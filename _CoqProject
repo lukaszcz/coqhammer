@@ -1,0 +1,17 @@
+src/hammer_errors.ml
+src/hhlib.ml
+src/escaping.ml
+src/hh_term.ml
+src/msg.ml
+src/timeout.ml
+src/coq_transl.ml
+src/opt.ml
+src/parallel.ml
+src/features.ml
+src/provers.ml
+src/hammer.ml4
+src/hammer_plugin.mllib
+theories/Reconstr.v
+theories/Hammer.v
+-R theories Hammer
+-I src
