@@ -1,3 +1,12 @@
+*.aux
+*.d
+*.glob
+*.vo
+predict
+htimeout
+Makefile
+Makefile.conf
+
 *.annot
 *.cmo
 *.cma
