@@ -11,7 +11,8 @@ reproducible, in the final scripts "hammer" should be replaced with an
 appropriate reconstruction tactic.
 *)
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Import Reconstr.
 
 (************************************************************************************************)
 
@@ -102,6 +103,24 @@ Proof.
   Reconstr.hexhaustive 0 Reconstr.Empty
 		 (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.le_0_l, @Coq.Arith.PeanoNat.Nat.pow_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_r)
 		 Reconstr.Empty.
+Qed.
+
+Require Coq.Numbers.Integer.BigZ.BigZ.
+
+Lemma BigZ_mul_mod : forall a n b : BigZ.BigZ.t,
+   (BigZ.BigZ.eq BigZ.BigZ.zero n -> False) ->
+   BigZ.BigZ.eq (BigZ.BigZ.modulo (BigZ.BigZ.mul b a) n)
+     (BigZ.BigZ.modulo
+        (BigZ.BigZ.mul (BigZ.BigZ.modulo b n) (BigZ.BigZ.modulo a n)) n).
+Proof.
+  time hammer. Restart.
+  Reconstr.htrivial Reconstr.Empty
+		    (@Coq.Numbers.Integer.BigZ.BigZ.BigZ.mul_mod, @Coq.Numbers.Integer.BigZ.BigZ.BigZ.eq_sym_iff)
+		    (@Coq.Numbers.Integer.BigZ.BigZ.BigZ.zero, @Coq.Numbers.Integer.BigZ.BigZ.BigZ.t).
+  Restart.
+  Reconstr.hobvious Reconstr.Empty
+        (@Coq.Numbers.Integer.BigZ.BigZ.BigZ.mul_mod)
+        (@Coq.Numbers.Integer.BigZ.BigZ.BigZ.eq).
 Qed.
 
 Require Coq.Reals.RIneq.

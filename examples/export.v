@@ -65,6 +65,6 @@ Require Import ZArith.Zquot.
 Require Import ZArith.Zsqrt_compat.
 Require Import ZArith.Zwf.
 
-From Hammer Require Import Hammer.
+Require Import Hammer.Hammer.
 
 Hammer_export Dir "coq_export".

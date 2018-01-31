@@ -1,5 +1,6 @@
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Import Reconstr.
 
 Require Import Reals.
 Require Import Fourier.
@@ -26,7 +27,10 @@ Proof.
   Reconstr.htrivial Reconstr.Empty
 		    (@Coq.Reals.RIneq.Z_R_minus)
 		    (@k).
-  assert (IZR 1 = 1) by scrush.
+  assert (IZR 1 = 1).
+  Reconstr.htrivial Reconstr.Empty
+		    (@Coq.Reals.RIneq.succ_IZR, @Coq.Reals.RIneq.plus_IZR, @Coq.Reals.RIneq.Rplus_opp_l, @Coq.Reals.RIneq.opp_IZR, @Coq.ZArith.BinInt.Z.opp_add_distr, @Coq.ZArith.BinInt.Z.sub_add_simpl_r_l, @Coq.ZArith.BinInt.Z.sub_0_r, @Coq.ZArith.BinInt.Z.sub_succ_r, @Coq.ZArith.BinInt.Z.one_succ, @Coq.ZArith.BinInt.Z.add_comm, @Coq.fourier.Fourier_util.Rnot_lt0, @Coq.Reals.RIneq.Rmult_0_l, @Coq.Reals.Raxioms.Rplus_0_l, @Coq.Reals.RIneq.Rplus_ne, @Coq.Reals.DiscrR.IZR_eq)
+		    (@Coq.ZArith.BinIntDef.Z.opp, @Coq.Reals.Rfunctions.powerRZ, @Coq.PArith.BinPosDef.Pos.mul, @Coq.ZArith.BinIntDef.Z.sub, @Coq.ZArith.BinIntDef.Z.succ, @Coq.Reals.Raxioms.IZR).
   ycrush.
   rewrite HH; clear HH.
   clear k.
@@ -86,7 +90,10 @@ Proof.
   Reconstr.htrivial Reconstr.Empty
 		    (@Coq.Reals.RIneq.Z_R_minus)
 		    (@k).
-  assert (IZR 1 = 1) by auto.
+  assert (IZR 1 = 1).
+  Reconstr.htrivial Reconstr.Empty
+		    (@Coq.Reals.RIneq.succ_IZR, @Coq.Reals.RIneq.plus_IZR, @Coq.Reals.RIneq.Rplus_opp_l, @Coq.Reals.RIneq.opp_IZR, @Coq.ZArith.BinInt.Z.opp_add_distr, @Coq.ZArith.BinInt.Z.sub_add_simpl_r_l, @Coq.ZArith.BinInt.Z.sub_0_r, @Coq.ZArith.BinInt.Z.sub_succ_r, @Coq.ZArith.BinInt.Z.one_succ, @Coq.ZArith.BinInt.Z.add_comm, @Coq.fourier.Fourier_util.Rnot_lt0, @Coq.Reals.RIneq.Rmult_0_l, @Coq.Reals.Raxioms.Rplus_0_l, @Coq.Reals.RIneq.Rplus_ne, @Coq.Reals.DiscrR.IZR_eq)
+		    (@Coq.ZArith.BinIntDef.Z.opp, @Coq.Reals.Rfunctions.powerRZ, @Coq.PArith.BinPosDef.Pos.mul, @Coq.ZArith.BinIntDef.Z.sub, @Coq.ZArith.BinIntDef.Z.succ, @Coq.Reals.Raxioms.IZR).
   ycrush.
   rewrite HH; clear HH.
   clear k.

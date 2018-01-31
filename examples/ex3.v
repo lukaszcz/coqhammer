@@ -1,7 +1,8 @@
 (* This file contains a proof of the fact that the square root of 2 is
    irrational. *)
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Import Reconstr.
 
 Require Import Reals.
 Require Import Arith.
@@ -128,8 +129,8 @@ Proof.
 		   Reconstr.Empty.
   assert (((INR p / INR q) ^ 2)%R = ((INR p / INR q) * (INR p / INR q))%R).
   Reconstr.hcrush Reconstr.AllHyps
-		  (@Coq.Reals.R_sqrt.Rsqr_sqrt, @Coq.Reals.DiscrR.Rlt_R0_R2)
-		  (@Coq.Reals.Rdefinitions.Rle, @Coq.Reals.RIneq.Rsqr).
+		  (@Coq.fourier.Fourier_util.Rle_zero_pos_plus1, @Coq.Reals.RIneq.Rle_0_1, @Coq.Reals.R_sqrt.Rsqr_sqrt)
+		  (@Coq.Reals.RIneq.Rsqr).
   assert (((INR p / INR q) * (INR p / INR q))%R = ((INR p * INR p) / (INR q * INR q))%R).
   Reconstr.hobvious Reconstr.AllHyps
 		    (@Coq.Reals.R_sqr.Rsqr_div, @Coq.Reals.RIneq.not_0_INR)

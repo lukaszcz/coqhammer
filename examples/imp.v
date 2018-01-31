@@ -9,7 +9,8 @@
    and our reconstruction tactics compares to the automation available
    in Isabelle/HOL. *)
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Import Reconstr.
 
 Require Import String.
 Require Import Arith.PeanoNat.

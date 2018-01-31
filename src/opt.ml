@@ -4,7 +4,8 @@ let predictions_num = ref 1024
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Predictions";
       optkey=["Hammer";"Predictions"];
       optread=(fun ()->Some !predictions_num);
@@ -19,7 +20,8 @@ let scrush_timelimit = ref 1
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer CrushLimit";
       optkey=["Hammer";"CrushLimit"];
       optread=(fun ()->Some !scrush_timelimit);
@@ -34,7 +36,8 @@ let atp_timelimit = ref 15
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer ATPLimit";
       optkey=["Hammer";"ATPLimit"];
       optread=(fun ()->Some !atp_timelimit);
@@ -49,7 +52,8 @@ let reconstr_timelimit = ref 5
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer ReconstrLimit";
       optkey=["Hammer";"ReconstrLimit"];
       optread=(fun ()->Some !reconstr_timelimit);
@@ -64,7 +68,8 @@ let max_atp_predictions = ref 16
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer MaxATPPredictions";
       optkey=["Hammer";"MaxATPPredictions"];
       optread=(fun ()->Some !max_atp_predictions);
@@ -79,7 +84,8 @@ let gs_mode = ref 8
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer GSMode";
       optkey=["Hammer";"GSMode"];
       optread=(fun ()->Some !gs_mode);
@@ -94,7 +100,8 @@ let eprover_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Eprover";
       optkey=["Hammer";"Eprover"];
       optread=(fun () -> !eprover_enabled);
@@ -106,7 +113,8 @@ let vampire_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Vampire";
       optkey=["Hammer";"Vampire"];
       optread=(fun () -> !vampire_enabled);
@@ -118,7 +126,8 @@ let z3_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Z3";
       optkey=["Hammer";"Z3"];
       optread=(fun () -> !z3_enabled);
@@ -130,7 +139,8 @@ let predict_path = ref "predict"
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer PredictPath";
       optkey=["Hammer";"PredictPath"];
       optread=(fun () -> !predict_path);
@@ -142,7 +152,8 @@ let predict_method = ref "knn"
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer PredictMethod";
       optkey=["Hammer";"PredictMethod"];
       optread=(fun () -> !predict_method);
@@ -160,7 +171,8 @@ let parallel_mode = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Parallel";
       optkey=["Hammer";"Parallel"];
       optread=(fun () -> !parallel_mode);
@@ -172,7 +184,8 @@ let debug_mode = ref false
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Debug";
       optkey=["Hammer";"Debug"];
       optread=(fun () -> !debug_mode);
@@ -182,7 +195,8 @@ let _ =
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer ClosureGuards";
       optkey=["Hammer";"ClosureGuards"];
       optread=(fun () -> !Coq_transl.opt_closure_guards);
@@ -194,7 +208,8 @@ let filter_program = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer FilterProgram";
       optkey=["Hammer";"FilterProgram"];
       optread=(fun () -> !filter_program);
@@ -206,7 +221,8 @@ let filter_classes = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer FilterClasses";
       optkey=["Hammer";"FilterClasses"];
       optread=(fun () -> !filter_classes);
@@ -218,7 +234,8 @@ let filter_hurkens = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer FilterHurkens";
       optkey=["Hammer";"FilterHurkens"];
       optread=(fun () -> !filter_hurkens);
@@ -230,7 +247,8 @@ let search_blacklist = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optsync=true;
+      optdepr=false;
       optname="Hammer Blacklist";
       optkey=["Hammer";"Blacklist"];
       optread=(fun () -> !search_blacklist);

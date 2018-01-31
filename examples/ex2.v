@@ -1,5 +1,6 @@
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Import Reconstr.
 
 Require Import ZArith.
 

@@ -1,7 +1,8 @@
 DECLARE PLUGIN "hammer_plugin"
 
-let hammer_version_string = "CoqHammer 1.0.6 for Coq 8.7 and 8.7.1"
+let hammer_version_string = "CoqHammer 1.0.6 for Coq 8.6 and 8.6.1"
 
+open Pp
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
   Flags.if_verbose msg_info Pp.(str hammer_version_string))
@@ -13,12 +14,23 @@ open Hammer_errors
 open Util
 open Names
 open Term
+open Vars
+open Context
+open Inductiveops
+open Environ
+open Glob_term
+open Glob_ops
+open Termops
+open Namegen
 open Libnames
 open Globnames
 open Nametab
+open Mod_subst
 open Misctypes
+open Decl_kinds
+open Printer
 open Stdarg
-open Ltac_plugin
+open Proofview.Notations
 
 let (++) f g x = f(g(x))
 
@@ -158,9 +170,6 @@ and hhterm_of_precdeclaration (a,b,c) =
   tuple [(mk_id "$PrecDeclaration") ; hhterm_of_namearray a;
          hhterm_of_constrarray b; hhterm_of_constrarray c]
 
-let get_type_of env evmap t =
-  EConstr.to_constr evmap (Retyping.get_type_of env evmap (EConstr.of_constr t))
-
 (* only for constants *)
 let hhproof_of c =
   begin match Global.body_of_constant c with
@@ -172,7 +181,7 @@ let hhdef_of_global glob_ref : (string * Hh_term.hhdef) =
   let glob_ref = Globnames.canonical_gr glob_ref in
   let (evmap, env) = get_current_context () in
   let ty = fst (Global.type_of_global_in_context env glob_ref) in
-  let kind = get_type_of env evmap ty in
+  let kind = Retyping.get_type_of env evmap ty in
   let const = match glob_ref with
     | ConstRef c -> hhterm_of_constant c
     | IndRef i   -> hhterm_of_inductive i
@@ -197,7 +206,7 @@ let hhdef_of_global glob_ref : (string * Hh_term.hhdef) =
 
 let hhdef_of_hyp (id, maybe_body, ty) =
   let (evmap, env) = get_current_context () in
-  let kind = get_type_of env evmap ty in
+  let kind = Retyping.get_type_of env evmap ty in
   let body =
     match maybe_body with
     | Some b -> lazy (hhterm_of b)
@@ -205,14 +214,10 @@ let hhdef_of_hyp (id, maybe_body, ty) =
   in
   (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), hhterm_of kind, lazy (hhterm_of ty), body)
 
-let econstr_to_constr x = EConstr.to_constr Evd.empty x
-
 let make_good =
   function
-  | Context.Named.Declaration.LocalAssum(x, y) ->
-     (x, None, econstr_to_constr y)
-  | Context.Named.Declaration.LocalDef(x, y, z) ->
-     (x, Some (econstr_to_constr y), econstr_to_constr z)
+  | Context.Named.Declaration.LocalAssum(x, y) -> (x, None, y)
+  | Context.Named.Declaration.LocalDef(x, y, z) -> (x, Some y, z)
 
 let get_hyps gl =
   List.map (hhdef_of_hyp ++ make_good) (Proofview.Goal.hyps gl)
@@ -220,7 +225,7 @@ let get_hyps gl =
 let get_goal gl =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (hhterm_of (econstr_to_constr (Proofview.Goal.concl gl))),
+   lazy (hhterm_of (Proofview.Goal.concl gl)),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
@@ -232,7 +237,7 @@ let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
      Hh_term.string_of_hhterm (Lazy.force hterm) ^ ").")
 
 let string_of_goal gl =
-  string_of (econstr_to_constr (Proofview.Goal.concl gl))
+  string_of (Proofview.Goal.concl gl)
 
 let save_in_list refl glob_ref env c = refl := glob_ref :: !refl
 
@@ -294,29 +299,28 @@ let get_tactic (s : string) =
   (Nametab.locate_tactic (Libnames.qualid_of_string s))
 
 let get_tacexpr tac args =
-  Tacexpr.TacArg(None,
-                 Tacexpr.TacCall(None,
-                                 (Misctypes.ArgArg(None, get_tactic tac),
-                                 args)))
+  Tacexpr.TacArg(Loc.dummy_loc,
+                 Tacexpr.TacCall(Loc.dummy_loc,
+                                 Misctypes.ArgArg(Loc.dummy_loc, get_tactic tac),
+                                 args))
 
 let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
   Tacinterp.eval_tactic (get_tacexpr tac args)
 
 let ltac_lcall tac args =
-  Tacexpr.TacArg(None,
-                 Tacexpr.TacCall(None, (ArgVar(None, Id.of_string tac),args)))
+  Tacexpr.TacArg(Loc.ghost,Tacexpr.TacCall(Loc.ghost, ArgVar(Loc.ghost, Id.of_string tac),args))
 
 let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
   let fold arg (i, vars, lfun) =
     let id = Id.of_string ("x" ^ string_of_int i) in
-    let x = Tacexpr.Reference (ArgVar (None, id)) in
+    let x = Tacexpr.Reference (ArgVar (Loc.ghost, id)) in
     (succ i, x :: vars, Id.Map.add id arg lfun)
   in
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
   let ist = { (Tacinterp.default_ist ()) with Tacinterp.lfun = lfun; } in
   Timeout.tclTIMEOUT tm (Tacinterp.eval_tactic_ist ist (get_tacexpr tac args))
 
-let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
+let to_ltac_val c = Tacinterp.Value.of_constr c
 
 let to_constr r =
   match r with
@@ -334,8 +338,8 @@ let get_constr s =
 let mk_pair x y =
   let (evmap, env) = get_current_context () in
   let pr = get_constr "pair" in
-  let tx = get_type_of env evmap x in
-  let ty = get_type_of env evmap y in
+  let tx = Retyping.get_type_of env evmap x in
+  let ty = Retyping.get_type_of env evmap y in
   mkApp (pr, [| tx; ty; x; y |])
 
 let rec mk_lst lst =
@@ -479,8 +483,8 @@ let try_scrush () =
         ltac_apply "idtac" [])
 
 let hammer_tac () =
-  Proofview.Goal.nf_enter
-    begin fun gl ->
+  Proofview.Goal.nf_enter { enter =
+      begin fun gl ->
         Proofview.tclOR
           (try_scrush ())
           begin fun _ ->
@@ -524,7 +528,7 @@ let hammer_tac () =
                Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
               ltac_apply "idtac" []
           end
-  end
+  end }
 
 TACTIC EXTEND Hammer_tac
 | [ "hammer" ] -> [ hammer_tac () ]

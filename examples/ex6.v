@@ -1,4 +1,5 @@
 
+From Hammer Require Import Hammer.
 From Hammer Require Import Reconstr.
 
 Section Sets.

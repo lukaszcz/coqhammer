@@ -2,7 +2,8 @@
    arithmetic on natural numbers from Reals.ArithProp. The proofs are
    noticeably simpler than the original ones. *)
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Import Reconstr.
 
 Require Import Arith.
 

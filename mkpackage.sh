@@ -1,10 +1,10 @@
 #!/bin/bash
 
-VERSION="1.0.6-coq8.7"
+VERSION="1.0.6-coq8.6"
 
 rm -rf coqhammer-$VERSION
 mkdir coqhammer-$VERSION
-cp LICENSE README TODO _CoqProject Makefile.local mkpackage.sh coqhammer-$VERSION
+cp LICENSE README TODO _CoqProject mkpackage.sh coqhammer-$VERSION
 mkdir coqhammer-$VERSION/examples
 cp examples/*.v coqhammer-$VERSION/examples
 mkdir coqhammer-$VERSION/theories

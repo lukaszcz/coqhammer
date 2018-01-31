@@ -1,13 +1,13 @@
-CoqHammer version 1.0.6 for Coq 8.7 and 8.7.1
+CoqHammer version 1.0.6 for Coq 8.6 and 8.6.1
 
 COPYRIGHT AND LICENSE
 
-  Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck
+  Copyright (c) 2017, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck
   Distributed under the terms of LGPL 2.1, see the file "LICENSE".
 
 INSTALLATION
 
-  Given already installed Coq 8.7, install the plugin by:
+  Given already installed Coq 8.6, install the plugin by:
 
     coq_makefile -f _CoqProject -o Makefile
     make
@@ -58,7 +58,7 @@ INSTALLATION OF FIRST ORDER PROVERS
   (z3_tptp). It is recommended to have all three ATPs.
 
   Eprover may be downloaded from http://www.eprover.org.
-  Vampire may be downloaded from https://vprover.github.io.
+  Vampire may be obtained from https://vprover.github.io.
   Z3 may be downloaded from https://github.com/Z3Prover/z3/releases.
 
   Note that the default version of Z3 does not support the TPTP format.
