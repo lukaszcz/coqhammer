@@ -16,8 +16,6 @@ let extract_consts (t : hhterm) : string list =
       (c :: acc)
     | Comb(x, y) ->
       pom y (pom x acc)
-    | Abs(_) ->
-      failwith "extract_consts"
   in
   Hhlib.sort_uniq compare (pom t [])
 
@@ -58,8 +56,6 @@ let extract_features (t : hhterm) : string list =
       pom args (c :: (app_fea acc args))
     | Comb(x, y) ->
       pom y (pom x acc)
-    | Abs(_) ->
-      failwith "extract_features"
   in
   Hhlib.sort_uniq compare (pom t [])
 

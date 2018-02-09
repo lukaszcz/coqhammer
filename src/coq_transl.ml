@@ -98,7 +98,6 @@ type coqterm =
 | SortProp | SortSet | SortType
 | Quant of string (* "?" or "!" *) * coqabstraction
 | Equal of coqterm * coqterm
-| FOL of coqterm
 and coqabstraction = string (* var name *) * coqterm (* var type *) * coqterm (* body *)
 
 type coqdef = (* coq global definition *)

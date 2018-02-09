@@ -2,8 +2,6 @@
  type hhterm = 
    Id of string (* may be a constant or variable *)
  | Comb of hhterm * hhterm
- | Abs of string * hhterm * hhterm;; (* name of introduced id, type and subterm *)
-(* Abs never occurs in Coq terms *)
 
 type hhdef =
   hhterm (* "name" term; use get_hhdef_name to extract the name string *) *
@@ -31,4 +29,3 @@ let rec string_of_hhterm t =
   match t with
   | Id(s) -> s
   | Comb(x, y) -> string_of_hhterm x ^ " @ (" ^ string_of_hhterm y ^ ")"
-  | Abs(s, x, y) -> "\\" ^ s ^ "." ^ string_of_hhterm y
