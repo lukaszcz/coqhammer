@@ -433,7 +433,10 @@ let do_predict hyps defs goal =
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 16);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64)]
+       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
+       (!Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
+       (!Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 64)
+       ]
     in
     let fname = Features.extract hyps defs goal in
     let jobs =
@@ -444,6 +447,7 @@ let do_predict hyps defs goal =
           Opt.vampire_enabled := false;
           Opt.eprover_enabled := false;
           Opt.z3_enabled := false;
+          Opt.cvc4_enabled := false;
           pref := true;
           Opt.parallel_mode := false;
           try
