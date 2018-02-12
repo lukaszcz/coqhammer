@@ -12,7 +12,7 @@ stated, execute all commands in the eval/ directory.
 
 3. The program tools/coqnames may be used to insert calls to
    "hammer_hook" in the library source files (it requires the
-   corresponding *.glob files to be present). Run it in the LIBSRCDIR
+   corresponding *.glob files to be present). Run it in the problems/
    directory. After running tools/coqnames you may need to edit some
    files manually to make them compile with coqc.
 
