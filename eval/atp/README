@@ -1,0 +1,40 @@
+ATP performance evaluation
+==========================
+
+Given a set of ATP problems, the Makefile in this directory runs ATPs
+to determine which problems ATPs are able to solve within a given time.
+
+The input files need to be in subdirectories of 'i':
+
+* 'i/f' should contain all the FOF files to evaluate.
+* 'i/h' may contain all the THF files to evaluate.
+* 'i/w' may contain all the Why3 files to evaluate.
+
+The outputs are written to 'o/$prover_name/...'
+
+To run, use `make -j 47 -k` (where 47 is the number of CPUs). The parameter `-k`
+resumes evaluation in case of errors. The timeout can be set in the Makefile.
+Optionally only particular provers may be specified, e.g. `make e-18`.
+
+Warning: Rerun `make` to ensure that all problems were treated.
+
+
+Tools
+-----
+
+* `write_problems`: generate problem files from predicted premises.
+   Example: `tools/write_problems miz-knn miz/eval miz/seq miz/statements 128`
+
+* `stat`: compute ATP statistics.
+  Example: `tools/stat , y,p , , false`
+
+stat takes 5 space-separated arguments: 4 lists (comma-separated
+values; empty list is represented by a single comma) and a boolean
+
+stat [labels] [sorting specification] [which fields to merge]
+     [greedy sequence fixed start]
+     (should different versions of the greedy sequence be computed?)
+
+y - the number of proved theorems
+n - the number of countersatisfiable problems
+p - the prover

@@ -4,7 +4,6 @@
 *.vo
 predict
 htimeout
-Makefile
 Makefile.conf
 
 *.annot
