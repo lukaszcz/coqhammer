@@ -1,6 +1,6 @@
 DECLARE PLUGIN "hammer_plugin"
 
-let hammer_version_string = "CoqHammer 1.0.6 for Coq 8.7 and 8.7.1"
+let hammer_version_string = "CoqHammer 1.0.* for Coq 8.7 and 8.7.1"
 
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
@@ -372,7 +372,14 @@ let get_tac_args deps defs =
   let args = [to_ltac_val tvars; to_ltac_val tdeps; to_ltac_val tdefs] in
   (vars, deps, defs, args)
 
-let run_tactics vars deps defs args msg_invoke msg_success msg_fail =
+let check_goal_prop gl =
+  let (evmap, env) = get_current_context () in
+  let tp = EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl)) in
+  match Term.kind_of_term tp with
+  | Sort s -> Term.family_of_sort s = InProp
+  | _ -> false
+    
+let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fail =
   let tactics =
     [("Reconstr.htrivial", "Reconstr.shtrivial", 2 * !Opt.reconstr_timelimit / 5);
      ("Reconstr.hobvious", "Reconstr.shobvious", 2 * !Opt.reconstr_timelimit / 5);
@@ -394,7 +401,7 @@ let run_tactics vars deps defs args msg_invoke msg_success msg_fail =
     match lst with
     | [] ->
        begin
-         Msg.error ("Hammer failed to solve the goal.");
+         msg_total_fail ();
          ltac_apply "idtac" []
        end
     | (tac, cmd, timeout) :: t ->
@@ -478,6 +485,8 @@ let try_scrush () =
         Msg.info "Replace the hammer tactic with: Reconstr.scrush";
         ltac_apply "idtac" [])
 
+(***************************************************************************************)
+
 let hammer_tac () =
   Proofview.Goal.nf_enter
     begin fun gl ->
@@ -507,6 +516,9 @@ let hammer_tac () =
                     Msg.info ("Tactic " ^ tac ^ " failed to solve the goal in " ^
                                  string_of_int timeout ^ "s.")
                 end
+                begin fun () ->
+                  Msg.error ("Hammer failed to solve the goal.")
+                end
             with
             | HammerError(msg) ->
                Msg.error ("Hammer error: " ^ msg);
@@ -524,7 +536,7 @@ let hammer_tac () =
                Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
               ltac_apply "idtac" []
           end
-  end
+    end
 
 TACTIC EXTEND Hammer_tac
 | [ "hammer" ] -> [ hammer_tac () ]
@@ -578,4 +590,124 @@ let hammer_version () =
 
 VERNAC COMMAND EXTEND Hammer_plugin_version CLASSIFIED AS QUERY
 | [ "Hammer_version" ] -> [ hammer_version () ]
+END
+
+let hammer_hook_tac prefix name =
+  Proofview.Goal.nf_enter begin fun gl ->
+    Msg.info ("Processing theorem " ^ name ^ "...");
+    if check_goal_prop gl then
+      begin
+        let fopt = open_in "coqhammer.opt" in
+        let str = input_line fopt in
+        close_in fopt;
+        if str = "gen-atp" then
+          begin
+            List.iter
+              begin fun (met, n) ->
+                let str = met ^ "-" ^ string_of_int n in
+                Msg.info ("Parameters: " ^ str);
+                Opt.predictions_num := n;
+                Opt.predict_method := met;
+                Opt.search_blacklist := false;
+                Opt.filter_program := true;
+                Opt.filter_classes := true;
+                Opt.filter_hurkens := true;
+                let dir = "atp/problems/" ^ str in
+                ignore (Sys.command ("mkdir -p " ^ dir));
+                let goal = get_goal gl in
+                let hyps = get_hyps gl in
+                let defs = get_defs () in
+                let defs1 = Features.predict hyps defs goal in
+                Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
+              end
+              [("knn", 16); ("knn", 32); ("knn", 64); ("knn", 128); ("knn", 256);
+               ("knn", 512); ("knn", 1024);
+               ("nbayes", 16); ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256);
+               ("nbayes", 512); ("nbayes", 1024)];
+            Msg.info ("Done processing " ^ name ^ ".\n");
+            ltac_apply "idtac" []
+          end
+        else
+          begin
+            let idx = String.index str '-' in
+            let prover = String.sub str 0 idx in
+            let extract =
+              if prover = "eprover" then
+                Provers.extract_eprover_data
+              else if prover = "vampire" then
+                Provers.extract_vampire_data
+              else if prover = "z3" then
+                Provers.extract_z3_data
+              else
+                failwith "unknown prover"
+            in
+            let dir = "atp/o/" ^ str
+            and odir = "out/" ^ str
+            in
+            let fname = dir ^ "/" ^ name ^ ".p"
+            and ofname =  odir ^ "/" ^ name ^ ".out"
+            and tfname =  odir ^ "/" ^ name ^ ".try"
+            in
+            ignore (Sys.command ("mkdir -p " ^ odir));
+            if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
+              not (Sys.file_exists ofname)
+            then
+              try
+                Msg.info ("Reconstructing theorem " ^ name ^ "...");
+                let tries_num =
+                  try
+                    let tfile = open_in tfname in
+                    let r = int_of_string (input_line tfile) in
+                    close_in tfile;
+                    r
+                  with _ ->
+                    0
+                in
+                if tries_num < 2 then
+                  begin
+                    ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
+                                            " > \"" ^ tfname ^ "\""));
+                    let (deps, defs) = extract fname in
+                    let (vars, deps, defs, args) = get_tac_args deps defs in
+                    run_tactics vars deps defs args
+                      (fun _ _ _ _ -> ())
+                      begin fun tac vars deps defs ->
+                        let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
+                        ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                        Msg.info msg
+                      end
+                      (fun _ _ -> ())
+                      begin fun () ->
+                        let msg = "Failure " ^ name ^ " " ^ str in
+                        ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                        Msg.info msg
+                      end
+                  end
+                else
+                  begin
+                    let msg = "Failure " ^ name ^ " " ^ str ^ ": gave up after " ^
+                      string_of_int tries_num ^ " tries"
+                    in
+                    ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                    Msg.info msg;
+                    ltac_apply "idtac" []
+                  end
+              with (HammerError s) ->
+                Msg.info s;
+                ltac_apply "idtac" []
+            else
+              begin
+                ltac_apply "idtac" []
+              end
+          end
+      end
+    else
+      begin
+        Msg.info "Goal not a proposition.\n";
+        ltac_apply "idtac" []
+      end
+  end
+
+TACTIC EXTEND Hammer_hook_tac
+| [ "hammer_hook" string(prefix) string(name) ] -> [ hammer_hook_tac prefix name ]
 END

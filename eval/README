@@ -1,4 +1,5 @@
-How to evaluate a new library?
+How to evaluate a new Coq library?
+==================================
 
 Let N be the number of parallel jobs to execute. Unless otherwise
 stated, execute all commands in the eval/ directory.
@@ -18,9 +19,31 @@ stated, execute all commands in the eval/ directory.
 
 4. make -k -j N atp
 
-5. atp/run-provers.sh [your.mail@mail.com]
+5. cd atp && ./run-provers.sh [your.mail@mail.com]
 
-   This script should be edited when adding or changing the (versions
-   of) ATP provers used in the evaluation.
+   The script atp/run-provers.sh should be edited when adding or
+   changing the (versions of) ATP provers used in the evaluation.
 
 6. make -k -j N reconstr
+
+After executing these steps, the reconstruction results are in the
+out/ directory. The ATP results are in the atp/o/ directory.
+
+Tools
+-----
+
+* `stat`: compute ATP statistics. Run in the atp/ directory. Reads the
+  o/*/*.p files.
+
+  Example: `tools/stat , y,p , , false`
+
+stat takes 5 space-separated arguments: 4 lists (comma-separated
+values; empty list is represented by a single comma) and a boolean
+
+stat [labels] [sorting specification] [which fields to merge]
+     [greedy sequence fixed start]
+     (should different versions of the greedy sequence be computed?)
+
+y - the number of proved theorems
+n - the number of countersatisfiable problems
+p - the prover

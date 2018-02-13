@@ -1,6 +1,6 @@
 #!/bin/bash
 
-for d in atp-problems/*
+for d in problems/*
 do
     echo "***************"
     echo $d
@@ -8,9 +8,9 @@ do
     ln -s ../$d i/f
     make -k -j 45 e-19 vam-40 z3-40q
     p=`basename $d`
-    mv logs/atp/e-19 logs/atp/eprover-$p
-    mv logs/atp/vam-40 logs/atp/vampire-$p
-    mv logs/atp/z3-40q logs/atp/z3-$p
+    mv o/e-19 o/eprover-$p
+    mv o/vam-40 o/vampire-$p
+    mv o/z3-40q o/z3-$p
     if [ -n "$1" ]; then
         echo "" | mail -s "$p finished" $1
     fi

@@ -17,24 +17,3 @@ resumes evaluation in case of errors. The timeout can be set in the Makefile.
 Optionally only particular provers may be specified, e.g. `make e-18`.
 
 Warning: Rerun `make` to ensure that all problems were treated.
-
-
-Tools
------
-
-* `write_problems`: generate problem files from predicted premises.
-   Example: `tools/write_problems miz-knn miz/eval miz/seq miz/statements 128`
-
-* `stat`: compute ATP statistics.
-  Example: `tools/stat , y,p , , false`
-
-stat takes 5 space-separated arguments: 4 lists (comma-separated
-values; empty list is represented by a single comma) and a boolean
-
-stat [labels] [sorting specification] [which fields to merge]
-     [greedy sequence fixed start]
-     (should different versions of the greedy sequence be computed?)
-
-y - the number of proved theorems
-n - the number of countersatisfiable problems
-p - the prover
