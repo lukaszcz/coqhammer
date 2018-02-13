@@ -600,7 +600,9 @@ let hammer_hook_tac prefix name =
         let fopt = open_in "coqhammer.opt" in
         let str = input_line fopt in
         close_in fopt;
-        if str = "gen-atp" then
+        if str = "check" then
+          ltac_apply "idtac" []
+        else if str = "gen-atp" then
           begin
             List.iter
               begin fun (met, n) ->

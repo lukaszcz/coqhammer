@@ -1,5 +1,5 @@
 
-all: stat coqnames
+all: stat coqnames rmcomments
 	rm -f *.cm* *.o
 
 stat: utils.ml stat.ml
@@ -8,5 +8,8 @@ stat: utils.ml stat.ml
 coqnames: utils.ml coqnames.ml
 	ocamlopt -inline 100 -unsafe unix.cmxa str.cmxa $^ -o $@
 
+rmcomments: rmcomments.c
+	gcc $^ -o $@
+
 clean:
-	-rm coqnames stat *.cmo *.cmi *.cmx *.o
+	-rm -f rmcomments coqnames stat *.cmo *.cmi *.cmx *.o
