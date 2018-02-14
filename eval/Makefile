@@ -24,7 +24,7 @@ logs/atp/%.log: problems/%.v
 reconstr: $(patsubst problems/%.v,logs/reconstr/%.log,$(FFILES))
 logs/reconstr/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	./run-reconstr.sh "$<" "$@"
+	coqc "$<" > "$@" 2>&1
 
 clean:
 	rm -rf logs coqhammer.opt

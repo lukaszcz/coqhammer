@@ -31,14 +31,14 @@ stated, execute all commands in the eval/ directory.
 
 6. make -k -j N atp
 
-7. cd atp && ./run-provers.sh [your.mail@mail.com]
+7. cd atp && ./run-provers.sh N [your.mail@mail.com]
 
    The script atp/run-provers.sh should be edited when adding or
    changing the (versions of) ATP provers used in the evaluation. When
    adding new ATPs also the hammer_hook code in hammer.ml4 should be
    edited.
 
-8. make -k -j N reconstr
+8. ./run-reconstr.sh N
 
 After executing these steps, the reconstruction results are in the
 out/ directory. The ATP results are in the atp/o/ directory.
