@@ -4,6 +4,13 @@ How to evaluate a new Coq library?
 Let N be the number of parallel jobs to execute. Unless otherwise
 stated, execute all commands in the eval/ directory.
 
+Steps 1-5 may be skipped if the library to evaluate is one of the
+libraries already prepared in the libs/ directory. Then just do:
+
+ln -s libs/library problems
+
+Otherwise follows all steps.
+
 1. Place the library sources in the problems/ directory (possibly with
    subdirectories). The sources should contain the *.v files.
 
