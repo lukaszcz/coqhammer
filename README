@@ -11,7 +11,7 @@ INSTALLATION
 
     coq_makefile -f _CoqProject -o Makefile
     make
-    sudo make install (OR: (sudo) make install COQBIN=/path/to/coq/binaries)
+    (sudo) make install (OR: (sudo) make install COQBIN=/path/to/coq/binaries)
 
   To use the hammer you will also need some automated provers
   installed. More information about provers is provided below.
@@ -21,13 +21,13 @@ INSTALLATION
   compilers (gcc and g++) available in the path for installation to
   succeed.
 
-  The command 'make install' will try to install the 'predict' program
-  into the directory specified by the COQBIN environment variable. If
-  this variable is not set then a binary directory is guessed basing
-  on the Coq library directory.
+  The command 'make install' will try to install the 'predict' and
+  'htimeout' programs into the directory specified by the COQBIN
+  environment variable. If this variable is not set then a binary
+  directory is guessed basing on the Coq library directory.
 
-  Note that some old versions of ProofGeneral encounter problems with
-  the plugin. If you use ProofGeneral you might need the most recent
+  Note that some old versions of Proof General encounter problems with
+  the plugin. If you use Proof General you might need the most recent
   version obtained directly from https://proofgeneral.github.io.
 
 USAGE
