@@ -9,7 +9,7 @@ int main() {
     while ((c = getchar()) != EOF) {
         if (prev == '(' && c == '*' && !in_string) {
             ++nesting;
-        } else if (prev == '*' && c == ')' && !in_string) {
+        } else if (prev == '*' && c == ')' && !in_string && nesting > 0) {
             --nesting;
             prev = getchar();
             if (prev == EOF) {

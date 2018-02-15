@@ -129,7 +129,8 @@ let process_file fname =
       try
         if Lib.string_begins_with s "Proof." ||
           Lib.string_begins_with s "Proof with " ||
-          Lib.string_begins_with s "Proof using "
+          Lib.string_begins_with s "Proof using " ||
+          Lib.string_begins_with s "Proof using."
         then
           begin
             let pref = Queue.pop (Hashtbl.find nametab last2) in
@@ -140,7 +141,7 @@ let process_file fname =
               if i + 1 = String.length s then "" else
                 (String.sub s (i + 1) (String.length s - i - 1))
             in
-            output_string oc (p ^ " hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Undo. " ^
+            output_string oc (p ^ " hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Restart. " ^
                                 r ^ "\n");
             print_endline path
           end
@@ -149,8 +150,8 @@ let process_file fname =
             let pref = Queue.pop (Hashtbl.find nametab last2) in
             let path = pref ^ "." ^ last2 in
             let p = String.sub s 6 (String.length s - 7) in
-            output_string oc ("Proof. hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Undo. " ^
-                                 "exact (" ^ p ^ "). Save.\n");
+            output_string oc ("Proof. hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Restart. " ^
+                                 "exact (" ^ p ^ "). Qed.\n");
             print_endline path
           end
         else
