@@ -2,6 +2,7 @@
 *.d
 *.glob
 *.vo
+*~
 predict
 htimeout
 Makefile.conf
