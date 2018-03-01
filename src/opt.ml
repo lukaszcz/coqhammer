@@ -180,7 +180,7 @@ let _ =
   in
   declare_bool_option gdopt
 
-let debug_mode = ref false
+let debug_mode = ref true
 
 let _ =
   let gdopt=
