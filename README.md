@@ -4,7 +4,7 @@ Requirements
 ------------
 
 - [Coq 8.7](https://coq.inria.fr/download)
-- automated provers ([Eprover](http://www.eprover.org), [Vampire](https://github.com/vprover/vampire/releases), and/or [Z3](https://github.com/Z3Prover/z3/releases))
+- automated provers ([Eprover](http://www.eprover.org), [Vampire](https://vprover.github.io/download.html), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
 ------------
