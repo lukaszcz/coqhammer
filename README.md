@@ -185,19 +185,20 @@ Set/Unset Hammer ClosureGuards.
 Bugs
 ----
 
-  In case you encounter any bugs, report them to:
-  lukaszcz@mimuw.edu.pl. Include a minimal reproducible example of the
-  bug.
+In case you encounter any bugs, report them to:
+lukaszcz@mimuw.edu.pl. Include a minimal reproducible example of the
+bug.
 
 Known bugs
 ----------
 
-  Occasionally, the hammer tactic hangs or outputs a wrong
-  reconstruction tactic. The authors believe that this is due to an
-  error in Coq's "timeout" tactical.
+Occasionally, the hammer tactic hangs or outputs a wrong
+reconstruction tactic. The authors believe that this is due to an
+error in Coq's `timeout` tactical.
 
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck
-Distributed under the terms of LGPL 2.1, see the file [LICENSE](LICENSE).
+Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University
+of Innsbruck. Distributed under the terms of LGPL 2.1, see the file
+[LICENSE](LICENSE).
