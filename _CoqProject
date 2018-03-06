@@ -1,3 +1,6 @@
+-Q theories Hammer
+-Q src Hammer
+-I src
 src/hammer_errors.ml
 src/hhlib.ml
 src/escaping.ml
@@ -13,5 +16,3 @@ src/hammer.ml4
 src/hammer_plugin.mllib
 theories/Reconstr.v
 theories/Hammer.v
--R theories Hammer
--I src

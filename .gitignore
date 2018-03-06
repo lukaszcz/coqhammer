@@ -5,7 +5,9 @@
 *~
 predict
 htimeout
-Makefile.conf
+Makefile.coq
+Makefile.coq.bak
+Makefile.coq.conf
 
 *.annot
 *.cmo

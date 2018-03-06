@@ -9,7 +9,7 @@ libraries already prepared in the libs/ directory. Then just do:
 
 ln -s libs/library problems
 
-Otherwise follows all steps.
+Otherwise follow all steps.
 
 1. Place the library sources in the problems/ directory (possibly with
    subdirectories). The sources should contain the *.v files.
