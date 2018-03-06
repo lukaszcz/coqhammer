@@ -33,7 +33,7 @@ Otherwise follow all steps.
 
 5. `./check.sh N`
 
-   This checks if the problems compile with coqc after running
+   This checks if the problems compile with `coqc` after running
    `tools/mkhooks.sh`. It may fail for some files, which must be then
    edited manually to make them compile with `coqc`. The errors may be
    viewed in the `check.log` file.
@@ -63,10 +63,12 @@ Tools
 `stat` takes 5 space-separated arguments: 4 lists (comma-separated
 values; empty list is represented by a single comma) and a boolean
 
+```
 stat [labels] [sorting specification] [which fields to merge]
      [greedy sequence fixed start]
      (should different versions of the greedy sequence be computed?)
+```
 
-`y` - the number of proved theorems
-`n` - the number of countersatisfiable problems
-`p` - the prover
+- `y` - the number of proved theorems
+- `n` - the number of countersatisfiable problems
+- `p` - the prover
