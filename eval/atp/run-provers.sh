@@ -4,8 +4,8 @@ for d in problems/*
 do
     echo "***************"
     echo $d
-    rm i/f
-    ln -s ../$d i/f
+    #rm /home/burak/Desktop/coqhammer/eval/problems/
+    ln -s ../$d /home/burak/Desktop/coqhammer/eval/problems/
     make -k -j "$1" e-19 vam-40 z3-40q
     p=`basename $d`
     mv o/e-19 o/eprover-$p

@@ -440,7 +440,9 @@ let do_predict hyps defs goal =
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 16);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64)]
+       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
+	   (!Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
+       (!Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128)]
     in
     let fname = Features.extract hyps defs goal in
     let jobs =
@@ -597,7 +599,7 @@ let hammer_hook_tac prefix name =
     Msg.info ("Processing theorem " ^ name ^ "...");
     if check_goal_prop gl then
       begin
-        let fopt = open_in "coqhammer.opt" in
+        let fopt = open_in "/home/burak/Desktop/coqhammer/eval/coqhammer.opt" in
         let str = input_line fopt in
         close_in fopt;
         if str = "check" then
