@@ -54,5 +54,5 @@ let my_timeout n f e =
      Exninfo.iraise e
 
 let tclTIMEOUT n t =
-  Control.set_timeout { timeout = my_timeout };
+  Control.set_timeout { Control.timeout = my_timeout };
   Proofview.tclTIMEOUT n t

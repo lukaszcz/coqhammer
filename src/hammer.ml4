@@ -1,6 +1,6 @@
 DECLARE PLUGIN "hammer_plugin"
 
-let hammer_version_string = "CoqHammer 1.0.* for Coq 8.7 and 8.7.1"
+let hammer_version_string = "CoqHammer 1.0.? for Coq 8.7"
 
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
@@ -28,18 +28,6 @@ let mkdir s =
 let rec mkdir_rec s =
   if s = "." || s = ".." || s = "" || s = "/" then ()
   else (mkdir_rec (Filename.dirname s); mkdir s)
-
-(* To do: choose a proper printing function *)
-let writel fn strl =
-  match fn with
-  | None ->
-      let oc = open_out "default.p" in
-      List.iter (Printf.fprintf oc "%s\n") strl;
-      close_out oc
-  | Some file ->
-      let oc = open_out file in
-      List.iter (Printf.fprintf oc "%s\n") strl;
-      close_out oc
 
 let append file str =
   let oc = open_out_gen [Open_creat; Open_text; Open_append] 0o640 file in
@@ -378,6 +366,8 @@ let check_goal_prop gl =
   match Term.kind_of_term tp with
   | Sort s -> Term.family_of_sort s = InProp
   | _ -> false
+
+(***************************************************************************************)
     
 let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fail =
   let tactics =
@@ -575,7 +565,7 @@ let hammer_dump name0 =
     List.iter
       begin fun (n, a) ->
         if not (Hhlib.string_begins_with n "_HAMMER_") then
-          Msg.notice (n ^ ": " ^ Coq_transl.string_of_coqterm a)
+          Msg.notice (n ^ ": " ^ Coqterms.string_of_coqterm a)
       end
       (Coq_transl.translate name)
   with Not_found ->

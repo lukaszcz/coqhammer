@@ -185,8 +185,8 @@ let _ =
     { optdepr=false;
       optname="Hammer ClosureGuards";
       optkey=["Hammer";"ClosureGuards"];
-      optread=(fun () -> !Coq_transl.opt_closure_guards);
-      optwrite=(fun b -> Coq_transl.opt_closure_guards := b)}
+      optread=(fun () -> !Coq_transl_opts.opt_closure_guards);
+      optwrite=(fun b -> Coq_transl_opts.opt_closure_guards := b)}
   in
   declare_bool_option gdopt
 

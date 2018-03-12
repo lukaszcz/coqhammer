@@ -80,3 +80,9 @@ let drop_prefix s pref =
     String.sub s plen (String.length s - plen)
   else
     s
+
+let rec oiter out f sep = function
+    [] -> ()
+  | [e] -> f e
+  | h :: t -> f h; out sep; oiter out f sep t
+

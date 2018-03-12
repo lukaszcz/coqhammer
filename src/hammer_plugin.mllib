@@ -1,9 +1,12 @@
 Hammer_errors
-Escaping
 Hh_term
 Hhlib
 Msg
 Timeout
+Coq_transl_opts
+Coqterms
+Coq_convert
+Tptp_out
 Coq_transl
 Opt
 Parallel

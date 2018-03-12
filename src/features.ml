@@ -23,7 +23,7 @@ let rec top_feature = function
   | Comb(Comb(Id "$Construct", _), Id c)
   | Comb(Comb(Id "$Ind", Id c), _)
   | Comb(Id "$Const", Id c)
-  | Comb(Id "$Var", Id c) -> c
+  | Comb(Id "$Var", Id c) -> c (* wouldn't "X" be better? *)
   | Comb(Id "$Rel", Id _) -> "X"
   | Comb(Comb(Id "$App", t), _) -> top_feature t
   | _ -> ""
@@ -132,12 +132,12 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
     output_string ocfea name; output_char ocfea ':';
     (* For empty features output empty quotes *)
     output_char ocfea '\"';
-    Coq_transl.oiter (output_string ocfea) (output_string ocfea) "\", \"" fea;
+    Hhlib.oiter (output_string ocfea) (output_string ocfea) "\", \"" fea;
     output_string ocfea "\"\n";
     let pre_deps = get_deps_cached def in
     let deps = List.filter (fun a -> StringSet.mem a names) pre_deps in
     output_string ocdep name; output_char ocdep ':';
-    if deps <> [] then Coq_transl.oiter (output_string ocdep) (output_string ocdep) " " deps;
+    if deps <> [] then Hhlib.oiter (output_string ocdep) (output_string ocdep) " " deps;
     output_char ocdep '\n';
   in
   List.iter write_def defs;
@@ -147,7 +147,7 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   let oc = open_out (fname ^ "conj") in
   let fea = List.concat (List.map get_def_features (goal :: hyps)) in
   output_char oc '\"';
-  Coq_transl.oiter (output_string oc) (output_string oc) "\", \"" fea;
+  Hhlib.oiter (output_string oc) (output_string oc) "\", \"" fea;
   output_string oc "\"\n";
   close_out oc;
   fname
@@ -161,7 +161,7 @@ let run_predict fname defs pred_num pred_method =
   in
   if !Opt.debug_mode || !Opt.gs_mode = 0 then
     Msg.info ("Running dependency prediction (" ^ pred_method ^ "-" ^
-		 string_of_int pred_num ^ ")...");
+                 string_of_int pred_num ^ ")...");
   if !Opt.debug_mode then
     Msg.info cmd;
   if Sys.command cmd <> 0 then
@@ -173,7 +173,7 @@ let run_predict fname defs pred_num pred_method =
     strset_from_lst
       (Str.split (Str.regexp " ")
          (try input_line ic with End_of_file ->
-	   close_in ic; Sys.remove oname;
+           close_in ic; Sys.remove oname;
            raise (HammerError "Predictor did not return advice.")))
   in
   close_in ic; Sys.remove oname;
@@ -182,7 +182,7 @@ let run_predict fname defs pred_num pred_method =
 let clean fname =
   if not !Opt.debug_mode then
     List.iter Sys.remove [fname; (fname ^ "fea"); (fname ^ "dep"); (fname ^ "seq");
-			  (fname ^ "conj")]
+                          (fname ^ "conj")]
 
 let predict (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : hhdef list =
   let fname = extract hyps defs goal in
