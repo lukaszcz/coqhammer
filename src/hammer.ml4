@@ -445,6 +445,8 @@ let do_predict hyps defs goal =
           Opt.parallel_mode := false;
           try
             let defs1 = Features.run_predict fname defs preds_num pred_method in
+            (* All hypotheses are always passed to the ATPs (only defs
+               are subject to premise selection) *)
             Provers.predict defs1 hyps defs goal
           with
           | HammerError(msg) ->
@@ -458,7 +460,13 @@ let do_predict hyps defs goal =
     let time = (float_of_int !Opt.atp_timelimit) *. 1.5
     in
     Msg.info ("Running provers (using " ^ string_of_int !Opt.gs_mode ^ " threads)...");
-    match Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs with
+    let ret =
+      try
+        Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
+      with e ->
+        Features.clean fname; raise e
+    in
+    match ret with
     | None -> Features.clean fname; raise (HammerFailure "ATPs failed to find a proof")
     | Some x -> Features.clean fname; x
   else
