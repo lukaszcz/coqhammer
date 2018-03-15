@@ -67,7 +67,7 @@ Vampire may be downloaded from https://vprover.github.io.
 Z3 may be downloaded from https://github.com/Z3Prover/z3/releases.
 
 Note that the default version of Z3 does not support the TPTP format.
-You need to compile a TPTP frontend located in examples/tptp in the Z3
+You need to compile a TPTP frontend located in `examples/tptp` in the Z3
 source package.
 
 Tactics
@@ -97,12 +97,12 @@ The most useful tactics are:
   possible to customize this tactic by adding rewrite hints to the
   yhints database.
 
-  WARNING: This tactic may change the proof state unpredictably and
+  **WARNING**: This tactic may change the proof state unpredictably and
   introduce randomly named hypotheses into the context.
 
   It is nonetheless useful to sometimes use `sauto` before a call to
   `hammer`. Then the list of hypotheses in the reconstruction tactic
-  may usually be replaced by Reconstr.AllHyps, removing any dependence
+  may usually be replaced by `Reconstr.AllHyps`, removing any dependence
   on auto-generated hypothesis names. Examples of this are provided in
   [`examples/imp.v`](examples/imp.v) and [`examples/combs.v`](examples/combs.v).
 
@@ -195,6 +195,23 @@ Known bugs
 Occasionally, the hammer tactic hangs or outputs a wrong
 reconstruction tactic. The authors believe that this is due to an
 error in Coq's `timeout` tactical.
+
+Debugging
+---------
+
+The following commands are useful for debugging.
+
+command                          | description
+-------------------------------- | ---------------------------------------------------------
+`Hammer_print "name"`            |  Prints object `name` in hhterm format.
+`Hammer_transl "name"`           |  Prints all axioms resulting from the translation
+                                 |  of `name` in the intermediate coqterm format
+                                 |  accepted by the [`tptp_out.ml`](src/tptp_out.ml) module.
+`Hammer_features "name"`         |  Prints the features of `name`, bypassing the cache.
+`Hammer_features_cached "name"`  |  Prints the features of `name`, using and possibly
+                                 |  modifying the cache.
+`hammer_goal_features`           |  Prints the features of the current goal.
+
 
 Copyright and license
 ---------------------

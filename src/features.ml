@@ -115,6 +115,9 @@ module StringSet = Set.Make(String)
 
 let strset_from_lst lst = List.fold_left (fun a x -> StringSet.add x a) StringSet.empty lst
 
+let get_goal_features (hyps : hhdef list) (goal : hhdef) : string list =
+  List.concat (List.map get_def_features (goal :: hyps))
+    
 let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
   let fname = Filename.temp_file "predict" "" in
@@ -145,7 +148,7 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   close_out ocseq;
   close_out ocdep;
   let oc = open_out (fname ^ "conj") in
-  let fea = List.concat (List.map get_def_features (goal :: hyps)) in
+  let fea = get_goal_features hyps goal in
   output_char oc '\"';
   Hhlib.oiter (output_string oc) (output_string oc) "\", \"" fea;
   output_string oc "\"\n";

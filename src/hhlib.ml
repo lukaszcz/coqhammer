@@ -86,3 +86,7 @@ let rec oiter out f sep = function
   | [e] -> f e
   | h :: t -> f h; out sep; oiter out f sep t
 
+let rec sfold f sep = function
+    [] -> ""
+  | [e] -> f e
+  | h :: t -> f h ^ sep ^ sfold f sep t

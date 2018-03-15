@@ -532,6 +532,18 @@ TACTIC EXTEND Hammer_tac
 | [ "hammer" ] -> [ hammer_tac () ]
 END
 
+let hammer_goal_features_tac () =
+  Proofview.Goal.nf_enter
+    begin fun gl ->
+      let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
+      Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
+      ltac_apply "idtac" []
+    end
+
+TACTIC EXTEND Hammer_goal_features_tac
+| [ "hammer_goal_features" ] -> [ hammer_goal_features_tac () ]
+END
+
 let hammer_cleanup () =
   Coq_transl.cleanup ();
   Features.cleanup ()
@@ -555,7 +567,7 @@ VERNAC COMMAND EXTEND Hammer_plugin_print CLASSIFIED AS QUERY
 | [ "Hammer_print" string(name) ] -> [ hammer_print name ]
 END
 
-let hammer_dump name0 =
+let hammer_transl name0 =
   try
     let glob = get_global name0 in
     let (_, def) = hhdef_of_global glob in
@@ -571,8 +583,32 @@ let hammer_dump name0 =
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
 
-VERNAC COMMAND EXTEND Hammer_plugin_dump CLASSIFIED AS QUERY
-| [ "Hammer_dump" string(name) ] -> [ hammer_dump name ]
+VERNAC COMMAND EXTEND Hammer_plugin_transl CLASSIFIED AS QUERY
+| [ "Hammer_transl" string(name) ] -> [ hammer_transl name ]
+END
+
+let hammer_features name =
+  try
+    let glob = get_global name in
+    let (_, def) = hhdef_of_global glob in
+    Msg.notice (Hhlib.sfold (fun x -> x) ", " (Features.get_def_features def))
+  with Not_found ->
+    Msg.error ("Not found: " ^ name)
+
+VERNAC COMMAND EXTEND Hammer_plugin_features CLASSIFIED AS QUERY
+| [ "Hammer_features" string(name) ] -> [ hammer_features name ]
+END
+
+let hammer_features_cached name =
+  try
+    let glob = get_global name in
+    let (_, def) = hhdef_of_global glob in
+    Msg.notice (Hhlib.sfold (fun x -> x) ", " (Features.get_def_features_cached def))
+  with Not_found ->
+    Msg.error ("Not found: " ^ name)
+
+VERNAC COMMAND EXTEND Hammer_plugin_features_cached CLASSIFIED AS QUERY
+| [ "Hammer_features_cached" string(name) ] -> [ hammer_features_cached name ]
 END
 
 let hammer_version () =
