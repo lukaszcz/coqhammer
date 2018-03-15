@@ -12,3 +12,4 @@ install-extra::
 
 clean::
 	rm -f predict htimeout
+	cd eval && $(MAKE) clean
