@@ -8,12 +8,17 @@ src/msg.ml
 src/timeout.ml
 src/coq_transl_opts.ml
 src/coqterms.ml
+src/coq_convert.mli
 src/coq_convert.ml
+src/tptp_out.mli
 src/tptp_out.ml
+src/coq_transl.mli
 src/coq_transl.ml
 src/opt.ml
 src/parallel.ml
+src/features.mli
 src/features.ml
+src/provers.mli
 src/provers.ml
 src/hammer.ml4
 src/hammer_plugin.mllib

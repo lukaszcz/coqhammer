@@ -118,31 +118,6 @@ let adjust_logops =
 (***************************************************************************************)
 (* Initialization *)
 
-let init (lst : hhdef list) =
-  let rec add_defs lst =
-    match lst with
-    | h :: t ->
-       begin
-	 defhash_add_lazy (get_hhdef_name h) (lazy (Coq_convert.to_coqdef h t));
-	 add_defs t
-       end
-    | [] ->
-        ()
-  in
-  defhash_clear ();
-  log 1 "Creating defhash...";
-  add_logop_defs ();
-  add_defs lst;
-  log 1 "Adjusting variable names...";
-  defhash_map adjust_varnames;
-  log 1 "Adjusting logical operators...";
-  defhash_map adjust_logops;
-  if opt_simpl then
-    begin
-      log 1 "Simplifying...";
-      defhash_map simpl;
-    end
-
 let reinit (lst : hhdef list) =
   let conv h t =
     let def = Coq_convert.to_coqdef h t in
@@ -1416,17 +1391,6 @@ let translate name =
   in
   clear_axioms ();
   axs
-
-let translate_all () =
-  axhash_clear ();
-  defhash_iter0
-    begin fun (name, _, _, _) ->
-      axhash_add name (translate name)
-    end
-
-let translate_lst lst =
-  axhash_clear ();
-  List.iter (fun name -> axhash_add name (translate name)) lst
 
 let retranslate lst =
   List.iter

@@ -191,5 +191,3 @@ let to_coqdef (def : hhdef) (lst : hhdef list) =
       (constrname, Const(constrname), to_coqterm (Lazy.force ty), to_coqsort kind)
   | _ ->
       failwith ("to_coqdef: " ^ get_hhdef_name def)
-
-let to_lazy_hhdefs lst = List.map (fun (x, y, z, u) -> (x, y, lazy z, lazy u)) lst
