@@ -1226,7 +1226,7 @@ and add_injection_axioms constr =
               ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
     | _ ->
       prop_to_formula ctx
-	(mk_impl
+        (mk_impl
            (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
               (mk_long_app (Const(constr)) (List.rev args2)))
            (join_left mk_and conjs))
@@ -1235,9 +1235,9 @@ and add_injection_axioms constr =
   | Prod(_) ->
      let ax =
        if !opt_closure_guards || opt_injectivity_guards then
-	 prop_to_formula [] (hlp ty ty [] [] [])
+         prop_to_formula [] (hlp ty ty [] [] [])
        else
-	 hlp2 [] ty ty [] [] []
+         hlp2 [] ty ty [] [] []
      in
      add_axiom (mk_axiom ("$_inj_" ^ constr) ax)
   | _ ->
@@ -1276,17 +1276,17 @@ and add_discrim_axioms constr1 constr2 =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       in
       mk_forall lname1 type_any (hlp2 ((lname1, lty1) :: ctx) lvalue1 ty2
-				   (Var(lname1) :: args1) args2)
+                                   (Var(lname1) :: args1) args2)
     | _, Prod(name2, lty2, value2) ->
       let lname2 = refresh_varname name2
       in
       let lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
       mk_forall lname2 type_any (hlp2 ((lname2, lty2) :: ctx) ty1 lvalue2
-				   args1 (Var(lname2) :: args2))
+                                   args1 (Var(lname2) :: args2))
     | _ ->
       prop_to_formula ctx
-	(mk_not
+        (mk_not
            (mk_eq
               (mk_long_app (Const(constr1)) (List.rev args1))
               (mk_long_app (Const(constr2)) (List.rev args2))))
@@ -1418,8 +1418,12 @@ let write_problem fname name deps =
   in
   let oc = open_out fname
   in
-  Tptp_out.write_fol_problem
-    (output_string oc)
-    (List.remove_assoc name axioms)
-    (name, List.assoc name axioms);
-  close_out oc
+  try
+    Tptp_out.write_fol_problem
+      (output_string oc)
+      (List.remove_assoc name axioms)
+      (name, List.assoc name axioms);
+    close_out oc
+  with e ->
+    close_out oc;
+    raise e

@@ -172,15 +172,19 @@ let run_predict fname defs pred_num pred_method =
       raise (HammerError ("Dependency prediction failed.\nPrediction command: " ^ cmd))
     end;
   let ic = open_in oname in
-  let predicts =
-    strset_from_lst
-      (Str.split (Str.regexp " ")
-         (try input_line ic with End_of_file ->
-           close_in ic; Sys.remove oname;
-           raise (HammerError "Predictor did not return advice.")))
-  in
-  close_in ic; Sys.remove oname;
-  List.filter (fun def -> StringSet.mem (get_hhdef_name def) predicts) defs
+  try
+    let predicts =
+      strset_from_lst
+        (Str.split (Str.regexp " ")
+           (try input_line ic with End_of_file ->
+             close_in ic; Sys.remove oname;
+             raise (HammerError "Predictor did not return advice.")))
+    in
+    close_in ic; Sys.remove oname;
+    List.filter (fun def -> StringSet.mem (get_hhdef_name def) predicts) defs
+  with e ->
+    close_in ic; Sys.remove oname;
+    raise e
 
 let clean fname =
   if not !Opt.debug_mode then

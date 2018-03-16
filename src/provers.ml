@@ -225,13 +225,15 @@ let predict deps1 hyps deps goal =
   let clean () =
     if not !Opt.debug_mode then
       begin
-	Sys.remove fname;
+	if Sys.file_exists fname then
+	  Sys.remove fname;
 	if Sys.file_exists ofname then
 	  Sys.remove ofname
       end
   in
   let call = if !Opt.parallel_mode then call_provers_par else call_provers
   in
+  at_exit clean;
   try
     let (pname, (deps, defs)) = call fname ofname in
     Msg.info (pname ^ " succeeded\n - dependencies: " ^ prn_lst deps ^

@@ -460,15 +460,22 @@ let do_predict hyps defs goal =
     let time = (float_of_int !Opt.atp_timelimit) *. 1.5
     in
     Msg.info ("Running provers (using " ^ string_of_int !Opt.gs_mode ^ " threads)...");
+    let clean () =
+      Features.clean fname;
+      if not !Opt.debug_mode then
+        begin (* a hack *)
+          ignore (Sys.command ("rm -f " ^ Filename.get_temp_dir_name () ^ "/coqhammer*"))
+        end
+    in
     let ret =
       try
         Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
       with e ->
-        Features.clean fname; raise e
+        clean (); raise e
     in
     match ret with
-    | None -> Features.clean fname; raise (HammerFailure "ATPs failed to find a proof")
-    | Some x -> Features.clean fname; x
+    | None -> clean (); raise (HammerFailure "ATPs failed to find a proof")
+    | Some x -> clean (); x
   else
     let defs1 = Features.predict hyps defs goal in
     Provers.predict defs1 hyps defs goal
