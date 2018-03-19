@@ -1,4 +1,4 @@
-CoqHammer 1.0.? for Coq 8.7
+CoqHammer 1.0.7 for Coq 8.7
 
 Requirements
 ------------
