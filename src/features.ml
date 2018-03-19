@@ -11,7 +11,7 @@ let extract_consts (t : hhterm) : string list =
           not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
       pom x (c :: acc)
     | Comb(Id x, Id c)
-        when (x = "$Const" || x = "$Ind" || x = "$Var") &&
+        when (x = "$Const" || x = "$Ind") &&
           not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
       (c :: acc)
     | Comb(x, y) ->
@@ -22,8 +22,8 @@ let extract_consts (t : hhterm) : string list =
 let rec top_feature = function
   | Comb(Comb(Id "$Construct", _), Id c)
   | Comb(Comb(Id "$Ind", Id c), _)
-  | Comb(Id "$Const", Id c)
-  | Comb(Id "$Var", Id c) -> c (* wouldn't "X" be better? *)
+  | Comb(Id "$Const", Id c) -> c
+  | Comb(Id "$Var", Id _) -> "X"
   | Comb(Id "$Rel", Id _) -> "X"
   | Comb(Comb(Id "$App", t), _) -> top_feature t
   | _ -> ""
@@ -38,7 +38,7 @@ let extract_features (t : hhterm) : string list =
           not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
       pom x (c :: acc)
     | Comb(Id x, Id c)
-        when (x = "$Const" || x = "$Ind" || x = "$Var") &&
+        when (x = "$Const" || x = "$Ind") &&
           not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
       (c :: acc)
     | Comb(Comb(Id "$App", Comb(Id "$Const", Id c)), args)
@@ -156,7 +156,7 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   fname
 
 let run_predict fname defs pred_num pred_method =
-  let oname = Filename.temp_file ("out" ^ pred_method ^ string_of_int pred_num) "" in
+  let oname = Filename.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in
   let cmd = !Opt.predict_path ^ " " ^ fname ^ "fea " ^ fname ^ "dep " ^
     fname ^ "seq -n " ^ string_of_int pred_num ^
     " -p " ^ pred_method ^ " 2>/dev/null < " ^ fname ^
