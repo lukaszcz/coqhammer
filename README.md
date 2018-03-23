@@ -43,6 +43,7 @@ Then, the available commands are as follows:
 command                          | description
 -------------------------------- | ------------------------------------
 `hammer`                         |  Runs the hammer tactic.
+`predict n`                      |  Prints n dependencies for the current goal predicted by the machine-learning premise selection.
 `Hammer_cleanup`                 |  Resets the hammer cache.
 `Hammer_export Dir "dir"`        |  Exports all visible objects to dir.
 `Hammer_version`                 |  Prints the version of CoqHammer.
@@ -208,6 +209,7 @@ command                          | description
 `Hammer_features "name"`         |  Prints the features of `name`, bypassing the cache.
 `Hammer_features_cached "name"`  |  Prints the features of `name`, using and possibly modifying the cache.
 `hammer_goal_features`           |  Prints the features of the current goal.
+`Hammer_objects`                 |  Prints the number of accessible objects.
 
 Copyright and license
 ---------------------

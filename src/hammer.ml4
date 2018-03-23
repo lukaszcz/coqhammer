@@ -368,7 +368,7 @@ let check_goal_prop gl =
   | _ -> false
 
 (***************************************************************************************)
-    
+
 let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fail =
   let tactics =
     [("Reconstr.htrivial", "Reconstr.shtrivial", 2 * !Opt.reconstr_timelimit / 5);
@@ -547,6 +547,63 @@ TACTIC EXTEND Hammer_tac
 | [ "hammer" ] -> [ hammer_tac () ]
 END
 
+let predict_tac n pred_method =
+  Proofview.Goal.nf_enter
+    begin fun gl ->
+      try
+        let goal = get_goal gl in
+        let hyps = get_hyps gl in
+        let defs = get_defs () in
+        if !Opt.debug_mode then
+          Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
+        if pred_method <> "knn" && pred_method <> "nbayes" then
+          Msg.error "Invalid prediction method"
+        else if n <= 0 then
+          Msg.error "The number of predictions must be positive"
+        else
+          begin
+            let old_pred_method = !Opt.predict_method
+            and old_n = !Opt.predictions_num in
+            Opt.predict_method := pred_method;
+            Opt.predictions_num := n;
+            let restore () =
+              Opt.predict_method := old_pred_method;
+              Opt.predictions_num := old_n
+            in
+            try
+              let defs1 = Features.predict hyps defs goal in
+              restore ();
+              Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
+            with e ->
+              restore (); raise e
+          end;
+        ltac_apply "idtac" []
+      with
+      | HammerError(msg) ->
+         Msg.error ("Hammer error: " ^ msg);
+        ltac_apply "idtac" []
+      | HammerFailure(msg) ->
+         Msg.error ("Hammer failed: " ^ msg);
+        ltac_apply "idtac" []
+      | Failure s ->
+         Msg.error ("CoqHammer bug: " ^ s);
+        Msg.error "Please report.";
+        ltac_apply "idtac" []
+      | Sys.Break ->
+         raise Sys.Break
+      | e ->
+         Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
+        ltac_apply "idtac" []
+    end
+
+TACTIC EXTEND Predict_tac_1
+| [ "predict" integer(n) ] -> [ predict_tac n !Opt.predict_method ]
+END
+
+TACTIC EXTEND Predict_tac_2
+| [ "predict" integer(n) string(pred_method) ] -> [ predict_tac n pred_method ]
+END
+
 let hammer_goal_features_tac () =
   Proofview.Goal.nf_enter
     begin fun gl ->
@@ -624,6 +681,13 @@ let hammer_features_cached name =
 
 VERNAC COMMAND EXTEND Hammer_plugin_features_cached CLASSIFIED AS QUERY
 | [ "Hammer_features_cached" string(name) ] -> [ hammer_features_cached name ]
+END
+
+let hammer_objects () =
+  Msg.info ("Found " ^ string_of_int (List.length (get_defs ())) ^ " accessible Coq objects.")
+
+VERNAC COMMAND EXTEND Hammer_plugin_objects CLASSIFIED AS QUERY
+| [ "Hammer_objects" ] -> [ hammer_objects () ]
 END
 
 let hammer_version () =
