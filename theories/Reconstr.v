@@ -4,15 +4,19 @@
 (* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 
-Require List Arith Bool.
+Require List Arith ZArith Bool.
 
 Inductive ReconstrT : Set := Empty : ReconstrT | AllHyps : ReconstrT.
 
 Create HintDb yhints discriminated.
 
-Hint Rewrite <- Peano.plus_n_O : yhints.
-Hint Rewrite <- Peano.mult_n_O : yhints.
+Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : yhints.
+Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : yhints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : yhints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : yhints.
+Hint Rewrite -> ZArith.BinInt.Z.add_0_r : yhints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : yhints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : yhints.
 Hint Rewrite -> List.in_app_iff : yhints.
 Hint Rewrite -> List.in_map_iff : yhints.
 Hint Rewrite -> List.in_inv : yhints.
@@ -286,19 +290,28 @@ Ltac simp0 f H :=
     | Some _ = Some _ => injection H; try clear H
     | ?F ?X = ?F ?Y =>
       (assert (X = Y); [ assumption | fail 1 ])
-      || (injection H;
+      || (injection H; try clear H;
           match goal with
-          | [ |- X = Y -> _ ] =>
-            try clear H; sintro tt; try subst
+          | [ |- _ = _ -> _ ] =>
+            sintro tt; try subst
           end)
     | ?F ?X ?U = ?F ?Y ?V =>
       (assert (X = Y); [ assumption
                        | assert (U = V); [ assumption | fail 1 ] ])
-      || (injection H;
-          match goal with
-          | [ |- U = V -> X = Y -> _ ] =>
-            try clear H; sintro tt; sintro tt; try subst
-          end)
+      || (injection H; try clear H;
+          repeat match goal with
+                 | [ |- _ = _ -> _ ] =>
+                   sintro tt; try subst
+                 end)
+    | ?F ?X ?U ?A = ?F ?Y ?V ?B =>
+      (assert (X = Y); [ assumption
+                       | assert (U = V); [ assumption |
+                                           assert (A = B); [ assumption | fail 1 ] ]])
+      || (injection H; try clear H;
+          repeat match goal with
+                 | [ |- _ = _ -> _ ] =>
+                   sintro tt; try subst
+                 end)
     | existT _ _ _ = existT _ _ _ => inversion H; try clear H
     | forall x : ?T1, ?A /\ ?B =>
       cut (forall x : T1, A);
@@ -1129,7 +1142,6 @@ Ltac ycrush := solve [ yisolve | eauto with yhints | docrush ].
 
 Ltac scrush0 :=
   sauto; forward_reasoning 2; sauto; repeat instering; sauto; try yelles 1;
-  try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try congruence;
   try match goal with
       | [ H : _ |- _ ] =>
@@ -1140,6 +1152,7 @@ Ltac scrush0 :=
         isPropAtom T; yinversion H; cbn in *; try subst; simp_hyps; eauto with yhints; yelles 1
       end;
   try yelles 2;
+  try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try ymeauto 0.
 
 Ltac scrush := solve [ yisolve | eauto with yhints | scrush0 ].

@@ -604,7 +604,7 @@ TACTIC EXTEND Predict_tac_2
 | [ "predict" integer(n) string(pred_method) ] -> [ predict_tac n pred_method ]
 END
 
-let hammer_goal_features_tac () =
+let hammer_features_tac () =
   Proofview.Goal.nf_enter
     begin fun gl ->
       let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
@@ -612,8 +612,8 @@ let hammer_goal_features_tac () =
       ltac_apply "idtac" []
     end
 
-TACTIC EXTEND Hammer_goal_features_tac
-| [ "hammer_goal_features" ] -> [ hammer_goal_features_tac () ]
+TACTIC EXTEND Hammer_features_tac
+| [ "hammer_features" ] -> [ hammer_features_tac () ]
 END
 
 let hammer_cleanup () =
