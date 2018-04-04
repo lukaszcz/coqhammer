@@ -492,13 +492,41 @@ let try_scrush () =
 
 (***************************************************************************************)
 
+let try_tactic f =
+  try
+    f ()
+  with
+  | HammerError(msg) ->
+     Msg.error ("Hammer error: " ^ msg);
+    ltac_apply "idtac" []
+  | HammerFailure(msg) ->
+     Msg.error ("Hammer failed: " ^ msg);
+    ltac_apply "idtac" []
+  | Failure s ->
+     Msg.error ("CoqHammer bug: " ^ s);
+    Msg.error "Please report.";
+    ltac_apply "idtac" []
+  | Sys.Break ->
+     raise Sys.Break
+  | e ->
+     Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
+    ltac_apply "idtac" []
+
+let try_goal_tactic f =
+  Proofview.Goal.nf_enter
+    begin fun gl ->
+      try_tactic (fun () -> f gl)
+    end
+
+(***************************************************************************************)
+
 let hammer_tac () =
   Proofview.Goal.nf_enter
     begin fun gl ->
         Proofview.tclOR
           (try_scrush ())
           begin fun _ ->
-            try
+            try_tactic begin fun () ->
               let goal = get_goal gl in
               let hyps = get_hyps gl in
               let defs = get_defs () in
@@ -524,22 +552,7 @@ let hammer_tac () =
                 begin fun () ->
                   Msg.error ("Hammer failed to solve the goal.")
                 end
-            with
-            | HammerError(msg) ->
-               Msg.error ("Hammer error: " ^ msg);
-              ltac_apply "idtac" []
-            | HammerFailure(msg) ->
-               Msg.error ("Hammer failed: " ^ msg);
-              ltac_apply "idtac" []
-            | Failure s ->
-               Msg.error ("CoqHammer bug: " ^ s);
-              Msg.error "Please report.";
-              ltac_apply "idtac" []
-            | Sys.Break ->
-               raise Sys.Break
-            | e ->
-               Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
-              ltac_apply "idtac" []
+            end
           end
     end
 
@@ -548,52 +561,35 @@ TACTIC EXTEND Hammer_tac
 END
 
 let predict_tac n pred_method =
-  Proofview.Goal.nf_enter
+  try_goal_tactic
     begin fun gl ->
-      try
-        let goal = get_goal gl in
-        let hyps = get_hyps gl in
-        let defs = get_defs () in
-        if !Opt.debug_mode then
-          Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
-        if pred_method <> "knn" && pred_method <> "nbayes" then
-          Msg.error "Invalid prediction method"
-        else if n <= 0 then
-          Msg.error "The number of predictions must be positive"
-        else
-          begin
-            let old_pred_method = !Opt.predict_method
-            and old_n = !Opt.predictions_num in
-            Opt.predict_method := pred_method;
-            Opt.predictions_num := n;
-            let restore () =
-              Opt.predict_method := old_pred_method;
-              Opt.predictions_num := old_n
-            in
-            try
-              let defs1 = Features.predict hyps defs goal in
-              restore ();
-              Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
-            with e ->
-              restore (); raise e
-          end;
-        ltac_apply "idtac" []
-      with
-      | HammerError(msg) ->
-         Msg.error ("Hammer error: " ^ msg);
-        ltac_apply "idtac" []
-      | HammerFailure(msg) ->
-         Msg.error ("Hammer failed: " ^ msg);
-        ltac_apply "idtac" []
-      | Failure s ->
-         Msg.error ("CoqHammer bug: " ^ s);
-        Msg.error "Please report.";
-        ltac_apply "idtac" []
-      | Sys.Break ->
-         raise Sys.Break
-      | e ->
-         Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
-        ltac_apply "idtac" []
+      let goal = get_goal gl in
+      let hyps = get_hyps gl in
+      let defs = get_defs () in
+      if !Opt.debug_mode then
+        Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
+      if pred_method <> "knn" && pred_method <> "nbayes" then
+        Msg.error "Invalid prediction method"
+      else if n <= 0 then
+        Msg.error "The number of predictions must be positive"
+      else
+        begin
+          let old_pred_method = !Opt.predict_method
+          and old_n = !Opt.predictions_num in
+          Opt.predict_method := pred_method;
+          Opt.predictions_num := n;
+          let restore () =
+            Opt.predict_method := old_pred_method;
+            Opt.predictions_num := old_n
+          in
+          try
+            let defs1 = Features.predict hyps defs goal in
+            restore ();
+            Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
+          with e ->
+            restore (); raise e
+        end;
+      ltac_apply "idtac" []
     end
 
 TACTIC EXTEND Predict_tac_1
@@ -605,7 +601,7 @@ TACTIC EXTEND Predict_tac_2
 END
 
 let hammer_features_tac () =
-  Proofview.Goal.nf_enter
+  try_goal_tactic
     begin fun gl ->
       let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
@@ -645,7 +641,7 @@ let hammer_transl name0 =
     let (_, def) = hhdef_of_global glob in
     let name = Hh_term.get_hhdef_name def in
     Coq_transl.remove_def name;
-    Coq_transl.reinit [def];
+    Coq_transl.reinit (def :: get_defs ());
     List.iter
       begin fun (n, a) ->
         if not (Hhlib.string_begins_with n "_HAMMER_") then
@@ -657,6 +653,28 @@ let hammer_transl name0 =
 
 VERNAC COMMAND EXTEND Hammer_plugin_transl CLASSIFIED AS QUERY
 | [ "Hammer_transl" string(name) ] -> [ hammer_transl name ]
+END
+
+let hammer_transl_tac () =
+  try_goal_tactic
+    begin fun gl ->
+      let goal = get_goal gl in
+      let hyps = get_hyps gl in
+      let defs = get_defs () in
+      let name = Hh_term.get_hhdef_name goal in
+      Coq_transl.remove_def name;
+      List.iter (fun d -> Coq_transl.remove_def (Hh_term.get_hhdef_name d)) hyps;
+      Coq_transl.reinit (goal :: hyps @ defs);
+      List.iter
+        begin fun (n, a) ->
+          Msg.notice (n ^ ": " ^ Coqterms.string_of_coqterm a)
+        end
+        (Coq_transl.translate name);
+      ltac_apply "idtac" []
+    end
+
+TACTIC EXTEND Hammer_plugin_transl_tac
+| [ "hammer_transl" ] -> [ hammer_transl_tac () ]
 END
 
 let hammer_features name =
