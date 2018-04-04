@@ -156,10 +156,10 @@ Inductive big_step : cmd * state -> state -> Prop :=
     bval s1 b = true -> big_step (c, s1) s2 -> big_step (While b c, s2) s3 ->
     big_step (While b c, s1) s3.
 
-Notation "A => B" := (big_step A B) (at level 80, no associativity).
+Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 
-Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) => s' <->
-                                            (Seq (Seq c1 c2) c3, s) => s'.
+Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
+                                            (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
   sauto.
   Reconstr.hobvious Reconstr.AllHyps
@@ -174,7 +174,7 @@ Proof.
   pose SeqSem; scrush.
 Qed.
 
-Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) => s' <-> (c2, s) => s'.
+Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
 
 Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
@@ -204,10 +204,10 @@ Proof.
   intro H; inversion H; pose WhileTrue; pose WhileFalse; scrush.
 Qed.
 
-Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) => s' -> c ~~ c' ->
-                                               (While b c', s) => s'.
+Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
+                                               (While b c', s) ==> s'.
 Proof.
-  assert (forall p s', p => s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) => s').
+  assert (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s').
   intros p s' H.
   induction H; sauto.
   pose WhileFalse; scrush.
@@ -226,7 +226,7 @@ Proof.
 Qed.
 
 Lemma lem_big_step_deterministic :
-  forall c s s1 s2, (c, s) => s1 -> (c, s) => s2 -> s1 = s2.
+  forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
   intros c s s1 s2 H.
   revert s2.
@@ -296,7 +296,7 @@ Proof.
   pose_rt; scrush.
 Qed.
 
-Lemma lem_big_to_small : forall p s', p => s' -> p -->* (Skip, s').
+Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').
 Proof.
   intros p s' H.
   induction H as [ | | | | | | b c s1 s2 ]; try yelles 1.
@@ -316,7 +316,7 @@ Proof.
   pose_rt; pose SeqSemS1; scrush.
 Qed.
 
-Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' => s -> p => s.
+Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
   induction H; try yelles 1.
@@ -338,7 +338,7 @@ Proof.
 		    (@equiv_cmd).
 Qed.
 
-Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' => s -> p => s.
+Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
   induction H; sauto.
@@ -347,9 +347,9 @@ Proof.
 		    Reconstr.Empty.
 Qed.
 
-Lemma lem_small_to_big : forall p s, p -->* (Skip, s) -> p => s.
+Lemma lem_small_to_big : forall p s, p -->* (Skip, s) -> p ==> s.
 Proof.
-  assert (forall p p', p -->* p' -> forall s, p' = (Skip, s) -> p => s).
+  assert (forall p p', p -->* p' -> forall s, p' = (Skip, s) -> p ==> s).
   intros p p' H.
   induction H; sauto.
   Reconstr.hobvious Reconstr.AllHyps
@@ -361,7 +361,7 @@ Proof.
   scrush.
 Qed.
 
-Corollary cor_big_iff_small : forall p s, p => s <-> p -->* (Skip, s).
+Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
   Reconstr.hobvious Reconstr.Empty
 		    (@lem_small_to_big, @lem_big_to_small)
