@@ -1,6 +1,6 @@
 (* Coq v8.7 required *)
 (* author: Lukasz Czajka *)
-(* This file contains fragments of the "crush" tactic by Adam Chlipala. *)
+(* This file contains fragments inspired by the "crush" tactic of Adam Chlipala. *)
 (* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 
