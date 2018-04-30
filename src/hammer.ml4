@@ -152,7 +152,7 @@ let get_type_of env evmap t =
 (* only for constants *)
 let hhproof_of c =
   begin match Global.body_of_constant c with
-  | Some b -> hhterm_of b
+  | Some b -> hhterm_of (fst b)
   | None -> mk_id "$Axiom"
   end
 
@@ -279,7 +279,7 @@ let get_defs () : Hh_term.hhdef list =
                   (List.map hhdef_of_global (my_search ())))
 
 let get_tactic (s : string) =
-  (Nametab.locate_tactic (Libnames.qualid_of_string s))
+  (Tacenv.locate_tactic (Libnames.qualid_of_string s))
 
 let get_tacexpr tac args =
   Tacexpr.TacArg(None,
@@ -292,12 +292,12 @@ let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
 
 let ltac_lcall tac args =
   Tacexpr.TacArg(None,
-                 Tacexpr.TacCall(None, (ArgVar(None, Id.of_string tac),args)))
+                 Tacexpr.TacCall(None, (ArgVar CAst.(make @@ Id.of_string tac),args)))
 
 let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
   let fold arg (i, vars, lfun) =
     let id = Id.of_string ("x" ^ string_of_int i) in
-    let x = Tacexpr.Reference (ArgVar (None, id)) in
+    let x = Tacexpr.Reference (ArgVar CAst.(make @@ id)) in
     (succ i, x :: vars, Id.Map.add id arg lfun)
   in
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
