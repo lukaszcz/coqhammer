@@ -2,7 +2,7 @@
    (a random thread receives the SIGALRM signal instead of the thread
    which set it up using Unix.alarm). This file contains a more
    correct version, but it may still fail to work sometimes. *)
-
+   
 let my_timeout n f e =
   let killed = ref false in
   let exited = ref false in
@@ -52,13 +52,8 @@ let my_timeout n f e =
      let e = Backtrace.add_backtrace e in
      restore_timeout ();
      Exninfo.iraise e
+	 
 
-type timeout = { timeout : 'a. int -> (unit -> 'a) -> exn -> 'a }
-
-let timeout_fun = ref { timeout = my_timeout }
-
-let set_timeout f = timeout_fun := f
-
-let tclTIMEOUT n t = 
-  set_timeout { timeout = my_timeout };
+let tclTIMEOUT n t =
   Proofview.tclTIMEOUT n t
+
