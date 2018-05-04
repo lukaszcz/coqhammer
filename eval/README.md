@@ -63,7 +63,7 @@ directory. The idea is that evaluation on these files should not take
 too long, and should cover many common use cases for the hammer tool.
 
 To perform an evaluation on these test files, first run
-`./gen-tests.sh` in the `eval/` directory. This will generate ATP
+`./gen-tests.sh N` in the `eval/` directory. This will generate ATP
 problems from the test files and put them in the `atp/problems/`
 directory. Then do the steps 7 and 8 from above.
 
