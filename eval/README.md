@@ -40,17 +40,32 @@ Otherwise follow all steps.
 
 6. `./gen-atp.sh N`
 
+   After running this command the generated ATP problems are in the
+   `atp/problems/` directory.
+
 7. `cd atp && ./run-provers.sh N [your.mail@mail.com]`
 
    The script `atp/run-provers.sh` should be edited when adding or
    changing the (versions of) ATP provers used in the evaluation. When
-   adding new ATPs also the `hammer_hook` code in [`src/hammer.ml4`](../src/hammer.ml4)
-   should be edited.
+   adding new ATPs also the `hammer_hook` code in
+   [`src/hammer.ml4`](../src/hammer.ml4) should be edited.
 
 8. `./run-reconstr.sh N`
 
 After executing these steps, the reconstruction results are in the
 `out/` directory. The ATP results are in the `atp/o/` directory.
+
+How to perform evaluation on standard test files?
+-------------------------------------------------
+
+Some hand-picked standard test files are present in the `tests/`
+directory. The idea is that evaluation on these files should not take
+too long, and should cover many common use cases for the hammer tool.
+
+To perform an evaluation on these test files, first run
+`./gen-tests.sh` in the `eval/` directory. This will generate ATP
+problems from the test files and put them in the `atp/problems/`
+directory. Then do the steps 7 and 8 from above.
 
 Tools
 -----

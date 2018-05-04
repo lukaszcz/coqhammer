@@ -18,12 +18,15 @@ logs/check/%.log: problems/%.v
 atp: $(patsubst problems/%.v,logs/atp/%.log,$(FFILES))
 logs/atp/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	coqc "$<" > "$@" 2>&1
+	coqc -I tests "$<" > "$@" 2>&1
 
 reconstr: $(patsubst problems/%.v,logs/reconstr/%.log,$(FFILES))
 logs/reconstr/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	coqc "$<" > "$@" 2>&1
+	coqc -I tests "$<" > "$@" 2>&1
+
+tests:
+	cd tests && $(MAKE) clean && $(MAKE)
 
 clean-vo:
 	rm -f $(OFILES)
@@ -31,8 +34,11 @@ clean-vo:
 clean: clean-vo
 	rm -rf logs coqhammer.opt check.log gen_atp.log
 	cd tools && $(MAKE) clean
+	cd tests && $(MAKE) clean
 
 clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/.%.aux,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
+
+.PHONY: tests
