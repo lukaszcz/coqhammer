@@ -61,22 +61,21 @@ Lemma program_contains_counts_occ:
 Proof.
   induction P.
   * scrush.
-  * intros.
+  * hammer_hook "JaProgram" "JaProgram.program_contains_counts_occ.subgoal_0". Undo.
+    intros.
     destruct a.
     destruct (JFClassName_dec D D0).
-    ** subst.
+    ** hammer_hook "JaProgram" "JaProgram.program_contains_counts_occ.subgoal_1". Undo.
+       subst.
        rewrite map_cons.
        unfold is_class_name.
        destruct (JFClassName_dec D0 D0); try contradiction.
-       rewrite count_occ_cons_eq; auto. 
+       hammer_hook "JaProgram" "JaProgram.program_contains_counts_occ.subgoal_1_1". Undo.
+       rewrite count_occ_cons_eq; auto.
+       hammer_hook "JaProgram" "JaProgram.program_contains_counts_occ.subgoal_1_2". Undo.
        auto with zarith.
-    ** rewrite map_cons.
-       unfold is_class_name.
-       destruct (JFClassName_dec D0 D); subst; try contradiction.
-       rewrite count_occ_cons_neq; auto.
-       fold (is_class_name D).
-       apply IHP;eauto.
-       eapply program_contains_further_neq;eauto.
+    ** hammer_hook "JaProgram" "JaProgram.program_contains_counts_occ.subgoal_2". Undo.
+       scrush.
 Qed.
 
 (** The property to check that class name [cname] occurs only once in the program [P]. *)
@@ -88,25 +87,7 @@ Lemma in_head_not_in_tail:
     (is_class_name cname cdecl) = true ->
     name_once (cdecl :: P) cname -> ~ name_once P cname.
 Proof.
-  induction P.
-  * intros.
-    compute.
-    intro.
-    discriminate H1.
-  * intros.
-    unfold name_once in H0.
-    rewrite map_cons in H0.
-    rewrite H in H0.
-    rewrite count_occ_cons_eq in H0.
-    set (XX := (count_occ Bool.bool_dec (map (is_class_name cname) (a :: P)) true)) in H0.
-    injection H0.
-    intros.
-    unfold XX in *.
-    intro.
-    unfold name_once in H2.
-    rewrite H1 in H2.
-    discriminate H2.
-    auto.
+  induction P; scrush.
 Qed.
 
 Lemma name_once_further:
@@ -114,14 +95,7 @@ Lemma name_once_further:
   C<>D ->
   name_once (JFCDecl C ex fields methods :: P) D -> name_once P D.
 Proof.
-  intros.
-  unfold name_once in H0.
-  rewrite map_cons in H0.
-  rewrite is_class_name_neq in H0.
-  rewrite count_occ_cons_neq in H0.
-  auto.
-  auto.
-  auto.
+  scrush.
 Qed.
 
 Lemma name_once_further_neq:
@@ -130,10 +104,8 @@ Lemma name_once_further_neq:
     name_once P D ->
     name_once (JFCDecl C ex ms fs :: P) D.
 Proof.
-  intros.
-  unfold name_once in *.
-  rewrite map_cons.
-  rewrite is_class_name_neq; auto.
+  hammer_hook "JaProgram" "JaProgram.name_once_further_neq". Undo.
+  unfold name_once; scrush.
 Qed.
 
 Lemma name_once_further_eq:
@@ -141,11 +113,8 @@ Lemma name_once_further_eq:
     count_occ Bool.bool_dec (map (is_class_name C) P) true = 0%nat ->
     name_once (JFCDecl C ex fields methods :: P) C.
 Proof.
-  unfold name_once.
-  intros.
-  rewrite map_cons.
-  rewrite is_class_name_name.
-  rewrite count_occ_cons_eq; auto.
+  hammer_hook "JaProgram" "JaProgram.name_once_further_eq". Undo.
+  unfold name_once; scrush.
 Qed.
 
 Lemma count_occ_zero_is_class_name_false:
@@ -154,33 +123,8 @@ Lemma count_occ_zero_is_class_name_false:
     In cdecl P ->
     is_class_name cname cdecl = false.
 Proof.
-  induction P.
-  * intros.
-    unfold In in H0.
-    tauto.
-  * intros.
-    apply in_inv in H0.
-    destruct H0.
-    - rewrite H0 in *.
-      rewrite map_cons in H.
-      apply <- count_occ_not_In in H.
-      apply not_in_cons in H.
-      destruct H.
-      destruct (is_class_name cname cdecl).
-      + tauto.
-      + auto.
-    - apply IHP.
-      rewrite map_cons in H.
-      assert (is_class_name cname a <> true).
-      apply <- count_occ_not_In in H.
-      apply not_in_cons in H.
-      intuition.
-      rewrite <- (count_occ_cons_neq  Bool.bool_dec (map (is_class_name cname) P) H1).
-      auto.
-      trivial.
+  induction P; scrush.
 Qed.
-
-
 
 (** The property to check that declaraion [cdecl] occurs only once in the program [P]. *)
 Definition decl_once (P:JFProgram) (cdecl:JFClassDeclaration) :=
@@ -193,10 +137,10 @@ Lemma count_occ_zero_decl_once:
     count_occ Bool.bool_dec (map (is_class_name C) P) true = 0%nat ->                                                         
     decl_once (JFCDecl C ex ms fs :: P) (JFCDecl C ex1 ms1 fs1).
 Proof.
-  intros.
-  unfold decl_once.
-  apply name_once_further_eq.
-  auto.
+  hammer_hook "JaProgram" "JaProgram.count_occ_zero_decl_once". Undo.
+  Reconstr.hobvious Reconstr.Empty
+		    (@name_once_further_eq)
+		    (@decl_once).
 Qed.
 
 Lemma decl_in_head_not_in_tail:
@@ -205,19 +149,8 @@ Lemma decl_in_head_not_in_tail:
     (decl_once (cdecl :: P) cdecl) ->
     ~ (decl_once P cdecl).
 Proof.
-  intros.
-  unfold decl_once in *.
-  destruct cdecl.
-  unfold is_class_name in H.
-  destruct (JFClassName_dec D cname).
-  rewrite e in *.
-  apply (in_head_not_in_tail P cname (JFCDecl cname ex fields methods)).
-  apply is_class_name_name.
-  auto.
-  discriminate H.
+  scrush.
 Qed.
-
-
 
 Lemma decl_in_head_false_in_tail:
   forall (P:JFProgram) (cname:JFClassName) (cdecl:JFClassDeclaration),
@@ -225,19 +158,24 @@ Lemma decl_in_head_false_in_tail:
     (decl_once (cdecl :: P) cdecl) ->
     Forall (fun x0 => is_class_name cname x0 = false) P.
 Proof.
+  hammer_hook "JaProgram" "JaProgram.decl_in_head_false_in_tail". Undo.
   intros.
   unfold decl_once in *.
   destruct cdecl.
   apply is_class_name_equal in H.
-  rewrite H in *.
+  subst.
   unfold name_once in H0.
+  hammer_hook "JaProgram" "JaProgram.decl_in_head_false_in_tail.subgoal_0_1". Undo.
   rewrite map_cons in H0.
   rewrite is_class_name_name in H0.
   rewrite count_occ_cons_eq in H0; auto.
+  hammer_hook "JaProgram" "JaProgram.decl_in_head_false_in_tail.subgoal_0_2". Undo.
   injection H0; intros.
   apply Forall_forall.
-  intros.
-  eapply count_occ_zero_is_class_name_false; try apply H1; auto.
+  hammer_hook "JaProgram" "JaProgram.decl_in_head_false_in_tail.subgoal_0_3". Undo.
+  Reconstr.hobvious (@H)
+		    (@count_occ_zero_is_class_name_false)
+		    Reconstr.Empty.
 Qed.
 
 Lemma decs_once_monotone:
@@ -252,13 +190,9 @@ Proof.
   unfold decl_once.
   destruct ddecl.
   unfold decl_once in H.
+  hammer_hook "JaProgram" "JaProgram.decs_once_monotone.subgoal_0". Undo.
   destruct cdecl.
-  apply is_class_name_equal in H0.
-  rewrite H0 in *.
-  eapply name_once_further.
-  apply is_class_name_nequal in H1.
-  apply H1.
-  apply H.
+  scrush.
 Qed.
   
 (** The property that all class names occur in the program uniquely. *)
@@ -270,14 +204,7 @@ Lemma names_unique_zero:
     names_unique (JFCDecl D ex fields methods :: P) ->
     count_occ Bool.bool_dec (map (is_class_name D) P) true = 0%nat.
 Proof.
-  intros.
-  unfold names_unique in H.
-  apply Forall_inv in H.
-  unfold decl_once in H.
-  unfold name_once in H.
-  rewrite map_cons in H.
-  rewrite is_class_name_name in H.
-  rewrite count_occ_cons_eq in H; auto.
+  scrush.
 Qed.
 
 Lemma names_unique_compose:
@@ -286,28 +213,30 @@ Lemma names_unique_compose:
     names_unique P ->
     names_unique (JFCDecl C ex ms fs::P).
 Proof.
+  hammer_hook "JaProgram" "JaProgram.names_unique_compose". Undo.
   intros.
   unfold names_unique.
   apply Forall_cons.
-  + apply count_occ_zero_decl_once.
-    auto.
-  + apply Forall_forall.
+  + hammer_hook "JaProgram" "JaProgram.names_unique_compose.subgoal_1". Undo.
+    Reconstr.htrivial (@H)
+		      (@count_occ_zero_decl_once)
+		      Reconstr.Empty.
+  + hammer_hook "JaProgram" "JaProgram.names_unique_compose.subgoal_2". Undo.
+    apply Forall_forall.
     intros.
     unfold names_unique in H0.
+    hammer_hook "JaProgram" "JaProgram.names_unique_compose.subgoal_2_1". Undo.
     assert (forall y, In y P -> (decl_once P) y).
-    apply (Forall_forall (decl_once P) P).
-    auto.
+    hammer_hook "JaProgram" "JaProgram.names_unique_compose.assert_1". Undo.
+    Reconstr.hobvious (@H0, @H)
+		      (@Coq.Lists.List.Forall_forall)
+                      Reconstr.Empty.
     destruct x.
-    assert (is_class_name C (JFCDecl D ex0 fields methods) = false).
-    eapply count_occ_zero_is_class_name_false.
-    apply H.
-    auto.
+    assert (is_class_name C (JFCDecl D ex0 fields methods) = false) by scrush.
     apply (is_class_name_nequal) in H3.
     unfold decl_once.
-    apply name_once_further_neq; auto.
-    assert (decl_once P (JFCDecl D ex0 fields methods)).
-    apply H2; auto.
-    unfold decl_once in H4; auto.
+    hammer_hook "JaProgram" "JaProgram.names_unique_compose.subgoal_2_2". Undo.
+    apply name_once_further_neq; scrush.
 Qed.
 
 Lemma names_unique_further:
@@ -315,18 +244,19 @@ Lemma names_unique_further:
     names_unique (cdecl::P) ->
     names_unique P.
 Proof.
+  hammer_hook "JaProgram" "JaProgram.names_unique_further". Undo.
   intros.
   unfold names_unique in H.
   inversion H.
   unfold names_unique.
   assert (forall x, In x P -> (decl_once P) x).
+  hammer_hook "JaProgram" "JaProgram.names_unique_further.assert_1". Undo.
   intros.
   assert (forall x, In x P -> (decl_once (cdecl :: P)) x).
+  hammer_hook "JaProgram" "JaProgram.names_unique_further.assert_2". Undo.
   apply -> (Forall_forall (decl_once (cdecl :: P)) P).
   auto.
-  assert (decl_once (cdecl :: P) x0).
-  apply H5.
-  auto.
+  assert (decl_once (cdecl :: P) x0) by scrush.
   destruct cdecl.
   apply (decs_once_monotone P (JFCDecl D ex fields methods) x0 D).
   auto.
@@ -335,15 +265,17 @@ Proof.
   auto.
   tauto.
   assert (Forall (fun x0 => is_class_name D x0 = false) P).
+  hammer_hook "JaProgram" "JaProgram.names_unique_further.assert_3". Undo.
   apply (decl_in_head_false_in_tail P D (JFCDecl D ex fields methods)).
   unfold is_class_name.
   destruct (JFClassName_dec D D);auto.
   auto.
   assert (forall x, In x P -> (is_class_name D x = false)).
+  hammer_hook "JaProgram" "JaProgram.names_unique_further.assert_4". Undo.
   apply Forall_forall.
   auto.
-  apply H8.
-  auto.
+  scrush.
+  hammer_hook "JaProgram" "JaProgram.names_unique_further.subgoal_0". Undo.
   apply Forall_forall.
   auto.
 Qed.
@@ -354,78 +286,11 @@ Lemma names_unique_decompose_program:
     names_unique P2.
 Proof.
   induction P1.
-  + intros.
-    simpl in *.
-    auto.
-  + intros.
-    simpl in H.
-    unfold names_unique in H.
-    apply IHP1.
-    unfold names_unique.
-    assert (forall x, In x (a :: P1 ++ P2) -> (decl_once (a :: P1 ++ P2)) x)
-      by (apply -> Forall_forall;auto).
-    apply <- Forall_forall.
-    intros.
-    destruct (JFClassName_dec (name_of_cd a) (name_of_cd x)).
-    ++ subst.
-       assert (decl_once (a :: P1 ++ P2) a) by eauto using in_eq.
-       assert (decl_once (a :: P1 ++ P2) x).
-       {
-         unfold decl_once.
-         unfold decl_once in H2.
-         destruct x.
-         destruct a.
-         simpl in e.
-         rewrite <- e.
-         auto.
-       }
-       assert (decl_once (x :: P1 ++ P2) x).
-       {
-         unfold decl_once.
-         unfold decl_once in H3.
-         destruct x.
-         destruct a.
-         simpl in e.
-         rewrite e in H3.
-         unfold name_once.
-         unfold name_once in H3.
-         simpl in H3.
-         simpl.
-         auto.
-       }
-       assert (~ decl_once (P1 ++ P2) x).
-       {
-         apply (decl_in_head_not_in_tail (P1 ++ P2) (name_of_cd x)).
-         apply is_class_name_name_cd; auto.
-         auto.
-       } 
-       destruct x.
-       assert (In (is_class_name D (JFCDecl D ex fields methods))
-                  (map (is_class_name D) (P1 ++ P2))) by eauto using in_map.
-       assert (count_occ Bool.bool_dec (map (is_class_name D) (P1 ++ P2))
-                         (is_class_name D (JFCDecl D ex fields methods)) > 0)
-         by (apply count_occ_In; eauto).
-       unfold decl_once in H4.
-       unfold name_once in H4.
-       simpl in H4.
-       simpl in H7.
-       destruct (JFClassName_dec D D);try contradiction.
-       destruct (Bool.bool_dec true true);try contradiction.
-       injection H4;intros.
-       rewrite H8 in H7.
-       apply gt_irrefl in H7.
-       contradiction.
-    ++ eapply decs_once_monotone.
-       apply H0.
-       apply in_cons;auto.
-       apply is_class_name_name_cd.
-       unfold is_class_name.
-       destruct x.
-       destruct (JFClassName_dec D (name_of_cd a)).
-       +++ rewrite <-  e in n.
-           simpl in n.
-           contradiction.
-       +++ trivial.
+  + scrush.
+  + hammer_hook "JaProgram" "JaProgram.names_unique_decompose_program.subgoal_2". Undo.
+    Reconstr.hobvious (@IHP1)
+		      (@names_unique_compose, @names_unique_further, @Coq.Lists.List.app_comm_cons)
+		      (@names_unique).
 Qed.
 
 Lemma names_unique_further_further:
@@ -435,18 +300,11 @@ Lemma names_unique_further_further:
 Proof.
   intros.
   destruct cdecl.
-  apply  names_unique_compose.
-  - apply (names_unique_zero P D ex fields methods).
-    apply (names_unique_compose).
-    assert (count_occ Bool.bool_dec (map (is_class_name D) (ddecl :: P)) true = 0).
-    apply (names_unique_zero (ddecl :: P) D ex fields methods).
-    auto.
-    rewrite map_cons in H0.
-    destruct (is_class_name D ddecl).
-    rewrite count_occ_cons_eq in H0; discriminate H0; auto.
-    rewrite count_occ_cons_neq in H0; auto.
+  hammer_hook "JaProgram" "JaProgram.names_unique_further_further.subgoal_0". Undo.
+  apply names_unique_compose.
+  - scrush.
+  - hammer_hook "JaProgram" "JaProgram.names_unique_further_further.subgoal_2". Undo.
     eauto using names_unique_further.
-  - eauto using names_unique_further.
 Qed.
 
 Lemma count_zero_count_nzero:
@@ -457,20 +315,19 @@ Lemma count_zero_count_nzero:
          False.
 Proof.
   induction CC; intros.
-  - rewrite count_occ_nil in H.
-    assert (0<>0).
-    apply Lt.lt_0_neq.
-    auto.
-    tauto.
-  - destruct a.
+  - scrush.
+  - hammer_hook "JaProgram" "JaProgram.names_unique_further_further.subgoal_2". Undo.
+    destruct a.
     destruct (JFClassName_dec D cname).
-    + rewrite e in *.
+    + hammer_hook "JaProgram" "JaProgram.names_unique_further_further.subgoal_2_1". Undo.
+      rewrite e in *.
       rewrite map_cons in H0.
       rewrite is_class_name_name in H0.
       rewrite count_occ_cons_eq in H0.
       discriminate H0.
       auto.
-    + rewrite map_cons in H0.
+    + hammer_hook "JaProgram" "JaProgram.names_unique_further_further.subgoal_2_2". Undo.
+      rewrite map_cons in H0.
       rewrite is_class_name_neq in H0.
       rewrite count_occ_cons_neq in H0.
       rewrite count_occ_cons_neq in H.
@@ -487,23 +344,7 @@ Lemma names_unique_find_class_unique:
          find_class P cname = Some C' ->
          C = C'.
 Proof.
-  induction P.
-  + intros.
-    simpl in H0.
-    discriminate H0.
-  + intros.
-    destruct a.
-    destruct (JFClassName_dec cname D).
-    ++ subst.
-       simpl in H1.
-       simpl in H0.
-       destruct (string_dec D D); try contradiction.
-       rewrite H0 in *.
-       injection H1.
-       tauto.
-    ++ apply find_class_further_neq in H0; auto.
-       apply find_class_further_neq in H1; auto.
-       eapply IHP;eauto using names_unique_further.
+  induction P; scrush.
 Qed.
   
 Hint Resolve names_unique_zero names_unique_compose names_unique_further names_unique_further_further names_unique_decompose_program count_zero_count_nzero is_class_name_name is_class_name_name_cd names_unique_find_class_unique : myhints.
@@ -515,16 +356,10 @@ Lemma in_names_unique_eq:
     names_unique  (JFCDecl cname ex0 fields0 methods0 :: CC) ->
     (ex = ex0 /\ fields = fields0 /\ methods = methods0).
 Proof.
-  intros.
-  simpl in H.
-  destruct H.
-  - injection H; auto.
-  - apply -> (count_occ_In JFClassDeclaration_dec) in H.
-    apply names_unique_zero in H0.
-    clear -H H0.
-    auto with zarith.
-    assert False by eauto with myhints.
-    tauto.
+  hammer_hook "JaProgram" "JaProgram.in_names_unique_eq". Undo.
+  unshelve (Reconstr.hcrush Reconstr.Empty
+		  (@count_occ_zero_decl_once, @JaSyntax.find_class_further_neq, @name_once_further, @JaSyntax.find_class_in, @JaSyntax.find_class_same, @count_occ_zero_is_class_name_false, @Coq.Lists.List.Forall_forall, @name_once_further_eq, @names_unique_compose, @names_unique_further, @JaSyntax.find_class_eq, @names_unique_further_further, @is_class_name_nequal, @names_unique_zero, @Coq.Bool.Bool.absurd_eq_true)
+		  (@JaSyntax.JFProgram, @Coq.Lists.List.map, @Coq.Lists.List.In, @name_once)); auto.
 Qed.
 
 Hint Resolve  in_names_unique_eq : myhints.
@@ -535,29 +370,8 @@ Lemma in_find_class_raw:
     exists ex1 fields1 methods1,
     find_class CC cname = Some (JFCDecl cname ex1 fields1 methods1).
 Proof.
-  induction CC.
-  * intros.
-    inversion H.
-  *  intros.
-     destruct (JFClassDeclaration_dec (JFCDecl cname ex fields methods) a).
-     ** rewrite <- e.
-        simpl.
-        destruct (JFClassName_dec cname cname); try contradiction.
-        clear.
-        do 3 eexists.
-        auto.
-     ** simpl.
-        destruct a.
-        destruct (JFClassName_dec D cname).
-        *** subst.
-            clear. do 3 eexists. auto.
-        *** eapply IHCC.
-            eapply in_inv in H.
-            destruct H.
-            + injection H;intros;clear H.
-              contradiction.
-            + eauto.
-Qed.    
+  induction CC; scrush.
+Qed.
 
 Lemma in_find_class:
   forall CC cname ex fields methods,
@@ -566,27 +380,28 @@ Lemma in_find_class:
     find_class CC cname = Some (JFCDecl cname ex fields methods).
 Proof.
   induction CC;intros.
-  - assert (~ In (JFCDecl cname ex fields methods) []) by  auto using in_nil.
-    tauto.
+  - scrush.
   - destruct (JFClassDeclaration_dec (JFCDecl cname ex fields methods) a).
-    + rewrite <- e. simpl.
-      destruct (JFClassName_dec cname cname); eauto.
-      tauto.
-    + destruct a.
+    + scrush.
+    + hammer_hook "JaProgram" "JaProgram.in_find_class.subgoal_2". Undo.
+      destruct a.
       simpl.
       destruct (JFClassName_dec D cname).
-      rewrite e in *.
-      assert (ex = ex0 /\ fields = fields0 /\ methods = methods0)
-        by eauto with myhints.
-      decompose [and] H1; clear H1.
-      congruence.
-      apply in_inv in H0.
-      destruct H0.
-      injection H0;intros.
-      tauto.
-      eapply IHCC; eauto with myhints.
+      * hammer_hook "JaProgram" "JaProgram.in_find_class.subgoal_2_1". Undo.
+        (* Eprover finds a proof which is not reconstructible *)
+        rewrite e in *.
+        assert (ex = ex0 /\ fields = fields0 /\ methods = methods0)
+          by eauto with myhints.
+        scrush.
+      * hammer_hook "JaProgram" "JaProgram.in_find_class.subgoal_2_2". Undo.
+        apply in_inv in H0.
+        destruct H0.
+        scrush.
+        hammer_hook "JaProgram" "JaProgram.in_find_class.subgoal_2_2_1". Undo.
+	Reconstr.hobvious (@H0, @H, @IHCC)
+		(@names_unique_further)
+		Reconstr.Empty.
 Qed.
-
 
 Lemma names_unique_neq_but_in:
   forall CC cdecl ddecl,
@@ -595,28 +410,17 @@ Lemma names_unique_neq_but_in:
          names_unique (cdecl :: CC) ->
          In ddecl CC -> name_of_cd ddecl <> name_of_cd cdecl.
 Proof.
+  hammer_hook "JaProgram" "JaProgram.names_unique_neq_but_in". Undo.
+  (* Eprover finds a proof which is not reconstructible *)
   intros.
   destruct cdecl.
   destruct ddecl.
   simpl.
-  assert (count_occ Bool.bool_dec (map (is_class_name D) CC) true = 0) by eauto with myhints.
-  assert (count_occ Bool.bool_dec (map (is_class_name D0) CC) true > 0).
-  apply count_occ_In.
-  assert (names_unique CC) by eauto using names_unique_further.
-  unfold names_unique in H4.
-  assert (forall x,In x CC -> decl_once CC x) by (apply Forall_forall; auto).
-  assert (decl_once CC (JFCDecl D0 ex0 fields0 methods0)) by auto.
-  unfold decl_once in H6.
-  unfold name_once in H6.
-  assert (count_occ Bool.bool_dec (map (is_class_name D0) CC) true >0) by
-      try (rewrite H6; apply Gt.gt_Sn_O).
-  apply <- count_occ_In; eauto.
-  intro.
-  rewrite H5 in *.
-  rewrite H3 in H4.
-  apply (Gt.gt_irrefl 0 H4).
+  hammer_hook "JaProgram" "JaProgram.names_unique_neq_but_in.subgoal_0". Undo.
+  Reconstr.hcrush (@H2, @H1)
+		  (@count_occ_zero_is_class_name_false, @names_unique_zero, @is_class_name_nequal)
+		  Reconstr.Empty.
 Qed.
-  
 
 Lemma in_find_class_eq:
   forall CC cdecl cdecl',
@@ -625,31 +429,19 @@ Lemma in_find_class_eq:
     find_class CC (name_of_cd cdecl) = Some cdecl' -> cdecl = cdecl'.
 Proof.
   induction CC;intros.
-  - assert (~ In cdecl []) by  auto using in_nil.
-    tauto.
+  - scrush.
   - destruct (JFClassDeclaration_dec cdecl a).
-    + simpl in H1. rewrite e in *.
-      destruct a.
-      simpl in H1.
-      destruct (JFClassName_dec D D);
-      try injection H1;
-      tauto.
-    + assert (names_unique CC) by eauto using names_unique_further.
+    + scrush.
+    + hammer_hook "JaProgram" "JaProgram.in_find_class_eq.subgoal_1". Undo.
+      (* EProver finds a proof which cannot be reconstructed *)
+      assert (names_unique CC) by eauto using names_unique_further.
       assert (a = cdecl \/ In cdecl CC) by eauto.
       destruct H3. symmetry in H3. contradiction.
       assert (name_of_cd cdecl <> name_of_cd a).
-      apply (names_unique_neq_but_in CC a cdecl); auto.
-      auto using in_eq.
-      assert (find_class CC (name_of_cd cdecl) = Some cdecl').
-      destruct a.
-      eapply find_class_further_neq.
-      simpl in H4.
-      assert (D <> name_of_cd cdecl) by auto.
-      eauto.
-      eauto.
-      apply IHCC; auto.
+      hammer_hook "JaProgram" "JaProgram.in_find_class_eq.assert_1". Undo.
+      (* Vampire finds a proof which cannot be reconstructed *)
+      apply (names_unique_neq_but_in CC a cdecl); auto using in_eq.
+      scrush.
 Qed.
 
-
 Hint Resolve in_find_class : myhints.
-
