@@ -1,6 +1,6 @@
 (* Coq v8.7 required *)
 (* author: Lukasz Czajka *)
-(* This file contains fragments inspired by the "crush" tactic of Adam Chlipala. *)
+(* This file contains fragments based on the "crush" tactic of Adam Chlipala. *)
 (* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 
@@ -566,10 +566,11 @@ Ltac rchange tp :=
       try rewrite H; clear H
   end.
 
-Ltac sintuition :=
-  simp_hyps; intuition (auto with nocore yhints); try yeasy; try subst; mcongr tt; try solve [ constructor ].
+Ltac sintuition0 :=
+  simp_hyps; intuition (auto with nocore yhints); try yeasy; try subst; mcongr tt; try solve [ constructor ];
+  auto with yhints; try yeasy.
 
-Ltac yintuition := simp_hyps; try subst; cbn in *; sintuition.
+Ltac sintuition := simp_hyps; try subst; cbn in *; sintuition0.
 
 Ltac eresolve H1 H2 :=
   let H1i := fresh "H" in
@@ -1124,7 +1125,7 @@ Ltac iauto n :=
   intros; doiauto n.
 
 Ltac docrush :=
-  yintuition; cbn in *; simp_hyps; forward_reasoning 2; simp_hyps; yisolve; try yelles 1;
+  sintuition; cbn in *; simp_hyps; forward_reasoning 2; simp_hyps; yisolve; try yelles 1;
   try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try congruence;
   try match goal with
@@ -1182,15 +1183,15 @@ Ltac hinit hyps lems defs :=
   unfolding defs.
 
 Ltac htrivial hyps lems defs :=
-  hinit hyps lems defs; sintuition.
+  hinit hyps lems defs; sintuition0.
 
 Ltac hobvious hyps lems defs :=
   htrivial hyps lems defs; simp_hyps; yisolve; try yellesd defs 1.
 
 Ltac heasy hyps lems defs :=
   hobvious hyps lems defs;
-  try solve [ unshelve (intuition isolve; eauto 10 with nocore yhints); dsolve ];
-  try congruence.
+  try congruence;
+  try solve [ unshelve (intuition isolve; eauto 10 with nocore yhints); dsolve ].
 
 Ltac hsimple hyps lems defs :=
   hobvious hyps lems defs;
@@ -1245,29 +1246,15 @@ Ltac hyreconstr hyps lems defs :=
   hsimple hyps lems defs;
   yreconstr1 lems defs.
 
-Ltac shtrivial hyps lems defs := solve [ unshelve htrivial hyps lems defs; dsolve ].
-Ltac shobvious hyps lems defs := solve [ unshelve hobvious hyps lems defs; dsolve ].
-Ltac sheasy hyps lems defs := solve [ unshelve heasy hyps lems defs; dsolve ].
-Ltac shsimple hyps lems defs := solve [ unshelve hsimple hyps lems defs; dsolve ].
-Ltac shcrush hyps lems defs := solve [ unshelve hcrush hyps lems defs; dsolve ].
-Ltac shscrush hyps lems defs := solve [ unshelve hscrush hyps lems defs; dsolve ].
-Ltac shblast hyps lems defs := solve [ unshelve hblast hyps lems defs; dsolve ].
-Ltac shfirstorder hyps lems defs := solve [ unshelve hfirstorder hyps lems defs; dsolve ].
-Ltac sheqfirstorder hyps lems defs := solve [ unshelve heqfirstorder hyps lems defs; dsolve ].
-Ltac shifirstorder hyps lems defs := solve [ unshelve hifirstorder hyps lems defs; dsolve ].
-Ltac shreconstr2 hyps lems defs := solve [ unshelve hreconstr 2 hyps lems defs; dsolve ].
-Ltac shreconstr4 hyps lems defs := solve [ unshelve hreconstr 4 hyps lems defs; dsolve ].
-Ltac shreconstr6 hyps lems defs := solve [ unshelve hreconstr 6 hyps lems defs; dsolve ].
-Ltac shreconstr8 hyps lems defs := solve [ unshelve hreconstr 8 hyps lems defs; dsolve ].
-Ltac shyelles2 hyps lems defs := solve [ unshelve hyelles 2 hyps lems defs; dsolve ].
-Ltac shyelles4 hyps lems defs := solve [ unshelve hyelles 4 hyps lems defs; dsolve ].
-Ltac shyelles6 hyps lems defs := solve [ unshelve hyelles 6 hyps lems defs; dsolve ].
-Ltac shyelles8 hyps lems defs := solve [ unshelve hyelles 8 hyps lems defs; dsolve ].
-Ltac shrauto2 hyps lems defs := solve [ unshelve hrauto 2 hyps lems defs; dsolve ].
-Ltac shrauto4 hyps lems defs := solve [ unshelve hrauto 4 hyps lems defs; dsolve ].
-Ltac shexhaustive0 hyps lems defs := solve [ unshelve hexhaustive 0 hyps lems defs; dsolve ].
-Ltac shexhaustive1 hyps lems defs := solve [ unshelve hexhaustive 1 hyps lems defs; dsolve ].
-Ltac shexhaustive2 hyps lems defs := solve [ unshelve hexhaustive 2 hyps lems defs; dsolve ].
-Ltac shexhaustive3 hyps lems defs := solve [ unshelve hexhaustive 3 hyps lems defs; dsolve ].
-Ltac shexhaustive4 hyps lems defs := solve [ unshelve hexhaustive 4 hyps lems defs; dsolve ].
-Ltac shyreconstr hyps lems defs := solve [ unshelve hyreconstr hyps lems defs; dsolve ].
+Ltac reasy lems defs := solve [ unshelve heasy AllHyps lems defs; dsolve ].
+Ltac rsimple lems defs := solve [ unshelve hsimple AllHyps lems defs; dsolve ].
+Ltac rcrush lems defs := solve [ unshelve hcrush AllHyps lems defs; dsolve ].
+Ltac rscrush lems defs := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
+Ltac rblast lems defs := solve [ unshelve hblast AllHyps lems defs; dsolve ].
+Ltac rreconstr4 lems defs := solve [ unshelve hreconstr 4 AllHyps lems defs; dsolve ].
+Ltac rreconstr6 lems defs := solve [ unshelve hreconstr 6 AllHyps lems defs; dsolve ].
+Ltac ryelles4 lems defs := solve [ unshelve hyelles 4 AllHyps lems defs; dsolve ].
+Ltac ryelles6 lems defs := solve [ unshelve hyelles 6 AllHyps lems defs; dsolve ].
+Ltac rrauto4 lems defs := solve [ unshelve hrauto 4 AllHyps lems defs; dsolve ].
+Ltac rexhaustive1 lems defs := solve [ unshelve hexhaustive 1 AllHyps lems defs; dsolve ].
+Ltac ryreconstr lems defs := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].

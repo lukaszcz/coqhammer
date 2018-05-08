@@ -357,8 +357,8 @@ let get_tac_args deps defs =
   let map_to_constr = List.map to_constr in
   let (vars, deps, defs) = (map_to_constr vars, map_to_constr deps, map_to_constr defs) in
   let (tvars, tdeps, tdefs) = (mk_lst vars, mk_lst deps, mk_lst defs) in
-  let args = [to_ltac_val tvars; to_ltac_val tdeps; to_ltac_val tdefs] in
-  (vars, deps, defs, args)
+  let args = [to_ltac_val tdeps; to_ltac_val tdefs] in
+  (deps, defs, args)
 
 let check_goal_prop gl =
   let (evmap, env) = get_current_context () in
@@ -369,24 +369,20 @@ let check_goal_prop gl =
 
 (***************************************************************************************)
 
-let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fail =
+let run_tactics deps defs args msg_invoke msg_success msg_fail msg_total_fail =
   let tactics =
-    [("Reconstr.htrivial", "Reconstr.shtrivial", 2 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.hobvious", "Reconstr.shobvious", 2 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.heasy", "Reconstr.sheasy", 3 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.hsimple", "Reconstr.shsimple", 3 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.hcrush", "Reconstr.shcrush", !Opt.reconstr_timelimit);
-     ("Reconstr.hyelles 4", "Reconstr.shyelles4", !Opt.reconstr_timelimit);
-     ("Reconstr.hrauto 2", "Reconstr.shrauto2", !Opt.reconstr_timelimit);
-     ("Reconstr.hblast", "Reconstr.shblast", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hexhaustive 0", "Reconstr.shexhaustive0", !Opt.reconstr_timelimit);
-     ("Reconstr.hreconstr 4", "Reconstr.shreconstr4", !Opt.reconstr_timelimit);
-     ("Reconstr.hscrush", "Reconstr.shscrush", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hrauto 4", "Reconstr.shrauto4", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.hyelles 6", "Reconstr.shyelles6", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hyreconstr", "Reconstr.shyreconstr", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.hexhaustive 1", "Reconstr.shexhaustive1", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hreconstr 6", "Reconstr.shreconstr6", 3 * !Opt.reconstr_timelimit / 2)] in
+    [("Reconstr.reasy", "Reconstr.reasy", 3 * !Opt.reconstr_timelimit / 5);
+     ("Reconstr.rsimple", "Reconstr.rsimple", 3 * !Opt.reconstr_timelimit / 5);
+     ("Reconstr.rcrush", "Reconstr.rcrush", !Opt.reconstr_timelimit);
+     ("Reconstr.rblast", "Reconstr.rblast", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.rscrush", "Reconstr.rscrush", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.ryelles4", "Reconstr.ryelles4", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.rexhaustive1", "Reconstr.rexhaustive1", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.rreconstr4", "Reconstr.rreconstr4", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.rrauto4", "Reconstr.rrauto4", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.ryreconstr", "Reconstr.ryreconstr", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.ryelles6", "Reconstr.ryelles6", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.rreconstr6", "Reconstr.rreconstr6", 2 * !Opt.reconstr_timelimit)] in
   let rec reconstr lst =
     match lst with
     | [] ->
@@ -396,11 +392,11 @@ let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fa
        end
     | (tac, cmd, timeout) :: t ->
        begin
-         msg_invoke tac vars deps defs;
+         msg_invoke tac deps defs;
          Proofview.tclOR
            (Proofview.tclBIND
               (ltac_timeout timeout cmd args)
-              (fun _ -> msg_success tac vars deps defs; ltac_apply "idtac" []))
+              (fun _ -> msg_success tac deps defs; ltac_apply "idtac" []))
            begin fun _ ->
              msg_fail tac timeout;
              reconstr t
@@ -533,16 +529,15 @@ let hammer_tac () =
               if !Opt.debug_mode then
                 Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
               let (deps, defs) = do_predict hyps defs goal in
-              let (vars, deps, defs, args) = get_tac_args deps defs in
-              run_tactics vars deps defs args
-                begin fun tac _ _ _ ->
+              let (deps, defs, args) = get_tac_args deps defs in
+              run_tactics deps defs args
+                begin fun tac _ _ ->
                   Msg.info ("Trying tactic " ^ tac ^ "...")
                 end
-                begin fun tac vars deps defs ->
+                begin fun tac deps defs ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ " " ^ mk_lst_str vars ^ "\n\t\t" ^ mk_lst_str deps ^
-                               "\n\t\t" ^ mk_lst_str defs ^ ".")
+                               tac ^ " " ^ mk_lst_str deps ^ " " ^ mk_lst_str defs ^ ".")
                 end
                 begin fun tac timeout ->
                   if !Opt.debug_mode then
@@ -793,10 +788,10 @@ let hammer_hook_tac prefix name =
                       ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
                                               " > \"" ^ tfname ^ "\""));
                       let (deps, defs) = extract fname in
-                      let (vars, deps, defs, args) = get_tac_args deps defs in
-                      run_tactics vars deps defs args
-                        (fun _ _ _ _ -> ())
-                        begin fun tac vars deps defs ->
+                      let (deps, defs, args) = get_tac_args deps defs in
+                      run_tactics deps defs args
+                        (fun _ _ _ -> ())
+                        begin fun tac deps defs ->
                           let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                           ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                           Msg.info msg
