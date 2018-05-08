@@ -193,9 +193,8 @@ bug.
 Known bugs
 ----------
 
-Occasionally, the hammer tactic hangs or outputs a wrong
-reconstruction tactic. The authors believe that this is due to an
-error in Coq's `timeout` tactical.
+Occasionally, the hammer tactic hangs. The authors believe that this
+is due to an error in Coq's `timeout` tactical.
 
 Debugging
 ---------
