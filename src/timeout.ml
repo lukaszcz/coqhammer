@@ -1,7 +1,13 @@
-(* Proofview.tclTIMEOUT is incorrect because of a bug in OCaml runtime
-   (a random thread receives the SIGALRM signal instead of the thread
-   which set it up using Unix.alarm). This file contains a more
-   correct version, but it may still fail to work sometimes. *)
+(* Proofview.tclTIMEOUT is incorrect because of a bug in OCaml
+   runtime. This file contains a more correct version, but it may
+   still fail to work sometimes. See:
+
+   https://caml.inria.fr/mantis/view.php?id=7709
+   https://caml.inria.fr/mantis/view.php?id=4127
+   https://github.com/coq/coq/issues/7430
+   https://github.com/coq/coq/issues/7408
+
+ *)
 
 let my_timeout n f e =
   let killed = ref false in
