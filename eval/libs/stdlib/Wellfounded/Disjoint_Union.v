@@ -20,7 +20,7 @@ Variable leB : B -> B -> Prop.
 Notation Le_AsB := (le_AsB A B leA leB).
 
 Lemma acc_A_sum : forall x:A, Acc leA x -> Acc Le_AsB (inl B x).
-Proof. hammer_hook "Disjoint_Union" "Disjoint_Union.acc_A_sum". Restart. 
+Proof. try hammer_hook "Disjoint_Union" "Disjoint_Union.acc_A_sum".  
 induction 1.
 apply Acc_intro; intros y H2.
 inversion_clear H2.
@@ -29,7 +29,7 @@ Qed.
 
 Lemma acc_B_sum :
 well_founded leA -> forall x:B, Acc leB x -> Acc Le_AsB (inr A x).
-Proof. hammer_hook "Disjoint_Union" "Disjoint_Union.acc_B_sum". Restart. 
+Proof. try hammer_hook "Disjoint_Union" "Disjoint_Union.acc_B_sum".  
 induction 2.
 apply Acc_intro; intros y H3.
 inversion_clear H3; auto with sets.
@@ -39,7 +39,7 @@ Qed.
 
 Lemma wf_disjoint_sum :
 well_founded leA -> well_founded leB -> well_founded Le_AsB.
-Proof. hammer_hook "Disjoint_Union" "Disjoint_Union.wf_disjoint_sum". Restart. 
+Proof. try hammer_hook "Disjoint_Union" "Disjoint_Union.wf_disjoint_sum".  
 intros.
 unfold well_founded.
 destruct a as [a| b].

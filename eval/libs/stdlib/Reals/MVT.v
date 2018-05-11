@@ -25,7 +25,7 @@ exists c : R,
 (exists P : a < c < b,
 (g b - g a) * derive_pt f c (pr1 c P) =
 (f b - f a) * derive_pt g c (pr2 c P)).
-Proof. hammer_hook "MVT" "MVT.MVT". Restart. 
+Proof. try hammer_hook "MVT" "MVT.MVT".  
 intros; assert (H2 := Rlt_le _ _ H).
 set (h := fun y:R => (g b - g a) * f y - (f b - f a) * g y).
 cut (forall c:R, a < c < b -> derivable_pt h c).
@@ -143,7 +143,7 @@ Lemma MVT_cor1 :
 forall (f:R -> R) (a b:R) (pr:derivable f),
 a < b ->
 exists c : R, f b - f a = derive_pt f c (pr c) * (b - a) /\ a < c < b.
-Proof. hammer_hook "MVT" "MVT.MVT_cor1". Restart. 
+Proof. try hammer_hook "MVT" "MVT.MVT_cor1".  
 intros f a b pr H; cut (forall c:R, a < c < b -> derivable_pt f c);
 [ intro X | intros; apply pr ].
 cut (forall c:R, a < c < b -> derivable_pt id c);
@@ -168,7 +168,7 @@ forall (f f':R -> R) (a b:R),
 a < b ->
 (forall c:R, a <= c <= b -> derivable_pt_lim f c (f' c)) ->
 exists c : R, f b - f a = f' c * (b - a) /\ a < c < b.
-Proof. hammer_hook "MVT" "MVT.MVT_cor2". Restart. 
+Proof. try hammer_hook "MVT" "MVT.MVT_cor2".  
 intros f f' a b H H0; cut (forall c:R, a <= c <= b -> derivable_pt f c).
 intro X; cut (forall c:R, a < c < b -> derivable_pt f c).
 intro X0; cut (forall c:R, a <= c <= b -> continuity_pt f c).
@@ -199,7 +199,7 @@ forall (f f':R -> R) (a b:R),
 a < b ->
 (forall x:R, a <= x -> x <= b -> derivable_pt_lim f x (f' x)) ->
 exists c : R, a <= c /\ c <= b /\ f b = f a + f' c * (b - a).
-Proof. hammer_hook "MVT" "MVT.MVT_cor3". Restart. 
+Proof. try hammer_hook "MVT" "MVT.MVT_cor3".  
 intros f f' a b H H0;
 assert (H1 :  exists c : R, f b - f a = f' c * (b - a) /\ a < c < b);
 [ apply MVT_cor2; [ apply H | intros; elim H1; intros; apply (H0 _ H2 H3) ]
@@ -213,7 +213,7 @@ forall (f:R -> R) (a b:R) (pr:forall x:R, a < x < b -> derivable_pt f x),
 a < b ->
 f a = f b ->
 exists c : R, (exists P : a < c < b, derive_pt f c (pr c P) = 0).
-Proof. hammer_hook "MVT" "MVT.Rolle". Restart. 
+Proof. try hammer_hook "MVT" "MVT.Rolle".  
 intros; assert (H2 : forall x:R, a < x < b -> derivable_pt id x).
 intros; apply derivable_pt_id.
 assert (H3 := MVT f id a b pr H2 H0 H);
@@ -231,7 +231,7 @@ Qed.
 Lemma nonneg_derivative_1 :
 forall (f:R -> R) (pr:derivable f),
 (forall x:R, 0 <= derive_pt f x (pr x)) -> increasing f.
-Proof. hammer_hook "MVT" "MVT.nonneg_derivative_1". Restart. 
+Proof. try hammer_hook "MVT" "MVT.nonneg_derivative_1".  
 intros.
 unfold increasing.
 intros.
@@ -253,7 +253,7 @@ Qed.
 Lemma nonpos_derivative_0 :
 forall (f:R -> R) (pr:derivable f),
 decreasing f -> forall x:R, derive_pt f x (pr x) <= 0.
-Proof. hammer_hook "MVT" "MVT.nonpos_derivative_0". Restart. 
+Proof. try hammer_hook "MVT" "MVT.nonpos_derivative_0".  
 intros f pr H x; assert (H0 := H); unfold decreasing in H0;
 generalize (derivable_derive f x (pr x)); intro; elim H1;
 intros l H2.
@@ -366,7 +366,7 @@ Qed.
 
 Lemma increasing_decreasing_opp :
 forall f:R -> R, increasing f -> decreasing (- f)%F.
-Proof. hammer_hook "MVT" "MVT.increasing_decreasing_opp". Restart. 
+Proof. try hammer_hook "MVT" "MVT.increasing_decreasing_opp".  
 unfold increasing, decreasing, opp_fct; intros; generalize (H x y H0);
 intro; apply Ropp_ge_le_contravar; apply Rle_ge; assumption.
 Qed.
@@ -375,7 +375,7 @@ Qed.
 Lemma nonpos_derivative_1 :
 forall (f:R -> R) (pr:derivable f),
 (forall x:R, derive_pt f x (pr x) <= 0) -> decreasing f.
-Proof. hammer_hook "MVT" "MVT.nonpos_derivative_1". Restart. 
+Proof. try hammer_hook "MVT" "MVT.nonpos_derivative_1".  
 intros.
 cut (forall h:R, - - f h = f h).
 intro.
@@ -407,7 +407,7 @@ Qed.
 Lemma positive_derivative :
 forall (f:R -> R) (pr:derivable f),
 (forall x:R, 0 < derive_pt f x (pr x)) -> strict_increasing f.
-Proof. hammer_hook "MVT" "MVT.positive_derivative". Restart. 
+Proof. try hammer_hook "MVT" "MVT.positive_derivative".  
 intros.
 unfold strict_increasing.
 intros.
@@ -427,7 +427,7 @@ Qed.
 
 Lemma strictincreasing_strictdecreasing_opp :
 forall f:R -> R, strict_increasing f -> strict_decreasing (- f)%F.
-Proof. hammer_hook "MVT" "MVT.strictincreasing_strictdecreasing_opp". Restart. 
+Proof. try hammer_hook "MVT" "MVT.strictincreasing_strictdecreasing_opp".  
 unfold strict_increasing, strict_decreasing, opp_fct; intros;
 generalize (H x y H0); intro; apply Ropp_lt_gt_contravar;
 assumption.
@@ -437,7 +437,7 @@ Qed.
 Lemma negative_derivative :
 forall (f:R -> R) (pr:derivable f),
 (forall x:R, derive_pt f x (pr x) < 0) -> strict_decreasing f.
-Proof. hammer_hook "MVT" "MVT.negative_derivative". Restart. 
+Proof. try hammer_hook "MVT" "MVT.negative_derivative".  
 intros.
 cut (forall h:R, - - f h = f h).
 intros.
@@ -465,7 +465,7 @@ Qed.
 Lemma null_derivative_0 :
 forall (f:R -> R) (pr:derivable f),
 constant f -> forall x:R, derive_pt f x (pr x) = 0.
-Proof. hammer_hook "MVT" "MVT.null_derivative_0". Restart. 
+Proof. try hammer_hook "MVT" "MVT.null_derivative_0".  
 intros.
 unfold constant in H.
 apply derive_pt_eq_0.
@@ -478,7 +478,7 @@ Qed.
 
 Lemma increasing_decreasing :
 forall f:R -> R, increasing f -> decreasing f -> constant f.
-Proof. hammer_hook "MVT" "MVT.increasing_decreasing". Restart. 
+Proof. try hammer_hook "MVT" "MVT.increasing_decreasing".  
 unfold increasing, decreasing, constant; intros;
 case (Rtotal_order x y); intro.
 generalize (Rlt_le x y H1); intro;
@@ -493,7 +493,7 @@ Qed.
 Lemma null_derivative_1 :
 forall (f:R -> R) (pr:derivable f),
 (forall x:R, derive_pt f x (pr x) = 0) -> constant f.
-Proof. hammer_hook "MVT" "MVT.null_derivative_1". Restart. 
+Proof. try hammer_hook "MVT" "MVT.null_derivative_1".  
 intros.
 cut (forall x:R, derive_pt f x (pr x) <= 0).
 cut (forall x:R, 0 <= derive_pt f x (pr x)).
@@ -513,7 +513,7 @@ a < b ->
 forall x y:R, a <= x <= b -> a <= y <= b -> x < y -> f x < f y) /\
 ((forall t:R, a < t < b -> 0 <= derive_pt f t (pr t)) ->
 forall x y:R, a <= x <= b -> a <= y <= b -> x < y -> f x <= f y).
-Proof. hammer_hook "MVT" "MVT.derive_increasing_interv_ax". Restart. 
+Proof. try hammer_hook "MVT" "MVT.derive_increasing_interv_ax".  
 intros.
 split; intros.
 apply Rplus_lt_reg_l with (- f x).
@@ -559,7 +559,7 @@ forall (a b:R) (f:R -> R) (pr:derivable f),
 a < b ->
 (forall t:R, a < t < b -> 0 < derive_pt f t (pr t)) ->
 forall x y:R, a <= x <= b -> a <= y <= b -> x < y -> f x < f y.
-Proof. hammer_hook "MVT" "MVT.derive_increasing_interv". Restart. 
+Proof. try hammer_hook "MVT" "MVT.derive_increasing_interv".  
 intros.
 generalize (derive_increasing_interv_ax a b f pr H); intro.
 elim H4; intros H5 _; apply (H5 H0 x y H1 H2 H3).
@@ -571,7 +571,7 @@ forall (a b:R) (f:R -> R) (pr:derivable f),
 a < b ->
 (forall t:R, a < t < b -> 0 <= derive_pt f t (pr t)) ->
 forall x y:R, a <= x <= b -> a <= y <= b -> x < y -> f x <= f y.
-Proof. hammer_hook "MVT" "MVT.derive_increasing_interv_var". Restart. 
+Proof. try hammer_hook "MVT" "MVT.derive_increasing_interv_var".  
 intros a b f pr H H0 x y H1 H2 H3;
 generalize (derive_increasing_interv_ax a b f pr H);
 intro; elim H4; intros _ H5; apply (H5 H0 x y H1 H2 H3).
@@ -584,7 +584,7 @@ forall (f:R -> R) (a b k:R) (pr:derivable f),
 a <= b ->
 (forall c:R, a <= c <= b -> derive_pt f c (pr c) <= k) ->
 f b - f a <= k * (b - a).
-Proof. hammer_hook "MVT" "MVT.IAF". Restart. 
+Proof. try hammer_hook "MVT" "MVT.IAF".  
 intros.
 destruct (total_order_T a b) as [[H1| -> ]|H1].
 pose proof (MVT_cor1 f _ _ pr H1) as (c & -> & H4).
@@ -605,7 +605,7 @@ forall (f g:R -> R) (a b:R) (pr1:derivable f) (pr2:derivable g),
 a <= b ->
 (forall c:R, a <= c <= b -> derive_pt g c (pr2 c) <= derive_pt f c (pr1 c)) ->
 g b - g a <= f b - f a.
-Proof. hammer_hook "MVT" "MVT.IAF_var". Restart. 
+Proof. try hammer_hook "MVT" "MVT.IAF_var".  
 intros.
 cut (derivable (g - f)).
 intro X.
@@ -641,7 +641,7 @@ forall (f:R -> R) (a b:R) (pr:forall x:R, a < x < b -> derivable_pt f x),
 (forall x:R, a <= x <= b -> continuity_pt f x) ->
 (forall (x:R) (P:a < x < b), derive_pt f x (pr x P) = 0) ->
 constant_D_eq f (fun x:R => a <= x <= b) (f a).
-Proof. hammer_hook "MVT" "MVT.null_derivative_loc". Restart. 
+Proof. try hammer_hook "MVT" "MVT.null_derivative_loc".  
 intros; unfold constant_D_eq; intros; destruct (total_order_T a b) as [[Hlt|Heq]|Hgt].
 assert (H2 : forall y:R, a < y < x -> derivable_pt id y).
 intros; apply derivable_pt_id.
@@ -684,7 +684,7 @@ forall (f g1 g2:R -> R) (a b:R),
 antiderivative f g1 a b ->
 antiderivative f g2 a b ->
 exists c : R, (forall x:R, a <= x <= b -> g1 x = g2 x + c).
-Proof. hammer_hook "MVT" "MVT.antiderivative_Ucte". Restart. 
+Proof. try hammer_hook "MVT" "MVT.antiderivative_Ucte".  
 unfold antiderivative; intros; elim H; clear H; intros; elim H0;
 clear H0; intros H0 _; exists (g1 a - g2 a); intros;
 assert (H3 : forall x:R, a <= x <= b -> derivable_pt g1 x).
@@ -720,7 +720,7 @@ forall (f f' : R -> R) (a b : R),
 derivable_pt_lim f c (f' c)) ->
 exists c : R, Rabs (f b - f a) = Rabs (f' c) * Rabs (b - a) /\
 Rmin a b <= c <= Rmax a b.
-Proof. hammer_hook "MVT" "MVT.MVT_abs". Restart. 
+Proof. try hammer_hook "MVT" "MVT.MVT_abs".  
 intros f f' a b.
 destruct (Rle_dec a b) as [aleb | blta].
 destruct (Req_dec a b) as [ab | anb].

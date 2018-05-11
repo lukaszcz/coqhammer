@@ -133,7 +133,7 @@ decidable Q ->
 (~ (P /\ R)) ->
 (~ (P -> R)) ->
 True.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetLogicalFacts.test_push". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetLogicalFacts.test_push".  
 intros. push not in *.
 
 tauto.
@@ -219,7 +219,7 @@ decidable Q ->
 (P /\ ~ R) ->
 (~ R /\ P) ->
 True.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetLogicalFacts.test_pull". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetLogicalFacts.test_pull".  
 intros. pull not in *. tauto.
 Qed.
 
@@ -353,7 +353,7 @@ F.union_iff F.inter_iff F.diff_iff
 : set_simpl.
 
 Lemma eq_refl_iff (x : E.t) : E.eq x x <-> True.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideAuxiliary.eq_refl_iff". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideAuxiliary.eq_refl_iff".  
 now split.
 Qed.
 
@@ -364,14 +364,14 @@ Hint Rewrite eq_refl_iff : set_eq_simpl.
 
 Lemma dec_In : forall x s,
 decidable (In x s).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideAuxiliary.dec_In". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideAuxiliary.dec_In".  
 red; intros; generalize (F.mem_iff s x); case (mem x s); intuition.
 Qed.
 
 
 Lemma dec_eq : forall (x y : E.t),
 decidable (E.eq x y).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideAuxiliary.dec_eq". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideAuxiliary.dec_eq".  
 red; intros x y; destruct (E.eq_dec x y); auto.
 Qed.
 
@@ -550,7 +550,7 @@ E.eq x y ->
 ~ ~ E.eq z y ->
 In x s ->
 In z s.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_trans_1". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_trans_1".   fsetdec. Qed.
 
 Lemma test_eq_trans_2 : forall x y z r s,
 In x (singleton y) ->
@@ -558,7 +558,7 @@ In x (singleton y) ->
 ~ ~ In z (add y r) ->
 In x s ->
 In z s.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_trans_2". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_trans_2".   fsetdec. Qed.
 
 Lemma test_eq_neq_trans_1 : forall w x y z s,
 E.eq x w ->
@@ -566,7 +566,7 @@ E.eq x w ->
 ~ E.eq y z ->
 In w s ->
 In w (remove z s).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_neq_trans_1". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_neq_trans_1".   fsetdec. Qed.
 
 Lemma test_eq_neq_trans_2 : forall w x y z r1 r2 s,
 In x (singleton w) ->
@@ -576,48 +576,48 @@ In y r2 ->
 In y (remove z r2) ->
 In w s ->
 In w (remove z s).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_neq_trans_2". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_neq_trans_2".   fsetdec. Qed.
 
 Lemma test_In_singleton : forall x,
 In x (singleton x).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_In_singleton". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_In_singleton".   fsetdec. Qed.
 
 Lemma test_add_In : forall x y s,
 In x (add y s) ->
 ~ E.eq x y ->
 In x s.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_add_In". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_add_In".   fsetdec. Qed.
 
 Lemma test_Subset_add_remove : forall x s,
 s [<=] (add x (remove x s)).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_Subset_add_remove". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_Subset_add_remove".   fsetdec. Qed.
 
 Lemma test_eq_disjunction : forall w x y z,
 In w (add x (add y (singleton z))) ->
 E.eq w x \/ E.eq w y \/ E.eq w z.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_disjunction". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_eq_disjunction".   fsetdec. Qed.
 
 Lemma test_not_In_disj : forall x y s1 s2 s3 s4,
 ~ In x (union s1 (union s2 (union s3 (add y s4)))) ->
 ~ (In x s1 \/ In x s4 \/ E.eq y x).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_not_In_disj". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_not_In_disj".   fsetdec. Qed.
 
 Lemma test_not_In_conj : forall x y s1 s2 s3 s4,
 ~ In x (union s1 (union s2 (union s3 (add y s4)))) ->
 ~ In x s1 /\ ~ In x s4 /\ ~ E.eq y x.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_not_In_conj". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_not_In_conj".   fsetdec. Qed.
 
 Lemma test_iff_conj : forall a x s s',
 (In a s' <-> E.eq x a \/ In a s) ->
 (In a s' <-> In a (add x s)).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_iff_conj". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_iff_conj".   fsetdec. Qed.
 
 Lemma test_set_ops_1 : forall x q r s,
 (singleton x) [<=] s ->
 Empty (union q r) ->
 Empty (inter (diff s q) (diff s r)) ->
 ~ In x s.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_set_ops_1". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_set_ops_1".   fsetdec. Qed.
 
 Lemma eq_chain_test : forall x1 x2 x3 x4 s1 s2 s3 s4,
 Empty s1 ->
@@ -628,14 +628,14 @@ In x3 s2 ->
 In x4 (add x3 s3) ->
 In x1 s4 ->
 Subset (add x4 s4) s4.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.eq_chain_test". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.eq_chain_test".   fsetdec. Qed.
 
 Lemma test_too_complex : forall x y z r s,
 E.eq x y ->
 (In x (singleton y) -> r [<=] s) ->
 In z r ->
 In z s.
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_too_complex". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_too_complex".  
 
 intros until s; intros Heq H Hr; lapply H; fsetdec.
 Qed.
@@ -649,7 +649,7 @@ Equal s1 (f s2) ->
 E.eq x1 (g (g x2)) ->
 In x1 s1 ->
 In (g (g x2)) (f s2).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.function_test_1". Restart.  fsetdec. Qed.
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.function_test_1".   fsetdec. Qed.
 
 Lemma function_test_2 :
 forall (f : t -> t),
@@ -661,7 +661,7 @@ E.eq x1 (g x2) ->
 In x1 s1 ->
 g x2 = g (g x2) ->
 In (g (g x2)) (f s2).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.function_test_2". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.function_test_2".  
 
 intros until 3. intros g_eq. rewrite <- g_eq. fsetdec.
 Qed.
@@ -673,7 +673,7 @@ forall (x y : elt),
 In x (add y (f s)) ->
 ~ E.eq x y ->
 In x (f s).
-Proof. hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_baydemir". Restart. 
+Proof. try hammer_hook "FSetDecide" "FSetDecide.WDecide_fun.FSetDecideTestCases.test_baydemir".  
 fsetdec.
 Qed.
 

@@ -35,7 +35,7 @@ limit1_in (fun x:R => (f x - f x0) / (x - x0)) (D_x D x0) (d x0) x0.
 Lemma cont_deriv :
 forall (f d:R -> R) (D:R -> Prop) (x0:R),
 D_in f d D x0 -> continue_in f D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.cont_deriv". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.cont_deriv".  
 unfold continue_in; unfold D_in; unfold limit1_in;
 unfold limit_in; unfold Rdiv; simpl;
 intros; elim (H eps H0); clear H; intros; elim H;
@@ -175,7 +175,7 @@ Qed.
 
 Lemma Dconst :
 forall (D:R -> Prop) (y x0:R), D_in (fun x:R => y) (fun x:R => 0) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dconst". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dconst".  
 unfold D_in; intros; unfold limit1_in;
 unfold limit_in; unfold Rdiv; intros;
 simpl; split with eps; split; auto.
@@ -190,7 +190,7 @@ Qed.
 
 Lemma Dx :
 forall (D:R -> Prop) (x0:R), D_in (fun x:R => x) (fun x:R => 1) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dx". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dx".  
 unfold D_in; unfold Rdiv; intros; unfold limit1_in;
 unfold limit_in; intros; simpl; split with eps;
 split; auto.
@@ -209,7 +209,7 @@ forall (D:R -> Prop) (df dg f g:R -> R) (x0:R),
 D_in f df D x0 ->
 D_in g dg D x0 ->
 D_in (fun x:R => f x + g x) (fun x:R => df x + dg x) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dadd". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dadd".  
 unfold D_in; intros;
 generalize
 (limit_plus (fun x:R => (f x - f x0) * / (x - x0))
@@ -234,7 +234,7 @@ forall (D:R -> Prop) (df dg f g:R -> R) (x0:R),
 D_in f df D x0 ->
 D_in g dg D x0 ->
 D_in (fun x:R => f x * g x) (fun x:R => df x * g x + f x * dg x) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dmult". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dmult".  
 intros; unfold D_in; generalize H H0; intros; unfold D_in in H, H0;
 generalize (cont_deriv f df D x0 H1); unfold continue_in;
 intro;
@@ -280,7 +280,7 @@ Qed.
 Lemma Dmult_const :
 forall (D:R -> Prop) (f df:R -> R) (x0 a:R),
 D_in f df D x0 -> D_in (fun x:R => a * f x) (fun x:R => a * df x) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dmult_const". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dmult_const".  
 intros;
 generalize (Dmult D (fun _:R => 0) df (fun _:R => a) f x0 (Dconst D a x0) H);
 unfold D_in; intros; rewrite (Rmult_0_l (f x0)) in H0;
@@ -292,7 +292,7 @@ Qed.
 Lemma Dopp :
 forall (D:R -> Prop) (f df:R -> R) (x0:R),
 D_in f df D x0 -> D_in (fun x:R => - f x) (fun x:R => - df x) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dopp". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dopp".  
 intros; generalize (Dmult_const D f df x0 (-1) H); unfold D_in;
 unfold limit1_in; unfold limit_in;
 intros; generalize (H0 eps H1); clear H0; intro; elim H0;
@@ -310,7 +310,7 @@ forall (D:R -> Prop) (df dg f g:R -> R) (x0:R),
 D_in f df D x0 ->
 D_in g dg D x0 ->
 D_in (fun x:R => f x - g x) (fun x:R => df x - dg x) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dminus". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dminus".  
 unfold Rminus; intros; generalize (Dopp D g dg x0 H0); intro;
 apply (Dadd D df (fun x:R => - dg x) f (fun x:R => - g x) x0);
 assumption.
@@ -320,7 +320,7 @@ Qed.
 Lemma Dx_pow_n :
 forall (n:nat) (D:R -> Prop) (x0:R),
 D_in (fun x:R => x ^ n) (fun x:R => INR n * x ^ (n - 1)) D x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dx_pow_n". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dx_pow_n".  
 simple induction n; intros.
 simpl; rewrite Rmult_0_l; apply Dconst.
 intros; cut (n0 = (S n0 - 1)%nat);
@@ -352,7 +352,7 @@ forall (Df Dg:R -> Prop) (df dg f g:R -> R) (x0:R),
 D_in f df Df x0 ->
 D_in g dg Dg (f x0) ->
 D_in (fun x:R => g (f x)) (fun x:R => df x * dg (f x)) (Dgf Df Dg f) x0.
-Proof. hammer_hook "Rderiv" "Rderiv.Dcomp". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.Dcomp".  
 intros Df Dg df dg f g x0 H H0; generalize H H0; unfold D_in;
 unfold Rdiv; intros;
 generalize
@@ -418,7 +418,7 @@ D_in expr dexpr D x0 ->
 D_in (fun x:R => expr x ^ n)
 (fun x:R => INR n * expr x ^ (n - 1) * dexpr x) (
 Dgf D D expr) x0.
-Proof. hammer_hook "Rderiv" "Rderiv.D_pow_n". Restart. 
+Proof. try hammer_hook "Rderiv" "Rderiv.D_pow_n".  
 intros n D x0 expr dexpr H;
 generalize
 (Dcomp D D dexpr (fun x:R => INR n * x ^ (n - 1)) expr (

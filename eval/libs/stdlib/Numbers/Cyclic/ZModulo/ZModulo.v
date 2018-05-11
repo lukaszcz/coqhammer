@@ -46,32 +46,32 @@ Notation "[|| x ||]" :=
 (zn2z_to_Z wB to_Z x)  (at level 0, x at level 99).
 
 Lemma spec_more_than_1_digit: 1 < Zpos digits.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_more_than_1_digit". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_more_than_1_digit".  
 generalize digits_ne_1; destruct digits; red; auto.
 destruct 1; auto.
 Qed.
 Let digits_gt_1 := spec_more_than_1_digit.
 
 Lemma wB_pos : wB > 0.
-Proof. hammer_hook "ZModulo" "ZModulo.wB_pos". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.wB_pos".  
 apply Z.lt_gt.
 unfold wB, base; auto with zarith.
 Qed.
 Hint Resolve wB_pos.
 
 Lemma spec_to_Z_1 : forall x, 0 <= [|x|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_to_Z_1". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_to_Z_1".  
 unfold to_Z; intros; destruct (Z_mod_lt x wB wB_pos); auto.
 Qed.
 
 Lemma spec_to_Z_2 : forall x, [|x|] < wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_to_Z_2". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_to_Z_2".  
 unfold to_Z; intros; destruct (Z_mod_lt x wB wB_pos); auto.
 Qed.
 Hint Resolve spec_to_Z_1 spec_to_Z_2.
 
 Lemma spec_to_Z : forall x, 0 <= [|x|] < wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_to_Z". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_to_Z".  
 auto.
 Qed.
 
@@ -80,7 +80,7 @@ let (q,r) := Z.pos_div_eucl x wB in (N_of_Z q, r).
 
 Lemma spec_of_pos : forall p,
 Zpos p = (Z.of_N (fst (of_pos p)))*wB + [|(snd (of_pos p))|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_of_pos". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_of_pos".  
 intros; unfold of_pos; simpl.
 generalize (Z_div_mod_POS wB wB_pos p).
 destruct (Z.pos_div_eucl p wB); simpl; destruct 1.
@@ -95,7 +95,7 @@ rewrite Z.mul_comm; auto.
 Qed.
 
 Lemma spec_zdigits : [|zdigits|] = Zpos digits.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_zdigits". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_zdigits".  
 unfold to_Z, zdigits.
 apply Zmod_small.
 unfold wB, base.
@@ -108,13 +108,13 @@ Definition one := 1.
 Definition minus_one := wB - 1.
 
 Lemma spec_0 : [|zero|] = 0.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_0". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_0".  
 unfold to_Z, zero.
 apply Zmod_small; generalize wB_pos; auto with zarith.
 Qed.
 
 Lemma spec_1 : [|one|] = 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_1". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_1".  
 unfold to_Z, one.
 apply Zmod_small; split; auto with zarith.
 unfold wB, base.
@@ -123,7 +123,7 @@ apply Zpower2_lt_lin; auto with zarith.
 Qed.
 
 Lemma spec_Bm1 : [|minus_one|] = wB - 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_Bm1". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_Bm1".  
 unfold to_Z, minus_one.
 apply Zmod_small; split; auto with zarith.
 unfold wB, base.
@@ -136,13 +136,13 @@ Definition compare x y := Z.compare [|x|] [|y|].
 
 Lemma spec_compare : forall x y,
 compare x y = Z.compare [|x|] [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_compare". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_compare".   reflexivity. Qed.
 
 Definition eq0 x :=
 match [|x|] with Z0 => true | _ => false end.
 
 Lemma spec_eq0 : forall x, eq0 x = true -> [|x|] = 0.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_eq0". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_eq0".  
 unfold eq0; intros; now destruct [|x|].
 Qed.
 
@@ -152,7 +152,7 @@ Definition opp x := - x.
 Definition opp_carry x := - x - 1.
 
 Lemma spec_opp_c : forall x, [-|opp_c x|] = -[|x|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_opp_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_opp_c".  
 intros; unfold opp_c, to_Z; auto.
 case_eq (eq0 x); intros; unfold interp_carry.
 fold [|x|]; rewrite (spec_eq0 x H); auto.
@@ -163,14 +163,14 @@ rewrite Z_mod_nz_opp_full; auto with zarith.
 Qed.
 
 Lemma spec_opp : forall x, [|opp x|] = (-[|x|]) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_opp". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_opp".  
 intros; unfold opp, to_Z; auto.
 change ((- x) mod wB = (0 - (x mod wB)) mod wB).
 rewrite Zminus_mod_idemp_r; simpl; auto.
 Qed.
 
 Lemma spec_opp_carry : forall x, [|opp_carry x|] = wB - [|x|] - 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_opp_carry". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_opp_carry".  
 intros; unfold opp_carry, to_Z; auto.
 replace (- x - 1) with (- 1 - x) by omega.
 rewrite <- Zminus_mod_idemp_r.
@@ -200,7 +200,7 @@ Definition add_carry x y := x + y + 1.
 
 Lemma Zmod_equal :
 forall x y z, z>0 -> (x-y) mod z = 0 -> x mod z = y mod z.
-Proof. hammer_hook "ZModulo" "ZModulo.Zmod_equal". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.Zmod_equal".  
 intros.
 generalize (Z_div_mod_eq (x-y) z H); rewrite H0, Z.add_0_r.
 remember ((x-y)/z) as k.
@@ -209,7 +209,7 @@ now apply Z_mod_plus.
 Qed.
 
 Lemma spec_succ_c : forall x, [+|succ_c x|] = [|x|] + 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_succ_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_succ_c".  
 intros; unfold succ_c, to_Z, Z.succ.
 case_eq (eq0 (x+1)); intros; unfold interp_carry.
 
@@ -235,7 +235,7 @@ generalize (Z_mod_lt x wB wB_pos); omega.
 Qed.
 
 Lemma spec_add_c : forall x y, [+|add_c x y|] = [|x|] + [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_add_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_add_c".  
 intros; unfold add_c, to_Z, interp_carry.
 destruct Z_lt_le_dec.
 apply Zmod_small;
@@ -246,7 +246,7 @@ generalize (Z_mod_lt x wB wB_pos) (Z_mod_lt y wB wB_pos); omega.
 Qed.
 
 Lemma spec_add_carry_c : forall x y, [+|add_carry_c x y|] = [|x|] + [|y|] + 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_add_carry_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_add_carry_c".  
 intros; unfold add_carry_c, to_Z, interp_carry.
 destruct Z_lt_le_dec.
 apply Zmod_small;
@@ -257,19 +257,19 @@ generalize (Z_mod_lt x wB wB_pos) (Z_mod_lt y wB wB_pos); omega.
 Qed.
 
 Lemma spec_succ : forall x, [|succ x|] = ([|x|] + 1) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_succ". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_succ".  
 intros; unfold succ, to_Z, Z.succ.
 symmetry; apply Zplus_mod_idemp_l.
 Qed.
 
 Lemma spec_add : forall x y, [|add x y|] = ([|x|] + [|y|]) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_add". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_add".  
 intros; unfold add, to_Z; apply Zplus_mod.
 Qed.
 
 Lemma spec_add_carry :
 forall x y, [|add_carry x y|] = ([|x|] + [|y|] + 1) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_add_carry". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_add_carry".  
 intros; unfold add_carry, to_Z.
 rewrite <- Zplus_mod_idemp_l.
 rewrite (Zplus_mod x y).
@@ -292,7 +292,7 @@ Definition sub := Z.sub.
 Definition sub_carry x y := x - y - 1.
 
 Lemma spec_pred_c : forall x, [-|pred_c x|] = [|x|] - 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_pred_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_pred_c".  
 intros; unfold pred_c, to_Z, interp_carry.
 case_eq (eq0 x); intros.
 fold [|x|]; rewrite spec_eq0; auto.
@@ -307,7 +307,7 @@ generalize (Z_mod_lt x wB wB_pos); omega.
 Qed.
 
 Lemma spec_sub_c : forall x y, [-|sub_c x y|] = [|x|] - [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_sub_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_sub_c".  
 intros; unfold sub_c, to_Z, interp_carry.
 destruct Z_lt_le_dec.
 replace ((wB + (x mod wB - y mod wB)) mod wB) with
@@ -321,7 +321,7 @@ generalize wB_pos (Z_mod_lt x wB wB_pos) (Z_mod_lt y wB wB_pos); omega.
 Qed.
 
 Lemma spec_sub_carry_c : forall x y, [-|sub_carry_c x y|] = [|x|] - [|y|] - 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_sub_carry_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_sub_carry_c".  
 intros; unfold sub_carry_c, to_Z, interp_carry.
 destruct Z_lt_le_dec.
 replace ((wB + (x mod wB - y mod wB - 1)) mod wB) with
@@ -335,19 +335,19 @@ generalize wB_pos (Z_mod_lt x wB wB_pos) (Z_mod_lt y wB wB_pos); omega.
 Qed.
 
 Lemma spec_pred : forall x, [|pred x|] = ([|x|] - 1) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_pred". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_pred".  
 intros; unfold pred, to_Z, Z.pred.
 rewrite <- Zplus_mod_idemp_l; auto.
 Qed.
 
 Lemma spec_sub : forall x y, [|sub x y|] = ([|x|] - [|y|]) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_sub". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_sub".  
 intros; unfold sub, to_Z; apply Zminus_mod.
 Qed.
 
 Lemma spec_sub_carry :
 forall x y, [|sub_carry x y|] = ([|x|] - [|y|] - 1) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_sub_carry". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_sub_carry".  
 intros; unfold sub_carry, to_Z.
 rewrite <- Zminus_mod_idemp_l.
 rewrite (Zminus_mod x y).
@@ -364,7 +364,7 @@ Definition mul := Z.mul.
 Definition square_c x := mul_c x x.
 
 Lemma spec_mul_c : forall x y, [|| mul_c x y ||] = [|x|] * [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_mul_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_mul_c".  
 intros; unfold mul_c, zn2z_to_Z.
 assert (Z.div_eucl ([|x|]*[|y|]) wB = (([|x|]*[|y|])/wB,([|x|]*[|y|]) mod wB)).
 unfold Z.modulo, Z.div; destruct Z.div_eucl; auto.
@@ -389,12 +389,12 @@ rewrite H3, H4; auto with zarith.
 Qed.
 
 Lemma spec_mul : forall x y, [|mul x y|] = ([|x|] * [|y|]) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_mul". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_mul".  
 intros; unfold mul, to_Z; apply Zmult_mod.
 Qed.
 
 Lemma spec_square_c : forall x, [|| square_c x||] = [|x|] * [|x|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_square_c". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_square_c".  
 intros x; exact (spec_mul_c x x).
 Qed.
 
@@ -404,7 +404,7 @@ Lemma spec_div : forall a b, 0 < [|b|] ->
 let (q,r) := div a b in
 [|a|] = [|q|] * [|b|] + [|r|] /\
 0 <= [|r|] < [|b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_div". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_div".  
 intros; unfold div.
 assert ([|b|]>0) by auto with zarith.
 assert (Z.div_eucl [|a|] [|b|] = ([|a|]/[|b|], [|a|] mod [|b|])).
@@ -433,7 +433,7 @@ Lemma spec_div_gt : forall a b, [|a|] > [|b|] -> 0 < [|b|] ->
 let (q,r) := div_gt a b in
 [|a|] = [|q|] * [|b|] + [|r|] /\
 0 <= [|r|] < [|b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_div_gt". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_div_gt".  
 intros.
 apply spec_div; auto.
 Qed.
@@ -443,7 +443,7 @@ Definition modulo_gt x y := [|x|] mod [|y|].
 
 Lemma spec_modulo :  forall a b, 0 < [|b|] ->
 [|modulo a b|] = [|a|] mod [|b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_modulo". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_modulo".  
 intros; unfold modulo.
 apply Zmod_small.
 assert ([|b|]>0) by auto with zarith.
@@ -453,7 +453,7 @@ Qed.
 
 Lemma spec_modulo_gt : forall a b, [|a|] > [|b|] -> 0 < [|b|] ->
 [|modulo_gt a b|] = [|a|] mod [|b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_modulo_gt". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_modulo_gt".  
 intros; apply spec_modulo; auto.
 Qed.
 
@@ -461,7 +461,7 @@ Definition gcd x y := Z.gcd [|x|] [|y|].
 Definition gcd_gt x y := Z.gcd [|x|] [|y|].
 
 Lemma Zgcd_bound : forall a b, 0<=a -> 0<=b -> Z.gcd a b <= Z.max a b.
-Proof. hammer_hook "ZModulo" "ZModulo.Zgcd_bound". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.Zgcd_bound".  
 intros.
 generalize (Zgcd_is_gcd a b); inversion_clear 1.
 destruct H2 as (q,H2); destruct H3 as (q',H3); clear H4.
@@ -483,7 +483,7 @@ generalize (Zmax_spec a b); omega.
 Qed.
 
 Lemma spec_gcd : forall a b, Zis_gcd [|a|] [|b|] [|gcd a b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_gcd". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_gcd".  
 intros; unfold gcd.
 generalize (Z_mod_lt a wB wB_pos)(Z_mod_lt b wB wB_pos); intros.
 fold [|a|] in *; fold [|b|] in *.
@@ -499,7 +499,7 @@ Qed.
 
 Lemma spec_gcd_gt : forall a b, [|a|] > [|b|] ->
 Zis_gcd [|a|] [|b|] [|gcd_gt a b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_gcd_gt". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_gcd_gt".  
 intros. apply spec_gcd; auto.
 Qed.
 
@@ -512,7 +512,7 @@ wB/2 <= [|b|] ->
 let (q,r) := div21 a1 a2 b in
 [|a1|] *wB+ [|a2|] = [|q|] * [|b|] + [|r|] /\
 0 <= [|r|] < [|b|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_div21". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_div21".  
 intros; unfold div21.
 generalize (Z_mod_lt a1 wB wB_pos); fold [|a1|]; intros.
 generalize (Z_mod_lt a2 wB wB_pos); fold [|a2|]; intros.
@@ -546,14 +546,14 @@ Lemma spec_add_mul_div : forall x y p,
 [| add_mul_div p x y |] =
 ([|x|] * (2 ^ [|p|]) +
 [|y|] / (2 ^ ((Zpos digits) - [|p|]))) mod wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_add_mul_div". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_add_mul_div".  
 intros; unfold add_mul_div; auto.
 Qed.
 
 Definition pos_mod p w := [|w|] mod (2 ^ [|p|]).
 Lemma spec_pos_mod : forall w p,
 [|pos_mod p w|] = [|w|] mod (2 ^ [|p|]).
-Proof. hammer_hook "ZModulo" "ZModulo.spec_pos_mod". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_pos_mod".  
 intros; unfold pos_mod.
 apply Zmod_small.
 generalize (Z_mod_lt [|w|] (2 ^ [|p|])); intros.
@@ -568,7 +568,7 @@ if Z.eq_dec ([|x|] mod 2) 0 then true else false.
 
 Lemma spec_is_even : forall x,
 if is_even x then [|x|] mod 2 = 0 else [|x|] mod 2 = 1.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_is_even". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_is_even".  
 intros; unfold is_even; destruct Z.eq_dec; auto.
 generalize (Z_mod_lt [|x|] 2); omega.
 Qed.
@@ -576,7 +576,7 @@ Qed.
 Definition sqrt x := Z.sqrt [|x|].
 Lemma spec_sqrt : forall x,
 [|sqrt x|] ^ 2 <= [|x|] < ([|sqrt x|] + 1) ^ 2.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_sqrt". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_sqrt".  
 intros.
 unfold sqrt.
 repeat rewrite Z.pow_2_r.
@@ -603,7 +603,7 @@ wB/ 4 <= [|x|] ->
 let (s,r) := sqrt2 x y in
 [||WW x y||] = [|s|] ^ 2 + [+|r|] /\
 [+|r|] <= 2 * [|s|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_sqrt2". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_sqrt2".  
 intros; unfold sqrt2.
 simpl zn2z_to_Z.
 remember ([|x|]*wB+[|y|]) as z.
@@ -638,7 +638,7 @@ compute in H0; elim H0; auto.
 Qed.
 
 Lemma two_p_power2 : forall x, x>=0 -> two_p x = 2 ^ x.
-Proof. hammer_hook "ZModulo" "ZModulo.two_p_power2". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.two_p_power2".  
 intros.
 unfold two_p.
 destruct x; simpl; auto.
@@ -652,14 +652,14 @@ Definition head0 x := match [|x|] with
 end.
 
 Lemma spec_head00:  forall x, [|x|] = 0 -> [|head0 x|] = Zpos digits.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_head00". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_head00".  
 unfold head0; intros.
 rewrite H; simpl.
 apply spec_zdigits.
 Qed.
 
 Lemma log_inf_bounded : forall x p, Zpos x < 2^p -> log_inf x < p.
-Proof. hammer_hook "ZModulo" "ZModulo.log_inf_bounded". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.log_inf_bounded".  
 induction x; simpl; intros.
 
 assert (0 < p) by (destruct p; compute; auto with zarith; discriminate).
@@ -682,7 +682,7 @@ Qed.
 
 Lemma spec_head0  : forall x,  0 < [|x|] ->
 wB/ 2 <= 2 ^ ([|head0 x|]) * [|x|] < wB.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_head0". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_head0".  
 intros; unfold head0.
 generalize (spec_to_Z x).
 destruct [|x|]; try discriminate.
@@ -726,13 +726,13 @@ Fixpoint Ptail p := match p with
 end.
 
 Lemma Ptail_pos : forall p, 0 <= Ptail p.
-Proof. hammer_hook "ZModulo" "ZModulo.Ptail_pos". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.Ptail_pos".  
 induction p; simpl; auto with zarith.
 Qed.
 Hint Resolve Ptail_pos.
 
 Lemma Ptail_bounded : forall p d, Zpos p < 2^(Zpos d) -> Ptail p < Zpos d.
-Proof. hammer_hook "ZModulo" "ZModulo.Ptail_bounded". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.Ptail_bounded".  
 induction p; try (compute; auto; fail).
 intros; simpl.
 assert (d <> xH).
@@ -762,7 +762,7 @@ match [|x|] with
 end.
 
 Lemma spec_tail00:  forall x, [|x|] = 0 -> [|tail0 x|] = Zpos digits.
-Proof. hammer_hook "ZModulo" "ZModulo.spec_tail00". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_tail00".  
 unfold tail0; intros.
 rewrite H; simpl.
 apply spec_zdigits.
@@ -770,7 +770,7 @@ Qed.
 
 Lemma spec_tail0  : forall x, 0 < [|x|] ->
 exists y, 0 <= y /\ [|x|] = (2 * y + 1) * (2 ^ [|tail0 x|]).
-Proof. hammer_hook "ZModulo" "ZModulo.spec_tail0". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_tail0".  
 intros; unfold tail0.
 generalize (spec_to_Z x).
 destruct [|x|]; try discriminate; intros.
@@ -801,7 +801,7 @@ Definition land := Z.land.
 Definition lxor := Z.lxor.
 
 Lemma spec_lor x y : [|lor x y|] = Z.lor [|x|] [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_lor". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_lor".  
 unfold lor, to_Z.
 apply Z.bits_inj'; intros n Hn. rewrite Z.lor_spec.
 unfold wB, base.
@@ -811,7 +811,7 @@ destruct (Z.le_gt_cases (Z.pos digits) n).
 Qed.
 
 Lemma spec_land x y : [|land x y|] = Z.land [|x|] [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_land". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_land".  
 unfold land, to_Z.
 apply Z.bits_inj'; intros n Hn. rewrite Z.land_spec.
 unfold wB, base.
@@ -821,7 +821,7 @@ destruct (Z.le_gt_cases (Z.pos digits) n).
 Qed.
 
 Lemma spec_lxor x y : [|lxor x y|] = Z.lxor [|x|] [|y|].
-Proof. hammer_hook "ZModulo" "ZModulo.spec_lxor". Restart. 
+Proof. try hammer_hook "ZModulo" "ZModulo.spec_lxor".  
 unfold lxor, to_Z.
 apply Z.bits_inj'; intros n Hn. rewrite Z.lxor_spec.
 unfold wB, base.

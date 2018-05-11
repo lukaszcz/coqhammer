@@ -25,20 +25,20 @@ Definition le_or_le_S := le_le_S_dec.
 Definition Pcompare := gt_eq_gt_dec.
 
 Lemma le_dec : forall n m, {n <= m} + {m <= n}.
-Proof. hammer_hook "Compare" "Compare.le_dec". Restart. exact (le_ge_dec). Qed.
+Proof. try hammer_hook "Compare" "Compare.le_dec".  exact (le_ge_dec). Qed.
 
 Definition lt_or_eq n m := {m > n} + {n = m}.
 
 Lemma le_decide : forall n m, n <= m -> lt_or_eq n m.
-Proof. hammer_hook "Compare" "Compare.le_decide". Restart. exact (le_lt_eq_dec). Qed.
+Proof. try hammer_hook "Compare" "Compare.le_decide".  exact (le_lt_eq_dec). Qed.
 
 Lemma le_le_S_eq : forall n m, n <= m -> S n <= m \/ n = m.
-Proof. hammer_hook "Compare" "Compare.le_le_S_eq". Restart. exact (le_lt_or_eq). Qed.
+Proof. try hammer_hook "Compare" "Compare.le_le_S_eq".  exact (le_lt_or_eq). Qed.
 
 
 Lemma discrete_nat :
 forall n m, n < m -> S n = m \/ (exists r : nat, m = S (S (n + r))).
-Proof. hammer_hook "Compare" "Compare.discrete_nat". Restart. 
+Proof. try hammer_hook "Compare" "Compare.discrete_nat".  
 intros m n H.
 lapply (lt_le_S m n); auto with arith.
 intro H'; lapply (le_lt_or_eq (S m) n); auto with arith.

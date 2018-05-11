@@ -19,43 +19,43 @@ Local Open Scope R_scope.
 Ltac ring_Rsqr := unfold Rsqr; ring.
 
 Lemma Rsqr_neg : forall x:R, Rsqr x = Rsqr (- x).
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_neg". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_neg".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_mult : forall x y:R, Rsqr (x * y) = Rsqr x * Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_mult". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_mult".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_plus : forall x y:R, Rsqr (x + y) = Rsqr x + Rsqr y + 2 * x * y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_plus". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_plus".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_minus : forall x y:R, Rsqr (x - y) = Rsqr x + Rsqr y - 2 * x * y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_minus". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_minus".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_neg_minus : forall x y:R, Rsqr (x - y) = Rsqr (y - x).
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_neg_minus". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_neg_minus".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_1 : Rsqr 1 = 1.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_1".  
 ring_Rsqr.
 Qed.
 
 Lemma Rsqr_gt_0_0 : forall x:R, 0 < Rsqr x -> x <> 0.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_gt_0_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_gt_0_0".  
 intros; red; intro; rewrite H0 in H; rewrite Rsqr_0 in H;
 elim (Rlt_irrefl 0 H).
 Qed.
 
 Lemma Rsqr_pos_lt : forall x:R, x <> 0 -> 0 < Rsqr x.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_pos_lt". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_pos_lt".  
 intros; case (Rtotal_order 0 x); intro;
 [ unfold Rsqr; apply Rmult_lt_0_compat; assumption
 | elim H0; intro;
@@ -66,7 +66,7 @@ apply Rmult_lt_0_compat; assumption ] ].
 Qed.
 
 Lemma Rsqr_div : forall x y:R, y <> 0 -> Rsqr (x / y) = Rsqr x / Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_div". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_div".  
 intros; unfold Rsqr.
 unfold Rdiv.
 rewrite Rinv_mult_distr.
@@ -81,24 +81,24 @@ assumption.
 Qed.
 
 Lemma Rsqr_eq_0 : forall x:R, Rsqr x = 0 -> x = 0.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_eq_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_eq_0".  
 unfold Rsqr; intros; generalize (Rmult_integral x x H); intro;
 elim H0; intro; assumption.
 Qed.
 
 Lemma Rsqr_minus_plus : forall a b:R, (a - b) * (a + b) = Rsqr a - Rsqr b.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_minus_plus". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_minus_plus".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_plus_minus : forall a b:R, (a + b) * (a - b) = Rsqr a - Rsqr b.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_plus_minus". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_plus_minus".  
 intros; ring_Rsqr.
 Qed.
 
 Lemma Rsqr_incr_0 :
 forall x y:R, Rsqr x <= Rsqr y -> 0 <= x -> 0 <= y -> x <= y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_incr_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_incr_0".  
 intros; destruct (Rle_dec x y) as [Hle|Hnle];
 [ assumption
 | cut (y < x);
@@ -110,7 +110,7 @@ intro; elim (Rlt_irrefl (x * x) H4)
 Qed.
 
 Lemma Rsqr_incr_0_var : forall x y:R, Rsqr x <= Rsqr y -> 0 <= y -> x <= y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_incr_0_var". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_incr_0_var".  
 intros; destruct (Rle_dec x y) as [Hle|Hnle];
 [ assumption
 | cut (y < x);
@@ -123,13 +123,13 @@ Qed.
 
 Lemma Rsqr_incr_1 :
 forall x y:R, x <= y -> 0 <= x -> 0 <= y -> Rsqr x <= Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_incr_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_incr_1".  
 intros; unfold Rsqr; apply Rmult_le_compat; assumption.
 Qed.
 
 Lemma Rsqr_incrst_0 :
 forall x y:R, Rsqr x < Rsqr y -> 0 <= x -> 0 <= y -> x < y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_incrst_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_incrst_0".  
 intros; case (Rtotal_order x y); intro;
 [ assumption
 | elim H2; intro;
@@ -141,13 +141,13 @@ Qed.
 
 Lemma Rsqr_incrst_1 :
 forall x y:R, x < y -> 0 <= x -> 0 <= y -> Rsqr x < Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_incrst_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_incrst_1".  
 intros; unfold Rsqr; apply Rmult_le_0_lt_compat; assumption.
 Qed.
 
 Lemma Rsqr_neg_pos_le_0 :
 forall x y:R, Rsqr x <= Rsqr y -> 0 <= y -> - y <= x.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_neg_pos_le_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_neg_pos_le_0".  
 intros; destruct (Rcase_abs x) as [Hlt|Hle].
 generalize (Ropp_lt_gt_contravar x 0 Hlt); rewrite Ropp_0; intro;
 generalize (Rlt_le 0 (- x) H1); intro; rewrite (Rsqr_neg x) in H;
@@ -161,7 +161,7 @@ Qed.
 
 Lemma Rsqr_neg_pos_le_1 :
 forall x y:R, - y <= x -> x <= y -> 0 <= y -> Rsqr x <= Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_neg_pos_le_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_neg_pos_le_1".  
 intros x y H H0 H1; destruct (Rcase_abs x) as [Hlt|Hle].
 apply Ropp_lt_gt_contravar, Rlt_le in Hlt; rewrite Ropp_0 in Hlt;
 apply Ropp_le_ge_contravar, Rge_le in H; rewrite Ropp_involutive in H;
@@ -170,7 +170,7 @@ apply Rge_le in Hle; apply Rsqr_incr_1; assumption.
 Qed.
 
 Lemma neg_pos_Rsqr_le : forall x y:R, - y <= x -> x <= y -> Rsqr x <= Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.neg_pos_Rsqr_le". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.neg_pos_Rsqr_le".  
 intros x y H H0; destruct (Rcase_abs x) as [Hlt|Hle].
 apply Ropp_lt_gt_contravar, Rlt_le in Hlt; rewrite Ropp_0 in Hlt;
 apply Ropp_le_ge_contravar, Rge_le in H; rewrite Ropp_involutive in H.
@@ -182,44 +182,44 @@ apply Rsqr_incr_1; assumption.
 Qed.
 
 Lemma Rsqr_abs : forall x:R, Rsqr x = Rsqr (Rabs x).
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_abs". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_abs".  
 intro; unfold Rabs; case (Rcase_abs x); intro;
 [ apply Rsqr_neg | reflexivity ].
 Qed.
 
 Lemma Rsqr_le_abs_0 : forall x y:R, Rsqr x <= Rsqr y -> Rabs x <= Rabs y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_le_abs_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_le_abs_0".  
 intros; apply Rsqr_incr_0; repeat rewrite <- Rsqr_abs;
 [ assumption | apply Rabs_pos | apply Rabs_pos ].
 Qed.
 
 Lemma Rsqr_le_abs_1 : forall x y:R, Rabs x <= Rabs y -> Rsqr x <= Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_le_abs_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_le_abs_1".  
 intros; rewrite (Rsqr_abs x); rewrite (Rsqr_abs y);
 apply (Rsqr_incr_1 (Rabs x) (Rabs y) H (Rabs_pos x) (Rabs_pos y)).
 Qed.
 
 Lemma Rsqr_lt_abs_0 : forall x y:R, Rsqr x < Rsqr y -> Rabs x < Rabs y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_lt_abs_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_lt_abs_0".  
 intros; apply Rsqr_incrst_0; repeat rewrite <- Rsqr_abs;
 [ assumption | apply Rabs_pos | apply Rabs_pos ].
 Qed.
 
 Lemma Rsqr_lt_abs_1 : forall x y:R, Rabs x < Rabs y -> Rsqr x < Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_lt_abs_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_lt_abs_1".  
 intros; rewrite (Rsqr_abs x); rewrite (Rsqr_abs y);
 apply (Rsqr_incrst_1 (Rabs x) (Rabs y) H (Rabs_pos x) (Rabs_pos y)).
 Qed.
 
 Lemma Rsqr_inj : forall x y:R, 0 <= x -> 0 <= y -> Rsqr x = Rsqr y -> x = y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_inj". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_inj".  
 intros; generalize (Rle_le_eq (Rsqr x) (Rsqr y)); intro; elim H2; intros _ H3;
 generalize (H3 H1); intro; elim H4; intros; apply Rle_antisym;
 apply Rsqr_incr_0; assumption.
 Qed.
 
 Lemma Rsqr_eq_abs_0 : forall x y:R, Rsqr x = Rsqr y -> Rabs x = Rabs y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_eq_abs_0". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_eq_abs_0".  
 intros; unfold Rabs; case (Rcase_abs x) as [Hltx|Hgex];
 case (Rcase_abs y) as [Hlty|Hgey].
 rewrite (Rsqr_neg x), (Rsqr_neg y) in H;
@@ -239,7 +239,7 @@ apply Rsqr_inj; auto using Rge_le.
 Qed.
 
 Lemma Rsqr_eq_asb_1 : forall x y:R, Rabs x = Rabs y -> Rsqr x = Rsqr y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_eq_asb_1". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_eq_asb_1".  
 intros; cut (Rsqr (Rabs x) = Rsqr (Rabs y)).
 intro; repeat rewrite <- Rsqr_abs in H0; assumption.
 rewrite H; reflexivity.
@@ -248,7 +248,7 @@ Qed.
 Lemma triangle_rectangle :
 forall x y z:R,
 0 <= z -> Rsqr x + Rsqr y <= Rsqr z -> - z <= x <= z /\ - z <= y <= z.
-Proof. hammer_hook "R_sqr" "R_sqr.triangle_rectangle". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.triangle_rectangle".  
 intros;
 generalize (plus_le_is_le (Rsqr x) (Rsqr y) (Rsqr z) (Rle_0_sqr y) H0);
 rewrite Rplus_comm in H0;
@@ -265,7 +265,7 @@ Qed.
 Lemma triangle_rectangle_lt :
 forall x y z:R,
 Rsqr x + Rsqr y < Rsqr z -> Rabs x < Rabs z /\ Rabs y < Rabs z.
-Proof. hammer_hook "R_sqr" "R_sqr.triangle_rectangle_lt". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.triangle_rectangle_lt".  
 intros; split;
 [ generalize (plus_lt_is_lt (Rsqr x) (Rsqr y) (Rsqr z) (Rle_0_sqr y) H);
 intro; apply Rsqr_lt_abs_0; assumption
@@ -277,7 +277,7 @@ Qed.
 Lemma triangle_rectangle_le :
 forall x y z:R,
 Rsqr x + Rsqr y <= Rsqr z -> Rabs x <= Rabs z /\ Rabs y <= Rabs z.
-Proof. hammer_hook "R_sqr" "R_sqr.triangle_rectangle_le". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.triangle_rectangle_le".  
 intros; split;
 [ generalize (plus_le_is_le (Rsqr x) (Rsqr y) (Rsqr z) (Rle_0_sqr y) H);
 intro; apply Rsqr_le_abs_0; assumption
@@ -287,7 +287,7 @@ intro; apply Rsqr_le_abs_0; assumption ].
 Qed.
 
 Lemma Rsqr_inv : forall x:R, x <> 0 -> Rsqr (/ x) = / Rsqr x.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_inv". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_inv".  
 intros; unfold Rsqr.
 rewrite Rinv_mult_distr; try reflexivity || assumption.
 Qed.
@@ -296,7 +296,7 @@ Lemma canonical_Rsqr :
 forall (a:nonzeroreal) (b c x:R),
 a * Rsqr x + b * x + c =
 a * Rsqr (x + b / (2 * a)) + (4 * a * c - Rsqr b) / (4 * a).
-Proof. hammer_hook "R_sqr" "R_sqr.canonical_Rsqr". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.canonical_Rsqr".  
 intros.
 unfold Rsqr.
 field.
@@ -304,7 +304,7 @@ apply a.
 Qed.
 
 Lemma Rsqr_eq : forall x y:R, Rsqr x = Rsqr y -> x = y \/ x = - y.
-Proof. hammer_hook "R_sqr" "R_sqr.Rsqr_eq". Restart. 
+Proof. try hammer_hook "R_sqr" "R_sqr.Rsqr_eq".  
 intros; unfold Rsqr in H;
 generalize (Rplus_eq_compat_l (- (y * y)) (x * x) (y * y) H);
 rewrite Rplus_opp_l; replace (- (y * y) + x * x) with ((x - y) * (x + y)).

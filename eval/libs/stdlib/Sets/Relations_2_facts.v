@@ -32,25 +32,25 @@ Require Export Relations_2.
 
 Theorem Rstar_reflexive :
 forall (U:Type) (R:Relation U), Reflexive U (Rstar U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_reflexive". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_reflexive".  
 auto with sets.
 Qed.
 
 Theorem Rplus_contains_R :
 forall (U:Type) (R:Relation U), contains U (Rplus U R) R.
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rplus_contains_R". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rplus_contains_R".  
 auto with sets.
 Qed.
 
 Theorem Rstar_contains_R :
 forall (U:Type) (R:Relation U), contains U (Rstar U R) R.
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_contains_R". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_contains_R".  
 intros U R; red; intros x y H'; apply Rstar_n with y; auto with sets.
 Qed.
 
 Theorem Rstar_contains_Rplus :
 forall (U:Type) (R:Relation U), contains U (Rstar U R) (Rplus U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_contains_Rplus". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_contains_Rplus".  
 intros U R; red.
 intros x y H'; elim H'.
 generalize Rstar_contains_R; intro T; red in T; auto with sets.
@@ -59,7 +59,7 @@ Qed.
 
 Theorem Rstar_transitive :
 forall (U:Type) (R:Relation U), Transitive U (Rstar U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_transitive". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_transitive".  
 intros U R; red.
 intros x y z H'; elim H'; auto with sets.
 intros x0 y0 z0 H'0 H'1 H'2 H'3; apply Rstar_n with y0; auto with sets.
@@ -68,14 +68,14 @@ Qed.
 Theorem Rstar_cases :
 forall (U:Type) (R:Relation U) (x y:U),
 Rstar U R x y -> x = y \/ (exists u : _, R x u /\ Rstar U R u y).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_cases". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_cases".  
 intros U R x y H'; elim H'; auto with sets.
 intros x0 y0 z H'0 H'1 H'2; right; exists y0; auto with sets.
 Qed.
 
 Theorem Rstar_equiv_Rstar1 :
 forall (U:Type) (R:Relation U), same_relation U (Rstar U R) (Rstar1 U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_equiv_Rstar1". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rstar_equiv_Rstar1".  
 generalize Rstar_contains_R; intro T; red in T.
 intros U R; unfold same_relation, contains.
 split; intros x y H'; elim H'; auto with sets.
@@ -86,7 +86,7 @@ Qed.
 
 Theorem Rsym_imp_Rstarsym :
 forall (U:Type) (R:Relation U), Symmetric U R -> Symmetric U (Rstar U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Rsym_imp_Rstarsym". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Rsym_imp_Rstarsym".  
 intros U R H'; red.
 intros x y H'0; elim H'0; auto with sets.
 intros x0 y0 z H'1 H'2 H'3.
@@ -98,7 +98,7 @@ Qed.
 Theorem Sstar_contains_Rstar :
 forall (U:Type) (R S:Relation U),
 contains U (Rstar U S) R -> contains U (Rstar U S) (Rstar U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Sstar_contains_Rstar". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Sstar_contains_Rstar".  
 unfold contains.
 intros U R S H' x y H'0; elim H'0; auto with sets.
 generalize Rstar_transitive; intro T1; red in T1.
@@ -108,7 +108,7 @@ Qed.
 Theorem star_monotone :
 forall (U:Type) (R S:Relation U),
 contains U S R -> contains U (Rstar U S) (Rstar U R).
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.star_monotone". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.star_monotone".  
 intros U R S H'.
 apply Sstar_contains_Rstar; auto with sets.
 generalize (Rstar_contains_R U S); auto with sets.
@@ -117,7 +117,7 @@ Qed.
 Theorem RstarRplus_RRstar :
 forall (U:Type) (R:Relation U) (x y z:U),
 Rstar U R x y -> Rplus U R y z ->  exists u : _, R x u /\ Rstar U R u z.
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.RstarRplus_RRstar". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.RstarRplus_RRstar".  
 generalize Rstar_contains_Rplus; intro T; red in T.
 generalize Rstar_transitive; intro T1; red in T1.
 intros U R x y z H'; elim H'.
@@ -135,7 +135,7 @@ Strongly_confluent U R ->
 forall x b:U,
 Rstar U R x b ->
 forall a:U, R x a ->  exists z : _, Rstar U R a z /\ R b z.
-Proof. hammer_hook "Relations_2_facts" "Relations_2_facts.Lemma1". Restart. 
+Proof. try hammer_hook "Relations_2_facts" "Relations_2_facts.Lemma1".  
 intros U R H' x b H'0; elim H'0.
 intros x0 a H'1; exists a; auto with sets.
 intros x0 y z H'1 H'2 H'3 a H'4.

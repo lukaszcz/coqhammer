@@ -152,7 +152,7 @@ end le.
 
 Lemma trunc : forall {A} {n} (p:nat), n > p -> t A n
 -> t A (n - p).
-Proof. hammer_hook "VectorDef" "VectorDef.trunc". Restart. 
+Proof. try hammer_hook "VectorDef" "VectorDef.trunc".  
 induction p as [| p f]; intros H v.
 rewrite <- minus_n_O.
 exact v.

@@ -30,7 +30,7 @@ Lemma CVN_R_cos :
 forall fn:nat -> R -> R,
 fn = (fun (N:nat) (x:R) => (-1) ^ N / INR (fact (2 * N)) * x ^ (2 * N)) ->
 CVN_R fn.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.CVN_R_cos". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.CVN_R_cos".  
 unfold CVN_R in |- *; intros.
 cut ((r:R) <> 0).
 intro hyp_r; unfold CVN_r in |- *.
@@ -129,7 +129,7 @@ Qed.
 
 
 Lemma continuity_cos : continuity cos.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.continuity_cos". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.continuity_cos".  
 set (fn := fun (N:nat) (x:R) => (-1) ^ N / INR (fact (2 * N)) * x ^ (2 * N)).
 cut (CVN_R fn).
 intro; cut (forall x:R, { l:R | Un_cv (fun N:nat => SP fn N x) l }).
@@ -174,7 +174,7 @@ apply CVN_R_cos; unfold fn in |- *; reflexivity.
 Qed.
 
 Lemma sin_gt_cos_7_8 : sin (7 / 8) > cos (7 / 8).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_gt_cos_7_8". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_gt_cos_7_8".  
 assert (lo1 : 0 <= 7/8) by fourier.
 assert (up1 : 7/8 <= 4) by fourier.
 assert (lo : -2 <= 7/8) by fourier.
@@ -236,25 +236,25 @@ Qed.
 
 
 Lemma cos_minus : forall x y:R, cos (x - y) = cos x * cos y + sin x * sin y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_minus". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_minus".  
 intros; unfold Rminus in |- *; rewrite cos_plus.
 rewrite <- cos_sym; rewrite sin_antisym; ring.
 Qed.
 
 
 Lemma sin2_cos2 : forall x:R, Rsqr (sin x) + Rsqr (cos x) = 1.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin2_cos2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin2_cos2".  
 intro; unfold Rsqr in |- *; rewrite Rplus_comm; rewrite <- (cos_minus x x);
 unfold Rminus in |- *; rewrite Rplus_opp_r; apply cos_0.
 Qed.
 
 Lemma cos2 : forall x:R, Rsqr (cos x) = 1 - Rsqr (sin x).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos2".  
 intros x; rewrite <- (sin2_cos2 x); ring.
 Qed.
 
 Lemma sin2 : forall x:R, Rsqr (sin x) = 1 - Rsqr (cos x).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin2".  
 intro x; generalize (cos2 x); intro H1; rewrite H1.
 unfold Rminus in |- *; rewrite Ropp_plus_distr; rewrite <- Rplus_assoc;
 rewrite Rplus_opp_r; rewrite Rplus_0_l; symmetry  in |- *;
@@ -263,7 +263,7 @@ Qed.
 
 
 Lemma cos_PI2 : cos (PI / 2) = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_PI2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_PI2".  
 unfold PI; generalize cos_pi2; replace ((2 * PI2)/2) with PI2 by field; tauto.
 Qed.
 
@@ -295,14 +295,14 @@ revert t2; rewrite Rabs_pos_eq;[| apply Rlt_le]; tauto.
 Qed.
 
 Lemma PI_RGT_0 : PI > 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.PI_RGT_0". Restart.  unfold PI; destruct pi2_int; fourier. Qed.
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.PI_RGT_0".   unfold PI; destruct pi2_int; fourier. Qed.
 
 Lemma PI_4 : PI <= 4.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.PI_4". Restart.  unfold PI; destruct pi2_int; fourier. Qed.
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.PI_4".   unfold PI; destruct pi2_int; fourier. Qed.
 
 
 Lemma PI_neq0 : PI <> 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.PI_neq0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.PI_neq0".  
 red in |- *; intro; assert (H0 := PI_RGT_0); rewrite H in H0;
 elim (Rlt_irrefl _ H0).
 Qed.
@@ -310,7 +310,7 @@ Qed.
 
 
 Lemma cos_PI : cos PI = -1.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_PI". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_PI".  
 replace PI with (PI / 2 + PI / 2).
 rewrite cos_plus.
 rewrite sin_PI2; rewrite cos_PI2.
@@ -319,7 +319,7 @@ symmetry  in |- *; apply double_var.
 Qed.
 
 Lemma sin_PI : sin PI = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_PI". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_PI".  
 assert (H := sin2_cos2 PI).
 rewrite cos_PI in H.
 change (-1) with (-(1)) in H.
@@ -333,7 +333,7 @@ Qed.
 
 Lemma sin_bound : forall (a : R) (n : nat), 0 <= a -> a <= PI ->
 sin_approx a (2 * n + 1) <= sin a <= sin_approx a (2 * (n + 1)).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_bound". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_bound".  
 intros a n a0 api; apply pre_sin_bound.
 assumption.
 apply Rle_trans with (1:= api) (2 := PI_4).
@@ -341,7 +341,7 @@ Qed.
 
 Lemma cos_bound : forall (a : R) (n : nat), - PI / 2 <= a -> a <= PI / 2 ->
 cos_approx a (2 * n + 1) <= cos a <= cos_approx a (2 * (n + 1)).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_bound". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_bound".  
 intros a n lower upper; apply pre_cos_bound.
 apply Rle_trans with (2 := lower).
 apply Rmult_le_reg_r with 2; [fourier |].
@@ -354,19 +354,19 @@ generalize PI_4; intros; fourier.
 Qed.
 
 Lemma neg_cos : forall x:R, cos (x + PI) = - cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.neg_cos". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.neg_cos".  
 intro x; rewrite cos_plus; rewrite sin_PI; rewrite cos_PI; ring.
 Qed.
 
 
 Lemma sin_cos : forall x:R, sin x = - cos (PI / 2 + x).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_cos". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_cos".  
 intro x; rewrite cos_plus; rewrite sin_PI2; rewrite cos_PI2; ring.
 Qed.
 
 
 Lemma sin_plus : forall x y:R, sin (x + y) = sin x * cos y + cos x * sin y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_plus". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_plus".  
 intros.
 rewrite (sin_cos (x + y)).
 replace (PI / 2 + (x + y)) with (PI / 2 + x + y); [ rewrite cos_plus | ring ].
@@ -380,7 +380,7 @@ pattern PI at 1 in |- *; rewrite (double_var PI); ring.
 Qed.
 
 Lemma sin_minus : forall x y:R, sin (x - y) = sin x * cos y - cos x * sin y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_minus". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_minus".  
 intros; unfold Rminus in |- *; rewrite sin_plus.
 rewrite <- cos_sym; rewrite sin_antisym; ring.
 Qed.
@@ -395,7 +395,7 @@ cos y <> 0 ->
 cos (x + y) <> 0 ->
 1 - tan x * tan y <> 0 ->
 tan (x + y) = (tan x + tan y) / (1 - tan x * tan y).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_plus". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_plus".  
 intros; unfold tan in |- *; rewrite sin_plus; rewrite cos_plus;
 unfold Rdiv in |- *;
 replace (cos x * cos y - sin x * sin y) with
@@ -432,26 +432,26 @@ Qed.
 
 
 Lemma sin_2a : forall x:R, sin (2 * x) = 2 * sin x * cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_2a". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_2a".  
 intro x; rewrite double; rewrite sin_plus.
 rewrite <- (Rmult_comm (sin x)); symmetry  in |- *; rewrite Rmult_assoc;
 apply double.
 Qed.
 
 Lemma cos_2a : forall x:R, cos (2 * x) = cos x * cos x - sin x * sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_2a". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_2a".  
 intro x; rewrite double; apply cos_plus.
 Qed.
 
 Lemma cos_2a_cos : forall x:R, cos (2 * x) = 2 * cos x * cos x - 1.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_2a_cos". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_2a_cos".  
 intro x; rewrite double; unfold Rminus in |- *; rewrite Rmult_assoc;
 rewrite cos_plus; generalize (sin2_cos2 x); rewrite double;
 intro H1; rewrite <- H1; ring_Rsqr.
 Qed.
 
 Lemma cos_2a_sin : forall x:R, cos (2 * x) = 1 - 2 * sin x * sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_2a_sin". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_2a_sin".  
 intro x; rewrite Rmult_assoc; unfold Rminus in |- *; repeat rewrite double.
 generalize (sin2_cos2 x); intro H1; rewrite <- H1; rewrite cos_plus;
 ring_Rsqr.
@@ -462,29 +462,29 @@ forall x:R,
 cos x <> 0 ->
 cos (2 * x) <> 0 ->
 1 - tan x * tan x <> 0 -> tan (2 * x) = 2 * tan x / (1 - tan x * tan x).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_2a". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_2a".  
 repeat rewrite double; intros; repeat rewrite double; rewrite double in H0;
 apply tan_plus; assumption.
 Qed.
 
 Lemma sin_neg : forall x:R, sin (- x) = - sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_neg". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_neg".  
 apply sin_antisym.
 Qed.
 
 Lemma cos_neg : forall x:R, cos (- x) = cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_neg". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_neg".  
 intro; symmetry  in |- *; apply cos_sym.
 Qed.
 
 Lemma tan_0 : tan 0 = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_0".  
 unfold tan in |- *; rewrite sin_0; rewrite cos_0.
 unfold Rdiv in |- *; apply Rmult_0_l.
 Qed.
 
 Lemma tan_neg : forall x:R, tan (- x) = - tan x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_neg". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_neg".  
 intros x; unfold tan in |- *; rewrite sin_neg; rewrite cos_neg;
 unfold Rdiv in |- *.
 apply Ropp_mult_distr_l_reverse.
@@ -497,7 +497,7 @@ cos y <> 0 ->
 cos (x - y) <> 0 ->
 1 + tan x * tan y <> 0 ->
 tan (x - y) = (tan x - tan y) / (1 + tan x * tan y).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_minus". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_minus".  
 intros; unfold Rminus in |- *; rewrite tan_plus.
 rewrite tan_neg; unfold Rminus in |- *; rewrite <- Ropp_mult_distr_l_reverse;
 rewrite Rmult_opp_opp; reflexivity.
@@ -509,7 +509,7 @@ rewrite Rmult_opp_opp; assumption.
 Qed.
 
 Lemma cos_3PI2 : cos (3 * (PI / 2)) = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_3PI2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_3PI2".  
 replace (3 * (PI / 2)) with (PI + PI / 2).
 rewrite cos_plus; rewrite sin_PI; rewrite cos_PI2; ring.
 pattern PI at 1 in |- *; rewrite (double_var PI).
@@ -517,28 +517,28 @@ ring.
 Qed.
 
 Lemma sin_2PI : sin (2 * PI) = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_2PI". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_2PI".  
 rewrite sin_2a; rewrite sin_PI; ring.
 Qed.
 
 Lemma cos_2PI : cos (2 * PI) = 1.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_2PI". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_2PI".  
 rewrite cos_2a; rewrite sin_PI; rewrite cos_PI; ring.
 Qed.
 
 Lemma neg_sin : forall x:R, sin (x + PI) = - sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.neg_sin". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.neg_sin".  
 intro x; rewrite sin_plus; rewrite sin_PI; rewrite cos_PI; ring.
 Qed.
 
 Lemma sin_PI_x : forall x:R, sin (PI - x) = sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_PI_x". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_PI_x".  
 intro x; rewrite sin_minus; rewrite sin_PI; rewrite cos_PI.
 ring.
 Qed.
 
 Lemma sin_period : forall (x:R) (k:nat), sin (x + 2 * INR k * PI) = sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_period". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_period".  
 intros x k; induction  k as [| k Hreck].
 simpl in |- *;  ring_simplify (x + 2 * 0 * PI).
 trivial.
@@ -550,7 +550,7 @@ rewrite S_INR in |- *;  ring.
 Qed.
 
 Lemma cos_period : forall (x:R) (k:nat), cos (x + 2 * INR k * PI) = cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_period". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_period".  
 intros x k; induction  k as [| k Hreck].
 simpl in |- *;  ring_simplify (x + 2 * 0 * PI).
 trivial.
@@ -562,28 +562,28 @@ rewrite S_INR in |- *;  ring.
 Qed.
 
 Lemma sin_shift : forall x:R, sin (PI / 2 - x) = cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_shift". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_shift".  
 intro x; rewrite sin_minus; rewrite sin_PI2; rewrite cos_PI2; ring.
 Qed.
 
 Lemma cos_shift : forall x:R, cos (PI / 2 - x) = sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_shift". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_shift".  
 intro x; rewrite cos_minus; rewrite sin_PI2; rewrite cos_PI2; ring.
 Qed.
 
 Lemma cos_sin : forall x:R, cos x = sin (PI / 2 + x).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_sin". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_sin".  
 intro x; rewrite sin_plus; rewrite sin_PI2; rewrite cos_PI2; ring.
 Qed.
 
 Lemma PI2_RGT_0 : 0 < PI / 2.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.PI2_RGT_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.PI2_RGT_0".  
 unfold Rdiv in |- *; apply Rmult_lt_0_compat;
 [ apply PI_RGT_0 | apply Rinv_0_lt_compat; prove_sup ].
 Qed.
 
 Lemma SIN_bound : forall x:R, -1 <= sin x <= 1.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.SIN_bound". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.SIN_bound".  
 intro; destruct (Rle_dec (-1) (sin x)) as [Hle|Hnle].
 destruct (Rle_dec (sin x) 1) as [Hle'|Hnle'].
 split; assumption.
@@ -619,12 +619,12 @@ auto with real.
 Qed.
 
 Lemma COS_bound : forall x:R, -1 <= cos x <= 1.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.COS_bound". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.COS_bound".  
 intro; rewrite <- sin_shift; apply SIN_bound.
 Qed.
 
 Lemma cos_sin_0 : forall x:R, ~ (cos x = 0 /\ sin x = 0).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_sin_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_sin_0".  
 intro; red in |- *; intro; elim H; intros; generalize (sin2_cos2 x); intro;
 rewrite H0 in H2; rewrite H1 in H2; repeat rewrite Rsqr_0 in H2;
 rewrite Rplus_0_r in H2; generalize Rlt_0_1; intro;
@@ -632,7 +632,7 @@ rewrite <- H2 in H3; elim (Rlt_irrefl 0 H3).
 Qed.
 
 Lemma cos_sin_0_var : forall x:R, cos x <> 0 \/ sin x <> 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_sin_0_var". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_sin_0_var".  
 intros x.
 destruct (Req_dec (cos x) 0). 2: now left.
 right. intros H'.
@@ -650,7 +650,7 @@ Definition cos_lb (a:R) : R := cos_approx a 3.
 Definition cos_ub (a:R) : R := cos_approx a 4.
 
 Lemma sin_lb_gt_0 : forall a:R, 0 < a -> a <= PI / 2 -> 0 < sin_lb a.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_lb_gt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_lb_gt_0".  
 intros.
 unfold sin_lb in |- *; unfold sin_approx in |- *; unfold sin_term in |- *.
 set (Un := fun i:nat => a ^ (2 * i + 1) / INR (fact (2 * i + 1))).
@@ -735,31 +735,31 @@ ring.
 Qed.
 
 Lemma SIN : forall a:R, 0 <= a -> a <= PI -> sin_lb a <= sin a <= sin_ub a.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.SIN". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.SIN".  
 intros; unfold sin_lb, sin_ub in |- *; apply (sin_bound a 1 H H0).
 Qed.
 
 Lemma COS :
 forall a:R, - PI / 2 <= a -> a <= PI / 2 -> cos_lb a <= cos a <= cos_ub a.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.COS". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.COS".  
 intros; unfold cos_lb, cos_ub in |- *; apply (cos_bound a 1 H H0).
 Qed.
 
 
 Lemma _PI2_RLT_0 : - (PI / 2) < 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1._PI2_RLT_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1._PI2_RLT_0".  
 assert (H := PI_RGT_0).
 fourier.
 Qed.
 
 Lemma PI4_RLT_PI2 : PI / 4 < PI / 2.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.PI4_RLT_PI2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.PI4_RLT_PI2".  
 assert (H := PI_RGT_0).
 fourier.
 Qed.
 
 Lemma PI2_Rlt_PI : PI / 2 < PI.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.PI2_Rlt_PI". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.PI2_Rlt_PI".  
 assert (H := PI_RGT_0).
 fourier.
 Qed.
@@ -768,7 +768,7 @@ Qed.
 
 
 Theorem sin_gt_0 : forall x:R, 0 < x -> x < PI -> 0 < sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_gt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_gt_0".  
 intros; elim (SIN x (Rlt_le 0 x H) (Rlt_le x PI H0)); intros H1 _;
 case (Rtotal_order x (PI / 2)); intro H2.
 apply Rlt_le_trans with (sin_lb x).
@@ -793,7 +793,7 @@ field.
 Qed.
 
 Theorem cos_gt_0 : forall x:R, - (PI / 2) < x -> x < PI / 2 -> 0 < cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_gt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_gt_0".  
 intros; rewrite cos_sin;
 generalize (Rplus_lt_compat_l (PI / 2) (- (PI / 2)) x H).
 rewrite Rplus_opp_r; intro H1;
@@ -802,7 +802,7 @@ rewrite <- double_var; intro H2; apply (sin_gt_0 (PI / 2 + x) H1 H2).
 Qed.
 
 Lemma sin_ge_0 : forall x:R, 0 <= x -> x <= PI -> 0 <= sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_ge_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_ge_0".  
 intros x H1 H2; elim H1; intro H3;
 [ elim H2; intro H4;
 [ left; apply (sin_gt_0 x H3 H4)
@@ -811,7 +811,7 @@ intros x H1 H2; elim H1; intro H3;
 Qed.
 
 Lemma cos_ge_0 : forall x:R, - (PI / 2) <= x -> x <= PI / 2 -> 0 <= cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_ge_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_ge_0".  
 intros x H1 H2; elim H1; intro H3;
 [ elim H2; intro H4;
 [ left; apply (cos_gt_0 x H3 H4)
@@ -820,7 +820,7 @@ intros x H1 H2; elim H1; intro H3;
 Qed.
 
 Lemma sin_le_0 : forall x:R, PI <= x -> x <= 2 * PI -> sin x <= 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_le_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_le_0".  
 intros x H1 H2; apply Rge_le; rewrite <- Ropp_0;
 rewrite <- (Ropp_involutive (sin x)); apply Ropp_le_ge_contravar;
 rewrite <- neg_sin; replace (x + PI) with (x - PI + 2 * INR 1 * PI);
@@ -837,7 +837,7 @@ rewrite <- neg_sin; replace (x + PI) with (x - PI + 2 * INR 1 * PI);
 Qed.
 
 Lemma cos_le_0 : forall x:R, PI / 2 <= x -> x <= 3 * (PI / 2) -> cos x <= 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_le_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_le_0".  
 intros x H1 H2; apply Rge_le; rewrite <- Ropp_0;
 rewrite <- (Ropp_involutive (cos x)); apply Ropp_le_ge_contravar;
 rewrite <- neg_cos; replace (x + PI) with (x - PI + 2 * INR 1 * PI).
@@ -852,7 +852,7 @@ unfold INR in |- *; ring.
 Qed.
 
 Lemma sin_lt_0 : forall x:R, PI < x -> x < 2 * PI -> sin x < 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_lt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_lt_0".  
 intros x H1 H2; rewrite <- Ropp_0; rewrite <- (Ropp_involutive (sin x));
 apply Ropp_lt_gt_contravar; rewrite <- neg_sin;
 replace (x + PI) with (x - PI + 2 * INR 1 * PI);
@@ -869,7 +869,7 @@ replace (x + PI) with (x - PI + 2 * INR 1 * PI);
 Qed.
 
 Lemma sin_lt_0_var : forall x:R, - PI < x -> x < 0 -> sin x < 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_lt_0_var". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_lt_0_var".  
 intros; generalize (Rplus_lt_compat_l (2 * PI) (- PI) x H);
 replace (2 * PI + - PI) with PI;
 [ intro H1; rewrite Rplus_comm in H1;
@@ -883,7 +883,7 @@ replace (2 * 1 * PI) with (2 * PI);
 Qed.
 
 Lemma cos_lt_0 : forall x:R, PI / 2 < x -> x < 3 * (PI / 2) -> cos x < 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_lt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_lt_0".  
 intros x H1 H2; rewrite <- Ropp_0; rewrite <- (Ropp_involutive (cos x));
 apply Ropp_lt_gt_contravar; rewrite <- neg_cos;
 replace (x + PI) with (x - PI + 2 * INR 1 * PI).
@@ -898,7 +898,7 @@ unfold INR in |- *; ring.
 Qed.
 
 Lemma tan_gt_0 : forall x:R, 0 < x -> x < PI / 2 -> 0 < tan x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_gt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_gt_0".  
 intros x H1 H2; unfold tan in |- *; generalize _PI2_RLT_0;
 generalize (Rlt_trans 0 x (PI / 2) H1 H2); intros;
 generalize (Rlt_trans (- (PI / 2)) 0 x H0 H1); intro H5;
@@ -909,7 +909,7 @@ apply Rinv_0_lt_compat; apply cos_gt_0; assumption.
 Qed.
 
 Lemma tan_lt_0 : forall x:R, - (PI / 2) < x -> x < 0 -> tan x < 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_lt_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_lt_0".  
 intros x H1 H2; unfold tan in |- *;
 generalize (cos_gt_0 x H1 (Rlt_trans x 0 (PI / 2) H2 PI2_RGT_0));
 intro H3; rewrite <- Ropp_0;
@@ -928,7 +928,7 @@ Qed.
 
 Lemma cos_ge_0_3PI2 :
 forall x:R, 3 * (PI / 2) <= x -> x <= 2 * PI -> 0 <= cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_ge_0_3PI2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_ge_0_3PI2".  
 intros; rewrite <- cos_neg; rewrite <- (cos_period (- x) 1);
 unfold INR in |- *; replace (- x + 2 * 1 * PI) with (2 * PI - x) by ring.
 generalize (Ropp_le_ge_contravar x (2 * PI) H0); intro H1;
@@ -949,7 +949,7 @@ Qed.
 
 Lemma form1 :
 forall p q:R, cos p + cos q = 2 * cos ((p - q) / 2) * cos ((p + q) / 2).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.form1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.form1".  
 intros p q; pattern p at 1 in |- *;
 replace p with ((p - q) / 2 + (p + q) / 2) by field.
 rewrite <- (cos_neg q); replace (- q) with ((p - q) / 2 - (p + q) / 2) by field.
@@ -958,7 +958,7 @@ Qed.
 
 Lemma form2 :
 forall p q:R, cos p - cos q = -2 * sin ((p - q) / 2) * sin ((p + q) / 2).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.form2". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.form2".  
 intros p q; pattern p at 1 in |- *;
 replace p with ((p - q) / 2 + (p + q) / 2) by field.
 rewrite <- (cos_neg q); replace (- q) with ((p - q) / 2 - (p + q) / 2) by field.
@@ -967,7 +967,7 @@ Qed.
 
 Lemma form3 :
 forall p q:R, sin p + sin q = 2 * cos ((p - q) / 2) * sin ((p + q) / 2).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.form3". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.form3".  
 intros p q; pattern p at 1 in |- *;
 replace p with ((p - q) / 2 + (p + q) / 2).
 pattern q at 3 in |- *; replace q with ((p + q) / 2 - (p - q) / 2).
@@ -978,7 +978,7 @@ Qed.
 
 Lemma form4 :
 forall p q:R, sin p - sin q = 2 * cos ((p + q) / 2) * sin ((p - q) / 2).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.form4". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.form4".  
 intros p q; pattern p at 1 in |- *;
 replace p with ((p - q) / 2 + (p + q) / 2) by field.
 pattern q at 3 in |- *; replace q with ((p + q) / 2 - (p - q) / 2) by field.
@@ -990,7 +990,7 @@ Lemma sin_increasing_0 :
 forall x y:R,
 - (PI / 2) <= x ->
 x <= PI / 2 -> - (PI / 2) <= y -> y <= PI / 2 -> sin x < sin y -> x < y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_increasing_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_increasing_0".  
 intros; cut (sin ((x - y) / 2) < 0).
 intro H4; case (Rtotal_order ((x - y) / 2) 0); intro H5.
 assert (Hyp : 0 < 2).
@@ -1072,7 +1072,7 @@ Lemma sin_increasing_1 :
 forall x y:R,
 - (PI / 2) <= x ->
 x <= PI / 2 -> - (PI / 2) <= y -> y <= PI / 2 -> x < y -> sin x < sin y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_increasing_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_increasing_1".  
 intros; generalize (Rplus_lt_compat_l x x y H3); intro H4;
 generalize (Rplus_le_compat (- (PI / 2)) x (- (PI / 2)) x H H);
 replace (- (PI / 2) + - (PI / 2)) with (- PI) by field.
@@ -1131,7 +1131,7 @@ Lemma sin_decreasing_0 :
 forall x y:R,
 x <= 3 * (PI / 2) ->
 PI / 2 <= x -> y <= 3 * (PI / 2) -> PI / 2 <= y -> sin x < sin y -> y < x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_decreasing_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_decreasing_0".  
 intros; rewrite <- (sin_PI_x x) in H3; rewrite <- (sin_PI_x y) in H3;
 generalize (Ropp_lt_gt_contravar (sin (PI - x)) (sin (PI - y)) H3);
 repeat rewrite <- sin_neg;
@@ -1155,7 +1155,7 @@ Lemma sin_decreasing_1 :
 forall x y:R,
 x <= 3 * (PI / 2) ->
 PI / 2 <= x -> y <= 3 * (PI / 2) -> PI / 2 <= y -> x < y -> sin y < sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_decreasing_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_decreasing_1".  
 intros; rewrite <- (sin_PI_x x); rewrite <- (sin_PI_x y);
 generalize (Rplus_le_compat_l (- PI) x (3 * (PI / 2)) H);
 generalize (Rplus_le_compat_l (- PI) (PI / 2) x H0);
@@ -1175,7 +1175,7 @@ Qed.
 Lemma cos_increasing_0 :
 forall x y:R,
 PI <= x -> x <= 2 * PI -> PI <= y -> y <= 2 * PI -> cos x < cos y -> x < y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_increasing_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_increasing_0".  
 intros x y H1 H2 H3 H4; rewrite <- (cos_neg x); rewrite <- (cos_neg y);
 rewrite <- (cos_period (- x) 1); rewrite <- (cos_period (- y) 1);
 unfold INR in |- *;
@@ -1200,7 +1200,7 @@ Qed.
 Lemma cos_increasing_1 :
 forall x y:R,
 PI <= x -> x <= 2 * PI -> PI <= y -> y <= 2 * PI -> x < y -> cos x < cos y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_increasing_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_increasing_1".  
 intros x y H1 H2 H3 H4 H5;
 generalize (Rplus_le_compat_l (-3 * (PI / 2)) PI x H1);
 generalize (Rplus_le_compat_l (-3 * (PI / 2)) x (2 * PI) H2);
@@ -1224,7 +1224,7 @@ Qed.
 Lemma cos_decreasing_0 :
 forall x y:R,
 0 <= x -> x <= PI -> 0 <= y -> y <= PI -> cos x < cos y -> y < x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_decreasing_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_decreasing_0".  
 intros; generalize (Ropp_lt_gt_contravar (cos x) (cos y) H3);
 repeat rewrite <- neg_cos; intro H4;
 change (cos (y + PI) < cos (x + PI)) in H4; rewrite (Rplus_comm x) in H4;
@@ -1240,7 +1240,7 @@ Qed.
 Lemma cos_decreasing_1 :
 forall x y:R,
 0 <= x -> x <= PI -> 0 <= y -> y <= PI -> x < y -> cos y < cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_decreasing_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_decreasing_1".  
 intros; apply Ropp_lt_cancel; repeat rewrite <- neg_cos;
 rewrite (Rplus_comm x); rewrite (Rplus_comm y);
 generalize (Rplus_le_compat_l PI 0 x H);
@@ -1255,7 +1255,7 @@ Qed.
 Lemma tan_diff :
 forall x y:R,
 cos x <> 0 -> cos y <> 0 -> tan x - tan y = sin (x - y) / (cos x * cos y).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_diff". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_diff".  
 intros; unfold tan in |- *; rewrite sin_minus.
 field.
 now split.
@@ -1265,7 +1265,7 @@ Lemma tan_increasing_0 :
 forall x y:R,
 - (PI / 4) <= x ->
 x <= PI / 4 -> - (PI / 4) <= y -> y <= PI / 4 -> tan x < tan y -> x < y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_increasing_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_increasing_0".  
 intros; generalize PI4_RLT_PI2; intro H4;
 generalize (Ropp_lt_gt_contravar (PI / 4) (PI / 2) H4);
 intro H5; change (- (PI / 2) < - (PI / 4)) in H5;
@@ -1327,7 +1327,7 @@ Lemma tan_increasing_1 :
 forall x y:R,
 - (PI / 4) <= x ->
 x <= PI / 4 -> - (PI / 4) <= y -> y <= PI / 4 -> x < y -> tan x < tan y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_increasing_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_increasing_1".  
 intros; apply Rminus_lt; generalize PI4_RLT_PI2; intro H4;
 generalize (Ropp_lt_gt_contravar (PI / 4) (PI / 2) H4);
 intro H5; change (- (PI / 2) < - (PI / 4)) in H5;
@@ -1375,7 +1375,7 @@ Lemma sin_incr_0 :
 forall x y:R,
 - (PI / 2) <= x ->
 x <= PI / 2 -> - (PI / 2) <= y -> y <= PI / 2 -> sin x <= sin y -> x <= y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_incr_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_incr_0".  
 intros; case (Rtotal_order (sin x) (sin y)); intro H4;
 [ left; apply (sin_increasing_0 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1392,7 +1392,7 @@ Lemma sin_incr_1 :
 forall x y:R,
 - (PI / 2) <= x ->
 x <= PI / 2 -> - (PI / 2) <= y -> y <= PI / 2 -> x <= y -> sin x <= sin y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_incr_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_incr_1".  
 intros; case (Rtotal_order x y); intro H4;
 [ left; apply (sin_increasing_1 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1410,7 +1410,7 @@ forall x y:R,
 x <= 3 * (PI / 2) ->
 PI / 2 <= x ->
 y <= 3 * (PI / 2) -> PI / 2 <= y -> sin x <= sin y -> y <= x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_decr_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_decr_0".  
 intros; case (Rtotal_order (sin x) (sin y)); intro H4;
 [ left; apply (sin_decreasing_0 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1427,7 +1427,7 @@ forall x y:R,
 x <= 3 * (PI / 2) ->
 PI / 2 <= x ->
 y <= 3 * (PI / 2) -> PI / 2 <= y -> x <= y -> sin y <= sin x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_decr_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_decr_1".  
 intros; case (Rtotal_order x y); intro H4;
 [ left; apply (sin_decreasing_1 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1443,7 +1443,7 @@ Lemma cos_incr_0 :
 forall x y:R,
 PI <= x ->
 x <= 2 * PI -> PI <= y -> y <= 2 * PI -> cos x <= cos y -> x <= y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_incr_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_incr_0".  
 intros; case (Rtotal_order (cos x) (cos y)); intro H4;
 [ left; apply (cos_increasing_0 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1460,7 +1460,7 @@ Lemma cos_incr_1 :
 forall x y:R,
 PI <= x ->
 x <= 2 * PI -> PI <= y -> y <= 2 * PI -> x <= y -> cos x <= cos y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_incr_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_incr_1".  
 intros; case (Rtotal_order x y); intro H4;
 [ left; apply (cos_increasing_1 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1476,7 +1476,7 @@ Qed.
 Lemma cos_decr_0 :
 forall x y:R,
 0 <= x -> x <= PI -> 0 <= y -> y <= PI -> cos x <= cos y -> y <= x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_decr_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_decr_0".  
 intros; case (Rtotal_order (cos x) (cos y)); intro H4;
 [ left; apply (cos_decreasing_0 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1491,7 +1491,7 @@ Qed.
 Lemma cos_decr_1 :
 forall x y:R,
 0 <= x -> x <= PI -> 0 <= y -> y <= PI -> x <= y -> cos y <= cos x.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_decr_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_decr_1".  
 intros; case (Rtotal_order x y); intro H4;
 [ left; apply (cos_decreasing_1 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1507,7 +1507,7 @@ Lemma tan_incr_0 :
 forall x y:R,
 - (PI / 4) <= x ->
 x <= PI / 4 -> - (PI / 4) <= y -> y <= PI / 4 -> tan x <= tan y -> x <= y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_incr_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_incr_0".  
 intros; case (Rtotal_order (tan x) (tan y)); intro H4;
 [ left; apply (tan_increasing_0 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1524,7 +1524,7 @@ Lemma tan_incr_1 :
 forall x y:R,
 - (PI / 4) <= x ->
 x <= PI / 4 -> - (PI / 4) <= y -> y <= PI / 4 -> x <= y -> tan x <= tan y.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.tan_incr_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.tan_incr_1".  
 intros; case (Rtotal_order x y); intro H4;
 [ left; apply (tan_increasing_1 x y H H0 H1 H2 H4)
 | elim H4; intro H5;
@@ -1539,7 +1539,7 @@ Qed.
 
 
 Lemma sin_eq_0_1 : forall x:R, (exists k : Z, x = IZR k * PI) -> sin x = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_0_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_0_1".  
 intros.
 elim H; intros.
 apply (Zcase_sign x0).
@@ -1617,7 +1617,7 @@ reflexivity.
 Qed.
 
 Lemma sin_eq_0_0 (x:R) : sin x = 0 ->  exists k : Z, x = IZR k * PI.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_0_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_0_0".  
 intros Hx.
 destruct (euclidian_division x PI PI_neq0) as (q & r & EQ & Hr & Hr').
 exists q.
@@ -1638,7 +1638,7 @@ Qed.
 
 Lemma cos_eq_0_0 (x:R) :
 cos x = 0 ->  exists k : Z, x = IZR k * PI + PI / 2.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_0".  
 rewrite cos_sin. intros Hx.
 destruct (sin_eq_0_0 (PI/2 + x) Hx) as (k,Hk). clear Hx.
 exists (k-1)%Z. rewrite <- Z_R_minus; simpl.
@@ -1647,7 +1647,7 @@ Qed.
 
 Lemma cos_eq_0_1 (x:R) :
 (exists k : Z, x = IZR k * PI + PI / 2) -> cos x = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_1".  
 rewrite cos_sin. intros (k,->).
 replace (_ + _) with (IZR k * PI + PI) by field.
 rewrite neg_sin, <- Ropp_0. apply Ropp_eq_compat.
@@ -1657,7 +1657,7 @@ Qed.
 Lemma sin_eq_O_2PI_0 (x:R) :
 0 <= x -> x <= 2 * PI -> sin x = 0 ->
 x = 0 \/ x = PI \/ x = 2 * PI.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_O_2PI_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_O_2PI_0".  
 intros Lo Hi Hx. destruct (sin_eq_0_0 x Hx) as (k,Hk). clear Hx.
 destruct (Rtotal_order PI x) as [Hx|[Hx|Hx]].
 - right; right.
@@ -1693,7 +1693,7 @@ Qed.
 Lemma sin_eq_O_2PI_1 (x:R) :
 0 <= x -> x <= 2 * PI ->
 x = 0 \/ x = PI \/ x = 2 * PI -> sin x = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_O_2PI_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.sin_eq_O_2PI_1".  
 intros _ _ [ -> |[ -> | -> ]].
 - now rewrite sin_0.
 - now rewrite sin_PI.
@@ -1703,7 +1703,7 @@ Qed.
 Lemma cos_eq_0_2PI_0 (x:R) :
 0 <= x -> x <= 2 * PI -> cos x = 0 ->
 x = PI / 2 \/ x = 3 * (PI / 2).
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_2PI_0". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_2PI_0".  
 intros Lo Hi Hx.
 destruct (Rtotal_order x (3 * (PI / 2))) as [LT|[EQ|GT]].
 - rewrite cos_sin in Hx.
@@ -1746,7 +1746,7 @@ Qed.
 Lemma cos_eq_0_2PI_1 (x:R) :
 0 <= x -> x <= 2 * PI ->
 x = PI / 2 \/ x = 3 * (PI / 2) -> cos x = 0.
-Proof. hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_2PI_1". Restart. 
+Proof. try hammer_hook "Rtrigo1" "Rtrigo1.cos_eq_0_2PI_1".  
 intros Lo Hi [ -> | -> ].
 - now rewrite cos_PI2.
 - now rewrite cos_3PI2.

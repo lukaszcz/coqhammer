@@ -28,7 +28,7 @@ Require Import ClassicalFacts.
 Variable pred_extensionality : PredicateExtensionality.
 
 Lemma prop_ext : forall A B:Prop, (A <-> B) -> A = B.
-Proof. hammer_hook "Diaconescu" "Diaconescu.prop_ext". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.prop_ext".  
 intros A B H.
 change ((fun _ => A) true = (fun _ => B) true).
 rewrite
@@ -38,7 +38,7 @@ intros _; exact H.
 Qed.
 
 Lemma proof_irrel : forall (A:Prop) (a1 a2:A), a1 = a2.
-Proof. hammer_hook "Diaconescu" "Diaconescu.proof_irrel". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.proof_irrel".  
 apply (ext_prop_dep_proof_irrel_cic prop_ext).
 Qed.
 
@@ -49,7 +49,7 @@ Require Import ChoiceFacts.
 Variable rel_choice : RelationalChoice.
 
 Lemma guarded_rel_choice : GuardedRelationalChoice.
-Proof. hammer_hook "Diaconescu" "Diaconescu.guarded_rel_choice". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.guarded_rel_choice".  
 apply
 (rel_choice_and_proof_irrel_imp_guarded_rel_choice rel_choice proof_irrel).
 Qed.
@@ -63,7 +63,7 @@ exists R : (bool -> Prop) -> bool -> Prop,
 (forall P:bool -> Prop,
 (exists b : bool, P b) ->
 exists b : bool, P b /\ R P b /\ (forall b':bool, R P b' -> b = b')).
-Proof. hammer_hook "Diaconescu" "Diaconescu.AC_bool_subset_to_bool". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.AC_bool_subset_to_bool".  
 destruct (guarded_rel_choice _ _
 (fun Q:bool -> Prop =>  exists y : _, Q y)
 (fun (Q:bool -> Prop) (y:bool) => Q y)) as (R,(HRsub,HR)).
@@ -77,7 +77,7 @@ Qed.
 
 
 Theorem pred_ext_and_rel_choice_imp_EM : forall P:Prop, P \/ ~ P.
-Proof. hammer_hook "Diaconescu" "Diaconescu.pred_ext_and_rel_choice_imp_EM". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.pred_ext_and_rel_choice_imp_EM".  
 intro P.
 
 
@@ -151,7 +151,7 @@ Defined.
 
 
 Lemma projT1_injective : a1=a2 -> a1'=a2'.
-Proof. hammer_hook "Diaconescu" "Diaconescu.projT1_injective". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.projT1_injective".  
 intro Heq ; unfold a1', a2', A'.
 rewrite Heq.
 replace (or_introl (a2=a2) (eq_refl a2))
@@ -164,14 +164,14 @@ Qed.
 
 Lemma decide : forall x:A', exists y:bool ,
 (projT1 x = a1 /\ y = true ) \/ (projT1 x = a2 /\ y = false).
-Proof. hammer_hook "Diaconescu" "Diaconescu.decide". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.decide".  
 intros [a [Ha1|Ha2]]; [exists true | exists false]; auto.
 Qed.
 
 
 
 Theorem proof_irrel_rel_choice_imp_eq_dec : a1=a2 \/ ~a1=a2.
-Proof. hammer_hook "Diaconescu" "Diaconescu.proof_irrel_rel_choice_imp_eq_dec". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.proof_irrel_rel_choice_imp_eq_dec".  
 destruct
 (rel_choice A' bool
 (fun x y =>  projT1 x = a1 /\ y = true \/ projT1 x = a2 /\ y = false))
@@ -195,7 +195,7 @@ Qed.
 Declare Implicit Tactic auto.
 
 Lemma proof_irrel_rel_choice_imp_eq_dec' : a1=a2 \/ ~a1=a2.
-Proof. hammer_hook "Diaconescu" "Diaconescu.proof_irrel_rel_choice_imp_eq_dec'". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.proof_irrel_rel_choice_imp_eq_dec'".  
 assert (decide: forall x:A, x=a1 \/ x=a2 ->
 exists y:bool, x=a1 /\ y=true \/ x=a2 /\ y=false).
 intros a [Ha1|Ha2]; [exists true | exists false]; auto.
@@ -245,7 +245,7 @@ forall (A:Type) (i:inhabited A) (P Q:A->Prop),
 Local Notation eps := (epsilon bool true) (only parsing).
 
 Theorem extensional_epsilon_imp_EM : forall P:Prop, P \/ ~ P.
-Proof. hammer_hook "Diaconescu" "Diaconescu.extensional_epsilon_imp_EM". Restart. 
+Proof. try hammer_hook "Diaconescu" "Diaconescu.extensional_epsilon_imp_EM".  
 intro P.
 pose (B := fun y => y=false \/ P).
 pose (C := fun y => y=true  \/ P).

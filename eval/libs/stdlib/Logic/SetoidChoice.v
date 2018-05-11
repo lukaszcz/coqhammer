@@ -25,7 +25,7 @@ Equivalence R ->
 (forall x x' y, R x x' -> T x y -> T x' y) ->
 (forall x, exists y, T x y) ->
 exists f : A -> B, forall x : A, T x (f x) /\ (forall x' : A, R x x' -> f x = f x').
-Proof. hammer_hook "SetoidChoice" "SetoidChoice.setoid_choice". Restart. 
+Proof. try hammer_hook "SetoidChoice" "SetoidChoice.setoid_choice".  
 apply setoid_functional_choice_first_characterization. split; [|split].
 - exact choice.
 - exact extensional_function_representative.
@@ -35,7 +35,7 @@ Qed.
 Theorem representative_choice :
 forall A (R:A->A->Prop), (Equivalence R) ->
 exists f : A->A, forall x : A, R x (f x) /\ forall x', R x x' -> f x = f x'.
-Proof. hammer_hook "SetoidChoice" "SetoidChoice.representative_choice". Restart. 
+Proof. try hammer_hook "SetoidChoice" "SetoidChoice.representative_choice".  
 apply setoid_fun_choice_imp_repr_fun_choice.
 exact setoid_choice.
 Qed.

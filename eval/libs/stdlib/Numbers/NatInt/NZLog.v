@@ -38,7 +38,7 @@ Module Type NZLog2Prop
 
 
 Lemma log2_nonneg : forall a, 0 <= log2 a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_nonneg". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_nonneg".  
 intros a. destruct (le_gt_cases a 0) as [Ha|Ha].
 now rewrite log2_nonpos.
 destruct (log2_spec a Ha) as (_,LT).
@@ -59,7 +59,7 @@ order_pos)
 
 
 Lemma log2_unique : forall a b, 0<=b -> 2^b<=a<2^(S b) -> log2 a == b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_unique". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_unique".  
 intros a b Hb (LEb,LTb).
 assert (Ha : 0 < a).
 apply lt_le_trans with (2^b); trivial.
@@ -78,7 +78,7 @@ Qed.
 
 
 Instance log2_wd : Proper (eq==>eq) log2.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_wd". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_wd".  
 intros x x' Hx.
 destruct (le_gt_cases x 0).
 rewrite 2 log2_nonpos; trivial. reflexivity. now rewrite <- Hx.
@@ -90,7 +90,7 @@ Qed.
 
 Lemma log2_spec_alt : forall a, 0<a -> exists r,
 a == 2^(log2 a) + r /\ 0 <= r < 2^(log2 a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_spec_alt". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_spec_alt".  
 intros a Ha.
 destruct (log2_spec _ Ha) as (LE,LT).
 destruct (le_exists_sub _ _ LE) as (r & Hr & Hr').
@@ -105,7 +105,7 @@ Qed.
 
 Lemma log2_unique' : forall a b c, 0<=b -> 0<=c<2^b ->
 a == 2^b + c -> log2 a == b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_unique'". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_unique'".  
 intros a b c Hb (Hc,H) EQ.
 apply log2_unique. trivial.
 rewrite EQ.
@@ -118,7 +118,7 @@ Qed.
 
 
 Lemma log2_pow2 : forall a, 0<=a -> log2 (2^a) == a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_pow2".  
 intros a Ha.
 apply log2_unique' with 0; trivial.
 split; order_pos. now nzsimpl.
@@ -127,7 +127,7 @@ Qed.
 
 
 Lemma log2_pred_pow2 : forall a, 0<a -> log2 (P (2^a)) == P a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_pred_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_pred_pow2".  
 intros a Ha.
 assert (Ha' : S (P a) == a) by (now rewrite lt_succ_pred with 0).
 apply log2_unique.
@@ -142,19 +142,19 @@ Qed.
 
 
 Lemma log2_1 : log2 1 == 0.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_1". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_1".  
 rewrite <- (pow_0_r 2). now apply log2_pow2.
 Qed.
 
 Lemma log2_2 : log2 2 == 1.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_2".  
 rewrite <- (pow_1_r 2). apply log2_pow2; order'.
 Qed.
 
 
 
 Lemma log2_pos : forall a, 1<a -> 0 < log2 a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_pos". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_pos".  
 intros a Ha.
 assert (Ha' : 0 < a) by order'.
 assert (H := log2_nonneg a). le_elim H; trivial.
@@ -165,7 +165,7 @@ Qed.
 
 
 Lemma log2_null : forall a, log2 a == 0 <-> a <= 1.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_null". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_null".  
 intros a. split; intros H.
 destruct (le_gt_cases a 1) as [Ha|Ha]; trivial.
 generalize (log2_pos a Ha); order.
@@ -177,7 +177,7 @@ Qed.
 
 
 Lemma log2_le_mono : forall a b, a<=b -> log2 a <= log2 b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_le_mono". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_le_mono".  
 intros a b H.
 destruct (le_gt_cases a 0) as [Ha|Ha].
 rewrite log2_nonpos; order_pos.
@@ -190,7 +190,7 @@ Qed.
 
 
 Lemma log2_lt_cancel : forall a b, log2 a < log2 b -> a < b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_lt_cancel". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_lt_cancel".  
 intros a b H.
 destruct (le_gt_cases b 0) as [Hb|Hb].
 rewrite (log2_nonpos b) in H; trivial.
@@ -205,7 +205,7 @@ Qed.
 
 
 Lemma log2_le_pow2 : forall a b, 0<a -> (2^b<=a <-> b <= log2 a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_le_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_le_pow2".  
 intros a b Ha.
 split; intros H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
@@ -219,7 +219,7 @@ Qed.
 
 
 Lemma log2_lt_pow2 : forall a b, 0<a -> (a<2^b <-> log2 a < b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_lt_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_lt_pow2".  
 intros a b Ha.
 split; intros H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
@@ -236,7 +236,7 @@ Qed.
 
 
 Lemma log2_lt_lin : forall a, 0<a -> log2 a < a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_lt_lin". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_lt_lin".  
 intros a Ha.
 apply (pow_lt_mono_r_iff 2); try order_pos.
 apply le_lt_trans with a.
@@ -245,7 +245,7 @@ apply pow_gt_lin_r; order'.
 Qed.
 
 Lemma log2_le_lin : forall a, 0<=a -> log2 a <= a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_le_lin". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_le_lin".  
 intros a Ha.
 le_elim Ha.
 now apply lt_le_incl, log2_lt_lin.
@@ -258,7 +258,7 @@ Qed.
 
 Lemma log2_mul_below : forall a b, 0<a -> 0<b ->
 log2 a + log2 b <= log2 (a*b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_mul_below". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_mul_below".  
 intros a b Ha Hb.
 apply log2_le_pow2; try order_pos.
 rewrite pow_add_r by order_pos.
@@ -267,7 +267,7 @@ Qed.
 
 Lemma log2_mul_above : forall a b, 0<=a -> 0<=b ->
 log2 (a*b) <= log2 a + log2 b + 1.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_mul_above". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_mul_above".  
 intros a b Ha Hb.
 le_elim Ha.
 le_elim Hb.
@@ -285,7 +285,7 @@ Qed.
 
 
 Lemma log2_mul_pow2 : forall a b, 0<a -> 0<=b -> log2 (a*2^b) == b + log2 a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_mul_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_mul_pow2".  
 intros a b Ha Hb.
 apply log2_unique; try order_pos. split.
 rewrite pow_add_r, mul_comm; try order_pos.
@@ -295,14 +295,14 @@ apply mul_lt_mono_pos_l. order_pos. now apply log2_spec.
 Qed.
 
 Lemma log2_double : forall a, 0<a -> log2 (2*a) == S (log2 a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_double". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_double".  
 intros a Ha. generalize (log2_mul_pow2 a 1 Ha le_0_1). now nzsimpl'.
 Qed.
 
 
 
 Lemma log2_same : forall a b, 0<a -> 0<b -> log2 a == log2 b -> a < 2*b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_same". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_same".  
 intros a b Ha Hb H.
 apply log2_lt_cancel. rewrite log2_double, H by trivial.
 apply lt_succ_diag_r.
@@ -311,7 +311,7 @@ Qed.
 
 
 Lemma log2_succ_le : forall a, log2 (S a) <= S (log2 a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_succ_le". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_succ_le".  
 intros a.
 destruct (lt_trichotomy 0 a) as [LT|[EQ|LT]].
 apply (pow_le_mono_r_iff 2); try order_pos.
@@ -325,7 +325,7 @@ Qed.
 
 Lemma log2_succ_or : forall a,
 log2 (S a) == S (log2 a) \/ log2 (S a) == log2 a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_succ_or". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_succ_or".  
 intros.
 destruct (le_gt_cases (log2 (S a)) (log2 a)) as [H|H].
 right. generalize (log2_le_mono _ _ (le_succ_diag_r a)); order.
@@ -334,7 +334,7 @@ Qed.
 
 Lemma log2_eq_succ_is_pow2 : forall a,
 log2 (S a) == S (log2 a) -> exists b, S a == 2^b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_eq_succ_is_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_eq_succ_is_pow2".  
 intros a H.
 destruct (le_gt_cases a 0) as [Ha|Ha].
 rewrite 2 (proj2 (log2_null _)) in H. generalize (lt_succ_diag_r 0); order.
@@ -347,7 +347,7 @@ Qed.
 
 Lemma log2_eq_succ_iff_pow2 : forall a, 0<a ->
 (log2 (S a) == S (log2 a) <-> exists b, S a == 2^b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_eq_succ_iff_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_eq_succ_iff_pow2".  
 intros a Ha.
 split. apply log2_eq_succ_is_pow2.
 intros (b,Hb).
@@ -361,7 +361,7 @@ rewrite <- Hb, lt_succ_r; order.
 Qed.
 
 Lemma log2_succ_double : forall a, 0<a -> log2 (2*a+1) == S (log2 a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_succ_double". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_succ_double".  
 intros a Ha.
 rewrite add_1_r.
 destruct (log2_succ_or (2*a)) as [H|H]; [exfalso|now rewrite H, log2_double].
@@ -384,7 +384,7 @@ Qed.
 
 
 Lemma log2_add_le : forall a b, a~=1 -> b~=1 -> log2 (a+b) <= log2 a + log2 b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_add_le". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.log2_add_le".  
 intros a b Ha Hb.
 destruct (lt_trichotomy a 1) as [Ha'|[Ha'|Ha']]; [|order|].
 rewrite one_succ, lt_succ_r in Ha'.
@@ -412,7 +412,7 @@ Qed.
 
 Lemma add_log2_lt : forall a b, 0<a -> 0<b ->
 log2 a + log2 b < 2 * log2 (a+b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2Prop.add_log2_lt". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2Prop.add_log2_lt".  
 intros a b Ha Hb. nzsimpl'.
 assert (H : log2 a <= log2 (a+b)).
 apply log2_le_mono. rewrite <- (add_0_r a) at 1. apply add_le_mono; order.
@@ -449,18 +449,18 @@ match compare 1 a with
 end.
 
 Lemma log2_up_eqn0 : forall a, a<=1 -> log2_up a == 0.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eqn0". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eqn0".  
 intros a Ha. unfold log2_up. case compare_spec; try order.
 Qed.
 
 Lemma log2_up_eqn : forall a, 1<a -> log2_up a == S (log2 (P a)).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eqn". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eqn".  
 intros a Ha. unfold log2_up. case compare_spec; try order.
 Qed.
 
 Lemma log2_up_spec : forall a, 1<a ->
 2^(P (log2_up a)) < a <= 2^(log2_up a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_spec". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_spec".  
 intros a Ha.
 rewrite log2_up_eqn; trivial.
 rewrite pred_succ.
@@ -471,12 +471,12 @@ apply succ_lt_mono. now rewrite (lt_succ_pred 1 a Ha), <- one_succ.
 Qed.
 
 Lemma log2_up_nonpos : forall a, a<=0 -> log2_up a == 0.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_nonpos". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_nonpos".  
 intros. apply log2_up_eqn0. order'.
 Qed.
 
 Instance log2_up_wd : Proper (eq==>eq) log2_up.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_wd". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_wd".  
 assert (Proper (eq==>eq==>Logic.eq) compare).
 repeat red; intros; do 2 case compare_spec; trivial; order.
 intros a a' Ha. unfold log2_up. rewrite Ha at 1.
@@ -486,7 +486,7 @@ Qed.
 
 
 Lemma log2_up_nonneg : forall a, 0 <= log2_up a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_nonneg". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_nonneg".  
 intros a. unfold log2_up. case compare_spec; try order.
 intros. apply le_le_succ_r, log2_nonneg.
 Qed.
@@ -494,7 +494,7 @@ Qed.
 
 
 Lemma log2_up_unique : forall a b, 0<b -> 2^(P b)<a<=2^b -> log2_up a == b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_unique". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_unique".  
 intros a b Hb (LEb,LTb).
 assert (Ha : 1 < a).
 apply le_lt_trans with (2^(P b)); trivial.
@@ -518,7 +518,7 @@ Qed.
 
 
 Lemma log2_up_pow2 : forall a, 0<=a -> log2_up (2^a) == a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_pow2".  
 intros a Ha.
 le_elim Ha.
 apply log2_up_unique; trivial.
@@ -532,7 +532,7 @@ Qed.
 
 
 Lemma log2_up_succ_pow2 : forall a, 0<=a -> log2_up (S (2^a)) == S a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_pow2".  
 intros a Ha.
 rewrite log2_up_eqn, pred_succ, log2_pow2; try easy.
 rewrite one_succ, <- succ_lt_mono. apply pow_pos_nonneg; order'.
@@ -541,19 +541,19 @@ Qed.
 
 
 Lemma log2_up_1 : log2_up 1 == 0.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_1". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_1".  
 now apply log2_up_eqn0.
 Qed.
 
 Lemma log2_up_2 : log2_up 2 == 1.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_2".  
 rewrite <- (pow_1_r 2). apply log2_up_pow2; order'.
 Qed.
 
 
 
 Lemma le_log2_log2_up : forall a, log2 a <= log2_up a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.le_log2_log2_up". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.le_log2_log2_up".  
 intros a. unfold log2_up. case compare_spec; intros H.
 rewrite <- H, log2_1. order.
 rewrite <- (lt_succ_pred 1 a H) at 1. apply log2_succ_le.
@@ -561,7 +561,7 @@ rewrite log2_nonpos. order. now rewrite <-lt_succ_r, <-one_succ.
 Qed.
 
 Lemma le_log2_up_succ_log2 : forall a, log2_up a <= S (log2 a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.le_log2_up_succ_log2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.le_log2_up_succ_log2".  
 intros a. unfold log2_up. case compare_spec; intros H; try order_pos.
 rewrite <- succ_le_mono. apply log2_le_mono.
 rewrite <- (lt_succ_pred 1 a H) at 2. apply le_succ_diag_r.
@@ -569,7 +569,7 @@ Qed.
 
 Lemma log2_log2_up_spec : forall a, 0<a ->
 2^log2 a <= a <= 2^log2_up a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_log2_up_spec". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_log2_up_spec".  
 intros a H. split.
 now apply log2_spec.
 rewrite <-le_succ_l, <-one_succ in H. le_elim H.
@@ -579,7 +579,7 @@ Qed.
 
 Lemma log2_log2_up_exact :
 forall a, 0<a -> (log2 a == log2_up a <-> exists b, a == 2^b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_log2_up_exact". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_log2_up_exact".  
 intros a Ha.
 split. intros. exists (log2 a).
 generalize (log2_log2_up_spec a Ha). rewrite <-H.
@@ -593,14 +593,14 @@ Qed.
 
 
 Lemma log2_up_pos : forall a, 1<a -> 0 < log2_up a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_pos". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_pos".  
 intros. rewrite log2_up_eqn; trivial. apply lt_succ_r; order_pos.
 Qed.
 
 
 
 Lemma log2_up_null : forall a, log2_up a == 0 <-> a <= 1.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_null". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_null".  
 intros a. split; intros H.
 destruct (le_gt_cases a 1) as [Ha|Ha]; trivial.
 generalize (log2_up_pos a Ha); order.
@@ -610,7 +610,7 @@ Qed.
 
 
 Lemma log2_up_le_mono : forall a b, a<=b -> log2_up a <= log2_up b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_le_mono". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_le_mono".  
 intros a b H.
 destruct (le_gt_cases a 1) as [Ha|Ha].
 rewrite log2_up_eqn0; trivial. apply log2_up_nonneg.
@@ -622,7 +622,7 @@ Qed.
 
 
 Lemma log2_up_lt_cancel : forall a b, log2_up a < log2_up b -> a < b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_lt_cancel". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_lt_cancel".  
 intros a b H.
 destruct (le_gt_cases b 1) as [Hb|Hb].
 rewrite (log2_up_eqn0 b) in H; trivial.
@@ -636,7 +636,7 @@ Qed.
 
 
 Lemma log2_up_lt_pow2 : forall a b, 0<a -> (2^b<a <-> b < log2_up a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_lt_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_lt_pow2".  
 intros a b Ha.
 split; intros H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
@@ -654,7 +654,7 @@ Qed.
 
 
 Lemma log2_up_le_pow2 : forall a b, 0<a -> (a<=2^b <-> log2_up a <= b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_le_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_le_pow2".  
 intros a b Ha.
 split; intros H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
@@ -668,7 +668,7 @@ Qed.
 
 
 Lemma log2_up_lt_lin : forall a, 0<a -> log2_up a < a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_lt_lin". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_lt_lin".  
 intros a Ha.
 assert (H : S (P a) == a) by (now apply lt_succ_pred with 0).
 rewrite <- H at 2. apply lt_succ_r. apply log2_up_le_pow2; trivial.
@@ -677,7 +677,7 @@ apply pow_gt_lin_r. order'. apply lt_succ_r; order.
 Qed.
 
 Lemma log2_up_le_lin : forall a, 0<=a -> log2_up a <= a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_le_lin". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_le_lin".  
 intros a Ha.
 le_elim Ha.
 now apply lt_le_incl, log2_up_lt_lin.
@@ -690,7 +690,7 @@ Qed.
 
 Lemma log2_up_mul_above : forall a b, 0<=a -> 0<=b ->
 log2_up (a*b) <= log2_up a + log2_up b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_mul_above". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_mul_above".  
 intros a b Ha Hb.
 assert (Ha':=log2_up_nonneg a).
 assert (Hb':=log2_up_nonneg b).
@@ -705,7 +705,7 @@ Qed.
 
 Lemma log2_up_mul_below : forall a b, 0<a -> 0<b ->
 log2_up a + log2_up b <= S (log2_up (a*b)).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_mul_below". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_mul_below".  
 intros a b Ha Hb.
 rewrite <-le_succ_l, <-one_succ in Ha. le_elim Ha.
 rewrite <-le_succ_l, <-one_succ in Hb. le_elim Hb.
@@ -731,7 +731,7 @@ Qed.
 
 Lemma log2_up_mul_pow2 : forall a b, 0<a -> 0<=b ->
 log2_up (a*2^b) == b + log2_up a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_mul_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_mul_pow2".  
 intros a b Ha Hb.
 rewrite <- le_succ_l, <- one_succ in Ha; le_elim Ha.
 apply log2_up_unique. apply add_nonneg_pos; trivial. now apply log2_up_pos.
@@ -747,14 +747,14 @@ now rewrite <- Ha, mul_1_l, log2_up_1, add_0_r, log2_up_pow2.
 Qed.
 
 Lemma log2_up_double : forall a, 0<a -> log2_up (2*a) == S (log2_up a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_double". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_double".  
 intros a Ha. generalize (log2_up_mul_pow2 a 1 Ha le_0_1). now nzsimpl'.
 Qed.
 
 
 
 Lemma log2_up_same : forall a b, 0<a -> 0<b -> log2_up a == log2_up b -> a < 2*b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_same". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_same".  
 intros a b Ha Hb H.
 apply log2_up_lt_cancel. rewrite log2_up_double, H by trivial.
 apply lt_succ_diag_r.
@@ -763,7 +763,7 @@ Qed.
 
 
 Lemma log2_up_succ_le : forall a, log2_up (S a) <= S (log2_up a).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_le". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_le".  
 intros a.
 destruct (lt_trichotomy 1 a) as [LT|[EQ|LT]].
 rewrite 2 log2_up_eqn; trivial.
@@ -776,7 +776,7 @@ Qed.
 
 Lemma log2_up_succ_or : forall a,
 log2_up (S a) == S (log2_up a) \/ log2_up (S a) == log2_up a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_or". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_or".  
 intros.
 destruct (le_gt_cases (log2_up (S a)) (log2_up a)).
 right. generalize (log2_up_le_mono _ _ (le_succ_diag_r a)); order.
@@ -785,7 +785,7 @@ Qed.
 
 Lemma log2_up_eq_succ_is_pow2 : forall a,
 log2_up (S a) == S (log2_up a) -> exists b, a == 2^b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eq_succ_is_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eq_succ_is_pow2".  
 intros a H.
 destruct (le_gt_cases a 0) as [Ha|Ha].
 rewrite 2 (proj2 (log2_up_null _)) in H. generalize (lt_succ_diag_r 0); order.
@@ -798,7 +798,7 @@ Qed.
 
 Lemma log2_up_eq_succ_iff_pow2 : forall a, 0<a ->
 (log2_up (S a) == S (log2_up a) <-> exists b, a == 2^b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eq_succ_iff_pow2". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_eq_succ_iff_pow2".  
 intros a Ha.
 split. apply log2_up_eq_succ_is_pow2.
 intros (b,Hb).
@@ -810,7 +810,7 @@ Qed.
 
 Lemma log2_up_succ_double : forall a, 0<a ->
 log2_up (2*a+1) == 2 + log2 a.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_double". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_succ_double".  
 intros a Ha.
 rewrite log2_up_eqn. rewrite add_1_r, pred_succ, log2_double; now nzsimpl'.
 apply le_lt_trans with (0+1). now nzsimpl'.
@@ -821,7 +821,7 @@ Qed.
 
 Lemma log2_up_add_le : forall a b, a~=1 -> b~=1 ->
 log2_up (a+b) <= log2_up a + log2_up b.
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_add_le". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.log2_up_add_le".  
 intros a b Ha Hb.
 destruct (lt_trichotomy a 1) as [Ha'|[Ha'|Ha']]; [|order|].
 rewrite (log2_up_eqn0 a) by order. nzsimpl. apply log2_up_le_mono.
@@ -841,7 +841,7 @@ Qed.
 
 Lemma add_log2_up_lt : forall a b, 0<a -> 0<b ->
 log2_up a + log2_up b < 2 * log2_up (a+b).
-Proof. hammer_hook "NZLog" "NZLog.NZLog2UpProp.add_log2_up_lt". Restart. 
+Proof. try hammer_hook "NZLog" "NZLog.NZLog2UpProp.add_log2_up_lt".  
 intros a b Ha Hb. nzsimpl'.
 assert (H : log2_up a <= log2_up (a+b)).
 apply log2_up_le_mono. rewrite <- (add_0_r a) at 1. apply add_le_mono; order.

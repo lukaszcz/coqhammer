@@ -29,7 +29,7 @@ Definition frac_part (r:R) : R := r - IZR (Int_part r).
 
 
 Lemma tech_up : forall (r:R) (z:Z), r < IZR z -> IZR z <= r + 1 -> z = up r.
-Proof. hammer_hook "R_Ifp" "R_Ifp.tech_up". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.tech_up".  
 intros; generalize (archimed r); intro; elim H1; intros; clear H1;
 unfold Rgt in H2; unfold Rminus in H3;
 generalize (Rplus_le_compat_l r (IZR (up r) + - r) 1 H3);
@@ -43,7 +43,7 @@ Qed.
 
 Lemma up_tech :
 forall (r:R) (z:Z), IZR z <= r -> r < IZR (z + 1) -> (z + 1)%Z = up r.
-Proof. hammer_hook "R_Ifp" "R_Ifp.up_tech". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.up_tech".  
 intros.
 apply tech_up with (1 := H0).
 rewrite plus_IZR.
@@ -52,7 +52,7 @@ Qed.
 
 
 Lemma fp_R0 : frac_part 0 = 0.
-Proof. hammer_hook "R_Ifp" "R_Ifp.fp_R0". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.fp_R0".  
 unfold frac_part, Int_part.
 replace (up 0) with 1%Z.
 now rewrite <- minus_IZR.
@@ -65,7 +65,7 @@ Qed.
 
 
 Lemma for_base_fp : forall r:R, IZR (up r) - r > 0 /\ IZR (up r) - r <= 1.
-Proof. hammer_hook "R_Ifp" "R_Ifp.for_base_fp". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.for_base_fp".  
 intro; split; cut (IZR (up r) > r /\ IZR (up r) - r <= 1).
 intro; elim H; intros.
 apply (Rgt_minus (IZR (up r)) r H0).
@@ -77,7 +77,7 @@ Qed.
 
 
 Lemma base_fp : forall r:R, frac_part r >= 0 /\ frac_part r < 1.
-Proof. hammer_hook "R_Ifp" "R_Ifp.base_fp". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.base_fp".  
 intro; unfold frac_part; unfold Int_part; split.
 
 cut (r - IZR (up r) >= -1).
@@ -106,7 +106,7 @@ Qed.
 
 Lemma base_Int_part :
 forall r:R, IZR (Int_part r) <= r /\ IZR (Int_part r) - r > -1.
-Proof. hammer_hook "R_Ifp" "R_Ifp.base_Int_part". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.base_Int_part".  
 intro; unfold Int_part; elim (archimed r); intros.
 split; rewrite <- (Z_R_minus (up r) 1); simpl.
 apply Rminus_le.
@@ -119,7 +119,7 @@ Qed.
 
 
 Lemma Int_part_INR : forall n:nat, Int_part (INR n) = Z.of_nat n.
-Proof. hammer_hook "R_Ifp" "R_Ifp.Int_part_INR". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.Int_part_INR".  
 intros n; unfold Int_part.
 cut (up (INR n) = (Z.of_nat n + Z.of_nat 1)%Z).
 intros H'; rewrite H'; simpl; ring.
@@ -134,14 +134,14 @@ Qed.
 
 
 Lemma fp_nat : forall r:R, frac_part r = 0 ->  exists c : Z, r = IZR c.
-Proof. hammer_hook "R_Ifp" "R_Ifp.fp_nat". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.fp_nat".  
 unfold frac_part; intros; split with (Int_part r);
 apply Rminus_diag_uniq; auto with zarith real.
 Qed.
 
 
 Lemma R0_fp_O : forall r:R, 0 <> frac_part r -> 0 <> r.
-Proof. hammer_hook "R_Ifp" "R_Ifp.R0_fp_O". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.R0_fp_O".  
 red; intros; rewrite <- H0 in H; generalize fp_R0; intro;
 auto with zarith real.
 Qed.
@@ -151,7 +151,7 @@ Lemma Rminus_Int_part1 :
 forall r1 r2:R,
 frac_part r1 >= frac_part r2 ->
 Int_part (r1 - r2) = (Int_part r1 - Int_part r2)%Z.
-Proof. hammer_hook "R_Ifp" "R_Ifp.Rminus_Int_part1". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.Rminus_Int_part1".  
 intros; elim (base_fp r1); elim (base_fp r2); intros;
 generalize (Rge_le (frac_part r2) 0 H0); intro; clear H0;
 generalize (Ropp_le_ge_contravar 0 (frac_part r2) H4);
@@ -238,7 +238,7 @@ Lemma Rminus_Int_part2 :
 forall r1 r2:R,
 frac_part r1 < frac_part r2 ->
 Int_part (r1 - r2) = (Int_part r1 - Int_part r2 - 1)%Z.
-Proof. hammer_hook "R_Ifp" "R_Ifp.Rminus_Int_part2". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.Rminus_Int_part2".  
 intros; elim (base_fp r1); elim (base_fp r2); intros;
 generalize (Rge_le (frac_part r2) 0 H0); intro; clear H0;
 generalize (Ropp_le_ge_contravar 0 (frac_part r2) H4);
@@ -331,7 +331,7 @@ Lemma Rminus_fp1 :
 forall r1 r2:R,
 frac_part r1 >= frac_part r2 ->
 frac_part (r1 - r2) = frac_part r1 - frac_part r2.
-Proof. hammer_hook "R_Ifp" "R_Ifp.Rminus_fp1". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.Rminus_fp1".  
 intros; unfold frac_part; generalize (Rminus_Int_part1 r1 r2 H);
 intro; rewrite H0; rewrite <- (Z_R_minus (Int_part r1) (Int_part r2));
 unfold Rminus;
@@ -351,7 +351,7 @@ Lemma Rminus_fp2 :
 forall r1 r2:R,
 frac_part r1 < frac_part r2 ->
 frac_part (r1 - r2) = frac_part r1 - frac_part r2 + 1.
-Proof. hammer_hook "R_Ifp" "R_Ifp.Rminus_fp2". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.Rminus_fp2".  
 intros; unfold frac_part; generalize (Rminus_Int_part2 r1 r2 H);
 intro; rewrite H0; rewrite <- (Z_R_minus (Int_part r1 - Int_part r2) 1);
 rewrite <- (Z_R_minus (Int_part r1) (Int_part r2));
@@ -378,7 +378,7 @@ Lemma plus_Int_part1 :
 forall r1 r2:R,
 frac_part r1 + frac_part r2 >= 1 ->
 Int_part (r1 + r2) = (Int_part r1 + Int_part r2 + 1)%Z.
-Proof. hammer_hook "R_Ifp" "R_Ifp.plus_Int_part1". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.plus_Int_part1".  
 intros; generalize (Rge_le (frac_part r1 + frac_part r2) 1 H); intro; clear H;
 elim (base_fp r1); elim (base_fp r2); intros; clear H H2;
 generalize (Rplus_lt_compat_l (frac_part r2) (frac_part r1) 1 H3);
@@ -445,7 +445,7 @@ Lemma plus_Int_part2 :
 forall r1 r2:R,
 frac_part r1 + frac_part r2 < 1 ->
 Int_part (r1 + r2) = (Int_part r1 + Int_part r2)%Z.
-Proof. hammer_hook "R_Ifp" "R_Ifp.plus_Int_part2". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.plus_Int_part2".  
 intros; elim (base_fp r1); elim (base_fp r2); intros; clear H1 H3;
 generalize (Rge_le (frac_part r2) 0 H0); intro; clear H0;
 generalize (Rge_le (frac_part r1) 0 H2); intro; clear H2;
@@ -507,7 +507,7 @@ Lemma plus_frac_part1 :
 forall r1 r2:R,
 frac_part r1 + frac_part r2 >= 1 ->
 frac_part (r1 + r2) = frac_part r1 + frac_part r2 - 1.
-Proof. hammer_hook "R_Ifp" "R_Ifp.plus_frac_part1". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.plus_frac_part1".  
 intros; unfold frac_part; generalize (plus_Int_part1 r1 r2 H); intro;
 rewrite H0; rewrite (plus_IZR (Int_part r1 + Int_part r2) 1);
 rewrite (plus_IZR (Int_part r1) (Int_part r2)); simpl;
@@ -530,7 +530,7 @@ Lemma plus_frac_part2 :
 forall r1 r2:R,
 frac_part r1 + frac_part r2 < 1 ->
 frac_part (r1 + r2) = frac_part r1 + frac_part r2.
-Proof. hammer_hook "R_Ifp" "R_Ifp.plus_frac_part2". Restart. 
+Proof. try hammer_hook "R_Ifp" "R_Ifp.plus_frac_part2".  
 intros; unfold frac_part; generalize (plus_Int_part2 r1 r2 H); intro;
 rewrite H0; rewrite (plus_IZR (Int_part r1) (Int_part r2));
 unfold Rminus at 2 3;

@@ -35,7 +35,7 @@ Variable U : Type.
 
 Lemma not_included_empty_Inhabited :
 forall A:Ensemble U, ~ Included U A (Empty_set U) -> Inhabited U A.
-Proof. hammer_hook "Classical_sets" "Classical_sets.not_included_empty_Inhabited". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.not_included_empty_Inhabited".  
 intros A NI.
 elim (not_all_ex_not U (fun x:U => ~ In U A x)).
 intros x H; apply Inhabited_intro with x.
@@ -47,7 +47,7 @@ Qed.
 
 Lemma not_empty_Inhabited :
 forall A:Ensemble U, A <> Empty_set U -> Inhabited U A.
-Proof. hammer_hook "Classical_sets" "Classical_sets.not_empty_Inhabited". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.not_empty_Inhabited".  
 intros; apply not_included_empty_Inhabited.
 red; auto with sets.
 Qed.
@@ -55,7 +55,7 @@ Qed.
 Lemma Inhabited_Setminus :
 forall X Y:Ensemble U,
 Included U X Y -> ~ Included U Y X -> Inhabited U (Setminus U Y X).
-Proof. hammer_hook "Classical_sets" "Classical_sets.Inhabited_Setminus". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Inhabited_Setminus".  
 intros X Y I NI.
 elim (not_all_ex_not U (fun x:U => In U Y x -> In U X x) NI).
 intros x YX.
@@ -68,26 +68,26 @@ Qed.
 Lemma Strict_super_set_contains_new_element :
 forall X Y:Ensemble U,
 Included U X Y -> X <> Y -> Inhabited U (Setminus U Y X).
-Proof. hammer_hook "Classical_sets" "Classical_sets.Strict_super_set_contains_new_element". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Strict_super_set_contains_new_element".  
 auto 7 using Inhabited_Setminus with sets.
 Qed.
 
 Lemma Subtract_intro :
 forall (A:Ensemble U) (x y:U), In U A y -> x <> y -> In U (Subtract U A x) y.
-Proof. hammer_hook "Classical_sets" "Classical_sets.Subtract_intro". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Subtract_intro".  
 unfold Subtract at 1; auto with sets.
 Qed.
 Hint Resolve Subtract_intro : sets.
 
 Lemma Subtract_inv :
 forall (A:Ensemble U) (x y:U), In U (Subtract U A x) y -> In U A y /\ x <> y.
-Proof. hammer_hook "Classical_sets" "Classical_sets.Subtract_inv". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Subtract_inv".  
 intros A x y H'; elim H'; auto with sets.
 Qed.
 
 Lemma Included_Strict_Included :
 forall X Y:Ensemble U, Included U X Y -> Strict_Included U X Y \/ X = Y.
-Proof. hammer_hook "Classical_sets" "Classical_sets.Included_Strict_Included". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Included_Strict_Included".  
 intros X Y H'; try assumption.
 elim (classic (X = Y)); auto with sets.
 Qed.
@@ -95,7 +95,7 @@ Qed.
 Lemma Strict_Included_inv :
 forall X Y:Ensemble U,
 Strict_Included U X Y -> Included U X Y /\ Inhabited U (Setminus U Y X).
-Proof. hammer_hook "Classical_sets" "Classical_sets.Strict_Included_inv". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Strict_Included_inv".  
 intros X Y H'; red in H'.
 split; [ tauto | idtac ].
 elim H'; intros H'0 H'1; try exact H'1; clear H'.
@@ -104,7 +104,7 @@ Qed.
 
 Lemma not_SIncl_empty :
 forall X:Ensemble U, ~ Strict_Included U X (Empty_set U).
-Proof. hammer_hook "Classical_sets" "Classical_sets.not_SIncl_empty". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.not_SIncl_empty".  
 intro X; red; intro H'; try exact H'.
 lapply (Strict_Included_inv X (Empty_set U)); auto with sets.
 intro H'0; elim H'0; intros H'1 H'2; elim H'2; clear H'0.
@@ -114,7 +114,7 @@ Qed.
 
 Lemma Complement_Complement :
 forall A:Ensemble U, Complement U (Complement U A) = A.
-Proof. hammer_hook "Classical_sets" "Classical_sets.Complement_Complement". Restart. 
+Proof. try hammer_hook "Classical_sets" "Classical_sets.Complement_Complement".  
 unfold Complement; intros; apply Extensionality_Ensembles;
 auto with sets.
 red; split; auto with sets.

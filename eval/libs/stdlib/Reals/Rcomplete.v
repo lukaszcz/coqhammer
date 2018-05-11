@@ -25,7 +25,7 @@ Local Open Scope R_scope.
 
 Theorem R_complete :
 forall Un:nat -> R, Cauchy_crit Un -> { l:R | Un_cv Un l } .
-Proof. hammer_hook "Rcomplete" "Rcomplete.R_complete". Restart. 
+Proof. try hammer_hook "Rcomplete" "Rcomplete.R_complete".  
 intros.
 set (Vn := sequence_minorant Un (cauchy_min Un H)).
 set (Wn := sequence_majorant Un (cauchy_maj Un H)).

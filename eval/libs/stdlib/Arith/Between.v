@@ -25,27 +25,27 @@ Inductive between k : nat -> Prop :=
 Hint Constructors between: arith.
 
 Lemma bet_eq : forall k l, l = k -> between k l.
-Proof. hammer_hook "Between" "Between.bet_eq". Restart. 
+Proof. try hammer_hook "Between" "Between.bet_eq".  
 intros * ->; auto with arith.
 Qed.
 
 Hint Resolve bet_eq: arith.
 
 Lemma between_le : forall k l, between k l -> k <= l.
-Proof. hammer_hook "Between" "Between.between_le". Restart. 
+Proof. try hammer_hook "Between" "Between.between_le".  
 induction 1; auto with arith.
 Qed.
 Hint Immediate between_le: arith.
 
 Lemma between_Sk_l : forall k l, between k l -> S k <= l -> between (S k) l.
-Proof. hammer_hook "Between" "Between.between_Sk_l". Restart. 
+Proof. try hammer_hook "Between" "Between.between_Sk_l".  
 induction 1 as [|* [|]]; auto with arith.
 Qed.
 Hint Resolve between_Sk_l: arith.
 
 Lemma between_restr :
 forall k l (m:nat), k <= l -> l <= m -> between k m -> between l m.
-Proof. hammer_hook "Between" "Between.between_restr". Restart. 
+Proof. try hammer_hook "Between" "Between.between_restr".  
 induction 1; auto with arith.
 Qed.
 
@@ -56,16 +56,16 @@ Inductive exists_between k : nat -> Prop :=
 Hint Constructors exists_between: arith.
 
 Lemma exists_le_S : forall k l, exists_between k l -> S k <= l.
-Proof. hammer_hook "Between" "Between.exists_le_S". Restart. 
+Proof. try hammer_hook "Between" "Between.exists_le_S".  
 induction 1; auto with arith.
 Qed.
 
 Lemma exists_lt : forall k l, exists_between k l -> k < l.
-Proof. hammer_hook "Between" "Between.exists_lt". Restart. exact (exists_le_S). Qed.
+Proof. try hammer_hook "Between" "Between.exists_lt".  exact (exists_le_S). Qed.
 Hint Immediate exists_le_S exists_lt: arith.
 
 Lemma exists_S_le : forall k l, exists_between k (S l) -> k <= l.
-Proof. hammer_hook "Between" "Between.exists_S_le". Restart. 
+Proof. try hammer_hook "Between" "Between.exists_S_le".  
 intros; apply le_S_n; auto with arith.
 Qed.
 Hint Immediate exists_S_le: arith.
@@ -73,39 +73,39 @@ Hint Immediate exists_S_le: arith.
 Definition in_int p q r := p <= r /\ r < q.
 
 Lemma in_int_intro : forall p q r, p <= r -> r < q -> in_int p q r.
-Proof. hammer_hook "Between" "Between.in_int_intro". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_intro".  
 split; assumption.
 Qed.
 Hint Resolve in_int_intro: arith.
 
 Lemma in_int_lt : forall p q r, in_int p q r -> p < q.
-Proof. hammer_hook "Between" "Between.in_int_lt". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_lt".  
 intros * [].
 eapply le_lt_trans; eassumption.
 Qed.
 
 Lemma in_int_p_Sq :
 forall p q r, in_int p (S q) r -> in_int p q r \/ r = q.
-Proof. hammer_hook "Between" "Between.in_int_p_Sq". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_p_Sq".  
 intros p q r [].
 destruct (le_lt_or_eq r q); auto with arith.
 Qed.
 
 Lemma in_int_S : forall p q r, in_int p q r -> in_int p (S q) r.
-Proof. hammer_hook "Between" "Between.in_int_S". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_S".  
 intros * []; auto with arith.
 Qed.
 Hint Resolve in_int_S: arith.
 
 Lemma in_int_Sp_q : forall p q r, in_int (S p) q r -> in_int p q r.
-Proof. hammer_hook "Between" "Between.in_int_Sp_q". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_Sp_q".  
 intros * []; auto with arith.
 Qed.
 Hint Immediate in_int_Sp_q: arith.
 
 Lemma between_in_int :
 forall k l, between k l -> forall r, in_int k l r -> P r.
-Proof. hammer_hook "Between" "Between.between_in_int". Restart. 
+Proof. try hammer_hook "Between" "Between.between_in_int".  
 induction 1; intros.
 - absurd (k < k). { auto with arith. }
 eapply in_int_lt; eassumption.
@@ -114,20 +114,20 @@ Qed.
 
 Lemma in_int_between :
 forall k l, k <= l -> (forall r, in_int k l r -> P r) -> between k l.
-Proof. hammer_hook "Between" "Between.in_int_between". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_between".  
 induction 1; auto with arith.
 Qed.
 
 Lemma exists_in_int :
 forall k l, exists_between k l -> exists2 m : nat, in_int k l m & Q m.
-Proof. hammer_hook "Between" "Between.exists_in_int". Restart. 
+Proof. try hammer_hook "Between" "Between.exists_in_int".  
 induction 1 as [* ? (p, ?, ?)|].
 - exists p; auto with arith.
 - exists l; auto with arith.
 Qed.
 
 Lemma in_int_exists : forall k l r, in_int k l r -> Q r -> exists_between k l.
-Proof. hammer_hook "Between" "Between.in_int_exists". Restart. 
+Proof. try hammer_hook "Between" "Between.in_int_exists".  
 intros * (?, lt_r_l) ?.
 induction lt_r_l; auto with arith.
 Qed.
@@ -137,7 +137,7 @@ forall k l,
 k <= l ->
 (forall n:nat, in_int k l n -> P n \/ Q n) ->
 between k l \/ exists_between k l.
-Proof. hammer_hook "Between" "Between.between_or_exists". Restart. 
+Proof. try hammer_hook "Between" "Between.between_or_exists".  
 induction 1 as [|m ? IHle].
 - auto with arith.
 - intros P_or_Q.
@@ -149,7 +149,7 @@ Lemma between_not_exists :
 forall k l,
 between k l ->
 (forall n:nat, in_int k l n -> P n -> ~ Q n) -> ~ exists_between k l.
-Proof. hammer_hook "Between" "Between.between_not_exists". Restart. 
+Proof. try hammer_hook "Between" "Between.between_not_exists".  
 induction 1; red; intros.
 - absurd (k < k); auto with arith.
 - absurd (Q l). { auto with arith. }
@@ -168,7 +168,7 @@ forall k l (n:nat),
 P_nth init k n -> between (S k) l -> Q l -> P_nth init l (S n).
 
 Lemma nth_le : forall (init:nat) l (n:nat), P_nth init l n -> init <= l.
-Proof. hammer_hook "Between" "Between.nth_le". Restart. 
+Proof. try hammer_hook "Between" "Between.nth_le".  
 induction 1.
 - auto with arith.
 - eapply le_trans; eauto with arith.
@@ -177,7 +177,7 @@ Qed.
 Definition eventually (n:nat) :=  exists2 k : nat, k <= n & Q k.
 
 Lemma event_O : eventually 0 -> Q 0.
-Proof. hammer_hook "Between" "Between.event_O". Restart. 
+Proof. try hammer_hook "Between" "Between.event_O".  
 intros (x, ?, ?).
 replace 0 with x; auto with arith.
 Qed.

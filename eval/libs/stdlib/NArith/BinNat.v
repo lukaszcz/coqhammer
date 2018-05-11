@@ -82,7 +82,7 @@ Program Definition testbit_wd : Proper (eq==>eq==>Logic.eq) testbit := _.
 
 
 Definition eq_dec : forall n m : N, { n = m } + { n <> m }.
-Proof. hammer_hook "BinNat" "BinNat.N.eq_dec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.eq_dec".  
 decide equality.
 apply Pos.eq_dec.
 Defined.
@@ -90,7 +90,7 @@ Defined.
 
 
 Definition discr n : { p:positive | n = pos p } + { n = 0 }.
-Proof. hammer_hook "BinNat" "BinNat.N.discr". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.discr".  
 destruct n; auto.
 left; exists p; auto.
 Defined.
@@ -124,13 +124,13 @@ match n with
 end.
 
 Theorem peano_rect_base P a f : peano_rect P a f 0 = a.
-Proof. hammer_hook "BinNat" "BinNat.N.peano_rect_base". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.peano_rect_base".  
 reflexivity.
 Qed.
 
 Theorem peano_rect_succ P a f n :
 peano_rect P a f (succ n) = f n (peano_rect P a f n).
-Proof. hammer_hook "BinNat" "BinNat.N.peano_rect_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.peano_rect_succ".  
 destruct n; simpl.
 trivial.
 now rewrite Pos.peano_rect_succ.
@@ -141,13 +141,13 @@ Definition peano_ind (P : N -> Prop) := peano_rect P.
 Definition peano_rec (P : N -> Set) := peano_rect P.
 
 Theorem peano_rec_base P a f : peano_rec P a f 0 = a.
-Proof. hammer_hook "BinNat" "BinNat.N.peano_rec_base". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.peano_rec_base".  
 apply peano_rect_base.
 Qed.
 
 Theorem peano_rec_succ P a f n :
 peano_rec P a f (succ n) = f n (peano_rec P a f n).
-Proof. hammer_hook "BinNat" "BinNat.N.peano_rec_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.peano_rec_succ".  
 apply peano_rect_succ.
 Qed.
 
@@ -156,7 +156,7 @@ Qed.
 Theorem bi_induction :
 forall A : N -> Prop, Proper (Logic.eq==>iff) A ->
 A 0 -> (forall n, A n <-> A (succ n)) -> forall n : N, A n.
-Proof. hammer_hook "BinNat" "BinNat.N.bi_induction". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.bi_induction".  
 intros A A_wd A0 AS. apply peano_rect. assumption. intros; now apply -> AS.
 Qed.
 
@@ -165,7 +165,7 @@ peano_rect (fun _ => A).
 
 Instance recursion_wd {A} (Aeq : relation A) :
 Proper (Aeq==>(Logic.eq==>Aeq==>Aeq)==>Logic.eq==>Aeq) recursion.
-Proof. hammer_hook "BinNat" "BinNat.N.recursion_wd". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.recursion_wd".  
 intros a a' Ea f f' Ef x x' Ex. subst x'.
 induction x using peano_ind.
 trivial.
@@ -173,12 +173,12 @@ unfold recursion in *. rewrite 2 peano_rect_succ. now apply Ef.
 Qed.
 
 Theorem recursion_0 {A} (a:A) (f:N->A->A) : recursion a f 0 = a.
-Proof. hammer_hook "BinNat" "BinNat.N.recursion_0". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinNat" "BinNat.N.recursion_0".   reflexivity. Qed.
 
 Theorem recursion_succ {A} (Aeq : relation A) (a : A) (f : N -> A -> A):
 Aeq a a -> Proper (Logic.eq==>Aeq==>Aeq) f ->
 forall n : N, Aeq (recursion a f (succ n)) (f n (recursion a f n)).
-Proof. hammer_hook "BinNat" "BinNat.N.recursion_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.recursion_succ".  
 unfold recursion; intros a_wd f_wd n. induction n using peano_ind.
 rewrite peano_rect_succ. now apply f_wd.
 rewrite !peano_rect_succ in *. now apply f_wd.
@@ -187,74 +187,74 @@ Qed.
 
 
 Lemma one_succ : 1 = succ 0.
-Proof. hammer_hook "BinNat" "BinNat.N.one_succ". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinNat" "BinNat.N.one_succ".   reflexivity. Qed.
 
 Lemma two_succ : 2 = succ 1.
-Proof. hammer_hook "BinNat" "BinNat.N.two_succ". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinNat" "BinNat.N.two_succ".   reflexivity. Qed.
 
 Definition pred_0 : pred 0 = 0.
-Proof. hammer_hook "BinNat" "BinNat.N.pred_0". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinNat" "BinNat.N.pred_0".   reflexivity. Qed.
 
 
 
 Lemma pos_pred_spec p : Pos.pred_N p = pred (pos p).
-Proof. hammer_hook "BinNat" "BinNat.N.pos_pred_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_pred_spec".  
 now destruct p.
 Qed.
 
 Lemma succ_pos_spec n : pos (succ_pos n) = succ n.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_pos_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_pos_spec".  
 now destruct n.
 Qed.
 
 Lemma pos_pred_succ n : Pos.pred_N (succ_pos n) = n.
-Proof. hammer_hook "BinNat" "BinNat.N.pos_pred_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_pred_succ".  
 destruct n. trivial. apply Pos.pred_N_succ.
 Qed.
 
 Lemma succ_pos_pred p : succ (Pos.pred_N p) = pos p.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_pos_pred". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_pos_pred".  
 destruct p; simpl; trivial. f_equal. apply Pos.succ_pred_double.
 Qed.
 
 
 
 Theorem pred_succ n : pred (succ n) = n.
-Proof. hammer_hook "BinNat" "BinNat.N.pred_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pred_succ".  
 destruct n; trivial. simpl. apply Pos.pred_N_succ.
 Qed.
 
 Theorem pred_sub n : pred n = sub n 1.
-Proof. hammer_hook "BinNat" "BinNat.N.pred_sub". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pred_sub".  
 now destruct n as [|[p|p|]].
 Qed.
 
 Theorem succ_0_discr n : succ n <> 0.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_0_discr". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_0_discr".  
 now destruct n.
 Qed.
 
 
 
 Theorem add_0_l n : 0 + n = n.
-Proof. hammer_hook "BinNat" "BinNat.N.add_0_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.add_0_l".  
 reflexivity.
 Qed.
 
 Theorem add_succ_l n m : succ n + m = succ (n + m).
-Proof. hammer_hook "BinNat" "BinNat.N.add_succ_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.add_succ_l".  
 destruct n, m; unfold succ, add; now rewrite ?Pos.add_1_l, ?Pos.add_succ_l.
 Qed.
 
 
 
 Theorem sub_0_r n : n - 0 = n.
-Proof. hammer_hook "BinNat" "BinNat.N.sub_0_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.sub_0_r".  
 now destruct n.
 Qed.
 
 Theorem sub_succ_r n m : n - succ m = pred (n - m).
-Proof. hammer_hook "BinNat" "BinNat.N.sub_succ_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.sub_succ_r".  
 destruct n as [|p], m as [|q]; trivial.
 now destruct p.
 simpl. rewrite Pos.sub_mask_succ_r, Pos.sub_mask_carry_spec.
@@ -264,12 +264,12 @@ Qed.
 
 
 Theorem mul_0_l n : 0 * n = 0.
-Proof. hammer_hook "BinNat" "BinNat.N.mul_0_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.mul_0_l".  
 reflexivity.
 Qed.
 
 Theorem mul_succ_l n m : (succ n) * m = n * m + m.
-Proof. hammer_hook "BinNat" "BinNat.N.mul_succ_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.mul_succ_l".  
 destruct n, m; simpl; trivial. f_equal. rewrite Pos.add_comm.
 apply Pos.mul_succ_l.
 Qed.
@@ -277,40 +277,40 @@ Qed.
 
 
 Lemma eqb_eq n m : eqb n m = true <-> n=m.
-Proof. hammer_hook "BinNat" "BinNat.N.eqb_eq". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.eqb_eq".  
 destruct n as [|n], m as [|m]; simpl; try easy'.
 rewrite Pos.eqb_eq. split; intro H. now subst. now destr_eq H.
 Qed.
 
 Lemma ltb_lt n m : (n <? m) = true <-> n < m.
-Proof. hammer_hook "BinNat" "BinNat.N.ltb_lt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.ltb_lt".  
 unfold ltb, lt. destruct compare; easy'.
 Qed.
 
 Lemma leb_le n m : (n <=? m) = true <-> n <= m.
-Proof. hammer_hook "BinNat" "BinNat.N.leb_le". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.leb_le".  
 unfold leb, le. destruct compare; easy'.
 Qed.
 
 
 
 Theorem compare_eq_iff n m : (n ?= m) = Eq <-> n = m.
-Proof. hammer_hook "BinNat" "BinNat.N.compare_eq_iff". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.compare_eq_iff".  
 destruct n, m; simpl; rewrite ?Pos.compare_eq_iff; split; congruence.
 Qed.
 
 Theorem compare_lt_iff n m : (n ?= m) = Lt <-> n < m.
-Proof. hammer_hook "BinNat" "BinNat.N.compare_lt_iff". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.compare_lt_iff".  
 reflexivity.
 Qed.
 
 Theorem compare_le_iff n m : (n ?= m) <> Gt <-> n <= m.
-Proof. hammer_hook "BinNat" "BinNat.N.compare_le_iff". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.compare_le_iff".  
 reflexivity.
 Qed.
 
 Theorem compare_antisym n m : (m ?= n) = CompOpp (n ?= m).
-Proof. hammer_hook "BinNat" "BinNat.N.compare_antisym". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.compare_antisym".  
 destruct n, m; simpl; trivial. apply Pos.compare_antisym.
 Qed.
 
@@ -321,31 +321,31 @@ Include BoolOrderFacts.
 
 
 Theorem min_l n m : n <= m -> min n m = n.
-Proof. hammer_hook "BinNat" "BinNat.N.min_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.min_l".  
 unfold min, le. case compare; trivial. now destruct 1.
 Qed.
 
 Theorem min_r n m : m <= n -> min n m = m.
-Proof. hammer_hook "BinNat" "BinNat.N.min_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.min_r".  
 unfold min, le. rewrite compare_antisym.
 case compare_spec; trivial. now destruct 2.
 Qed.
 
 Theorem max_l n m : m <= n -> max n m = n.
-Proof. hammer_hook "BinNat" "BinNat.N.max_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.max_l".  
 unfold max, le. rewrite compare_antisym.
 case compare_spec; auto. now destruct 2.
 Qed.
 
 Theorem max_r n m : n <= m -> max n m = m.
-Proof. hammer_hook "BinNat" "BinNat.N.max_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.max_r".  
 unfold max, le. case compare; trivial. now destruct 1.
 Qed.
 
 
 
 Lemma lt_succ_r n m : n < succ m <-> n<=m.
-Proof. hammer_hook "BinNat" "BinNat.N.lt_succ_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.lt_succ_r".  
 destruct n as [|p], m as [|q]; simpl; try easy'.
 split. now destruct p. now destruct 1.
 apply Pos.lt_succ_r.
@@ -359,59 +359,59 @@ Include NBasicProp <+ UsualMinMaxLogicalProperties <+ UsualMinMaxDecProperties.
 
 
 Lemma double_spec n : double n = 2 * n.
-Proof. hammer_hook "BinNat" "BinNat.N.double_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.double_spec".  
 reflexivity.
 Qed.
 
 Lemma succ_double_spec n : succ_double n = 2 * n + 1.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_double_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_double_spec".  
 now destruct n.
 Qed.
 
 Lemma double_add n m : double (n+m) = double n + double m.
-Proof. hammer_hook "BinNat" "BinNat.N.double_add". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.double_add".  
 now destruct n, m.
 Qed.
 
 Lemma succ_double_add n m : succ_double (n+m) = double n + succ_double m.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_double_add". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_double_add".  
 now destruct n, m.
 Qed.
 
 Lemma double_mul n m : double (n*m) = double n * m.
-Proof. hammer_hook "BinNat" "BinNat.N.double_mul". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.double_mul".  
 now destruct n, m.
 Qed.
 
 Lemma succ_double_mul n m :
 succ_double n * m = double n * m + m.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_double_mul". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_double_mul".  
 destruct n; simpl; destruct m; trivial.
 now rewrite Pos.add_comm.
 Qed.
 
 Lemma div2_double n : div2 (double n) = n.
-Proof. hammer_hook "BinNat" "BinNat.N.div2_double". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.div2_double".  
 now destruct n.
 Qed.
 
 Lemma div2_succ_double n : div2 (succ_double n) = n.
-Proof. hammer_hook "BinNat" "BinNat.N.div2_succ_double". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.div2_succ_double".  
 now destruct n.
 Qed.
 
 Lemma double_inj n m : double n = double m -> n = m.
-Proof. hammer_hook "BinNat" "BinNat.N.double_inj". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.double_inj".  
 intro H. rewrite <- (div2_double n), H. apply div2_double.
 Qed.
 
 Lemma succ_double_inj n m : succ_double n = succ_double m -> n = m.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_double_inj". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_double_inj".  
 intro H. rewrite <- (div2_succ_double n), H. apply div2_succ_double.
 Qed.
 
 Lemma succ_double_lt n m : n<m -> succ_double n < double m.
-Proof. hammer_hook "BinNat" "BinNat.N.succ_double_lt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.succ_double_lt".  
 destruct n as [|n], m as [|m]; intros H; try easy.
 unfold lt in *; simpl in *. now rewrite Pos.compare_xI_xO, H.
 Qed.
@@ -420,47 +420,47 @@ Qed.
 
 
 Theorem compare_0_r n : (n ?= 0) <> Lt.
-Proof. hammer_hook "BinNat" "BinNat.N.compare_0_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.compare_0_r".  
 now destruct n.
 Qed.
 
 
 
 Lemma pow_0_r n : n ^ 0 = 1.
-Proof. hammer_hook "BinNat" "BinNat.N.pow_0_r". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinNat" "BinNat.N.pow_0_r".   reflexivity. Qed.
 
 Lemma pow_succ_r n p : 0<=p -> n^(succ p) = n * n^p.
-Proof. hammer_hook "BinNat" "BinNat.N.pow_succ_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pow_succ_r".  
 intros _.
 destruct n, p; simpl; trivial; f_equal. apply Pos.pow_succ_r.
 Qed.
 
 Lemma pow_neg_r n p : p<0 -> n^p = 0.
-Proof. hammer_hook "BinNat" "BinNat.N.pow_neg_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pow_neg_r".  
 now destruct p.
 Qed.
 
 
 
 Lemma square_spec n : square n = n * n.
-Proof. hammer_hook "BinNat" "BinNat.N.square_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.square_spec".  
 destruct n; trivial. simpl. f_equal. apply Pos.square_spec.
 Qed.
 
 
 
 Lemma size_log2 n : n<>0 -> size n = succ (log2 n).
-Proof. hammer_hook "BinNat" "BinNat.N.size_log2". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.size_log2".  
 destruct n as [|[n|n| ]]; trivial. now destruct 1.
 Qed.
 
 Lemma size_gt n : n < 2^(size n).
-Proof. hammer_hook "BinNat" "BinNat.N.size_gt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.size_gt".  
 destruct n. reflexivity. simpl. apply Pos.size_gt.
 Qed.
 
 Lemma size_le n : 2^(size n) <= succ_double n.
-Proof. hammer_hook "BinNat" "BinNat.N.size_le". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.size_le".  
 destruct n. discriminate. simpl.
 change (2^Pos.size p <= Pos.succ (p~0))%positive.
 apply Pos.lt_le_incl, Pos.lt_succ_r, Pos.size_le.
@@ -468,7 +468,7 @@ Qed.
 
 Lemma log2_spec n : 0 < n ->
 2^(log2 n) <= n < 2^(succ (log2 n)).
-Proof. hammer_hook "BinNat" "BinNat.N.log2_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.log2_spec".  
 destruct n as [|[p|p|]]; discriminate || intros _; simpl; split.
 apply (size_le (pos p)).
 apply Pos.size_gt.
@@ -479,14 +479,14 @@ reflexivity.
 Qed.
 
 Lemma log2_nonpos n : n<=0 -> log2 n = 0.
-Proof. hammer_hook "BinNat" "BinNat.N.log2_nonpos". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.log2_nonpos".  
 destruct n; intros Hn. reflexivity. now destruct Hn.
 Qed.
 
 
 
 Lemma even_spec n : even n = true <-> Even n.
-Proof. hammer_hook "BinNat" "BinNat.N.even_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.even_spec".  
 destruct n.
 split. now exists 0.
 trivial.
@@ -497,7 +497,7 @@ intros (m,H). now destruct m.
 Qed.
 
 Lemma odd_spec n : odd n = true <-> Odd n.
-Proof. hammer_hook "BinNat" "BinNat.N.odd_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.odd_spec".  
 destruct n.
 split. discriminate.
 intros (m,H). now destruct m.
@@ -511,7 +511,7 @@ Qed.
 
 Theorem pos_div_eucl_spec (a:positive)(b:N) :
 let (q,r) := pos_div_eucl a b in pos a = q * b + r.
-Proof. hammer_hook "BinNat" "BinNat.N.pos_div_eucl_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_div_eucl_spec".  
 induction a; cbv beta iota delta [pos_div_eucl]; fold pos_div_eucl; cbv zeta.
 
 destruct pos_div_eucl as (q,r).
@@ -533,26 +533,26 @@ Qed.
 
 Theorem div_eucl_spec a b :
 let (q,r) := div_eucl a b in a = b * q + r.
-Proof. hammer_hook "BinNat" "BinNat.N.div_eucl_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.div_eucl_spec".  
 destruct a as [|a], b as [|b]; unfold div_eucl; trivial.
 generalize (pos_div_eucl_spec a (pos b)).
 destruct pos_div_eucl. now rewrite mul_comm.
 Qed.
 
 Theorem div_mod' a b : a = b * (a/b) + (a mod b).
-Proof. hammer_hook "BinNat" "BinNat.N.div_mod'". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.div_mod'".  
 generalize (div_eucl_spec a b).
 unfold div, modulo. now destruct div_eucl.
 Qed.
 
 Definition div_mod a b : b<>0 -> a = b * (a/b) + (a mod b).
-Proof. hammer_hook "BinNat" "BinNat.N.div_mod". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.div_mod".  
 intros _. apply div_mod'.
 Qed.
 
 Theorem pos_div_eucl_remainder (a:positive) (b:N) :
 b<>0 -> snd (pos_div_eucl a b) < b.
-Proof. hammer_hook "BinNat" "BinNat.N.pos_div_eucl_remainder". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_div_eucl_remainder".  
 intros Hb.
 induction a; cbv beta iota delta [pos_div_eucl]; fold pos_div_eucl; cbv zeta.
 
@@ -572,21 +572,21 @@ destruct b as [|[ | | ]]; easy || (now destruct Hb).
 Qed.
 
 Theorem mod_lt a b : b<>0 -> a mod b < b.
-Proof. hammer_hook "BinNat" "BinNat.N.mod_lt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.mod_lt".  
 destruct b as [ |b]. now destruct 1.
 destruct a as [ |a]. reflexivity.
 unfold modulo. simpl. apply pos_div_eucl_remainder.
 Qed.
 
 Theorem mod_bound_pos a b : 0<=a -> 0<b -> 0 <= a mod b < b.
-Proof. hammer_hook "BinNat" "BinNat.N.mod_bound_pos". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.mod_bound_pos".  
 intros _ H. split. apply le_0_l. apply mod_lt. now destruct b.
 Qed.
 
 
 
 Lemma sqrtrem_sqrt n : fst (sqrtrem n) = sqrt n.
-Proof. hammer_hook "BinNat" "BinNat.N.sqrtrem_sqrt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.sqrtrem_sqrt".  
 destruct n. reflexivity.
 unfold sqrtrem, sqrt, Pos.sqrt.
 destruct (Pos.sqrtrem p) as (s,r). now destruct r.
@@ -594,7 +594,7 @@ Qed.
 
 Lemma sqrtrem_spec n :
 let (s,r) := sqrtrem n in n = s*s + r /\ r <= 2*s.
-Proof. hammer_hook "BinNat" "BinNat.N.sqrtrem_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.sqrtrem_spec".  
 destruct n. now split.
 generalize (Pos.sqrtrem_spec p). simpl.
 destruct 1; simpl; subst; now split.
@@ -602,12 +602,12 @@ Qed.
 
 Lemma sqrt_spec n : 0<=n ->
 let s := sqrt n in s*s <= n < (succ s)*(succ s).
-Proof. hammer_hook "BinNat" "BinNat.N.sqrt_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.sqrt_spec".  
 intros _. destruct n. now split. apply (Pos.sqrt_spec p).
 Qed.
 
 Lemma sqrt_neg n : n<0 -> sqrt n = 0.
-Proof. hammer_hook "BinNat" "BinNat.N.sqrt_neg". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.sqrt_neg".  
 now destruct n.
 Qed.
 
@@ -616,7 +616,7 @@ Qed.
 
 
 Lemma ggcd_gcd a b : fst (ggcd a b) = gcd a b.
-Proof. hammer_hook "BinNat" "BinNat.N.ggcd_gcd". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.ggcd_gcd".  
 destruct a as [|p], b as [|q]; simpl; auto.
 assert (H := Pos.ggcd_gcd p q).
 destruct Pos.ggcd as (g,(aa,bb)); simpl; now f_equal.
@@ -627,7 +627,7 @@ Qed.
 Lemma ggcd_correct_divisors a b :
 let '(g,(aa,bb)) := ggcd a b in
 a=g*aa /\ b=g*bb.
-Proof. hammer_hook "BinNat" "BinNat.N.ggcd_correct_divisors". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.ggcd_correct_divisors".  
 destruct a as [|p], b as [|q]; simpl; auto.
 now rewrite Pos.mul_1_r.
 now rewrite Pos.mul_1_r.
@@ -639,14 +639,14 @@ Qed.
 
 
 Lemma gcd_divide_l a b : (gcd a b | a).
-Proof. hammer_hook "BinNat" "BinNat.N.gcd_divide_l". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.gcd_divide_l".  
 rewrite <- ggcd_gcd. generalize (ggcd_correct_divisors a b).
 destruct ggcd as (g,(aa,bb)); simpl. intros (H,_). exists aa.
 now rewrite mul_comm.
 Qed.
 
 Lemma gcd_divide_r a b : (gcd a b | b).
-Proof. hammer_hook "BinNat" "BinNat.N.gcd_divide_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.gcd_divide_r".  
 rewrite <- ggcd_gcd. generalize (ggcd_correct_divisors a b).
 destruct ggcd as (g,(aa,bb)); simpl. intros (_,H). exists bb.
 now rewrite mul_comm.
@@ -655,7 +655,7 @@ Qed.
 
 
 Lemma gcd_greatest a b c : (c|a) -> (c|b) -> (c|gcd a b).
-Proof. hammer_hook "BinNat" "BinNat.N.gcd_greatest". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.gcd_greatest".  
 destruct a as [ |p], b as [ |q]; simpl; trivial.
 destruct c as [ |r]. intros (s,H). destruct s; discriminate.
 intros ([ |s],Hs) ([ |t],Ht); try discriminate; simpl in *.
@@ -666,43 +666,43 @@ exists (pos u). simpl; now f_equal.
 Qed.
 
 Lemma gcd_nonneg a b : 0 <= gcd a b.
-Proof. hammer_hook "BinNat" "BinNat.N.gcd_nonneg". Restart.  apply le_0_l. Qed.
+Proof. try hammer_hook "BinNat" "BinNat.N.gcd_nonneg".   apply le_0_l. Qed.
 
 
 
 
 
 Lemma testbit_even_0 a : testbit (2*a) 0 = false.
-Proof. hammer_hook "BinNat" "BinNat.N.testbit_even_0". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.testbit_even_0".  
 now destruct a.
 Qed.
 
 Lemma testbit_odd_0 a : testbit (2*a+1) 0 = true.
-Proof. hammer_hook "BinNat" "BinNat.N.testbit_odd_0". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.testbit_odd_0".  
 now destruct a.
 Qed.
 
 Lemma testbit_succ_r_div2 a n : 0<=n ->
 testbit a (succ n) = testbit (div2 a) n.
-Proof. hammer_hook "BinNat" "BinNat.N.testbit_succ_r_div2". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.testbit_succ_r_div2".  
 intros _. destruct a as [|[a|a| ]], n as [|n]; simpl; trivial;
 f_equal; apply Pos.pred_N_succ.
 Qed.
 
 Lemma testbit_odd_succ a n : 0<=n ->
 testbit (2*a+1) (succ n) = testbit a n.
-Proof. hammer_hook "BinNat" "BinNat.N.testbit_odd_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.testbit_odd_succ".  
 intros H. rewrite testbit_succ_r_div2 by trivial. f_equal. now destruct a.
 Qed.
 
 Lemma testbit_even_succ a n : 0<=n ->
 testbit (2*a) (succ n) = testbit a n.
-Proof. hammer_hook "BinNat" "BinNat.N.testbit_even_succ". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.testbit_even_succ".  
 intros H. rewrite testbit_succ_r_div2 by trivial. f_equal. now destruct a.
 Qed.
 
 Lemma testbit_neg_r a n : n<0 -> testbit a n = false.
-Proof. hammer_hook "BinNat" "BinNat.N.testbit_neg_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.testbit_neg_r".  
 now destruct n.
 Qed.
 
@@ -710,19 +710,19 @@ Qed.
 
 Lemma shiftr_succ_r a n :
 shiftr a (succ n) = div2 (shiftr a n).
-Proof. hammer_hook "BinNat" "BinNat.N.shiftr_succ_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.shiftr_succ_r".  
 destruct n; simpl; trivial. apply Pos.iter_succ.
 Qed.
 
 Lemma shiftl_succ_r a n :
 shiftl a (succ n) = double (shiftl a n).
-Proof. hammer_hook "BinNat" "BinNat.N.shiftl_succ_r". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.shiftl_succ_r".  
 destruct n, a; simpl; trivial. f_equal. apply Pos.iter_succ.
 Qed.
 
 Lemma shiftr_spec a n m : 0<=m ->
 testbit (shiftr a n) m = testbit a (m+n).
-Proof. hammer_hook "BinNat" "BinNat.N.shiftr_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.shiftr_spec".  
 intros _. revert a m.
 induction n using peano_ind; intros a m. now rewrite add_0_r.
 rewrite add_comm, add_succ_l, add_comm, <- add_succ_l.
@@ -731,7 +731,7 @@ Qed.
 
 Lemma shiftl_spec_high a n m : 0<=m -> n<=m ->
 testbit (shiftl a n) m = testbit a (m-n).
-Proof. hammer_hook "BinNat" "BinNat.N.shiftl_spec_high". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.shiftl_spec_high".  
 intros _ H.
 rewrite <- (sub_add n m H) at 1.
 set (m' := m-n). clearbody m'. clear H m. revert a m'.
@@ -744,7 +744,7 @@ Qed.
 
 Lemma shiftl_spec_low a n m : m<n ->
 testbit (shiftl a n) m = false.
-Proof. hammer_hook "BinNat" "BinNat.N.shiftl_spec_low". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.shiftl_spec_low".  
 revert a m.
 induction n using peano_ind; intros a m H.
 elim (le_0_l m). now rewrite compare_antisym, H.
@@ -757,7 +757,7 @@ now rewrite succ_pos_pred.
 Qed.
 
 Definition div2_spec a : div2 a = shiftr a 1.
-Proof. hammer_hook "BinNat" "BinNat.N.div2_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.div2_spec".  
 reflexivity.
 Qed.
 
@@ -765,7 +765,7 @@ Qed.
 
 Lemma pos_lxor_spec p p' n :
 testbit (Pos.lxor p p') n = xorb (Pos.testbit p n) (Pos.testbit p' n).
-Proof. hammer_hook "BinNat" "BinNat.N.pos_lxor_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_lxor_spec".  
 revert p' n.
 induction p as [p IH|p IH|]; intros [p'|p'|] [|n]; trivial; simpl;
 (specialize (IH p'); destruct Pos.lxor; trivial; now rewrite <-IH) ||
@@ -774,7 +774,7 @@ Qed.
 
 Lemma lxor_spec a a' n :
 testbit (lxor a a') n = xorb (testbit a n) (testbit a' n).
-Proof. hammer_hook "BinNat" "BinNat.N.lxor_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.lxor_spec".  
 destruct a, a'; simpl; trivial.
 now destruct Pos.testbit.
 now destruct Pos.testbit.
@@ -783,7 +783,7 @@ Qed.
 
 Lemma pos_lor_spec p p' n :
 Pos.testbit (Pos.lor p p') n = (Pos.testbit p n) || (Pos.testbit p' n).
-Proof. hammer_hook "BinNat" "BinNat.N.pos_lor_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_lor_spec".  
 revert p' n.
 induction p as [p IH|p IH|]; intros [p'|p'|] [|n]; trivial; simpl;
 apply IH || now rewrite orb_false_r.
@@ -791,7 +791,7 @@ Qed.
 
 Lemma lor_spec a a' n :
 testbit (lor a a') n = (testbit a n) || (testbit a' n).
-Proof. hammer_hook "BinNat" "BinNat.N.lor_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.lor_spec".  
 destruct a, a'; simpl; trivial.
 now rewrite orb_false_r.
 apply pos_lor_spec.
@@ -799,7 +799,7 @@ Qed.
 
 Lemma pos_land_spec p p' n :
 testbit (Pos.land p p') n = (Pos.testbit p n) && (Pos.testbit p' n).
-Proof. hammer_hook "BinNat" "BinNat.N.pos_land_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_land_spec".  
 revert p' n.
 induction p as [p IH|p IH|]; intros [p'|p'|] [|n]; trivial; simpl;
 (specialize (IH p'); destruct Pos.land; trivial; now rewrite <-IH) ||
@@ -808,7 +808,7 @@ Qed.
 
 Lemma land_spec a a' n :
 testbit (land a a') n = (testbit a n) && (testbit a' n).
-Proof. hammer_hook "BinNat" "BinNat.N.land_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.land_spec".  
 destruct a, a'; simpl; trivial.
 now rewrite andb_false_r.
 apply pos_land_spec.
@@ -816,7 +816,7 @@ Qed.
 
 Lemma pos_ldiff_spec p p' n :
 testbit (Pos.ldiff p p') n = (Pos.testbit p n) && negb (Pos.testbit p' n).
-Proof. hammer_hook "BinNat" "BinNat.N.pos_ldiff_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_ldiff_spec".  
 revert p' n.
 induction p as [p IH|p IH|]; intros [p'|p'|] [|n]; trivial; simpl;
 (specialize (IH p'); destruct Pos.ldiff; trivial; now rewrite <-IH) ||
@@ -825,7 +825,7 @@ Qed.
 
 Lemma ldiff_spec a a' n :
 testbit (ldiff a a') n = (testbit a n) && negb (testbit a' n).
-Proof. hammer_hook "BinNat" "BinNat.N.ldiff_spec". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.ldiff_spec".  
 destruct a, a'; simpl; trivial.
 now rewrite andb_true_r.
 apply pos_ldiff_spec.
@@ -838,32 +838,32 @@ Include NExtraProp.
 
 
 Lemma gt_lt_iff n m : n > m <-> m < n.
-Proof. hammer_hook "BinNat" "BinNat.N.gt_lt_iff". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.gt_lt_iff".  
 unfold lt, gt. now rewrite compare_antisym, CompOpp_iff.
 Qed.
 
 Lemma gt_lt n m : n > m -> m < n.
-Proof. hammer_hook "BinNat" "BinNat.N.gt_lt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.gt_lt".  
 apply gt_lt_iff.
 Qed.
 
 Lemma lt_gt n m : n < m -> m > n.
-Proof. hammer_hook "BinNat" "BinNat.N.lt_gt". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.lt_gt".  
 apply gt_lt_iff.
 Qed.
 
 Lemma ge_le_iff n m : n >= m <-> m <= n.
-Proof. hammer_hook "BinNat" "BinNat.N.ge_le_iff". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.ge_le_iff".  
 unfold le, ge. now rewrite compare_antisym, CompOpp_iff.
 Qed.
 
 Lemma ge_le n m : n >= m -> m <= n.
-Proof. hammer_hook "BinNat" "BinNat.N.ge_le". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.ge_le".  
 apply ge_le_iff.
 Qed.
 
 Lemma le_ge n m : n <= m -> m >= n.
-Proof. hammer_hook "BinNat" "BinNat.N.le_ge". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.le_ge".  
 apply ge_le_iff.
 Qed.
 
@@ -871,7 +871,7 @@ Qed.
 
 Lemma pos_pred_shiftl_low : forall p n m, m<n ->
 testbit (Pos.pred_N (Pos.shiftl p n)) m = true.
-Proof. hammer_hook "BinNat" "BinNat.N.pos_pred_shiftl_low". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_pred_shiftl_low".  
 induction n using peano_ind.
 now destruct m.
 intros m H. unfold Pos.shiftl.
@@ -890,7 +890,7 @@ Qed.
 Lemma pos_pred_shiftl_high : forall p n m, n<=m ->
 testbit (Pos.pred_N (Pos.shiftl p n)) m =
 testbit (shiftl (Pos.pred_N p) n) m.
-Proof. hammer_hook "BinNat" "BinNat.N.pos_pred_shiftl_high". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pos_pred_shiftl_high".  
 induction n using peano_ind; intros m H.
 unfold shiftl. simpl. now destruct (Pos.pred_N p).
 rewrite shiftl_succ_r.
@@ -907,7 +907,7 @@ apply succ_le_mono. now rewrite succ_pos_pred.
 Qed.
 
 Lemma pred_div2_up p : Pos.pred_N (Pos.div2_up p) = div2 (Pos.pred_N p).
-Proof. hammer_hook "BinNat" "BinNat.N.pred_div2_up". Restart. 
+Proof. try hammer_hook "BinNat" "BinNat.N.pred_div2_up".  
 destruct p as [p|p| ]; trivial.
 simpl. apply Pos.pred_N_succ.
 destruct p; simpl; trivial.
@@ -1040,15 +1040,15 @@ Notation Ngt_Nlt := N.gt_lt (compat "8.3").
 
 
 Lemma Nplus_reg_l n m p : n + m = n + p -> m = p.
-Proof. hammer_hook "BinNat" "BinNat.Nplus_reg_l". Restart. exact ((proj1 (N.add_cancel_l m p n))). Qed.
+Proof. try hammer_hook "BinNat" "BinNat.Nplus_reg_l".  exact ((proj1 (N.add_cancel_l m p n))). Qed.
 Lemma Nmult_Sn_m n m : N.succ n * m = m + n * m.
-Proof. hammer_hook "BinNat" "BinNat.Nmult_Sn_m". Restart. exact ((eq_trans (N.mul_succ_l n m) (N.add_comm _ _))). Qed.
+Proof. try hammer_hook "BinNat" "BinNat.Nmult_Sn_m".  exact ((eq_trans (N.mul_succ_l n m) (N.add_comm _ _))). Qed.
 Lemma Nmult_plus_distr_l n m p : p * (n + m) = p * n + p * m.
-Proof. hammer_hook "BinNat" "BinNat.Nmult_plus_distr_l". Restart. exact ((N.mul_add_distr_l p n m)). Qed.
+Proof. try hammer_hook "BinNat" "BinNat.Nmult_plus_distr_l".  exact ((N.mul_add_distr_l p n m)). Qed.
 Lemma Nmult_reg_r n m p : p <> 0 -> n * p = m * p -> n = m.
-Proof. hammer_hook "BinNat" "BinNat.Nmult_reg_r". Restart. exact ((fun H => proj1 (N.mul_cancel_r n m p H))). Qed.
+Proof. try hammer_hook "BinNat" "BinNat.Nmult_reg_r".  exact ((fun H => proj1 (N.mul_cancel_r n m p H))). Qed.
 Lemma Ncompare_antisym n m : CompOpp (n ?= m) = (m ?= n).
-Proof. hammer_hook "BinNat" "BinNat.Ncompare_antisym". Restart. exact ((eq_sym (N.compare_antisym n m))). Qed.
+Proof. try hammer_hook "BinNat" "BinNat.Ncompare_antisym".  exact ((eq_sym (N.compare_antisym n m))). Qed.
 
 Definition N_ind_double a P f0 f2 fS2 := N.binary_ind P f0 f2 fS2 a.
 Definition N_rec_double a P f0 f2 fS2 := N.binary_rec P f0 f2 fS2 a.

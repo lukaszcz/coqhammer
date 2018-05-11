@@ -32,7 +32,7 @@ Notation "<< x , y >>" := (exist Descl x y) (at level 0, x, y at level 100).
 
 
 Lemma left_prefix : forall x y z : List, ltl (x ++ y) z -> ltl x z.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.left_prefix". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.left_prefix".  
 simple induction x.
 simple induction z.
 simpl; intros H.
@@ -52,7 +52,7 @@ Lemma right_prefix :
 forall x y z : List,
 ltl x (y ++ z) ->
 ltl x y \/ (exists y' : List, x = y ++ y' /\ ltl y' z).
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.right_prefix". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.right_prefix".  
 intros x y; generalize x.
 elim y; simpl.
 right.
@@ -71,7 +71,7 @@ right; exists x2; auto with sets.
 Qed.
 
 Lemma desc_prefix : forall (x : List) (a : A), Descl (x ++ [a]) -> Descl x.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.desc_prefix". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.desc_prefix".  
 intros.
 inversion H.
 - apply app_cons_not_nil in H1 as [].
@@ -85,7 +85,7 @@ Qed.
 Lemma desc_tail :
 forall (x : List) (a b : A),
 Descl (b :: x ++ [a]) -> clos_refl_trans A leA a b.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.desc_tail". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.desc_tail".  
 intro.
 apply rev_ind with
 (P :=
@@ -114,7 +114,7 @@ Qed.
 Lemma dist_aux :
 forall z : List,
 Descl z -> forall x y : List, z = x ++ y -> Descl x /\ Descl y.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.dist_aux". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.dist_aux".  
 intros z D.
 induction D as [| | * H D Hind]; intros.
 - assert (H0 : x ++ y = []) by auto with sets.
@@ -154,7 +154,7 @@ Qed.
 
 Lemma dist_Desc_concat :
 forall x y : List, Descl (x ++ y) -> Descl x /\ Descl y.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.dist_Desc_concat". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.dist_Desc_concat".  
 intros.
 apply (dist_aux (x ++ y) H x y); auto with sets.
 Qed.
@@ -162,7 +162,7 @@ Qed.
 Lemma desc_end :
 forall (a b : A) (x : List),
 Descl (x ++ [a]) /\ ltl (x ++ [a]) [b] -> clos_trans A leA a b.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.desc_end". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.desc_end".  
 intros a b x.
 case x.
 simpl.
@@ -187,7 +187,7 @@ Qed.
 Lemma ltl_unit :
 forall (x : List) (a b : A),
 Descl (x ++ [a]) -> ltl (x ++ [a]) [b] -> ltl x [b].
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.ltl_unit". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.ltl_unit".  
 intro.
 case x.
 intros; apply (Lt_nil A leA).
@@ -205,7 +205,7 @@ forall (x1 x2 : List) (y1 : Descl (x1 ++ x2)),
 Acc Lex_Exp << x1 ++ x2, y1 >> ->
 forall (x : List) (y : Descl x),
 ltl x (x1 ++ x2) -> Acc Lex_Exp << x, y >>.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.acc_app". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.acc_app".  
 intros.
 apply (Acc_inv (R:=Lex_Exp) (x:=<< x1 ++ x2, y1 >>)).
 auto with sets.
@@ -215,7 +215,7 @@ Qed.
 
 
 Theorem wf_lex_exp : well_founded leA -> well_founded Lex_Exp.
-Proof. hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.wf_lex_exp". Restart. 
+Proof. try hammer_hook "Lexicographic_Exponentiation" "Lexicographic_Exponentiation.wf_lex_exp".  
 unfold well_founded at 2.
 simple induction a; intros x y.
 apply Acc_intro.

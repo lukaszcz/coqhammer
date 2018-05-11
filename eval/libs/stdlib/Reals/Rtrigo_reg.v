@@ -20,7 +20,7 @@ Local Open Scope R_scope.
 
 
 Lemma continuity_sin : continuity sin.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.continuity_sin". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.continuity_sin".  
 unfold continuity; intro.
 assert (H0 := continuity_cos (PI / 2 - x)).
 unfold continuity_pt in H0; unfold continue_in in H0; unfold limit1_in in H0;
@@ -51,7 +51,7 @@ forall fn:nat -> R -> R,
 fn =
 (fun (N:nat) (x:R) => (-1) ^ N / INR (fact (2 * N + 1)) * x ^ (2 * N)) ->
 CVN_R fn.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.CVN_R_sin". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.CVN_R_sin".  
 unfold CVN_R; unfold CVN_r; intros fn H r.
 exists (fun n:nat => / INR (fact (2 * n + 1)) * r ^ (2 * n)).
 cut
@@ -152,7 +152,7 @@ Qed.
 
 
 Lemma derivable_pt_lim_sin_0 : derivable_pt_lim sin 0 1.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_sin_0". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_sin_0".  
 unfold derivable_pt_lim; intros.
 set
 (fn := fun (N:nat) (x:R) => (-1) ^ N / INR (fact (2 * N + 1)) * x ^ (2 * N)).
@@ -236,7 +236,7 @@ Qed.
 
 
 Lemma derivable_pt_lim_cos_0 : derivable_pt_lim cos 0 0.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_cos_0". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_cos_0".  
 unfold derivable_pt_lim; intros.
 assert (H0 := derivable_pt_lim_sin_0).
 unfold derivable_pt_lim in H0.
@@ -345,7 +345,7 @@ Qed.
 
 
 Theorem derivable_pt_lim_sin : forall x:R, derivable_pt_lim sin x (cos x).
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_sin". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_sin".  
 intro; assert (H0 := derivable_pt_lim_sin_0).
 assert (H := derivable_pt_lim_cos_0).
 unfold derivable_pt_lim in H0, H.
@@ -406,7 +406,7 @@ apply (cond_pos alp2).
 Qed.
 
 Lemma derivable_pt_lim_cos : forall x:R, derivable_pt_lim cos x (- sin x).
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_cos". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_lim_cos".  
 intro; cut (forall h:R, sin (h + PI / 2) = cos h).
 intro; replace (- sin x) with (cos (x + PI / 2) * (1 + 0)).
 generalize (derivable_pt_lim_comp (id + fct_cte (PI / 2))%F sin); intros.
@@ -428,39 +428,39 @@ intro; rewrite cos_sin; rewrite Rplus_comm; reflexivity.
 Qed.
 
 Lemma derivable_pt_sin : forall x:R, derivable_pt sin x.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_sin". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_sin".  
 unfold derivable_pt; intro.
 exists (cos x).
 apply derivable_pt_lim_sin.
 Qed.
 
 Lemma derivable_pt_cos : forall x:R, derivable_pt cos x.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_cos". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_pt_cos".  
 unfold derivable_pt; intro.
 exists (- sin x).
 apply derivable_pt_lim_cos.
 Qed.
 
 Lemma derivable_sin : derivable sin.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_sin". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_sin".  
 unfold derivable; intro; apply derivable_pt_sin.
 Qed.
 
 Lemma derivable_cos : derivable cos.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_cos". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derivable_cos".  
 unfold derivable; intro; apply derivable_pt_cos.
 Qed.
 
 Lemma derive_pt_sin :
 forall x:R, derive_pt sin x (derivable_pt_sin _) = cos x.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derive_pt_sin". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derive_pt_sin".  
 intros; apply derive_pt_eq_0.
 apply derivable_pt_lim_sin.
 Qed.
 
 Lemma derive_pt_cos :
 forall x:R, derive_pt cos x (derivable_pt_cos _) = - sin x.
-Proof. hammer_hook "Rtrigo_reg" "Rtrigo_reg.derive_pt_cos". Restart. 
+Proof. try hammer_hook "Rtrigo_reg" "Rtrigo_reg.derive_pt_cos".  
 intros; apply derive_pt_eq_0.
 apply derivable_pt_lim_cos.
 Qed.

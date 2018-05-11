@@ -1,16 +1,17 @@
 #!/bin/bash
 
+mkdir i
 for d in problems/*
 do
     echo "***************"
     echo $d
-    rm i/f
+    rm -f i/f
     ln -s ../$d i/f
-    make -k -j "$1" e-19 vam-40 z3-40q
+    make -k -j "$1" eprover vampire z3
     p=`basename $d`
-    mv o/e-19 o/eprover-$p
-    mv o/vam-40 o/vampire-$p
-    mv o/z3-40q o/z3-$p
+    mv o/eprover o/eprover-$p
+    mv o/vampire o/vampire-$p
+    mv o/z3 o/z3-$p
     if [ -n "$2" ]; then
         echo "" | mail -s "$p finished" "$2"
     fi

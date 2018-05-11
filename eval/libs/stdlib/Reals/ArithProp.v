@@ -18,7 +18,7 @@ Local Open Scope Z_scope.
 Local Open Scope R_scope.
 
 Lemma minus_neq_O : forall n i:nat, (i < n)%nat -> (n - i)%nat <> 0%nat.
-Proof. hammer_hook "ArithProp" "ArithProp.minus_neq_O". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.minus_neq_O".  
 intros; red; intro.
 cut (forall n m:nat, (m <= n)%nat -> (n - m)%nat = 0%nat -> n = m).
 intro; assert (H2 := H1 _ _ (lt_le_weak _ _ H) H0); rewrite H2 in H;
@@ -37,7 +37,7 @@ unfold R; intros; apply H1; assumption.
 Qed.
 
 Lemma le_minusni_n : forall n i:nat, (i <= n)%nat -> (n - i <= n)%nat.
-Proof. hammer_hook "ArithProp" "ArithProp.le_minusni_n". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.le_minusni_n".  
 set (R := fun m n:nat => (n <= m)%nat -> (m - n <= m)%nat).
 cut
 ((forall m n:nat, R m n) -> forall n i:nat, (i <= n)%nat -> (n - i <= n)%nat).
@@ -52,7 +52,7 @@ unfold R; intros; apply H; assumption.
 Qed.
 
 Lemma lt_minus_O_lt : forall m n:nat, (m < n)%nat -> (0 < n - m)%nat.
-Proof. hammer_hook "ArithProp" "ArithProp.lt_minus_O_lt". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.lt_minus_O_lt".  
 intros n m; pattern n, m; apply nat_double_ind;
 [ intros; rewrite <- minus_n_O; assumption
 | intros; elim (lt_n_O _ H)
@@ -61,7 +61,7 @@ Qed.
 
 Lemma even_odd_cor :
 forall n:nat,  exists p : nat, n = (2 * p)%nat \/ n = S (2 * p).
-Proof. hammer_hook "ArithProp" "ArithProp.even_odd_cor". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.even_odd_cor".  
 intro.
 assert (H := even_or_odd n).
 exists (div2 n).
@@ -80,7 +80,7 @@ Qed.
 
 
 Lemma le_double : forall m n:nat, (2 * m <= 2 * n)%nat -> (m <= n)%nat.
-Proof. hammer_hook "ArithProp" "ArithProp.le_double". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.le_double".  
 intros; apply INR_le.
 assert (H1 := le_INR _ _ H).
 do 2 rewrite mult_INR in H1.
@@ -95,7 +95,7 @@ Lemma euclidian_division :
 forall x y:R,
 y <> 0 ->
 exists k : Z, (exists r : R, x = IZR k * y + r /\ 0 <= r < Rabs y).
-Proof. hammer_hook "ArithProp" "ArithProp.euclidian_division". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.euclidian_division".  
 intros.
 set
 (k0 :=
@@ -177,7 +177,7 @@ apply Rge_le in Hge; elim (Rlt_irrefl _ (Rle_lt_trans _ _ _ Hge Hgt)).
 Qed.
 
 Lemma tech8 : forall n i:nat, (n <= S n + i)%nat.
-Proof. hammer_hook "ArithProp" "ArithProp.tech8". Restart. 
+Proof. try hammer_hook "ArithProp" "ArithProp.tech8".  
 intros; induction  i as [| i Hreci].
 replace (S n + 0)%nat with (S n); [ apply le_n_Sn | ring ].
 replace (S n + S i)%nat with (S (S n + i)).

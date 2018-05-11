@@ -28,19 +28,19 @@ Arguments if_zero [A] a b n.
 
 Instance if_zero_wd (A : Type) :
 Proper (Logic.eq ==> Logic.eq ==> N.eq ==> Logic.eq) (@if_zero A).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.if_zero_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.if_zero_wd".  
 unfold if_zero.
 f_equiv'.
 Qed.
 
 Theorem if_zero_0 : forall (A : Type) (a b : A), if_zero a b 0 = a.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.if_zero_0". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.if_zero_0".  
 unfold if_zero; intros; now rewrite recursion_0.
 Qed.
 
 Theorem if_zero_succ :
 forall (A : Type) (a b : A) (n : N.t), if_zero a b (S n) = b.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.if_zero_succ". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.if_zero_succ".  
 intros; unfold if_zero.
 now rewrite recursion_succ.
 Qed.
@@ -53,23 +53,23 @@ Definition def_add (x y : N.t) := recursion y (fun _ => S) x.
 Local Infix "+++" := def_add (at level 50, left associativity).
 
 Instance def_add_wd : Proper (N.eq ==> N.eq ==> N.eq) def_add.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_wd".  
 unfold def_add. f_equiv'.
 Qed.
 
 Theorem def_add_0_l : forall y, 0 +++ y == y.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_0_l". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_0_l".  
 intro y. unfold def_add. now rewrite recursion_0.
 Qed.
 
 Theorem def_add_succ_l : forall x y, S x +++ y == S (x +++ y).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_succ_l". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_succ_l".  
 intros x y; unfold def_add.
 rewrite recursion_succ; f_equiv'.
 Qed.
 
 Theorem def_add_add : forall n m, n +++ m == n + m.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_add". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_add_add".  
 intros n m; induct n.
 now rewrite def_add_0_l, add_0_l.
 intros n H. now rewrite def_add_succ_l, add_succ_l, H.
@@ -83,25 +83,25 @@ Definition def_mul (x y : N.t) := recursion 0 (fun _ p => p +++ x) y.
 Local Infix "**" := def_mul (at level 40, left associativity).
 
 Instance def_mul_wd : Proper (N.eq ==> N.eq ==> N.eq) def_mul.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_wd".  
 unfold def_mul.
 f_equiv'.
 Qed.
 
 Theorem def_mul_0_r : forall x, x ** 0 == 0.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_0_r". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_0_r".  
 intro. unfold def_mul. now rewrite recursion_0.
 Qed.
 
 Theorem def_mul_succ_r : forall x y, x ** S y == x ** y +++ x.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_succ_r". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_succ_r".  
 intros x y; unfold def_mul.
 rewrite recursion_succ; auto with *.
 f_equiv'.
 Qed.
 
 Theorem def_mul_mul : forall n m, n ** m == n * m.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_mul". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.def_mul_mul".  
 intros n m; induct m.
 now rewrite def_mul_0_r, mul_0_r.
 intros m IH; now rewrite def_mul_succ_r, mul_succ_r, def_add_add, IH.
@@ -119,18 +119,18 @@ m.
 Local Infix "<<" := ltb (at level 70, no associativity).
 
 Instance ltb_wd : Proper (N.eq ==> N.eq ==> Logic.eq) ltb.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_wd".  
 unfold ltb. f_equiv'.
 Qed.
 
 Theorem ltb_base : forall n, 0 << n = if_zero false true n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_base". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_base".  
 intro n; unfold ltb; now rewrite recursion_0.
 Qed.
 
 Theorem ltb_step :
 forall m n, S m << n = recursion false (fun n' _ => m << n') n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_step". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_step".  
 intros m n; unfold ltb at 1.
 f_equiv.
 rewrite recursion_succ; f_equiv'.
@@ -139,25 +139,25 @@ Qed.
 
 
 Theorem ltb_0 : forall n, n << 0 = false.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_0". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_0".  
 cases n.
 rewrite ltb_base; now rewrite if_zero_0.
 intro n; rewrite ltb_step. now rewrite recursion_0.
 Qed.
 
 Theorem ltb_0_succ : forall n, 0 << S n = true.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_0_succ". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_0_succ".  
 intro n; rewrite ltb_base; now rewrite if_zero_succ.
 Qed.
 
 Theorem succ_ltb_mono : forall n m, (S n << S m) = (n << m).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.succ_ltb_mono". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.succ_ltb_mono".  
 intros n m.
 rewrite ltb_step. rewrite recursion_succ; f_equiv'.
 Qed.
 
 Theorem ltb_lt : forall n m, n << m = true <-> n < m.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_lt". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_lt".  
 double_induct n m.
 cases m.
 rewrite ltb_0. split; intro H; [discriminate H | false_hyp H nlt_0_r].
@@ -167,7 +167,7 @@ intros n m. rewrite succ_ltb_mono. now rewrite <- succ_lt_mono.
 Qed.
 
 Theorem ltb_ge : forall n m, n << m = false <-> n >= m.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_ge". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.ltb_ge".  
 intros. rewrite <- not_true_iff_false, ltb_lt. apply nlt_ge.
 Qed.
 
@@ -177,18 +177,18 @@ Qed.
 Definition even (x : N.t) := recursion true (fun _ p => negb p) x.
 
 Instance even_wd : Proper (N.eq==>Logic.eq) even.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.even_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.even_wd".  
 unfold even. f_equiv'.
 Qed.
 
 Theorem even_0 : even 0 = true.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.even_0". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.even_0".  
 unfold even.
 now rewrite recursion_0.
 Qed.
 
 Theorem even_succ : forall x, even (S x) = negb (even x).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.even_succ". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.even_succ".  
 unfold even.
 intro x; rewrite recursion_succ; f_equiv'.
 Qed.
@@ -202,7 +202,7 @@ recursion (0, 0) (fun _ p => let (x1, x2) := p in (S x2, x1)) x.
 Definition half (x : N.t) := snd (half_aux x).
 
 Instance half_aux_wd : Proper (N.eq ==> N.eq*N.eq) half_aux.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_wd".  
 intros x x' Hx. unfold half_aux.
 f_equiv; trivial.
 intros y y' Hy (u,v) (u',v') (Hu,Hv). compute in *.
@@ -210,18 +210,18 @@ rewrite Hu, Hv; auto with *.
 Qed.
 
 Instance half_wd : Proper (N.eq==>N.eq) half.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_wd".  
 unfold half. f_equiv'.
 Qed.
 
 Lemma half_aux_0 : half_aux 0 = (0,0).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_0". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_0".  
 unfold half_aux. rewrite recursion_0; auto.
 Qed.
 
 Lemma half_aux_succ : forall x,
 half_aux (S x) = (S (snd (half_aux x)), fst (half_aux x)).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_succ". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_succ".  
 intros.
 remember (half_aux x) as h.
 destruct h as (f,s); simpl in *.
@@ -231,7 +231,7 @@ Qed.
 
 Theorem half_aux_spec : forall n,
 n == fst (half_aux n) + snd (half_aux n).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_spec". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_spec".  
 apply induction.
 intros x x' Hx. setoid_rewrite Hx; auto with *.
 rewrite half_aux_0; simpl; rewrite add_0_l; auto with *.
@@ -244,7 +244,7 @@ Qed.
 Theorem half_aux_spec2 : forall n,
 fst (half_aux n) == snd (half_aux n) \/
 fst (half_aux n) == S (snd (half_aux n)).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_spec2". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_aux_spec2".  
 apply induction.
 intros x x' Hx. setoid_rewrite Hx; auto with *.
 rewrite half_aux_0; simpl. auto with *.
@@ -255,18 +255,18 @@ right; now f_equiv.
 Qed.
 
 Theorem half_0 : half 0 == 0.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_0". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_0".  
 unfold half. rewrite half_aux_0; simpl; auto with *.
 Qed.
 
 Theorem half_1 : half 1 == 0.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_1". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_1".  
 unfold half. rewrite one_succ, half_aux_succ, half_aux_0; simpl; auto with *.
 Qed.
 
 Theorem half_double : forall n,
 n == 2 * half n \/ n == 1 + 2 * half n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_double". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_double".  
 intros. unfold half.
 nzsimpl'.
 destruct (half_aux_spec2 n) as [H|H]; [left|right].
@@ -275,7 +275,7 @@ rewrite <- add_succ_l. rewrite <- H at 1. apply half_aux_spec.
 Qed.
 
 Theorem half_upper_bound : forall n, 2 * half n <= n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_upper_bound". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_upper_bound".  
 intros.
 destruct (half_double n) as [E|E]; rewrite E at 2.
 apply le_refl.
@@ -284,7 +284,7 @@ apply le_le_succ_r, le_refl.
 Qed.
 
 Theorem half_lower_bound : forall n, n <= 1 + 2 * half n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_lower_bound". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_lower_bound".  
 intros.
 destruct (half_double n) as [E|E]; rewrite E at 1.
 nzsimpl.
@@ -293,7 +293,7 @@ apply le_refl.
 Qed.
 
 Theorem half_nz : forall n, 1 < n -> 0 < half n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_nz". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_nz".  
 intros n LT.
 assert (LE : 0 <= half n) by apply le_0_l.
 le_elim LE; auto.
@@ -304,7 +304,7 @@ order.
 Qed.
 
 Theorem half_decrease : forall n, 0 < n -> half n < n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_decrease". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.half_decrease".  
 intros n LT.
 destruct (half_double n) as [E|E]; rewrite E at 2; nzsimpl'.
 rewrite <- add_0_l at 1.
@@ -327,17 +327,17 @@ Definition pow (n m : N.t) := recursion 1 (fun _ r => n*r) m.
 Local Infix "^^" := pow (at level 30, right associativity).
 
 Instance pow_wd : Proper (N.eq==>N.eq==>N.eq) pow.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow_wd".  
 unfold pow. f_equiv'.
 Qed.
 
 Lemma pow_0 : forall n, n^^0 == 1.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow_0". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow_0".  
 intros. unfold pow. rewrite recursion_0. auto with *.
 Qed.
 
 Lemma pow_succ : forall n m, n^^(S m) == n*(n^^m).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow_succ". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow_succ".  
 intros. unfold pow. rewrite recursion_succ; f_equiv'.
 Qed.
 
@@ -355,7 +355,7 @@ x.
 Instance log_prewd :
 Proper ((N.eq==>N.eq)==>N.eq==>N.eq)
 (fun g x => if x<<2 then 0 else S (g (half x))).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_prewd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_prewd".  
 intros g g' Hg n n' Hn.
 rewrite Hn.
 destruct (n' << 2); auto with *.
@@ -363,7 +363,7 @@ f_equiv. apply Hg. now f_equiv.
 Qed.
 
 Instance log_wd : Proper (N.eq==>N.eq) log.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_wd". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_wd".  
 intros x x' Exx'. unfold log.
 apply strong_rec_wd; f_equiv'.
 Qed.
@@ -372,7 +372,7 @@ Lemma log_good_step : forall n h1 h2,
 (forall m, m < n -> h1 m == h2 m) ->
 (if n << 2 then 0 else S (h1 (half n))) ==
 (if n << 2 then 0 else S (h2 (half n))).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_good_step". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_good_step".  
 intros n h1 h2 E.
 destruct (n<<2) eqn:H.
 auto with *.
@@ -383,21 +383,21 @@ Qed.
 Hint Resolve log_good_step.
 
 Theorem log_init : forall n, n < 2 -> log n == 0.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_init". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_init".  
 intros n Hn. unfold log. rewrite strong_rec_fixpoint; auto with *.
 replace (n << 2) with true; auto with *.
 symmetry. now rewrite ltb_lt.
 Qed.
 
 Theorem log_step : forall n, 2 <= n -> log n == S (log (half n)).
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_step". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.log_step".  
 intros n Hn. unfold log. rewrite strong_rec_fixpoint; auto with *.
 replace (n << 2) with false; auto with *.
 symmetry. rewrite <- not_true_iff_false, ltb_lt, nlt_ge; auto.
 Qed.
 
 Theorem pow2_log : forall n, 0 < n -> half n < 2^^(log n) <= n.
-Proof. hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow2_log". Restart. 
+Proof. try hammer_hook "NDefOps" "NDefOps.NdefOpsProp.pow2_log".  
 intro n; generalize (le_refl n). set (k:=n) at -2. clearbody k.
 revert k. pattern n. apply induction; clear n.
 intros n n' Hn; setoid_rewrite Hn; auto with *.

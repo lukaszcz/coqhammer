@@ -95,19 +95,19 @@ end
 end.
 
 Lemma of_nat_ext {p}{n} (h h' : p < n) : of_nat_lt h = of_nat_lt h'.
-Proof. hammer_hook "Fin" "Fin.of_nat_ext". Restart. 
+Proof. try hammer_hook "Fin" "Fin.of_nat_ext".  
 now rewrite (Peano_dec.le_unique _ _ h h').
 Qed.
 
 Lemma of_nat_to_nat_inv {m} (p : t m) : of_nat_lt (proj2_sig (to_nat p)) = p.
-Proof. hammer_hook "Fin" "Fin.of_nat_to_nat_inv". Restart. 
+Proof. try hammer_hook "Fin" "Fin.of_nat_to_nat_inv".  
 induction p; simpl.
 - reflexivity.
 - destruct (to_nat p); simpl in *. f_equal. subst p. apply of_nat_ext.
 Qed.
 
 Lemma to_nat_of_nat {p}{n} (h : p < n) : to_nat (of_nat_lt h) = exist _ p h.
-Proof. hammer_hook "Fin" "Fin.to_nat_of_nat". Restart. 
+Proof. try hammer_hook "Fin" "Fin.to_nat_of_nat".  
 revert n h.
 induction p; (destruct n ; intros h; [ destruct (Lt.lt_n_O _ h) | cbn]);
 [ | rewrite (IHp _ (Lt.lt_S_n p n h))];  f_equal; apply Peano_dec.le_unique.
@@ -115,7 +115,7 @@ Qed.
 
 Lemma to_nat_inj {n} (p q : t n) :
 proj1_sig (to_nat p) = proj1_sig (to_nat q) -> p = q.
-Proof. hammer_hook "Fin" "Fin.to_nat_inj". Restart. 
+Proof. try hammer_hook "Fin" "Fin.to_nat_inj".  
 intro H.
 rewrite <- (of_nat_to_nat_inv p), <- (of_nat_to_nat_inv q).
 destruct (to_nat p) as (np,hp), (to_nat q) as (nq,hq); simpl in *.
@@ -139,7 +139,7 @@ Fixpoint L {m} n (p : t m) : t (m + n) :=
 match p with |F1 => F1 |FS p' => FS (L n p') end.
 
 Lemma L_sanity {m} n (p : t m) : proj1_sig (to_nat (L n p)) = proj1_sig (to_nat p).
-Proof. hammer_hook "Fin" "Fin.L_sanity". Restart. 
+Proof. try hammer_hook "Fin" "Fin.L_sanity".  
 induction p.
 - reflexivity.
 - simpl; destruct (to_nat (L n p)); simpl in *; rewrite IHp. now destruct (to_nat p).
@@ -147,7 +147,7 @@ Qed.
 
 
 Definition L_R {m} n (p : t m) : t (n + m).
-Proof. hammer_hook "Fin" "Fin.L_R". Restart. 
+Proof. try hammer_hook "Fin" "Fin.L_R".  
 induction n.
 - exact p.
 - exact ((fix LS k (p: t k) :=
@@ -162,7 +162,7 @@ Fixpoint R {m} n (p : t m) : t (n + m) :=
 match n with |0 => p |S n' => FS (R n' p) end.
 
 Lemma R_sanity {m} n (p : t m) : proj1_sig (to_nat (R n p)) = n + proj1_sig (to_nat p).
-Proof. hammer_hook "Fin" "Fin.R_sanity". Restart. 
+Proof. try hammer_hook "Fin" "Fin.R_sanity".  
 induction n.
 - reflexivity.
 - simpl; destruct (to_nat (R n p)); simpl in *; rewrite IHn. now destruct (to_nat p).
@@ -176,7 +176,7 @@ end.
 
 Lemma depair_sanity {m n} (o : t m) (p : t n) :
 proj1_sig (to_nat (depair o p)) = n * (proj1_sig (to_nat o)) + (proj1_sig (to_nat p)).
-Proof. hammer_hook "Fin" "Fin.depair_sanity". Restart. 
+Proof. try hammer_hook "Fin" "Fin.depair_sanity".  
 induction o ; simpl.
 - rewrite L_sanity. now rewrite Mult.mult_0_r.
 
@@ -194,7 +194,7 @@ match p, q with
 end.
 
 Lemma eqb_nat_eq : forall m n (p : t m) (q : t n), eqb p q = true -> m = n.
-Proof. hammer_hook "Fin" "Fin.eqb_nat_eq". Restart. 
+Proof. try hammer_hook "Fin" "Fin.eqb_nat_eq".  
 intros m n p; revert n; induction p; destruct q; simpl; intros; f_equal.
 - now apply EqNat.beq_nat_true.
 - easy.
@@ -203,7 +203,7 @@ intros m n p; revert n; induction p; destruct q; simpl; intros; f_equal.
 Qed.
 
 Lemma eqb_eq : forall n (p q : t n), eqb p q = true <-> p = q.
-Proof. hammer_hook "Fin" "Fin.eqb_eq". Restart. 
+Proof. try hammer_hook "Fin" "Fin.eqb_eq".  
 apply rect2; simpl; intros.
 - split; intros ; [ reflexivity | now apply EqNat.beq_nat_true_iff ].
 - now split.
@@ -216,14 +216,14 @@ apply rect2; simpl; intros.
 Qed.
 
 Lemma eq_dec {n} (x y : t n): {x = y} + {x <> y}.
-Proof. hammer_hook "Fin" "Fin.eq_dec". Restart. 
+Proof. try hammer_hook "Fin" "Fin.eq_dec".  
 case_eq (eqb x y); intros.
 - left; now apply eqb_eq.
 - right. intros Heq. apply <- eqb_eq in Heq. congruence.
 Defined.
 
 Definition cast: forall {m} (v: t m) {n}, m = n -> t n.
-Proof. hammer_hook "Fin" "Fin.cast". Restart. 
+Proof. try hammer_hook "Fin" "Fin.cast".  
 refine (fix cast {m} (v: t m) {struct v} :=
 match v in t m' return forall n, m' = n -> t n with
 |F1 => fun n => match n with

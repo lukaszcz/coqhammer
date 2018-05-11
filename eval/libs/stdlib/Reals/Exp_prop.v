@@ -25,7 +25,7 @@ Definition E1 (x:R) (N:nat) : R :=
 sum_f_R0 (fun k:nat => / INR (fact k) * x ^ k) N.
 
 Lemma E1_cvg : forall x:R, Un_cv (E1 x) (exp x).
-Proof. hammer_hook "Exp_prop" "Exp_prop.E1_cvg". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.E1_cvg".  
 intro; unfold exp; unfold projT1.
 case (exist_exp x); intro.
 unfold exp_in, Un_cv; unfold infinite_sum, E1; trivial.
@@ -43,7 +43,7 @@ pred (N - k))) (pred N).
 Lemma exp_form :
 forall (x y:R) (n:nat),
 (0 < n)%nat -> E1 x n * E1 y n - Reste_E x y n = E1 (x + y) n.
-Proof. hammer_hook "Exp_prop" "Exp_prop.exp_form". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.exp_form".  
 intros; unfold E1.
 rewrite cauchy_finite.
 unfold Reste_E; unfold Rminus; rewrite Rplus_assoc;
@@ -69,7 +69,7 @@ Rsqr (INR (fact (div2 (pred N))))).
 
 
 Lemma div2_double : forall N:nat, div2 (2 * N) = N.
-Proof. hammer_hook "Exp_prop" "Exp_prop.div2_double". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.div2_double".  
 intro; induction  N as [| N HrecN].
 reflexivity.
 replace (2 * S N)%nat with (S (S (2 * N))).
@@ -78,7 +78,7 @@ ring.
 Qed.
 
 Lemma div2_S_double : forall N:nat, div2 (S (2 * N)) = N.
-Proof. hammer_hook "Exp_prop" "Exp_prop.div2_S_double". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.div2_S_double".  
 intro; induction  N as [| N HrecN].
 reflexivity.
 replace (2 * S N)%nat with (S (S (2 * N))).
@@ -87,7 +87,7 @@ ring.
 Qed.
 
 Lemma div2_not_R0 : forall N:nat, (1 < N)%nat -> (0 < div2 N)%nat.
-Proof. hammer_hook "Exp_prop" "Exp_prop.div2_not_R0". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.div2_not_R0".  
 intros; induction N as [| N HrecN].
 - elim (lt_n_O _ H).
 - cut ((1 < N)%nat \/ N = 1%nat).
@@ -104,7 +104,7 @@ Qed.
 Lemma Reste_E_maj :
 forall (x y:R) (N:nat),
 (0 < N)%nat -> Rabs (Reste_E x y N) <= maj_Reste_E x y N.
-Proof. hammer_hook "Exp_prop" "Exp_prop.Reste_E_maj". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.Reste_E_maj".  
 intros; set (M := Rmax 1 (Rmax (Rabs x) (Rabs y))).
 apply Rle_trans with
 (M ^ (2 * N) *
@@ -500,7 +500,7 @@ apply S_pred with 0%nat; apply H.
 Qed.
 
 Lemma maj_Reste_cv_R0 : forall x y:R, Un_cv (maj_Reste_E x y) 0.
-Proof. hammer_hook "Exp_prop" "Exp_prop.maj_Reste_cv_R0". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.maj_Reste_cv_R0".  
 intros; assert (H := Majxy_cv_R0 x y).
 unfold Un_cv in H; unfold Un_cv; intros.
 cut (0 < eps / 4);
@@ -648,7 +648,7 @@ Qed.
 
 
 Lemma Reste_E_cv : forall x y:R, Un_cv (Reste_E x y) 0.
-Proof. hammer_hook "Exp_prop" "Exp_prop.Reste_E_cv". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.Reste_E_cv".  
 intros; assert (H := maj_Reste_cv_R0 x y).
 unfold Un_cv in H; unfold Un_cv; intros; elim (H _ H0); intros.
 exists (max x0 1); intros.
@@ -678,7 +678,7 @@ Qed.
 
 
 Lemma exp_plus : forall x y:R, exp (x + y) = exp x * exp y.
-Proof. hammer_hook "Exp_prop" "Exp_prop.exp_plus". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.exp_plus".  
 intros; assert (H0 := E1_cvg x).
 assert (H := E1_cvg y).
 assert (H1 := E1_cvg (x + y)).
@@ -702,7 +702,7 @@ Qed.
 
 
 Lemma exp_pos_pos : forall x:R, 0 < x -> 0 < exp x.
-Proof. hammer_hook "Exp_prop" "Exp_prop.exp_pos_pos". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.exp_pos_pos".  
 intros; set (An := fun N:nat => / INR (fact N) * x ^ N).
 cut (Un_cv (fun n:nat => sum_f_R0 An n) (exp x)).
 intro; apply Rlt_le_trans with (sum_f_R0 An 0).
@@ -719,7 +719,7 @@ Qed.
 
 
 Lemma exp_pos : forall x:R, 0 < exp x.
-Proof. hammer_hook "Exp_prop" "Exp_prop.exp_pos". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.exp_pos".  
 intro; destruct (total_order_T 0 x) as [[Hlt|<-]|Hgt].
 apply (exp_pos_pos _ Hlt).
 rewrite exp_0; apply Rlt_0_1.
@@ -744,7 +744,7 @@ Qed.
 
 
 Lemma derivable_pt_lim_exp_0 : derivable_pt_lim exp 0 1.
-Proof. hammer_hook "Exp_prop" "Exp_prop.derivable_pt_lim_exp_0". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.derivable_pt_lim_exp_0".  
 unfold derivable_pt_lim; intros.
 set (fn := fun (N:nat) (x:R) => x ^ N / INR (fact (S N))).
 cut (CVN_R fn).
@@ -941,7 +941,7 @@ Qed.
 
 
 Lemma derivable_pt_lim_exp : forall x:R, derivable_pt_lim exp x (exp x).
-Proof. hammer_hook "Exp_prop" "Exp_prop.derivable_pt_lim_exp". Restart. 
+Proof. try hammer_hook "Exp_prop" "Exp_prop.derivable_pt_lim_exp".  
 intro; assert (H0 := derivable_pt_lim_exp_0).
 unfold derivable_pt_lim in H0; unfold derivable_pt_lim; intros.
 cut (0 < eps / exp x);

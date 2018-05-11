@@ -29,13 +29,13 @@ Notation eq_dec := E.eq_dec.
 Definition eqb x y := if eq_dec x y then true else false.
 
 Lemma eq_bool_alt : forall b b', b=b' <-> (b=true <-> b'=true).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.eq_bool_alt". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.eq_bool_alt".  
 destruct b; destruct b'; intuition.
 Qed.
 
 Lemma eq_option_alt : forall (elt:Type)(o o':option elt),
 o=o' <-> (forall e, o=Some e <-> o'=Some e).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.eq_option_alt". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.eq_option_alt".  
 split; intros.
 subst; split; auto.
 destruct o; destruct o'; try rewrite H; auto.
@@ -44,7 +44,7 @@ Qed.
 
 Lemma MapsTo_fun : forall (elt:Type) m x (e e':elt),
 MapsTo x e m -> MapsTo x e' m -> e=e'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.MapsTo_fun". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.MapsTo_fun".  
 intros.
 generalize (find_1 H) (find_1 H0); clear H H0.
 intros; rewrite H in H0; injection H0; auto.
@@ -59,7 +59,7 @@ Implicit Type x y z: key.
 Implicit Type e: elt.
 
 Lemma In_iff : forall m x y, E.eq x y -> (In x m <-> In y m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.In_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.In_iff".  
 unfold In.
 split; intros (e0,H0); exists e0.
 apply (MapsTo_1 H H0); auto.
@@ -67,34 +67,34 @@ apply (MapsTo_1 (E.eq_sym H) H0); auto.
 Qed.
 
 Lemma MapsTo_iff : forall m x y e, E.eq x y -> (MapsTo x e m <-> MapsTo y e m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.MapsTo_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.MapsTo_iff".  
 split; apply MapsTo_1; auto.
 Qed.
 
 Lemma mem_in_iff : forall m x, In x m <-> mem x m = true.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mem_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mem_in_iff".  
 split; [apply mem_1|apply mem_2].
 Qed.
 
 Lemma not_mem_in_iff : forall m x, ~In x m <-> mem x m = false.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.not_mem_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.not_mem_in_iff".  
 intros; rewrite mem_in_iff; destruct (mem x m); intuition.
 Qed.
 
 Lemma In_dec : forall m x, { In x m } + { ~ In x m }.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.In_dec". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.In_dec".  
 intros.
 generalize (mem_in_iff m x).
 destruct (mem x m); [left|right]; intuition.
 Qed.
 
 Lemma find_mapsto_iff : forall m x e, MapsTo x e m <-> find x m = Some e.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.find_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.find_mapsto_iff".  
 split; [apply find_1|apply find_2].
 Qed.
 
 Lemma not_find_in_iff : forall m x, ~In x m <-> find x m = None.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.not_find_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.not_find_in_iff".  
 split; intros.
 rewrite eq_option_alt. intro e. rewrite <- find_mapsto_iff.
 split; try discriminate. intro H'; elim H; exists e; auto.
@@ -102,29 +102,29 @@ intros (e,He); rewrite find_mapsto_iff,H in He; discriminate.
 Qed.
 
 Lemma in_find_iff : forall m x, In x m <-> find x m <> None.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.in_find_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.in_find_iff".  
 intros; rewrite <- not_find_in_iff, mem_in_iff.
 destruct mem; intuition.
 Qed.
 
 Lemma equal_iff : forall m m' cmp, Equivb cmp m m' <-> equal cmp m m' = true.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.equal_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.equal_iff".  
 split; [apply equal_1|apply equal_2].
 Qed.
 
 Lemma empty_mapsto_iff : forall x e, MapsTo x e (empty elt) <-> False.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_mapsto_iff".  
 intuition; apply (empty_1 H).
 Qed.
 
 Lemma empty_in_iff : forall x, In x (empty elt) <-> False.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_in_iff".  
 unfold In.
 split; [intros (e,H); rewrite empty_mapsto_iff in H|]; intuition.
 Qed.
 
 Lemma is_empty_iff : forall m, Empty m <-> is_empty m = true.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.is_empty_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.is_empty_iff".  
 split; [apply is_empty_1|apply is_empty_2].
 Qed.
 
@@ -132,7 +132,7 @@ Lemma add_mapsto_iff : forall m x y e e',
 MapsTo y e' (add x e m) <->
 (E.eq x y /\ e=e') \/
 (~E.eq x y /\ MapsTo y e' m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_mapsto_iff".  
 intros.
 intuition.
 destruct (eq_dec x y); [left|right].
@@ -143,7 +143,7 @@ subst; auto with map.
 Qed.
 
 Lemma add_in_iff : forall m x y e, In y (add x e m) <-> E.eq x y \/ In y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_in_iff".  
 unfold In; split.
 intros (e',H).
 destruct (eq_dec x y) as [E|E]; auto.
@@ -159,13 +159,13 @@ Qed.
 
 Lemma add_neq_mapsto_iff : forall m x y e e',
 ~ E.eq x y -> (MapsTo y e' (add x e m)  <-> MapsTo y e' m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_mapsto_iff".  
 split; [apply add_3|apply add_2]; auto.
 Qed.
 
 Lemma add_neq_in_iff : forall m x y e,
 ~ E.eq x y -> (In y (add x e m)  <-> In y m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_in_iff".  
 split; intros (e',H0); exists e'.
 apply (add_3 H H0).
 apply add_2; auto.
@@ -173,7 +173,7 @@ Qed.
 
 Lemma remove_mapsto_iff : forall m x y e,
 MapsTo y e (remove x m) <-> ~E.eq x y /\ MapsTo y e m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_mapsto_iff".  
 intros.
 split; intros.
 split.
@@ -184,7 +184,7 @@ apply remove_2; intuition.
 Qed.
 
 Lemma remove_in_iff : forall m x y, In y (remove x m) <-> ~E.eq x y /\ In y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_in_iff".  
 unfold In; split.
 intros (e,H).
 split.
@@ -196,13 +196,13 @@ Qed.
 
 Lemma remove_neq_mapsto_iff : forall m x y e,
 ~ E.eq x y -> (MapsTo y e (remove x m)  <-> MapsTo y e m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_mapsto_iff".  
 split; [apply remove_3|apply remove_2]; auto.
 Qed.
 
 Lemma remove_neq_in_iff : forall m x y,
 ~ E.eq x y -> (In y (remove x m)  <-> In y m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_in_iff".  
 split; intros (e',H0); exists e'.
 apply (remove_3 H0).
 apply remove_2; auto.
@@ -210,19 +210,19 @@ Qed.
 
 Lemma elements_mapsto_iff : forall m x e,
 MapsTo x e m <-> InA (@eq_key_elt _) (x,e) (elements m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_mapsto_iff".  
 split; [apply elements_1 | apply elements_2].
 Qed.
 
 Lemma elements_in_iff : forall m x,
 In x m <-> exists e, InA (@eq_key_elt _) (x,e) (elements m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_in_iff".  
 unfold In; split; intros (e,H); exists e; [apply elements_1 | apply elements_2]; auto.
 Qed.
 
 Lemma map_mapsto_iff : forall m x b (f : elt -> elt'),
 MapsTo x b (map f m) <-> exists a, b = f a /\ MapsTo x a m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_mapsto_iff".  
 split.
 case_eq (find x m); intros.
 exists e.
@@ -238,7 +238,7 @@ Qed.
 
 Lemma map_in_iff : forall m x (f : elt -> elt'),
 In x (map f m) <-> In x m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_in_iff".  
 split; intros; eauto with map.
 destruct H as (a,H).
 exists (f a); auto with map.
@@ -246,7 +246,7 @@ Qed.
 
 Lemma mapi_in_iff : forall m x (f:key->elt->elt'),
 In x (mapi f m) <-> In x m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_in_iff".  
 split; intros; eauto with map.
 destruct H as (a,H).
 destruct (mapi_1 f H) as (y,(H0,H1)).
@@ -258,7 +258,7 @@ Qed.
 Lemma mapi_inv : forall m x b (f : key -> elt -> elt'),
 MapsTo x b (mapi f m) ->
 exists a y, E.eq y x /\ b = f y a /\ MapsTo x a m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_inv". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_inv".  
 intros; case_eq (find x m); intros.
 exists e.
 destruct (@mapi_1 _ _ m x e f) as (y,(H1,H2)).
@@ -273,7 +273,7 @@ Qed.
 Lemma mapi_1bis : forall m x e (f:key->elt->elt'),
 (forall x y e, E.eq x y -> f x e = f y e) ->
 MapsTo x e m -> MapsTo x (f x e) (mapi f m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_1bis". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_1bis".  
 intros.
 destruct (mapi_1 f H0) as (y,(H1,H2)).
 replace (f x e) with (f y e) by auto.
@@ -283,7 +283,7 @@ Qed.
 Lemma mapi_mapsto_iff : forall m x b (f:key->elt->elt'),
 (forall x y e, E.eq x y -> f x e = f y e) ->
 (MapsTo x b (mapi f m) <-> exists a, b = f x a /\ MapsTo x a m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_mapsto_iff".  
 split.
 intros.
 destruct (mapi_inv H0) as (a,(y,(H1,(H2,H3)))).
@@ -313,7 +313,7 @@ rewrite mapi_in_iff)).
 Section BoolSpec.
 
 Lemma mem_find_b : forall (elt:Type)(m:t elt)(x:key), mem x m = if find x m then true else false.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mem_find_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mem_find_b".  
 intros.
 generalize (find_mapsto_iff m x)(mem_in_iff m x); unfold In.
 destruct (find x m); destruct (mem x m); auto.
@@ -330,26 +330,26 @@ Implicit Types x y z : key.
 Implicit Types e : elt.
 
 Lemma mem_b : forall m x y, E.eq x y -> mem x m = mem y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mem_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mem_b".  
 intros.
 generalize (mem_in_iff m x) (mem_in_iff m y)(In_iff m H).
 destruct (mem x m); destruct (mem y m); intuition.
 Qed.
 
 Lemma find_o : forall m x y, E.eq x y -> find x m = find y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.find_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.find_o".  
 intros. rewrite eq_option_alt. intro e. rewrite <- 2 find_mapsto_iff.
 apply MapsTo_iff; auto.
 Qed.
 
 Lemma empty_o : forall x, find x (empty elt) = None.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_o".  
 intros. rewrite eq_option_alt. intro e.
 rewrite <- find_mapsto_iff, empty_mapsto_iff; now intuition.
 Qed.
 
 Lemma empty_a : forall x, mem x (empty elt) = false.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_a". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.empty_a".  
 intros.
 case_eq (mem x (empty elt)); intros; auto.
 generalize (mem_2 H).
@@ -358,13 +358,13 @@ Qed.
 
 Lemma add_eq_o : forall m x y e,
 E.eq x y -> find y (add x e m) = Some e.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_eq_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_eq_o".  
 auto with map.
 Qed.
 
 Lemma add_neq_o : forall m x y e,
 ~ E.eq x y -> find y (add x e m) = find y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_o".  
 intros. rewrite eq_option_alt. intro e'. rewrite <- 2 find_mapsto_iff.
 apply add_neq_mapsto_iff; auto.
 Qed.
@@ -372,32 +372,32 @@ Hint Resolve add_neq_o : map.
 
 Lemma add_o : forall m x y e,
 find y (add x e m) = if eq_dec x y then Some e else find y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_o".  
 intros; destruct (eq_dec x y); auto with map.
 Qed.
 
 Lemma add_eq_b : forall m x y e,
 E.eq x y -> mem y (add x e m) = true.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_eq_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_eq_b".  
 intros; rewrite mem_find_b; rewrite add_eq_o; auto.
 Qed.
 
 Lemma add_neq_b : forall m x y e,
 ~E.eq x y -> mem y (add x e m) = mem y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_neq_b".  
 intros; do 2 rewrite mem_find_b; rewrite add_neq_o; auto.
 Qed.
 
 Lemma add_b : forall m x y e,
 mem y (add x e m) = eqb x y || mem y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.add_b".  
 intros; do 2 rewrite mem_find_b; rewrite add_o; unfold eqb.
 destruct (eq_dec x y); simpl; auto.
 Qed.
 
 Lemma remove_eq_o : forall m x y,
 E.eq x y -> find y (remove x m) = None.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_eq_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_eq_o".  
 intros. rewrite eq_option_alt. intro e.
 rewrite <- find_mapsto_iff, remove_mapsto_iff; now intuition.
 Qed.
@@ -405,7 +405,7 @@ Hint Resolve remove_eq_o : map.
 
 Lemma remove_neq_o : forall m x y,
 ~ E.eq x y -> find y (remove x m) = find y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_o".  
 intros. rewrite eq_option_alt. intro e.
 rewrite <- find_mapsto_iff, remove_neq_mapsto_iff; now intuition.
 Qed.
@@ -413,32 +413,32 @@ Hint Resolve remove_neq_o : map.
 
 Lemma remove_o : forall m x y,
 find y (remove x m) = if eq_dec x y then None else find y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_o".  
 intros; destruct (eq_dec x y); auto with map.
 Qed.
 
 Lemma remove_eq_b : forall m x y,
 E.eq x y -> mem y (remove x m) = false.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_eq_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_eq_b".  
 intros; rewrite mem_find_b; rewrite remove_eq_o; auto.
 Qed.
 
 Lemma remove_neq_b : forall m x y,
 ~ E.eq x y -> mem y (remove x m) = mem y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_neq_b".  
 intros; do 2 rewrite mem_find_b; rewrite remove_neq_o; auto.
 Qed.
 
 Lemma remove_b : forall m x y,
 mem y (remove x m) = negb (eqb x y) && mem y m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.remove_b".  
 intros; do 2 rewrite mem_find_b; rewrite remove_o; unfold eqb.
 destruct (eq_dec x y); auto.
 Qed.
 
 Lemma map_o : forall m x (f:elt->elt'),
 find x (map f m) = option_map f (find x m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_o".  
 intros.
 generalize (find_mapsto_iff (map f m) x) (find_mapsto_iff m x)
 (fun b => map_mapsto_iff m x b f).
@@ -453,14 +453,14 @@ Qed.
 
 Lemma map_b : forall m x (f:elt->elt'),
 mem x (map f m) = mem x m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map_b".  
 intros; do 2 rewrite mem_find_b; rewrite map_o.
 destruct (find x m); simpl; auto.
 Qed.
 
 Lemma mapi_b : forall m x (f:key->elt->elt'),
 mem x (mapi f m) = mem x m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_b".  
 intros.
 generalize (mem_in_iff (mapi f m) x) (mem_in_iff m x) (mapi_in_iff m x f).
 destruct (mem x (mapi f m)); destruct (mem x m); simpl; auto; intros.
@@ -471,7 +471,7 @@ Qed.
 Lemma mapi_o : forall m x (f:key->elt->elt'),
 (forall x y e, E.eq x y -> f x e = f y e) ->
 find x (mapi f m) = option_map (f x) (find x m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.mapi_o".  
 intros.
 generalize (find_mapsto_iff (mapi f m) x) (find_mapsto_iff m x)
 (fun b => mapi_mapsto_iff m x b H).
@@ -488,7 +488,7 @@ Lemma map2_1bis : forall (m: t elt)(m': t elt') x
 (f:option elt->option elt'->option elt''),
 f None None = None ->
 find x (map2 f m m') = f (find x m) (find x m').
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map2_1bis". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.map2_1bis".  
 intros.
 case_eq (find x m); intros.
 rewrite <- H0.
@@ -508,7 +508,7 @@ Qed.
 
 Lemma elements_o : forall m x,
 find x m = findA (eqb x) (elements m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_o". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_o".  
 intros. rewrite eq_option_alt. intro e.
 rewrite <- find_mapsto_iff, elements_mapsto_iff.
 unfold eqb.
@@ -517,7 +517,7 @@ Qed.
 
 Lemma elements_b : forall m x,
 mem x m = existsb (fun p => eqb x (fst p)) (elements m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.elements_b".  
 intros.
 generalize (mem_in_iff m x)(elements_in_iff m x)
 (existsb_exists (fun p => eqb x (fst p)) (elements m)).
@@ -550,7 +550,7 @@ Variable elt:Type.
 
 Lemma Equal_mapsto_iff : forall m1 m2 : t elt,
 Equal m1 m2 <-> (forall k e, MapsTo k e m1 <-> MapsTo k e m2).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_mapsto_iff".  
 intros m1 m2. split; [intros Heq k e|intros Hiff].
 rewrite 2 find_mapsto_iff, Heq. split; auto.
 intro k. rewrite eq_option_alt. intro e.
@@ -563,7 +563,7 @@ Qed.
 
 Lemma Equal_Equiv : forall (m m' : t elt),
 Equal m m' <-> Equiv Logic.eq m m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_Equiv". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_Equiv".  
 intros. rewrite Equal_mapsto_iff. split; intros.
 split.
 split; intros (e,Hin); exists e; [rewrite <- H|rewrite H]; auto.
@@ -590,7 +590,7 @@ forall e e', cmp e e' = true <-> eq_elt e e'.
 
 Lemma Equiv_Equivb : compat_cmp ->
 forall m m', Equiv eq_elt m m' <-> Equivb cmp m m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equiv_Equivb". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equiv_Equivb".  
 unfold Equivb, Equiv, Cmp; intuition.
 red in H; rewrite H; eauto.
 red in H; rewrite <-H; eauto.
@@ -602,7 +602,7 @@ End Cmp.
 Lemma Equal_Equivb : forall cmp,
 (forall e e', cmp e e' = true <-> e = e') ->
 forall (m m':t elt), Equal m m' <-> Equivb cmp m m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_Equivb". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_Equivb".  
 intros; rewrite Equal_Equiv.
 apply Equiv_Equivb; auto.
 Qed.
@@ -611,7 +611,7 @@ Lemma Equal_Equivb_eqdec :
 forall eq_elt_dec : (forall e e', { e = e' } + { e <> e' }),
 let cmp := fun e e' => if eq_elt_dec e e' then true else false in
 forall (m m':t elt), Equal m m' <-> Equivb cmp m m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_Equivb_eqdec". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_Equivb_eqdec".  
 intros; apply Equal_Equivb.
 unfold cmp; clear cmp; intros.
 destruct eq_elt_dec; now intuition.
@@ -622,18 +622,18 @@ End Equalities.
 
 
 Lemma Equal_refl : forall (elt:Type)(m : t elt), Equal m m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_refl". Restart.  red; reflexivity. Qed.
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_refl".   red; reflexivity. Qed.
 
 Lemma Equal_sym : forall (elt:Type)(m m' : t elt),
 Equal m m' -> Equal m' m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_sym". Restart.  unfold Equal; auto. Qed.
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_sym".   unfold Equal; auto. Qed.
 
 Lemma Equal_trans : forall (elt:Type)(m m' m'' : t elt),
 Equal m m' -> Equal m' m'' -> Equal m m''.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_trans". Restart.  unfold Equal; congruence. Qed.
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_trans".   unfold Equal; congruence. Qed.
 
 Definition Equal_ST : forall elt:Type, Equivalence (@Equal elt).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_ST". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WFacts_fun.Equal_ST".  
 constructor; red; [apply Equal_refl | apply Equal_sym | apply Equal_trans].
 Qed.
 
@@ -747,10 +747,10 @@ Notation eqke := (@eq_key_elt elt).
 Notation eqk := (@eq_key elt).
 
 Instance eqk_equiv : Equivalence eqk.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.eqk_equiv". Restart.  unfold eq_key; split; eauto. Qed.
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.eqk_equiv".   unfold eq_key; split; eauto. Qed.
 
 Instance eqke_equiv : Equivalence eqke.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.eqke_equiv". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.eqke_equiv".  
 unfold eq_key_elt; split; repeat red; firstorder.
 eauto with *.
 congruence.
@@ -760,7 +760,7 @@ Qed.
 
 Lemma InA_eqke_eqk : forall k1 k2 e1 e2 l,
 E.eq k1 k2 -> InA eqke (k1,e1) l -> InA eqk (k2,e2) l.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.InA_eqke_eqk". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.InA_eqke_eqk".  
 intros k1 k2 e1 e2 l Hk. rewrite 2 InA_alt.
 intros ((k',e') & (Hk',He') & H); simpl in *.
 exists (k',e'); split; auto.
@@ -768,7 +768,7 @@ red; simpl; eauto.
 Qed.
 
 Lemma NoDupA_eqk_eqke : forall l, NoDupA eqk l -> NoDupA eqke l.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.NoDupA_eqk_eqke". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.NoDupA_eqk_eqke".  
 induction 1; auto.
 constructor; auto.
 destruct x as (k,e).
@@ -777,7 +777,7 @@ Qed.
 
 Lemma findA_rev : forall l k, NoDupA eqk l ->
 findA (eqb k) l = findA (eqb k) (rev l).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.findA_rev". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.findA_rev".  
 intros.
 case_eq (findA (eqb k) l).
 intros. symmetry.
@@ -795,7 +795,7 @@ Qed.
 
 
 Lemma elements_Empty : forall m:t elt, Empty m <-> elements m = nil.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.elements_Empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.elements_Empty".  
 intros.
 unfold Empty.
 split; intros.
@@ -814,7 +814,7 @@ rewrite H in H0; destruct H0 as (_,H0); inversion H0.
 Qed.
 
 Lemma elements_empty : elements (@empty elt) = nil.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.elements_empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.elements_empty".  
 rewrite <-elements_Empty; apply empty_1.
 Qed.
 
@@ -831,7 +831,7 @@ Definition to_list := elements.
 Lemma of_list_1 : forall l k e,
 NoDupA eqk l ->
 (MapsTo k e (of_list l) <-> InA eqke (k,e) l).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_1". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_1".  
 induction l as [|(k',e') l IH]; simpl; intros k e Hnodup.
 rewrite empty_mapsto_iff, InA_nil; intuition.
 unfold uncurry; simpl.
@@ -848,7 +848,7 @@ Qed.
 Lemma of_list_1b : forall l k,
 NoDupA eqk l ->
 find k (of_list l) = findA (eqb k) l.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_1b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_1b".  
 induction l as [|(k',e') l IH]; simpl; intros k Hnodup.
 apply empty_o.
 unfold uncurry; simpl.
@@ -860,13 +860,13 @@ Qed.
 
 Lemma of_list_2 : forall l, NoDupA eqk l ->
 equivlistA eqke l (to_list (of_list l)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_2". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_2".  
 intros l Hnodup (k,e).
 rewrite <- elements_mapsto_iff, of_list_1; intuition.
 Qed.
 
 Lemma of_list_3 : forall s, Equal (of_list (to_list s)) s.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_3". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.of_list_3".  
 intros s k.
 rewrite of_list_1b, elements_o; auto.
 apply elements_3w.
@@ -878,7 +878,7 @@ Qed.
 
 Lemma fold_spec_right m (A:Type)(i:A)(f : key -> elt -> A -> A) :
 fold f m i = List.fold_right (uncurry f) i (rev (elements m)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_spec_right". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_spec_right".  
 rewrite fold_1. symmetry. apply fold_left_rev_right.
 Qed.
 
@@ -893,7 +893,7 @@ forall (i:A)(m:t elt),
 (forall k e a m' m'', MapsTo k e m -> ~In k m' ->
 Add k e m' m'' -> P m' a -> P m'' (f k e a)) ->
 P m (fold f m i).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec".  
 intros A P f i m Hempty Hstep.
 rewrite fold_spec_right.
 set (F:=uncurry f).
@@ -939,7 +939,7 @@ forall (i:A)(m:t elt),
 (forall k e a m', MapsTo k e m -> ~In k m' ->
 P m' a -> P (add k e m') (f k e a)) ->
 P m (fold f m i).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec_bis". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec_bis".  
 intros A P f i m Pmorphism Pempty Pstep.
 apply fold_rec; intros.
 apply Pmorphism with (empty _); auto. intro k. rewrite empty_o.
@@ -952,7 +952,7 @@ Lemma fold_rec_nodep :
 forall (A:Type)(P : A -> Type)(f : key -> elt -> A -> A)(i:A)(m:t elt),
 P i -> (forall k e a, MapsTo k e m -> P a -> P (f k e a)) ->
 P (fold f m i).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec_nodep". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec_nodep".  
 intros; apply fold_rec_bis with (P:=fun _ => P); auto.
 Qed.
 
@@ -964,7 +964,7 @@ forall (A:Type)(P : t elt -> A -> Type)(f : key -> elt -> A -> A)(i:A),
 P (empty _) i ->
 (forall k e a m, ~In k m -> P m a -> P (add k e m) (f k e a)) ->
 forall m, P m (fold f m i).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec_weak". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rec_weak".  
 intros; apply fold_rec_bis; auto.
 Qed.
 
@@ -975,7 +975,7 @@ forall (A B:Type)(R : A -> B -> Type)
 R i j ->
 (forall k e a b, MapsTo k e m -> R a b -> R (f k e a) (g k e b)) ->
 R (fold f m i) (fold g m j).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rel". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_rel".  
 intros A B R f g i j m Rempty Rstep.
 rewrite 2 fold_spec_right. set (l:=rev (elements m)).
 assert (Rstep' : forall k e a b, InA eqke (k,e) l ->
@@ -994,7 +994,7 @@ forall P : t elt -> Type,
 (forall m, Empty m -> P m) ->
 (forall m m', P m -> forall x e, ~In x m -> Add x e m m' -> P m') ->
 forall m, P m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.map_induction". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.map_induction".  
 intros. apply (@fold_rec _ (fun s _ => P s) (fun _ _ _ => tt) tt m); eauto.
 Qed.
 
@@ -1004,7 +1004,7 @@ forall P : t elt -> Type,
 P (empty _) ->
 (forall x e m, ~In x m -> P m -> P (add x e m)) ->
 forall m, P m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.map_induction_bis". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.map_induction_bis".  
 intros.
 apply (@fold_rec_bis _ (fun s _ => P s) (fun _ _ _ => tt) tt m); eauto.
 Qed.
@@ -1012,7 +1012,7 @@ Qed.
 
 
 Lemma fold_identity : forall m : t elt, Equal (fold (@add _) m (empty _)) m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_identity". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_identity".  
 intros.
 apply fold_rec with (P:=fun m acc => Equal acc m); auto with map.
 intros m' Heq k'.
@@ -1036,14 +1036,14 @@ Hypothesis Comp : Proper (E.eq==>eq==>eqA==>eqA) f.
 
 Lemma fold_init :
 forall m i i', eqA i i' -> eqA (fold f m i) (fold f m i').
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_init". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_init".  
 intros. apply fold_rel with (R:=eqA); auto.
 intros. apply Comp; auto.
 Qed.
 
 Lemma fold_Empty :
 forall m i, Empty m -> eqA (fold f m i) i.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Empty".  
 intros. apply fold_rec_nodep with (P:=fun a => eqA a i).
 reflexivity.
 intros. elim (H k e); auto.
@@ -1059,7 +1059,7 @@ Hypothesis Tra : transpose_neqkey.
 
 Lemma fold_commutes : forall i m k e, ~In k m ->
 eqA (fold f m (f k e i)) (f k e (fold f m i)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_commutes". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_commutes".  
 intros i m k e Hnotin.
 apply fold_rel with (R:= fun a b => eqA a (f k e b)); auto.
 reflexivity.
@@ -1074,7 +1074,7 @@ Hint Resolve NoDupA_eqk_eqke NoDupA_rev elements_3w : map.
 
 Lemma fold_Equal : forall m1 m2 i, Equal m1 m2 ->
 eqA (fold f m1 i) (fold f m2 i).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Equal". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Equal".  
 intros.
 rewrite 2 fold_spec_right.
 assert (NoDupA eqk (rev (elements m1))) by (auto with *).
@@ -1092,7 +1092,7 @@ Qed.
 
 Lemma fold_Equal2 : forall m1 m2 i j, Equal m1 m2 -> eqA i j ->
 eqA (fold f m1 i) (fold f m2 j).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Equal2". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Equal2".  
 intros.
 rewrite 2 fold_spec_right.
 assert (NoDupA eqk (rev (elements m1))) by (auto with * ).
@@ -1113,7 +1113,7 @@ Qed.
 
 Lemma fold_Add : forall m1 m2 k e i, ~In k m1 -> Add k e m1 m2 ->
 eqA (fold f m2 i) (f k e (fold f m1 i)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Add". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_Add".  
 intros.
 rewrite 2 fold_spec_right.
 set (f':=uncurry f).
@@ -1144,7 +1144,7 @@ Qed.
 
 Lemma fold_add : forall m k e i, ~In k m ->
 eqA (fold f (add k e m) i) (f k e (fold f m i)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_add". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.fold_add".  
 intros. apply fold_Add; try red; auto.
 Qed.
 
@@ -1154,14 +1154,14 @@ End Fold_More.
 
 Lemma cardinal_fold : forall m : t elt,
 cardinal m = fold (fun _ _ => S) m 0.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_fold". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_fold".  
 intros; rewrite cardinal_1, fold_1.
 symmetry; apply fold_left_length; auto.
 Qed.
 
 Lemma cardinal_Empty : forall m : t elt,
 Empty m <-> cardinal m = 0.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_Empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_Empty".  
 intros.
 rewrite cardinal_1, elements_Empty.
 destruct (elements m); intuition; discriminate.
@@ -1169,19 +1169,19 @@ Qed.
 
 Lemma Equal_cardinal : forall m m' : t elt,
 Equal m m' -> cardinal m = cardinal m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Equal_cardinal". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Equal_cardinal".  
 intros; do 2 rewrite cardinal_fold.
 apply fold_Equal with (eqA:=eq); compute; auto.
 Qed.
 
 Lemma cardinal_1 : forall m : t elt, Empty m -> cardinal m = 0.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_1". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_1".  
 intros; rewrite <- cardinal_Empty; auto.
 Qed.
 
 Lemma cardinal_2 :
 forall m m' x e, ~ In x m -> Add x e m m' -> cardinal m' = S (cardinal m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_2". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_2".  
 intros; do 2 rewrite cardinal_fold.
 change S with ((fun _ _ => S) x e).
 apply fold_Add with (eqA:=eq); compute; auto.
@@ -1189,14 +1189,14 @@ Qed.
 
 Lemma cardinal_inv_1 : forall m : t elt,
 cardinal m = 0 -> Empty m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_inv_1". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_inv_1".  
 intros; rewrite cardinal_Empty; auto.
 Qed.
 Hint Resolve cardinal_inv_1 : map.
 
 Lemma cardinal_inv_2 :
 forall m n, cardinal m = S n -> { p : key*elt | MapsTo (fst p) (snd p) m }.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_inv_2". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_inv_2".  
 intros; rewrite M.cardinal_1 in *.
 generalize (elements_mapsto_iff m).
 destruct (elements m); try discriminate.
@@ -1207,7 +1207,7 @@ Qed.
 
 Lemma cardinal_inv_2b :
 forall m, cardinal m <> 0 -> { p : key*elt | MapsTo (fst p) (snd p) m }.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_inv_2b". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.cardinal_inv_2b".  
 intros.
 generalize (@cardinal_inv_2 m); destruct cardinal.
 elim H;auto.
@@ -1255,7 +1255,7 @@ Hypothesis Hf : Proper (E.eq==>eq==>eq) f.
 
 Lemma filter_iff : forall m k e,
 MapsTo k e (filter f m) <-> MapsTo k e m /\ f k e = true.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.filter_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.filter_iff".  
 unfold filter.
 set (f':=fun k e m => if f k e then add k e m else m).
 intro m. pattern m, (fold f' m (empty _)). apply fold_rec.
@@ -1276,7 +1276,7 @@ Qed.
 
 Lemma for_all_iff : forall m,
 for_all f m = true <-> (forall k e, MapsTo k e m -> f k e = true).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.for_all_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.for_all_iff".  
 unfold for_all.
 set (f':=fun k e b => if f k e then b else false).
 intro m. pattern m, (fold f' m true). apply fold_rec.
@@ -1302,7 +1302,7 @@ Qed.
 Lemma exists_iff : forall m,
 exists_ f m = true <->
 (exists p, MapsTo (fst p) (snd p) m /\ f (fst p) (snd p) = true).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.exists_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.exists_iff".  
 unfold exists_.
 set (f':=fun k e b => if f k e then true else b).
 intro m. pattern m, (fold f' m false). apply fold_rec.
@@ -1332,7 +1332,7 @@ End Specs.
 Lemma Disjoint_alt : forall m m',
 Disjoint m m' <->
 (forall k e e', MapsTo k e m -> MapsTo k e' m' -> False).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Disjoint_alt". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Disjoint_alt".  
 unfold Disjoint; split.
 intros H k v v' H1 H2.
 apply H with k; split.
@@ -1349,7 +1349,7 @@ Hypothesis Hf : Proper (E.eq==>eq==>eq) f.
 Lemma partition_iff_1 : forall m m1 k e,
 m1 = fst (partition f m) ->
 (MapsTo k e m1 <-> MapsTo k e m /\ f k e = true).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_iff_1". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_iff_1".  
 unfold partition; simpl; intros. subst m1.
 apply filter_iff; auto.
 Qed.
@@ -1357,7 +1357,7 @@ Qed.
 Lemma partition_iff_2 : forall m m2 k e,
 m2 = snd (partition f m) ->
 (MapsTo k e m2 <-> MapsTo k e m /\ f k e = false).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_iff_2". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_iff_2".  
 unfold partition; simpl; intros. subst m2.
 rewrite filter_iff.
 split; intros (H,H'); split; auto.
@@ -1368,7 +1368,7 @@ Qed.
 
 Lemma partition_Partition : forall m m1 m2,
 partition f m = (m1,m2) -> Partition m m1 m2.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_Partition". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_Partition".  
 intros. split.
 rewrite Disjoint_alt. intros k e e'.
 rewrite (@partition_iff_1 m m1), (@partition_iff_2 m m2)
@@ -1384,7 +1384,7 @@ End Partition.
 
 Lemma Partition_In : forall m m1 m2 k,
 Partition m m1 m2 -> In k m -> {In k m1}+{In k m2}.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_In". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_In".  
 intros m m1 m2 k Hm Hk.
 destruct (In_dec m1 k) as [H|H]; [left|right]; auto.
 destruct Hm as (Hm,Hm').
@@ -1394,13 +1394,13 @@ exists e; auto.
 Defined.
 
 Lemma Disjoint_sym : forall m1 m2, Disjoint m1 m2 -> Disjoint m2 m1.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Disjoint_sym". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Disjoint_sym".  
 intros m1 m2 H k (H1,H2). elim (H k); auto.
 Qed.
 
 Lemma Partition_sym : forall m m1 m2,
 Partition m m1 m2 -> Partition m m2 m1.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_sym". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_sym".  
 intros m m1 m2 (H,H'); split.
 apply Disjoint_sym; auto.
 intros; rewrite H'; intuition.
@@ -1408,7 +1408,7 @@ Qed.
 
 Lemma Partition_Empty : forall m m1 m2, Partition m m1 m2 ->
 (Empty m <-> (Empty m1 /\ Empty m2)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_Empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_Empty".  
 intros m m1 m2 (Hdisj,Heq). split.
 intro He.
 split; intros k e Hke; elim (He k e); rewrite Heq; auto.
@@ -1422,7 +1422,7 @@ forall m m' x e , ~In x m -> Add x e m m' ->
 forall m1 m2, Partition m' m1 m2 ->
 exists m3, (Add x e m3 m1 /\ Partition m m3 m2 \/
 Add x e m3 m2 /\ Partition m m1 m3).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_Add". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_Add".  
 unfold Partition. intros m m' x e Hn Hadd m1 m2 (Hdisj,Hor).
 assert (Heq : Equal m (remove x m')).
 change (Equal m' (add x e m)) in Hadd. rewrite Hadd.
@@ -1478,7 +1478,7 @@ transpose_neqkey eqA f ->
 forall m m1 m2 i,
 Partition m m1 m2 ->
 eqA (fold f m i) (fold f m1 (fold f m2 i)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_fold". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_fold".  
 intros A eqA st f Comp Tra.
 induction m as [m Hm|m m' IH k e Hn Hadd] using map_induction.
 
@@ -1520,7 +1520,7 @@ Qed.
 
 Lemma Partition_cardinal : forall m m1 m2, Partition m m1 m2 ->
 cardinal m = cardinal m1 + cardinal m2.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_cardinal". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_cardinal".  
 intros.
 rewrite (cardinal_fold m), (cardinal_fold m1).
 set (f:=fun (_:key)(_:elt)=>S).
@@ -1533,7 +1533,7 @@ Qed.
 Lemma Partition_partition : forall m m1 m2, Partition m m1 m2 ->
 let f := fun k (_:elt) => mem k m1 in
 Equal m1 (fst (partition f m)) /\ Equal m2 (snd (partition f m)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_partition". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.Partition_partition".  
 intros m m1 m2 Hm f.
 assert (Hf : Proper (E.eq==>eq==>eq) f).
 intros k k' Hk e e' _; unfold f; rewrite Hk; auto.
@@ -1561,7 +1561,7 @@ Qed.
 Lemma update_mapsto_iff : forall m m' k e,
 MapsTo k e (update m m') <->
 (MapsTo k e m' \/ (MapsTo k e m /\ ~In k m')).
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.update_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.update_mapsto_iff".  
 unfold update.
 intros m m'.
 pattern m', (fold (@add _) m' m). apply fold_rec.
@@ -1578,7 +1578,7 @@ Qed.
 
 Lemma update_dec : forall m m' k e, MapsTo k e (update m m') ->
 { MapsTo k e m' } + { MapsTo k e m /\ ~In k m'}.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.update_dec". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.update_dec".  
 intros m m' k e H. rewrite update_mapsto_iff in H.
 destruct (In_dec m' k) as [H'|H']; [left|right]; intuition.
 elim H'; exists e; auto.
@@ -1586,7 +1586,7 @@ Defined.
 
 Lemma update_in_iff : forall m m' k,
 In k (update m m') <-> In k m \/ In k m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.update_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.update_in_iff".  
 intros m m' k. split.
 intros (e,H); rewrite update_mapsto_iff in H.
 destruct H; [right|left]; exists e; intuition.
@@ -1600,7 +1600,7 @@ Qed.
 
 Lemma diff_mapsto_iff : forall m m' k e,
 MapsTo k e (diff m m') <-> MapsTo k e m /\ ~In k m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.diff_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.diff_mapsto_iff".  
 intros m m' k e.
 unfold diff.
 rewrite filter_iff.
@@ -1611,7 +1611,7 @@ Qed.
 
 Lemma diff_in_iff : forall m m' k,
 In k (diff m m') <-> In k m /\ ~In k m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.diff_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.diff_in_iff".  
 intros m m' k. split.
 intros (e,H); rewrite diff_mapsto_iff in H.
 destruct H; split; auto. exists e; auto.
@@ -1620,7 +1620,7 @@ Qed.
 
 Lemma restrict_mapsto_iff : forall m m' k e,
 MapsTo k e (restrict m m') <-> MapsTo k e m /\ In k m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.restrict_mapsto_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.restrict_mapsto_iff".  
 intros m m' k e.
 unfold restrict.
 rewrite filter_iff.
@@ -1630,7 +1630,7 @@ Qed.
 
 Lemma restrict_in_iff : forall m m' k,
 In k (restrict m m') <-> In k m /\ In k m'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.restrict_in_iff". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.restrict_in_iff".  
 intros m m' k. split.
 intros (e,H); rewrite restrict_mapsto_iff in H.
 destruct H; split; auto. exists e; auto.
@@ -1652,7 +1652,7 @@ End Elt.
 
 Add Parametric Morphism elt : (@cardinal elt)
 with signature Equal ==> eq as cardinal_m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_range". Restart.  intros; apply Equal_cardinal; auto. Qed.
+Proof. try hammer_hook "FMapFacts" "FMapFacts.WProperties_fun.partition_range".   intros; apply Equal_cardinal; auto. Qed.
 
 Add Parametric Morphism elt : (@Disjoint elt)
 with signature Equal ==> Equal ==> iff as Disjoint_m.
@@ -1756,7 +1756,7 @@ Section Elements.
 
 Lemma sort_equivlistA_eqlistA : forall l l' : list (key*elt),
 sort ltk l -> sort ltk l' -> equivlistA eqke l l' -> eqlistA eqke l l'.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.sort_equivlistA_eqlistA". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.sort_equivlistA_eqlistA".  
 apply SortA_equivlistA_eqlistA; eauto with *.
 Qed.
 
@@ -1770,19 +1770,19 @@ Definition elements_lt p m := List.filter (gtb p) (elements m).
 Definition elements_ge p m := List.filter (leb p) (elements m).
 
 Lemma gtb_1 : forall p p', gtb p p' = true <-> ltk p' p.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.gtb_1". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.gtb_1".  
 intros (x,e) (y,e'); unfold gtb, O.ltk; simpl.
 destruct (E.compare x y); intuition; try discriminate; ME.order.
 Qed.
 
 Lemma leb_1 : forall p p', leb p p' = true <-> ~ltk p' p.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.leb_1". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.leb_1".  
 intros (x,e) (y,e'); unfold leb, gtb, O.ltk; simpl.
 destruct (E.compare x y); intuition; try discriminate; ME.order.
 Qed.
 
 Lemma gtb_compat : forall p, Proper (eqke==>eq) (gtb p).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.gtb_compat". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.gtb_compat".  
 red; intros (x,e) (a,e') (b,e'') H; red in H; simpl in *; destruct H.
 generalize (gtb_1 (x,e) (a,e'))(gtb_1 (x,e) (b,e''));
 destruct (gtb (x,e) (a,e')); destruct (gtb (x,e) (b,e'')); auto.
@@ -1797,7 +1797,7 @@ rewrite <- H2; auto.
 Qed.
 
 Lemma leb_compat : forall p, Proper (eqke==>eq) (leb p).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.leb_compat". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.leb_compat".  
 red; intros x a b H.
 unfold leb; f_equal; apply gtb_compat; auto.
 Qed.
@@ -1806,7 +1806,7 @@ Hint Resolve gtb_compat leb_compat elements_3 : map.
 
 Lemma elements_split : forall p m,
 elements m = elements_lt p m ++ elements_ge p m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_split". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_split".  
 unfold elements_lt, elements_ge, leb; intros.
 apply filter_split with (eqA:=eqk) (ltA:=ltk); eauto with *.
 intros; destruct x; destruct y; destruct p.
@@ -1820,7 +1820,7 @@ Qed.
 Lemma elements_Add : forall m m' x e, ~In x m -> Add x e m m' ->
 eqlistA eqke (elements m')
 (elements_lt (x,e) m ++ (x,e):: elements_ge (x,e) m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Add". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Add".  
 intros; unfold elements_lt, elements_ge.
 apply sort_equivlistA_eqlistA; auto with *.
 apply (@SortA_app _ eqke); auto with *.
@@ -1862,7 +1862,7 @@ Qed.
 Lemma elements_Add_Above : forall m m' x e,
 Above x m -> Add x e m m' ->
 eqlistA eqke (elements m') (elements m ++ (x,e)::nil).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Add_Above". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Add_Above".  
 intros.
 apply sort_equivlistA_eqlistA; auto with *.
 apply (@SortA_app _ eqke); auto with *.
@@ -1890,7 +1890,7 @@ Qed.
 Lemma elements_Add_Below : forall m m' x e,
 Below x m -> Add x e m m' ->
 eqlistA eqke (elements m') ((x,e)::elements m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Add_Below". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Add_Below".  
 intros.
 apply sort_equivlistA_eqlistA; auto with *.
 change (sort ltk (((x,e)::nil) ++ elements m)).
@@ -1918,7 +1918,7 @@ Qed.
 
 Lemma elements_Equal_eqlistA : forall (m m': t elt),
 Equal m m' -> eqlistA eqke (elements m) (elements m').
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Equal_eqlistA". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.elements_Equal_eqlistA".  
 intros.
 apply sort_equivlistA_eqlistA; auto with *.
 red; intros.
@@ -1941,7 +1941,7 @@ Definition max_elt m := max_elt_aux (elements m).
 
 Lemma max_elt_Above :
 forall m x e, max_elt m = Some (x,e) -> Above x (remove x m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.max_elt_Above". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.max_elt_Above".  
 red; intros.
 rewrite remove_in_iff in H0.
 destruct H0.
@@ -1981,7 +1981,7 @@ Qed.
 
 Lemma max_elt_MapsTo :
 forall m x e, max_elt m = Some (x,e) -> MapsTo x e m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.max_elt_MapsTo". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.max_elt_MapsTo".  
 intros.
 unfold max_elt in *.
 rewrite elements_mapsto_iff.
@@ -1994,7 +1994,7 @@ Qed.
 
 Lemma max_elt_Empty :
 forall m, max_elt m = None -> Empty m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.max_elt_Empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.max_elt_Empty".  
 intros.
 unfold max_elt in *.
 rewrite elements_Empty.
@@ -2010,7 +2010,7 @@ end.
 
 Lemma min_elt_Below :
 forall m x e, min_elt m = Some (x,e) -> Below x (remove x m).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.min_elt_Below". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.min_elt_Below".  
 unfold min_elt, Below; intros.
 rewrite remove_in_iff in H0; destruct H0.
 rewrite elements_in_iff in H1.
@@ -2028,7 +2028,7 @@ Qed.
 
 Lemma min_elt_MapsTo :
 forall m x e, min_elt m = Some (x,e) -> MapsTo x e m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.min_elt_MapsTo". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.min_elt_MapsTo".  
 intros.
 unfold min_elt in *.
 rewrite elements_mapsto_iff.
@@ -2040,7 +2040,7 @@ Qed.
 
 Lemma min_elt_Empty :
 forall m, min_elt m = None -> Empty m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.min_elt_Empty". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.min_elt_Empty".  
 intros.
 unfold min_elt in *.
 rewrite elements_Empty.
@@ -2057,7 +2057,7 @@ forall P : t elt -> Type,
 (forall m, Empty m -> P m) ->
 (forall m m', P m -> forall x e, Above x m -> Add x e m m' -> P m') ->
 forall m, P m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.map_induction_max". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.map_induction_max".  
 intros; remember (cardinal m) as n; revert m Heqn; induction n; intros.
 apply X; apply cardinal_inv_1; auto.
 
@@ -2084,7 +2084,7 @@ forall P : t elt -> Type,
 (forall m, Empty m -> P m) ->
 (forall m m', P m -> forall x e, Below x m -> Add x e m m' -> P m') ->
 forall m, P m.
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.map_induction_min". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.map_induction_min".  
 intros; remember (cardinal m) as n; revert m Heqn; induction n; intros.
 apply X; apply cardinal_inv_1; auto.
 
@@ -2117,7 +2117,7 @@ Lemma fold_Equal : forall m1 m2 (A:Type)(eqA:A->A->Prop)(st:Equivalence  eqA)
 Proper (E.eq==>eq==>eqA==>eqA) f ->
 Equal m1 m2 ->
 eqA (fold f m1 i) (fold f m2 i).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.fold_Equal". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.fold_Equal".  
 intros m1 m2 A eqA st f i Hf Heq.
 rewrite 2 fold_spec_right.
 apply fold_right_eqlistA with (eqA:=eqke) (eqB:=eqA); auto.
@@ -2129,7 +2129,7 @@ Lemma fold_Add_Above : forall m1 m2 x e (A:Type)(eqA:A->A->Prop)(st:Equivalence 
 (f:key->elt->A->A)(i:A) (P:Proper (E.eq==>eq==>eqA==>eqA) f),
 Above x m1 -> Add x e m1 m2 ->
 eqA (fold f m2 i) (f x e (fold f m1 i)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.fold_Add_Above". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.fold_Add_Above".  
 intros. rewrite 2 fold_spec_right. set (f':=uncurry f).
 transitivity (fold_right f' i (rev (elements m1 ++ (x,e)::nil))).
 apply fold_right_eqlistA with (eqA:=eqke) (eqB:=eqA); auto.
@@ -2144,7 +2144,7 @@ Lemma fold_Add_Below : forall m1 m2 x e (A:Type)(eqA:A->A->Prop)(st:Equivalence 
 (f:key->elt->A->A)(i:A) (P:Proper (E.eq==>eq==>eqA==>eqA) f),
 Below x m1 -> Add x e m1 m2 ->
 eqA (fold f m2 i) (fold f m1 (f x e i)).
-Proof. hammer_hook "FMapFacts" "FMapFacts.OrdProperties.fold_Add_Below". Restart. 
+Proof. try hammer_hook "FMapFacts" "FMapFacts.OrdProperties.fold_Add_Below".  
 intros. rewrite 2 fold_spec_right. set (f':=uncurry f).
 transitivity (fold_right f' i (rev (((x,e)::nil)++elements m1))).
 apply fold_right_eqlistA with (eqA:=eqke) (eqB:=eqA); auto.

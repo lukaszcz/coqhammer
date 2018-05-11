@@ -15,7 +15,7 @@ Local Open Scope nat_scope.
 Implicit Types m n x y : nat.
 
 Theorem O_or_S n : {m : nat | S m = n} + {0 = n}.
-Proof. hammer_hook "Peano_dec" "Peano_dec.O_or_S". Restart. 
+Proof. try hammer_hook "Peano_dec" "Peano_dec.O_or_S".  
 induction n.
 - now right.
 - left; exists n; auto.
@@ -26,7 +26,7 @@ Notation eq_nat_dec := Nat.eq_dec (compat "8.4").
 Hint Resolve O_or_S eq_nat_dec: arith.
 
 Theorem dec_eq_nat n m : decidable (n = m).
-Proof. hammer_hook "Peano_dec" "Peano_dec.dec_eq_nat". Restart. 
+Proof. try hammer_hook "Peano_dec" "Peano_dec.dec_eq_nat".  
 elim (Nat.eq_dec n m); [left|right]; trivial.
 Defined.
 
@@ -35,7 +35,7 @@ Definition UIP_nat:= Eqdep_dec.UIP_dec Nat.eq_dec.
 Import EqNotations.
 
 Lemma le_unique: forall m n (le_mn1 le_mn2 : m <= n), le_mn1 = le_mn2.
-Proof. hammer_hook "Peano_dec" "Peano_dec.le_unique". Restart. 
+Proof. try hammer_hook "Peano_dec" "Peano_dec.le_unique".  
 intros m n.
 generalize (eq_refl (S n)).
 generalize n at -1.

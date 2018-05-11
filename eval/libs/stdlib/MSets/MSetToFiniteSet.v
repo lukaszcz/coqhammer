@@ -25,32 +25,32 @@ fun s x => M.In x s.
 Notation " !! " := mkEns.
 
 Lemma In_In : forall s x, M.In x s <-> In _ (!!s) x.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.In_In". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.In_In".  
 unfold In; compute; auto with extcore.
 Qed.
 
 Lemma Subset_Included : forall s s',  s[<=]s'  <-> Included _ (!!s) (!!s').
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Subset_Included". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Subset_Included".  
 unfold Subset, Included, In, mkEns; intuition.
 Qed.
 
 Notation " a === b " := (Same_set M.elt a b) (at level 70, no associativity).
 
 Lemma Equal_Same_set : forall s s', s[=]s' <-> !!s === !!s'.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Equal_Same_set". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Equal_Same_set".  
 intros.
 rewrite double_inclusion.
 unfold Subset, Included, Same_set, In, mkEns; intuition.
 Qed.
 
 Lemma empty_Empty_Set : !!M.empty === Empty_set _.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.empty_Empty_Set". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.empty_Empty_Set".  
 unfold Same_set, Included, mkEns, In.
 split; intro; set_iff; inversion 1.
 Qed.
 
 Lemma Empty_Empty_set : forall s, Empty s -> !!s === Empty_set _.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Empty_Empty_set". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Empty_Empty_set".  
 unfold Same_set, Included, mkEns, In.
 split; intros.
 destruct(H x H0).
@@ -58,25 +58,25 @@ inversion H0.
 Qed.
 
 Lemma singleton_Singleton : forall x, !!(M.singleton x) === Singleton _ x .
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.singleton_Singleton". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.singleton_Singleton".  
 unfold Same_set, Included, mkEns, In.
 split; intro; set_iff; inversion 1; try constructor; auto.
 Qed.
 
 Lemma union_Union : forall s s', !!(union s s') === Union _ (!!s) (!!s').
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.union_Union". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.union_Union".  
 unfold Same_set, Included, mkEns, In.
 split; intro; set_iff; inversion 1; [ constructor 1 | constructor 2 | | ]; auto.
 Qed.
 
 Lemma inter_Intersection : forall s s', !!(inter s s') === Intersection _ (!!s) (!!s').
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.inter_Intersection". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.inter_Intersection".  
 unfold Same_set, Included, mkEns, In.
 split; intro; set_iff; inversion 1; try constructor; auto.
 Qed.
 
 Lemma add_Add : forall x s, !!(add x s) === Add _ (!!s) x.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.add_Add". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.add_Add".  
 unfold Same_set, Included, mkEns, In.
 split; intro; set_iff; inversion 1; auto with sets.
 inversion H0.
@@ -85,7 +85,7 @@ constructor 1; auto.
 Qed.
 
 Lemma Add_Add : forall x s s', MP.Add x s s' -> !!s' === Add _ (!!s) x.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Add_Add". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Add_Add".  
 unfold Same_set, Included, mkEns, In.
 split; intros.
 red in H; rewrite H in H0.
@@ -99,7 +99,7 @@ inversion H1; auto.
 Qed.
 
 Lemma remove_Subtract : forall x s, !!(remove x s) === Subtract _ (!!s) x.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.remove_Subtract". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.remove_Subtract".  
 unfold Same_set, Included, mkEns, In.
 split; intro; set_iff; inversion 1; auto with sets.
 split; auto.
@@ -108,7 +108,7 @@ inversion H1; auto.
 Qed.
 
 Lemma mkEns_Finite : forall s, Finite _ (!!s).
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.mkEns_Finite". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.mkEns_Finite".  
 intro s; pattern s; apply set_induction; clear s; intros.
 intros; replace (!!s) with (Empty_set elt); auto with sets.
 symmetry; apply Extensionality_Ensembles.
@@ -120,7 +120,7 @@ apply Add_Add; auto.
 Qed.
 
 Lemma mkEns_cardinal : forall s, cardinal _ (!!s) (M.cardinal s).
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.mkEns_cardinal". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.mkEns_cardinal".  
 intro s; pattern s; apply set_induction; clear s; intros.
 intros; replace (!!s) with (Empty_set elt); auto with sets.
 rewrite MP.cardinal_1; auto with sets.
@@ -136,7 +136,7 @@ Qed.
 
 Lemma Ens_to_MSet : forall e : Ensemble M.elt, Finite _ e ->
 exists s:M.t, !!s === e.
-Proof. hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Ens_to_MSet". Restart. 
+Proof. try hammer_hook "MSetToFiniteSet" "MSetToFiniteSet.WS_to_Finite_set.Ens_to_MSet".  
 induction 1.
 exists M.empty.
 apply empty_Empty_Set.

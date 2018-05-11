@@ -1,6 +1,6 @@
 #!/bin/bash
 
-rm -f problems
+rm -f problems || rm -rf problems
 cd tests
 make clean
 cd ..

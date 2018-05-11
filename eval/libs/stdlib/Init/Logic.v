@@ -43,12 +43,12 @@ Section Conjunction.
 Variables A B : Prop.
 
 Theorem proj1 : A /\ B -> A.
-Proof. hammer_hook "Logic" "Logic.proj1". Restart. 
+Proof. try hammer_hook "Logic" "Logic.proj1".  
 destruct 1; trivial.
 Qed.
 
 Theorem proj2 : A /\ B -> B.
-Proof. hammer_hook "Logic" "Logic.proj2". Restart. 
+Proof. try hammer_hook "Logic" "Logic.proj2".  
 destruct 1; trivial.
 Qed.
 
@@ -74,17 +74,17 @@ Notation "A <-> B" := (iff A B) : type_scope.
 Section Equivalence.
 
 Theorem iff_refl : forall A:Prop, A <-> A.
-Proof. hammer_hook "Logic" "Logic.iff_refl". Restart. 
+Proof. try hammer_hook "Logic" "Logic.iff_refl".  
 split; auto.
 Qed.
 
 Theorem iff_trans : forall A B C:Prop, (A <-> B) -> (B <-> C) -> (A <-> C).
-Proof. hammer_hook "Logic" "Logic.iff_trans". Restart. 
+Proof. try hammer_hook "Logic" "Logic.iff_trans".  
 intros A B C [H1 H2] [H3 H4]; split; auto.
 Qed.
 
 Theorem iff_sym : forall A B:Prop, (A <-> B) -> (B <-> A).
-Proof. hammer_hook "Logic" "Logic.iff_sym". Restart. 
+Proof. try hammer_hook "Logic" "Logic.iff_sym".  
 intros A B [H1 H2]; split; auto.
 Qed.
 
@@ -96,47 +96,47 @@ Hint Unfold iff: extcore.
 
 Theorem and_iff_compat_l : forall A B C : Prop,
 (B <-> C) -> (A /\ B <-> A /\ C).
-Proof. hammer_hook "Logic" "Logic.and_iff_compat_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.and_iff_compat_l".  
 intros ? ? ? [Hl Hr]; split; intros [? ?]; (split; [ assumption | ]);
 [apply Hl | apply Hr]; assumption.
 Qed.
 
 Theorem and_iff_compat_r : forall A B C : Prop,
 (B <-> C) -> (B /\ A <-> C /\ A).
-Proof. hammer_hook "Logic" "Logic.and_iff_compat_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.and_iff_compat_r".  
 intros ? ? ? [Hl Hr]; split; intros [? ?]; (split; [ | assumption ]);
 [apply Hl | apply Hr]; assumption.
 Qed.
 
 Theorem or_iff_compat_l : forall A B C : Prop,
 (B <-> C) -> (A \/ B <-> A \/ C).
-Proof. hammer_hook "Logic" "Logic.or_iff_compat_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.or_iff_compat_l".  
 intros ? ? ? [Hl Hr]; split; (intros [?|?]; [left; assumption| right]);
 [apply Hl | apply Hr]; assumption.
 Qed.
 
 Theorem or_iff_compat_r : forall A B C : Prop,
 (B <-> C) -> (B \/ A <-> C \/ A).
-Proof. hammer_hook "Logic" "Logic.or_iff_compat_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.or_iff_compat_r".  
 intros ? ? ? [Hl Hr]; split; (intros [?|?]; [left| right; assumption]);
 [apply Hl | apply Hr]; assumption.
 Qed.
 
 Theorem imp_iff_compat_l : forall A B C : Prop,
 (B <-> C) -> ((A -> B) <-> (A -> C)).
-Proof. hammer_hook "Logic" "Logic.imp_iff_compat_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.imp_iff_compat_l".  
 intros ? ? ? [Hl Hr]; split; intros H ?; [apply Hl | apply Hr]; apply H; assumption.
 Qed.
 
 Theorem imp_iff_compat_r : forall A B C : Prop,
 (B <-> C) -> ((B -> A) <-> (C -> A)).
-Proof. hammer_hook "Logic" "Logic.imp_iff_compat_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.imp_iff_compat_r".  
 intros ? ? ? [Hl Hr]; split; intros H ?; [apply H, Hr | apply H, Hl]; assumption.
 Qed.
 
 Theorem not_iff_compat : forall A B : Prop,
 (A <-> B) -> (~ A <-> ~B).
-Proof. hammer_hook "Logic" "Logic.not_iff_compat". Restart. 
+Proof. try hammer_hook "Logic" "Logic.not_iff_compat".  
 intros; apply imp_iff_compat_r; assumption.
 Qed.
 
@@ -144,7 +144,7 @@ Qed.
 
 
 Theorem neg_false : forall A : Prop, ~ A <-> (A <-> False).
-Proof. hammer_hook "Logic" "Logic.neg_false". Restart. 
+Proof. try hammer_hook "Logic" "Logic.neg_false".  
 intro A; unfold not; split.
 - intro H; split; [exact H | intro H1; elim H1].
 - intros [H _]; exact H.
@@ -152,7 +152,7 @@ Qed.
 
 Theorem and_cancel_l : forall A B C : Prop,
 (B -> A) -> (C -> A) -> ((A /\ B <-> A /\ C) <-> (B <-> C)).
-Proof. hammer_hook "Logic" "Logic.and_cancel_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.and_cancel_l".  
 intros A B C Hl Hr.
 split; [ | apply and_iff_compat_l]; intros [HypL HypR]; split; intros.
 + apply HypL; split; [apply Hl | ]; assumption.
@@ -161,7 +161,7 @@ Qed.
 
 Theorem and_cancel_r : forall A B C : Prop,
 (B -> A) -> (C -> A) -> ((B /\ A <-> C /\ A) <-> (B <-> C)).
-Proof. hammer_hook "Logic" "Logic.and_cancel_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.and_cancel_r".  
 intros A B C Hl Hr.
 split; [ | apply and_iff_compat_r]; intros [HypL HypR]; split; intros.
 + apply HypL; split; [ | apply Hl ]; assumption.
@@ -169,18 +169,18 @@ split; [ | apply and_iff_compat_r]; intros [HypL HypR]; split; intros.
 Qed.
 
 Theorem and_comm : forall A B : Prop, A /\ B <-> B /\ A.
-Proof. hammer_hook "Logic" "Logic.and_comm". Restart. 
+Proof. try hammer_hook "Logic" "Logic.and_comm".  
 intros; split; intros [? ?]; split; assumption.
 Qed.
 
 Theorem and_assoc : forall A B C : Prop, (A /\ B) /\ C <-> A /\ B /\ C.
-Proof. hammer_hook "Logic" "Logic.and_assoc". Restart. 
+Proof. try hammer_hook "Logic" "Logic.and_assoc".  
 intros; split; [ intros [[? ?] ?]| intros [? [? ?]]]; repeat split; assumption.
 Qed.
 
 Theorem or_cancel_l : forall A B C : Prop,
 (B -> ~ A) -> (C -> ~ A) -> ((A \/ B <-> A \/ C) <-> (B <-> C)).
-Proof. hammer_hook "Logic" "Logic.or_cancel_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.or_cancel_l".  
 intros ? ? ? Fl Fr; split; [ | apply or_iff_compat_l]; intros [Hl Hr]; split; intros.
 { destruct Hl; [ right | destruct Fl | ]; assumption. }
 { destruct Hr; [ right | destruct Fr | ]; assumption. }
@@ -188,19 +188,19 @@ Qed.
 
 Theorem or_cancel_r : forall A B C : Prop,
 (B -> ~ A) -> (C -> ~ A) -> ((B \/ A <-> C \/ A) <-> (B <-> C)).
-Proof. hammer_hook "Logic" "Logic.or_cancel_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.or_cancel_r".  
 intros ? ? ? Fl Fr; split; [ | apply or_iff_compat_r]; intros [Hl Hr]; split; intros.
 { destruct Hl; [ left | | destruct Fl ]; assumption. }
 { destruct Hr; [ left | | destruct Fr ]; assumption. }
 Qed.
 
 Theorem or_comm : forall A B : Prop, (A \/ B) <-> (B \/ A).
-Proof. hammer_hook "Logic" "Logic.or_comm". Restart. 
+Proof. try hammer_hook "Logic" "Logic.or_comm".  
 intros; split; (intros [? | ?]; [ right | left ]; assumption).
 Qed.
 
 Theorem or_assoc : forall A B C : Prop, (A \/ B) \/ C <-> A \/ B \/ C.
-Proof. hammer_hook "Logic" "Logic.or_assoc". Restart. 
+Proof. try hammer_hook "Logic" "Logic.or_assoc".  
 intros; split; [ intros [[?|?]|?]| intros [?|[?|?]]].
 + left; assumption.
 + right; left; assumption.
@@ -210,12 +210,12 @@ intros; split; [ intros [[?|?]|?]| intros [?|[?|?]]].
 + right; assumption.
 Qed.
 Lemma iff_and : forall A B : Prop, (A <-> B) -> (A -> B) /\ (B -> A).
-Proof. hammer_hook "Logic" "Logic.iff_and". Restart. 
+Proof. try hammer_hook "Logic" "Logic.iff_and".  
 intros A B []; split; trivial.
 Qed.
 
 Lemma iff_to_and : forall A B : Prop, (A <-> B) <-> (A -> B) /\ (B -> A).
-Proof. hammer_hook "Logic" "Logic.iff_to_and". Restart. 
+Proof. try hammer_hook "Logic" "Logic.iff_to_and".  
 intros; split; intros [Hl Hr]; (split; intros; [ apply Hl | apply Hr]); assumption.
 Qed.
 
@@ -260,12 +260,12 @@ Variable A : Type.
 Variable P : A -> Prop.
 
 Theorem inst : forall x:A, all (fun x => P x) -> P x.
-Proof. hammer_hook "Logic" "Logic.inst". Restart. 
+Proof. try hammer_hook "Logic" "Logic.inst".  
 unfold all; auto.
 Qed.
 
 Theorem gen : forall (B:Prop) (f:forall y:A, B -> P y), B -> all P.
-Proof. hammer_hook "Logic" "Logic.gen". Restart. 
+Proof. try hammer_hook "Logic" "Logic.gen".  
 red; auto.
 Qed.
 
@@ -298,7 +298,7 @@ Hint Resolve ex_intro ex_intro2: core.
 Section Logic_lemmas.
 
 Theorem absurd : forall A C:Prop, A -> ~ A -> C.
-Proof. hammer_hook "Logic" "Logic.absurd". Restart. 
+Proof. try hammer_hook "Logic" "Logic.absurd".  
 unfold not; intros A C h1 h2.
 destruct (h2 h1).
 Qed.
@@ -309,22 +309,22 @@ Variable f : A -> B.
 Variables x y z : A.
 
 Theorem eq_sym : x = y -> y = x.
-Proof. hammer_hook "Logic" "Logic.eq_sym". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_sym".  
 destruct 1; trivial.
 Defined.
 
 Theorem eq_trans : x = y -> y = z -> x = z.
-Proof. hammer_hook "Logic" "Logic.eq_trans". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans".  
 destruct 2; trivial.
 Defined.
 
 Theorem f_equal : x = y -> f x = f y.
-Proof. hammer_hook "Logic" "Logic.f_equal". Restart. 
+Proof. try hammer_hook "Logic" "Logic.f_equal".  
 destruct 1; trivial.
 Defined.
 
 Theorem not_eq_sym : x <> y -> y <> x.
-Proof. hammer_hook "Logic" "Logic.not_eq_sym". Restart. 
+Proof. try hammer_hook "Logic" "Logic.not_eq_sym".  
 red; intros h1 h2; apply h1; destruct h2; trivial.
 Qed.
 
@@ -369,14 +369,14 @@ End EqNotations.
 Import EqNotations.
 
 Lemma rew_opp_r : forall A (P:A->Type) (x y:A) (H:x=y) (a:P y), rew H in rew <- H in a = a.
-Proof. hammer_hook "Logic" "Logic.rew_opp_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.rew_opp_r".  
 intros.
 destruct H.
 reflexivity.
 Defined.
 
 Lemma rew_opp_l : forall A (P:A->Type) (x y:A) (H:x=y) (a:P x), rew <- H in rew H in a = a.
-Proof. hammer_hook "Logic" "Logic.rew_opp_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.rew_opp_l".  
 intros.
 destruct H.
 reflexivity.
@@ -385,7 +385,7 @@ Defined.
 Theorem f_equal2 :
 forall (A1 A2 B:Type) (f:A1 -> A2 -> B) (x1 y1:A1)
 (x2 y2:A2), x1 = y1 -> x2 = y2 -> f x1 x2 = f y1 y2.
-Proof. hammer_hook "Logic" "Logic.f_equal2". Restart. 
+Proof. try hammer_hook "Logic" "Logic.f_equal2".  
 destruct 1; destruct 1; reflexivity.
 Qed.
 
@@ -393,7 +393,7 @@ Theorem f_equal3 :
 forall (A1 A2 A3 B:Type) (f:A1 -> A2 -> A3 -> B) (x1 y1:A1)
 (x2 y2:A2) (x3 y3:A3),
 x1 = y1 -> x2 = y2 -> x3 = y3 -> f x1 x2 x3 = f y1 y2 y3.
-Proof. hammer_hook "Logic" "Logic.f_equal3". Restart. 
+Proof. try hammer_hook "Logic" "Logic.f_equal3".  
 destruct 1; destruct 1; destruct 1; reflexivity.
 Qed.
 
@@ -401,7 +401,7 @@ Theorem f_equal4 :
 forall (A1 A2 A3 A4 B:Type) (f:A1 -> A2 -> A3 -> A4 -> B)
 (x1 y1:A1) (x2 y2:A2) (x3 y3:A3) (x4 y4:A4),
 x1 = y1 -> x2 = y2 -> x3 = y3 -> x4 = y4 -> f x1 x2 x3 x4 = f y1 y2 y3 y4.
-Proof. hammer_hook "Logic" "Logic.f_equal4". Restart. 
+Proof. try hammer_hook "Logic" "Logic.f_equal4".  
 destruct 1; destruct 1; destruct 1; destruct 1; reflexivity.
 Qed.
 
@@ -411,53 +411,53 @@ forall (A1 A2 A3 A4 A5 B:Type) (f:A1 -> A2 -> A3 -> A4 -> A5 -> B)
 x1 = y1 ->
 x2 = y2 ->
 x3 = y3 -> x4 = y4 -> x5 = y5 -> f x1 x2 x3 x4 x5 = f y1 y2 y3 y4 y5.
-Proof. hammer_hook "Logic" "Logic.f_equal5". Restart. 
+Proof. try hammer_hook "Logic" "Logic.f_equal5".  
 destruct 1; destruct 1; destruct 1; destruct 1; destruct 1; reflexivity.
 Qed.
 
 Theorem f_equal_compose : forall A B C (a b:A) (f:A->B) (g:B->C) (e:a=b),
 f_equal g (f_equal f e) = f_equal (fun a => g (f a)) e.
-Proof. hammer_hook "Logic" "Logic.f_equal_compose". Restart. 
+Proof. try hammer_hook "Logic" "Logic.f_equal_compose".  
 destruct e. reflexivity.
 Defined.
 
 
 
 Theorem eq_trans_refl_l : forall A (x y:A) (e:x=y), eq_trans eq_refl e = e.
-Proof. hammer_hook "Logic" "Logic.eq_trans_refl_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_refl_l".  
 destruct e. reflexivity.
 Defined.
 
 Theorem eq_trans_refl_r : forall A (x y:A) (e:x=y), eq_trans e eq_refl = e.
-Proof. hammer_hook "Logic" "Logic.eq_trans_refl_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_refl_r".  
 destruct e. reflexivity.
 Defined.
 
 Theorem eq_sym_involutive : forall A (x y:A) (e:x=y), eq_sym (eq_sym e) = e.
-Proof. hammer_hook "Logic" "Logic.eq_sym_involutive". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_sym_involutive".  
 destruct e; reflexivity.
 Defined.
 
 Theorem eq_trans_sym_inv_l : forall A (x y:A) (e:x=y), eq_trans (eq_sym e) e = eq_refl.
-Proof. hammer_hook "Logic" "Logic.eq_trans_sym_inv_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_sym_inv_l".  
 destruct e; reflexivity.
 Defined.
 
 Theorem eq_trans_sym_inv_r : forall A (x y:A) (e:x=y), eq_trans e (eq_sym e) = eq_refl.
-Proof. hammer_hook "Logic" "Logic.eq_trans_sym_inv_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_sym_inv_r".  
 destruct e; reflexivity.
 Defined.
 
 Theorem eq_trans_assoc : forall A (x y z t:A) (e:x=y) (e':y=z) (e'':z=t),
 eq_trans e (eq_trans e' e'') = eq_trans (eq_trans e e') e''.
-Proof. hammer_hook "Logic" "Logic.eq_trans_assoc". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_assoc".  
 destruct e''; reflexivity.
 Defined.
 
 
 
 Theorem eq_id_comm_l : forall A (f:A->A) (Hf:forall a, a = f a), forall a, f_equal f (Hf a) = Hf (f a).
-Proof. hammer_hook "Logic" "Logic.eq_id_comm_l". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_id_comm_l".  
 intros.
 unfold f_equal.
 rewrite <- (eq_trans_sym_inv_l (Hf a)).
@@ -467,7 +467,7 @@ reflexivity.
 Defined.
 
 Theorem eq_id_comm_r : forall A (f:A->A) (Hf:forall a, f a = a), forall a, f_equal f (Hf a) = Hf (f a).
-Proof. hammer_hook "Logic" "Logic.eq_id_comm_r". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_id_comm_r".  
 intros.
 unfold f_equal.
 rewrite <- (eq_trans_sym_inv_l (Hf (f (f a)))).
@@ -483,37 +483,37 @@ reflexivity.
 Defined.
 
 Lemma eq_refl_map_distr : forall A B x (f:A->B), f_equal f (eq_refl x) = eq_refl (f x).
-Proof. hammer_hook "Logic" "Logic.eq_refl_map_distr". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_refl_map_distr".  
 reflexivity.
 Qed.
 
 Lemma eq_trans_map_distr : forall A B x y z (f:A->B) (e:x=y) (e':y=z), f_equal f (eq_trans e e') = eq_trans (f_equal f e) (f_equal f e').
-Proof. hammer_hook "Logic" "Logic.eq_trans_map_distr". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_map_distr".  
 destruct e'.
 reflexivity.
 Defined.
 
 Lemma eq_sym_map_distr : forall A B (x y:A) (f:A->B) (e:x=y), eq_sym (f_equal f e) = f_equal f (eq_sym e).
-Proof. hammer_hook "Logic" "Logic.eq_sym_map_distr". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_sym_map_distr".  
 destruct e.
 reflexivity.
 Defined.
 
 Lemma eq_trans_sym_distr : forall A (x y z:A) (e:x=y) (e':y=z), eq_sym (eq_trans e e') = eq_trans (eq_sym e') (eq_sym e).
-Proof. hammer_hook "Logic" "Logic.eq_trans_sym_distr". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_sym_distr".  
 destruct e, e'.
 reflexivity.
 Defined.
 
 Lemma eq_trans_rew_distr : forall A (P:A -> Type) (x y z:A) (e:x=y) (e':y=z) (k:P x),
 rew (eq_trans e e') in k = rew e' in rew e in k.
-Proof. hammer_hook "Logic" "Logic.eq_trans_rew_distr". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_trans_rew_distr".  
 destruct e, e'; reflexivity.
 Qed.
 
 Lemma rew_const : forall A P (x y:A) (e:x=y) (k:P),
 rew [fun _ => P] e in k = k.
-Proof. hammer_hook "Logic" "Logic.rew_const". Restart. 
+Proof. try hammer_hook "Logic" "Logic.rew_const".  
 destruct e; reflexivity.
 Qed.
 
@@ -551,7 +551,7 @@ format "'[' 'exists'  !  '/  ' x  ..  y ,  '/  ' p ']'")
 
 Lemma unique_existence : forall (A:Type) (P:A->Prop),
 ((exists x, P x) /\ uniqueness P) <-> (exists! x, P x).
-Proof. hammer_hook "Logic" "Logic.unique_existence". Restart. 
+Proof. try hammer_hook "Logic" "Logic.unique_existence".  
 intros A P; split.
 - intros ((x,Hx),Huni); exists x; red; auto.
 - intros (x,(Hx,Huni)); split.
@@ -564,7 +564,7 @@ Qed.
 Lemma forall_exists_unique_domain_coincide :
 forall A (P:A->Prop), (exists! x, P x) ->
 forall Q:A->Prop, (forall x, P x -> Q x) <-> (exists x, P x /\ Q x).
-Proof. hammer_hook "Logic" "Logic.forall_exists_unique_domain_coincide". Restart. 
+Proof. try hammer_hook "Logic" "Logic.forall_exists_unique_domain_coincide".  
 intros A P (x & Hp & Huniq); split.
 - intro; exists x; auto.
 - intros (x0 & HPx0 & HQx0) x1 HPx1.
@@ -577,7 +577,7 @@ Lemma forall_exists_coincide_unique_domain :
 forall A (P:A->Prop),
 (forall Q:A->Prop, (forall x, P x -> Q x) <-> (exists x, P x /\ Q x))
 -> (exists! x, P x).
-Proof. hammer_hook "Logic" "Logic.forall_exists_coincide_unique_domain". Restart. 
+Proof. try hammer_hook "Logic" "Logic.forall_exists_coincide_unique_domain".  
 intros A P H.
 destruct H with (Q:=P) as ((x & Hx & _),_); [trivial|].
 exists x. split; [trivial|].
@@ -595,19 +595,19 @@ Hint Resolve inhabits: core.
 
 Lemma exists_inhabited : forall (A:Type) (P:A->Prop),
 (exists x, P x) -> inhabited A.
-Proof. hammer_hook "Logic" "Logic.exists_inhabited". Restart. 
+Proof. try hammer_hook "Logic" "Logic.exists_inhabited".  
 destruct 1; auto.
 Qed.
 
 Lemma inhabited_covariant (A B : Type) : (A -> B) -> inhabited A -> inhabited B.
-Proof. hammer_hook "Logic" "Logic.inhabited_covariant". Restart. 
+Proof. try hammer_hook "Logic" "Logic.inhabited_covariant".  
 intros f [x];exact (inhabits (f x)).
 Qed.
 
 
 
 Lemma eq_stepl : forall (A : Type) (x y z : A), x = y -> x = z -> z = y.
-Proof. hammer_hook "Logic" "Logic.eq_stepl". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_stepl".  
 intros A x y z H1 H2. rewrite <- H2; exact H1.
 Qed.
 
@@ -615,7 +615,7 @@ Declare Left Step eq_stepl.
 Declare Right Step eq_trans.
 
 Lemma iff_stepl : forall A B C : Prop, (A <-> B) -> (A <-> C) -> (C <-> B).
-Proof. hammer_hook "Logic" "Logic.iff_stepl". Restart. 
+Proof. try hammer_hook "Logic" "Logic.iff_stepl".  
 intros ? ? ? [? ?] [? ?]; split; intros; auto.
 Qed.
 
@@ -635,7 +635,7 @@ Local Unset Implicit Arguments.
 Definition eq_ex_uncurried {A : Type} (P : A -> Prop) {u1 v1 : A} {u2 : P u1} {v2 : P v1}
 (pq : exists p : u1 = v1, rew p in u2 = v2)
 : ex_intro P u1 u2 = ex_intro P v1 v2.
-Proof. hammer_hook "Logic" "Logic.eq_ex_uncurried". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_ex_uncurried".  
 destruct pq as [p q].
 destruct q; simpl in *.
 destruct p; reflexivity.
@@ -661,7 +661,7 @@ Lemma rew_ex {A x} {P : A -> Type} (Q : forall a, P a -> Prop) (u : exists p, Q 
 (rew H in u1)
 (rew dependent H in u2)
 end.
-Proof. hammer_hook "Logic" "Logic.rew_ex". Restart. 
+Proof. try hammer_hook "Logic" "Logic.rew_ex".  
 destruct H, u; reflexivity.
 Qed.
 End ex.
@@ -675,7 +675,7 @@ Definition eq_ex2_uncurried {A : Type} (P Q : A -> Prop) {u1 v1 : A}
 {u3 : Q u1} {v3 : Q v1}
 (pq : exists2 p : u1 = v1, rew p in u2 = v2 & rew p in u3 = v3)
 : ex_intro2 P Q u1 u2 u3 = ex_intro2 P Q v1 v2 v3.
-Proof. hammer_hook "Logic" "Logic.eq_ex2_uncurried". Restart. 
+Proof. try hammer_hook "Logic" "Logic.eq_ex2_uncurried".  
 destruct pq as [p q r].
 destruct r, q, p; simpl in *.
 reflexivity.
@@ -711,7 +711,7 @@ Lemma rew_ex2 {A x} {P : A -> Type}
 (rew dependent H in u2)
 (rew dependent H in u3)
 end.
-Proof. hammer_hook "Logic" "Logic.rew_ex2". Restart. 
+Proof. try hammer_hook "Logic" "Logic.rew_ex2".  
 destruct H, u; reflexivity.
 Qed.
 End ex2.

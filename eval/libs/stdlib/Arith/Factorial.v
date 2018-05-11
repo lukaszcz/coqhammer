@@ -22,17 +22,17 @@ end.
 Arguments fact n%nat.
 
 Lemma lt_O_fact n : 0 < fact n.
-Proof. hammer_hook "Factorial" "Factorial.lt_O_fact". Restart. 
+Proof. try hammer_hook "Factorial" "Factorial.lt_O_fact".  
 induction n; simpl; auto with arith.
 Qed.
 
 Lemma fact_neq_0 n : fact n <> 0.
-Proof. hammer_hook "Factorial" "Factorial.fact_neq_0". Restart. 
+Proof. try hammer_hook "Factorial" "Factorial.fact_neq_0".  
 apply Nat.neq_0_lt_0, lt_O_fact.
 Qed.
 
 Lemma fact_le n m : n <= m -> fact n <= fact m.
-Proof. hammer_hook "Factorial" "Factorial.fact_le". Restart. 
+Proof. try hammer_hook "Factorial" "Factorial.fact_le".  
 induction 1.
 - apply le_n.
 - simpl. transitivity (fact m). trivial. apply Nat.le_add_r.

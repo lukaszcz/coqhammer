@@ -131,7 +131,7 @@ End BackportEq.
 
 Module UpdateEq (E:Eq)(F:IsEqOrig E) <: IsEq E.
 Instance eq_equiv : Equivalence E.eq.
-Proof. hammer_hook "Equalities" "Equalities.IsEq.eq_equiv". Restart.  exact (Build_Equivalence _ F.eq_refl F.eq_sym F.eq_trans). Qed.
+Proof. try hammer_hook "Equalities" "Equalities.IsEq.eq_equiv".   exact (Build_Equivalence _ F.eq_refl F.eq_sym F.eq_trans). Qed.
 End UpdateEq.
 
 Module Backport_ET (E:EqualityType) <: EqualityTypeBoth
@@ -152,7 +152,7 @@ Module Update_DT (E:DecidableTypeOrig) <: DecidableTypeBoth
 Module HasEqDec2Bool (E:Eq)(F:HasEqDec E) <: HasEqBool E.
 Definition eqb x y := if F.eq_dec x y then true else false.
 Lemma eqb_eq : forall x y, eqb x y = true <-> E.eq x y.
-Proof. hammer_hook "Equalities" "Equalities.EqbSpec.eqb_eq". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.EqbSpec.eqb_eq".  
 intros x y. unfold eqb. destruct F.eq_dec as [EQ|NEQ].
 auto with *.
 split. discriminate. intro EQ; elim NEQ; auto.
@@ -161,7 +161,7 @@ End HasEqDec2Bool.
 
 Module HasEqBool2Dec (E:Eq)(F:HasEqBool E) <: HasEqDec E.
 Lemma eq_dec : forall x y, {E.eq x y}+{~E.eq x y}.
-Proof. hammer_hook "Equalities" "Equalities.HasEqDec.eq_dec". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.HasEqDec.eq_dec".  
 intros x y. assert (H:=F.eqb_eq x y).
 destruct (F.eqb x y); [left|right].
 apply -> H; auto.
@@ -183,7 +183,7 @@ Module BoolEqualityFacts (Import E : BooleanEqualityType').
 
 
 Instance eqb_compat : Proper (E.eq ==> E.eq ==> Logic.eq) eqb.
-Proof. hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_compat". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_compat".  
 intros x x' Exx' y y' Eyy'.
 apply eq_true_iff_eq.
 now rewrite 2 eqb_eq, Exx', Eyy'.
@@ -192,26 +192,26 @@ Qed.
 
 
 Lemma eqb_spec x y : reflect (x==y) (x =? y).
-Proof. hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_spec". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_spec".  
 apply iff_reflect. symmetry. apply eqb_eq.
 Defined.
 
 
 
 Lemma eqb_neq x y : (x =? y) = false <-> x ~= y.
-Proof. hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_neq". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_neq".  
 now rewrite <- not_true_iff_false, eqb_eq.
 Qed.
 
 
 
 Lemma eqb_refl x : (x =? x) = true.
-Proof. hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_refl". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_refl".  
 now apply eqb_eq.
 Qed.
 
 Lemma eqb_sym x y : (x =? y) = (y =? x).
-Proof. hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_sym". Restart. 
+Proof. try hammer_hook "Equalities" "Equalities.BoolEqualityFacts.eqb_sym".  
 apply eq_true_iff_eq. now rewrite 2 eqb_eq.
 Qed.
 

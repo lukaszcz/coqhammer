@@ -85,12 +85,12 @@ Lemma extends_neq:
          extends (JFCDecl D1 ex fields methods :: P) cname dname) ->
   D0 <> JFClass D1.
 Proof.
-  hammer_hook "JaSubtype" "JaSubtype.extends_neq". Undo.
+  try hammer_hook "JaSubtype" "JaSubtype.extends_neq".
   intros.
   destruct H0, H0.
   decompose [and] H0; clear H0.
   eapply extends_in_second_second  in H4; [idtac | reflexivity].
-  hammer_hook "JaSubtype" "JaSubtype.extends_neq.subgoal_1". Undo.
+  try hammer_hook "JaSubtype" "JaSubtype.extends_neq.subgoal_1".
   pose names_unique_zero; pose count_occ_not_In; scrush.
 Qed.
 
@@ -109,7 +109,7 @@ Proof.
   + sauto.
   + intros ? ? ? ? H2.
     injection H2.
-    hammer_hook "JaSubtype" "JaSubtype.extends_neq_none.subgoal_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.extends_neq_none.subgoal_1".
     pose extends_in_first; pose count_occ_zero_is_class_name_false; scrush.
 Qed.
 
@@ -123,18 +123,18 @@ Proof.
   inversion Ext.
   * auto.
   * subst.
-    hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.subgoal_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.subgoal_1".
     assert (forall x, In x P -> decl_once P x).
     assert (names_unique P).
-    hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.assert_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.assert_1".
     Reconstr.hobvious (@Nuq)
                       (@JaProgram.names_unique_further)
                       (@JaSyntax.JFProgram).
-    hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.subgoal_1_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.subgoal_1_1".
     Reconstr.hobvious (@H)
                       (@Coq.Lists.List.Forall_forall)
                       Reconstr.Empty.
-    hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.subgoal_1_2". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.extends_equals_first.subgoal_1_2".
     pose extends_in_first; scrush.
 Qed.
 
@@ -144,12 +144,12 @@ Lemma names_unique_extends_non_refl:
 Proof.
   intros P C D Nuq H.
   induction H.
-  + hammer_hook "JaSubtype" "JaSubtype.names_unique_extends_non_refl.subgoal_1". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.names_unique_extends_non_refl.subgoal_1".
     Reconstr.hcrush Reconstr.AllHyps
                     (@JaProgram.names_unique_zero, @JaProgram.is_class_name_name,
                      @JaProgram.count_occ_zero_is_class_name_false)
                     Reconstr.Empty.
-  + hammer_hook "JaSubtype" "JaSubtype.names_unique_extends_non_refl.subgoal_2". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.names_unique_extends_non_refl.subgoal_2".
     Reconstr.hobvious (@Nuq, @IHextends)
                       (@JaProgram.names_unique_further)
                       Reconstr.Empty.
@@ -200,13 +200,13 @@ Lemma number_of_extends_decompose:
     number_of_extends ((JFCDecl C (Some ex) flds mthds) :: P) C = Some n ->
     number_of_extends P ex = Some (n-1) /\ n > 0.
 Proof.
-  hammer_hook "JaSubtype" "JaSubtype.number_of_extends_decompose". Undo.
+  try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_decompose".
   intros.
   unfold number_of_extends in H.
   destruct (JFClassName_dec C C).
   + fold (number_of_extends P ex) in H.
     destruct (number_of_extends P ex).
-    ++ hammer_hook "JaSubtype" "JaSubtype.number_of_extends_decompose.subgoal_1". Undo.
+    ++ try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_decompose.subgoal_1".
        Reconstr.hobvious (@H)
                          (@Coq.Arith.PeanoNat.Nat.pred_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.sub_1_r, @Coq.Arith.Gt.gt_Sn_O)
                          Reconstr.Empty.
@@ -240,7 +240,7 @@ Lemma number_of_extends_find_class_simple:
 Proof.
   induction P.
   * sauto.
-  * hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class_simple.subgoal_2". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class_simple.subgoal_2".
     intros.
     unfold number_of_extends in H.
     destruct a.
@@ -268,7 +268,7 @@ Lemma names_unique_number_of_extends_loop:
          names_unique ((JFCDecl C (Some C) flds mthds) :: P) ->
          number_of_extends ((JFCDecl C (Some C) flds mthds) :: P) C = None.
 Proof.
-  hammer_hook "JaSubtype" "JaSubtype.names_unique_number_of_extends_loop". Undo.
+  try hammer_hook "JaSubtype" "JaSubtype.names_unique_number_of_extends_loop".
   pose number_of_extends_find_class_simple; pose names_unique_zero;
     pose find_class_program_contains; pose program_contains_counts_occ;
       scrush.
@@ -285,18 +285,18 @@ Lemma is_class_and_occ_zero:
 Proof.
   induction P.
   + sauto.
-  + hammer_hook "JaSubtype" "JaSubtype.is_class_and_occ_zero.subgoal_2". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.is_class_and_occ_zero.subgoal_2".
     intros.
     destruct a.
     assert ({C=D} + {C<>D}) by apply JFClassName_dec.
     destruct H2.
-    * hammer_hook "JaSubtype" "JaSubtype.is_class_and_occ_zero.subgoal_2_1". Undo.
+    * try hammer_hook "JaSubtype" "JaSubtype.is_class_and_occ_zero.subgoal_2_1".
       rewrite e in *.
       rewrite map_cons in H1.
       unfold is_class_name in H1.
       destruct (JFClassName_dec D0 D).
       - scrush.
-      - hammer_hook "JaSubtype" "JaSubtype.is_class_and_occ_zero.subgoal_2_1_1". Undo.
+      - try hammer_hook "JaSubtype" "JaSubtype.is_class_and_occ_zero.subgoal_2_1_1".
         pose count_occ_cons_neq; pose names_unique_further;
           pose find_class_further_neq; scrush.
     * auto.
@@ -308,7 +308,7 @@ Lemma names_unique_in_neq:
     In (JFCDecl D ex1 fields1 methods1) P ->
     C <> D.
 Proof.
-  hammer_hook "JaSubtype" "JaSubtype.names_unique_in_neq". Undo.
+  try hammer_hook "JaSubtype" "JaSubtype.names_unique_in_neq".
   Reconstr.hsimple Reconstr.Empty
                    (@JaProgram.in_find_class_raw, @JaProgram.is_class_name_name, @JaProgram.names_unique_zero, @JaProgram.count_occ_zero_is_class_name_false, @Coq.Bool.Bool.diff_false_true, @JaProgram.names_unique_further)
                    Reconstr.Empty.
@@ -338,7 +338,7 @@ Proof.
     destruct a.
     assert ({D=D0}+{D<>D0}) by auto using JFClassName_dec.
     destruct H1.
-    * hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.subgoal_2". Undo.
+    * try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.subgoal_2".
       rewrite e in *. (* D = D0 *)
       assert (C<>D0) by scrush.
       unfold names_unique in H.
@@ -346,24 +346,24 @@ Proof.
          :: JFCDecl D0 ex fields0 methods0 :: P) ->  (decl_once
            (JFCDecl C (Some D0) fields methods
                     :: JFCDecl D0 ex fields0 methods0 :: P)) x).
-      hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_1". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_1".
       apply Forall_forall; auto.
       assert (decl_once
          (JFCDecl C (Some D0) fields methods
                   :: JFCDecl D0 ex fields0 methods0 :: P)
          (JFCDecl D0 ex fields0 methods0)).
-      hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_2". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_2".
       apply H2; sauto.
       exists (JFCDecl D0 ex fields0 methods0).
       scrush.
     * assert ({C=D} + {C<>D}) by apply JFClassName_dec.
       destruct H1.
       + scrush.
-      + hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.subgoal_3_1". Undo.
+      + try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.subgoal_3_1".
         assert (exists CC0 : JFClassDeclaration,
                   find_class (JFCDecl C (Some D) fields methods :: P) D =
                   Some CC0).
-        hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_3". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_3".
         apply (IHP C D fields methods n).
         auto.
         apply (names_unique_further_further P
@@ -374,12 +374,12 @@ Proof.
         assert (number_of_extends P D =
                 Some (n - 1)) by scrush.
         assert (HH: n = n - 1 + 1).
-        hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_4". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.assert_4".
         Reconstr.hobvious (@H0)
                 (@Coq.Arith.PeanoNat.Nat.sub_1_r, @Coq.Arith.PeanoNat.Nat.succ_pred, @Coq.Arith.PeanoNat.Nat.neq_0_lt_0, @Coq.Arith.PeanoNat.Nat.add_1_r)
                 Reconstr.Empty.
         scrush.
-        hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.subgoal_3_2". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.number_of_extends_find_class.subgoal_3_2".
         Reconstr.hobvious (@H1)
                 (@JaSyntax.find_class_further_neq, @JaSyntax.find_class_same)
                 (@JaSyntax.JFProgram).
@@ -407,16 +407,16 @@ Proof.
   assert ({j=C0} + {j<>C0}) by apply JFClassName_dec.
   destruct H4.
   - scrush.
-  - hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_further.subgoal_2". Undo.
+  - try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_further.subgoal_2".
     lapply (H0 C0 CC); intros.
     destruct H4.
     exists x.
     scrush.
     scrush.
-  - hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_further.subgoal_3". Undo.
+  - try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_further.subgoal_3".
     assert ( exists n : nat,
                number_of_extends (JFCDecl D None fields methods :: P) C0 = Some n).
-    hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_further.assert_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_further.assert_1".
     Reconstr.hcrush (@H3, @H1, @H0)
                     (@JaSyntax.find_class_same)
                     (@JaSyntax.JFProgram).
@@ -430,7 +430,7 @@ Lemma subtype_well_founded_decompose_program:
 Proof.
   induction P.
   + sauto.
-  + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_decompose_program.subgoal_2". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_decompose_program.subgoal_2".
     Reconstr.hobvious (@IHP)
                       (@Coq.Lists.List.Forall_forall, @Coq.Lists.List.Forall_cons, @Coq.Init.Datatypes.list_ind, @Coq.Lists.List.app_comm_cons, @is_class_and_occ_zero, @JaProgram.names_unique_compose, @JaProgram.names_unique_further, @subtype_well_founded_further, @JaProgram.names_unique_decompose_program)
                       (@Coq.Lists.List.In, @JaSyntax.JFClassName, @Coq.Lists.List.count_occ, @Coq.Lists.List.map, @Coq.Init.Datatypes.app, @JaSyntax.find_class, @JaProgram.names_unique, @number_of_extends, @JaSyntax.JFProgram, @subtype_well_founded).
@@ -446,7 +446,7 @@ Lemma subtype_get_superclass:
 Proof.
   induction P.
   + scrush.
-  + hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.subgoal_2". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.subgoal_2".
     intros.
     destruct a.
     assert ({D=ex}+{D<>ex}) by apply JFClassName_dec; destruct H2; auto.
@@ -466,13 +466,13 @@ Proof.
     scrush.
     assert ( exists n : nat,
                number_of_extends (JFCDecl x ex0 fields0 methods0 :: P) x = Some n).
-    hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.assert_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.assert_1".
     Reconstr.hobvious (@H0)
                       (@JaSyntax.find_class_eq)
                       Reconstr.Empty.
     destruct H7.
     rewrite H5 in *.
-    hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.subgoal_2_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.subgoal_2_1".
     Reconstr.hcrush (@H, @H7)
                     (@number_of_extends_find_class)
                     (@JaSyntax.JFProgram).
@@ -481,7 +481,7 @@ Proof.
     destruct (JFClassName_dec D ex).
     exists (JFCDecl D ex0 fields0 methods0).
     auto.
-    hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.subgoal_2_2". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtype_get_superclass.subgoal_2_2".
     eapply IHP.
     eapply names_unique_further.
     apply H.
@@ -510,22 +510,22 @@ Proof.
     destruct a.
     simpl in H1.
     destruct (JFClassName_dec D0 C).
-    ++ hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.subgoal_1". Undo.
+    ++ try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.subgoal_1".
        subst.
        unfold subtype_well_founded in H.
        simpl in H1.
        assert (exists n : nat, number_of_extends (JFCDecl C ex0 fields0 methods0 :: P) C = Some n).
-       hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.assert_1". Undo.
+       try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.assert_1".
        Reconstr.hobvious (@H)
                          (@JaSyntax.find_class_eq)
                          Reconstr.Empty.
        scrush.
-    ++ hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.subgoal_2". Undo.
+    ++ try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.subgoal_2".
        eapply IHP; eauto.
        eapply subtype_well_founded_further.
        scrush.
        scrush.
-       hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.subgoal_2_1". Undo.
+       try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_superclass.subgoal_2_1".
        Reconstr.hobvious (@H0)
                          (@JaProgram.names_unique_further)
                          (@JaSyntax.JFProgram).
@@ -548,7 +548,7 @@ Proof.
     destruct (JFClassName_dec D0 cname).
     ++ (* D0 = cname *)
       subst.
-      hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_1". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_1".
       injection H;intros;clear H;subst.
       destruct D.
       assert (dname=D) by eauto using find_class_eq_name.
@@ -557,26 +557,26 @@ Proof.
       apply in_inv in H0.
       destruct H0.
       +++ scrush.
-      +++ hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_1_1". Undo.
+      +++ try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_1_1".
           Reconstr.reasy (@base, @Coq.Init.Peano.f_equal_nat) Reconstr.Empty.
     ++ (* D0 <> cname *)
       apply ind.
-      hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_2". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_2".
       assert (exists P0 P1,
                  P = P0 ++ ((JFCDecl name (Some dname) fields methods) :: P1)).
-      hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_1". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_1".
       Reconstr.reasy (@JaSyntax.find_class_decompose_program) (@JaSyntax.JFProgram).
       destruct H4 as [P0 [P1 H4]].
       rewrite H4 in *.
       assert (exists D', find_class
                            (JFCDecl name (Some dname) fields methods ::P1)
                            dname = Some D').
-      hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_2". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_2".
       {
         rewrite app_comm_cons in H1.
         assert (subtype_well_founded
                   (JFCDecl name (Some dname) fields methods :: P1)).
-        hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_3". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_3".
         rewrite app_comm_cons in H2; eauto using subtype_well_founded_decompose_program.
         eapply subtype_get_superclass;eauto 3 using subtype_well_founded_further with myhints .
         assert (find_class (JFCDecl name (Some dname) fields methods :: P1)
@@ -591,9 +591,9 @@ Proof.
                  find_class
                    (P0 ++ (JFCDecl name (Some dname) fields methods) :: P1)
                    dname = Some C').
-      hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_4". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.assert_4".
       Reconstr.reasy (@JaSyntax.find_class_lift) (@JaSyntax.JFProgram).
-      hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_2_1". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.find_class_extends.subgoal_2_1".
       destruct H6.
       eapply IHP; eauto 2 using subtype_well_founded_further with myhints.
 Qed.
@@ -615,7 +615,7 @@ Proof.
     destruct (JFClassName_dec JFObjectName JFObjectName).
     - auto.
     - intuition.
-    - hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1". Undo.
+    - try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1".
       destruct (JFClassName_dec D name).
       destruct P.
       (* P = [] *)
@@ -647,28 +647,28 @@ Proof.
       destruct j.
       lapply (IHP D0 (JFCDecl D0 ex0 fields0 methods0));intros.
       assert (program_contains (JFCDecl D0 ex0 fields0 methods0 :: P) JFObjectName = true).
-      hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.assert_1". Undo.
+      try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.assert_1".
       apply H2.
-      + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_1". Undo.
+      + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_1".
         eapply subtype_well_founded_further.
         apply H.
         apply H0.
-      + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_2". Undo.
+      + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_2".
         Reconstr.reasy (@JaSyntax.find_class_eq) Reconstr.Empty.
-      + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_3". Undo.
+      + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_3".
         Reconstr.reasy (@JaSyntax.program_contains_further) (@JaSyntax.JFClassName, @JaSyntax.JFProgram).
-      + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_4". Undo.
+      + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_4".
         Reconstr.reasy (@JaProgram.names_unique_further) (@JaSyntax.JFProgram).
-      + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5". Undo.
+      + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5".
         assert (program_contains P JFObjectName = true).
-        hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.assert_2". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.assert_2".
         apply (IHP name cl).
-        hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5_1". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5_1".
         Reconstr.reasy (@JaProgram.names_unique_further) (@JaSyntax.JFProgram).
-        hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5_2". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5_2".
         Reconstr.reasy (@subtype_well_founded_further) Reconstr.Empty.
         scrush.
-        hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5_3". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_contains_object.subgoal_1_5_3".
         Reconstr.reasy (@JaSyntax.program_contains_further) (@JaSyntax.JFClassName, @JaSyntax.JFProgram).
 Qed.
 
@@ -680,7 +680,7 @@ Lemma subtype_well_founded_program_contains_further:
     (program_contains (b::P) JFObjectName) = true.
 Proof.
   induction P.
-  * hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.subgoal_1". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.subgoal_1".
     intros.
     destruct a.
     destruct b.
@@ -692,7 +692,7 @@ Proof.
                   number_of_extends
                     [JFCDecl JFObjectName ex fields methods;
                      JFCDecl D0 ex0 fields0 methods0] D0 = Some n).
-       hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.assert_1". Undo.
+       try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.assert_1".
        eapply H1.
        eapply find_class_same;eauto 2.
        apply find_class_eq.
@@ -700,9 +700,9 @@ Proof.
        destruct ex.
        *** scrush.
        *** scrush.
-    ** hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.subgoal_1_1". Undo.
+    ** try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.subgoal_1_1".
        eapply program_contains_further_neq; eauto.
-  * hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.subgoal_2". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_program_contains_further.subgoal_2".
     intros.
     destruct b.
     eapply subtype_well_founded_contains_object;eauto 2 with myhints.
@@ -721,9 +721,9 @@ Proof.
   intro.
   subst name'.
   specialize H0 with name (JFCDecl name (Some name) fields methods).
-  hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_neq.subgoal_0". Undo.
+  try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_neq.subgoal_0".
   lapply H0;intros.
-  + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_neq.subgoal_1". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_neq.subgoal_1".
     Reconstr.rcrush (@names_unique_number_of_extends_loop) Reconstr.Empty.
   + scrush.
 Qed.
@@ -737,14 +737,14 @@ Lemma subtype_well_founded_find_class_neq:
 Proof.
   induction P.
   + scrush.
-  + hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_find_class_neq.subgoal_1". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_find_class_neq.subgoal_1".
     intros.
     destruct a.
     simpl in H1.
     destruct (JFClassName_dec D name).
-    ++ hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_find_class_neq.subgoal_1_1". Undo.
+    ++ try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_find_class_neq.subgoal_1_1".
        Reconstr.rcrush (@subtype_well_founded_neq) Reconstr.Empty.
-    ++ hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_find_class_neq.subgoal_1_2". Undo.
+    ++ try hammer_hook "JaSubtype" "JaSubtype.subtype_well_founded_find_class_neq.subgoal_1_2".
        Reconstr.rcrush (@subtype_well_founded_further, @JaProgram.names_unique_further) (@JaSyntax.JFProgram).
 Qed.
 
@@ -808,7 +808,7 @@ Lemma extends_further_object:
 Proof.
   induction P.
   + scrush.
-  + hammer_hook "JaSubtype" "JaSubtype.extends_further_object.subgoal_1". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.extends_further_object.subgoal_1".
     intros.
     inversion H1.
     unfold JFObject in H0.
@@ -860,16 +860,16 @@ Proof.
   * scrush.
   * scrush.
   * scrush.
-  * hammer_hook "JaSubtype" "JaSubtype.subtyping_further.subgoal_1". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.subtyping_further.subgoal_1".
     eapply (substep (E :: P) C D E0).
     + scrush.
     + scrush.
     + inversion H1.
       - destruct E.
-        hammer_hook "JaSubtype" "JaSubtype.subtyping_further.subgoal_1_1". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.subtyping_further.subgoal_1_1".
         Reconstr.reasy (@ind) Reconstr.Empty.
       - destruct E.
-        hammer_hook "JaSubtype" "JaSubtype.subtyping_further.subgoal_1_2". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.subtyping_further.subgoal_1_2".
         Reconstr.reasy (@ind) Reconstr.Empty.
     + auto.
 Qed.
@@ -885,7 +885,7 @@ Proof.
   * scrush.
   * intros.
     apply IHP.
-    + hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_1". Undo.
+    + try hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_1".
       Reconstr.reasy (@JaProgram.names_unique_further) (@object_not_extended, @JaSyntax.JFProgram).
     + scrush.
     + scrush.
@@ -893,9 +893,9 @@ Proof.
       - scrush.
       - scrush.
       - unfold object_is_not_extended in H0.
-        hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_2". Undo.
+        try hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_2".
         { inversion H5.
-          + hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_2_1". Undo.
+          + try hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_2_1".
             rewrite H11 in *.
             apply Forall_inv in H0.
             rewrite <- H10 in *.
@@ -905,12 +905,12 @@ Proof.
             unfold JFObject in H3.
             congruence.
           +  assert (exists ex0 fields' methods',  In (JFCDecl cname (Some ex0) fields' methods') P).
-             hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.assert_1". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.assert_1".
              Reconstr.reasy (@extends_in_first) (@JaSyntax.JFProgram).
-             hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_2_2". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.subgoal_2_2".
              destruct H15, H15, H15.
              assert (forall x, In x (a :: P) -> object_not_extended x).
-             hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.assert_2". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.object_is_not_subtype.assert_2".
              apply -> (Forall_forall object_not_extended (a :: P)).
              auto.
              assert (object_not_extended (JFCDecl cname (Some x) x0 x1)).
@@ -935,10 +935,10 @@ Proof.
   + scrush.
   + induction 5.
     - auto.
-    - hammer_hook "JaSubtype" "JaSubtype.subtrans.subgoal_1". Undo.
+    - try hammer_hook "JaSubtype" "JaSubtype.subtrans.subgoal_1".
       Reconstr.reasy (@subobj, @object_is_not_subtype) Reconstr.Empty.
     - scrush.
-    - hammer_hook "JaSubtype" "JaSubtype.subtrans.subgoal_2". Undo.
+    - try hammer_hook "JaSubtype" "JaSubtype.subtrans.subgoal_2".
       Reconstr.reasy (@substep) Reconstr.Empty.
 Qed.
 
@@ -959,9 +959,9 @@ Proof.
   intros P C D H.
   induction H; sauto.
   * ycrush.
-  * hammer_hook "JaSubtype" "JaSubtype.subtyping_greater_in.subgoal_0". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.subtyping_greater_in.subgoal_0".
     destruct (JFClassName_dec dname dn).
-    ** hammer_hook "JaSubtype" "JaSubtype.subtyping_greater_in.subgoal_1". Undo.
+    ** try hammer_hook "JaSubtype" "JaSubtype.subtyping_greater_in.subgoal_1".
        Reconstr.reasy (@extends_in_second) Reconstr.Empty.
     ** scrush.
 Qed.
@@ -976,7 +976,7 @@ Lemma subtyping_further_neq:
       subtyping P D E.
 Proof.
   induction 1; sauto.
-  - hammer_hook "JaSubtype" "JaSubtype.subtyping_further_neq.subgoal_1". Undo.
+  - try hammer_hook "JaSubtype" "JaSubtype.subtyping_further_neq.subgoal_1".
     Reconstr.rblast (@extends_narrower, @JaProgram.count_occ_zero_is_class_name_false, @substep, @JaProgram.is_class_name_nequal, @extends_in_second) (@JaSyntax.JFProgram).
 Qed.
 
@@ -998,16 +998,16 @@ Lemma subtyping_find_class:
 Proof.
   intros.
   inversion H3; sauto.
-  + hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class.subgoal_1". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class.subgoal_1".
     assert (exists
                (ex0 : JFClassName) (fields' : list JFFieldDeclaration)
                (methods' : list JFMethodDeclaration),
                In (JFCDecl cname (Some ex0) fields' methods') P).
-    hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class.assert_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class.assert_1".
     Reconstr.reasy (@extends_in_first) Reconstr.Empty.
     destruct H1, H1, H1.
     exists (JFCDecl cname (Some x) x0 x1).
-    hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class.subgoal_1_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class.subgoal_1_1".
     Reconstr.reasy (@JaProgram.in_find_class) Reconstr.Empty.
 Qed.
 
@@ -1028,7 +1028,7 @@ Proof.
     inversion Sub.
     ++ contradiction.
     ++ subst.
-       hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_1". Undo.
+       try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_1".
        injection H1;intros.
        subst.
        apply program_contains_find_class;auto.
@@ -1039,33 +1039,33 @@ Proof.
        destruct (JFClassName_dec D Did).
        +++ scrush.
        +++ fold (find_class P Did).
-           hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2". Undo.
+           try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2".
            assert (exists
                       (ex0 : option JFClassName)
                       (fields' : list JFFieldDeclaration)
                       (methods' : list JFMethodDeclaration),
                       In (JFCDecl dname ex0 fields' methods') P).
-           hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.assert_1". Undo.
+           try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.assert_1".
            eauto using extends_in_second_second.
            do 3 destruct H.
            destruct (JFClassName_dec D cname).
            * subst.
-             hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1".
              destruct (JFClassName_dec cname dname).
-             ** hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_1". Undo.
+             ** try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_1".
                 (* EProver finds a proof which cannot be reconstructed *)
                 subst.
                 assert (JFClass dname <> JFClass dname).
                 eapply extends_neq;eauto.
                 contradiction.
              ** assert (JFClass cname <> JFClass dname) by congruence.
-                hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2". Undo.
+                try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2".
                 destruct (JFClassName_dec dname Did).
-                *** hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2_1". Undo.
+                *** try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2_1".
                     subst; eauto with myhints.
-                *** hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2_2". Undo.
+                *** try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2_2".
                     assert (subtyping P (JFClass dname) (JFClass Did)).
-                    hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.assert_2". Undo.
+                    try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.assert_2".
                     eapply subtyping_further_neq ;
                       try apply H2;eauto 2 with myhints.
                     eapply IHP;
@@ -1074,27 +1074,27 @@ Proof.
                     {
                       destruct P.
                       * inversion H.
-                      * hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2_2_1". Undo.
+                      * try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_1_2_2_1".
                         Reconstr.reasy (@subtype_well_founded_program_contains_further) Reconstr.Empty.
                     }
            * subst.
-             hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2".
              assert (JFClass dname <> JFClass D).
-             hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.assert_3". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.assert_3".
              clear -H1 Nuq.
              eapply extends_neq; eauto.
              assert (JFClass D <> JFClass Did) by congruence.
              destruct (JFClassName_dec dname Did).
-             ** hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2_1". Undo.
+             ** try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2_1".
                 subst; eauto with myhints.
              ** assert (JFClass dname <> JFClass Did) by congruence.
-                hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2_2". Undo.
+                try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2_2".
                 eapply IHP; try eapply H4; eauto 2 with myhints.
                 *** discriminate.
                 *** destruct P.
                     **** inversion H.
                     **** eauto using subtype_well_founded_program_contains_further with myhints.
-                *** hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2_2_1". Undo.
+                *** try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_gt.subgoal_2_2_2_1".
                     eapply subtyping_further_neq; eauto.
 Qed.
 
@@ -1107,7 +1107,7 @@ Lemma subtyping_neq_object:
 Proof.
   intros.
   inversion H1; sauto.
-  + hammer_hook "JaSubtype" "JaSubtype.subtyping_neq_object.subgoal_1". Undo.
+  + try hammer_hook "JaSubtype" "JaSubtype.subtyping_neq_object.subgoal_1".
     Reconstr.rcrush (@object_is_not_extended_extends_neq) (@JaSyntax.JFObject, @JaSyntax.JFObjectName).
 Qed.
 
@@ -1126,13 +1126,13 @@ Lemma subtyping_find_class_further:
 Proof.
   intros P D E H.
   induction H; sauto.
-  * hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_further.subgoal_1". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_further.subgoal_1".
     eapply extends_in_first in H1.
     destruct H1. destruct H.
     eapply in_inv in H.
     destruct H.
     ** congruence.
-    ** hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_further.subgoal_1_1". Undo.
+    ** try hammer_hook "JaSubtype" "JaSubtype.subtyping_find_class_further.subgoal_1_1".
        eapply in_find_class_raw in H.
        scrush.
 Qed.
@@ -1151,17 +1151,17 @@ Lemma subtyping_object_supremum:
 Proof.
   induction P.
   * scrush.
-  * hammer_hook "JaSubtype" "JaSubtype.subtyping_object_supremum.subgoal_1". Undo.
+  * try hammer_hook "JaSubtype" "JaSubtype.subtyping_object_supremum.subgoal_1".
     intros.
     apply IHP;eauto 2 with myhints.
     destruct a.
     destruct (JFCId_dec (JFClass D) JFObject).
     assert (C = JFObject).
-    hammer_hook "JaSubtype" "JaSubtype.subtyping_object_supremum.assert_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtyping_object_supremum.assert_1".
     eapply object_is_not_subtype;
       try apply H;eauto with myhints.
     scrush.
-    hammer_hook "JaSubtype" "JaSubtype.subtyping_object_supremum.subgoal_1_1". Undo.
+    try hammer_hook "JaSubtype" "JaSubtype.subtyping_object_supremum.subgoal_1_1".
     Reconstr.reasy (@subrefl, @object_is_not_subtype) (@JaSyntax.JFProgram).
 Qed.
 
@@ -1192,43 +1192,43 @@ Proof.
     fold methodLookup in *.
     destruct a.
     destruct (JFClassName_dec cname D).
-    ** hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1". Undo.
+    ** try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1".
        (* Vampire finds a proof which cannot be reconstructed *)
        destruct (find_method methods m).
        *** scrush.
        *** destruct ex.
            + subst.
-             hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1_1". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1_1".
              destruct (JFClassName_dec dname D).
              ++ firstorder.
-             ++ hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1_1_1". Undo.
+             ++ try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1_1_1".
                 Reconstr.rcrush (@extends_equals_first) (@JaSyntax.methodLookup, @JaSyntax.JFProgram).
            + subst.
              inversion Exts.
              subst.
-             hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1_2". Undo.
+             try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_1_2".
              Reconstr.rcrush (@JaSyntax.methodLookup_find_class, @extends_in_first, @Coq.Init.Datatypes.list_ind, @JaSyntax.methodLookup_raw_neq, @number_of_extends_none, @JaProgram.count_occ_zero_is_class_name_false, @extends_neq_none, @lookup_cons_neq, @JaSyntax.isLSForId_ind, @JaSyntax.methodLookup_prog_monotone_eq, @JaSyntax.methodLookup_raw_empty, @JaSyntax.isLStrue) (@JaSyntax.JFMId_dec, @JaSyntax.isLS, @JaSyntax.JFXId, @JaSyntax.JFACId, @JaSyntax.JFProgram, @JaProgram.names_unique, @Coq.Bool.Bool.bool_dec, @Coq.Lists.List.In, @Coq.Lists.List.map, @Coq.Lists.List.count_occ, @JaSyntax.JFClassName, @JaSyntax.extds_of_cd, @JaSyntax.mthds_of_cd, @JaSyntax.name_of_cd, @JaProgram.decl_once, @JaProgram.is_class_name, @JaSyntax.JFMId, @JaSyntax.find_method, @JaSyntax.methodLookup, @number_of_extends, @JaSyntax.find_class, @JaSyntax.JFObjectName, @JaSyntax.JFClassName_dec).
    ** destruct (JFClassName_dec dname D).
       *** subst. clear -Nuq Exts n.
-          hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_2". Undo.
+          try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_2".
           (* Vampire finds a proof which cannot be reconstructed *)
           assert (exists (ex0 : option JFClassName) (fields' : list JFFieldDeclaration) (methods' : list JFMethodDeclaration),
                      In (JFCDecl D ex0 fields' methods') P).
-          hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.assert_1". Undo.
+          try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.assert_1".
           Reconstr.reasy (@Coq.Init.Datatypes.list_ind, @subtyping_greater_in, @extends_in_second_second, @extends_in_second, @extends_in_first, @base, @JaProgram.count_occ_zero_is_class_name_false, @extends_neq, @extends_neq_none, @JaProgram.in_find_class_raw, @subtyping_ind, @extends_ind, @Coq.Lists.List.in_map_iff) (@JaSyntax.JFObject, @JaSyntax.JFProgram, @JaSyntax.JFClassName, @object_is_not_extended, @extensions_in_all_but_object, @JaProgram.names_unique, @Coq.Bool.Bool.bool_dec, @JaProgram.decl_once, @JaProgram.is_class_name, @JaSyntax.find_class, @Hammer.Reconstr.rdone, @Coq.Lists.List.In, @Coq.Lists.List.map, @Coq.Lists.List.count_occ, @JaSyntax.JFObjectName, @JaSyntax.JFClassName_dec).
           destruct H as [ex0 [fields' [methods' H]]].
           assert (names_unique P).
-          hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.assert_2". Undo.
+          try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.assert_2".
           Reconstr.reasy (@JaProgram.names_unique_further) (@JaSyntax.JFProgram).
           unfold names_unique in H0.
           assert (forall x, In x P -> decl_once P x).
-          hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.assert_3". Undo.
+          try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.assert_3".
           Reconstr.reasy (@JaProgram.decl_in_head_not_in_tail, @JaProgram.decs_once_monotone, @Coq.Lists.List.in_map_iff, @Coq.Lists.List.count_occ_not_In, @JaProgram.is_class_name_name, @Coq.Lists.List.Forall_forall) (@Coq.Lists.List.In, @JaSyntax.JFProgram, @JaProgram.decl_once, @JaSyntax.JFClassName).
           scrush.
-      *** hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_3". Undo.
+      *** try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_3".
           inversion Exts.
            + subst. contradiction.
-           + hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_3_1". Undo.
+           + try hammer_hook "JaSubtype" "JaSubtype.lookup_in_supertype_subtype_extends.subgoal_3_1".
              Reconstr.reasy (@JaProgram.names_unique_further) (@JaSyntax.JFProgram).
 Qed.
 

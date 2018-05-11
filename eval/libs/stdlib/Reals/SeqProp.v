@@ -28,7 +28,7 @@ Definition has_lb (Un:nat -> R) : Prop := bound (EUn (opp_seq Un)).
 
 Lemma growing_cv :
 forall Un:nat -> R, Un_growing Un -> has_ub Un -> { l:R | Un_cv Un l }.
-Proof. hammer_hook "SeqProp" "SeqProp.growing_cv". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.growing_cv".  
 intros Un Hug Heub.
 exists (proj1_sig (completeness (EUn Un) Heub (EUn_noempty Un))).
 destruct (completeness _ Heub (EUn_noempty Un)) as (l, H).
@@ -37,7 +37,7 @@ Qed.
 
 Lemma decreasing_growing :
 forall Un:nat -> R, Un_decreasing Un -> Un_growing (opp_seq Un).
-Proof. hammer_hook "SeqProp" "SeqProp.decreasing_growing". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.decreasing_growing".  
 intro.
 unfold Un_growing, opp_seq, Un_decreasing.
 intros.
@@ -47,7 +47,7 @@ Qed.
 
 Lemma decreasing_cv :
 forall Un:nat -> R, Un_decreasing Un -> has_lb Un -> { l:R | Un_cv Un l }.
-Proof. hammer_hook "SeqProp" "SeqProp.decreasing_cv". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.decreasing_cv".  
 intros.
 cut ({ l:R | Un_cv (opp_seq Un) l } -> { l:R | Un_cv Un l }).
 intro X.
@@ -73,7 +73,7 @@ Qed.
 
 Lemma ub_to_lub :
 forall Un:nat -> R, has_ub Un -> { l:R | is_lub (EUn Un) l }.
-Proof. hammer_hook "SeqProp" "SeqProp.ub_to_lub". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.ub_to_lub".  
 intros.
 unfold has_ub in H.
 apply completeness.
@@ -86,7 +86,7 @@ Qed.
 
 Lemma lb_to_glb :
 forall Un:nat -> R, has_lb Un -> { l:R | is_lub (EUn (opp_seq Un)) l }.
-Proof. hammer_hook "SeqProp" "SeqProp.lb_to_glb". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.lb_to_glb".  
 intros; unfold has_lb in H.
 apply completeness.
 assumption.
@@ -110,7 +110,7 @@ Notation minorant := glb (only parsing).
 Lemma maj_ss :
 forall (Un:nat -> R) (k:nat),
 has_ub Un -> has_ub (fun i:nat => Un (k + i)%nat).
-Proof. hammer_hook "SeqProp" "SeqProp.maj_ss". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.maj_ss".  
 intros.
 unfold has_ub in H.
 unfold bound in H.
@@ -128,7 +128,7 @@ Qed.
 Lemma min_ss :
 forall (Un:nat -> R) (k:nat),
 has_lb Un -> has_lb (fun i:nat => Un (k + i)%nat).
-Proof. hammer_hook "SeqProp" "SeqProp.min_ss". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.min_ss".  
 intros.
 unfold has_lb in H.
 unfold bound in H.
@@ -155,7 +155,7 @@ Notation sequence_minorant := sequence_lb (only parsing).
 
 Lemma Wn_decreasing :
 forall (Un:nat -> R) (pr:has_ub Un), Un_decreasing (sequence_ub Un pr).
-Proof. hammer_hook "SeqProp" "SeqProp.Wn_decreasing". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.Wn_decreasing".  
 intros.
 unfold Un_decreasing.
 intro.
@@ -203,7 +203,7 @@ Qed.
 
 Lemma Vn_growing :
 forall (Un:nat -> R) (pr:has_lb Un), Un_growing (sequence_lb Un pr).
-Proof. hammer_hook "SeqProp" "SeqProp.Vn_growing". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.Vn_growing".  
 intros.
 unfold Un_growing.
 intro.
@@ -275,7 +275,7 @@ Qed.
 Lemma Vn_Un_Wn_order :
 forall (Un:nat -> R) (pr1:has_ub Un) (pr2:has_lb Un)
 (n:nat), sequence_lb Un pr2 n <= Un n <= sequence_ub Un pr1 n.
-Proof. hammer_hook "SeqProp" "SeqProp.Vn_Un_Wn_order". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.Vn_Un_Wn_order".  
 intros.
 split.
 unfold sequence_lb.
@@ -342,7 +342,7 @@ Qed.
 Lemma min_maj :
 forall (Un:nat -> R) (pr1:has_ub Un) (pr2:has_lb Un),
 has_ub (sequence_lb Un pr2).
-Proof. hammer_hook "SeqProp" "SeqProp.min_maj". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.min_maj".  
 intros.
 assert (H := Vn_Un_Wn_order Un pr1 pr2).
 unfold has_ub.
@@ -365,7 +365,7 @@ Qed.
 Lemma maj_min :
 forall (Un:nat -> R) (pr1:has_ub Un) (pr2:has_lb Un),
 has_lb (sequence_ub Un pr1).
-Proof. hammer_hook "SeqProp" "SeqProp.maj_min". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.maj_min".  
 intros.
 assert (H := Vn_Un_Wn_order Un pr1 pr2).
 unfold has_lb.
@@ -389,7 +389,7 @@ Qed.
 
 
 Lemma cauchy_maj : forall Un:nat -> R, Cauchy_crit Un -> has_ub Un.
-Proof. hammer_hook "SeqProp" "SeqProp.cauchy_maj". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cauchy_maj".  
 intros.
 unfold has_ub.
 apply cauchy_bound.
@@ -399,7 +399,7 @@ Qed.
 
 Lemma cauchy_opp :
 forall Un:nat -> R, Cauchy_crit Un -> Cauchy_crit (opp_seq Un).
-Proof. hammer_hook "SeqProp" "SeqProp.cauchy_opp". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cauchy_opp".  
 intro.
 unfold Cauchy_crit.
 unfold R_dist.
@@ -414,7 +414,7 @@ Qed.
 
 
 Lemma cauchy_min : forall Un:nat -> R, Cauchy_crit Un -> has_lb Un.
-Proof. hammer_hook "SeqProp" "SeqProp.cauchy_min". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cauchy_min".  
 intros.
 unfold has_lb.
 assert (H0 := cauchy_opp _ H).
@@ -426,7 +426,7 @@ Qed.
 Lemma maj_cv :
 forall (Un:nat -> R) (pr:Cauchy_crit Un),
 { l:R | Un_cv (sequence_ub Un (cauchy_maj Un pr)) l }.
-Proof. hammer_hook "SeqProp" "SeqProp.maj_cv". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.maj_cv".  
 intros.
 apply decreasing_cv.
 apply Wn_decreasing.
@@ -439,7 +439,7 @@ Qed.
 Lemma min_cv :
 forall (Un:nat -> R) (pr:Cauchy_crit Un),
 { l:R | Un_cv (sequence_lb Un (cauchy_min Un pr)) l }.
-Proof. hammer_hook "SeqProp" "SeqProp.min_cv". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.min_cv".  
 intros.
 apply growing_cv.
 apply Vn_growing.
@@ -450,7 +450,7 @@ Qed.
 
 Lemma cond_eq :
 forall x y:R, (forall eps:R, 0 < eps -> Rabs (x - y) < eps) -> x = y.
-Proof. hammer_hook "SeqProp" "SeqProp.cond_eq". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cond_eq".  
 intros.
 destruct (total_order_T x y) as [[Hlt|Heq]|Hgt].
 cut (0 < y - x).
@@ -475,7 +475,7 @@ rewrite Rplus_0_r; replace (y + (x - y)) with x; [ assumption | ring ].
 Qed.
 
 Lemma not_Rlt : forall r1 r2:R, ~ r1 < r2 -> r1 >= r2.
-Proof. hammer_hook "SeqProp" "SeqProp.not_Rlt". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.not_Rlt".  
 intros r1 r2; generalize (Rtotal_order r1 r2); unfold Rge.
 tauto.
 Qed.
@@ -484,7 +484,7 @@ Qed.
 Lemma approx_maj :
 forall (Un:nat -> R) (pr:has_ub Un) (eps:R),
 0 < eps ->  exists k : nat, Rabs (lub Un pr - Un k) < eps.
-Proof. hammer_hook "SeqProp" "SeqProp.approx_maj". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.approx_maj".  
 intros Un pr.
 pose (Vn := fix aux n := match n with S n' => if Rle_lt_dec (aux n') (Un n) then Un n else aux n' | O => Un O end).
 pose (In := fix aux n := match n with S n' => if Rle_lt_dec (Vn n) (Un n) then n else aux n' | O => O end).
@@ -562,7 +562,7 @@ Qed.
 Lemma approx_min :
 forall (Un:nat -> R) (pr:has_lb Un) (eps:R),
 0 < eps ->  exists k : nat, Rabs (glb Un pr - Un k) < eps.
-Proof. hammer_hook "SeqProp" "SeqProp.approx_min". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.approx_min".  
 intros Un pr.
 unfold glb.
 destruct lb_to_glb as (lb, Hlb).
@@ -585,7 +585,7 @@ Qed.
 
 Lemma UL_sequence :
 forall (Un:nat -> R) (l1 l2:R), Un_cv Un l1 -> Un_cv Un l2 -> l1 = l2.
-Proof. hammer_hook "SeqProp" "SeqProp.UL_sequence". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.UL_sequence".  
 intros Un l1 l2; unfold Un_cv; unfold R_dist; intros.
 apply cond_eq.
 intros; cut (0 < eps / 2);
@@ -608,7 +608,7 @@ Qed.
 Lemma CV_plus :
 forall (An Bn:nat -> R) (l1 l2:R),
 Un_cv An l1 -> Un_cv Bn l2 -> Un_cv (fun i:nat => An i + Bn i) (l1 + l2).
-Proof. hammer_hook "SeqProp" "SeqProp.CV_plus". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.CV_plus".  
 unfold Un_cv; unfold R_dist; intros.
 cut (0 < eps / 2);
 [ intro
@@ -633,7 +633,7 @@ Qed.
 Lemma cv_cvabs :
 forall (Un:nat -> R) (l:R),
 Un_cv Un l -> Un_cv (fun i:nat => Rabs (Un i)) (Rabs l).
-Proof. hammer_hook "SeqProp" "SeqProp.cv_cvabs". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cv_cvabs".  
 unfold Un_cv; unfold R_dist; intros.
 elim (H eps H0); intros.
 exists x; intros.
@@ -645,7 +645,7 @@ Qed.
 
 Lemma CV_Cauchy :
 forall Un:nat -> R, { l:R | Un_cv Un l } -> Cauchy_crit Un.
-Proof. hammer_hook "SeqProp" "SeqProp.CV_Cauchy". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.CV_Cauchy".  
 intros Un X; elim X; intros.
 unfold Cauchy_crit; intros.
 unfold Un_cv in p; unfold R_dist in p.
@@ -669,7 +669,7 @@ Lemma maj_by_pos :
 forall Un:nat -> R,
 { l:R | Un_cv Un l } ->
 exists l : R, 0 < l /\ (forall n:nat, Rabs (Un n) <= l).
-Proof. hammer_hook "SeqProp" "SeqProp.maj_by_pos". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.maj_by_pos".  
 intros Un X; elim X; intros.
 cut { l:R | Un_cv (fun k:nat => Rabs (Un k)) l }.
 intro X0.
@@ -701,7 +701,7 @@ Qed.
 Lemma CV_mult :
 forall (An Bn:nat -> R) (l1 l2:R),
 Un_cv An l1 -> Un_cv Bn l2 -> Un_cv (fun i:nat => An i * Bn i) (l1 * l2).
-Proof. hammer_hook "SeqProp" "SeqProp.CV_mult". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.CV_mult".  
 intros.
 cut { l:R | Un_cv An l }.
 intro X.
@@ -820,7 +820,7 @@ Qed.
 Lemma tech9 :
 forall Un:nat -> R,
 Un_growing Un -> forall m n:nat, (m <= n)%nat -> Un m <= Un n.
-Proof. hammer_hook "SeqProp" "SeqProp.tech9". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.tech9".  
 intros; unfold Un_growing in H.
 induction  n as [| n Hrecn].
 induction  m as [| m Hrecm].
@@ -845,7 +845,7 @@ exists k0 : R,
 k < k0 < 1 /\
 (exists N : nat,
 (forall n:nat, (N <= n)%nat -> Rabs (An (S n) / An n) < k0)).
-Proof. hammer_hook "SeqProp" "SeqProp.tech13". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.tech13".  
 intros; exists (k + (1 - k) / 2).
 split.
 split.
@@ -886,7 +886,7 @@ Qed.
 Lemma growing_ineq :
 forall (Un:nat -> R) (l:R),
 Un_growing Un -> Un_cv Un l -> forall n:nat, Un n <= l.
-Proof. hammer_hook "SeqProp" "SeqProp.growing_ineq". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.growing_ineq".  
 intros; destruct (total_order_T (Un n) l) as [[Hlt|Heq]|Hgt].
 left; assumption.
 right; assumption.
@@ -914,7 +914,7 @@ Qed.
 
 Lemma CV_opp :
 forall (An:nat -> R) (l:R), Un_cv An l -> Un_cv (opp_seq An) (- l).
-Proof. hammer_hook "SeqProp" "SeqProp.CV_opp". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.CV_opp".  
 intros An l.
 unfold Un_cv; unfold R_dist; intros.
 elim (H eps H0); intros.
@@ -928,7 +928,7 @@ Qed.
 Lemma decreasing_ineq :
 forall (Un:nat -> R) (l:R),
 Un_decreasing Un -> Un_cv Un l -> forall n:nat, l <= Un n.
-Proof. hammer_hook "SeqProp" "SeqProp.decreasing_ineq". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.decreasing_ineq".  
 intros.
 assert (H1 := decreasing_growing _ H).
 assert (H2 := CV_opp _ _ H0).
@@ -941,7 +941,7 @@ Qed.
 Lemma CV_minus :
 forall (An Bn:nat -> R) (l1 l2:R),
 Un_cv An l1 -> Un_cv Bn l2 -> Un_cv (fun i:nat => An i - Bn i) (l1 - l2).
-Proof. hammer_hook "SeqProp" "SeqProp.CV_minus". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.CV_minus".  
 intros.
 replace (fun i:nat => An i - Bn i) with (fun i:nat => An i + opp_seq Bn i).
 unfold Rminus; apply CV_plus.
@@ -958,7 +958,7 @@ forall M:R,  exists N : nat, (forall n:nat, (N <= n)%nat -> M < Un n).
 Lemma cv_infty_cv_R0 :
 forall Un:nat -> R,
 (forall n:nat, Un n <> 0) -> cv_infty Un -> Un_cv (fun n:nat => / Un n) 0.
-Proof. hammer_hook "SeqProp" "SeqProp.cv_infty_cv_R0". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cv_infty_cv_R0".  
 unfold cv_infty, Un_cv; unfold R_dist; intros.
 elim (H0 (/ eps)); intros N0 H2.
 exists N0; intros.
@@ -982,7 +982,7 @@ Qed.
 Lemma decreasing_prop :
 forall (Un:nat -> R) (m n:nat),
 Un_decreasing Un -> (m <= n)%nat -> Un n <= Un m.
-Proof. hammer_hook "SeqProp" "SeqProp.decreasing_prop". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.decreasing_prop".  
 unfold Un_decreasing; intros.
 induction  n as [| n Hrecn].
 induction  m as [| m Hrecm].
@@ -1000,7 +1000,7 @@ Qed.
 
 Lemma cv_speed_pow_fact :
 forall x:R, Un_cv (fun n:nat => x ^ n / INR (fact n)) 0.
-Proof. hammer_hook "SeqProp" "SeqProp.cv_speed_pow_fact". Restart. 
+Proof. try hammer_hook "SeqProp" "SeqProp.cv_speed_pow_fact".  
 intro;
 cut
 (Un_cv (fun n:nat => Rabs x ^ n / INR (fact n)) 0 ->

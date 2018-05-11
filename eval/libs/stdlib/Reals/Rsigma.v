@@ -28,7 +28,7 @@ Theorem sigma_split :
 forall low high k:nat,
 (low <= k)%nat ->
 (k < high)%nat -> sigma low high = sigma low k + sigma (S k) high.
-Proof. hammer_hook "Rsigma" "Rsigma.sigma_split". Restart. 
+Proof. try hammer_hook "Rsigma" "Rsigma.sigma_split".  
 intros; induction  k as [| k Hreck].
 cut (low = 0%nat).
 intro; rewrite H1; unfold sigma; rewrite <- minus_n_n;
@@ -81,7 +81,7 @@ Theorem sigma_diff :
 forall low high k:nat,
 (low <= k)%nat ->
 (k < high)%nat -> sigma low high - sigma low k = sigma (S k) high.
-Proof. hammer_hook "Rsigma" "Rsigma.sigma_diff". Restart. 
+Proof. try hammer_hook "Rsigma" "Rsigma.sigma_diff".  
 intros low high k H1 H2; symmetry ; rewrite (sigma_split H1 H2); ring.
 Qed.
 
@@ -89,14 +89,14 @@ Theorem sigma_diff_neg :
 forall low high k:nat,
 (low <= k)%nat ->
 (k < high)%nat -> sigma low k - sigma low high = - sigma (S k) high.
-Proof. hammer_hook "Rsigma" "Rsigma.sigma_diff_neg". Restart. 
+Proof. try hammer_hook "Rsigma" "Rsigma.sigma_diff_neg".  
 intros low high k H1 H2; rewrite (sigma_split H1 H2); ring.
 Qed.
 
 Theorem sigma_first :
 forall low high:nat,
 (low < high)%nat -> sigma low high = f low + sigma (S low) high.
-Proof. hammer_hook "Rsigma" "Rsigma.sigma_first". Restart. 
+Proof. try hammer_hook "Rsigma" "Rsigma.sigma_first".  
 intros low high H1; generalize (lt_le_S low high H1); intro H2;
 generalize (lt_le_weak low high H1); intro H3;
 replace (f low) with (sigma low low).
@@ -111,7 +111,7 @@ Qed.
 Theorem sigma_last :
 forall low high:nat,
 (low < high)%nat -> sigma low high = f high + sigma low (pred high).
-Proof. hammer_hook "Rsigma" "Rsigma.sigma_last". Restart. 
+Proof. try hammer_hook "Rsigma" "Rsigma.sigma_last".  
 intros low high H1; generalize (lt_le_S low high H1); intro H2;
 generalize (lt_le_weak low high H1); intro H3;
 replace (f high) with (sigma high high).
@@ -127,7 +127,7 @@ replace (high + 0)%nat with high; [ reflexivity | ring ].
 Qed.
 
 Theorem sigma_eq_arg : forall low:nat, sigma low low = f low.
-Proof. hammer_hook "Rsigma" "Rsigma.sigma_eq_arg". Restart. 
+Proof. try hammer_hook "Rsigma" "Rsigma.sigma_eq_arg".  
 intro; unfold sigma; rewrite <- minus_n_n.
 simpl; replace (low + 0)%nat with low; [ reflexivity | ring ].
 Qed.

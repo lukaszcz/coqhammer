@@ -27,7 +27,7 @@ Theorem unique_choice :
 forall (A B:Type) (R:A -> B -> Prop),
 (forall x:A,  exists! y : B, R x y) ->
 (exists f:A->B, forall x:A, R x (f x)).
-Proof. hammer_hook "ClassicalUniqueChoice" "ClassicalUniqueChoice.unique_choice". Restart. 
+Proof. try hammer_hook "ClassicalUniqueChoice" "ClassicalUniqueChoice.unique_choice".  
 intros A B.
 apply (dependent_unique_choice A (fun _ => B)).
 Qed.
@@ -38,7 +38,7 @@ Require Import Setoid.
 
 Theorem classic_set_in_prop_context :
 forall C:Prop, ((forall P:Prop, {P} + {~ P}) -> C) -> C.
-Proof. hammer_hook "ClassicalUniqueChoice" "ClassicalUniqueChoice.classic_set_in_prop_context". Restart. 
+Proof. try hammer_hook "ClassicalUniqueChoice" "ClassicalUniqueChoice.classic_set_in_prop_context".  
 intros C HnotEM.
 set (R := fun A b => A /\ true = b \/ ~ A /\ false = b).
 assert (H :  exists f : Prop -> bool, (forall A:Prop, R A (f A))).
@@ -73,7 +73,7 @@ Qed.
 
 Corollary not_not_classic_set :
 ((forall P:Prop, {P} + {~ P}) -> False) -> False.
-Proof. hammer_hook "ClassicalUniqueChoice" "ClassicalUniqueChoice.not_not_classic_set". Restart. 
+Proof. try hammer_hook "ClassicalUniqueChoice" "ClassicalUniqueChoice.not_not_classic_set".  
 apply classic_set_in_prop_context.
 Qed.
 

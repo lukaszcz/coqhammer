@@ -10,7 +10,7 @@ FFILES=$(shell find i/f/ -type f | sort -R)
 # timeout (in seconds)
 TIM=30
 
-all: e-par0 e-par1 e-par2 e-par3 \
+all: eprover vampire z3 e-par0 e-par1 e-par2 e-par3 \
   e-14 e-18 e-19 \
   vam-18 vam-26 vam-30 vam-40 \
   z3-32 z3-40 z3-40q z3-432 z3-442 \
@@ -22,6 +22,21 @@ all: e-par0 e-par1 e-par2 e-par3 \
   leancop-ml.cut.conj leancop-ml.cut leancop-ml.nocut \
   meson-infer \
   yic-1 cvc-3 alte
+
+eprover: $(patsubst i/f/%,o/eprover/%,$(FFILES))
+o/eprover/%: i/f/%
+	@mkdir -p `dirname "$@"`
+	@eprover -s --cpu-limit=$(TIM) --auto-schedule -R --print-statistics -p --tstp-format "$<"  | grep "file[(]'\|# SZS" > "$@"
+
+vampire: $(patsubst i/f/%,o/vampire/%,$(FFILES))
+o/vampire/%: i/f/%
+	@mkdir -p `dirname "$@"`
+	@htimeout $(TIM) vampire --mode casc -t $(TIM) --proof tptp --output_axiom_names on "$<" | grep "file[(]'\|% SZS" > "$@"
+
+z3: $(patsubst i/f/%,o/z3/%,$(FFILES))
+o/z3/%: i/f/%
+	@mkdir -p `dirname "$@"`
+	@htimeout $(TIM) z3_tptp -c -t:$(TIM) "-file:$<" > "$@"
 
 e-par0: $(patsubst i/f/%,o/e-par0/%,$(FFILES))
 o/e-par0/%: i/f/%

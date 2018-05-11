@@ -28,7 +28,7 @@ Local Open Scope N_scope.
 
 Section TestOrder.
 Let test : forall x y, x<=y -> y<=x -> x=y.
-Proof. hammer_hook "NArith" "NArith.TestOrder.test". Restart. 
+Proof. try hammer_hook "NArith" "NArith.TestOrder.test".  
 N.order.
 Qed.
 End TestOrder.

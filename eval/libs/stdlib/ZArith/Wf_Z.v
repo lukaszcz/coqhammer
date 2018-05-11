@@ -20,27 +20,27 @@ Local Open Scope Z_scope.
 
 Lemma Z_of_nat_complete (x : Z) :
 0 <= x -> exists n : nat, x = Z.of_nat n.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_complete". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_complete".  
 intros H. exists (Z.to_nat x). symmetry. now apply Z2Nat.id.
 Qed.
 
 Lemma Z_of_nat_complete_inf (x : Z) :
 0 <= x -> {n : nat | x = Z.of_nat n}.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_complete_inf". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_complete_inf".  
 intros H. exists (Z.to_nat x). symmetry. now apply Z2Nat.id.
 Qed.
 
 Lemma Z_of_nat_prop :
 forall P:Z -> Prop,
 (forall n:nat, P (Z.of_nat n)) -> forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_prop". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_prop".  
 intros P H x Hx. now destruct (Z_of_nat_complete x Hx) as (n,->).
 Qed.
 
 Lemma Z_of_nat_set :
 forall P:Z -> Set,
 (forall n:nat, P (Z.of_nat n)) -> forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_set". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Z_of_nat_set".  
 intros P H x Hx. now destruct (Z_of_nat_complete_inf x Hx) as (n,->).
 Qed.
 
@@ -49,7 +49,7 @@ forall P:Z -> Prop,
 P 0 ->
 (forall x:Z, 0 <= x -> P x -> P (Z.succ x)) ->
 forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.natlike_ind". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.natlike_ind".  
 intros P Ho Hrec x Hx; apply Z_of_nat_prop; trivial.
 induction n. exact Ho.
 rewrite Nat2Z.inj_succ. apply Hrec; trivial using Nat2Z.is_nonneg.
@@ -60,7 +60,7 @@ forall P:Z -> Set,
 P 0 ->
 (forall x:Z, 0 <= x -> P x -> P (Z.succ x)) ->
 forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.natlike_rec". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.natlike_rec".  
 intros P Ho Hrec x Hx; apply Z_of_nat_set; trivial.
 induction n. exact Ho.
 rewrite Nat2Z.inj_succ. apply Hrec; trivial using Nat2Z.is_nonneg.
@@ -73,7 +73,7 @@ Section Efficient_Rec.
 Let R (a b:Z) := 0 <= a /\ a < b.
 
 Let R_wf : well_founded R.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Efficient_Rec.R_wf". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Efficient_Rec.R_wf".  
 apply well_founded_lt_compat with Z.to_nat.
 intros x y (Hx,H). apply Z2Nat.inj_lt; Z.order.
 Qed.
@@ -83,7 +83,7 @@ forall P:Z -> Type,
 P 0 ->
 (forall z:Z, 0 <= z -> P z -> P (Z.succ z)) ->
 forall z:Z, 0 <= z -> P z.
-Proof. hammer_hook "Wf_Z" "Wf_Z.natlike_rec2". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.natlike_rec2".  
 intros P Ho Hrec.
 induction z as [z IH] using (well_founded_induction_type R_wf).
 destruct z; intros Hz.
@@ -103,7 +103,7 @@ forall P:Z -> Type,
 P 0 ->
 (forall z:Z, 0 < z -> P (Z.pred z) -> P z) ->
 forall z:Z, 0 <= z -> P z.
-Proof. hammer_hook "Wf_Z" "Wf_Z.natlike_rec3". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.natlike_rec3".  
 intros P Ho Hrec.
 induction z as [z IH] using (well_founded_induction_type R_wf).
 destruct z; intros Hz.
@@ -120,7 +120,7 @@ Lemma Zlt_0_rec :
 forall P:Z -> Type,
 (forall x:Z, (forall y:Z, 0 <= y < x -> P y) -> 0 <= x -> P x) ->
 forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Zlt_0_rec". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Zlt_0_rec".  
 intros P Hrec.
 induction x as [x IH] using (well_founded_induction_type R_wf).
 destruct x; intros Hx.
@@ -136,7 +136,7 @@ Lemma Zlt_0_ind :
 forall P:Z -> Prop,
 (forall x:Z, (forall y:Z, 0 <= y < x -> P y) -> 0 <= x -> P x) ->
 forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Zlt_0_ind". Restart.  intros; now apply Zlt_0_rec. Qed.
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Zlt_0_ind".   intros; now apply Zlt_0_rec. Qed.
 
 
 
@@ -144,7 +144,7 @@ Lemma Z_lt_rec :
 forall P:Z -> Type,
 (forall x:Z, (forall y:Z, 0 <= y < x -> P y) -> P x) ->
 forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Z_lt_rec". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Z_lt_rec".  
 intros P Hrec; apply Zlt_0_rec; auto.
 Qed.
 
@@ -152,7 +152,7 @@ Lemma Z_lt_induction :
 forall P:Z -> Prop,
 (forall x:Z, (forall y:Z, 0 <= y < x -> P y) -> P x) ->
 forall x:Z, 0 <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Z_lt_induction". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Z_lt_induction".  
 intros; now apply Z_lt_rec.
 Qed.
 
@@ -162,7 +162,7 @@ Lemma Zlt_lower_bound_rec :
 forall P:Z -> Type, forall z:Z,
 (forall x:Z, (forall y:Z, z <= y < x -> P y) -> z <= x -> P x) ->
 forall x:Z, z <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Zlt_lower_bound_rec". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Zlt_lower_bound_rec".  
 intros P z Hrec x Hx.
 rewrite <- (Z.sub_simpl_r x z). apply Z.le_0_sub in Hx.
 pattern (x - z); apply Zlt_0_rec; trivial.
@@ -178,7 +178,7 @@ Lemma Zlt_lower_bound_ind :
 forall P:Z -> Prop, forall z:Z,
 (forall x:Z, (forall y:Z, z <= y < x -> P y) -> z <= x -> P x) ->
 forall x:Z, z <= x -> P x.
-Proof. hammer_hook "Wf_Z" "Wf_Z.Zlt_lower_bound_ind". Restart. 
+Proof. try hammer_hook "Wf_Z" "Wf_Z.Zlt_lower_bound_ind".  
 intros; now apply Zlt_lower_bound_rec with z.
 Qed.
 

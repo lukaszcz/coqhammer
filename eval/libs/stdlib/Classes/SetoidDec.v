@@ -86,7 +86,7 @@ Program Instance unit_eqdec : EqDec (eq_setoid unit) :=
 fun x y => in_left.
 
 Next Obligation.
-Proof. hammer_hook "SetoidDec" "SetoidDec.unit_eqdec". Restart. 
+Proof. try hammer_hook "SetoidDec" "SetoidDec.unit_eqdec".  
 destruct x ; destruct y.
 reflexivity.
 Qed.
@@ -116,7 +116,7 @@ else in_right.
 Solve Obligations with try red ; unfold complement ; program_simpl.
 
 Next Obligation.
-Proof. hammer_hook "SetoidDec" "SetoidDec.bool_function_eqdec". Restart. 
+Proof. try hammer_hook "SetoidDec" "SetoidDec.bool_function_eqdec".  
 extensionality x.
 destruct x ; auto.
 Qed.

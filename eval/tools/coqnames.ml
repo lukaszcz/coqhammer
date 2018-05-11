@@ -35,7 +35,7 @@ let find_dot s i =
 
 let remove_hammer_hook s =
   try
-    let i =  Str.search_forward (Str.regexp "hammer_hook ") s 0 in
+    let i =  Str.search_forward (Str.regexp "try hammer_hook ") s 0 in
     let len = String.length s in
     let k = find_dot s i in
     String.sub s 0 i ^ String.sub s k (len - k)
@@ -141,7 +141,7 @@ let process_file fname =
               if i + 1 = String.length s then "" else
                 (String.sub s (i + 1) (String.length s - i - 1))
             in
-            output_string oc (p ^ " hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Restart. " ^
+            output_string oc (p ^ " try hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". " ^
                                 r ^ "\n");
             print_endline path
           end
@@ -150,7 +150,7 @@ let process_file fname =
             let pref = Queue.pop (Hashtbl.find nametab last2) in
             let path = pref ^ "." ^ last2 in
             let p = String.sub s 6 (String.length s - 7) in
-            output_string oc ("Proof. hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Restart. " ^
+            output_string oc ("Proof. try hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". " ^
                                  "exact (" ^ p ^ "). Qed.\n");
             print_endline path
           end

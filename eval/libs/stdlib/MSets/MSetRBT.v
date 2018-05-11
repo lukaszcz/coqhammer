@@ -423,34 +423,34 @@ Local Hint Resolve elements_spec2.
 
 
 Lemma singleton_spec x y : InT y (singleton x) <-> X.eq y x.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.singleton_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.singleton_spec".  
 unfold singleton; intuition_in.
 Qed.
 
 Instance singleton_ok x : Ok (singleton x).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.singleton_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.singleton_ok".  
 unfold singleton; auto.
 Qed.
 
 
 
 Lemma makeBlack_spec s x : InT x (makeBlack s) <-> InT x s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeBlack_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeBlack_spec".  
 destruct s; simpl; intuition_in.
 Qed.
 
 Lemma makeRed_spec s x : InT x (makeRed s) <-> InT x s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeRed_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeRed_spec".  
 destruct s; simpl; intuition_in.
 Qed.
 
 Instance makeBlack_ok s `{Ok s} : Ok (makeBlack s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeBlack_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeBlack_ok".  
 destruct s; simpl; ok.
 Qed.
 
 Instance makeRed_ok s `{Ok s} : Ok (makeRed s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeRed_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.makeRed_ok".  
 destruct s; simpl; ok.
 Qed.
 
@@ -476,7 +476,7 @@ Inductive rspec {A} f g : tree -> A -> Prop :=
 | relse t : notred t -> rspec f g t (g t).
 
 Fact rmatch {A} f g t : rspec (A:=A) f g t (rcase f g t).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rmatch". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rmatch".  
 destruct t as [|[|] l x r]; simpl; now constructor.
 Qed.
 
@@ -495,7 +495,7 @@ Inductive rrspec {A} f g : tree -> A -> Prop :=
 | rrelse t : notredred t -> rrspec f g t (g t).
 
 Fact rrmatch {A} f g t : rrspec (A:=A) f g t (rrcase f g t).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rrmatch". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rrmatch".  
 destruct t as [|[|] l x r]; simpl; try now constructor.
 destruct l as [|[|] ll lx lr], r as [|[|] rl rx rr]; now constructor.
 Qed.
@@ -508,7 +508,7 @@ match t with
 end.
 
 Fact rrmatch' {A} f g t : rrspec (A:=A) f g t (rrcase' f g t).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rrmatch'". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rrmatch'".  
 destruct t as [|[|] l x r]; simpl; try now constructor.
 destruct l as [|[|] ll lx lr], r as [|[|] rl rx rr]; now constructor.
 Qed.
@@ -521,7 +521,7 @@ rrspec
 (fun l => Bk l k r)
 l
 (lbal l k r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbal_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbal_match".  
 exact (rrmatch _ _ _).
 Qed.
 
@@ -531,7 +531,7 @@ rrspec
 (fun r => Bk l k r)
 r
 (rbal l k r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal_match".  
 exact (rrmatch _ _ _).
 Qed.
 
@@ -541,7 +541,7 @@ rrspec
 (fun r => Bk l k r)
 r
 (rbal' l k r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal'_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal'_match".  
 exact (rrmatch' _ _ _).
 Qed.
 
@@ -556,7 +556,7 @@ match r with
 end)
 l
 (lbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbalS_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbalS_match".  
 exact (rmatch _ _ _).
 Qed.
 
@@ -571,7 +571,7 @@ match l with
 end)
 r
 (rbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbalS_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbalS_match".  
 exact (rmatch _ _ _).
 Qed.
 
@@ -579,37 +579,37 @@ Qed.
 
 Lemma lbal_spec l x r y :
 InT y (lbal l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbal_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbal_spec".  
 case lbal_match; intuition_in.
 Qed.
 
 Instance lbal_ok l x r `(Ok l, Ok r, lt_tree x l, gt_tree x r) :
 Ok (lbal l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbal_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbal_ok".  
 destruct (lbal_match l x r); ok.
 Qed.
 
 Lemma rbal_spec l x r y :
 InT y (rbal l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal_spec".  
 case rbal_match; intuition_in.
 Qed.
 
 Instance rbal_ok l x r `(Ok l, Ok r, lt_tree x l, gt_tree x r) :
 Ok (rbal l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal_ok".  
 destruct (rbal_match l x r); ok.
 Qed.
 
 Lemma rbal'_spec l x r y :
 InT y (rbal' l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal'_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal'_spec".  
 case rbal'_match; intuition_in.
 Qed.
 
 Instance rbal'_ok l x r `(Ok l, Ok r, lt_tree x l, gt_tree x r) :
 Ok (rbal' l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal'_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbal'_ok".  
 destruct (rbal'_match l x r); ok.
 Qed.
 
@@ -625,7 +625,7 @@ Tactic Notation "autorew" "in" ident(H) := autorewrite with rb in H.
 
 Lemma ins_spec : forall s x y,
 InT y (ins x s) <-> X.eq y x \/ InT y s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.ins_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.ins_spec".  
 induct s x.
 - intuition_in.
 - intuition_in. setoid_replace y with x; eauto.
@@ -635,7 +635,7 @@ Qed.
 Hint Rewrite ins_spec : rb.
 
 Instance ins_ok s x `{Ok s} : Ok (ins x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.ins_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.ins_ok".  
 induct s x; auto; descolor;
 (apply lbal_ok || apply rbal_ok || ok); auto;
 intros y; autorew; intuition; order.
@@ -643,7 +643,7 @@ Qed.
 
 Lemma add_spec' s x y :
 InT y (add x s) <-> X.eq y x \/ InT y s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.add_spec'". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.add_spec'".  
 unfold add. now autorew.
 Qed.
 
@@ -651,12 +651,12 @@ Hint Rewrite add_spec' : rb.
 
 Lemma add_spec s x y `{Ok s} :
 InT y (add x s) <-> X.eq y x \/ InT y s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.add_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.add_spec".  
 apply add_spec'.
 Qed.
 
 Instance add_ok s x `{Ok s} : Ok (add x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.add_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.add_ok".  
 unfold add; auto_tc.
 Qed.
 
@@ -664,7 +664,7 @@ Qed.
 
 Lemma lbalS_spec l x r y :
 InT y (lbalS l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbalS_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbalS_spec".  
 case lbalS_match.
 - intros; autorew; intuition_in.
 - clear l. intros l _.
@@ -676,7 +676,7 @@ Qed.
 
 Instance lbalS_ok l x r :
 forall `(Ok l, Ok r, lt_tree x l, gt_tree x r), Ok (lbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbalS_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.lbalS_ok".  
 case lbalS_match; intros.
 - ok.
 - destruct r as [|[|] rl rx rr].
@@ -691,7 +691,7 @@ Qed.
 
 Lemma rbalS_spec l x r y :
 InT y (rbalS l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbalS_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbalS_spec".  
 case rbalS_match.
 - intros; autorew; intuition_in.
 - intros t _.
@@ -703,7 +703,7 @@ Qed.
 
 Instance rbalS_ok l x r :
 forall `(Ok l, Ok r, lt_tree x l, gt_tree x r), Ok (rbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbalS_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.rbalS_ok".  
 case rbalS_match; intros.
 - ok.
 - destruct l as [|[|] ll lx lr].
@@ -742,7 +742,7 @@ rspec
 (fun t => Rd ll lx (Rd t rx rr))
 (append lr rl)
 (append (Rd ll lx lr) (Rd rl rx rr)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_rr_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_rr_match".  
 exact (rmatch _ _ _).
 Qed.
 
@@ -752,13 +752,13 @@ rspec
 (fun t => lbalS ll lx (Bk t rx rr))
 (append lr rl)
 (append (Bk ll lx lr) (Bk rl rx rr)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_bb_match". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_bb_match".  
 exact (rmatch _ _ _).
 Qed.
 
 Lemma append_spec l r x :
 InT x (append l r) <-> InT x l \/ InT x r.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_spec".  
 revert r.
 append_tac l r; autorew; try tauto.
 -
@@ -773,7 +773,7 @@ Hint Rewrite append_spec : rb.
 
 Lemma append_ok : forall x l r `{Ok l, Ok r},
 lt_tree x l -> gt_tree x r -> Ok (append l r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.append_ok".  
 append_tac l r.
 -
 trivial.
@@ -810,7 +810,7 @@ Qed.
 
 Lemma del_spec : forall s x y `{Ok s},
 InT y (del x s) <-> InT y s /\ ~X.eq y x.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.del_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.del_spec".  
 induct s x.
 - intuition_in.
 - autorew; intuition_in.
@@ -826,7 +826,7 @@ Qed.
 Hint Rewrite del_spec : rb.
 
 Instance del_ok s x `{Ok s} : Ok (del x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.del_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.del_ok".  
 induct s x.
 - trivial.
 - eapply append_ok; eauto.
@@ -840,14 +840,14 @@ Qed.
 
 Lemma remove_spec s x y `{Ok s} :
 InT y (remove x s) <-> InT y s /\ ~X.eq y x.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_spec".  
 unfold remove. now autorew.
 Qed.
 
 Hint Rewrite remove_spec : rb.
 
 Instance remove_ok s x `{Ok s} : Ok (remove x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_ok".  
 unfold remove; auto_tc.
 Qed.
 
@@ -856,7 +856,7 @@ Qed.
 Lemma delmin_spec l y r c x s' `{O : Ok (Node c l y r)} :
 delmin l y r = (x,s') ->
 min_elt (Node c l y r) = Some x /\ del x (Node c l y r) = s'.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.delmin_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.delmin_spec".  
 revert y r c x s' O.
 induction l as [|lc ll IH ly lr _].
 - simpl. intros y r _ x s' _. injection 1; intros; subst.
@@ -881,7 +881,7 @@ Qed.
 Lemma remove_min_spec1 s x s' `{Ok s}:
 remove_min s = Some (x,s') ->
 min_elt s = Some x /\ remove x s = s'.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MSetRemoveMin.remove_min_spec1". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MSetRemoveMin.remove_min_spec1".  
 unfold remove_min.
 destruct s as [|c l y r]; try easy.
 generalize (delmin_spec l y r c).
@@ -892,7 +892,7 @@ inversion_clear 1; auto.
 Qed.
 
 Lemma remove_min_spec2 s : remove_min s = None -> Empty s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MSetRemoveMin.remove_min_spec2". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MSetRemoveMin.remove_min_spec2".  
 unfold remove_min.
 destruct s as [|c l y r].
 - easy.
@@ -904,7 +904,7 @@ match remove_min s with
 | Some (_,s') => Ok s'
 | None => True
 end.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_min_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_min_ok".  
 generalize (remove_min_spec1 s).
 destruct remove_min as [(x0,s0)|]; auto.
 intros R. destruct (R x0 s0); auto. subst s0. auto_tc.
@@ -921,12 +921,12 @@ let (t,acc') := f acc in
 cardinal t = size /\ acc = elements t ++ acc'.
 
 Lemma treeify_zero_spec : treeify_invariant 0 treeify_zero.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_zero_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_zero_spec".  
 intro. simpl. auto.
 Qed.
 
 Lemma treeify_one_spec : treeify_invariant 1 treeify_one.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_one_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_one_spec".  
 intros [|x acc]; simpl; auto; inversion 1.
 Qed.
 
@@ -935,7 +935,7 @@ treeify_invariant size1 f ->
 treeify_invariant size2 g ->
 size = S (size1 + size2) ->
 treeify_invariant size (treeify_cont f g).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_cont_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_cont_spec".  
 intros Hf Hg EQ acc LE. unfold treeify_cont.
 specialize (Hf acc).
 destruct (f acc) as (t1,acc1).
@@ -956,7 +956,7 @@ Qed.
 
 Lemma treeify_aux_spec n (p:bool) :
 treeify_invariant (ifpred p (Pos.to_nat n)) (treeify_aux p n).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_aux_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_aux_spec".  
 revert p.
 induction n as [n|n|]; intros p; simpl treeify_aux.
 - eapply treeify_cont_spec; [ apply (IHn false) | apply (IHn p) | ].
@@ -975,18 +975,18 @@ Qed.
 
 Lemma plength_aux_spec l p :
 Pos.to_nat (plength_aux l p) = length l + Pos.to_nat p.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.plength_aux_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.plength_aux_spec".  
 revert p. induction l; trivial. simpl plength_aux.
 intros. now rewrite IHl, Pos2Nat.inj_succ, Nat.add_succ_r.
 Qed.
 
 Lemma plength_spec l : Pos.to_nat (plength l) = S (length l).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.plength_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.plength_spec".  
 unfold plength. rewrite plength_aux_spec. apply Nat.add_1_r.
 Qed.
 
 Lemma treeify_elements l : elements (treeify l) = l.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_elements". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_elements".  
 assert (H := treeify_aux_spec (plength l) true l).
 unfold treeify. destruct treeify_aux as (t,acc); simpl in *.
 destruct H as (H,H'). { now rewrite plength_spec. }
@@ -999,12 +999,12 @@ apply Nat.succ_add_discr.
 Qed.
 
 Lemma treeify_spec x l : InT x (treeify l) <-> InA X.eq x l.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_spec".  
 intros. now rewrite <- elements_spec1, treeify_elements.
 Qed.
 
 Lemma treeify_ok l : sort X.lt l -> Ok (treeify l).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.treeify_ok".  
 intros. apply elements_sort_ok. rewrite treeify_elements; auto.
 Qed.
 
@@ -1013,14 +1013,14 @@ Qed.
 
 Lemma filter_app A f (l l':list A) :
 List.filter f (l ++ l') = List.filter f l ++ List.filter f l'.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_app". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_app".  
 induction l as [|x l IH]; simpl; trivial.
 destruct (f x); simpl; now rewrite IH.
 Qed.
 
 Lemma filter_aux_elements s f acc :
 filter_aux f s acc = List.filter f (elements s) ++ acc.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_aux_elements". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_aux_elements".  
 revert acc.
 induction s as [|c l IHl x r IHr]; trivial.
 intros acc.
@@ -1030,7 +1030,7 @@ Qed.
 
 Lemma filter_elements s f :
 elements (filter f s) = List.filter f (elements s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_elements". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_elements".  
 unfold filter.
 now rewrite treeify_elements, filter_aux_elements, app_nil_r.
 Qed.
@@ -1038,14 +1038,14 @@ Qed.
 Lemma filter_spec s x f :
 Proper (X.eq==>Logic.eq) f ->
 (InT x (filter f s) <-> InT x s /\ f x = true).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_spec".  
 intros Hf.
 rewrite <- elements_spec1, filter_elements, filter_InA, elements_spec1;
 now auto_tc.
 Qed.
 
 Instance filter_ok s f `(Ok s) : Ok (filter f s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.filter_ok".  
 apply elements_sort_ok.
 rewrite filter_elements.
 apply filter_sort with X.eq; auto_tc.
@@ -1056,7 +1056,7 @@ Qed.
 Lemma partition_aux_spec s f acc1 acc2 :
 partition_aux f s acc1 acc2 =
 (filter_aux f s acc1, filter_aux (fun x => negb (f x)) s acc2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_aux_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_aux_spec".  
 revert acc1 acc2.
 induction s as [ | c l Hl x r Hr ]; simpl.
 - trivial.
@@ -1066,25 +1066,25 @@ Qed.
 
 Lemma partition_spec s f :
 partition f s = (filter f s, filter (fun x => negb (f x)) s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_spec".  
 unfold partition, filter. now rewrite partition_aux_spec.
 Qed.
 
 Lemma partition_spec1 s f :
 Proper (X.eq==>Logic.eq) f ->
 Equal (fst (partition f s)) (filter f s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_spec1". Restart.  now rewrite partition_spec. Qed.
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_spec1".   now rewrite partition_spec. Qed.
 
 Lemma partition_spec2 s f :
 Proper (X.eq==>Logic.eq) f ->
 Equal (snd (partition f s)) (filter (fun x => negb (f x)) s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_spec2". Restart.  now rewrite partition_spec. Qed.
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_spec2".   now rewrite partition_spec. Qed.
 
 Instance partition_ok1 s f `(Ok s) : Ok (fst (partition f s)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_ok1". Restart.  rewrite partition_spec; now apply filter_ok. Qed.
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_ok1".   rewrite partition_spec; now apply filter_ok. Qed.
 
 Instance partition_ok2 s f `(Ok s) : Ok (snd (partition f s)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_ok2". Restart.  rewrite partition_spec; now apply filter_ok. Qed.
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.partition_ok2".   rewrite partition_spec; now apply filter_ok. Qed.
 
 
 
@@ -1102,19 +1102,19 @@ Local Hint Resolve l1_sorted l2_sorted acc_sorted.
 
 Lemma INV_init s1 s2 `(Ok s1, Ok s2) :
 INV (rev_elements s1) (rev_elements s2) nil.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_init". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_init".  
 rewrite !rev_elements_rev.
 split; rewrite ?rev_involutive; auto; intros; now inA.
 Qed.
 
 Lemma INV_sym l1 l2 acc : INV l1 l2 acc -> INV l2 l1 acc.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_sym". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_sym".  
 destruct 1; now split.
 Qed.
 
 Lemma INV_drop x1 l1 l2 acc :
 INV (x1 :: l1) l2 acc -> INV l1 l2 acc.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_drop". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_drop".  
 intros (l1s,l2s,accs,l1a,l2a). simpl in *.
 destruct (sorted_app_inv _ _ l1s) as (U & V & W); auto.
 split; auto.
@@ -1123,7 +1123,7 @@ Qed.
 Lemma INV_eq x1 x2 l1 l2 acc :
 INV (x1 :: l1) (x2 :: l2) acc -> X.eq x1 x2 ->
 INV l1 l2 (x1 :: acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_eq". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_eq".  
 intros (U,V,W,X,Y) EQ. simpl in *.
 destruct (sorted_app_inv _ _ U) as (U1 & U2 & U3); auto.
 destruct (sorted_app_inv _ _ V) as (V1 & V2 & V3); auto.
@@ -1140,7 +1140,7 @@ Qed.
 Lemma INV_lt x1 x2 l1 l2 acc :
 INV (x1 :: l1) (x2 :: l2) acc -> X.lt x1 x2 ->
 INV (x1 :: l1) l2 (x2 :: acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_lt". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_lt".  
 intros (U,V,W,X,Y) EQ. simpl in *.
 destruct (sorted_app_inv _ _ U) as (U1 & U2 & U3); auto.
 destruct (sorted_app_inv _ _ V) as (V1 & V2 & V3); auto.
@@ -1157,7 +1157,7 @@ Qed.
 
 Lemma INV_rev l1 l2 acc :
 INV l1 l2 acc -> Sorted X.lt (rev_append l1 acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_rev". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.INV_rev".  
 intros. rewrite rev_append_rev.
 apply SortA_app with X.eq; eauto with *.
 intros x y. inA. eapply @l1_lt_acc; eauto.
@@ -1167,7 +1167,7 @@ Qed.
 
 Lemma union_list_ok l1 l2 acc :
 INV l1 l2 acc -> sort X.lt (union_list l1 l2 acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_list_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_list_ok".  
 revert l2 acc.
 induction l1 as [|x1 l1 IH1];
 [intro l2|induction l2 as [|x2 l2 IH2]];
@@ -1182,27 +1182,27 @@ Qed.
 
 Instance linear_union_ok s1 s2 `(Ok s1, Ok s2) :
 Ok (linear_union s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_union_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_union_ok".  
 unfold linear_union. now apply treeify_ok, union_list_ok, INV_init.
 Qed.
 
 Instance fold_add_ok s1 s2 `(Ok s1, Ok s2) :
 Ok (fold add s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_add_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_add_ok".  
 rewrite fold_spec, <- fold_left_rev_right.
 unfold elt in *.
 induction (rev (elements s1)); simpl; unfold flip in *; auto_tc.
 Qed.
 
 Instance union_ok s1 s2 `(Ok s1, Ok s2) : Ok (union s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_ok".  
 unfold union. destruct compare_height; auto_tc.
 Qed.
 
 Lemma union_list_spec x l1 l2 acc :
 InA X.eq x (union_list l1 l2 acc) <->
 InA X.eq x l1 \/ InA X.eq x l2 \/ InA X.eq x acc.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_list_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_list_spec".  
 revert l2 acc.
 induction l1 as [|x1 l1 IH1].
 - intros l2 acc; simpl. rewrite rev_append_rev. inA. tauto.
@@ -1216,7 +1216,7 @@ Qed.
 
 Lemma linear_union_spec s1 s2 x :
 InT x (linear_union s1 s2) <-> InT x s1 \/ InT x s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_union_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_union_spec".  
 unfold linear_union.
 rewrite treeify_spec, union_list_spec, !rev_elements_rev.
 rewrite !InA_rev, InA_nil, !elements_spec1 by auto_tc.
@@ -1225,7 +1225,7 @@ Qed.
 
 Lemma fold_add_spec s1 s2 x :
 InT x (fold add s1 s2) <-> InT x s1 \/ InT x s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_add_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_add_spec".  
 rewrite fold_spec, <- fold_left_rev_right.
 rewrite <- (elements_spec1 s1), <- InA_rev by auto_tc.
 unfold elt in *.
@@ -1236,7 +1236,7 @@ Qed.
 
 Lemma union_spec' s1 s2 x :
 InT x (union s1 s2) <-> InT x s1 \/ InT x s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_spec'". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_spec'".  
 unfold union. destruct compare_height.
 - apply linear_union_spec.
 - apply fold_add_spec.
@@ -1245,7 +1245,7 @@ Qed.
 
 Lemma union_spec : forall s1 s2 y `{Ok s1, Ok s2},
 (InT y (union s1 s2) <-> InT y s1 \/ InT y s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.union_spec".  
 intros; apply union_spec'.
 Qed.
 
@@ -1253,7 +1253,7 @@ Qed.
 
 Lemma inter_list_ok l1 l2 acc :
 INV l1 l2 acc -> sort X.lt (inter_list l1 l2 acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_list_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_list_ok".  
 revert l2 acc.
 induction l1 as [|x1 l1 IH1]; [|induction l2 as [|x2 l2 IH2]]; simpl.
 - eauto.
@@ -1267,12 +1267,12 @@ Qed.
 
 Instance linear_inter_ok s1 s2 `(Ok s1, Ok s2) :
 Ok (linear_inter s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_inter_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_inter_ok".  
 unfold linear_inter. now apply treeify_ok, inter_list_ok, INV_init.
 Qed.
 
 Instance inter_ok s1 s2 `(Ok s1, Ok s2) : Ok (inter s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_ok".  
 unfold inter. destruct compare_height; auto_tc.
 Qed.
 
@@ -1281,7 +1281,7 @@ sort X.lt (rev l1) ->
 sort X.lt (rev l2) ->
 (InA X.eq x (inter_list l1 l2 acc) <->
 (InA X.eq x l1 /\ InA X.eq x l2) \/ InA X.eq x acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_list_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_list_spec".  
 revert l2 acc.
 induction l1 as [|x1 l1 IH1].
 - intros l2 acc; simpl. inA. tauto.
@@ -1300,7 +1300,7 @@ Qed.
 
 Lemma linear_inter_spec s1 s2 x `(Ok s1, Ok s2) :
 InT x (linear_inter s1 s2) <-> InT x s1 /\ InT x s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_inter_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_inter_spec".  
 unfold linear_inter.
 rewrite !rev_elements_rev, treeify_spec, inter_list_spec
 by (rewrite rev_involutive; auto_tc).
@@ -1309,14 +1309,14 @@ Qed.
 
 Local Instance mem_proper s `(Ok s) :
 Proper (X.eq ==> Logic.eq) (fun k => mem k s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.mem_proper". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.mem_proper".  
 intros x y EQ. apply Bool.eq_iff_eq_true; rewrite !mem_spec; auto.
 now rewrite EQ.
 Qed.
 
 Lemma inter_spec s1 s2 y `{Ok s1, Ok s2} :
 InT y (inter s1 s2) <-> InT y s1 /\ InT y s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.inter_spec".  
 unfold inter. destruct compare_height.
 - now apply linear_inter_spec.
 - rewrite filter_spec, mem_spec by auto_tc; tauto.
@@ -1327,7 +1327,7 @@ Qed.
 
 Lemma diff_list_ok l1 l2 acc :
 INV l1 l2 acc -> sort X.lt (diff_list l1 l2 acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_list_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_list_ok".  
 revert l2 acc.
 induction l1 as [|x1 l1 IH1];
 [intro l2|induction l2 as [|x2 l2 IH2]];
@@ -1342,20 +1342,20 @@ Qed.
 
 Instance diff_inter_ok s1 s2 `(Ok s1, Ok s2) :
 Ok (linear_diff s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_inter_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_inter_ok".  
 unfold linear_inter. now apply treeify_ok, diff_list_ok, INV_init.
 Qed.
 
 Instance fold_remove_ok s1 s2 `(Ok s2) :
 Ok (fold remove s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_remove_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_remove_ok".  
 rewrite fold_spec, <- fold_left_rev_right.
 unfold elt in *.
 induction (rev (elements s1)); simpl; unfold flip in *; auto_tc.
 Qed.
 
 Instance diff_ok s1 s2 `(Ok s1, Ok s2) : Ok (diff s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_ok". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_ok".  
 unfold diff. destruct compare_height; auto_tc.
 Qed.
 
@@ -1364,7 +1364,7 @@ sort X.lt (rev l1) ->
 sort X.lt (rev l2) ->
 (InA X.eq x (diff_list l1 l2 acc) <->
 (InA X.eq x l1 /\ ~InA X.eq x l2) \/ InA X.eq x acc).
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_list_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_list_spec".  
 revert l2 acc.
 induction l1 as [|x1 l1 IH1].
 - intros l2 acc; simpl. inA. tauto.
@@ -1385,7 +1385,7 @@ Qed.
 
 Lemma linear_diff_spec s1 s2 x `(Ok s1, Ok s2) :
 InT x (linear_diff s1 s2) <-> InT x s1 /\ ~InT x s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_diff_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.linear_diff_spec".  
 unfold linear_diff.
 rewrite !rev_elements_rev, treeify_spec, diff_list_spec
 by (rewrite rev_involutive; auto_tc).
@@ -1394,7 +1394,7 @@ Qed.
 
 Lemma fold_remove_spec s1 s2 x `(Ok s2) :
 InT x (fold remove s1 s2) <-> InT x s2 /\ ~InT x s1.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_remove_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.fold_remove_spec".  
 rewrite fold_spec, <- fold_left_rev_right.
 rewrite <- (elements_spec1 s1), <- InA_rev by auto_tc.
 unfold elt in *.
@@ -1406,7 +1406,7 @@ Qed.
 
 Lemma diff_spec s1 s2 y `{Ok s1, Ok s2} :
 InT y (diff s1 s2) <-> InT y s1 /\ ~InT y s2.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_spec". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.diff_spec".  
 unfold diff. destruct compare_height.
 - now apply linear_diff_spec.
 - rewrite filter_spec, Bool.negb_true_iff,
@@ -1462,7 +1462,7 @@ Ltac nonzero n := destruct n as [|n]; [try split; invrb|].
 
 Lemma rr_nrr_rb n t :
 rrt n t -> notredred t -> rbt n t.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rr_nrr_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rr_nrr_rb".  
 destruct 1 as [l x r Hl Hr].
 destruct l, r; descolor; invrb; auto.
 Qed.
@@ -1471,13 +1471,13 @@ Local Hint Resolve rr_nrr_rb.
 
 Lemma arb_nrr_rb n t :
 arbt n t -> notredred t -> rbt n t.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.arb_nrr_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.arb_nrr_rb".  
 destruct 1; auto.
 Qed.
 
 Lemma arb_nr_rb n t :
 arbt n t -> notred t -> rbt n t.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.arb_nr_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.arb_nr_rb".  
 destruct 1; destruct t; descolor; invrb; auto.
 Qed.
 
@@ -1488,7 +1488,7 @@ Local Hint Resolve arb_nrr_rb arb_nr_rb.
 Definition redcarac s := rcase (fun _ _ _ => 1) (fun _ => 0) s.
 
 Lemma rb_maxdepth s n : rbt n s -> maxdepth s <= 2*n + redcarac s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rb_maxdepth". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rb_maxdepth".  
 induction 1.
 - simpl; auto.
 - replace (redcarac l) with 0 in * by now destree l.
@@ -1503,7 +1503,7 @@ rewrite !Nat.add_0_r, ?Nat.add_1_r; auto with arith.
 Qed.
 
 Lemma rb_mindepth s n : rbt n s -> n + redcarac s <= mindepth s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rb_mindepth". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rb_mindepth".  
 induction 1; simpl.
 - trivial.
 - rewrite Nat.add_succ_r.
@@ -1517,7 +1517,7 @@ Qed.
 
 Lemma maxdepth_upperbound s : Rbt s ->
 maxdepth s <= 2 * Nat.log2 (S (cardinal s)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.maxdepth_upperbound". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.maxdepth_upperbound".  
 intros (n,H).
 eapply Nat.le_trans; [eapply rb_maxdepth; eauto|].
 transitivity (2*(n+redcarac s)).
@@ -1532,7 +1532,7 @@ Qed.
 
 Lemma maxdepth_lowerbound s : s<>Leaf ->
 Nat.log2 (cardinal s) < maxdepth s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.maxdepth_lowerbound". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.maxdepth_lowerbound".  
 apply maxdepth_log_cardinal.
 Qed.
 
@@ -1540,14 +1540,14 @@ Qed.
 
 
 Lemma singleton_rb x : Rbt (singleton x).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.singleton_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.singleton_rb".  
 unfold singleton. exists 1; auto.
 Qed.
 
 
 
 Lemma makeBlack_rb n t : arbt n t -> Rbt (makeBlack t).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.makeBlack_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.makeBlack_rb".  
 destruct t as [|[|] l x r].
 - exists 0; auto.
 - destruct 1; invrb; exists (S n); simpl; auto.
@@ -1556,7 +1556,7 @@ Qed.
 
 Lemma makeRed_rr t n :
 rbt (S n) t -> notred t -> rrt n (makeRed t).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.makeRed_rr". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.makeRed_rr".  
 destruct t as [|[|] l x r]; invrb; simpl; auto.
 Qed.
 
@@ -1564,25 +1564,25 @@ Qed.
 
 Lemma lbal_rb n l k r :
 arbt n l -> rbt n r -> rbt (S n) (lbal l k r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.lbal_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.lbal_rb".  
 case lbal_match; intros; desarb; invrb; auto.
 Qed.
 
 Lemma rbal_rb n l k r :
 rbt n l -> arbt n r -> rbt (S n) (rbal l k r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbal_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbal_rb".  
 case rbal_match; intros; desarb; invrb; auto.
 Qed.
 
 Lemma rbal'_rb n l k r :
 rbt n l -> arbt n r -> rbt (S n) (rbal' l k r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbal'_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbal'_rb".  
 case rbal'_match; intros; desarb; invrb; auto.
 Qed.
 
 Lemma lbalS_rb n l x r :
 arbt n l -> rbt (S n) r -> notred r -> rbt (S n) (lbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.lbalS_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.lbalS_rb".  
 intros Hl Hr Hr'.
 destruct r as [|[|] rl rx rr]; invrb. clear Hr'.
 revert Hl.
@@ -1593,7 +1593,7 @@ Qed.
 
 Lemma lbalS_arb n l x r :
 arbt n l -> rbt (S n) r -> arbt (S n) (lbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.lbalS_arb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.lbalS_arb".  
 case lbalS_match.
 - destruct 1; invrb; auto.
 - clear l. intros l Hl Hl' Hr.
@@ -1605,7 +1605,7 @@ Qed.
 
 Lemma rbalS_rb n l x r :
 rbt (S n) l -> notred l -> arbt n r -> rbt (S n) (rbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbalS_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbalS_rb".  
 intros Hl Hl' Hr.
 destruct l as [|[|] ll lx lr]; invrb. clear Hl'.
 revert Hr.
@@ -1616,7 +1616,7 @@ Qed.
 
 Lemma rbalS_arb n l x r :
 rbt (S n) l -> arbt n r -> arbt (S n) (rbalS l x r).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbalS_arb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.rbalS_arb".  
 case rbalS_match.
 - destruct 2; invrb; auto.
 - clear r. intros r Hr Hr' Hl.
@@ -1634,18 +1634,18 @@ Qed.
 Definition ifred s (A B:Prop) := rcase (fun _ _ _ => A) (fun _ => B) s.
 
 Lemma ifred_notred s A B : notred s -> (ifred s A B <-> B).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ifred_notred". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ifred_notred".  
 destruct s; descolor; simpl; intuition.
 Qed.
 
 Lemma ifred_or s A B : ifred s A B -> A\/B.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ifred_or". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ifred_or".  
 destruct s; descolor; simpl; intuition.
 Qed.
 
 Lemma ins_rr_rb x s n : rbt n s ->
 ifred s (rrt n (ins x s)) (rbt n (ins x s)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ins_rr_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ins_rr_rb".  
 induction 1 as [ | n l k r | n l k r Hl IHl Hr IHr ].
 - simpl; auto.
 - simpl. rewrite ifred_notred in * by trivial.
@@ -1659,12 +1659,12 @@ elim_compare x k.
 Qed.
 
 Lemma ins_arb x s n : rbt n s -> arbt n (ins x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ins_arb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.ins_arb".  
 intros H. apply (ins_rr_rb x), ifred_or in H. intuition.
 Qed.
 
 Instance add_rb x s : Rbt s -> Rbt (add x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.add_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.add_rb".  
 intros (n,H). unfold add. now apply (makeBlack_rb n), ins_arb.
 Qed.
 
@@ -1675,7 +1675,7 @@ Qed.
 Lemma append_arb_rb n l r : rbt n l -> rbt n r ->
 (arbt n (append l r)) /\
 (notred l -> notred r -> rbt n (append l r)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.append_arb_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.append_arb_rb".  
 revert r n.
 append_tac l r.
 - split; auto.
@@ -1705,7 +1705,7 @@ Qed.
 
 Lemma del_arb s x n : rbt (S n) s -> isblack s -> arbt n (del x s)
 with del_rb s x n : rbt n s -> notblack s -> rbt n (del x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.del_arb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.del_arb".  
 { revert n.
 induct s x; try destruct c; try contradiction; invrb.
 - apply append_arb_rb; assumption.
@@ -1727,7 +1727,7 @@ nonzero n. apply rbalS_rb; auto. }
 Qed.
 
 Instance remove_rb s x : Rbt s -> Rbt (remove x s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.remove_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.remove_rb".  
 intros (n,H). unfold remove.
 destruct s as [|[|] l y r].
 - apply (makeBlack_rb n). auto.
@@ -1744,12 +1744,12 @@ rbt depth (fst (f acc)) /\
 size + length (snd (f acc)) = length acc.
 
 Lemma treeify_zero_rb : treeify_rb_invariant 0 0 treeify_zero.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_zero_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_zero_rb".  
 intros acc _; simpl; auto.
 Qed.
 
 Lemma treeify_one_rb : treeify_rb_invariant 1 0 treeify_one.
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_one_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_one_rb".  
 intros [|x acc]; simpl; auto; inversion 1.
 Qed.
 
@@ -1758,7 +1758,7 @@ treeify_rb_invariant size1 d f ->
 treeify_rb_invariant size2 d g ->
 size = S (size1 + size2) ->
 treeify_rb_invariant size (S d) (treeify_cont f g).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_cont_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_cont_rb".  
 intros Hf Hg H acc Hacc.
 unfold treeify_cont.
 specialize (Hf acc).
@@ -1780,7 +1780,7 @@ Qed.
 Lemma treeify_aux_rb n :
 exists d, forall (b:bool),
 treeify_rb_invariant (ifpred b (Pos.to_nat n)) d (treeify_aux b n).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_aux_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_aux_rb".  
 induction n as [n (d,IHn)|n (d,IHn)| ].
 - exists (S d). intros b.
 eapply treeify_cont_rb; [ apply (IHn false) | apply (IHn b) | ].
@@ -1802,7 +1802,7 @@ Qed.
 
 
 Instance treeify_rb l : Rbt (treeify l).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.treeify_rb".  
 unfold treeify.
 destruct (treeify_aux_rb (plength l)) as (d,H).
 exists d.
@@ -1813,46 +1813,46 @@ Qed.
 
 
 Instance filter_rb f s : Rbt (filter f s).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.filter_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.filter_rb".  
 unfold filter; auto_tc.
 Qed.
 
 Instance partition_rb1 f s : Rbt (fst (partition f s)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.partition_rb1". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.partition_rb1".  
 unfold partition. destruct partition_aux. simpl. auto_tc.
 Qed.
 
 Instance partition_rb2 f s : Rbt (snd (partition f s)).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.partition_rb2". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.partition_rb2".  
 unfold partition. destruct partition_aux. simpl. auto_tc.
 Qed.
 
 
 
 Instance fold_add_rb s1 s2 : Rbt s2 -> Rbt (fold add s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.fold_add_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.fold_add_rb".  
 intros. rewrite fold_spec, <- fold_left_rev_right. unfold elt in *.
 induction (rev (elements s1)); simpl; unfold flip in *; auto_tc.
 Qed.
 
 Instance fold_remove_rb s1 s2 : Rbt s2 -> Rbt (fold remove s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.fold_remove_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.fold_remove_rb".  
 intros. rewrite fold_spec, <- fold_left_rev_right. unfold elt in *.
 induction (rev (elements s1)); simpl; unfold flip in *; auto_tc.
 Qed.
 
 Lemma union_rb s1 s2 : Rbt s1 -> Rbt s2 -> Rbt (union s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.union_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.union_rb".  
 intros. unfold union, linear_union. destruct compare_height; auto_tc.
 Qed.
 
 Lemma inter_rb s1 s2 : Rbt s1 -> Rbt s2 -> Rbt (inter s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.inter_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.inter_rb".  
 intros. unfold inter, linear_inter. destruct compare_height; auto_tc.
 Qed.
 
 Lemma diff_rb s1 s2 : Rbt s1 -> Rbt s2 -> Rbt (diff s1 s2).
-Proof. hammer_hook "MSetRBT" "MSetRBT.BalanceProps.diff_rb". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.BalanceProps.diff_rb".  
 intros. unfold diff, linear_diff. destruct compare_height; auto_tc.
 Qed.
 
@@ -1883,7 +1883,7 @@ mk_opt_t (Raw.remove_min (this s)) (Raw.remove_min_ok s).
 Lemma remove_min_spec1 s x s' :
 remove_min s = Some (x,s') ->
 min_elt s = Some x /\ Equal (remove x s) s'.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_min_spec1". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_min_spec1".  
 destruct s as (s,Hs).
 unfold remove_min, mk_opt_t, min_elt, remove, Equal, In; simpl.
 generalize (fun x s' => @Raw.remove_min_spec1 s x s' Hs).
@@ -1894,7 +1894,7 @@ destruct (H x s0); auto. subst; intuition.
 Qed.
 
 Lemma remove_min_spec2 s : remove_min s = None -> Empty s.
-Proof. hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_min_spec2". Restart. 
+Proof. try hammer_hook "MSetRBT" "MSetRBT.MakeRaw.remove_min_spec2".  
 destruct s as (s,Hs).
 unfold remove_min, mk_opt_t, Empty, In; simpl.
 generalize (Raw.remove_min_spec2 s).

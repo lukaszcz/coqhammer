@@ -35,13 +35,13 @@ setoid_equiv :> Equivalence equiv }.
 
 
 Definition setoid_refl `(sa : Setoid A) : Reflexive equiv.
-Proof. hammer_hook "SetoidClass" "SetoidClass.setoid_refl". Restart.  typeclasses eauto. Qed.
+Proof. try hammer_hook "SetoidClass" "SetoidClass.setoid_refl".   typeclasses eauto. Qed.
 
 Definition setoid_sym `(sa : Setoid A) : Symmetric equiv.
-Proof. hammer_hook "SetoidClass" "SetoidClass.setoid_sym". Restart.  typeclasses eauto. Qed.
+Proof. try hammer_hook "SetoidClass" "SetoidClass.setoid_sym".   typeclasses eauto. Qed.
 
 Definition setoid_trans `(sa : Setoid A) : Transitive equiv.
-Proof. hammer_hook "SetoidClass" "SetoidClass.setoid_trans". Restart.  typeclasses eauto. Qed.
+Proof. try hammer_hook "SetoidClass" "SetoidClass.setoid_trans".   typeclasses eauto. Qed.
 
 Existing Instance setoid_refl.
 Existing Instance setoid_sym.
@@ -82,7 +82,7 @@ end.
 Tactic Notation "clsubst" "*" := clsubst_nofail.
 
 Lemma nequiv_equiv_trans : forall `{Setoid A} (x y z : A), x =/= y -> y == z -> x =/= z.
-Proof with auto. hammer_hook "SetoidClass" "SetoidClass.nequiv_equiv_trans". Restart. 
+Proof with auto. try hammer_hook "SetoidClass" "SetoidClass.nequiv_equiv_trans".  
 intros; intro.
 assert(z == y) by (symmetry ; auto).
 assert(x == y) by (transitivity z ; eauto).
@@ -90,7 +90,7 @@ contradiction.
 Qed.
 
 Lemma equiv_nequiv_trans : forall `{Setoid A} (x y z : A), x == y -> y =/= z -> x =/= z.
-Proof. hammer_hook "SetoidClass" "SetoidClass.equiv_nequiv_trans". Restart. 
+Proof. try hammer_hook "SetoidClass" "SetoidClass.equiv_nequiv_trans".  
 intros; intro.
 assert(y == x) by (symmetry ; auto).
 assert(y == z) by (transitivity x ; eauto).

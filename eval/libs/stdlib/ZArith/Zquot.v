@@ -33,18 +33,18 @@ Notation Zquot2_quot := Zquot2_quot (compat "8.3").
 
 
 Lemma Zquot_0_r a : a ÷ 0 = 0.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_0_r". Restart.  now destruct a. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_0_r".   now destruct a. Qed.
 
 Lemma Zrem_0_r a : Z.rem a 0 = a.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_0_r". Restart.  now destruct a. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_0_r".   now destruct a. Qed.
 
 
 
 Lemma Zrem_0_l a : Z.rem 0 a = 0.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_0_l". Restart.  now destruct a. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_0_l".   now destruct a. Qed.
 
 Lemma Zquot_0_l a : 0÷a = 0.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_0_l". Restart.  now destruct a. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_0_l".   now destruct a. Qed.
 
 Hint Resolve Zrem_0_l Zrem_0_r Zquot_0_l Zquot_0_r Z.quot_1_r Z.rem_1_r
 : zarith.
@@ -55,37 +55,37 @@ destruct (Z.eq_decidable a 0) as [->|?];
 auto with zarith|].
 
 Lemma Z_rem_same a : Z.rem a a = 0.
-Proof. hammer_hook "Zquot" "Zquot.Z_rem_same". Restart.  zero_or_not a. now apply Z.rem_same. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_rem_same".   zero_or_not a. now apply Z.rem_same. Qed.
 
 Lemma Z_rem_mult a b : Z.rem (a*b) b = 0.
-Proof. hammer_hook "Zquot" "Zquot.Z_rem_mult". Restart.  zero_or_not b. now apply Z.rem_mul. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_rem_mult".   zero_or_not b. now apply Z.rem_mul. Qed.
 
 
 
 
 
 Theorem Zquot_opp_l a b : (-a)÷b = -(a÷b).
-Proof. hammer_hook "Zquot" "Zquot.Zquot_opp_l". Restart.  zero_or_not b. now apply Z.quot_opp_l. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_opp_l".   zero_or_not b. now apply Z.quot_opp_l. Qed.
 
 Theorem Zquot_opp_r a b : a÷(-b) = -(a÷b).
-Proof. hammer_hook "Zquot" "Zquot.Zquot_opp_r". Restart.  zero_or_not b. now apply Z.quot_opp_r. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_opp_r".   zero_or_not b. now apply Z.quot_opp_r. Qed.
 
 Theorem Zrem_opp_l a b : Z.rem (-a) b = -(Z.rem a b).
-Proof. hammer_hook "Zquot" "Zquot.Zrem_opp_l". Restart.  zero_or_not b. now apply Z.rem_opp_l. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_opp_l".   zero_or_not b. now apply Z.rem_opp_l. Qed.
 
 Theorem Zrem_opp_r a b : Z.rem a (-b) = Z.rem a b.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_opp_r". Restart.  zero_or_not b. now apply Z.rem_opp_r. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_opp_r".   zero_or_not b. now apply Z.rem_opp_r. Qed.
 
 Theorem Zquot_opp_opp a b : (-a)÷(-b) = a÷b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_opp_opp". Restart.  zero_or_not b. now apply Z.quot_opp_opp. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_opp_opp".   zero_or_not b. now apply Z.quot_opp_opp. Qed.
 
 Theorem Zrem_opp_opp a b : Z.rem (-a) (-b) = -(Z.rem a b).
-Proof. hammer_hook "Zquot" "Zquot.Zrem_opp_opp". Restart.  zero_or_not b. now apply Z.rem_opp_opp. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_opp_opp".   zero_or_not b. now apply Z.rem_opp_opp. Qed.
 
 
 
 Theorem Zrem_sgn a b : 0 <= Z.sgn (Z.rem a b) * Z.sgn a.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_sgn". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_sgn".  
 zero_or_not b.
 - apply Z.square_nonneg.
 - zero_or_not (Z.rem a b).
@@ -95,7 +95,7 @@ Qed.
 
 
 Theorem Zrem_sgn2 a b : 0 <= (Z.rem a b) * a.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_sgn2". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_sgn2".  
 zero_or_not b.
 - apply Z.square_nonneg.
 - now apply Z.rem_sign_mul.
@@ -104,34 +104,34 @@ Qed.
 
 
 Theorem Zrem_lt_pos a b : 0<=a -> b<>0 -> 0 <= Z.rem a b < Z.abs b.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_lt_pos". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_lt_pos".  
 intros; generalize (Z.rem_nonneg a b) (Z.rem_bound_abs a b);
 romega with *.
 Qed.
 
 Theorem Zrem_lt_neg a b : a<=0 -> b<>0 -> -Z.abs b < Z.rem a b <= 0.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_lt_neg". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_lt_neg".  
 intros; generalize (Z.rem_nonpos a b) (Z.rem_bound_abs a b);
 romega with *.
 Qed.
 
 Theorem Zrem_lt_pos_pos a b : 0<=a -> 0<b -> 0 <= Z.rem a b < b.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_lt_pos_pos". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_lt_pos_pos".  
 intros; generalize (Zrem_lt_pos a b); romega with *.
 Qed.
 
 Theorem Zrem_lt_pos_neg a b : 0<=a -> b<0 -> 0 <= Z.rem a b < -b.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_lt_pos_neg". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_lt_pos_neg".  
 intros; generalize (Zrem_lt_pos a b); romega with *.
 Qed.
 
 Theorem Zrem_lt_neg_pos a b : a<=0 -> 0<b -> -b < Z.rem a b <= 0.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_lt_neg_pos". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_lt_neg_pos".  
 intros; generalize (Zrem_lt_neg a b); romega with *.
 Qed.
 
 Theorem Zrem_lt_neg_neg a b : a<=0 -> b<0 -> b < Z.rem a b <= 0.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_lt_neg_neg". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_lt_neg_neg".  
 intros; generalize (Zrem_lt_neg a b); romega with *.
 Qed.
 
@@ -146,7 +146,7 @@ Z.abs r < Z.abs b /\ 0 <= r * a.
 
 Lemma Remainder_equiv : forall a b r,
 Remainder a b r <-> Remainder_alt a b r.
-Proof. hammer_hook "Zquot" "Zquot.Remainder_equiv". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Remainder_equiv".  
 unfold Remainder, Remainder_alt; intuition.
 - romega with *.
 - romega with *.
@@ -158,7 +158,7 @@ Qed.
 
 Theorem Zquot_mod_unique_full a b q r :
 Remainder a b r -> a = b*q + r -> q = a÷b /\ r = Z.rem a b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_mod_unique_full". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_mod_unique_full".  
 destruct 1 as [(H,H0)|(H,H0)]; intros.
 apply Zdiv_mod_unique with b; auto.
 apply Zrem_lt_pos; auto.
@@ -175,13 +175,13 @@ Qed.
 
 Theorem Zquot_unique_full a b q r :
 Remainder a b r -> a = b*q + r -> q = a÷b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_unique_full". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_unique_full".  
 intros; destruct (Zquot_mod_unique_full a b q r); auto.
 Qed.
 
 Theorem Zrem_unique_full a b q r :
 Remainder a b r -> a = b*q + r -> r = Z.rem a b.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_unique_full". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_unique_full".  
 intros; destruct (Zquot_mod_unique_full a b q r); auto.
 Qed.
 
@@ -190,53 +190,53 @@ Qed.
 
 
 Lemma Z_quot_pos a b : 0 <= a -> 0 <= b -> 0 <= a÷b.
-Proof. hammer_hook "Zquot" "Zquot.Z_quot_pos". Restart.  intros. zero_or_not b. apply Z.quot_pos; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_quot_pos".   intros. zero_or_not b. apply Z.quot_pos; auto with zarith. Qed.
 
 
 
 Lemma Z_quot_lt a b : 0 < a -> 2 <= b -> a÷b < a.
-Proof. hammer_hook "Zquot" "Zquot.Z_quot_lt". Restart.  intros. apply Z.quot_lt; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_quot_lt".   intros. apply Z.quot_lt; auto with zarith. Qed.
 
 
 
 Lemma Z_quot_monotone a b c : 0<=c -> a<=b -> a÷c <= b÷c.
-Proof. hammer_hook "Zquot" "Zquot.Z_quot_monotone". Restart.  intros. zero_or_not c. apply Z.quot_le_mono; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_quot_monotone".   intros. zero_or_not c. apply Z.quot_le_mono; auto with zarith. Qed.
 
 
 
 Lemma Z_mult_quot_le a b : 0 <= a -> 0 <= b*(a÷b) <= a.
-Proof. hammer_hook "Zquot" "Zquot.Z_mult_quot_le". Restart.  intros. zero_or_not b. apply Z.mul_quot_le; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_mult_quot_le".   intros. zero_or_not b. apply Z.mul_quot_le; auto with zarith. Qed.
 
 Lemma Z_mult_quot_ge a b : a <= 0 -> a <= b*(a÷b) <= 0.
-Proof. hammer_hook "Zquot" "Zquot.Z_mult_quot_ge". Restart.  intros. zero_or_not b. apply Z.mul_quot_ge; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_mult_quot_ge".   intros. zero_or_not b. apply Z.mul_quot_ge; auto with zarith. Qed.
 
 
 
 Lemma Z_quot_exact_full a b : a = b*(a÷b) <-> Z.rem a b = 0.
-Proof. hammer_hook "Zquot" "Zquot.Z_quot_exact_full". Restart.  intros. zero_or_not b. intuition. apply Z.quot_exact; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_quot_exact_full".   intros. zero_or_not b. intuition. apply Z.quot_exact; auto. Qed.
 
 
 
 Theorem Zrem_le a b : 0 <= a -> 0 <= b -> Z.rem a b <= a.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_le". Restart.  intros. zero_or_not b. apply Z.rem_le; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_le".   intros. zero_or_not b. apply Z.rem_le; auto with zarith. Qed.
 
 
 
 Theorem Zquot_le_upper_bound:
 forall a b q, 0 < b -> a <= q*b -> a÷b <= q.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_le_upper_bound". Restart.  intros a b q; rewrite Z.mul_comm; apply Z.quot_le_upper_bound. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_le_upper_bound".   intros a b q; rewrite Z.mul_comm; apply Z.quot_le_upper_bound. Qed.
 
 Theorem Zquot_lt_upper_bound:
 forall a b q, 0 <= a -> 0 < b -> a < q*b -> a÷b < q.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_lt_upper_bound". Restart.  intros a b q; rewrite Z.mul_comm; apply Z.quot_lt_upper_bound. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_lt_upper_bound".   intros a b q; rewrite Z.mul_comm; apply Z.quot_lt_upper_bound. Qed.
 
 Theorem Zquot_le_lower_bound:
 forall a b q, 0 < b -> q*b <= a -> q <= a÷b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_le_lower_bound". Restart.  intros a b q; rewrite Z.mul_comm; apply Z.quot_le_lower_bound. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_le_lower_bound".   intros a b q; rewrite Z.mul_comm; apply Z.quot_le_lower_bound. Qed.
 
 Theorem Zquot_sgn: forall a b,
 0 <= Z.sgn (a÷b) * Z.sgn a * Z.sgn b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_sgn". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_sgn".  
 destruct a as [ |a|a]; destruct b as [ |b|b]; simpl; auto with zarith;
 unfold Z.quot; simpl; destruct N.pos_div_eucl; simpl; destruct n; simpl; auto with zarith.
 Qed.
@@ -248,41 +248,41 @@ Qed.
 Lemma Z_rem_plus : forall a b c:Z,
 0 <= (a+b*c) * a ->
 Z.rem (a + b * c) c = Z.rem a c.
-Proof. hammer_hook "Zquot" "Zquot.Z_rem_plus". Restart.  intros. zero_or_not c. apply Z.rem_add; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_rem_plus".   intros. zero_or_not c. apply Z.rem_add; auto with zarith. Qed.
 
 Lemma Z_quot_plus : forall a b c:Z,
 0 <= (a+b*c) * a -> c<>0 ->
 (a + b * c) ÷ c = a ÷ c + b.
-Proof. hammer_hook "Zquot" "Zquot.Z_quot_plus". Restart.  intros. apply Z.quot_add; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_quot_plus".   intros. apply Z.quot_add; auto with zarith. Qed.
 
 Theorem Z_quot_plus_l: forall a b c : Z,
 0 <= (a*b+c)*c -> b<>0 ->
 b<>0 -> (a * b + c) ÷ b = a + c ÷ b.
-Proof. hammer_hook "Zquot" "Zquot.Z_quot_plus_l". Restart.  intros. apply Z.quot_add_l; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Z_quot_plus_l".   intros. apply Z.quot_add_l; auto with zarith. Qed.
 
 
 
 Lemma Zquot_mult_cancel_r : forall a b c:Z,
 c<>0 -> (a*c)÷(b*c) = a÷b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_mult_cancel_r". Restart.  intros. zero_or_not b. apply Z.quot_mul_cancel_r; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_mult_cancel_r".   intros. zero_or_not b. apply Z.quot_mul_cancel_r; auto. Qed.
 
 Lemma Zquot_mult_cancel_l : forall a b c:Z,
 c<>0 -> (c*a)÷(c*b) = a÷b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_mult_cancel_l". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_mult_cancel_l".  
 intros. rewrite (Z.mul_comm c b). zero_or_not b.
 rewrite (Z.mul_comm b c). apply Z.quot_mul_cancel_l; auto.
 Qed.
 
 Lemma Zmult_rem_distr_l: forall a b c,
 Z.rem (c*a) (c*b) = c * (Z.rem a b).
-Proof. hammer_hook "Zquot" "Zquot.Zmult_rem_distr_l". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zmult_rem_distr_l".  
 intros. zero_or_not c. rewrite (Z.mul_comm c b). zero_or_not b.
 rewrite (Z.mul_comm b c). apply Z.mul_rem_distr_l; auto.
 Qed.
 
 Lemma Zmult_rem_distr_r: forall a b c,
 Z.rem (a*c) (b*c) = (Z.rem a b) * c.
-Proof. hammer_hook "Zquot" "Zquot.Zmult_rem_distr_r". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zmult_rem_distr_r".  
 intros. zero_or_not b. rewrite (Z.mul_comm b c). zero_or_not c.
 rewrite (Z.mul_comm c b). apply Z.mul_rem_distr_r; auto.
 Qed.
@@ -290,42 +290,42 @@ Qed.
 
 
 Theorem Zrem_rem: forall a n, Z.rem (Z.rem a n) n = Z.rem a n.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_rem". Restart.  intros. zero_or_not n. apply Z.rem_rem; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_rem".   intros. zero_or_not n. apply Z.rem_rem; auto. Qed.
 
 Theorem Zmult_rem: forall a b n,
 Z.rem (a * b) n = Z.rem (Z.rem a n * Z.rem b n) n.
-Proof. hammer_hook "Zquot" "Zquot.Zmult_rem". Restart.  intros. zero_or_not n. apply Z.mul_rem; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zmult_rem".   intros. zero_or_not n. apply Z.mul_rem; auto. Qed.
 
 
 
 Theorem Zplus_rem: forall a b n,
 0 <= a * b ->
 Z.rem (a + b) n = Z.rem (Z.rem a n + Z.rem b n) n.
-Proof. hammer_hook "Zquot" "Zquot.Zplus_rem". Restart.  intros. zero_or_not n. apply Z.add_rem; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zplus_rem".   intros. zero_or_not n. apply Z.add_rem; auto. Qed.
 
 Lemma Zplus_rem_idemp_l: forall a b n,
 0 <= a * b ->
 Z.rem (Z.rem a n + b) n = Z.rem (a + b) n.
-Proof. hammer_hook "Zquot" "Zquot.Zplus_rem_idemp_l". Restart.  intros. zero_or_not n. apply Z.add_rem_idemp_l; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zplus_rem_idemp_l".   intros. zero_or_not n. apply Z.add_rem_idemp_l; auto. Qed.
 
 Lemma Zplus_rem_idemp_r: forall a b n,
 0 <= a*b ->
 Z.rem (b + Z.rem a n) n = Z.rem (b + a) n.
-Proof. hammer_hook "Zquot" "Zquot.Zplus_rem_idemp_r". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zplus_rem_idemp_r".  
 intros. zero_or_not n. apply Z.add_rem_idemp_r; auto.
 rewrite Z.mul_comm; auto.
 Qed.
 
 Lemma Zmult_rem_idemp_l: forall a b n, Z.rem (Z.rem a n * b) n = Z.rem (a * b) n.
-Proof. hammer_hook "Zquot" "Zquot.Zmult_rem_idemp_l". Restart.  intros. zero_or_not n. apply Z.mul_rem_idemp_l; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zmult_rem_idemp_l".   intros. zero_or_not n. apply Z.mul_rem_idemp_l; auto. Qed.
 
 Lemma Zmult_rem_idemp_r: forall a b n, Z.rem (b * Z.rem a n) n = Z.rem (b * a) n.
-Proof. hammer_hook "Zquot" "Zquot.Zmult_rem_idemp_r". Restart.  intros. zero_or_not n. apply Z.mul_rem_idemp_r; auto. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zmult_rem_idemp_r".   intros. zero_or_not n. apply Z.mul_rem_idemp_r; auto. Qed.
 
 
 
 Lemma Zquot_Zquot : forall a b c, (a÷b)÷c = a÷(b*c).
-Proof. hammer_hook "Zquot" "Zquot.Zquot_Zquot". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_Zquot".  
 intros. zero_or_not b. rewrite Z.mul_comm. zero_or_not c.
 rewrite Z.mul_comm. apply Z.quot_quot; auto.
 Qed.
@@ -334,13 +334,13 @@ Qed.
 
 Theorem Zquot_mult_le:
 forall a b c, 0<=a -> 0<=b -> 0<=c -> c*(a÷b) <= (c*a)÷b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_mult_le". Restart.  intros. zero_or_not b. apply Z.quot_mul_le; auto with zarith. Qed.
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_mult_le".   intros. zero_or_not b. apply Z.quot_mul_le; auto with zarith. Qed.
 
 
 
 Lemma Zrem_divides : forall a b,
 Z.rem a b = 0 <-> exists c, a = b*c.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_divides". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_divides".  
 intros. zero_or_not b. firstorder.
 rewrite Z.rem_divide; trivial.
 split; intros (c,Hc); exists c; subst; auto with zarith.
@@ -350,7 +350,7 @@ Qed.
 
 Lemma Zquot2_odd_remainder : forall a,
 Remainder a 2 (if Z.odd a then Z.sgn a else 0).
-Proof. hammer_hook "Zquot" "Zquot.Zquot2_odd_remainder". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot2_odd_remainder".  
 intros [ |p|p]. simpl.
 left. simpl. auto with zarith.
 left. destruct p; simpl; auto with zarith.
@@ -358,7 +358,7 @@ right. destruct p; simpl; split; now auto with zarith.
 Qed.
 
 Lemma Zrem_odd : forall a, Z.rem a 2 = if Z.odd a then Z.sgn a else 0.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_odd". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_odd".  
 intros. symmetry.
 apply Zrem_unique_full with (Z.quot2 a).
 apply Zquot2_odd_remainder.
@@ -366,18 +366,18 @@ apply Zquot2_odd_eqn.
 Qed.
 
 Lemma Zrem_even : forall a, Z.rem a 2 = if Z.even a then 0 else Z.sgn a.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_even". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_even".  
 intros a. rewrite Zrem_odd, Zodd_even_bool. now destruct Z.even.
 Qed.
 
 Lemma Zeven_rem : forall a, Z.even a = Z.eqb (Z.rem a 2) 0.
-Proof. hammer_hook "Zquot" "Zquot.Zeven_rem". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zeven_rem".  
 intros a. rewrite Zrem_even.
 destruct a as [ |p|p]; trivial; now destruct p.
 Qed.
 
 Lemma Zodd_rem : forall a, Z.odd a = negb (Z.eqb (Z.rem a 2) 0).
-Proof. hammer_hook "Zquot" "Zquot.Zodd_rem". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zodd_rem".  
 intros a. rewrite Zrem_odd.
 destruct a as [ |p|p]; trivial; now destruct p.
 Qed.
@@ -388,7 +388,7 @@ Qed.
 
 Theorem Zquotrem_Zdiv_eucl_pos : forall a b:Z, 0 <= a -> 0 < b ->
 a÷b = a/b /\ Z.rem a b = a mod b.
-Proof. hammer_hook "Zquot" "Zquot.Zquotrem_Zdiv_eucl_pos". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquotrem_Zdiv_eucl_pos".  
 intros.
 apply Zdiv_mod_unique with b.
 apply Zrem_lt_pos; auto with zarith.
@@ -399,7 +399,7 @@ Qed.
 
 Theorem Zquot_Zdiv_pos : forall a b, 0 <= a -> 0 <= b ->
 a÷b = a/b.
-Proof. hammer_hook "Zquot" "Zquot.Zquot_Zdiv_pos". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zquot_Zdiv_pos".  
 intros a b Ha Hb. Z.le_elim Hb.
 - generalize (Zquotrem_Zdiv_eucl_pos a b Ha Hb); intuition.
 - subst; now rewrite Zquot_0_r, Zdiv_0_r.
@@ -407,7 +407,7 @@ Qed.
 
 Theorem Zrem_Zmod_pos : forall a b, 0 <= a -> 0 < b ->
 Z.rem a b = a mod b.
-Proof. hammer_hook "Zquot" "Zquot.Zrem_Zmod_pos". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_Zmod_pos".  
 intros a b Ha Hb; generalize (Zquotrem_Zdiv_eucl_pos a b Ha Hb);
 intuition.
 Qed.
@@ -416,7 +416,7 @@ Qed.
 
 Theorem Zrem_Zmod_zero : forall a b, b<>0 ->
 (Z.rem a b = 0 <-> a mod b = 0).
-Proof. hammer_hook "Zquot" "Zquot.Zrem_Zmod_zero". Restart. 
+Proof. try hammer_hook "Zquot" "Zquot.Zrem_Zmod_zero".  
 intros.
 rewrite Zrem_divides, Zmod_divides; intuition.
 Qed.

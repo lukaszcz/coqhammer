@@ -295,34 +295,34 @@ Definition lt m m' := compare m m' = Lt.
 
 
 Instance In_compat : Proper (E.eq==>Logic.eq==>iff) In.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.In_compat". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.In_compat".  
 intros s s' Hs x x' Hx. rewrite Hs, Hx; intuition.
 Qed.
 
 
 
 Local Instance eq_equiv : Equivalence eq.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.eq_equiv". Restart.  firstorder. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.eq_equiv".   firstorder. Qed.
 
 
 
 Lemma mem_spec: forall s x, mem x s = true <-> In x s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.mem_spec". Restart.  unfold In. intuition. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.mem_spec".   unfold In. intuition. Qed.
 
 
 
 Lemma mem_Leaf: forall x, mem x Leaf = false.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.mem_Leaf". Restart.  destruct x; trivial. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.mem_Leaf".   destruct x; trivial. Qed.
 
 
 
 Lemma empty_spec : Empty empty.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.empty_spec". Restart.  unfold Empty, In. intro. rewrite mem_Leaf. discriminate. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.empty_spec".   unfold Empty, In. intro. rewrite mem_Leaf. discriminate. Qed.
 
 
 
 Lemma mem_node: forall x l o r, mem x (node l o r) = mem x (Node l o r).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.mem_node". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.mem_node".  
 intros x l o r.
 case o; trivial.
 destruct l; trivial.
@@ -334,7 +334,7 @@ Local Opaque node.
 
 
 Lemma is_empty_spec: forall s, is_empty s = true <-> Empty s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.is_empty_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.is_empty_spec".  
 unfold Empty, In.
 induction s as [|l IHl o r IHr]; simpl.
 firstorder.
@@ -351,10 +351,10 @@ Qed.
 
 
 Lemma subset_Leaf_s: forall s, Leaf [<=] s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.subset_Leaf_s". Restart.  intros s i Hi. apply empty_spec in Hi. elim Hi. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.subset_Leaf_s".   intros s i Hi. apply empty_spec in Hi. elim Hi. Qed.
 
 Lemma subset_spec: forall s s', subset s s' = true <-> s [<=] s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.subset_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.subset_spec".  
 induction s as [|l IHl o r IHr]; intros [|l' o' r']; simpl.
 split; intros. apply subset_Leaf_s. reflexivity.
 
@@ -401,7 +401,7 @@ Qed.
 
 
 Lemma equal_subset: forall s s', equal s s' = subset s s' && subset s' s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.equal_subset". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.equal_subset".  
 induction s as [|l IHl o r IHr]; intros [|l' o' r']; simpl; trivial.
 destruct o. reflexivity. rewrite andb_comm. reflexivity.
 rewrite <- 6andb_lazy_alt. rewrite eq_iff_eq_true.
@@ -413,13 +413,13 @@ destruct o; auto. destruct o'; trivial.
 Qed.
 
 Lemma equal_spec: forall s s', equal s s' = true <-> Equal s s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.equal_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.equal_spec".  
 intros. rewrite equal_subset. rewrite andb_true_iff.
 rewrite 2subset_spec. unfold Equal, Subset. firstorder.
 Qed.
 
 Lemma eq_dec : forall s s', { eq s s' } + { ~ eq s s' }.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.eq_dec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.eq_dec".  
 unfold eq.
 intros. case_eq (equal s s'); intro H.
 left. apply equal_spec, H.
@@ -430,14 +430,14 @@ Defined.
 
 Lemma lex_Opp: forall u v u' v', u = CompOpp u' -> v = CompOpp v' ->
 lex u v = CompOpp (lex u' v').
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lex_Opp". Restart.  intros ? ? u' ? -> ->. case u'; reflexivity. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lex_Opp".   intros ? ? u' ? -> ->. case u'; reflexivity. Qed.
 
 Lemma compare_bool_inv: forall b b',
 compare_bool b b' = CompOpp (compare_bool b' b).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_bool_inv". Restart.  intros [|] [|]; reflexivity. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_bool_inv".   intros [|] [|]; reflexivity. Qed.
 
 Lemma compare_inv: forall s s', compare s s' = CompOpp (compare s' s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_inv". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_inv".  
 induction s as [|l IHl o r IHr]; destruct s' as [|l' o' r']; trivial.
 unfold compare. case is_empty; reflexivity.
 unfold compare. case is_empty; reflexivity.
@@ -446,14 +446,14 @@ case compare_bool; simpl; trivial; apply lex_Opp; auto.
 Qed.
 
 Lemma lex_Eq: forall u v, lex u v = Eq <-> u=Eq /\ v=Eq.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lex_Eq". Restart.  intros u v; destruct u; intuition discriminate. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lex_Eq".   intros u v; destruct u; intuition discriminate. Qed.
 
 Lemma compare_bool_Eq: forall b1 b2,
 compare_bool b1 b2 = Eq <-> eqb b1 b2 = true.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_bool_Eq". Restart.  intros [|] [|]; intuition discriminate. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_bool_Eq".   intros [|] [|]; intuition discriminate. Qed.
 
 Lemma compare_equal: forall s s', compare s s' = Eq <-> equal s s' = true.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_equal". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_equal".  
 induction s as [|l IHl o r IHr]; destruct s' as [|l' o' r'].
 simpl. tauto.
 unfold compare, equal. case is_empty; intuition discriminate.
@@ -465,18 +465,18 @@ Qed.
 
 
 Lemma compare_gt: forall s s', compare s s' = Gt -> lt s' s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_gt". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_gt".  
 unfold lt. intros s s'. rewrite compare_inv.
 case compare; trivial; intros; discriminate.
 Qed.
 
 Lemma compare_eq: forall s s', compare s s' = Eq -> eq s s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_eq". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_eq".  
 unfold eq. intros s s'. rewrite compare_equal, equal_spec. trivial.
 Qed.
 
 Lemma compare_spec : forall s s' : t, CompSpec eq lt s s' (compare s s').
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_spec".  
 intros. case_eq (compare s s'); intro H; constructor.
 apply compare_eq, H.
 assumption.
@@ -493,22 +493,22 @@ Inductive ct: comparison -> comparison -> comparison -> Prop :=
 | ct_lgx: forall x, ct Lt Gt x.
 
 Lemma ct_cxe: forall x, ct (CompOpp x) x Eq.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_cxe". Restart.  destruct x; constructor. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_cxe".   destruct x; constructor. Qed.
 
 Lemma ct_xce: forall x, ct x (CompOpp x) Eq.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_xce". Restart.  destruct x; constructor. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_xce".   destruct x; constructor. Qed.
 
 Lemma ct_lxl: forall x, ct Lt x Lt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_lxl". Restart.  destruct x; constructor. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_lxl".   destruct x; constructor. Qed.
 
 Lemma ct_gxg: forall x, ct Gt x Gt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_gxg". Restart.  destruct x; constructor. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_gxg".   destruct x; constructor. Qed.
 
 Lemma ct_xll: forall x, ct x Lt Lt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_xll". Restart.  destruct x; constructor. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_xll".   destruct x; constructor. Qed.
 
 Lemma ct_xgg: forall x, ct x Gt Gt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_xgg". Restart.  destruct x; constructor. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_xgg".   destruct x; constructor. Qed.
 
 Local Hint Constructors ct: ct.
 Local Hint Resolve ct_cxe ct_xce ct_lxl ct_xll ct_gxg ct_xgg: ct.
@@ -516,26 +516,26 @@ Ltac ct := trivial with ct.
 
 Lemma ct_lex: forall u v w u' v' w',
 ct u v w -> ct u' v' w' -> ct (lex u u') (lex v v') (lex w w').
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_lex". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_lex".  
 intros u v w u' v' w' H H'.
 inversion_clear H; inversion_clear H'; ct; destruct w; ct; destruct w'; ct.
 Qed.
 
 Lemma ct_compare_bool:
 forall a b c, ct (compare_bool a b) (compare_bool b c) (compare_bool a c).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_compare_bool". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_compare_bool".  
 intros [|] [|] [|]; constructor.
 Qed.
 
 Lemma compare_x_Leaf: forall s,
 compare s Leaf = if is_empty s then Eq else Gt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_x_Leaf". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_x_Leaf".  
 intros. rewrite compare_inv. simpl. case (is_empty s); reflexivity.
 Qed.
 
 Lemma compare_empty_x: forall a, is_empty a = true ->
 forall b, compare a b = if is_empty b then Eq else Lt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_empty_x". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_empty_x".  
 induction a as [|l IHl o r IHr]; trivial.
 destruct o. intro; discriminate.
 simpl is_empty. rewrite <- andb_lazy_alt, andb_true_iff.
@@ -548,14 +548,14 @@ Qed.
 
 Lemma compare_x_empty: forall a, is_empty a = true ->
 forall b, compare b a = if is_empty b then Eq else Gt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_x_empty". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_x_empty".  
 setoid_rewrite <- compare_x_Leaf.
 intros. rewrite 2(compare_inv b), (compare_empty_x _ H). reflexivity.
 Qed.
 
 Lemma ct_compare:
 forall a b c, ct (compare a b) (compare b c) (compare a c).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_compare". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.ct_compare".  
 induction a as [|l IHl o r IHr]; intros s' s''.
 destruct s' as [|l' o' r']; destruct s'' as [|l'' o'' r'']; ct.
 rewrite compare_inv. ct.
@@ -588,7 +588,7 @@ Qed.
 End lt_spec.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lt_strorder". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lt_strorder".  
 unfold lt. split.
 intros x H.
 assert (compare x x = Eq).
@@ -599,27 +599,27 @@ inversion_clear H; trivial; intros; discriminate.
 Qed.
 
 Local Instance compare_compat_1 : Proper (eq==>Logic.eq==>Logic.eq) compare.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_compat_1". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_compat_1".  
 intros x x' Hx y y' Hy. subst y'.
 unfold eq in *. rewrite <- equal_spec, <- compare_equal in *.
 assert (C:=ct_compare x x' y). rewrite Hx in C. inversion C; auto.
 Qed.
 
 Instance compare_compat : Proper (eq==>eq==>Logic.eq) compare.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_compat". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.compare_compat".  
 intros x x' Hx y y' Hy. rewrite Hx.
 rewrite compare_inv, Hy, <- compare_inv. reflexivity.
 Qed.
 
 Local Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lt_compat". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lt_compat".  
 intros x x' Hx y y' Hy. unfold lt. rewrite Hx, Hy. intuition.
 Qed.
 
 
 
 Lemma add_spec: forall s x y, In y (add x s) <-> y=x \/ In y s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.add_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.add_spec".  
 unfold In. intros s x y; revert x y s.
 induction x; intros [y|y|] [|l o r]; simpl mem;
 try (rewrite IHx; clear IHx); rewrite ?mem_Leaf; intuition congruence.
@@ -628,7 +628,7 @@ Qed.
 
 
 Lemma remove_spec: forall s x y, In y (remove x s) <-> In y s /\ y<>x.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.remove_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.remove_spec".  
 unfold In. intros s x y; revert x y s.
 induction x; intros [y|y|] [|l o r]; simpl remove; rewrite ?mem_node;
 simpl mem; try (rewrite IHx; clear IHx); rewrite ?mem_Leaf;
@@ -638,7 +638,7 @@ Qed.
 
 
 Lemma singleton_spec : forall x y, In y (singleton x) <-> y=x.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.singleton_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.singleton_spec".  
 unfold singleton. intros x y. rewrite add_spec. intuition.
 unfold In in *. rewrite mem_Leaf in *. discriminate.
 Qed.
@@ -646,7 +646,7 @@ Qed.
 
 
 Lemma union_spec: forall s s' x, In x (union s s') <-> In x s \/ In x s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.union_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.union_spec".  
 unfold In. intros s s' x; revert x s s'.
 induction x; destruct s; destruct s'; simpl union; simpl mem;
 try (rewrite IHx; clear IHx); try intuition congruence.
@@ -656,7 +656,7 @@ Qed.
 
 
 Lemma inter_spec: forall s s' x, In x (inter s s') <-> In x s /\ In x s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.inter_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.inter_spec".  
 unfold In. intros s s' x; revert x s s'.
 induction x; destruct s; destruct s'; simpl inter; rewrite ?mem_node;
 simpl mem; try (rewrite IHx; clear IHx); try intuition congruence.
@@ -666,7 +666,7 @@ Qed.
 
 
 Lemma diff_spec: forall s s' x, In x (diff s s') <-> In x s /\ ~ In x s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.diff_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.diff_spec".  
 unfold In. intros s s' x; revert x s s'.
 induction x; destruct s; destruct s' as [|l' o' r']; simpl diff;
 rewrite ?mem_node; simpl mem;
@@ -678,7 +678,7 @@ Qed.
 
 Lemma fold_spec: forall s (A : Type) (i : A) (f : elt -> A -> A),
 fold f s i = fold_left (fun a e => f e a) (elements s) i.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.fold_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.fold_spec".  
 unfold fold, elements. intros s A i f. revert s i.
 set (f' := fun a e => f e a).
 assert (H: forall s i j acc,
@@ -696,7 +696,7 @@ Qed.
 
 
 Lemma cardinal_spec: forall s, cardinal s = length (elements s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.cardinal_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.cardinal_spec".  
 unfold elements.
 assert (H: forall s j acc,
 (cardinal s + length acc)%nat = length (xelements s j acc)).
@@ -713,7 +713,7 @@ Qed.
 
 Lemma xfilter_spec: forall f s x i,
 In x (xfilter f s i) <-> In x s /\ f (i@x) = true.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xfilter_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xfilter_spec".  
 intro f. unfold In.
 induction s as [|l IHl o r IHr]; intros x i; simpl xfilter.
 rewrite mem_Leaf. intuition discriminate.
@@ -725,13 +725,13 @@ Qed.
 
 Lemma filter_spec: forall s x f, @compat_bool elt E.eq f ->
 (In x (filter f s) <-> In x s /\ f x = true).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.filter_spec". Restart.  intros. apply xfilter_spec. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.filter_spec".   intros. apply xfilter_spec. Qed.
 
 
 
 Lemma xforall_spec: forall f s i,
 xforall f s i = true <-> For_all (fun x => f (i@x) = true) s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xforall_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xforall_spec".  
 unfold For_all, In. intro f.
 induction s as [|l IHl o r IHr]; intros i; simpl.
 intuition discriminate.
@@ -750,13 +750,13 @@ Qed.
 
 Lemma for_all_spec: forall s f, @compat_bool elt E.eq f ->
 (for_all f s = true <-> For_all (fun x => f x = true) s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.for_all_spec". Restart.  intros. apply xforall_spec. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.for_all_spec".   intros. apply xforall_spec. Qed.
 
 
 
 Lemma xexists_spec: forall f s i,
 xexists f s i = true <-> Exists (fun x => f (i@x) = true) s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xexists_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xexists_spec".  
 unfold Exists, In. intro f.
 induction s as [|l IHl o r IHr]; intros i; simpl.
 firstorder.
@@ -772,14 +772,14 @@ Qed.
 
 Lemma exists_spec : forall s f, @compat_bool elt E.eq f ->
 (exists_ f s = true <-> Exists (fun x => f x = true) s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.exists_spec". Restart.  intros. apply xexists_spec. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.exists_spec".   intros. apply xexists_spec. Qed.
 
 
 
 
 Lemma partition_filter : forall s f,
 partition f s = (filter f s, filter (fun x => negb (f x)) s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.partition_filter". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.partition_filter".  
 unfold partition, filter. intros s f. generalize 1 as j.
 induction s as [|l IHl o r IHr]; intro j.
 reflexivity.
@@ -788,11 +788,11 @@ Qed.
 
 Lemma partition_spec1 : forall s f, @compat_bool elt E.eq f ->
 Equal (fst (partition f s)) (filter f s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.partition_spec1". Restart.  intros. rewrite partition_filter. reflexivity. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.partition_spec1".   intros. rewrite partition_filter. reflexivity. Qed.
 
 Lemma partition_spec2 : forall s f, @compat_bool elt E.eq f ->
 Equal (snd (partition f s)) (filter (fun x => negb (f x)) s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.partition_spec2". Restart.  intros. rewrite partition_filter. reflexivity. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.partition_spec2".   intros. rewrite partition_filter. reflexivity. Qed.
 
 
 
@@ -803,7 +803,7 @@ Lemma xelements_spec: forall s j acc y,
 InL y (xelements s j acc)
 <->
 InL y acc \/ exists x, y=(j@x) /\ mem x s = true.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xelements_spec". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.xelements_spec".  
 induction s as [|l IHl o r IHr]; simpl.
 intros. split; intro H.
 left. assumption.
@@ -835,7 +835,7 @@ discriminate.
 Qed.
 
 Lemma elements_spec1: forall s x, InL x (elements s) <-> In x s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.elements_spec1". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.elements_spec1".  
 unfold elements. intros. rewrite xelements_spec.
 split; [ intros [A|(y & B & C)] | intros IN ].
 inversion A. simpl in *. congruence.
@@ -843,10 +843,10 @@ right. exists x. auto.
 Qed.
 
 Lemma lt_rev_append: forall j x y, E.lt x y -> E.lt (j@x) (j@y).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lt_rev_append". Restart.  induction j; intros; simpl; auto. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.lt_rev_append".   induction j; intros; simpl; auto. Qed.
 
 Lemma elements_spec2: forall s, sort E.lt (elements s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.elements_spec2". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.elements_spec2".  
 unfold elements.
 assert (H: forall s j acc,
 sort E.lt acc ->
@@ -883,7 +883,7 @@ intros x y _ H'. inversion H'.
 Qed.
 
 Lemma elements_spec2w: forall s, NoDupA E.eq (elements s).
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.elements_spec2w". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.elements_spec2w".  
 intro. apply SortA_NoDupA with E.lt; auto with *.
 apply elements_spec2.
 Qed.
@@ -892,7 +892,7 @@ Qed.
 
 
 Lemma choose_spec1: forall s x, choose s = Some x -> In x s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec1". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec1".  
 induction s as [| l IHl o r IHr]; simpl.
 intros. discriminate.
 destruct o.
@@ -907,7 +907,7 @@ intros. discriminate.
 Qed.
 
 Lemma choose_spec2: forall s, choose s = None -> Empty s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec2". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec2".  
 unfold Empty, In. intros s H.
 induction s as [|l IHl o r IHr].
 intro. apply empty_spec.
@@ -924,14 +924,14 @@ discriminate.
 Qed.
 
 Lemma choose_empty: forall s, is_empty s = true -> choose s = None.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_empty". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_empty".  
 intros s Hs. case_eq (choose s); trivial.
 intros p Hp. apply choose_spec1 in Hp. apply is_empty_spec in Hs.
 elim (Hs _ Hp).
 Qed.
 
 Lemma choose_spec3': forall s s', Equal s s' -> choose s = choose s'.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec3'". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec3'".  
 setoid_rewrite <- equal_spec.
 induction s as [|l IHl o r IHr].
 intros. symmetry. apply choose_empty. assumption.
@@ -947,13 +947,13 @@ Qed.
 
 Lemma choose_spec3: forall s s' x y,
 choose s = Some x -> choose s' = Some y -> Equal s s' -> E.eq x y.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec3". Restart.  intros s s' x y Hx Hy H. apply choose_spec3' in H. congruence. Qed.
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.choose_spec3".   intros s s' x y Hx Hy H. apply choose_spec3' in H. congruence. Qed.
 
 
 
 
 Lemma min_elt_spec1: forall s x, min_elt s = Some x -> In x s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.min_elt_spec1". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.min_elt_spec1".  
 unfold In.
 induction s as [| l IHl o r IHr]; simpl.
 intros. discriminate.
@@ -967,7 +967,7 @@ discriminate.
 Qed.
 
 Lemma min_elt_spec3: forall s, min_elt s = None -> Empty s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.min_elt_spec3". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.min_elt_spec3".  
 unfold Empty, In. intros s H.
 induction s as [|l IHl o r IHr].
 intro. apply empty_spec.
@@ -981,7 +981,7 @@ destruct o; discriminate.
 Qed.
 
 Lemma min_elt_spec2: forall s x y, min_elt s = Some x -> In y s -> ~ E.lt y x.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.min_elt_spec2". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.min_elt_spec2".  
 unfold In.
 induction s as [|l IHl o r IHr]; intros x y H H'.
 discriminate.
@@ -1006,7 +1006,7 @@ Qed.
 
 
 Lemma max_elt_spec1: forall s x, max_elt s = Some x -> In x s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.max_elt_spec1". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.max_elt_spec1".  
 unfold In.
 induction s as [| l IHl o r IHr]; simpl.
 intros. discriminate.
@@ -1020,7 +1020,7 @@ discriminate.
 Qed.
 
 Lemma max_elt_spec3: forall s, max_elt s = None -> Empty s.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.max_elt_spec3". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.max_elt_spec3".  
 unfold Empty, In. intros s H.
 induction s as [|l IHl o r IHr].
 intro. apply empty_spec.
@@ -1034,7 +1034,7 @@ destruct o; discriminate.
 Qed.
 
 Lemma max_elt_spec2: forall s x y, max_elt s = Some x -> In y s -> ~ E.lt x y.
-Proof. hammer_hook "MSetPositive" "MSetPositive.PositiveSet.max_elt_spec2". Restart. 
+Proof. try hammer_hook "MSetPositive" "MSetPositive.PositiveSet.max_elt_spec2".  
 unfold In.
 induction s as [|l IHl o r IHr]; intros x y H H'.
 discriminate.

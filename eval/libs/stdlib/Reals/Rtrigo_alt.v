@@ -35,7 +35,7 @@ Theorem pre_sin_bound :
 forall (a:R) (n:nat),
 0 <= a ->
 a <= 4 -> sin_approx a (2 * n + 1) <= sin a <= sin_approx a (2 * (n + 1)).
-Proof. hammer_hook "Rtrigo_alt" "Rtrigo_alt.pre_sin_bound". Restart. 
+Proof. try hammer_hook "Rtrigo_alt" "Rtrigo_alt.pre_sin_bound".  
 intros; case (Req_dec a 0); intro Hyp_a.
 rewrite Hyp_a; rewrite sin_0; split; right; unfold sin_approx;
 apply sum_eq_R0 || (symmetry ; apply sum_eq_R0);
@@ -209,7 +209,7 @@ Lemma pre_cos_bound :
 forall (a:R) (n:nat),
 - 2 <= a -> a <= 2 ->
 cos_approx a (2 * n + 1) <= cos a <= cos_approx a (2 * (n + 1)).
-Proof. hammer_hook "Rtrigo_alt" "Rtrigo_alt.pre_cos_bound". Restart. 
+Proof. try hammer_hook "Rtrigo_alt" "Rtrigo_alt.pre_cos_bound".  
 cut
 ((forall (a:R) (n:nat),
 0 <= a ->

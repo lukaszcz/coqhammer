@@ -20,17 +20,17 @@ Include NZProp Z.
 
 
 Theorem pred_inj : forall n m, P n == P m -> n == m.
-Proof. hammer_hook "ZBase" "ZBase.ZBaseProp.pred_inj". Restart. 
+Proof. try hammer_hook "ZBase" "ZBase.ZBaseProp.pred_inj".  
 intros n m H. apply succ_wd in H. now rewrite 2 succ_pred in H.
 Qed.
 
 Theorem pred_inj_wd : forall n1 n2, P n1 == P n2 <-> n1 == n2.
-Proof. hammer_hook "ZBase" "ZBase.ZBaseProp.pred_inj_wd". Restart. 
+Proof. try hammer_hook "ZBase" "ZBase.ZBaseProp.pred_inj_wd".  
 intros n1 n2; split; [apply pred_inj | intros; now f_equiv].
 Qed.
 
 Lemma succ_m1 : S (-1) == 0.
-Proof. hammer_hook "ZBase" "ZBase.ZBaseProp.succ_m1". Restart. 
+Proof. try hammer_hook "ZBase" "ZBase.ZBaseProp.succ_m1".  
 now rewrite one_succ, opp_succ, opp_0, succ_pred.
 Qed.
 

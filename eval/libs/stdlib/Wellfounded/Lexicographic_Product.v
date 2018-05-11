@@ -29,7 +29,7 @@ forall x:A,
 Acc leA x ->
 (forall x0:A, clos_trans A leA x0 x -> well_founded (leB x0)) ->
 forall y:B x, Acc (leB x) y -> Acc LexProd (existT B x y).
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.acc_A_B_lexprod". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.acc_A_B_lexprod".  
 induction 1 as [x _ IHAcc]; intros H2 y.
 induction 1 as [x0 H IHAcc0]; intros.
 apply Acc_intro.
@@ -57,7 +57,7 @@ Defined.
 Theorem wf_lexprod :
 well_founded leA ->
 (forall x:A, well_founded (leB x)) -> well_founded LexProd.
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.wf_lexprod". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.wf_lexprod".  
 intros wfA wfB; unfold well_founded.
 destruct a.
 apply acc_A_B_lexprod; auto with sets; intros.
@@ -79,7 +79,7 @@ Notation Symprod := (symprod A B leA leB).
 
 Lemma Acc_symprod :
 forall x:A, Acc leA x -> forall y:B, Acc leB y -> Acc Symprod (x, y).
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.Acc_symprod". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.Acc_symprod".  
 induction 1 as [x _ IHAcc]; intros y H2.
 induction H2 as [x1 H3 IHAcc1].
 apply Acc_intro; intros y H5.
@@ -91,7 +91,7 @@ Defined.
 
 Lemma wf_symprod :
 well_founded leA -> well_founded leB -> well_founded Symprod.
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.wf_symprod". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.wf_symprod".  
 red.
 destruct a.
 apply Acc_symprod; auto with sets.
@@ -109,7 +109,7 @@ Notation SwapProd := (swapprod A R).
 
 
 Lemma swap_Acc : forall x y:A, Acc SwapProd (x, y) -> Acc SwapProd (y, x).
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.swap_Acc". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.swap_Acc".  
 intros.
 inversion_clear H.
 apply Acc_intro.
@@ -131,7 +131,7 @@ Defined.
 
 Lemma Acc_swapprod :
 forall x y:A, Acc R x -> Acc R y -> Acc SwapProd (x, y).
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.Acc_swapprod". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.Acc_swapprod".  
 induction 1 as [x0 _ IHAcc0]; intros H2.
 cut (forall y0:A, R y0 x0 -> Acc SwapProd (y0, y)).
 clear IHAcc0.
@@ -158,7 +158,7 @@ Defined.
 
 
 Lemma wf_swapprod : well_founded R -> well_founded SwapProd.
-Proof. hammer_hook "Lexicographic_Product" "Lexicographic_Product.wf_swapprod". Restart. 
+Proof. try hammer_hook "Lexicographic_Product" "Lexicographic_Product.wf_swapprod".  
 red.
 destruct a; intros.
 apply Acc_swapprod; auto with sets.

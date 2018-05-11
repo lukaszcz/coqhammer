@@ -22,7 +22,7 @@ Definition Majxy (x y:R) (n:nat) : R :=
 Rmax 1 (Rmax (Rabs x) (Rabs y)) ^ (4 * S n) / INR (fact n).
 
 Lemma Majxy_cv_R0 : forall x y:R, Un_cv (Majxy x y) 0.
-Proof. hammer_hook "Cos_plus" "Cos_plus.Majxy_cv_R0". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.Majxy_cv_R0".  
 intros.
 set (C := Rmax 1 (Rmax (Rabs x) (Rabs y))).
 set (C0 := C ^ 4).
@@ -72,7 +72,7 @@ Qed.
 Lemma reste1_maj :
 forall (x y:R) (N:nat),
 (0 < N)%nat -> Rabs (Reste1 x y N) <= Majxy x y (pred N).
-Proof. hammer_hook "Cos_plus" "Cos_plus.reste1_maj". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.reste1_maj".  
 intros.
 set (C := Rmax 1 (Rmax (Rabs x) (Rabs y))).
 unfold Reste1.
@@ -361,7 +361,7 @@ Qed.
 
 Lemma reste2_maj :
 forall (x y:R) (N:nat), (0 < N)%nat -> Rabs (Reste2 x y N) <= Majxy x y N.
-Proof. hammer_hook "Cos_plus" "Cos_plus.reste2_maj". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.reste2_maj".  
 intros.
 set (C := Rmax 1 (Rmax (Rabs x) (Rabs y))).
 unfold Reste2.
@@ -649,7 +649,7 @@ reflexivity.
 Qed.
 
 Lemma reste1_cv_R0 : forall x y:R, Un_cv (Reste1 x y) 0.
-Proof. hammer_hook "Cos_plus" "Cos_plus.reste1_cv_R0". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.reste1_cv_R0".  
 intros.
 assert (H := Majxy_cv_R0 x y).
 unfold Un_cv in H; unfold R_dist in H.
@@ -681,7 +681,7 @@ apply lt_le_trans with (S N0); [ apply lt_O_Sn | assumption ].
 Qed.
 
 Lemma reste2_cv_R0 : forall x y:R, Un_cv (Reste2 x y) 0.
-Proof. hammer_hook "Cos_plus" "Cos_plus.reste2_cv_R0". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.reste2_cv_R0".  
 intros.
 assert (H := Majxy_cv_R0 x y).
 unfold Un_cv in H; unfold R_dist in H.
@@ -711,7 +711,7 @@ exact H2.
 Qed.
 
 Lemma reste_cv_R0 : forall x y:R, Un_cv (Reste x y) 0.
-Proof. hammer_hook "Cos_plus" "Cos_plus.reste_cv_R0". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.reste_cv_R0".  
 intros.
 unfold Reste.
 set (An := fun n:nat => Reste2 x y n).
@@ -743,7 +743,7 @@ exact H.
 Qed.
 
 Theorem cos_plus : forall x y:R, cos (x + y) = cos x * cos y - sin x * sin y.
-Proof. hammer_hook "Cos_plus" "Cos_plus.cos_plus". Restart. 
+Proof. try hammer_hook "Cos_plus" "Cos_plus.cos_plus".  
 intros.
 cut (Un_cv (C1 x y) (cos x * cos y - sin x * sin y)).
 cut (Un_cv (C1 x y) (cos (x + y))).

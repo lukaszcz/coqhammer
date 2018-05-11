@@ -32,40 +32,40 @@ Implicit Type r : R.
 
 
 Lemma Rle_refl : forall r, r <= r.
-Proof. hammer_hook "RIneq" "RIneq.Rle_refl". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_refl".  
 intro; right; reflexivity.
 Qed.
 Hint Immediate Rle_refl: rorders.
 
 Lemma Rge_refl : forall r, r <= r.
-Proof. hammer_hook "RIneq" "RIneq.Rge_refl". Restart.  exact Rle_refl. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_refl".   exact Rle_refl. Qed.
 Hint Immediate Rge_refl: rorders.
 
 
 
 Lemma Rlt_irrefl : forall r, ~ r < r.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_irrefl". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_irrefl".  
 intros r H; eapply Rlt_asym; eauto.
 Qed.
 Hint Resolve Rlt_irrefl: real.
 
 Lemma Rgt_irrefl : forall r, ~ r > r.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_irrefl". Restart.  exact Rlt_irrefl. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_irrefl".   exact Rlt_irrefl. Qed.
 
 Lemma Rlt_not_eq : forall r1 r2, r1 < r2 -> r1 <> r2.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_not_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_not_eq".  
 red; intros r1 r2 H H0; apply (Rlt_irrefl r1).
 pattern r1 at 2; rewrite H0; trivial.
 Qed.
 
 Lemma Rgt_not_eq : forall r1 r2, r1 > r2 -> r1 <> r2.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_not_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_not_eq".  
 intros; apply not_eq_sym; apply Rlt_not_eq; auto with real.
 Qed.
 
 
 Lemma Rlt_dichotomy_converse : forall r1 r2, r1 < r2 \/ r1 > r2 -> r1 <> r2.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_dichotomy_converse". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_dichotomy_converse".  
 intuition.
 - apply Rlt_not_eq in H1. eauto.
 - apply Rgt_not_eq in H1. eauto.
@@ -76,7 +76,7 @@ Hint Resolve Rlt_dichotomy_converse: real.
 
 
 Lemma Req_dec : forall r1 r2, r1 = r2 \/ r1 <> r2.
-Proof. hammer_hook "RIneq" "RIneq.Req_dec". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Req_dec".  
 intros; generalize (total_order_T r1 r2) Rlt_dichotomy_converse;
 unfold not; intuition eauto 3.
 Qed.
@@ -84,13 +84,13 @@ Hint Resolve Req_dec: real.
 
 
 Lemma Rtotal_order : forall r1 r2, r1 < r2 \/ r1 = r2 \/ r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rtotal_order". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rtotal_order".  
 intros; generalize (total_order_T r1 r2); tauto.
 Qed.
 
 
 Lemma Rdichotomy : forall r1 r2, r1 <> r2 -> r1 < r2 \/ r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rdichotomy". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rdichotomy".  
 intros; generalize (total_order_T r1 r2); tauto.
 Qed.
 
@@ -105,26 +105,26 @@ Qed.
 
 
 Lemma Rlt_le : forall r1 r2, r1 < r2 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_le".  
 intros; red; tauto.
 Qed.
 Hint Resolve Rlt_le: real.
 
 Lemma Rgt_ge : forall r1 r2, r1 > r2 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_ge". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_ge".  
 intros; red; tauto.
 Qed.
 
 
 Lemma Rle_ge : forall r1 r2, r1 <= r2 -> r2 >= r1.
-Proof. hammer_hook "RIneq" "RIneq.Rle_ge". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_ge".  
 destruct 1; red; auto with real.
 Qed.
 Hint Immediate Rle_ge: real.
 Hint Resolve Rle_ge: rorders.
 
 Lemma Rge_le : forall r1 r2, r1 >= r2 -> r2 <= r1.
-Proof. hammer_hook "RIneq" "RIneq.Rge_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rge_le".  
 destruct 1; red; auto with real.
 Qed.
 Hint Resolve Rge_le: real.
@@ -132,13 +132,13 @@ Hint Immediate Rge_le: rorders.
 
 
 Lemma Rlt_gt : forall r1 r2, r1 < r2 -> r2 > r1.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_gt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_gt".  
 trivial.
 Qed.
 Hint Resolve Rlt_gt: rorders.
 
 Lemma Rgt_lt : forall r1 r2, r1 > r2 -> r2 < r1.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_lt".  
 trivial.
 Qed.
 Hint Immediate Rgt_lt: rorders.
@@ -146,89 +146,89 @@ Hint Immediate Rgt_lt: rorders.
 
 
 Lemma Rnot_le_lt : forall r1 r2, ~ r1 <= r2 -> r2 < r1.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_le_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_le_lt".  
 intros r1 r2; generalize (Rtotal_order r1 r2); unfold Rle; tauto.
 Qed.
 Hint Immediate Rnot_le_lt: real.
 
 Lemma Rnot_ge_gt : forall r1 r2, ~ r1 >= r2 -> r2 > r1.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_ge_gt". Restart.  intros; red; apply Rnot_le_lt. auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_ge_gt".   intros; red; apply Rnot_le_lt. auto with real. Qed.
 
 Lemma Rnot_le_gt : forall r1 r2, ~ r1 <= r2 -> r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_le_gt". Restart.  intros; red; apply Rnot_le_lt. auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_le_gt".   intros; red; apply Rnot_le_lt. auto with real. Qed.
 
 Lemma Rnot_ge_lt : forall r1 r2, ~ r1 >= r2 -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_ge_lt". Restart.  intros; apply Rnot_le_lt. auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_ge_lt".   intros; apply Rnot_le_lt. auto with real. Qed.
 
 Lemma Rnot_lt_le : forall r1 r2, ~ r1 < r2 -> r2 <= r1.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_lt_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_lt_le".  
 intros r1 r2 H; destruct (Rtotal_order r1 r2) as [ | [ H0 | H0 ] ].
 contradiction. subst; auto with rorders. auto with real.
 Qed.
 
 Lemma Rnot_gt_le : forall r1 r2, ~ r1 > r2 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_gt_le". Restart.  auto using Rnot_lt_le with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_gt_le".   auto using Rnot_lt_le with real. Qed.
 
 Lemma Rnot_gt_ge : forall r1 r2, ~ r1 > r2 -> r2 >= r1.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_gt_ge". Restart.  intros; eauto using Rnot_lt_le with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_gt_ge".   intros; eauto using Rnot_lt_le with rorders. Qed.
 
 Lemma Rnot_lt_ge : forall r1 r2, ~ r1 < r2 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rnot_lt_ge". Restart.  eauto using Rnot_gt_ge with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rnot_lt_ge".   eauto using Rnot_gt_ge with rorders. Qed.
 
 
 Lemma Rlt_not_le : forall r1 r2, r2 < r1 -> ~ r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_not_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_not_le".  
 generalize Rlt_asym Rlt_dichotomy_converse; unfold Rle.
 unfold not; intuition eauto 3.
 Qed.
 Hint Immediate Rlt_not_le: real.
 
 Lemma Rgt_not_le : forall r1 r2, r1 > r2 -> ~ r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_not_le". Restart.  exact Rlt_not_le. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_not_le".   exact Rlt_not_le. Qed.
 
 Lemma Rlt_not_ge : forall r1 r2, r1 < r2 -> ~ r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_not_ge". Restart.  red; intros; eapply Rlt_not_le; eauto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_not_ge".   red; intros; eapply Rlt_not_le; eauto with real. Qed.
 Hint Immediate Rlt_not_ge: real.
 
 Lemma Rgt_not_ge : forall r1 r2, r2 > r1 -> ~ r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_not_ge". Restart.  exact Rlt_not_ge. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_not_ge".   exact Rlt_not_ge. Qed.
 
 Lemma Rle_not_lt : forall r1 r2, r2 <= r1 -> ~ r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rle_not_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_not_lt".  
 intros r1 r2. generalize (Rlt_asym r1 r2) (Rlt_dichotomy_converse r1 r2).
 unfold Rle; intuition.
 Qed.
 
 Lemma Rge_not_lt : forall r1 r2, r1 >= r2 -> ~ r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rge_not_lt". Restart.  intros; apply Rle_not_lt; auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_not_lt".   intros; apply Rle_not_lt; auto with real. Qed.
 
 Lemma Rle_not_gt : forall r1 r2, r1 <= r2 -> ~ r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rle_not_gt". Restart.  do 2 intro; apply Rle_not_lt. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rle_not_gt".   do 2 intro; apply Rle_not_lt. Qed.
 
 Lemma Rge_not_gt : forall r1 r2, r2 >= r1 -> ~ r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rge_not_gt". Restart.  do 2 intro; apply Rge_not_lt. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_not_gt".   do 2 intro; apply Rge_not_lt. Qed.
 
 
 Lemma Req_le : forall r1 r2, r1 = r2 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Req_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Req_le".  
 unfold Rle; tauto.
 Qed.
 Hint Immediate Req_le: real.
 
 Lemma Req_ge : forall r1 r2, r1 = r2 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Req_ge". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Req_ge".  
 unfold Rge; tauto.
 Qed.
 Hint Immediate Req_ge: real.
 
 Lemma Req_le_sym : forall r1 r2, r2 = r1 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Req_le_sym". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Req_le_sym".  
 unfold Rle; auto.
 Qed.
 Hint Immediate Req_le_sym: real.
 
 Lemma Req_ge_sym : forall r1 r2, r2 = r1 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Req_ge_sym". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Req_ge_sym".  
 unfold Rge; auto.
 Qed.
 Hint Immediate Req_ge_sym: real.
@@ -238,27 +238,27 @@ Hint Immediate Req_ge_sym: real.
 
 
 Lemma Rgt_asym : forall r1 r2:R, r1 > r2 -> ~ r2 > r1.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_asym". Restart.  do 2 intro; apply Rlt_asym. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_asym".   do 2 intro; apply Rlt_asym. Qed.
 
 
 
 Lemma Rle_antisym : forall r1 r2, r1 <= r2 -> r2 <= r1 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rle_antisym". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_antisym".  
 intros r1 r2; generalize (Rlt_asym r1 r2); unfold Rle; intuition.
 Qed.
 Hint Resolve Rle_antisym: real.
 
 Lemma Rge_antisym : forall r1 r2, r1 >= r2 -> r2 >= r1 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rge_antisym". Restart.  auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_antisym".   auto with real. Qed.
 
 
 Lemma Rle_le_eq : forall r1 r2, r1 <= r2 /\ r2 <= r1 <-> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rle_le_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_le_eq".  
 intuition.
 Qed.
 
 Lemma Rge_ge_eq : forall r1 r2, r1 >= r2 /\ r2 >= r1 <-> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rge_ge_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rge_ge_eq".  
 intuition.
 Qed.
 
@@ -266,112 +266,112 @@ Qed.
 
 Lemma Rlt_eq_compat :
 forall r1 r2 r3 r4, r1 = r2 -> r2 < r4 -> r4 = r3 -> r1 < r3.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_eq_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_eq_compat".  
 intros x x' y y'; intros; replace x with x'; replace y with y'; assumption.
 Qed.
 
 Lemma Rgt_eq_compat :
 forall r1 r2 r3 r4, r1 = r2 -> r2 > r4 -> r4 = r3 -> r1 > r3.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_eq_compat". Restart.  intros; red; apply Rlt_eq_compat with (r2:=r4) (r4:=r2); auto. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_eq_compat".   intros; red; apply Rlt_eq_compat with (r2:=r4) (r4:=r2); auto. Qed.
 
 
 
 
 
 Lemma Rle_trans : forall r1 r2 r3, r1 <= r2 -> r2 <= r3 -> r1 <= r3.
-Proof. hammer_hook "RIneq" "RIneq.Rle_trans". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_trans".  
 generalize eq_trans Rlt_trans Rlt_eq_compat.
 unfold Rle.
 intuition eauto 2.
 Qed.
 
 Lemma Rge_trans : forall r1 r2 r3, r1 >= r2 -> r2 >= r3 -> r1 >= r3.
-Proof. hammer_hook "RIneq" "RIneq.Rge_trans". Restart.  eauto using Rle_trans with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_trans".   eauto using Rle_trans with rorders. Qed.
 
 Lemma Rgt_trans : forall r1 r2 r3, r1 > r2 -> r2 > r3 -> r1 > r3.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_trans". Restart.  eauto using Rlt_trans with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_trans".   eauto using Rlt_trans with rorders. Qed.
 
 
 Lemma Rle_lt_trans : forall r1 r2 r3, r1 <= r2 -> r2 < r3 -> r1 < r3.
-Proof. hammer_hook "RIneq" "RIneq.Rle_lt_trans". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_lt_trans".  
 generalize Rlt_trans Rlt_eq_compat.
 unfold Rle.
 intuition eauto 2.
 Qed.
 
 Lemma Rlt_le_trans : forall r1 r2 r3, r1 < r2 -> r2 <= r3 -> r1 < r3.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_le_trans". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_le_trans".  
 generalize Rlt_trans Rlt_eq_compat; unfold Rle; intuition eauto 2.
 Qed.
 
 Lemma Rge_gt_trans : forall r1 r2 r3, r1 >= r2 -> r2 > r3 -> r1 > r3.
-Proof. hammer_hook "RIneq" "RIneq.Rge_gt_trans". Restart.  eauto using Rlt_le_trans with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_gt_trans".   eauto using Rlt_le_trans with rorders. Qed.
 
 Lemma Rgt_ge_trans : forall r1 r2 r3, r1 > r2 -> r2 >= r3 -> r1 > r3.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_ge_trans". Restart.  eauto using Rle_lt_trans with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_ge_trans".   eauto using Rle_lt_trans with rorders. Qed.
 
 
 
 Lemma Rlt_dec : forall r1 r2, {r1 < r2} + {~ r1 < r2}.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_dec". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_dec".  
 intros; generalize (total_order_T r1 r2) (Rlt_dichotomy_converse r1 r2);
 intuition.
 Qed.
 
 Lemma Rle_dec : forall r1 r2, {r1 <= r2} + {~ r1 <= r2}.
-Proof. hammer_hook "RIneq" "RIneq.Rle_dec". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_dec".  
 intros r1 r2.
 generalize (total_order_T r1 r2) (Rlt_dichotomy_converse r1 r2).
 intuition eauto 4 with real.
 Qed.
 
 Lemma Rgt_dec : forall r1 r2, {r1 > r2} + {~ r1 > r2}.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_dec". Restart.  do 2 intro; apply Rlt_dec. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_dec".   do 2 intro; apply Rlt_dec. Qed.
 
 Lemma Rge_dec : forall r1 r2, {r1 >= r2} + {~ r1 >= r2}.
-Proof. hammer_hook "RIneq" "RIneq.Rge_dec". Restart.  intros; edestruct Rle_dec; [left|right]; eauto with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_dec".   intros; edestruct Rle_dec; [left|right]; eauto with rorders. Qed.
 
 Lemma Rlt_le_dec : forall r1 r2, {r1 < r2} + {r2 <= r1}.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_le_dec". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_le_dec".  
 intros; generalize (total_order_T r1 r2); intuition.
 Qed.
 
 Lemma Rgt_ge_dec : forall r1 r2, {r1 > r2} + {r2 >= r1}.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_ge_dec". Restart.  intros; edestruct Rlt_le_dec; [left|right]; eauto with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_ge_dec".   intros; edestruct Rlt_le_dec; [left|right]; eauto with rorders. Qed.
 
 Lemma Rle_lt_dec : forall r1 r2, {r1 <= r2} + {r2 < r1}.
-Proof. hammer_hook "RIneq" "RIneq.Rle_lt_dec". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_lt_dec".  
 intros; generalize (total_order_T r1 r2); intuition.
 Qed.
 
 Lemma Rge_gt_dec : forall r1 r2, {r1 >= r2} + {r2 > r1}.
-Proof. hammer_hook "RIneq" "RIneq.Rge_gt_dec". Restart.  intros; edestruct Rle_lt_dec; [left|right]; eauto with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_gt_dec".   intros; edestruct Rle_lt_dec; [left|right]; eauto with rorders. Qed.
 
 Lemma Rlt_or_le : forall r1 r2, r1 < r2 \/ r2 <= r1.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_or_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_or_le".  
 intros n m; elim (Rle_lt_dec m n); auto with real.
 Qed.
 
 Lemma Rgt_or_ge : forall r1 r2, r1 > r2 \/ r2 >= r1.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_or_ge". Restart.  intros; edestruct Rlt_or_le; [left|right]; eauto with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_or_ge".   intros; edestruct Rlt_or_le; [left|right]; eauto with rorders. Qed.
 
 Lemma Rle_or_lt : forall r1 r2, r1 <= r2 \/ r2 < r1.
-Proof. hammer_hook "RIneq" "RIneq.Rle_or_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_or_lt".  
 intros n m; elim (Rlt_le_dec m n); auto with real.
 Qed.
 
 Lemma Rge_or_gt : forall r1 r2, r1 >= r2 \/ r2 > r1.
-Proof. hammer_hook "RIneq" "RIneq.Rge_or_gt". Restart.  intros; edestruct Rle_or_lt; [left|right]; eauto with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rge_or_gt".   intros; edestruct Rle_or_lt; [left|right]; eauto with rorders. Qed.
 
 Lemma Rle_lt_or_eq_dec : forall r1 r2, r1 <= r2 -> {r1 < r2} + {r1 = r2}.
-Proof. hammer_hook "RIneq" "RIneq.Rle_lt_or_eq_dec". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_lt_or_eq_dec".  
 intros r1 r2 H; generalize (total_order_T r1 r2); intuition.
 Qed.
 
 
 Lemma inser_trans_R :
 forall r1 r2 r3 r4, r1 <= r2 < r3 -> {r1 <= r2 < r4} + {r4 <= r2 < r3}.
-Proof. hammer_hook "RIneq" "RIneq.inser_trans_R". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.inser_trans_R".  
 intros n m p q; intros; generalize (Rlt_le_dec m q); intuition.
 Qed.
 
@@ -382,13 +382,13 @@ Qed.
 
 
 Lemma Rplus_0_r : forall r, r + 0 = r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_0_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_0_r".  
 intro; ring.
 Qed.
 Hint Resolve Rplus_0_r: real.
 
 Lemma Rplus_ne : forall r, r + 0 = r /\ 0 + r = r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ne". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ne".  
 split; ring.
 Qed.
 Hint Resolve Rplus_ne: real.
@@ -398,14 +398,14 @@ Hint Resolve Rplus_ne: real.
 
 
 Lemma Rplus_opp_l : forall r, - r + r = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_opp_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_opp_l".  
 intro; ring.
 Qed.
 Hint Resolve Rplus_opp_l: real.
 
 
 Lemma Rplus_opp_r_uniq : forall r1 r2, r1 + r2 = 0 -> r2 = - r1.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_opp_r_uniq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_opp_r_uniq".  
 intros x y H;
 replace y with (- x + x + y) by ring.
 rewrite Rplus_assoc; rewrite H; ring.
@@ -416,13 +416,13 @@ Definition f_equal_R := (f_equal (A:=R)).
 Hint Resolve f_equal_R : real.
 
 Lemma Rplus_eq_compat_l : forall r r1 r2, r1 = r2 -> r + r1 = r + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_eq_compat_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_eq_compat_l".  
 intros r r1 r2.
 apply f_equal.
 Qed.
 
 Lemma Rplus_eq_compat_r : forall r r1 r2, r1 = r2 -> r1 + r = r2 + r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_eq_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_eq_compat_r".  
 intros r r1 r2.
 apply (f_equal (fun v => v + r)).
 Qed.
@@ -430,7 +430,7 @@ Qed.
 
 
 Lemma Rplus_eq_reg_l : forall r r1 r2, r + r1 = r + r2 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_eq_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_eq_reg_l".  
 intros; transitivity (- r + r + r1).
 ring.
 transitivity (- r + r + r2).
@@ -440,7 +440,7 @@ Qed.
 Hint Resolve Rplus_eq_reg_l: real.
 
 Lemma Rplus_eq_reg_r : forall r r1 r2, r1 + r = r2 + r -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_eq_reg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_eq_reg_r".  
 intros r r1 r2 H.
 apply Rplus_eq_reg_l with r.
 now rewrite 2!(Rplus_comm r).
@@ -448,14 +448,14 @@ Qed.
 
 
 Lemma Rplus_0_r_uniq : forall r r1, r + r1 = r -> r1 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_0_r_uniq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_0_r_uniq".  
 intros r b; pattern r at 2; replace r with (r + 0); eauto with real.
 Qed.
 
 
 Lemma Rplus_eq_0_l :
 forall r1 r2, 0 <= r1 -> 0 <= r2 -> r1 + r2 = 0 -> r1 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_eq_0_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_eq_0_l".  
 intros a b H [H0| H0] H1; auto with real.
 absurd (0 < a + b).
 rewrite H1; auto with real.
@@ -467,7 +467,7 @@ Qed.
 
 Lemma Rplus_eq_R0 :
 forall r1 r2, 0 <= r1 -> 0 <= r2 -> r1 + r2 = 0 -> r1 = 0 /\ r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_eq_R0". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_eq_R0".  
 intros a b; split.
 apply Rplus_eq_0_l with b; auto with real.
 apply Rplus_eq_0_l with a; auto with real.
@@ -480,60 +480,60 @@ Qed.
 
 
 Lemma Rinv_r : forall r, r <> 0 -> r * / r = 1.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_r".  
 intros; field; trivial.
 Qed.
 Hint Resolve Rinv_r: real.
 
 Lemma Rinv_l_sym : forall r, r <> 0 -> 1 = / r * r.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_l_sym". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_l_sym".  
 intros; field; trivial.
 Qed.
 Hint Resolve Rinv_l_sym: real.
 
 Lemma Rinv_r_sym : forall r, r <> 0 -> 1 = r * / r.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_r_sym". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_r_sym".  
 intros; field; trivial.
 Qed.
 Hint Resolve Rinv_r_sym: real.
 
 
 Lemma Rmult_0_r : forall r, r * 0 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_0_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_0_r".  
 intro; ring.
 Qed.
 Hint Resolve Rmult_0_r: real.
 
 
 Lemma Rmult_0_l : forall r, 0 * r = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_0_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_0_l".  
 intro; ring.
 Qed.
 Hint Resolve Rmult_0_l: real.
 
 
 Lemma Rmult_ne : forall r, r * 1 = r /\ 1 * r = r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_ne". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_ne".  
 intro; split; ring.
 Qed.
 Hint Resolve Rmult_ne: real.
 
 
 Lemma Rmult_1_r : forall r, r * 1 = r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_1_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_1_r".  
 intro; ring.
 Qed.
 Hint Resolve Rmult_1_r: real.
 
 
 Lemma Rmult_eq_compat_l : forall r r1 r2, r1 = r2 -> r * r1 = r * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_compat_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_compat_l".  
 auto with real.
 Qed.
 
 
 Lemma Rmult_eq_compat_r : forall r r1 r2, r1 = r2 -> r1 * r = r2 * r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_compat_r".  
 intros.
 rewrite <- 2!(Rmult_comm r).
 now apply Rmult_eq_compat_l.
@@ -541,7 +541,7 @@ Qed.
 
 
 Lemma Rmult_eq_reg_l : forall r r1 r2, r * r1 = r * r2 -> r <> 0 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_reg_l".  
 intros; transitivity (/ r * r * r1).
 field; trivial.
 transitivity (/ r * r * r2).
@@ -550,7 +550,7 @@ field; trivial.
 Qed.
 
 Lemma Rmult_eq_reg_r : forall r r1 r2, r1 * r = r2 * r -> r <> 0 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_reg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_reg_r".  
 intros.
 apply Rmult_eq_reg_l with (2 := H0).
 now rewrite 2!(Rmult_comm r).
@@ -558,7 +558,7 @@ Qed.
 
 
 Lemma Rmult_integral : forall r1 r2, r1 * r2 = 0 -> r1 = 0 \/ r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_integral". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_integral".  
 intros; case (Req_dec r1 0); [ intro Hz | intro Hnotz ].
 auto.
 right; apply Rmult_eq_reg_l with r1; trivial.
@@ -567,7 +567,7 @@ Qed.
 
 
 Lemma Rmult_eq_0_compat : forall r1 r2, r1 = 0 \/ r2 = 0 -> r1 * r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_0_compat".  
 intros r1 r2 [H| H]; rewrite H; auto with real.
 Qed.
 
@@ -575,26 +575,26 @@ Hint Resolve Rmult_eq_0_compat: real.
 
 
 Lemma Rmult_eq_0_compat_r : forall r1 r2, r1 = 0 -> r1 * r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_0_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_0_compat_r".  
 auto with real.
 Qed.
 
 
 Lemma Rmult_eq_0_compat_l : forall r1 r2, r2 = 0 -> r1 * r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_eq_0_compat_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_eq_0_compat_l".  
 auto with real.
 Qed.
 
 
 Lemma Rmult_neq_0_reg : forall r1 r2, r1 * r2 <> 0 -> r1 <> 0 /\ r2 <> 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_neq_0_reg". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_neq_0_reg".  
 intros r1 r2 H; split; red; intro; apply H; auto with real.
 Qed.
 
 
 Lemma Rmult_integral_contrapositive :
 forall r1 r2, r1 <> 0 /\ r2 <> 0 -> r1 * r2 <> 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_integral_contrapositive". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_integral_contrapositive".  
 red; intros r1 r2 [H1 H2] H.
 case (Rmult_integral r1 r2); auto with real.
 Qed.
@@ -602,12 +602,12 @@ Hint Resolve Rmult_integral_contrapositive: real.
 
 Lemma Rmult_integral_contrapositive_currified :
 forall r1 r2, r1 <> 0 -> r2 <> 0 -> r1 * r2 <> 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_integral_contrapositive_currified". Restart.  auto using Rmult_integral_contrapositive. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_integral_contrapositive_currified".   auto using Rmult_integral_contrapositive. Qed.
 
 
 Lemma Rmult_plus_distr_r :
 forall r1 r2 r3, (r1 + r2) * r3 = r1 * r3 + r2 * r3.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_plus_distr_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_plus_distr_r".  
 intros; ring.
 Qed.
 
@@ -636,35 +636,35 @@ Qed.
 
 
 Lemma Ropp_eq_compat : forall r1 r2, r1 = r2 -> - r1 = - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_eq_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_eq_compat".  
 auto with real.
 Qed.
 Hint Resolve Ropp_eq_compat: real.
 
 
 Lemma Ropp_0 : -0 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_0". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_0".  
 ring.
 Qed.
 Hint Resolve Ropp_0: real.
 
 
 Lemma Ropp_eq_0_compat : forall r, r = 0 -> - r = 0.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_eq_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_eq_0_compat".  
 intros; rewrite H; auto with real.
 Qed.
 Hint Resolve Ropp_eq_0_compat: real.
 
 
 Lemma Ropp_involutive : forall r, - - r = r.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_involutive". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_involutive".  
 intro; ring.
 Qed.
 Hint Resolve Ropp_involutive: real.
 
 
 Lemma Ropp_neq_0_compat : forall r, r <> 0 -> - r <> 0.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_neq_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_neq_0_compat".  
 red; intros r H H0.
 apply H.
 transitivity (- - r); auto with real.
@@ -673,7 +673,7 @@ Hint Resolve Ropp_neq_0_compat: real.
 
 
 Lemma Ropp_plus_distr : forall r1 r2, - (r1 + r2) = - r1 + - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_plus_distr". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_plus_distr".  
 intros; ring.
 Qed.
 Hint Resolve Ropp_plus_distr: real.
@@ -683,30 +683,30 @@ Hint Resolve Ropp_plus_distr: real.
 
 
 Lemma Ropp_mult_distr_l : forall r1 r2, - (r1 * r2) = - r1 * r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_mult_distr_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_mult_distr_l".  
 intros; ring.
 Qed.
 
 Lemma Ropp_mult_distr_l_reverse : forall r1 r2, - r1 * r2 = - (r1 * r2).
-Proof. hammer_hook "RIneq" "RIneq.Ropp_mult_distr_l_reverse". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_mult_distr_l_reverse".  
 intros; ring.
 Qed.
 Hint Resolve Ropp_mult_distr_l_reverse: real.
 
 
 Lemma Rmult_opp_opp : forall r1 r2, - r1 * - r2 = r1 * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_opp_opp". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_opp_opp".  
 intros; ring.
 Qed.
 Hint Resolve Rmult_opp_opp: real.
 
 Lemma Ropp_mult_distr_r : forall r1 r2, - (r1 * r2) = r1 * - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_mult_distr_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_mult_distr_r".  
 intros; ring.
 Qed.
 
 Lemma Ropp_mult_distr_r_reverse : forall r1 r2, r1 * - r2 = - (r1 * r2).
-Proof. hammer_hook "RIneq" "RIneq.Ropp_mult_distr_r_reverse". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_mult_distr_r_reverse".  
 intros; ring.
 Qed.
 
@@ -715,73 +715,73 @@ Qed.
 
 
 Lemma Rminus_0_r : forall r, r - 0 = r.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_0_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_0_r".  
 intro; ring.
 Qed.
 Hint Resolve Rminus_0_r: real.
 
 Lemma Rminus_0_l : forall r, 0 - r = - r.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_0_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_0_l".  
 intro; ring.
 Qed.
 Hint Resolve Rminus_0_l: real.
 
 
 Lemma Ropp_minus_distr : forall r1 r2, - (r1 - r2) = r2 - r1.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_minus_distr". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_minus_distr".  
 intros; ring.
 Qed.
 Hint Resolve Ropp_minus_distr: real.
 
 Lemma Ropp_minus_distr' : forall r1 r2, - (r2 - r1) = r1 - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_minus_distr'". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_minus_distr'".  
 intros; ring.
 Qed.
 
 
 Lemma Rminus_diag_eq : forall r1 r2, r1 = r2 -> r1 - r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_diag_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_diag_eq".  
 intros; rewrite H; ring.
 Qed.
 Hint Resolve Rminus_diag_eq: real.
 
 
 Lemma Rminus_diag_uniq : forall r1 r2, r1 - r2 = 0 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_diag_uniq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_diag_uniq".  
 intros r1 r2; unfold Rminus; rewrite Rplus_comm; intro.
 rewrite <- (Ropp_involutive r2); apply (Rplus_opp_r_uniq (- r2) r1 H).
 Qed.
 Hint Immediate Rminus_diag_uniq: real.
 
 Lemma Rminus_diag_uniq_sym : forall r1 r2, r2 - r1 = 0 -> r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_diag_uniq_sym". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_diag_uniq_sym".  
 intros; generalize (Rminus_diag_uniq r2 r1 H); clear H; intro H; rewrite H;
 ring.
 Qed.
 Hint Immediate Rminus_diag_uniq_sym: real.
 
 Lemma Rplus_minus : forall r1 r2, r1 + (r2 - r1) = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_minus".  
 intros; ring.
 Qed.
 Hint Resolve Rplus_minus: real.
 
 
 Lemma Rminus_eq_contra : forall r1 r2, r1 <> r2 -> r1 - r2 <> 0.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_eq_contra". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_eq_contra".  
 red; intros r1 r2 H H0.
 apply H; auto with real.
 Qed.
 Hint Resolve Rminus_eq_contra: real.
 
 Lemma Rminus_not_eq : forall r1 r2, r1 - r2 <> 0 -> r1 <> r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_not_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_not_eq".  
 red; intros; elim H; apply Rminus_diag_eq; auto.
 Qed.
 Hint Resolve Rminus_not_eq: real.
 
 Lemma Rminus_not_eq_right : forall r1 r2, r2 - r1 <> 0 -> r1 <> r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_not_eq_right". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_not_eq_right".  
 red; intros; elim H; rewrite H0; ring.
 Qed.
 Hint Resolve Rminus_not_eq_right: real.
@@ -789,7 +789,7 @@ Hint Resolve Rminus_not_eq_right: real.
 
 Lemma Rmult_minus_distr_l :
 forall r1 r2 r3, r1 * (r2 - r3) = r1 * r2 - r1 * r3.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_minus_distr_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_minus_distr_l".  
 intros; ring.
 Qed.
 
@@ -798,14 +798,14 @@ Qed.
 
 
 Lemma Rinv_1 : / 1 = 1.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_1".  
 field.
 Qed.
 Hint Resolve Rinv_1: real.
 
 
 Lemma Rinv_neq_0_compat : forall r, r <> 0 -> / r <> 0.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_neq_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_neq_0_compat".  
 red; intros; apply R1_neq_R0.
 replace 1 with (/ r * r); auto with real.
 Qed.
@@ -813,7 +813,7 @@ Hint Resolve Rinv_neq_0_compat: real.
 
 
 Lemma Rinv_involutive : forall r, r <> 0 -> / / r = r.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_involutive". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_involutive".  
 intros; field; trivial.
 Qed.
 Hint Resolve Rinv_involutive: real.
@@ -821,30 +821,30 @@ Hint Resolve Rinv_involutive: real.
 
 Lemma Rinv_mult_distr :
 forall r1 r2, r1 <> 0 -> r2 <> 0 -> / (r1 * r2) = / r1 * / r2.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_mult_distr". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_mult_distr".  
 intros; field; auto.
 Qed.
 
 
 Lemma Ropp_inv_permute : forall r, r <> 0 -> - / r = / - r.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_inv_permute". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_inv_permute".  
 intros; field; trivial.
 Qed.
 
 Lemma Rinv_r_simpl_r : forall r1 r2, r1 <> 0 -> r1 * / r1 * r2 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_r_simpl_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_r_simpl_r".  
 intros; transitivity (1 * r2); auto with real.
 rewrite Rinv_r; auto with real.
 Qed.
 
 Lemma Rinv_r_simpl_l : forall r1 r2, r1 <> 0 -> r2 * r1 * / r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_r_simpl_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_r_simpl_l".  
 intros; transitivity (r2 * 1); auto with real.
 transitivity (r2 * (r1 * / r1)); auto with real.
 Qed.
 
 Lemma Rinv_r_simpl_m : forall r1 r2, r1 <> 0 -> r1 * r2 * / r1 = r2.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_r_simpl_m". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_r_simpl_m".  
 intros; transitivity (r2 * 1); auto with real.
 transitivity (r2 * (r1 * / r1)); auto with real.
 ring.
@@ -854,7 +854,7 @@ Hint Resolve Rinv_r_simpl_l Rinv_r_simpl_r Rinv_r_simpl_m: real.
 
 Lemma Rinv_mult_simpl :
 forall r1 r2 r3, r1 <> 0 -> r1 * / r2 * (r3 * / r1) = r3 * / r2.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_mult_simpl". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_mult_simpl".  
 intros a b c; intros.
 transitivity (a * / a * (c * / b)); auto with real.
 ring.
@@ -869,35 +869,35 @@ Qed.
 
 
 Lemma Rplus_gt_compat_l : forall r r1 r2, r1 > r2 -> r + r1 > r + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_gt_compat_l". Restart.  eauto using Rplus_lt_compat_l with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_gt_compat_l".   eauto using Rplus_lt_compat_l with rorders. Qed.
 Hint Resolve Rplus_gt_compat_l: real.
 
 
 Lemma Rplus_lt_compat_r : forall r r1 r2, r1 < r2 -> r1 + r < r2 + r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_compat_r".  
 intros.
 rewrite (Rplus_comm r1 r); rewrite (Rplus_comm r2 r); auto with real.
 Qed.
 Hint Resolve Rplus_lt_compat_r: real.
 
 Lemma Rplus_gt_compat_r : forall r r1 r2, r1 > r2 -> r1 + r > r2 + r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_gt_compat_r". Restart.  do 3 intro; apply Rplus_lt_compat_r. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_gt_compat_r".   do 3 intro; apply Rplus_lt_compat_r. Qed.
 
 
 Lemma Rplus_le_compat_l : forall r r1 r2, r1 <= r2 -> r + r1 <= r + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_compat_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_compat_l".  
 unfold Rle; intros; elim H; intro.
 left; apply (Rplus_lt_compat_l r r1 r2 H0).
 right; rewrite <- H0; auto with zarith real.
 Qed.
 
 Lemma Rplus_ge_compat_l : forall r r1 r2, r1 >= r2 -> r + r1 >= r + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ge_compat_l". Restart.  auto using Rplus_le_compat_l with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ge_compat_l".   auto using Rplus_le_compat_l with rorders. Qed.
 Hint Resolve Rplus_ge_compat_l: real.
 
 
 Lemma Rplus_le_compat_r : forall r r1 r2, r1 <= r2 -> r1 + r <= r2 + r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_compat_r".  
 unfold Rle; intros; elim H; intro.
 left; apply (Rplus_lt_compat_r r r1 r2 H0).
 right; rewrite <- H0; auto with real.
@@ -906,41 +906,41 @@ Qed.
 Hint Resolve Rplus_le_compat_l Rplus_le_compat_r: real.
 
 Lemma Rplus_ge_compat_r : forall r r1 r2, r1 >= r2 -> r1 + r >= r2 + r.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ge_compat_r". Restart.  auto using Rplus_le_compat_r with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ge_compat_r".   auto using Rplus_le_compat_r with rorders. Qed.
 
 
 Lemma Rplus_lt_compat :
 forall r1 r2 r3 r4, r1 < r2 -> r3 < r4 -> r1 + r3 < r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_compat".  
 intros; apply Rlt_trans with (r2 + r3); auto with real.
 Qed.
 Hint Immediate Rplus_lt_compat: real.
 
 Lemma Rplus_le_compat :
 forall r1 r2 r3 r4, r1 <= r2 -> r3 <= r4 -> r1 + r3 <= r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_compat".  
 intros; apply Rle_trans with (r2 + r3); auto with real.
 Qed.
 Hint Immediate Rplus_le_compat: real.
 
 Lemma Rplus_gt_compat :
 forall r1 r2 r3 r4, r1 > r2 -> r3 > r4 -> r1 + r3 > r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_gt_compat". Restart.  auto using Rplus_lt_compat with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_gt_compat".   auto using Rplus_lt_compat with rorders. Qed.
 
 Lemma Rplus_ge_compat :
 forall r1 r2 r3 r4, r1 >= r2 -> r3 >= r4 -> r1 + r3 >= r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ge_compat". Restart.  auto using Rplus_le_compat with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ge_compat".   auto using Rplus_le_compat with rorders. Qed.
 
 
 Lemma Rplus_lt_le_compat :
 forall r1 r2 r3 r4, r1 < r2 -> r3 <= r4 -> r1 + r3 < r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_le_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_le_compat".  
 intros; apply Rlt_le_trans with (r2 + r3); auto with real.
 Qed.
 
 Lemma Rplus_le_lt_compat :
 forall r1 r2 r3 r4, r1 <= r2 -> r3 < r4 -> r1 + r3 < r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_lt_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_lt_compat".  
 intros; apply Rle_lt_trans with (r2 + r3); auto with real.
 Qed.
 
@@ -948,15 +948,15 @@ Hint Immediate Rplus_lt_le_compat Rplus_le_lt_compat: real.
 
 Lemma Rplus_gt_ge_compat :
 forall r1 r2 r3 r4, r1 > r2 -> r3 >= r4 -> r1 + r3 > r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_gt_ge_compat". Restart.  auto using Rplus_lt_le_compat with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_gt_ge_compat".   auto using Rplus_lt_le_compat with rorders. Qed.
 
 Lemma Rplus_ge_gt_compat :
 forall r1 r2 r3 r4, r1 >= r2 -> r3 > r4 -> r1 + r3 > r2 + r4.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ge_gt_compat". Restart.  auto using Rplus_le_lt_compat with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ge_gt_compat".   auto using Rplus_le_lt_compat with rorders. Qed.
 
 
 Lemma Rplus_lt_0_compat : forall r1 r2, 0 < r1 -> 0 < r2 -> 0 < r1 + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_0_compat".  
 intros x y; intros; apply Rlt_trans with x;
 [ assumption
 | pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_lt_compat_l;
@@ -964,7 +964,7 @@ assumption ].
 Qed.
 
 Lemma Rplus_le_lt_0_compat : forall r1 r2, 0 <= r1 -> 0 < r2 -> 0 < r1 + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_lt_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_lt_0_compat".  
 intros x y; intros; apply Rle_lt_trans with x;
 [ assumption
 | pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_lt_compat_l;
@@ -972,13 +972,13 @@ assumption ].
 Qed.
 
 Lemma Rplus_lt_le_0_compat : forall r1 r2, 0 < r1 -> 0 <= r2 -> 0 < r1 + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_le_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_le_0_compat".  
 intros x y; intros; rewrite <- Rplus_comm; apply Rplus_le_lt_0_compat;
 assumption.
 Qed.
 
 Lemma Rplus_le_le_0_compat : forall r1 r2, 0 <= r1 -> 0 <= r2 -> 0 <= r1 + r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_le_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_le_0_compat".  
 intros x y; intros; apply Rle_trans with x;
 [ assumption
 | pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_le_compat_l;
@@ -989,7 +989,7 @@ Qed.
 Lemma sum_inequa_Rle_lt :
 forall a x b c y d:R,
 a <= x -> x < b -> c < y -> y <= d -> a + c < x + y < b + d.
-Proof. hammer_hook "RIneq" "RIneq.sum_inequa_Rle_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.sum_inequa_Rle_lt".  
 intros; split.
 apply Rlt_le_trans with (a + y); auto with real.
 apply Rlt_le_trans with (b + y); auto with real.
@@ -998,7 +998,7 @@ Qed.
 
 
 Lemma Rplus_lt_reg_l : forall r r1 r2, r + r1 < r + r2 -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_reg_l".  
 intros; cut (- r + r + r1 < - r + r + r2).
 rewrite Rplus_opp_l.
 elim (Rplus_ne r1); elim (Rplus_ne r2); intros; rewrite <- H3; rewrite <- H1;
@@ -1008,40 +1008,40 @@ apply (Rplus_lt_compat_l (- r) (r + r1) (r + r2) H).
 Qed.
 
 Lemma Rplus_lt_reg_r : forall r r1 r2, r1 + r < r2 + r -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_reg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_reg_r".  
 intros.
 apply (Rplus_lt_reg_l r).
 now rewrite 2!(Rplus_comm r).
 Qed.
 
 Lemma Rplus_le_reg_l : forall r r1 r2, r + r1 <= r + r2 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_reg_l".  
 unfold Rle; intros; elim H; intro.
 left; apply (Rplus_lt_reg_l r r1 r2 H0).
 right; apply (Rplus_eq_reg_l r r1 r2 H0).
 Qed.
 
 Lemma Rplus_le_reg_r : forall r r1 r2, r1 + r <= r2 + r -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_reg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_reg_r".  
 intros.
 apply (Rplus_le_reg_l r).
 now rewrite 2!(Rplus_comm r).
 Qed.
 
 Lemma Rplus_gt_reg_l : forall r r1 r2, r + r1 > r + r2 -> r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_gt_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_gt_reg_l".  
 unfold Rgt; intros; apply (Rplus_lt_reg_l r r2 r1 H).
 Qed.
 
 Lemma Rplus_ge_reg_l : forall r r1 r2, r + r1 >= r + r2 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ge_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ge_reg_l".  
 intros; apply Rle_ge; apply Rplus_le_reg_l with r; auto with real.
 Qed.
 
 
 Lemma Rplus_le_reg_pos_r :
 forall r1 r2 r3, 0 <= r2 -> r1 + r2 <= r3 -> r1 <= r3.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_le_reg_pos_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_le_reg_pos_r".  
 intros x y z; intros; apply Rle_trans with (x + y);
 [ pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_le_compat_l;
 assumption
@@ -1049,7 +1049,7 @@ assumption
 Qed.
 
 Lemma Rplus_lt_reg_pos_r : forall r1 r2 r3, 0 <= r2 -> r1 + r2 < r3 -> r1 < r3.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_lt_reg_pos_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_lt_reg_pos_r".  
 intros x y z; intros; apply Rle_lt_trans with (x + y);
 [ pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_le_compat_l;
 assumption
@@ -1058,7 +1058,7 @@ Qed.
 
 Lemma Rplus_ge_reg_neg_r :
 forall r1 r2 r3, 0 >= r2 -> r1 + r2 >= r3 -> r1 >= r3.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_ge_reg_neg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_ge_reg_neg_r".  
 intros x y z; intros; apply Rge_trans with (x + y);
 [ pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_ge_compat_l;
 assumption
@@ -1066,7 +1066,7 @@ assumption
 Qed.
 
 Lemma Rplus_gt_reg_neg_r : forall r1 r2 r3, 0 >= r2 -> r1 + r2 > r3 -> r1 > r3.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_gt_reg_neg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_gt_reg_neg_r".  
 intros x y z; intros; apply Rge_gt_trans with (x + y);
 [ pattern x at 1; rewrite <- (Rplus_0_r x); apply Rplus_ge_compat_l;
 assumption
@@ -1080,7 +1080,7 @@ Qed.
 
 
 Lemma Ropp_gt_lt_contravar : forall r1 r2, r1 > r2 -> - r1 < - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_gt_lt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_gt_lt_contravar".  
 unfold Rgt; intros.
 apply (Rplus_lt_reg_l (r2 + r1)).
 replace (r2 + r1 + - r1) with r2 by ring.
@@ -1090,79 +1090,79 @@ Qed.
 Hint Resolve Ropp_gt_lt_contravar.
 
 Lemma Ropp_lt_gt_contravar : forall r1 r2, r1 < r2 -> - r1 > - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_lt_gt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_lt_gt_contravar".  
 unfold Rgt; auto with real.
 Qed.
 Hint Resolve Ropp_lt_gt_contravar: real.
 
 
 Lemma Ropp_lt_contravar : forall r1 r2, r2 < r1 -> - r1 < - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_lt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_lt_contravar".  
 auto with real.
 Qed.
 Hint Resolve Ropp_lt_contravar: real.
 
 Lemma Ropp_gt_contravar : forall r1 r2, r2 > r1 -> - r1 > - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_gt_contravar". Restart.  auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_gt_contravar".   auto with real. Qed.
 
 
 Lemma Ropp_le_ge_contravar : forall r1 r2, r1 <= r2 -> - r1 >= - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_le_ge_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_le_ge_contravar".  
 unfold Rge; intros r1 r2 [H| H]; auto with real.
 Qed.
 Hint Resolve Ropp_le_ge_contravar: real.
 
 Lemma Ropp_ge_le_contravar : forall r1 r2, r1 >= r2 -> - r1 <= - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_ge_le_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_ge_le_contravar".  
 unfold Rle; intros r1 r2 [H| H]; auto with real.
 Qed.
 Hint Resolve Ropp_ge_le_contravar: real.
 
 
 Lemma Ropp_le_contravar : forall r1 r2, r2 <= r1 -> - r1 <= - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_le_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_le_contravar".  
 intros r1 r2 H; elim H; auto with real.
 Qed.
 Hint Resolve Ropp_le_contravar: real.
 
 Lemma Ropp_ge_contravar : forall r1 r2, r2 >= r1 -> - r1 >= - r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_ge_contravar". Restart.  auto using Ropp_le_contravar with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_ge_contravar".   auto using Ropp_le_contravar with real. Qed.
 
 
 Lemma Ropp_0_lt_gt_contravar : forall r, 0 < r -> 0 > - r.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_0_lt_gt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_0_lt_gt_contravar".  
 intros; replace 0 with (-0); auto with real.
 Qed.
 Hint Resolve Ropp_0_lt_gt_contravar: real.
 
 Lemma Ropp_0_gt_lt_contravar : forall r, 0 > r -> 0 < - r.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_0_gt_lt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_0_gt_lt_contravar".  
 intros; replace 0 with (-0); auto with real.
 Qed.
 Hint Resolve Ropp_0_gt_lt_contravar: real.
 
 
 Lemma Ropp_lt_gt_0_contravar : forall r, r > 0 -> - r < 0.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_lt_gt_0_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_lt_gt_0_contravar".  
 intros; rewrite <- Ropp_0; auto with real.
 Qed.
 Hint Resolve Ropp_lt_gt_0_contravar: real.
 
 Lemma Ropp_gt_lt_0_contravar : forall r, r < 0 -> - r > 0.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_gt_lt_0_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_gt_lt_0_contravar".  
 intros; rewrite <- Ropp_0; auto with real.
 Qed.
 Hint Resolve Ropp_gt_lt_0_contravar: real.
 
 
 Lemma Ropp_0_le_ge_contravar : forall r, 0 <= r -> 0 >= - r.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_0_le_ge_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_0_le_ge_contravar".  
 intros; replace 0 with (-0); auto with real.
 Qed.
 Hint Resolve Ropp_0_le_ge_contravar: real.
 
 Lemma Ropp_0_ge_le_contravar : forall r, 0 >= r -> 0 <= - r.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_0_ge_le_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_0_ge_le_contravar".  
 intros; replace 0 with (-0); auto with real.
 Qed.
 Hint Resolve Ropp_0_ge_le_contravar: real.
@@ -1170,7 +1170,7 @@ Hint Resolve Ropp_0_ge_le_contravar: real.
 
 
 Lemma Ropp_lt_cancel : forall r1 r2, - r2 < - r1 -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_lt_cancel". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_lt_cancel".  
 intros x y H'.
 rewrite <- (Ropp_involutive x); rewrite <- (Ropp_involutive y);
 auto with real.
@@ -1178,10 +1178,10 @@ Qed.
 Hint Immediate Ropp_lt_cancel: real.
 
 Lemma Ropp_gt_cancel : forall r1 r2, - r2 > - r1 -> r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_gt_cancel". Restart.  auto using Ropp_lt_cancel with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_gt_cancel".   auto using Ropp_lt_cancel with rorders. Qed.
 
 Lemma Ropp_le_cancel : forall r1 r2, - r2 <= - r1 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_le_cancel". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_le_cancel".  
 intros x y H.
 elim H; auto with real.
 intro H1; rewrite <- (Ropp_involutive x); rewrite <- (Ropp_involutive y);
@@ -1190,7 +1190,7 @@ Qed.
 Hint Immediate Ropp_le_cancel: real.
 
 Lemma Ropp_ge_cancel : forall r1 r2, - r2 >= - r1 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Ropp_ge_cancel". Restart.  auto using Ropp_le_cancel with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Ropp_ge_cancel".   auto using Ropp_le_cancel with rorders. Qed.
 
 
 
@@ -1201,21 +1201,21 @@ Proof. hammer_hook "RIneq" "RIneq.Ropp_ge_cancel". Restart.  auto using Ropp_le_
 
 
 Lemma Rmult_lt_compat_r : forall r r1 r2, 0 < r -> r1 < r2 -> r1 * r < r2 * r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_lt_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_lt_compat_r".  
 intros; rewrite (Rmult_comm r1 r); rewrite (Rmult_comm r2 r); auto with real.
 Qed.
 Hint Resolve Rmult_lt_compat_r.
 
 Lemma Rmult_gt_compat_r : forall r r1 r2, r > 0 -> r1 > r2 -> r1 * r > r2 * r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_gt_compat_r". Restart.  eauto using Rmult_lt_compat_r with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_gt_compat_r".   eauto using Rmult_lt_compat_r with rorders. Qed.
 
 Lemma Rmult_gt_compat_l : forall r r1 r2, r > 0 -> r1 > r2 -> r * r1 > r * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_gt_compat_l". Restart.  eauto using Rmult_lt_compat_l with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_gt_compat_l".   eauto using Rmult_lt_compat_l with rorders. Qed.
 
 
 Lemma Rmult_le_compat_l :
 forall r r1 r2, 0 <= r -> r1 <= r2 -> r * r1 <= r * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_compat_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_compat_l".  
 intros r r1 r2 H H0; destruct H; destruct H0; unfold Rle;
 auto with real.
 right; rewrite <- H; do 2 rewrite Rmult_0_l; reflexivity.
@@ -1224,7 +1224,7 @@ Hint Resolve Rmult_le_compat_l: real.
 
 Lemma Rmult_le_compat_r :
 forall r r1 r2, 0 <= r -> r1 <= r2 -> r1 * r <= r2 * r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_compat_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_compat_r".  
 intros r r1 r2 H; rewrite (Rmult_comm r1 r); rewrite (Rmult_comm r2 r);
 auto with real.
 Qed.
@@ -1232,17 +1232,17 @@ Hint Resolve Rmult_le_compat_r: real.
 
 Lemma Rmult_ge_compat_l :
 forall r r1 r2, r >= 0 -> r1 >= r2 -> r * r1 >= r * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_ge_compat_l". Restart.  eauto using Rmult_le_compat_l with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_ge_compat_l".   eauto using Rmult_le_compat_l with rorders. Qed.
 
 Lemma Rmult_ge_compat_r :
 forall r r1 r2, r >= 0 -> r1 >= r2 -> r1 * r >= r2 * r.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_ge_compat_r". Restart.  eauto using Rmult_le_compat_r with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_ge_compat_r".   eauto using Rmult_le_compat_r with rorders. Qed.
 
 
 Lemma Rmult_le_compat :
 forall r1 r2 r3 r4,
 0 <= r1 -> 0 <= r3 -> r1 <= r2 -> r3 <= r4 -> r1 * r3 <= r2 * r4.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_compat".  
 intros x y z t H' H'0 H'1 H'2.
 apply Rle_trans with (r2 := x * t); auto with real.
 repeat rewrite (fun x => Rmult_comm x t).
@@ -1254,12 +1254,12 @@ Hint Resolve Rmult_le_compat: real.
 Lemma Rmult_ge_compat :
 forall r1 r2 r3 r4,
 r2 >= 0 -> r4 >= 0 -> r1 >= r2 -> r3 >= r4 -> r1 * r3 >= r2 * r4.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_ge_compat". Restart.  auto with real rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_ge_compat".   auto with real rorders. Qed.
 
 Lemma Rmult_gt_0_lt_compat :
 forall r1 r2 r3 r4,
 r3 > 0 -> r2 > 0 -> r1 < r2 -> r3 < r4 -> r1 * r3 < r2 * r4.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_gt_0_lt_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_gt_0_lt_compat".  
 intros; apply Rlt_trans with (r2 * r3); auto with real.
 Qed.
 
@@ -1267,7 +1267,7 @@ Qed.
 Lemma Rmult_le_0_lt_compat :
 forall r1 r2 r3 r4,
 0 <= r1 -> 0 <= r3 -> r1 < r2 -> r3 < r4 -> r1 * r3 < r2 * r4.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_0_lt_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_0_lt_compat".  
 intros; apply Rle_lt_trans with (r2 * r3);
 [ apply Rmult_le_compat_r; [ assumption | left; assumption ]
 | apply Rmult_lt_compat_l;
@@ -1276,16 +1276,16 @@ Qed.
 
 
 Lemma Rmult_lt_0_compat : forall r1 r2, 0 < r1 -> 0 < r2 -> 0 < r1 * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_lt_0_compat". Restart.  intros; replace 0 with (0 * r2); auto with real. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_lt_0_compat".   intros; replace 0 with (0 * r2); auto with real. Qed.
 
 Lemma Rmult_gt_0_compat : forall r1 r2, r1 > 0 -> r2 > 0 -> r1 * r2 > 0.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_gt_0_compat". Restart. exact (Rmult_lt_0_compat). Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_gt_0_compat".  exact (Rmult_lt_0_compat). Qed.
 
 
 
 Lemma Rmult_le_compat_neg_l :
 forall r r1 r2, r <= 0 -> r1 <= r2 -> r * r2 <= r * r1.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_compat_neg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_compat_neg_l".  
 intros; replace r with (- - r); auto with real.
 do 2 rewrite (Ropp_mult_distr_l_reverse (- r)).
 apply Ropp_le_contravar; auto with real.
@@ -1294,14 +1294,14 @@ Hint Resolve Rmult_le_compat_neg_l: real.
 
 Lemma Rmult_le_ge_compat_neg_l :
 forall r r1 r2, r <= 0 -> r1 <= r2 -> r * r1 >= r * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_ge_compat_neg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_ge_compat_neg_l".  
 intros; apply Rle_ge; auto with real.
 Qed.
 Hint Resolve Rmult_le_ge_compat_neg_l: real.
 
 Lemma Rmult_lt_gt_compat_neg_l :
 forall r r1 r2, r < 0 -> r1 < r2 -> r * r1 > r * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_lt_gt_compat_neg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_lt_gt_compat_neg_l".  
 intros; replace r with (- - r); auto with real.
 rewrite (Ropp_mult_distr_l_reverse (- r));
 rewrite (Ropp_mult_distr_l_reverse (- r)).
@@ -1311,7 +1311,7 @@ Qed.
 
 
 Lemma Rmult_lt_reg_l : forall r r1 r2, 0 < r -> r * r1 < r * r2 -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_lt_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_lt_reg_l".  
 intros z x y H H0.
 case (Rtotal_order x y); intros Eq0; auto; elim Eq0; clear Eq0; intros Eq0.
 rewrite Eq0 in H0; exfalso; apply (Rlt_irrefl (z * y)); auto.
@@ -1321,7 +1321,7 @@ intro; apply (Rlt_irrefl (z * x)); auto.
 Qed.
 
 Lemma Rmult_lt_reg_r : forall r r1 r2 : R, 0 < r -> r1 * r < r2 * r -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_lt_reg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_lt_reg_r".  
 intros.
 apply Rmult_lt_reg_l with r.
 exact H.
@@ -1329,10 +1329,10 @@ now rewrite 2!(Rmult_comm r).
 Qed.
 
 Lemma Rmult_gt_reg_l : forall r r1 r2, 0 < r -> r * r1 < r * r2 -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_gt_reg_l". Restart.  eauto using Rmult_lt_reg_l with rorders. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_gt_reg_l".   eauto using Rmult_lt_reg_l with rorders. Qed.
 
 Lemma Rmult_le_reg_l : forall r r1 r2, 0 < r -> r * r1 <= r * r2 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_reg_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_reg_l".  
 intros z x y H H0; case H0; auto with real.
 intros H1; apply Rlt_le.
 apply Rmult_lt_reg_l with (r := z); auto.
@@ -1344,7 +1344,7 @@ rewrite <- Rmult_assoc; rewrite Rinv_l; auto with real.
 Qed.
 
 Lemma Rmult_le_reg_r : forall r r1 r2, 0 < r -> r1 * r <= r2 * r -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_reg_r". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_reg_r".  
 intros.
 apply Rmult_le_reg_l with r.
 exact H.
@@ -1356,7 +1356,7 @@ Qed.
 
 
 Lemma Rlt_minus : forall r1 r2, r1 < r2 -> r1 - r2 < 0.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_minus".  
 intros; apply (Rplus_lt_reg_l r2).
 replace (r2 + (r1 - r2)) with r1 by ring.
 now rewrite Rplus_0_r.
@@ -1364,25 +1364,25 @@ Qed.
 Hint Resolve Rlt_minus: real.
 
 Lemma Rgt_minus : forall r1 r2, r1 > r2 -> r1 - r2 > 0.
-Proof. hammer_hook "RIneq" "RIneq.Rgt_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rgt_minus".  
 intros; apply (Rplus_lt_reg_l r2).
 replace (r2 + (r1 - r2)) with r1 by ring.
 now rewrite Rplus_0_r.
 Qed.
 
 Lemma Rlt_Rminus : forall a b:R, a < b -> 0 < b - a.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_Rminus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_Rminus".  
 intros a b; apply Rgt_minus.
 Qed.
 
 
 Lemma Rle_minus : forall r1 r2, r1 <= r2 -> r1 - r2 <= 0.
-Proof. hammer_hook "RIneq" "RIneq.Rle_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_minus".  
 destruct 1; unfold Rle; auto with real.
 Qed.
 
 Lemma Rge_minus : forall r1 r2, r1 >= r2 -> r1 - r2 >= 0.
-Proof. hammer_hook "RIneq" "RIneq.Rge_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rge_minus".  
 destruct 1.
 auto using Rgt_minus, Rgt_ge.
 right; auto using Rminus_diag_eq with rorders.
@@ -1390,14 +1390,14 @@ Qed.
 
 
 Lemma Rminus_lt : forall r1 r2, r1 - r2 < 0 -> r1 < r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_lt".  
 intros; replace r1 with (r1 - r2 + r2).
 pattern r2 at 3; replace r2 with (0 + r2); auto with real.
 ring.
 Qed.
 
 Lemma Rminus_gt : forall r1 r2, r1 - r2 > 0 -> r1 > r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_gt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_gt".  
 intros; replace r2 with (0 + r2); auto with real.
 replace r1 with (r1 - r2 + r2).
 apply Rplus_gt_compat_r; assumption.
@@ -1405,18 +1405,18 @@ ring.
 Qed.
 
 Lemma Rminus_gt_0_lt : forall a b, 0 < b - a -> a < b.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_gt_0_lt". Restart.  intro; intro; apply Rminus_gt. Qed.
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_gt_0_lt".   intro; intro; apply Rminus_gt. Qed.
 
 
 Lemma Rminus_le : forall r1 r2, r1 - r2 <= 0 -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_le".  
 intros; replace r1 with (r1 - r2 + r2).
 pattern r2 at 3; replace r2 with (0 + r2); auto with real.
 ring.
 Qed.
 
 Lemma Rminus_ge : forall r1 r2, r1 - r2 >= 0 -> r1 >= r2.
-Proof. hammer_hook "RIneq" "RIneq.Rminus_ge". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rminus_ge".  
 intros; replace r2 with (0 + r2); auto with real.
 replace r1 with (r1 - r2 + r2).
 apply Rplus_ge_compat_r; assumption.
@@ -1425,7 +1425,7 @@ Qed.
 
 
 Lemma tech_Rplus : forall r (s:R), 0 <= r -> 0 < s -> r + s <> 0.
-Proof. hammer_hook "RIneq" "RIneq.tech_Rplus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.tech_Rplus".  
 intros; apply not_eq_sym; apply Rlt_not_eq.
 rewrite Rplus_comm; replace 0 with (0 + 0); auto with real.
 Qed.
@@ -1436,7 +1436,7 @@ Hint Immediate tech_Rplus: real.
 
 
 Lemma Rle_0_sqr : forall r, 0 <= Rsqr r.
-Proof. hammer_hook "RIneq" "RIneq.Rle_0_sqr". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_0_sqr".  
 intro; case (Rlt_le_dec r 0); unfold Rsqr; intro.
 replace (r * r) with (- r * - r); auto with real.
 replace 0 with (- r * 0); auto with real.
@@ -1445,7 +1445,7 @@ Qed.
 
 
 Lemma Rlt_0_sqr : forall r, r <> 0 -> 0 < Rsqr r.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_0_sqr". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_0_sqr".  
 intros; case (Rdichotomy r 0); trivial; unfold Rsqr; intro.
 replace (r * r) with (- r * - r); auto with real.
 replace 0 with (- r * 0); auto with real.
@@ -1455,14 +1455,14 @@ Hint Resolve Rle_0_sqr Rlt_0_sqr: real.
 
 
 Lemma Rplus_sqr_eq_0_l : forall r1 r2, Rsqr r1 + Rsqr r2 = 0 -> r1 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_sqr_eq_0_l". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_sqr_eq_0_l".  
 intros a b; intros; apply Rsqr_0_uniq; apply Rplus_eq_0_l with (Rsqr b);
 auto with real.
 Qed.
 
 Lemma Rplus_sqr_eq_0 :
 forall r1 r2, Rsqr r1 + Rsqr r2 = 0 -> r1 = 0 /\ r2 = 0.
-Proof. hammer_hook "RIneq" "RIneq.Rplus_sqr_eq_0". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rplus_sqr_eq_0".  
 intros a b; split.
 apply Rplus_sqr_eq_0_l with b; auto with real.
 apply Rplus_sqr_eq_0_l with a; auto with real.
@@ -1474,14 +1474,14 @@ Qed.
 
 
 Lemma Rlt_0_1 : 0 < 1.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_0_1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_0_1".  
 replace 1 with (Rsqr 1); auto with real.
 unfold Rsqr; auto with real.
 Qed.
 Hint Resolve Rlt_0_1: real.
 
 Lemma Rle_0_1 : 0 <= 1.
-Proof. hammer_hook "RIneq" "RIneq.Rle_0_1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_0_1".  
 left.
 exact Rlt_0_1.
 Qed.
@@ -1491,7 +1491,7 @@ Qed.
 
 
 Lemma Rinv_0_lt_compat : forall r, 0 < r -> 0 < / r.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_0_lt_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_0_lt_compat".  
 intros; apply Rnot_le_lt; red; intros.
 absurd (1 <= 0); auto with real.
 replace 1 with (r * / r); auto with real.
@@ -1501,7 +1501,7 @@ Hint Resolve Rinv_0_lt_compat: real.
 
 
 Lemma Rinv_lt_0_compat : forall r, r < 0 -> / r < 0.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_lt_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_lt_0_compat".  
 intros; apply Rnot_le_lt; red; intros.
 absurd (1 <= 0); auto with real.
 replace 1 with (r * / r); auto with real.
@@ -1511,7 +1511,7 @@ Hint Resolve Rinv_lt_0_compat: real.
 
 
 Lemma Rinv_lt_contravar : forall r1 r2, 0 < r1 * r2 -> r1 < r2 -> / r2 < / r1.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_lt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_lt_contravar".  
 intros; apply Rmult_lt_reg_l with (r1 * r2); auto with real.
 case (Rmult_neq_0_reg r1 r2); intros; auto with real.
 replace (r1 * r2 * / r2) with r1.
@@ -1521,7 +1521,7 @@ symmetry ; auto with real.
 Qed.
 
 Lemma Rinv_1_lt_contravar : forall r1 r2, 1 <= r1 -> r1 < r2 -> / r2 < / r1.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_1_lt_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_1_lt_contravar".  
 intros x y H' H'0.
 cut (0 < x); [ intros Lt0 | apply Rlt_le_trans with (r2 := 1) ];
 auto with real.
@@ -1544,7 +1544,7 @@ Hint Resolve Rinv_1_lt_contravar: real.
 
 
 Lemma Rle_lt_0_plus_1 : forall r, 0 <= r -> 0 < r + 1.
-Proof. hammer_hook "RIneq" "RIneq.Rle_lt_0_plus_1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_lt_0_plus_1".  
 intros.
 apply Rlt_le_trans with 1; auto with real.
 pattern 1 at 1; replace 1 with (0 + 1); auto with real.
@@ -1553,7 +1553,7 @@ Hint Resolve Rle_lt_0_plus_1: real.
 
 
 Lemma Rlt_plus_1 : forall r, r < r + 1.
-Proof. hammer_hook "RIneq" "RIneq.Rlt_plus_1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rlt_plus_1".  
 intros.
 pattern r at 1; replace r with (r + 0); auto with real.
 Qed.
@@ -1561,7 +1561,7 @@ Hint Resolve Rlt_plus_1: real.
 
 
 Lemma tech_Rgt_minus : forall r1 r2, 0 < r2 -> r1 > r1 - r2.
-Proof. hammer_hook "RIneq" "RIneq.tech_Rgt_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.tech_Rgt_minus".  
 red; unfold Rminus; intros.
 pattern r1 at 2; replace r1 with (r1 + 0); auto with real.
 Qed.
@@ -1572,19 +1572,19 @@ Qed.
 
 
 Lemma S_INR : forall n:nat, INR (S n) = INR n + 1.
-Proof. hammer_hook "RIneq" "RIneq.S_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.S_INR".  
 intro; case n; auto with real.
 Qed.
 
 
 Lemma S_O_plus_INR : forall n:nat, INR (1 + n) = INR 1 + INR n.
-Proof. hammer_hook "RIneq" "RIneq.S_O_plus_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.S_O_plus_INR".  
 intro; simpl; case n; intros; auto with real.
 Qed.
 
 
 Lemma plus_INR : forall n m:nat, INR (n + m) = INR n + INR m.
-Proof. hammer_hook "RIneq" "RIneq.plus_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.plus_INR".  
 intros n m; induction  n as [| n Hrecn].
 simpl; auto with real.
 replace (S n + m)%nat with (S (n + m)); auto with arith.
@@ -1595,7 +1595,7 @@ Hint Resolve plus_INR: real.
 
 
 Lemma minus_INR : forall n m:nat, (m <= n)%nat -> INR (n - m) = INR n - INR m.
-Proof. hammer_hook "RIneq" "RIneq.minus_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.minus_INR".  
 intros n m le; pattern m, n; apply le_elim_rel; auto with real.
 intros; rewrite <- minus_n_O; auto with real.
 intros; repeat rewrite S_INR; simpl.
@@ -1605,7 +1605,7 @@ Hint Resolve minus_INR: real.
 
 
 Lemma mult_INR : forall n m:nat, INR (n * m) = INR n * INR m.
-Proof. hammer_hook "RIneq" "RIneq.mult_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.mult_INR".  
 intros n m; induction  n as [| n Hrecn].
 simpl; auto with real.
 intros; repeat rewrite S_INR; simpl.
@@ -1615,14 +1615,14 @@ Hint Resolve mult_INR: real.
 
 
 Lemma lt_0_INR : forall n:nat, (0 < n)%nat -> 0 < INR n.
-Proof. hammer_hook "RIneq" "RIneq.lt_0_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.lt_0_INR".  
 simple induction 1; intros; auto with real.
 rewrite S_INR; auto with real.
 Qed.
 Hint Resolve lt_0_INR: real.
 
 Lemma lt_INR : forall n m:nat, (n < m)%nat -> INR n < INR m.
-Proof. hammer_hook "RIneq" "RIneq.lt_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.lt_INR".  
 simple induction 1; intros; auto with real.
 rewrite S_INR; auto with real.
 rewrite S_INR; apply Rlt_trans with (INR m0); auto with real.
@@ -1630,14 +1630,14 @@ Qed.
 Hint Resolve lt_INR: real.
 
 Lemma lt_1_INR : forall n:nat, (1 < n)%nat -> 1 < INR n.
-Proof. hammer_hook "RIneq" "RIneq.lt_1_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.lt_1_INR".  
 apply lt_INR.
 Qed.
 Hint Resolve lt_1_INR: real.
 
 
 Lemma pos_INR_nat_of_P : forall p:positive, 0 < INR (Pos.to_nat p).
-Proof. hammer_hook "RIneq" "RIneq.pos_INR_nat_of_P". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.pos_INR_nat_of_P".  
 intro; apply lt_0_INR.
 simpl; auto with real.
 apply Pos2Nat.is_pos.
@@ -1646,7 +1646,7 @@ Hint Resolve pos_INR_nat_of_P: real.
 
 
 Lemma pos_INR : forall n:nat, 0 <= INR n.
-Proof. hammer_hook "RIneq" "RIneq.pos_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.pos_INR".  
 intro n; case n.
 simpl; auto with real.
 auto with arith real.
@@ -1654,7 +1654,7 @@ Qed.
 Hint Resolve pos_INR: real.
 
 Lemma INR_lt : forall n m:nat, INR n < INR m -> (n < m)%nat.
-Proof. hammer_hook "RIneq" "RIneq.INR_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.INR_lt".  
 intros n m. revert n.
 induction m ; intros n H.
 - elim (Rlt_irrefl 0).
@@ -1670,7 +1670,7 @@ Hint Resolve INR_lt: real.
 
 
 Lemma le_INR : forall n m:nat, (n <= m)%nat -> INR n <= INR m.
-Proof. hammer_hook "RIneq" "RIneq.le_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.le_INR".  
 simple induction 1; intros; auto with real.
 rewrite S_INR.
 apply Rle_trans with (INR m0); auto with real.
@@ -1679,7 +1679,7 @@ Hint Resolve le_INR: real.
 
 
 Lemma INR_not_0 : forall n:nat, INR n <> 0 -> n <> 0%nat.
-Proof. hammer_hook "RIneq" "RIneq.INR_not_0". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.INR_not_0".  
 red; intros n H H1.
 apply H.
 rewrite H1; trivial.
@@ -1688,7 +1688,7 @@ Hint Immediate INR_not_0: real.
 
 
 Lemma not_0_INR : forall n:nat, n <> 0%nat -> INR n <> 0.
-Proof. hammer_hook "RIneq" "RIneq.not_0_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.not_0_INR".  
 intro n; case n.
 intro; absurd (0%nat = 0%nat); trivial.
 intros; rewrite S_INR.
@@ -1697,7 +1697,7 @@ Qed.
 Hint Resolve not_0_INR: real.
 
 Lemma not_INR : forall n m:nat, n <> m -> INR n <> INR m.
-Proof. hammer_hook "RIneq" "RIneq.not_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.not_INR".  
 intros n m H; case (le_or_lt n m); intros H1.
 case (le_lt_or_eq _ _ H1); intros H2.
 apply Rlt_dichotomy_converse; auto with real.
@@ -1707,7 +1707,7 @@ Qed.
 Hint Resolve not_INR: real.
 
 Lemma INR_eq : forall n m:nat, INR n = INR m -> n = m.
-Proof. hammer_hook "RIneq" "RIneq.INR_eq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.INR_eq".  
 intros n m HR.
 destruct (dec_eq_nat n m) as [H|H].
 exact H.
@@ -1716,7 +1716,7 @@ Qed.
 Hint Resolve INR_eq: real.
 
 Lemma INR_le : forall n m:nat, INR n <= INR m -> (n <= m)%nat.
-Proof. hammer_hook "RIneq" "RIneq.INR_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.INR_le".  
 intros; elim H; intro.
 generalize (INR_lt n m H0); intro; auto with arith.
 generalize (INR_eq n m H0); intro; rewrite H1; auto.
@@ -1724,7 +1724,7 @@ Qed.
 Hint Resolve INR_le: real.
 
 Lemma not_1_INR : forall n:nat, n <> 1%nat -> INR n <> 1.
-Proof. hammer_hook "RIneq" "RIneq.not_1_INR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.not_1_INR".  
 intros n.
 apply not_INR.
 Qed.
@@ -1737,12 +1737,12 @@ Hint Resolve not_1_INR: real.
 
 
 Lemma IZN : forall n:Z, (0 <= n)%Z ->  exists m : nat, n = Z.of_nat m.
-Proof. hammer_hook "RIneq" "RIneq.IZN". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.IZN".  
 intros z; idtac; apply Z_of_nat_complete; assumption.
 Qed.
 
 Lemma INR_IPR : forall p, INR (Pos.to_nat p) = IPR p.
-Proof. hammer_hook "RIneq" "RIneq.INR_IPR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.INR_IPR".  
 assert (H: forall p, 2 * INR (Pos.to_nat p) = IPR_2 p).
 induction p as [p|p|] ; simpl IPR_2.
 rewrite Pos2Nat.inj_xI, S_INR, mult_INR, <- IHp.
@@ -1758,7 +1758,7 @@ Qed.
 
 
 Lemma INR_IZR_INZ : forall n:nat, INR n = IZR (Z.of_nat n).
-Proof. hammer_hook "RIneq" "RIneq.INR_IZR_INZ". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.INR_IZR_INZ".  
 intros [|n].
 easy.
 simpl Z.of_nat. unfold IZR.
@@ -1767,7 +1767,7 @@ Qed.
 
 Lemma plus_IZR_NEG_POS :
 forall p q:positive, IZR (Zpos p + Zneg q) = IZR (Zpos p) + IZR (Zneg q).
-Proof. hammer_hook "RIneq" "RIneq.plus_IZR_NEG_POS". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.plus_IZR_NEG_POS".  
 intros p q; simpl. rewrite Z.pos_sub_spec.
 case Pos.compare_spec; intros H; unfold IZR.
 subst. ring.
@@ -1781,7 +1781,7 @@ Qed.
 
 
 Lemma plus_IZR : forall n m:Z, IZR (n + m) = IZR n + IZR m.
-Proof. hammer_hook "RIneq" "RIneq.plus_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.plus_IZR".  
 intro z; destruct z; intro t; destruct t; intros; auto with real.
 simpl. unfold IZR. rewrite <- 3!INR_IPR, Pos2Nat.inj_add. apply plus_INR.
 apply plus_IZR_NEG_POS.
@@ -1792,13 +1792,13 @@ Qed.
 
 
 Lemma mult_IZR : forall n m:Z, IZR (n * m) = IZR n * IZR m.
-Proof. hammer_hook "RIneq" "RIneq.mult_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.mult_IZR".  
 intros z t; case z; case t; simpl; auto with real;
 unfold IZR; intros m n; rewrite <- 3!INR_IPR, Pos2Nat.inj_mul, mult_INR; ring.
 Qed.
 
 Lemma pow_IZR : forall z n, pow (IZR z) n = IZR (Z.pow z (Z.of_nat n)).
-Proof. hammer_hook "RIneq" "RIneq.pow_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.pow_IZR".  
 intros z [|n];simpl;trivial.
 rewrite Zpower_pos_nat.
 rewrite SuccNat2Pos.id_succ. unfold Zpower_nat;simpl.
@@ -1809,20 +1809,20 @@ Qed.
 
 
 Lemma succ_IZR : forall n:Z, IZR (Z.succ n) = IZR n + 1.
-Proof. hammer_hook "RIneq" "RIneq.succ_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.succ_IZR".  
 intro; unfold Z.succ; apply plus_IZR.
 Qed.
 
 
 Lemma opp_IZR : forall n:Z, IZR (- n) = - IZR n.
-Proof. hammer_hook "RIneq" "RIneq.opp_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.opp_IZR".  
 intros [|z|z]; unfold IZR; simpl; auto with real.
 Qed.
 
 Definition Ropp_Ropp_IZR := opp_IZR.
 
 Lemma minus_IZR : forall n m:Z, IZR (n - m) = IZR n - IZR m.
-Proof. hammer_hook "RIneq" "RIneq.minus_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.minus_IZR".  
 intros; unfold Z.sub, Rminus.
 rewrite <- opp_IZR.
 apply plus_IZR.
@@ -1830,14 +1830,14 @@ Qed.
 
 
 Lemma Z_R_minus : forall n m:Z, IZR n - IZR m = IZR (n - m).
-Proof. hammer_hook "RIneq" "RIneq.Z_R_minus". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Z_R_minus".  
 intros z1 z2; unfold Rminus; unfold Z.sub.
 rewrite <- (Ropp_Ropp_IZR z2); symmetry ; apply plus_IZR.
 Qed.
 
 
 Lemma lt_0_IZR : forall n:Z, 0 < IZR n -> (0 < n)%Z.
-Proof. hammer_hook "RIneq" "RIneq.lt_0_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.lt_0_IZR".  
 intro z; case z; simpl; intros.
 elim (Rlt_irrefl _ H).
 easy.
@@ -1849,7 +1849,7 @@ Qed.
 
 
 Lemma lt_IZR : forall n m:Z, IZR n < IZR m -> (n < m)%Z.
-Proof. hammer_hook "RIneq" "RIneq.lt_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.lt_IZR".  
 intros z1 z2 H; apply Z.lt_0_sub.
 apply lt_0_IZR.
 rewrite <- Z_R_minus.
@@ -1858,7 +1858,7 @@ Qed.
 
 
 Lemma eq_IZR_R0 : forall n:Z, IZR n = 0 -> n = 0%Z.
-Proof. hammer_hook "RIneq" "RIneq.eq_IZR_R0". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.eq_IZR_R0".  
 intro z; destruct z; simpl; intros; auto with zarith.
 elim Rgt_not_eq with (2 := H).
 unfold IZR. rewrite <- INR_IPR.
@@ -1870,7 +1870,7 @@ Qed.
 
 
 Lemma eq_IZR : forall n m:Z, IZR n = IZR m -> n = m.
-Proof. hammer_hook "RIneq" "RIneq.eq_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.eq_IZR".  
 intros z1 z2 H; generalize (Rminus_diag_eq (IZR z1) (IZR z2) H);
 rewrite (Z_R_minus z1 z2); intro; generalize (eq_IZR_R0 (z1 - z2) H0);
 intro; omega.
@@ -1878,14 +1878,14 @@ Qed.
 
 
 Lemma not_0_IZR : forall n:Z, n <> 0%Z -> IZR n <> 0.
-Proof. hammer_hook "RIneq" "RIneq.not_0_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.not_0_IZR".  
 intros z H; red; intros H0; case H.
 apply eq_IZR; auto.
 Qed.
 
 
 Lemma le_0_IZR : forall n:Z, 0 <= IZR n -> (0 <= n)%Z.
-Proof. hammer_hook "RIneq" "RIneq.le_0_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.le_0_IZR".  
 unfold Rle; intros z [H| H].
 red; intro; apply (Z.lt_le_incl 0 z (lt_0_IZR z H)); assumption.
 rewrite (eq_IZR_R0 z); auto with zarith real.
@@ -1893,7 +1893,7 @@ Qed.
 
 
 Lemma le_IZR : forall n m:Z, IZR n <= IZR m -> (n <= m)%Z.
-Proof. hammer_hook "RIneq" "RIneq.le_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.le_IZR".  
 unfold Rle; intros z1 z2 [H| H].
 apply (Z.lt_le_incl z1 z2); auto with real.
 apply lt_IZR; trivial.
@@ -1902,26 +1902,26 @@ Qed.
 
 
 Lemma le_IZR_R1 : forall n:Z, IZR n <= 1 -> (n <= 1)%Z.
-Proof. hammer_hook "RIneq" "RIneq.le_IZR_R1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.le_IZR_R1".  
 intros n.
 apply le_IZR.
 Qed.
 
 
 Lemma IZR_ge : forall n m:Z, (n >= m)%Z -> IZR n >= IZR m.
-Proof. hammer_hook "RIneq" "RIneq.IZR_ge". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.IZR_ge".  
 intros m n H; apply Rnot_lt_ge; red; intro.
 generalize (lt_IZR m n H0); intro; omega.
 Qed.
 
 Lemma IZR_le : forall n m:Z, (n <= m)%Z -> IZR n <= IZR m.
-Proof. hammer_hook "RIneq" "RIneq.IZR_le". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.IZR_le".  
 intros m n H; apply Rnot_gt_le; red; intro.
 unfold Rgt in H0; generalize (lt_IZR n m H0); intro; omega.
 Qed.
 
 Lemma IZR_lt : forall n m:Z, (n < m)%Z -> IZR n < IZR m.
-Proof. hammer_hook "RIneq" "RIneq.IZR_lt". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.IZR_lt".  
 intros m n H; cut (m <= n)%Z.
 intro H0; elim (IZR_le m n H0); intro; auto.
 generalize (eq_IZR m n H1); intro; exfalso; omega.
@@ -1929,7 +1929,7 @@ omega.
 Qed.
 
 Lemma IZR_neq : forall z1 z2:Z, z1 <> z2 -> IZR z1 <> IZR z2.
-Proof. hammer_hook "RIneq" "RIneq.IZR_neq". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.IZR_neq".  
 intros; red; intro; elim H; apply eq_IZR; assumption.
 Qed.
 
@@ -1940,7 +1940,7 @@ Hint Extern 0 (IZR _ >  IZR _) => apply IZR_lt, eq_refl : real.
 Hint Extern 0 (IZR _ <> IZR _) => apply IZR_neq, Zeq_bool_neq, eq_refl : real.
 
 Lemma one_IZR_lt1 : forall n:Z, -1 < IZR n < 1 -> n = 0%Z.
-Proof. hammer_hook "RIneq" "RIneq.one_IZR_lt1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.one_IZR_lt1".  
 intros z [H1 H2].
 apply Z.le_antisymm.
 apply Z.lt_succ_r; apply lt_IZR; trivial.
@@ -1950,7 +1950,7 @@ Qed.
 
 Lemma one_IZR_r_R1 :
 forall r (n m:Z), r < IZR n <= r + 1 -> r < IZR m <= r + 1 -> n = m.
-Proof. hammer_hook "RIneq" "RIneq.one_IZR_r_R1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.one_IZR_r_R1".  
 intros r z x [H1 H2] [H3 H4].
 cut ((z - x)%Z = 0%Z); auto with zarith.
 apply one_IZR_lt1.
@@ -1968,7 +1968,7 @@ Qed.
 Lemma single_z_r_R1 :
 forall r (n m:Z),
 r < IZR n -> IZR n <= r + 1 -> r < IZR m -> IZR m <= r + 1 -> n = m.
-Proof. hammer_hook "RIneq" "RIneq.single_z_r_R1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.single_z_r_R1".  
 intros; apply one_IZR_r_R1 with r; auto.
 Qed.
 
@@ -1978,21 +1978,21 @@ forall r (n:Z),
 r < IZR n ->
 IZR n <= r + 1 ->
 (exists s : Z, s <> n /\ r < IZR s /\ IZR s <= r + 1) -> False.
-Proof. hammer_hook "RIneq" "RIneq.tech_single_z_r_R1". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.tech_single_z_r_R1".  
 intros r z H1 H2 [s [H3 [H4 H5]]].
 apply H3; apply single_z_r_R1 with r; trivial.
 Qed.
 
 
 Lemma Rmult_le_pos : forall r1 r2, 0 <= r1 -> 0 <= r2 -> 0 <= r1 * r2.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_le_pos". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_le_pos".  
 intros x y H H0; rewrite <- (Rmult_0_l x); rewrite <- (Rmult_comm x);
 apply (Rmult_le_compat_l x 0 y H H0).
 Qed.
 
 Lemma Rinv_le_contravar :
 forall x y, 0 < x -> x <= y -> / y <= / x.
-Proof. hammer_hook "RIneq" "RIneq.Rinv_le_contravar". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rinv_le_contravar".  
 intros x y H1 [H2|H2].
 apply Rlt_le.
 apply Rinv_lt_contravar with (2 := H2).
@@ -2003,7 +2003,7 @@ apply Rle_refl.
 Qed.
 
 Lemma Rle_Rinv : forall x y:R, 0 < x -> 0 < y -> x <= y -> / y <= / x.
-Proof. hammer_hook "RIneq" "RIneq.Rle_Rinv". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rle_Rinv".  
 intros x y H _.
 apply Rinv_le_contravar with (1 := H).
 Qed.
@@ -2013,12 +2013,12 @@ intros x y; unfold Rdiv; ring.
 Qed.
 
 Lemma double : forall r1, 2 * r1 = r1 + r1.
-Proof. hammer_hook "RIneq" "RIneq.double". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.double".  
 intro; ring.
 Qed.
 
 Lemma double_var : forall r1, r1 = r1 / 2 + r1 / 2.
-Proof. hammer_hook "RIneq" "RIneq.double_var". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.double_var".  
 intro; rewrite <- double; unfold Rdiv; rewrite <- Rmult_assoc;
 symmetry ; apply Rinv_r_simpl_m.
 now apply not_0_IZR.
@@ -2027,7 +2027,7 @@ Qed.
 Lemma R_rm : ring_morph
 0%R 1%R Rplus Rmult Rminus Ropp eq
 0%Z 1%Z Zplus Zmult Zminus Zopp Zeq_bool IZR.
-Proof. hammer_hook "RIneq" "RIneq.R_rm". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.R_rm".  
 constructor ; try easy.
 exact plus_IZR.
 exact minus_IZR.
@@ -2040,7 +2040,7 @@ Qed.
 
 Lemma Zeq_bool_IZR x y :
 IZR x = IZR y -> Zeq_bool x y = true.
-Proof. hammer_hook "RIneq" "RIneq.Zeq_bool_IZR". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Zeq_bool_IZR".  
 intros H.
 apply Zeq_is_eq_bool.
 now apply eq_IZR.
@@ -2056,13 +2056,13 @@ Add Field RField : Rfield
 Lemma Rmult_ge_0_gt_0_lt_compat :
 forall r1 r2 r3 r4,
 r3 >= 0 -> r2 > 0 -> r1 < r2 -> r3 < r4 -> r1 * r3 < r2 * r4.
-Proof. hammer_hook "RIneq" "RIneq.Rmult_ge_0_gt_0_lt_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rmult_ge_0_gt_0_lt_compat".  
 intros; apply Rle_lt_trans with (r2 * r3); auto with real.
 Qed.
 
 Lemma le_epsilon :
 forall r1 r2, (forall eps:R, 0 < eps -> r1 <= r2 + eps) -> r1 <= r2.
-Proof. hammer_hook "RIneq" "RIneq.le_epsilon". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.le_epsilon".  
 intros x y H.
 destruct (Rle_or_lt x y) as [H1|H1].
 exact H1.
@@ -2081,12 +2081,12 @@ Qed.
 Lemma completeness_weak :
 forall E:R -> Prop,
 bound E -> (exists x : R, E x) ->  exists m : R, is_lub E m.
-Proof. hammer_hook "RIneq" "RIneq.completeness_weak". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.completeness_weak".  
 intros; elim (completeness E H H0); intros; split with x; assumption.
 Qed.
 
 Lemma Rdiv_lt_0_compat : forall a b, 0 < a -> 0 < b -> 0 < a/b.
-Proof. hammer_hook "RIneq" "RIneq.Rdiv_lt_0_compat". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Rdiv_lt_0_compat".  
 intros; apply Rmult_lt_0_compat;[|apply Rinv_0_lt_compat]; assumption.
 Qed.
 
@@ -2100,7 +2100,7 @@ Qed.
 
 
 Lemma Req_EM_T : forall r1 r2:R, {r1 = r2} + {r1 <> r2}.
-Proof. hammer_hook "RIneq" "RIneq.Req_EM_T". Restart. 
+Proof. try hammer_hook "RIneq" "RIneq.Req_EM_T".  
 intros; destruct (total_order_T r1 r2) as [[H|]|H].
 - right; red; intros ->; elim (Rlt_irrefl r2 H).
 - left; assumption.

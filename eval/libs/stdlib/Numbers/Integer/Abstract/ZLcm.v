@@ -25,14 +25,14 @@ Module Type ZLcmProp
 
 
 Lemma quot_div_nonneg : forall a b, 0<=a -> 0<b -> a÷b == a/b.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.quot_div_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.quot_div_nonneg".  
 intros. apply div_unique_pos with (a rem b).
 now apply rem_bound_pos.
 apply quot_rem. order.
 Qed.
 
 Lemma rem_mod_nonneg : forall a b, 0<=a -> 0<b -> a rem b == a mod b.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_mod_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_mod_nonneg".  
 intros. apply mod_unique_pos with (a÷b).
 now apply rem_bound_pos.
 apply quot_rem. order.
@@ -42,7 +42,7 @@ Qed.
 
 Lemma quot_div : forall a b, b~=0 ->
 a÷b == (sgn a)*(sgn b)*(abs a / abs b).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.quot_div". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.quot_div".  
 assert (AUX : forall a b, 0<b -> a÷b == (sgn a)*(sgn b)*(abs a / abs b)).
 intros a b Hb. rewrite (sgn_pos b), (abs_eq b), mul_1_r by order.
 destruct (lt_trichotomy 0 a) as [Ha|[Ha|Ha]].
@@ -63,7 +63,7 @@ Qed.
 
 Lemma rem_mod : forall a b, b~=0 ->
 a rem b == (sgn a) * ((abs a) mod (abs b)).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_mod". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_mod".  
 intros a b Hb.
 rewrite <- rem_abs_r by trivial.
 assert (Hb' := proj2 (abs_pos b) Hb).
@@ -78,7 +78,7 @@ Qed.
 
 
 Lemma mod_divide : forall a b, b~=0 -> (a mod b == 0 <-> (b|a)).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.mod_divide". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.mod_divide".  
 intros a b Hb. split.
 intros Hab. exists (a/b). rewrite mul_comm.
 rewrite (div_mod a b Hb) at 1. rewrite Hab; now nzsimpl.
@@ -86,7 +86,7 @@ intros (c,Hc). rewrite Hc. now apply mod_mul.
 Qed.
 
 Lemma rem_divide : forall a b, b~=0 -> (a rem b == 0 <-> (b|a)).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_divide". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_divide".  
 intros a b Hb. split.
 intros Hab. exists (a÷b). rewrite mul_comm.
 rewrite (quot_rem a b Hb) at 1. rewrite Hab; now nzsimpl.
@@ -94,14 +94,14 @@ intros (c,Hc). rewrite Hc. now apply rem_mul.
 Qed.
 
 Lemma rem_mod_eq_0 : forall a b, b~=0 -> (a rem b == 0 <-> a mod b == 0).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_mod_eq_0". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.rem_mod_eq_0".  
 intros a b Hb. now rewrite mod_divide, rem_divide.
 Qed.
 
 
 
 Lemma quot_div_exact : forall a b, b~=0 -> (b|a) -> a÷b == a/b.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.quot_div_exact". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.quot_div_exact".  
 intros a b Hb H.
 apply mul_cancel_l with b; trivial.
 assert (H':=H).
@@ -112,7 +112,7 @@ Qed.
 
 Lemma divide_div_mul_exact : forall a b c, b~=0 -> (b|a) ->
 (c*a)/b == c*(a/b).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_div_mul_exact". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_div_mul_exact".  
 intros a b c Hb H.
 apply mul_cancel_l with b; trivial.
 rewrite mul_assoc, mul_shuffle0.
@@ -125,7 +125,7 @@ Qed.
 
 Lemma divide_quot_mul_exact : forall a b c, b~=0 -> (b|a) ->
 (c*a)÷b == c*(a÷b).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_quot_mul_exact". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_quot_mul_exact".  
 intros a b c Hb H.
 rewrite 2 quot_div_exact; trivial.
 apply divide_div_mul_exact; trivial.
@@ -136,7 +136,7 @@ Qed.
 
 Lemma gcd_div_factor : forall a b c, 0<c -> (c|a) -> (c|b) ->
 gcd (a/c) (b/c) == (gcd a b)/c.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_div_factor". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_div_factor".  
 intros a b c Hc Ha Hb.
 apply mul_cancel_l with c; try order.
 assert (H:=gcd_greatest _ _ _ Ha Hb).
@@ -149,14 +149,14 @@ Qed.
 
 Lemma gcd_quot_factor : forall a b c, 0<c -> (c|a) -> (c|b) ->
 gcd (a÷c) (b÷c) == (gcd a b)÷c.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_quot_factor". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_quot_factor".  
 intros a b c Hc Ha Hb. rewrite !quot_div_exact; trivial; try order.
 now apply gcd_div_factor. now apply gcd_greatest.
 Qed.
 
 Lemma gcd_div_gcd : forall a b g, g~=0 -> g == gcd a b ->
 gcd (a/g) (b/g) == 1.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_div_gcd". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_div_gcd".  
 intros a b g NZ EQ. rewrite gcd_div_factor.
 now rewrite <- EQ, div_same.
 generalize (gcd_nonneg a b); order.
@@ -166,7 +166,7 @@ Qed.
 
 Lemma gcd_quot_gcd : forall a b g, g~=0 -> g == gcd a b ->
 gcd (a÷g) (b÷g) == 1.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_quot_gcd". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_quot_gcd".  
 intros a b g NZ EQ. rewrite !quot_div_exact; trivial.
 now apply gcd_div_gcd.
 rewrite EQ; apply gcd_divide_r.
@@ -176,7 +176,7 @@ Qed.
 
 
 Lemma gcd_mod : forall a b, b~=0 -> gcd (a mod b) b == gcd b a.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_mod". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_mod".  
 intros a b Hb. rewrite mod_eq; trivial.
 rewrite <- add_opp_r, mul_comm, <- mul_opp_l.
 rewrite (gcd_comm _ b).
@@ -184,7 +184,7 @@ apply gcd_add_mult_diag_r.
 Qed.
 
 Lemma gcd_rem : forall a b, b~=0 -> gcd (a rem b) b == gcd b a.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_rem". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_rem".  
 intros a b Hb. rewrite rem_eq; trivial.
 rewrite <- add_opp_r, mul_comm, <- mul_opp_l.
 rewrite (gcd_comm _ b).
@@ -196,49 +196,49 @@ Qed.
 Definition lcm a b := abs (a*(b/gcd a b)).
 
 Instance lcm_wd : Proper (eq==>eq==>eq) lcm.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_wd". Restart.  unfold lcm. solve_proper. Qed.
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_wd".   unfold lcm. solve_proper. Qed.
 
 Lemma lcm_equiv1 : forall a b, gcd a b ~= 0 ->
 a * (b / gcd a b) == (a*b)/gcd a b.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_equiv1". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_equiv1".  
 intros a b H. rewrite divide_div_mul_exact; try easy. apply gcd_divide_r.
 Qed.
 
 Lemma lcm_equiv2 : forall a b, gcd a b ~= 0 ->
 (a / gcd a b) * b == (a*b)/gcd a b.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_equiv2". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_equiv2".  
 intros a b H. rewrite 2 (mul_comm _ b).
 rewrite divide_div_mul_exact; try easy. apply gcd_divide_l.
 Qed.
 
 Lemma gcd_div_swap : forall a b,
 (a / gcd a b) * b == a * (b / gcd a b).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_div_swap". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_div_swap".  
 intros a b. destruct (eq_decidable (gcd a b) 0) as [EQ|NEQ].
 apply gcd_eq_0 in EQ. destruct EQ as (EQ,EQ'). rewrite EQ, EQ'. now nzsimpl.
 now rewrite lcm_equiv1, <-lcm_equiv2.
 Qed.
 
 Lemma divide_lcm_l : forall a b, (a | lcm a b).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_l". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_l".  
 unfold lcm. intros a b. apply divide_abs_r, divide_factor_l.
 Qed.
 
 Lemma divide_lcm_r : forall a b, (b | lcm a b).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_r".  
 unfold lcm. intros a b. apply divide_abs_r. rewrite <- gcd_div_swap.
 apply divide_factor_r.
 Qed.
 
 Lemma divide_div : forall a b c, a~=0 -> (a|b) -> (b|c) -> (b/a|c/a).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_div". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_div".  
 intros a b c Ha Hb (c',Hc). exists c'.
 now rewrite <- divide_div_mul_exact, <- Hc.
 Qed.
 
 Lemma lcm_least : forall a b c,
 (a | c) -> (b | c) -> (lcm a b | c).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_least". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_least".  
 intros a b c Ha Hb. unfold lcm. apply divide_abs_l.
 destruct (eq_decidable (gcd a b) 0) as [EQ|NEQ].
 apply gcd_eq_0 in EQ. destruct EQ as (EQ,EQ'). rewrite EQ in *. now nzsimpl.
@@ -260,19 +260,19 @@ apply mod_divide; trivial. transitivity a; trivial.
 Qed.
 
 Lemma lcm_nonneg : forall a b, 0 <= lcm a b.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_nonneg".  
 intros a b. unfold lcm. apply abs_nonneg.
 Qed.
 
 Lemma lcm_comm : forall a b, lcm a b == lcm b a.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_comm". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_comm".  
 intros a b. unfold lcm. rewrite (gcd_comm b), (mul_comm b).
 now rewrite <- gcd_div_swap.
 Qed.
 
 Lemma lcm_divide_iff : forall n m p,
 (lcm n m | p) <-> (n | p) /\ (m | p).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_divide_iff". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_divide_iff".  
 intros. split. split.
 transitivity (lcm n m); trivial using divide_lcm_l.
 transitivity (lcm n m); trivial using divide_lcm_r.
@@ -283,7 +283,7 @@ Lemma lcm_unique : forall n m p,
 0<=p -> (n|p) -> (m|p) ->
 (forall q, (n|q) -> (m|q) -> (p|q)) ->
 lcm n m == p.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_unique". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_unique".  
 intros n m p Hp Hn Hm H.
 apply divide_antisym_nonneg; trivial. apply lcm_nonneg.
 now apply lcm_least.
@@ -293,7 +293,7 @@ Qed.
 Lemma lcm_unique_alt : forall n m p, 0<=p ->
 (forall q, (p|q) <-> (n|q) /\ (m|q)) ->
 lcm n m == p.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_unique_alt". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_unique_alt".  
 intros n m p Hp H.
 apply lcm_unique; trivial.
 apply H, divide_refl.
@@ -302,40 +302,40 @@ intros. apply H. now split.
 Qed.
 
 Lemma lcm_assoc : forall n m p, lcm n (lcm m p) == lcm (lcm n m) p.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_assoc". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_assoc".  
 intros. apply lcm_unique_alt; try apply lcm_nonneg.
 intros. now rewrite !lcm_divide_iff, and_assoc.
 Qed.
 
 Lemma lcm_0_l : forall n, lcm 0 n == 0.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_0_l". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_0_l".  
 intros. apply lcm_unique; trivial. order.
 apply divide_refl.
 apply divide_0_r.
 Qed.
 
 Lemma lcm_0_r : forall n, lcm n 0 == 0.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_0_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_0_r".  
 intros. now rewrite lcm_comm, lcm_0_l.
 Qed.
 
 Lemma lcm_1_l_nonneg : forall n, 0<=n -> lcm 1 n == n.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_l_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_l_nonneg".  
 intros. apply lcm_unique; trivial using divide_1_l, le_0_1, divide_refl.
 Qed.
 
 Lemma lcm_1_r_nonneg : forall n, 0<=n -> lcm n 1 == n.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_r_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_r_nonneg".  
 intros. now rewrite lcm_comm, lcm_1_l_nonneg.
 Qed.
 
 Lemma lcm_diag_nonneg : forall n, 0<=n -> lcm n n == n.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_diag_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_diag_nonneg".  
 intros. apply lcm_unique; trivial using divide_refl.
 Qed.
 
 Lemma lcm_eq_0 : forall n m, lcm n m == 0 <-> n == 0 \/ m == 0.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_eq_0". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_eq_0".  
 intros. split.
 intros EQ.
 apply eq_mul_0.
@@ -345,59 +345,59 @@ destruct 1 as [EQ|EQ]; rewrite EQ. apply lcm_0_l. apply lcm_0_r.
 Qed.
 
 Lemma divide_lcm_eq_r : forall n m, 0<=m -> (n|m) -> lcm n m == m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_eq_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_eq_r".  
 intros n m Hm H. apply lcm_unique_alt; trivial.
 intros q. split. split; trivial. now transitivity m.
 now destruct 1.
 Qed.
 
 Lemma divide_lcm_iff : forall n m, 0<=m -> ((n|m) <-> lcm n m == m).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_iff". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.divide_lcm_iff".  
 intros n m Hn. split. now apply divide_lcm_eq_r.
 intros EQ. rewrite <- EQ. apply divide_lcm_l.
 Qed.
 
 Lemma lcm_opp_l : forall n m, lcm (-n) m == lcm n m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_opp_l". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_opp_l".  
 intros. apply lcm_unique_alt; try apply lcm_nonneg.
 intros. rewrite divide_opp_l. apply lcm_divide_iff.
 Qed.
 
 Lemma lcm_opp_r : forall n m, lcm n (-m) == lcm n m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_opp_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_opp_r".  
 intros. now rewrite lcm_comm, lcm_opp_l, lcm_comm.
 Qed.
 
 Lemma lcm_abs_l : forall n m, lcm (abs n) m == lcm n m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_abs_l". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_abs_l".  
 intros. destruct (abs_eq_or_opp n) as [H|H]; rewrite H.
 easy. apply lcm_opp_l.
 Qed.
 
 Lemma lcm_abs_r : forall n m, lcm n (abs m) == lcm n m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_abs_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_abs_r".  
 intros. now rewrite lcm_comm, lcm_abs_l, lcm_comm.
 Qed.
 
 Lemma lcm_1_l : forall n, lcm 1 n == abs n.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_l". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_l".  
 intros. rewrite <- lcm_abs_r. apply lcm_1_l_nonneg, abs_nonneg.
 Qed.
 
 Lemma lcm_1_r : forall n, lcm n 1 == abs n.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_1_r".  
 intros. now rewrite lcm_comm, lcm_1_l.
 Qed.
 
 Lemma lcm_diag : forall n, lcm n n == abs n.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_diag". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_diag".  
 intros. rewrite <- lcm_abs_l, <- lcm_abs_r.
 apply lcm_diag_nonneg, abs_nonneg.
 Qed.
 
 Lemma lcm_mul_mono_l :
 forall n m p, lcm (p * n) (p * m) == abs p * lcm n m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_l". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_l".  
 intros n m p.
 destruct (eq_decidable p 0) as [Hp|Hp].
 rewrite Hp. nzsimpl. rewrite lcm_0_l, abs_0. now nzsimpl.
@@ -420,25 +420,25 @@ Qed.
 
 Lemma lcm_mul_mono_l_nonneg :
 forall n m p, 0<=p -> lcm (p*n) (p*m) == p * lcm n m.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_l_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_l_nonneg".  
 intros. rewrite <- (abs_eq p) at 3; trivial. apply lcm_mul_mono_l.
 Qed.
 
 Lemma lcm_mul_mono_r :
 forall n m p, lcm (n * p) (m * p) == lcm n m * abs p.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_r". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_r".  
 intros n m p. now rewrite !(mul_comm _ p), lcm_mul_mono_l, mul_comm.
 Qed.
 
 Lemma lcm_mul_mono_r_nonneg :
 forall n m p, 0<=p -> lcm (n*p) (m*p) == lcm n m * p.
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_r_nonneg". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.lcm_mul_mono_r_nonneg".  
 intros. rewrite <- (abs_eq p) at 3; trivial. apply lcm_mul_mono_r.
 Qed.
 
 Lemma gcd_1_lcm_mul : forall n m, n~=0 -> m~=0 ->
 (gcd n m == 1 <-> lcm n m == abs (n*m)).
-Proof. hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_1_lcm_mul". Restart. 
+Proof. try hammer_hook "ZLcm" "ZLcm.ZLcmProp.gcd_1_lcm_mul".  
 intros n m Hn Hm. split; intros H.
 unfold lcm. rewrite H. now rewrite div_1_r.
 unfold lcm in *.

@@ -23,7 +23,7 @@ Include NZPowProp A A B.
 
 
 Lemma pow_twice_r a b : a^(2*b) == a^b * a^b.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_twice_r". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_twice_r".  
 rewrite two_succ. nzsimpl.
 destruct (le_gt_cases 0 b).
 - now rewrite pow_add_r.
@@ -34,7 +34,7 @@ Qed.
 
 
 Lemma even_pow : forall a b, 0<b -> even (a^b) = even a.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.even_pow". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.even_pow".  
 intros a b Hb. apply lt_ind with (4:=Hb). solve_proper.
 now nzsimpl.
 clear b Hb. intros b Hb IH. nzsimpl; [|order].
@@ -42,14 +42,14 @@ rewrite even_mul, IH. now destruct (even a).
 Qed.
 
 Lemma odd_pow : forall a b, 0<b -> odd (a^b) = odd a.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.odd_pow". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.odd_pow".  
 intros. now rewrite <- !negb_even, even_pow.
 Qed.
 
 
 
 Lemma pow_opp_even : forall a b, Even b -> (-a)^b == a^b.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_opp_even". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_opp_even".  
 intros a b (c,H). rewrite H.
 destruct (le_gt_cases 0 c).
 rewrite 2 pow_mul_r by order'.
@@ -60,7 +60,7 @@ now rewrite !pow_neg_r.
 Qed.
 
 Lemma pow_opp_odd : forall a b, Odd b -> (-a)^b == -(a^b).
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_opp_odd". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_opp_odd".  
 intros a b (c,H). rewrite H.
 destruct (le_gt_cases 0 c) as [LE|GT].
 assert (0 <= 2*c) by (apply mul_nonneg_nonneg; order').
@@ -72,20 +72,20 @@ rewrite !pow_neg_r by trivial. now rewrite opp_0.
 Qed.
 
 Lemma pow_even_abs : forall a b, Even b -> a^b == (abs a)^b.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_even_abs". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_even_abs".  
 intros. destruct (abs_eq_or_opp a) as [EQ|EQ]; rewrite EQ.
 reflexivity.
 symmetry. now apply pow_opp_even.
 Qed.
 
 Lemma pow_even_nonneg : forall a b, Even b -> 0 <= a^b.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_even_nonneg". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_even_nonneg".  
 intros. rewrite pow_even_abs by trivial.
 apply pow_nonneg, abs_nonneg.
 Qed.
 
 Lemma pow_odd_abs_sgn : forall a b, Odd b -> a^b == sgn a * (abs a)^b.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_odd_abs_sgn". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_odd_abs_sgn".  
 intros a b H.
 destruct (sgn_spec a) as [(LT,EQ)|[(EQ',EQ)|(LT,EQ)]]; rewrite EQ.
 nzsimpl.
@@ -102,7 +102,7 @@ now rewrite mul_opp_opp, mul_1_l.
 Qed.
 
 Lemma pow_odd_sgn : forall a b, 0<=b -> Odd b -> sgn (a^b) == sgn a.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.pow_odd_sgn". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.pow_odd_sgn".  
 intros a b Hb H.
 destruct (sgn_spec a) as [(LT,EQ)|[(EQ',EQ)|(LT,EQ)]]; rewrite EQ.
 apply sgn_pos. apply pow_pos_nonneg; trivial.
@@ -117,7 +117,7 @@ now apply opp_pos_neg.
 Qed.
 
 Lemma abs_pow : forall a b, abs (a^b) == (abs a)^b.
-Proof. hammer_hook "ZPow" "ZPow.ZPowProp.abs_pow". Restart. 
+Proof. try hammer_hook "ZPow" "ZPow.ZPowProp.abs_pow".  
 intros a b.
 destruct (Even_or_Odd b).
 rewrite pow_even_abs by trivial.

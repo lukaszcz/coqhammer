@@ -30,7 +30,7 @@ Lemma atan_sub_correct :
 forall u v, 1 + u * v <> 0 -> -PI/2 < atan u - atan v < PI/2 ->
 -PI/2 < atan (atan_sub u v) < PI/2 ->
 atan u = atan v + atan (atan_sub u v).
-Proof. hammer_hook "Machin" "Machin.atan_sub_correct". Restart. 
+Proof. try hammer_hook "Machin" "Machin.atan_sub_correct".  
 intros u v pn0 uvint aint.
 assert (cos (atan u) <> 0).
 destruct (atan_bound u); apply Rgt_not_eq, cos_gt_0; auto.
@@ -48,7 +48,7 @@ Qed.
 
 Lemma tech : forall x y , -1 <= x <= 1 -> -1 < y < 1 ->
 -PI/2 < atan x - atan y < PI/2.
-Proof. hammer_hook "Machin" "Machin.tech". Restart. 
+Proof. try hammer_hook "Machin" "Machin.tech".  
 assert (ut := PI_RGT_0).
 intros x y [xm1 x1] [ym1 y1].
 assert (-(PI/4) <= atan x).
@@ -72,7 +72,7 @@ Qed.
 
 
 Lemma Machin_2_3 : PI/4 = atan(/2) + atan(/3).
-Proof. hammer_hook "Machin" "Machin.Machin_2_3". Restart. 
+Proof. try hammer_hook "Machin" "Machin.Machin_2_3".  
 assert (utility : 0 < PI/2) by (apply PI2_RGT_0).
 rewrite <- atan_1.
 rewrite (atan_sub_correct 1 (/2)).
@@ -83,7 +83,7 @@ apply atan_bound.
 Qed.
 
 Lemma Machin_4_5_239 : PI/4 = 4 * atan (/5) - atan(/239).
-Proof. hammer_hook "Machin" "Machin.Machin_4_5_239". Restart. 
+Proof. try hammer_hook "Machin" "Machin.Machin_4_5_239".  
 rewrite <- atan_1.
 rewrite (atan_sub_correct 1 (/5));
 [ | apply Rgt_not_eq; fourier | apply tech; try split; fourier |
@@ -112,7 +112,7 @@ unfold atan_sub; field.
 Qed.
 
 Lemma Machin_2_3_7 : PI/4 = 2 * atan(/3) + (atan (/7)).
-Proof. hammer_hook "Machin" "Machin.Machin_2_3_7". Restart. 
+Proof. try hammer_hook "Machin" "Machin.Machin_2_3_7".  
 rewrite <- atan_1.
 rewrite (atan_sub_correct 1 (/3));
 [ | apply Rgt_not_eq; fourier | apply tech; try split; fourier |
@@ -137,7 +137,7 @@ Lemma PI_2_3_7_ineq :
 forall N : nat,
 sum_f_R0 (tg_alt PI_2_3_7_tg) (S (2 * N)) <= PI / 4 <=
 sum_f_R0 (tg_alt PI_2_3_7_tg) (2 * N).
-Proof. hammer_hook "Machin" "Machin.PI_2_3_7_ineq". Restart. 
+Proof. try hammer_hook "Machin" "Machin.PI_2_3_7_ineq".  
 assert (dec3 : 0 <= /3 <= 1) by (split; fourier).
 assert (dec7 : 0 <= /7 <= 1) by (split; fourier).
 assert (decr : Un_decreasing PI_2_3_7_tg).

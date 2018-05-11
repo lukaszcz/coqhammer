@@ -16,57 +16,57 @@ Require Import R_sqrt.
 Local Open Scope R_scope.
 
 Lemma tan_PI : tan PI = 0.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI".  
 unfold tan; rewrite sin_PI; rewrite cos_PI; unfold Rdiv;
 apply Rmult_0_l.
 Qed.
 
 Lemma sin_3PI2 : sin (3 * (PI / 2)) = -1.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_3PI2". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_3PI2".  
 replace (3 * (PI / 2)) with (PI + PI / 2).
 rewrite sin_plus; rewrite sin_PI; rewrite cos_PI; rewrite sin_PI2; ring.
 pattern PI at 1; rewrite (double_var PI); ring.
 Qed.
 
 Lemma tan_2PI : tan (2 * PI) = 0.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_2PI". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_2PI".  
 unfold tan; rewrite sin_2PI; unfold Rdiv; apply Rmult_0_l.
 Qed.
 
 Lemma sin_cos_PI4 : sin (PI / 4) = cos (PI / 4).
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_cos_PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_cos_PI4".  
 rewrite cos_sin.
 replace (PI / 2 + PI / 4) with (- (PI / 4) + PI) by field.
 rewrite neg_sin, sin_neg; ring.
 Qed.
 
 Lemma sin_PI3_cos_PI6 : sin (PI / 3) = cos (PI / 6).
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI3_cos_PI6". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI3_cos_PI6".  
 replace (PI / 6) with (PI / 2 - PI / 3) by field.
 now rewrite cos_shift.
 Qed.
 
 Lemma sin_PI6_cos_PI3 : cos (PI / 3) = sin (PI / 6).
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI6_cos_PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI6_cos_PI3".  
 replace (PI / 6) with (PI / 2 - PI / 3) by field.
 now rewrite sin_shift.
 Qed.
 
 Lemma PI6_RGT_0 : 0 < PI / 6.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.PI6_RGT_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.PI6_RGT_0".  
 unfold Rdiv; apply Rmult_lt_0_compat;
 [ apply PI_RGT_0 | apply Rinv_0_lt_compat; prove_sup0 ].
 Qed.
 
 Lemma PI6_RLT_PI2 : PI / 6 < PI / 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.PI6_RLT_PI2". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.PI6_RLT_PI2".  
 unfold Rdiv; apply Rmult_lt_compat_l.
 apply PI_RGT_0.
 apply Rinv_lt_contravar; prove_sup.
 Qed.
 
 Lemma sin_PI6 : sin (PI / 6) = 1 / 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI6". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI6".  
 apply Rmult_eq_reg_l with (2 * cos (PI / 6)).
 replace (2 * cos (PI / 6) * sin (PI / 6)) with
 (2 * sin (PI / 6) * cos (PI / 6)) by ring.
@@ -83,7 +83,7 @@ cut (0 < cos (PI / 6));
 Qed.
 
 Lemma sqrt2_neq_0 : sqrt 2 <> 0.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sqrt2_neq_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sqrt2_neq_0".  
 assert (Hyp : 0 < 2);
 [ prove_sup0
 | generalize (Rlt_le 0 2 Hyp); intro H1; red; intro H2;
@@ -92,14 +92,14 @@ generalize (sqrt_eq_0 2 H1 H2); intro H; absurd (2 = 0);
 Qed.
 
 Lemma R1_sqrt2_neq_0 : 1 / sqrt 2 <> 0.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.R1_sqrt2_neq_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.R1_sqrt2_neq_0".  
 generalize (Rinv_neq_0_compat (sqrt 2) sqrt2_neq_0); intro H;
 generalize (prod_neq_R0 1 (/ sqrt 2) R1_neq_R0 H);
 intro H0; assumption.
 Qed.
 
 Lemma sqrt3_2_neq_0 : 2 * sqrt 3 <> 0.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sqrt3_2_neq_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sqrt3_2_neq_0".  
 apply prod_neq_R0;
 [ discrR
 | assert (Hyp : 0 < 3);
@@ -110,7 +110,7 @@ generalize (sqrt_eq_0 3 H1 H2); intro H; absurd (3 = 0);
 Qed.
 
 Lemma Rlt_sqrt2_0 : 0 < sqrt 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_sqrt2_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_sqrt2_0".  
 assert (Hyp : 0 < 2);
 [ prove_sup0
 | generalize (sqrt_positivity 2 (Rlt_le 0 2 Hyp)); intro H1; elim H1;
@@ -121,7 +121,7 @@ intro H2;
 Qed.
 
 Lemma Rlt_sqrt3_0 : 0 < sqrt 3.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_sqrt3_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_sqrt3_0".  
 cut (0%nat <> 1%nat);
 [ intro H0; assert (Hyp : 0 < 2);
 [ prove_sup0
@@ -139,13 +139,13 @@ apply (Rlt_trans 0 (sqrt 2) (sqrt 3) Rlt_sqrt2_0 H3)
 Qed.
 
 Lemma PI4_RGT_0 : 0 < PI / 4.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.PI4_RGT_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.PI4_RGT_0".  
 unfold Rdiv; apply Rmult_lt_0_compat;
 [ apply PI_RGT_0 | apply Rinv_0_lt_compat; prove_sup0 ].
 Qed.
 
 Lemma cos_PI4 : cos (PI / 4) = 1 / sqrt 2.
-Proof with trivial. hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_PI4". Restart. 
+Proof with trivial. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_PI4".  
 apply Rsqr_inj...
 apply cos_ge_0...
 left; apply (Rlt_trans (- (PI / 2)) 0 (PI / 4) _PI2_RLT_0 PI4_RGT_0)...
@@ -167,19 +167,19 @@ apply sqrt2_neq_0...
 Qed.
 
 Lemma sin_PI4 : sin (PI / 4) = 1 / sqrt 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI4".  
 rewrite sin_cos_PI4; apply cos_PI4.
 Qed.
 
 Lemma tan_PI4 : tan (PI / 4) = 1.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI4".  
 unfold tan; rewrite sin_cos_PI4.
 unfold Rdiv; apply Rinv_r.
 change (cos (PI / 4) <> 0); rewrite cos_PI4; apply R1_sqrt2_neq_0.
 Qed.
 
 Lemma cos3PI4 : cos (3 * (PI / 4)) = -1 / sqrt 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos3PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos3PI4".  
 replace (3 * (PI / 4)) with (PI / 2 - - (PI / 4)) by field.
 rewrite cos_shift; rewrite sin_neg; rewrite sin_PI4.
 unfold Rdiv.
@@ -187,13 +187,13 @@ ring.
 Qed.
 
 Lemma sin3PI4 : sin (3 * (PI / 4)) = 1 / sqrt 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin3PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin3PI4".  
 replace (3 * (PI / 4)) with (PI / 2 - - (PI / 4)) by field.
 now rewrite sin_shift, cos_neg, cos_PI4.
 Qed.
 
 Lemma cos_PI6 : cos (PI / 6) = sqrt 3 / 2.
-Proof with trivial. hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_PI6". Restart. 
+Proof with trivial. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_PI6".  
 apply Rsqr_inj...
 apply cos_ge_0...
 left; apply (Rlt_trans (- (PI / 2)) 0 (PI / 6) _PI2_RLT_0 PI6_RGT_0)...
@@ -209,7 +209,7 @@ discrR.
 Qed.
 
 Lemma tan_PI6 : tan (PI / 6) = 1 / sqrt 3.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI6". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI6".  
 unfold tan; rewrite sin_PI6; rewrite cos_PI6; unfold Rdiv;
 repeat rewrite Rmult_1_l; rewrite Rinv_mult_distr.
 rewrite Rinv_involutive.
@@ -223,17 +223,17 @@ apply Rinv_neq_0_compat; discrR.
 Qed.
 
 Lemma sin_PI3 : sin (PI / 3) = sqrt 3 / 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_PI3".  
 rewrite sin_PI3_cos_PI6; apply cos_PI6.
 Qed.
 
 Lemma cos_PI3 : cos (PI / 3) = 1 / 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_PI3".  
 rewrite sin_PI6_cos_PI3; apply sin_PI6.
 Qed.
 
 Lemma tan_PI3 : tan (PI / 3) = sqrt 3.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_PI3".  
 unfold tan; rewrite sin_PI3; rewrite cos_PI3; unfold Rdiv;
 rewrite Rmult_1_l; rewrite Rinv_involutive.
 rewrite Rmult_assoc; rewrite <- Rinv_l_sym.
@@ -243,7 +243,7 @@ discrR.
 Qed.
 
 Lemma sin_2PI3 : sin (2 * (PI / 3)) = sqrt 3 / 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_2PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_2PI3".  
 rewrite double; rewrite sin_plus; rewrite sin_PI3; rewrite cos_PI3;
 unfold Rdiv; repeat rewrite Rmult_1_l; rewrite (Rmult_comm (/ 2));
 repeat rewrite <- Rmult_assoc; rewrite double_var;
@@ -251,7 +251,7 @@ reflexivity.
 Qed.
 
 Lemma cos_2PI3 : cos (2 * (PI / 3)) = -1 / 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_2PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_2PI3".  
 rewrite cos_2a, sin_PI3, cos_PI3.
 replace (sqrt 3 / 2 * (sqrt 3 / 2)) with ((sqrt 3 * sqrt 3) / 4) by field.
 rewrite sqrt_sqrt.
@@ -260,32 +260,32 @@ left ; prove_sup0.
 Qed.
 
 Lemma tan_2PI3 : tan (2 * (PI / 3)) = - sqrt 3.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_2PI3". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.tan_2PI3".  
 unfold tan; rewrite sin_2PI3, cos_2PI3.
 field.
 Qed.
 
 Lemma cos_5PI4 : cos (5 * (PI / 4)) = -1 / sqrt 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_5PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.cos_5PI4".  
 replace (5 * (PI / 4)) with (PI / 4 + PI) by field.
 rewrite neg_cos; rewrite cos_PI4; unfold Rdiv.
 ring.
 Qed.
 
 Lemma sin_5PI4 : sin (5 * (PI / 4)) = -1 / sqrt 2.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_5PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_5PI4".  
 replace (5 * (PI / 4)) with (PI / 4 + PI) by field.
 rewrite neg_sin; rewrite sin_PI4; unfold Rdiv.
 ring.
 Qed.
 
 Lemma sin_cos5PI4 : cos (5 * (PI / 4)) = sin (5 * (PI / 4)).
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_cos5PI4". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_cos5PI4".  
 rewrite cos_5PI4; rewrite sin_5PI4; reflexivity.
 Qed.
 
 Lemma Rgt_3PI2_0 : 0 < 3 * (PI / 2).
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rgt_3PI2_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rgt_3PI2_0".  
 apply Rmult_lt_0_compat;
 [ prove_sup0
 | unfold Rdiv; apply Rmult_lt_0_compat;
@@ -293,12 +293,12 @@ apply Rmult_lt_0_compat;
 Qed.
 
 Lemma Rgt_2PI_0 : 0 < 2 * PI.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rgt_2PI_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rgt_2PI_0".  
 apply Rmult_lt_0_compat; [ prove_sup0 | apply PI_RGT_0 ].
 Qed.
 
 Lemma Rlt_PI_3PI2 : PI < 3 * (PI / 2).
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_PI_3PI2". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_PI_3PI2".  
 generalize PI2_RGT_0; intro H1;
 generalize (Rplus_lt_compat_l PI 0 (PI / 2) H1);
 replace (PI + PI / 2) with (3 * (PI / 2)).
@@ -307,7 +307,7 @@ pattern PI at 2; rewrite double_var; ring.
 Qed.
 
 Lemma Rlt_3PI2_2PI : 3 * (PI / 2) < 2 * PI.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_3PI2_2PI". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rlt_3PI2_2PI".  
 generalize PI2_RGT_0; intro H1;
 generalize (Rplus_lt_compat_l (3 * (PI / 2)) 0 (PI / 2) H1);
 replace (3 * (PI / 2) + PI / 2) with (2 * PI).
@@ -324,7 +324,7 @@ Definition toRad (x:R) : R := x * PI * / plat.
 Definition toDeg (x:R) : R := x * plat * / PI.
 
 Lemma rad_deg : forall x:R, toRad (toDeg x) = x.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.rad_deg". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.rad_deg".  
 intro; unfold toRad, toDeg;
 replace (x * plat * / PI * PI * / plat) with
 (x * (plat * / plat) * (PI * / PI)); [ idtac | ring ].
@@ -335,7 +335,7 @@ unfold plat; discrR.
 Qed.
 
 Lemma toRad_inj : forall x y:R, toRad x = toRad y -> x = y.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.toRad_inj". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.toRad_inj".  
 intros; unfold toRad in H; apply Rmult_eq_reg_l with PI.
 rewrite <- (Rmult_comm x); rewrite <- (Rmult_comm y).
 apply Rmult_eq_reg_l with (/ plat).
@@ -346,7 +346,7 @@ apply PI_neq0.
 Qed.
 
 Lemma deg_rad : forall x:R, toDeg (toRad x) = x.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.deg_rad". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.deg_rad".  
 intro x; apply toRad_inj; rewrite (rad_deg (toRad x)); reflexivity.
 Qed.
 
@@ -355,7 +355,7 @@ Definition cosd (x:R) : R := cos (toRad x).
 Definition tand (x:R) : R := tan (toRad x).
 
 Lemma Rsqr_sin_cos_d_one : forall x:R, Rsqr (sind x) + Rsqr (cosd x) = 1.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rsqr_sin_cos_d_one". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.Rsqr_sin_cos_d_one".  
 intro x; unfold sind; unfold cosd; apply sin2_cos2.
 Qed.
 
@@ -364,7 +364,7 @@ Qed.
 
 
 Lemma sin_lb_ge_0 : forall a:R, 0 <= a -> a <= PI / 2 -> 0 <= sin_lb a.
-Proof. hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_lb_ge_0". Restart. 
+Proof. try hammer_hook "Rtrigo_calc" "Rtrigo_calc.sin_lb_ge_0".  
 intros; case (Rtotal_order 0 a); intro.
 left; apply sin_lb_gt_0; assumption.
 elim H1; intro.

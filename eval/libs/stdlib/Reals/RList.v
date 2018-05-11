@@ -49,7 +49,7 @@ end
 end.
 
 Lemma MaxRlist_P1 : forall (l:Rlist) (x:R), In x l -> x <= MaxRlist l.
-Proof. hammer_hook "RList" "RList.MaxRlist_P1". Restart. 
+Proof. try hammer_hook "RList" "RList.MaxRlist_P1".  
 intros; induction  l as [| r l Hrecl].
 simpl in H; elim H.
 induction  l as [| r0 l Hrecl0].
@@ -77,7 +77,7 @@ match l with
 end.
 
 Lemma MinRlist_P1 : forall (l:Rlist) (x:R), In x l -> MinRlist l <= x.
-Proof. hammer_hook "RList" "RList.MinRlist_P1". Restart. 
+Proof. try hammer_hook "RList" "RList.MinRlist_P1".  
 intros; induction  l as [| r l Hrecl].
 simpl in H; elim H.
 induction  l as [| r0 l Hrecl0].
@@ -100,7 +100,7 @@ Qed.
 
 Lemma AbsList_P1 :
 forall (l:Rlist) (x y:R), In y l -> In (Rabs (y - x) / 2) (AbsList l x).
-Proof. hammer_hook "RList" "RList.AbsList_P1". Restart. 
+Proof. try hammer_hook "RList" "RList.AbsList_P1".  
 intros; induction  l as [| r l Hrecl].
 elim H.
 simpl; simpl in H; elim H; intro.
@@ -110,7 +110,7 @@ Qed.
 
 Lemma MinRlist_P2 :
 forall l:Rlist, (forall y:R, In y l -> 0 < y) -> 0 < MinRlist l.
-Proof. hammer_hook "RList" "RList.MinRlist_P2". Restart. 
+Proof. try hammer_hook "RList" "RList.MinRlist_P2".  
 intros; induction  l as [| r l Hrecl].
 apply Rlt_0_1.
 induction  l as [| r0 l Hrecl0].
@@ -125,7 +125,7 @@ Qed.
 Lemma AbsList_P2 :
 forall (l:Rlist) (x y:R),
 In y (AbsList l x) ->  exists z : R, In z l /\ y = Rabs (z - x) / 2.
-Proof. hammer_hook "RList" "RList.AbsList_P2". Restart. 
+Proof. try hammer_hook "RList" "RList.AbsList_P2".  
 intros; induction  l as [| r l Hrecl].
 elim H.
 elim H; intro.
@@ -138,7 +138,7 @@ Qed.
 
 Lemma MaxRlist_P2 :
 forall l:Rlist, (exists y : R, In y l) -> In (MaxRlist l) l.
-Proof. hammer_hook "RList" "RList.MaxRlist_P2". Restart. 
+Proof. try hammer_hook "RList" "RList.MaxRlist_P2".  
 intros; induction  l as [| r l Hrecl].
 simpl in H; elim H; trivial.
 induction  l as [| r0 l Hrecl0].
@@ -163,7 +163,7 @@ Lemma pos_Rl_P1 :
 forall (l:Rlist) (a:R),
 (0 < Rlength l)%nat ->
 pos_Rl (cons a l) (Rlength l) = pos_Rl l (pred (Rlength l)).
-Proof. hammer_hook "RList" "RList.pos_Rl_P1". Restart. 
+Proof. try hammer_hook "RList" "RList.pos_Rl_P1".  
 intros; induction  l as [| r l Hrecl];
 [ elim (lt_n_O _ H)
 | simpl; case (Rlength l); [ reflexivity | intro; reflexivity ] ].
@@ -172,7 +172,7 @@ Qed.
 Lemma pos_Rl_P2 :
 forall (l:Rlist) (x:R),
 In x l <-> (exists i : nat, (i < Rlength l)%nat /\ x = pos_Rl l i).
-Proof. hammer_hook "RList" "RList.pos_Rl_P2". Restart. 
+Proof. try hammer_hook "RList" "RList.pos_Rl_P2".  
 intros; induction  l as [| r l Hrecl].
 split; intro;
 [ elim H | elim H; intros; elim H0; intros; elim (lt_n_O _ H1) ].
@@ -198,7 +198,7 @@ forall (l:Rlist) (P:R -> R -> Prop),
 exists l' : Rlist,
 Rlength l = Rlength l' /\
 (forall i:nat, (i < Rlength l)%nat -> P (pos_Rl l i) (pos_Rl l' i)).
-Proof. hammer_hook "RList" "RList.Rlist_P1". Restart. 
+Proof. try hammer_hook "RList" "RList.Rlist_P1".  
 intros; induction  l as [| r l Hrecl].
 exists nil; intros; split;
 [ reflexivity | intros; simpl in H0; elim (lt_n_O _ H0) ].
@@ -270,7 +270,7 @@ end.
 Lemma RList_P0 :
 forall (l:Rlist) (a:R),
 pos_Rl (insert l a) 0 = a \/ pos_Rl (insert l a) 0 = pos_Rl l 0.
-Proof. hammer_hook "RList" "RList.RList_P0". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P0".  
 intros; induction  l as [| r l Hrecl];
 [ left; reflexivity
 | simpl; case (Rle_dec r a); intro;
@@ -279,7 +279,7 @@ Qed.
 
 Lemma RList_P1 :
 forall (l:Rlist) (a:R), ordered_Rlist l -> ordered_Rlist (insert l a).
-Proof. hammer_hook "RList" "RList.RList_P1". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P1".  
 intros; induction  l as [| r l Hrecl].
 simpl; unfold ordered_Rlist; intros; simpl in H0;
 elim (lt_n_O _ H0).
@@ -312,7 +312,7 @@ Qed.
 
 Lemma RList_P2 :
 forall l1 l2:Rlist, ordered_Rlist l2 -> ordered_Rlist (cons_ORlist l1 l2).
-Proof. hammer_hook "RList" "RList.RList_P2". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P2".  
 simple induction l1;
 [ intros; simpl; apply H
 | intros; simpl; apply H; apply RList_P1; assumption ].
@@ -321,7 +321,7 @@ Qed.
 Lemma RList_P3 :
 forall (l:Rlist) (x:R),
 In x l <-> (exists i : nat, x = pos_Rl l i /\ (i < Rlength l)%nat).
-Proof. hammer_hook "RList" "RList.RList_P3". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P3".  
 intros; split; intro;
 [ induction  l as [| r l Hrecl] | induction  l as [| r l Hrecl] ].
 elim H.
@@ -339,7 +339,7 @@ Qed.
 
 Lemma RList_P4 :
 forall (l1:Rlist) (a:R), ordered_Rlist (cons a l1) -> ordered_Rlist l1.
-Proof. hammer_hook "RList" "RList.RList_P4". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P4".  
 intros; unfold ordered_Rlist; intros; apply (H (S i)); simpl;
 replace (Rlength l1) with (S (pred (Rlength l1)));
 [ apply lt_n_S; assumption
@@ -349,7 +349,7 @@ Qed.
 
 Lemma RList_P5 :
 forall (l:Rlist) (x:R), ordered_Rlist l -> In x l -> pos_Rl l 0 <= x.
-Proof. hammer_hook "RList" "RList.RList_P5". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P5".  
 intros; induction  l as [| r l Hrecl];
 [ elim H0
 | simpl; elim H0; intro;
@@ -365,7 +365,7 @@ forall l:Rlist,
 ordered_Rlist l <->
 (forall i j:nat,
 (i <= j)%nat -> (j < Rlength l)%nat -> pos_Rl l i <= pos_Rl l j).
-Proof. hammer_hook "RList" "RList.RList_P6". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P6".  
 simple induction l; split; intro.
 intros; right; reflexivity.
 unfold ordered_Rlist; intros; simpl in H0; elim (lt_n_O _ H0).
@@ -393,7 +393,7 @@ Qed.
 Lemma RList_P7 :
 forall (l:Rlist) (x:R),
 ordered_Rlist l -> In x l -> x <= pos_Rl l (pred (Rlength l)).
-Proof. hammer_hook "RList" "RList.RList_P7". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P7".  
 intros; assert (H1 := RList_P6 l); elim H1; intros H2 _; assert (H3 := H2 H);
 clear H1 H2; assert (H1 := RList_P3 l x); elim H1;
 clear H1; intros; assert (H4 := H1 H0); elim H4; clear H4;
@@ -409,7 +409,7 @@ Qed.
 
 Lemma RList_P8 :
 forall (l:Rlist) (a x:R), In x (insert l a) <-> x = a \/ In x l.
-Proof. hammer_hook "RList" "RList.RList_P8". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P8".  
 simple induction l.
 intros; split; intro; simpl in H; apply H.
 intros; split; intro;
@@ -433,7 +433,7 @@ Qed.
 
 Lemma RList_P9 :
 forall (l1 l2:Rlist) (x:R), In x (cons_ORlist l1 l2) <-> In x l1 \/ In x l2.
-Proof. hammer_hook "RList" "RList.RList_P9". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P9".  
 simple induction l1.
 intros; split; intro;
 [ simpl in H; right; assumption
@@ -454,7 +454,7 @@ Qed.
 
 Lemma RList_P10 :
 forall (l:Rlist) (a:R), Rlength (insert l a) = S (Rlength l).
-Proof. hammer_hook "RList" "RList.RList_P10". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P10".  
 intros; induction  l as [| r l Hrecl];
 [ reflexivity
 | simpl; case (Rle_dec r a); intro;
@@ -464,7 +464,7 @@ Qed.
 Lemma RList_P11 :
 forall l1 l2:Rlist,
 Rlength (cons_ORlist l1 l2) = (Rlength l1 + Rlength l2)%nat.
-Proof. hammer_hook "RList" "RList.RList_P11". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P11".  
 simple induction l1;
 [ intro; reflexivity
 | intros; simpl; rewrite (H (insert l2 r)); rewrite RList_P10;
@@ -475,7 +475,7 @@ Qed.
 Lemma RList_P12 :
 forall (l:Rlist) (i:nat) (f:R -> R),
 (i < Rlength l)%nat -> pos_Rl (app_Rlist l f) i = f (pos_Rl l i).
-Proof. hammer_hook "RList" "RList.RList_P12". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P12".  
 simple induction l;
 [ intros; elim (lt_n_O _ H)
 | intros; induction  i as [| i Hreci];
@@ -486,7 +486,7 @@ Lemma RList_P13 :
 forall (l:Rlist) (i:nat) (a:R),
 (i < pred (Rlength l))%nat ->
 pos_Rl (mid_Rlist l a) (S i) = (pos_Rl l i + pos_Rl l (S i)) / 2.
-Proof. hammer_hook "RList" "RList.RList_P13". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P13".  
 simple induction l.
 intros; simpl in H; elim (lt_n_O _ H).
 simple induction r0.
@@ -500,7 +500,7 @@ change
 Qed.
 
 Lemma RList_P14 : forall (l:Rlist) (a:R), Rlength (mid_Rlist l a) = Rlength l.
-Proof. hammer_hook "RList" "RList.RList_P14". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P14".  
 simple induction l; intros;
 [ reflexivity | simpl; rewrite (H r); reflexivity ].
 Qed.
@@ -510,7 +510,7 @@ forall l1 l2:Rlist,
 ordered_Rlist l1 ->
 ordered_Rlist l2 ->
 pos_Rl l1 0 = pos_Rl l2 0 -> pos_Rl (cons_ORlist l1 l2) 0 = pos_Rl l1 0.
-Proof. hammer_hook "RList" "RList.RList_P15". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P15".  
 intros; apply Rle_antisym.
 induction  l1 as [| r l1 Hrecl1];
 [ simpl; simpl in H1; right; symmetry ; assumption
@@ -544,7 +544,7 @@ ordered_Rlist l2 ->
 pos_Rl l1 (pred (Rlength l1)) = pos_Rl l2 (pred (Rlength l2)) ->
 pos_Rl (cons_ORlist l1 l2) (pred (Rlength (cons_ORlist l1 l2))) =
 pos_Rl l1 (pred (Rlength l1)).
-Proof. hammer_hook "RList" "RList.RList_P16". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P16".  
 intros; apply Rle_antisym.
 induction  l1 as [| r l1 Hrecl1].
 simpl; simpl in H1; right; symmetry ; assumption.
@@ -597,7 +597,7 @@ forall (l1:Rlist) (x:R) (i:nat),
 ordered_Rlist l1 ->
 In x l1 ->
 pos_Rl l1 i < x -> (i < pred (Rlength l1))%nat -> pos_Rl l1 (S i) <= x.
-Proof. hammer_hook "RList" "RList.RList_P17". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P17".  
 simple induction l1.
 intros; elim H0.
 intros; induction  i as [| i Hreci].
@@ -626,7 +626,7 @@ Qed.
 
 Lemma RList_P18 :
 forall (l:Rlist) (f:R -> R), Rlength (app_Rlist l f) = Rlength l.
-Proof. hammer_hook "RList" "RList.RList_P18". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P18".  
 simple induction l; intros;
 [ reflexivity | simpl; rewrite H; reflexivity ].
 Qed.
@@ -634,7 +634,7 @@ Qed.
 Lemma RList_P19 :
 forall l:Rlist,
 l <> nil ->  exists r : R, (exists r0 : Rlist, l = cons r r0).
-Proof. hammer_hook "RList" "RList.RList_P19". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P19".  
 intros; induction  l as [| r l Hrecl];
 [ elim H; reflexivity | exists r; exists l; reflexivity ].
 Qed.
@@ -644,7 +644,7 @@ forall l:Rlist,
 (2 <= Rlength l)%nat ->
 exists r : R,
 (exists r1 : R, (exists l' : Rlist, l = cons r (cons r1 l'))).
-Proof. hammer_hook "RList" "RList.RList_P20". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P20".  
 intros; induction  l as [| r l Hrecl];
 [ simpl in H; elim (le_Sn_O _ H)
 | induction  l as [| r0 l Hrecl0];
@@ -653,20 +653,20 @@ intros; induction  l as [| r l Hrecl];
 Qed.
 
 Lemma RList_P21 : forall l l':Rlist, l = l' -> Rtail l = Rtail l'.
-Proof. hammer_hook "RList" "RList.RList_P21". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P21".  
 intros; rewrite H; reflexivity.
 Qed.
 
 Lemma RList_P22 :
 forall l1 l2:Rlist, l1 <> nil -> pos_Rl (cons_Rlist l1 l2) 0 = pos_Rl l1 0.
-Proof. hammer_hook "RList" "RList.RList_P22". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P22".  
 simple induction l1; [ intros; elim H; reflexivity | intros; reflexivity ].
 Qed.
 
 Lemma RList_P23 :
 forall l1 l2:Rlist,
 Rlength (cons_Rlist l1 l2) = (Rlength l1 + Rlength l2)%nat.
-Proof. hammer_hook "RList" "RList.RList_P23". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P23".  
 simple induction l1;
 [ intro; reflexivity | intros; simpl; rewrite H; reflexivity ].
 Qed.
@@ -676,7 +676,7 @@ forall l1 l2:Rlist,
 l2 <> nil ->
 pos_Rl (cons_Rlist l1 l2) (pred (Rlength (cons_Rlist l1 l2))) =
 pos_Rl l2 (pred (Rlength l2)).
-Proof. hammer_hook "RList" "RList.RList_P24". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P24".  
 simple induction l1.
 intros; reflexivity.
 intros; rewrite <- (H l2 H0); induction  l2 as [| r1 l2 Hrecl2].
@@ -699,7 +699,7 @@ ordered_Rlist l1 ->
 ordered_Rlist l2 ->
 pos_Rl l1 (pred (Rlength l1)) <= pos_Rl l2 0 ->
 ordered_Rlist (cons_Rlist l1 l2).
-Proof. hammer_hook "RList" "RList.RList_P25". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P25".  
 simple induction l1.
 intros; simpl; assumption.
 simple induction r0.
@@ -727,7 +727,7 @@ Qed.
 Lemma RList_P26 :
 forall (l1 l2:Rlist) (i:nat),
 (i < Rlength l1)%nat -> pos_Rl (cons_Rlist l1 l2) i = pos_Rl l1 i.
-Proof. hammer_hook "RList" "RList.RList_P26". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P26".  
 simple induction l1.
 intros; elim (lt_n_O _ H).
 intros; induction  i as [| i Hreci].
@@ -738,13 +738,13 @@ Qed.
 Lemma RList_P27 :
 forall l1 l2 l3:Rlist,
 cons_Rlist l1 (cons_Rlist l2 l3) = cons_Rlist (cons_Rlist l1 l2) l3.
-Proof. hammer_hook "RList" "RList.RList_P27". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P27".  
 simple induction l1; intros;
 [ reflexivity | simpl; rewrite (H l2 l3); reflexivity ].
 Qed.
 
 Lemma RList_P28 : forall l:Rlist, cons_Rlist l nil = l.
-Proof. hammer_hook "RList" "RList.RList_P28". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P28".  
 simple induction l;
 [ reflexivity | intros; simpl; rewrite H; reflexivity ].
 Qed.
@@ -754,7 +754,7 @@ forall (l2 l1:Rlist) (i:nat),
 (Rlength l1 <= i)%nat ->
 (i < Rlength (cons_Rlist l1 l2))%nat ->
 pos_Rl (cons_Rlist l1 l2) i = pos_Rl l2 (i - Rlength l1).
-Proof. hammer_hook "RList" "RList.RList_P29". Restart. 
+Proof. try hammer_hook "RList" "RList.RList_P29".  
 simple induction l2.
 intros; rewrite RList_P28 in H0; elim (lt_irrefl _ (le_lt_trans _ _ _ H H0)).
 intros;

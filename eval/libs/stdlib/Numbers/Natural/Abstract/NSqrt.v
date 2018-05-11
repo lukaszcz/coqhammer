@@ -22,13 +22,13 @@ Ltac wrap l := intros; apply l; auto'.
 
 
 Lemma sqrt_spec' : forall a, √a*√a <= a < S (√a) * S (√a).
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_spec'". Restart.  wrap sqrt_spec. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_spec'".   wrap sqrt_spec. Qed.
 
 Definition sqrt_unique : forall a b, b*b<=a<(S b)*(S b) -> √a == b
 := sqrt_unique.
 
 Lemma sqrt_square : forall a, √(a*a) == a.
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_square". Restart.  wrap sqrt_square. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_square".   wrap sqrt_square. Qed.
 
 Definition sqrt_le_mono : forall a b, a<=b -> √a <= √b
 := sqrt_le_mono.
@@ -37,10 +37,10 @@ Definition sqrt_lt_cancel : forall a b, √a < √b -> a < b
 := sqrt_lt_cancel.
 
 Lemma sqrt_le_square : forall a b, b*b<=a <-> b <= √a.
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_le_square". Restart.  wrap sqrt_le_square. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_le_square".   wrap sqrt_le_square. Qed.
 
 Lemma sqrt_lt_square : forall a b, a<b*b <-> √a < b.
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_lt_square". Restart.  wrap sqrt_lt_square. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_lt_square".   wrap sqrt_lt_square. Qed.
 
 Definition sqrt_0 := sqrt_0.
 Definition sqrt_1 := sqrt_1.
@@ -50,25 +50,25 @@ Definition sqrt_lt_lin : forall a, 1<a -> √a<a
 := sqrt_lt_lin.
 
 Lemma sqrt_le_lin : forall a, √a<=a.
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_le_lin". Restart.  wrap sqrt_le_lin. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_le_lin".   wrap sqrt_le_lin. Qed.
 
 Definition sqrt_mul_below : forall a b, √a * √b <= √(a*b)
 := sqrt_mul_below.
 
 Lemma sqrt_mul_above : forall a b, √(a*b) < S (√a) * S (√b).
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_mul_above". Restart.  wrap sqrt_mul_above. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_mul_above".   wrap sqrt_mul_above. Qed.
 
 Lemma sqrt_succ_le : forall a, √(S a) <= S (√a).
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_succ_le". Restart.  wrap sqrt_succ_le. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_succ_le".   wrap sqrt_succ_le. Qed.
 
 Lemma sqrt_succ_or : forall a, √(S a) == S (√a) \/ √(S a) == √a.
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_succ_or". Restart.  wrap sqrt_succ_or. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.sqrt_succ_or".   wrap sqrt_succ_or. Qed.
 
 Definition sqrt_add_le : forall a b, √(a+b) <= √a + √b
 := sqrt_add_le.
 
 Lemma add_sqrt_le : forall a b, √a + √b <= √(2*(a+b)).
-Proof. hammer_hook "NSqrt" "NSqrt.NSqrtProp.add_sqrt_le". Restart.  wrap add_sqrt_le. Qed.
+Proof. try hammer_hook "NSqrt" "NSqrt.NSqrtProp.add_sqrt_le".   wrap add_sqrt_le. Qed.
 
 
 

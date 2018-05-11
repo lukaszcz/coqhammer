@@ -29,7 +29,7 @@ let (g,_) := pr in g b - g a.
 Lemma FTCN_step1 :
 forall (f:Differential) (a b:R),
 Newton_integrable (fun x:R => derive_pt f x (cond_diff f x)) a b.
-Proof. hammer_hook "NewtonInt" "NewtonInt.FTCN_step1". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.FTCN_step1".  
 intros f a b; unfold Newton_integrable; exists (d1 f);
 unfold antiderivative; intros; case (Rle_dec a b);
 intro;
@@ -43,13 +43,13 @@ Lemma FTC_Newton :
 forall (f:Differential) (a b:R),
 NewtonInt (fun x:R => derive_pt f x (cond_diff f x)) a b
 (FTCN_step1 f a b) = f b - f a.
-Proof. hammer_hook "NewtonInt" "NewtonInt.FTC_Newton". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.FTC_Newton".  
 intros; unfold NewtonInt; reflexivity.
 Qed.
 
 
 Lemma NewtonInt_P1 : forall (f:R -> R) (a:R), Newton_integrable f a a.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P1". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P1".  
 intros f a; unfold Newton_integrable;
 exists (fct_cte (f a) * id)%F; left;
 unfold antiderivative; split.
@@ -70,7 +70,7 @@ Qed.
 
 Lemma NewtonInt_P2 :
 forall (f:R -> R) (a:R), NewtonInt f a a (NewtonInt_P1 f a) = 0.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P2". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P2".  
 intros; unfold NewtonInt; simpl;
 unfold mult_fct, fct_cte, id.
 destruct NewtonInt_P1 as [g _].
@@ -81,7 +81,7 @@ Qed.
 Lemma NewtonInt_P3 :
 forall (f:R -> R) (a b:R) (X:Newton_integrable f a b),
 Newton_integrable f b a.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P3". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P3".  
 unfold Newton_integrable; intros; elim X; intros g H;
 exists g; tauto.
 Defined.
@@ -90,7 +90,7 @@ Defined.
 Lemma NewtonInt_P4 :
 forall (f:R -> R) (a b:R) (pr:Newton_integrable f a b),
 NewtonInt f a b pr = - NewtonInt f b a (NewtonInt_P3 f a b pr).
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P4". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P4".  
 intros f a b (x,H). unfold NewtonInt, NewtonInt_P3; simpl; ring.
 Qed.
 
@@ -100,7 +100,7 @@ forall (f g:R -> R) (l a b:R),
 Newton_integrable f a b ->
 Newton_integrable g a b ->
 Newton_integrable (fun x:R => l * f x + g x) a b.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P5". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P5".  
 unfold Newton_integrable; intros f g l a b X X0;
 elim X; intros x p; elim X0; intros x0 p0;
 exists (fun y:R => l * x y + x0 y).
@@ -178,7 +178,7 @@ forall (f g F G:R -> R) (l a b:R),
 antiderivative f F a b ->
 antiderivative g G a b ->
 antiderivative (fun x:R => l * f x + g x) (fun x:R => l * F x + G x) a b.
-Proof. hammer_hook "NewtonInt" "NewtonInt.antiderivative_P1". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.antiderivative_P1".  
 unfold antiderivative; intros; elim H; elim H0; clear H H0; intros;
 split.
 intros; elim (H _ H3); elim (H1 _ H3); intros.
@@ -194,7 +194,7 @@ forall (f g:R -> R) (l a b:R) (pr1:Newton_integrable f a b)
 (pr2:Newton_integrable g a b),
 NewtonInt (fun x:R => l * f x + g x) a b (NewtonInt_P5 f g l a b pr1 pr2) =
 l * NewtonInt f a b pr1 + NewtonInt g a b pr2.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P6". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P6".  
 intros f g l a b pr1 pr2; unfold NewtonInt;
 destruct (NewtonInt_P5 f g l a b pr1 pr2) as (x,o); destruct pr1 as (x0,o0);
 destruct pr2 as (x1,o1); destruct (total_order_T a b) as [[Hlt|Heq]|Hgt].
@@ -243,7 +243,7 @@ match Rle_dec x b with
 | left _ => F0 x
 | right _ => F1 x + (F0 b - F1 b)
 end) a c.
-Proof. hammer_hook "NewtonInt" "NewtonInt.antiderivative_P2". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.antiderivative_P2".  
 intros; destruct H as (H,H1), H0 as (H0,H2); split.
 2: apply Rle_trans with b; assumption.
 intros x (H3,H4); destruct (total_order_T x b) as [[Hlt|Heq]|Hgt].
@@ -387,7 +387,7 @@ forall (f F0 F1:R -> R) (a b c:R),
 antiderivative f F0 a b ->
 antiderivative f F1 c b ->
 antiderivative f F1 c a \/ antiderivative f F0 a c.
-Proof. hammer_hook "NewtonInt" "NewtonInt.antiderivative_P3". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.antiderivative_P3".  
 intros; unfold antiderivative in H, H0; elim H; clear H; elim H0; clear H0;
 intros; destruct (total_order_T a c) as [[Hle|Heq]|Hgt].
 right; unfold antiderivative; split.
@@ -409,7 +409,7 @@ forall (f F0 F1:R -> R) (a b c:R),
 antiderivative f F0 a b ->
 antiderivative f F1 a c ->
 antiderivative f F1 b c \/ antiderivative f F0 c b.
-Proof. hammer_hook "NewtonInt" "NewtonInt.antiderivative_P4". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.antiderivative_P4".  
 intros; unfold antiderivative in H, H0; elim H; clear H; elim H0; clear H0;
 intros; destruct (total_order_T c b) as [[Hlt|Heq]|Hgt].
 right; unfold antiderivative; split.
@@ -432,7 +432,7 @@ a < b ->
 b < c ->
 Newton_integrable f a b ->
 Newton_integrable f b c -> Newton_integrable f a c.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P7". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P7".  
 unfold Newton_integrable; intros f a b c Hab Hbc X X0; elim X;
 clear X; intros F0 H0; elim X0; clear X0; intros F1 H1;
 set
@@ -457,7 +457,7 @@ Lemma NewtonInt_P8 :
 forall (f:R -> R) (a b c:R),
 Newton_integrable f a b ->
 Newton_integrable f b c -> Newton_integrable f a c.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P8". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P8".  
 intros.
 elim X; intros F0 H0.
 elim X0; intros F1 H1.
@@ -557,7 +557,7 @@ forall (f:R -> R) (a b c:R) (pr1:Newton_integrable f a b)
 (pr2:Newton_integrable f b c),
 NewtonInt f a c (NewtonInt_P8 f a b c pr1 pr2) =
 NewtonInt f a b pr1 + NewtonInt f b c pr2.
-Proof. hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P9". Restart. 
+Proof. try hammer_hook "NewtonInt" "NewtonInt.NewtonInt_P9".  
 intros; unfold NewtonInt.
 case (NewtonInt_P8 f a b c pr1 pr2) as (x,Hor).
 case pr1 as (x0,Hor0).

@@ -16,7 +16,7 @@ Require Export QArith_base.
 Definition Q2R (x : Q) : R := (IZR (Qnum x) * / IZR (QDen x))%R.
 
 Lemma IZR_nz : forall p : positive, IZR (Zpos p) <> 0%R.
-Proof. hammer_hook "Qreals" "Qreals.IZR_nz". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.IZR_nz".  
 intros.
 now apply not_O_IZR.
 Qed.
@@ -24,7 +24,7 @@ Qed.
 Hint Resolve IZR_nz Rmult_integral_contrapositive.
 
 Lemma eqR_Qeq : forall x y : Q, Q2R x = Q2R y -> x==y.
-Proof. hammer_hook "Qreals" "Qreals.eqR_Qeq". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.eqR_Qeq".  
 unfold Qeq, Q2R; intros (x1, x2) (y1, y2); unfold Qnum, Qden;
 intros.
 apply eq_IZR.
@@ -39,7 +39,7 @@ rewrite Rinv_r_simpl_m in H0; auto; rewrite H0; field; auto.
 Qed.
 
 Lemma Qeq_eqR : forall x y : Q, x==y -> Q2R x = Q2R y.
-Proof. hammer_hook "Qreals" "Qreals.Qeq_eqR". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Qeq_eqR".  
 unfold Qeq, Q2R; intros (x1, x2) (y1, y2); unfold Qnum, Qden;
 intros.
 set (X1 := IZR x1) in *; assert (X2nz := IZR_nz x2);
@@ -55,7 +55,7 @@ rewrite H0; ring.
 Qed.
 
 Lemma Rle_Qle : forall x y : Q, (Q2R x <= Q2R y)%R -> x<=y.
-Proof. hammer_hook "Qreals" "Qreals.Rle_Qle". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Rle_Qle".  
 unfold Qle, Q2R; intros (x1, x2) (y1, y2); unfold Qnum, Qden;
 intros.
 apply le_IZR.
@@ -73,7 +73,7 @@ now apply IZR_le.
 Qed.
 
 Lemma Qle_Rle : forall x y : Q, x<=y -> (Q2R x <= Q2R y)%R.
-Proof. hammer_hook "Qreals" "Qreals.Qle_Rle". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Qle_Rle".  
 unfold Qle, Q2R; intros (x1, x2) (y1, y2); unfold Qnum, Qden;
 intros.
 set (X1 := IZR x1) in *; assert (X2nz := IZR_nz x2);
@@ -93,7 +93,7 @@ now apply IZR_lt.
 Qed.
 
 Lemma Rlt_Qlt : forall x y : Q, (Q2R x < Q2R y)%R -> x<y.
-Proof. hammer_hook "Qreals" "Qreals.Rlt_Qlt". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Rlt_Qlt".  
 unfold Qlt, Q2R; intros (x1, x2) (y1, y2); unfold Qnum, Qden;
 intros.
 apply lt_IZR.
@@ -111,7 +111,7 @@ now apply IZR_lt.
 Qed.
 
 Lemma Qlt_Rlt : forall x y : Q, x<y -> (Q2R x < Q2R y)%R.
-Proof. hammer_hook "Qreals" "Qreals.Qlt_Rlt". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Qlt_Rlt".  
 unfold Qlt, Q2R; intros (x1, x2) (y1, y2); unfold Qnum, Qden;
 intros.
 set (X1 := IZR x1) in *; assert (X2nz := IZR_nz x2);
@@ -131,7 +131,7 @@ now apply IZR_lt.
 Qed.
 
 Lemma Q2R_plus : forall x y : Q, Q2R (x+y) = (Q2R x + Q2R y)%R.
-Proof. hammer_hook "Qreals" "Qreals.Q2R_plus". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Q2R_plus".  
 unfold Qplus, Qeq, Q2R; intros (x1, x2) (y1, y2);
 unfold Qden, Qnum.
 simpl_mult.
@@ -141,7 +141,7 @@ field; auto.
 Qed.
 
 Lemma Q2R_mult : forall x y : Q, Q2R (x*y) = (Q2R x * Q2R y)%R.
-Proof. hammer_hook "Qreals" "Qreals.Q2R_mult". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Q2R_mult".  
 unfold Qmult, Qeq, Q2R; intros (x1, x2) (y1, y2);
 unfold Qden, Qnum.
 simpl_mult.
@@ -150,19 +150,19 @@ field; auto.
 Qed.
 
 Lemma Q2R_opp : forall x : Q, Q2R (- x) = (- Q2R x)%R.
-Proof. hammer_hook "Qreals" "Qreals.Q2R_opp". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Q2R_opp".  
 unfold Qopp, Qeq, Q2R; intros (x1, x2); unfold Qden, Qnum.
 rewrite Ropp_Ropp_IZR.
 field; auto.
 Qed.
 
 Lemma Q2R_minus : forall x y : Q, Q2R (x-y) = (Q2R x - Q2R y)%R.
-Proof. hammer_hook "Qreals" "Qreals.Q2R_minus". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Q2R_minus".  
 unfold Qminus; intros; rewrite Q2R_plus; rewrite Q2R_opp; auto.
 Qed.
 
 Lemma Q2R_inv : forall x : Q, ~ x==0 -> Q2R (/x) = (/ Q2R x)%R.
-Proof. hammer_hook "Qreals" "Qreals.Q2R_inv". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Q2R_inv".  
 unfold Qinv, Q2R, Qeq; intros (x1, x2). case x1; unfold Qnum, Qden.
 simpl; intros; elim H; trivial.
 intros; field; auto.
@@ -175,7 +175,7 @@ Qed.
 
 Lemma Q2R_div :
 forall x y : Q, ~ y==0 -> Q2R (x/y) = (Q2R x / Q2R y)%R.
-Proof. hammer_hook "Qreals" "Qreals.Q2R_div". Restart. 
+Proof. try hammer_hook "Qreals" "Qreals.Q2R_div".  
 unfold Qdiv, Rdiv.
 intros; rewrite Q2R_mult.
 rewrite Q2R_inv; auto.

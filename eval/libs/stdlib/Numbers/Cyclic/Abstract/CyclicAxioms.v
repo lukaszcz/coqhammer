@@ -245,7 +245,7 @@ WW' eq0 zero.
 
 Lemma spec_WO : forall h,
 zn2z_to_Z wB to_Z (WO h) = (to_Z h)*wB.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.spec_WO". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.spec_WO".  
 unfold zn2z_to_Z, WO; simpl; intros.
 case_eq (eq0 h); intros.
 rewrite (spec_eq0 _ H); auto.
@@ -254,7 +254,7 @@ Qed.
 
 Lemma spec_OW : forall l,
 zn2z_to_Z wB to_Z (OW l) = to_Z l.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.spec_OW". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.spec_OW".  
 unfold zn2z_to_Z, OW; simpl; intros.
 case_eq (eq0 l); intros.
 rewrite (spec_eq0 _ H); auto.
@@ -263,7 +263,7 @@ Qed.
 
 Lemma spec_WW : forall h l,
 zn2z_to_Z wB to_Z (WW h l) = (to_Z h)*wB + to_Z l.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.spec_WW". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.spec_WW".  
 unfold WW; simpl; intros.
 case_eq (eq0 h); intros.
 rewrite (spec_eq0 _ H); auto.
@@ -284,7 +284,7 @@ Notation "[| x |]" := (to_Z x)  (at level 0, x at level 99).
 
 Theorem of_pos_correct:
 forall p, Zpos p < base digits -> [|(snd (of_pos p))|] = Zpos p.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.of_pos_correct". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.of_pos_correct".  
 intros p Hp.
 generalize (spec_of_pos p).
 case (of_pos p); intros n w1; simpl.
@@ -307,7 +307,7 @@ end.
 
 Theorem of_Z_correct:
 forall p, 0 <= p < base digits -> [|of_Z p|] = p.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.of_Z_correct". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.ZnZ.of_Z_correct".  
 intros p; case p; simpl; try rewrite spec_0; auto.
 intros; rewrite of_pos_correct; auto with zarith.
 intros p1 (H1, _); contradict H1; apply Z.lt_nge; red; simpl; auto.
@@ -350,44 +350,44 @@ ZnZ.spec_opp ZnZ.spec_sub
 Ltac zify := unfold eq in *; autorewrite with cyclic.
 
 Lemma add_0_l : forall x, 0 + x == x.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_0_l". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_0_l".  
 intros. zify. rewrite Z.add_0_l.
 apply Zmod_small. apply ZnZ.spec_to_Z.
 Qed.
 
 Lemma add_comm : forall x y, x + y == y + x.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_comm". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_comm".  
 intros. zify. now rewrite Z.add_comm.
 Qed.
 
 Lemma add_assoc : forall x y z, x + (y + z) == x + y + z.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_assoc". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_assoc".  
 intros. zify. now rewrite Zplus_mod_idemp_r, Zplus_mod_idemp_l, Z.add_assoc.
 Qed.
 
 Lemma mul_1_l : forall x, 1 * x == x.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_1_l". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_1_l".  
 intros. zify. rewrite Z.mul_1_l.
 apply Zmod_small. apply ZnZ.spec_to_Z.
 Qed.
 
 Lemma mul_comm : forall x y, x * y == y * x.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_comm". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_comm".  
 intros. zify. now rewrite Z.mul_comm.
 Qed.
 
 Lemma mul_assoc : forall x y z, x * (y * z) == x * y * z.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_assoc". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_assoc".  
 intros. zify. now rewrite Zmult_mod_idemp_r, Zmult_mod_idemp_l, Z.mul_assoc.
 Qed.
 
 Lemma mul_add_distr_r : forall x y z, (x+y)*z == x*z + y*z.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_add_distr_r". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.mul_add_distr_r".  
 intros. zify. now rewrite <- Zplus_mod, Zmult_mod_idemp_l, Z.mul_add_distr_r.
 Qed.
 
 Lemma add_opp_r : forall x y, x + - y == x-y.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_opp_r". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_opp_r".  
 intros. zify. rewrite <- Zminus_mod_idemp_r. unfold Z.sub.
 destruct (Z.eq_dec ([|y|] mod wB) 0) as [EQ|NEQ].
 rewrite Z_mod_zero_opp_full, EQ, 2 Z.add_0_r; auto.
@@ -397,12 +397,12 @@ rewrite Z_mod_same_full. simpl. now rewrite Zplus_mod_idemp_r.
 Qed.
 
 Lemma add_opp_diag_r : forall x, x + - x == 0.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_opp_diag_r". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.add_opp_diag_r".  
 intros. red. rewrite add_opp_r. zify. now rewrite Z.sub_diag, Zmod_0_l.
 Qed.
 
 Lemma CyclicRing : ring_theory 0 1 ZnZ.add ZnZ.mul ZnZ.sub ZnZ.opp eq.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing".  
 constructor.
 exact add_0_l. exact add_comm. exact add_assoc.
 exact mul_1_l. exact mul_comm. exact mul_assoc.
@@ -415,13 +415,13 @@ Definition eqb x y :=
 match ZnZ.compare x y with Eq => true | _ => false end.
 
 Lemma eqb_eq : forall x y, eqb x y = true <-> x == y.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.eqb_eq". Restart. 
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.eqb_eq".  
 intros. unfold eqb, eq.
 rewrite ZnZ.spec_compare.
 case Z.compare_spec; intuition; try discriminate.
 Qed.
 
 Lemma eqb_correct : forall x y, eqb x y = true -> x==y.
-Proof. hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.eqb_correct". Restart.  now apply eqb_eq. Qed.
+Proof. try hammer_hook "CyclicAxioms" "CyclicAxioms.CyclicRing.eqb_correct".   now apply eqb_eq. Qed.
 
 End CyclicRing.

@@ -616,9 +616,9 @@ Lemma find_class_decompose_program:
       P = P0 ++ (D :: P1).
 Proof.
   induction P; sauto.
-  +  hammer_hook "JaSyntax" "JaSyntax.find_class_decompose_program.subgoal_1". Undo.
+  +  try hammer_hook "JaSyntax" "JaSyntax.find_class_decompose_program.subgoal_1". 
      exists [], P; auto.
-  +  hammer_hook  "JaSyntax" "JaSyntax.find_class_decompose_program.subgoal_2". Undo.
+  +  try hammer_hook  "JaSyntax" "JaSyntax.find_class_decompose_program.subgoal_2". 
      Reconstr.hobvious (@IHP, @H)
 		       (@Coq.Lists.List.app_comm_cons)
 		       Reconstr.Empty.

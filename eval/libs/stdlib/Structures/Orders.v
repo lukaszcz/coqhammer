@@ -136,7 +136,7 @@ Definition eqb x y :=
 match compare x y with Eq => true | _ => false end.
 
 Lemma eqb_eq : forall x y, eqb x y = true <-> x==y.
-Proof. hammer_hook "Orders" "Orders.Compare2EqBool.eqb_eq". Restart. 
+Proof. try hammer_hook "Orders" "Orders.Compare2EqBool.eqb_eq".  
 unfold eqb. intros x y.
 destruct (compare_spec x y) as [H|H|H]; split; auto; try discriminate.
 intros EQ; rewrite EQ in H; elim (StrictOrder_Irreflexive _ H).
@@ -154,14 +154,14 @@ Module OT_to_Full (O:OrderedType') <: OrderedTypeFull.
 Include O.
 Definition le x y := x<y \/ x==y.
 Lemma le_lteq : forall x y, le x y <-> x<y \/ x==y.
-Proof. hammer_hook "Orders" "Orders.LeIsLtEq.le_lteq". Restart.  unfold le; split; auto. Qed.
+Proof. try hammer_hook "Orders" "Orders.LeIsLtEq.le_lteq".   unfold le; split; auto. Qed.
 End OT_to_Full.
 
 
 
 Module OTF_LtIsTotal (Import O:OrderedTypeFull') <: LtIsTotal O.
 Lemma lt_total : forall x y, x<y \/ x==y \/ y<x.
-Proof. hammer_hook "Orders" "Orders.LtIsTotal.lt_total". Restart.  intros; destruct (compare_spec x y); auto. Qed.
+Proof. try hammer_hook "Orders" "Orders.LtIsTotal.lt_total".   intros; destruct (compare_spec x y); auto. Qed.
 End OTF_LtIsTotal.
 
 Module OTF_to_TotalOrder (O:OrderedTypeFull) <: TotalOrder
@@ -241,7 +241,7 @@ Definition leb x y :=
 match compare x y with Gt => false | _ => true end.
 
 Lemma leb_le : forall x y, leb x y <-> x <= y.
-Proof. hammer_hook "Orders" "Orders.LebSpec.leb_le". Restart. 
+Proof. try hammer_hook "Orders" "Orders.LebSpec.leb_le".  
 intros. unfold leb. rewrite le_lteq.
 destruct (compare_spec x y) as [EQ|LT|GT]; split; auto.
 discriminate.
@@ -250,13 +250,13 @@ destruct LE as [LT|EQ]. now transitivity y. now rewrite <- EQ in GT.
 Qed.
 
 Lemma leb_total : forall x y, leb x y \/ leb y x.
-Proof. hammer_hook "Orders" "Orders.LebIsTotal.leb_total". Restart. 
+Proof. try hammer_hook "Orders" "Orders.LebIsTotal.leb_total".  
 intros. rewrite 2 leb_le. rewrite 2 le_lteq.
 destruct (compare_spec x y); intuition.
 Qed.
 
 Lemma leb_trans : Transitive leb.
-Proof. hammer_hook "Orders" "Orders.LebIsTransitive.leb_trans". Restart. 
+Proof. try hammer_hook "Orders" "Orders.LebIsTransitive.leb_trans".  
 intros x y z. rewrite !leb_le, !le_lteq.
 intros [Hxy|Hxy] [Hyz|Hyz].
 left; transitivity y; auto.
@@ -286,7 +286,7 @@ Definition compare x y :=
 if x <=? y then (if y <=? x then Eq else Lt) else Gt.
 
 Lemma compare_spec : forall x y, CompSpec eq lt x y (compare x y).
-Proof. hammer_hook "Orders" "Orders.CmpSpec.compare_spec". Restart. 
+Proof. try hammer_hook "Orders" "Orders.CmpSpec.compare_spec".  
 intros. unfold compare.
 case_eq (x <=? y).
 case_eq (y <=? x).
@@ -298,7 +298,7 @@ Qed.
 Definition eqb x y := (x <=? y) && (y <=? x).
 
 Lemma eqb_eq : forall x y, eqb x y <-> eq x y.
-Proof. hammer_hook "Orders" "Orders.TTLB_to_OTF.eqb_eq". Restart. 
+Proof. try hammer_hook "Orders" "Orders.TTLB_to_OTF.eqb_eq".  
 intros. unfold eq, eqb, le.
 case leb; simpl; intuition; discriminate.
 Qed.
@@ -306,7 +306,7 @@ Qed.
 Include HasEqBool2Dec.
 
 Instance eq_equiv : Equivalence eq.
-Proof. hammer_hook "Orders" "Orders.TTLB_to_OTF.eq_equiv". Restart. 
+Proof. try hammer_hook "Orders" "Orders.TTLB_to_OTF.eq_equiv".  
 split.
 intros x; unfold eq, le. destruct (leb_total x x); auto.
 intros x y; unfold eq, le. intuition.
@@ -314,7 +314,7 @@ intros x y z; unfold eq, le. intuition; apply leb_trans with y; auto.
 Qed.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. hammer_hook "Orders" "Orders.IsStrOrder.lt_strorder". Restart. 
+Proof. try hammer_hook "Orders" "Orders.IsStrOrder.lt_strorder".  
 split.
 intros x. unfold lt; red; intuition.
 intros x y z; unfold lt, le. intuition.
@@ -324,7 +324,7 @@ apply leb_trans with x; auto.
 Qed.
 
 Instance lt_compat : Proper (eq ==> eq ==> iff) lt.
-Proof. hammer_hook "Orders" "Orders.IsStrOrder.lt_compat". Restart. 
+Proof. try hammer_hook "Orders" "Orders.IsStrOrder.lt_compat".  
 apply proper_sym_impl_iff_2; auto with *.
 intros x x' Hx y y' Hy' H. unfold eq, lt, le in *.
 intuition.
@@ -336,7 +336,7 @@ apply leb_trans with y'; auto.
 Qed.
 
 Definition le_lteq : forall x y, le x y <-> lt x y \/ eq x y.
-Proof. hammer_hook "Orders" "Orders.OT_to_Full.le_lteq". Restart. 
+Proof. try hammer_hook "Orders" "Orders.OT_to_Full.le_lteq".  
 intros.
 unfold lt, eq, le.
 split; [ | intuition ].

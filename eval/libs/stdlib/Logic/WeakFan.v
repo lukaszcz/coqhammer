@@ -46,7 +46,7 @@ if b then inductively_barred P (false::l) else ~ inductively_barred P (false::l)
 end.
 
 Lemma Y_unique : forall P l1 l2, length l1 = length l2 -> Y P l1 -> Y P l2 -> l1 = l2.
-Proof. hammer_hook "WeakFan" "WeakFan.Y_unique". Restart. 
+Proof. try hammer_hook "WeakFan" "WeakFan.Y_unique".  
 induction l1, l2.
 - trivial.
 - discriminate.
@@ -64,7 +64,7 @@ Qed.
 Definition X P n := exists l, length l = n /\ Y P (true::l).
 
 Lemma Y_approx : forall P l, approx (X P) l -> Y P l.
-Proof. hammer_hook "WeakFan" "WeakFan.Y_approx". Restart. 
+Proof. try hammer_hook "WeakFan" "WeakFan.Y_approx".  
 induction l.
 - trivial.
 - intros (H,Hb). split.
@@ -77,7 +77,7 @@ rewrite <- (Y_unique P l' l Hl'); auto.
 Qed.
 
 Theorem WeakFanTheorem : forall P, barred P -> inductively_barred P [].
-Proof. hammer_hook "WeakFan" "WeakFan.WeakFanTheorem". Restart. 
+Proof. try hammer_hook "WeakFan" "WeakFan.WeakFanTheorem".  
 intros P Hbar.
 destruct Hbar with (X P) as (l,(Hd%Y_approx,HP)).
 assert (inductively_barred P l) by (apply (now P l), HP).

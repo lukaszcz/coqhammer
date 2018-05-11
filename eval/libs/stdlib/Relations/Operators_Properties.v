@@ -43,7 +43,7 @@ Local Notation "R *" := (clos_refl_trans R)
 
 
 Lemma clos_rt_is_preorder : preorder R*.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_is_preorder". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_is_preorder".  
 apply Build_preorder.
 exact (rt_refl A R).
 
@@ -53,7 +53,7 @@ Qed.
 
 
 Lemma clos_rt_idempotent : inclusion (R*)* R*.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_idempotent". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_idempotent".  
 red.
 induction 1; auto with sets.
 intros.
@@ -68,7 +68,7 @@ Section Clos_Refl_Sym_Trans.
 
 Lemma clos_rt_clos_rst :
 inclusion (clos_refl_trans R) (clos_refl_sym_trans R).
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_clos_rst". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_clos_rst".  
 red.
 induction 1; auto with sets.
 apply rst_trans with y; auto with sets.
@@ -78,7 +78,7 @@ Qed.
 
 Lemma clos_r_clos_rt :
 inclusion (clos_refl R) (clos_refl_trans R).
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_r_clos_rt". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_r_clos_rt".  
 induction 1 as [? ?| ].
 constructor; auto.
 constructor 2.
@@ -87,7 +87,7 @@ Qed.
 Lemma clos_rt_t : forall x y z,
 clos_refl_trans R x y -> clos_trans R y z ->
 clos_trans R x z.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_t". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_t".  
 induction 1 as [b d H1|b|a b d H1 H2 IH1 IH2]; auto.
 intro H. apply t_trans with (y:=d); auto.
 constructor. auto.
@@ -96,7 +96,7 @@ Qed.
 
 
 Lemma clos_rst_is_equiv : equivalence A (clos_refl_sym_trans R).
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_is_equiv". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_is_equiv".  
 apply Build_equivalence.
 exact (rst_refl A R).
 exact (rst_trans A R).
@@ -108,7 +108,7 @@ Qed.
 Lemma clos_rst_idempotent :
 inclusion (clos_refl_sym_trans (clos_refl_sym_trans R))
 (clos_refl_sym_trans R).
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_idempotent". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_idempotent".  
 red.
 induction 1; auto with sets.
 apply rst_trans with y; auto with sets.
@@ -125,7 +125,7 @@ Section Equivalences.
 
 
 Lemma clos_t1n_trans : forall x y, clos_trans_1n R x y -> clos_trans R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_t1n_trans". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_t1n_trans".  
 induction 1.
 left; assumption.
 right with y; auto.
@@ -133,7 +133,7 @@ left; auto.
 Qed.
 
 Lemma clos_trans_t1n : forall x y, clos_trans R x y -> clos_trans_1n R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_t1n". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_t1n".  
 induction 1.
 left; assumption.
 generalize IHclos_trans2; clear IHclos_trans2; induction IHclos_trans1.
@@ -145,7 +145,7 @@ Qed.
 
 Lemma clos_trans_t1n_iff : forall x y,
 clos_trans R x y <-> clos_trans_1n R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_t1n_iff". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_t1n_iff".  
 split.
 apply clos_trans_t1n.
 apply clos_t1n_trans.
@@ -154,7 +154,7 @@ Qed.
 
 
 Lemma clos_tn1_trans : forall x y, clos_trans_n1 R x y -> clos_trans R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_tn1_trans". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_tn1_trans".  
 induction 1.
 left; assumption.
 right with y; auto.
@@ -162,7 +162,7 @@ left; assumption.
 Qed.
 
 Lemma clos_trans_tn1 :  forall x y, clos_trans R x y -> clos_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_tn1". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_tn1".  
 induction 1.
 left; assumption.
 elim IHclos_trans2.
@@ -175,7 +175,7 @@ Qed.
 
 Lemma clos_trans_tn1_iff : forall x y,
 clos_trans R x y <-> clos_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_tn1_iff". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_tn1_iff".  
 split.
 apply clos_trans_tn1.
 apply clos_tn1_trans.
@@ -184,20 +184,20 @@ Qed.
 
 
 Lemma clos_rt1n_step : forall x y, R x y -> clos_refl_trans_1n R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt1n_step". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt1n_step".  
 intros x y H.
 right with y;[assumption|left].
 Qed.
 
 Lemma clos_rtn1_step : forall x y, R x y -> clos_refl_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rtn1_step". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rtn1_step".  
 intros x y H.
 right with x;[assumption|left].
 Qed.
 
 Lemma clos_rt1n_rt : forall x y,
 clos_refl_trans_1n R x y -> clos_refl_trans R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt1n_rt". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt1n_rt".  
 induction 1.
 constructor 2.
 constructor 3 with y; auto.
@@ -206,7 +206,7 @@ Qed.
 
 Lemma clos_rt_rt1n : forall x y,
 clos_refl_trans R x y -> clos_refl_trans_1n R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rt1n". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rt1n".  
 induction 1.
 apply clos_rt1n_step; assumption.
 left.
@@ -220,7 +220,7 @@ Qed.
 
 Lemma clos_rt_rt1n_iff : forall x y,
 clos_refl_trans R x y <-> clos_refl_trans_1n R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rt1n_iff". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rt1n_iff".  
 split.
 apply clos_rt_rt1n.
 apply clos_rt1n_rt.
@@ -230,7 +230,7 @@ Qed.
 
 Lemma clos_rtn1_rt : forall x y,
 clos_refl_trans_n1 R x y -> clos_refl_trans R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rtn1_rt". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rtn1_rt".  
 induction 1.
 constructor 2.
 constructor 3 with y; auto.
@@ -239,7 +239,7 @@ Qed.
 
 Lemma clos_rt_rtn1 :  forall x y,
 clos_refl_trans R x y -> clos_refl_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rtn1". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rtn1".  
 induction 1.
 apply clos_rtn1_step; auto.
 left.
@@ -250,7 +250,7 @@ Qed.
 
 Lemma clos_rt_rtn1_iff : forall x y,
 clos_refl_trans R x y <-> clos_refl_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rtn1_iff". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rt_rtn1_iff".  
 split.
 apply clos_rt_rtn1.
 apply clos_rtn1_rt.
@@ -262,7 +262,7 @@ Lemma clos_refl_trans_ind_left :
 forall (x:A) (P:A -> Prop), P x ->
 (forall y z:A, clos_refl_trans R x y -> P y -> R y z -> P z) ->
 forall z:A, clos_refl_trans R x z -> P z.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_refl_trans_ind_left". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_refl_trans_ind_left".  
 intros.
 revert H H0.
 induction H1; intros; auto with sets.
@@ -303,7 +303,7 @@ Qed.
 
 Lemma clos_rst1n_rst  : forall x y,
 clos_refl_sym_trans_1n R x y -> clos_refl_sym_trans R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst1n_rst". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst1n_rst".  
 induction 1.
 constructor 2.
 constructor 4 with y; auto.
@@ -319,7 +319,7 @@ Qed.
 
 Lemma clos_rst1n_sym : forall x y, clos_refl_sym_trans_1n R x y ->
 clos_refl_sym_trans_1n R y x.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst1n_sym". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst1n_sym".  
 intros x y H; elim H.
 constructor 1.
 intros x0 y0 z D H0 H1; apply clos_rst1n_trans with y0; auto.
@@ -340,7 +340,7 @@ Qed.
 
 Lemma clos_rst_rst1n_iff : forall x y,
 clos_refl_sym_trans R x y <-> clos_refl_sym_trans_1n R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_rst1n_iff". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_rst1n_iff".  
 split.
 apply clos_rst_rst1n.
 apply clos_rst1n_rst.
@@ -350,7 +350,7 @@ Qed.
 
 Lemma clos_rstn1_rst : forall x y,
 clos_refl_sym_trans_n1 R x y -> clos_refl_sym_trans R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rstn1_rst". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rstn1_rst".  
 induction 1.
 constructor 2.
 constructor 4 with y; auto.
@@ -359,7 +359,7 @@ Qed.
 
 Lemma clos_rstn1_trans : forall x y z, clos_refl_sym_trans_n1 R x y ->
 clos_refl_sym_trans_n1 R y z -> clos_refl_sym_trans_n1 R x z.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rstn1_trans". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rstn1_trans".  
 intros x y z H1 H2.
 induction H2.
 auto.
@@ -369,7 +369,7 @@ Qed.
 
 Lemma clos_rstn1_sym : forall x y, clos_refl_sym_trans_n1 R x y ->
 clos_refl_sym_trans_n1 R y x.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rstn1_sym". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rstn1_sym".  
 intros x y H; elim H.
 constructor 1.
 intros y0 z D H0 H1. apply clos_rstn1_trans with y0; auto.
@@ -380,7 +380,7 @@ Qed.
 
 Lemma clos_rst_rstn1 : forall x y,
 clos_refl_sym_trans R x y -> clos_refl_sym_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_rstn1". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_rstn1".  
 induction 1.
 constructor 2 with x; auto.
 constructor 1.
@@ -391,7 +391,7 @@ Qed.
 
 Lemma clos_rst_rstn1_iff : forall x y,
 clos_refl_sym_trans R x y <-> clos_refl_sym_trans_n1 R x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_rstn1_iff". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_rst_rstn1_iff".  
 split.
 apply clos_rst_rstn1.
 apply clos_rstn1_rst.
@@ -401,7 +401,7 @@ End Equivalences.
 
 Lemma clos_trans_transp_permute : forall x y,
 transp _ (clos_trans R) x y <-> clos_trans (transp _ R) x y.
-Proof. hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_transp_permute". Restart. 
+Proof. try hammer_hook "Operators_Properties" "Operators_Properties.clos_trans_transp_permute".  
 split; induction 1;
 (apply t_step; assumption) || eapply t_trans; eassumption.
 Qed.

@@ -31,7 +31,7 @@ Definition union_domain (D1 D2:R -> Prop) (c:R) : Prop := D1 c \/ D2 c.
 Definition interior (D:R -> Prop) (x:R) : Prop := neighbourhood D x.
 
 Lemma interior_P1 : forall D:R -> Prop, included (interior D) D.
-Proof. hammer_hook "Rtopology" "Rtopology.interior_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.interior_P1".  
 intros; unfold included; unfold interior; intros;
 unfold neighbourhood in H; elim H; intros; unfold included in H0;
 apply H0; unfold disc; unfold Rminus;
@@ -39,7 +39,7 @@ rewrite Rplus_opp_r; rewrite Rabs_R0; apply (cond_pos x0).
 Qed.
 
 Lemma interior_P2 : forall D:R -> Prop, open_set D -> included D (interior D).
-Proof. hammer_hook "Rtopology" "Rtopology.interior_P2". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.interior_P2".  
 intros; unfold open_set in H; unfold included; intros;
 assert (H1 := H _ H0); unfold interior; apply H1.
 Qed.
@@ -50,7 +50,7 @@ neighbourhood V x ->  exists y : R, intersection_domain V D y.
 Definition adherence (D:R -> Prop) (x:R) : Prop := point_adherent D x.
 
 Lemma adherence_P1 : forall D:R -> Prop, included D (adherence D).
-Proof. hammer_hook "Rtopology" "Rtopology.adherence_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.adherence_P1".  
 intro; unfold included; intros; unfold adherence;
 unfold point_adherent; intros; exists x;
 unfold intersection_domain; split.
@@ -63,12 +63,12 @@ Qed.
 Lemma included_trans :
 forall D1 D2 D3:R -> Prop,
 included D1 D2 -> included D2 D3 -> included D1 D3.
-Proof. hammer_hook "Rtopology" "Rtopology.included_trans". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.included_trans".  
 unfold included; intros; apply H0; apply H; apply H1.
 Qed.
 
 Lemma interior_P3 : forall D:R -> Prop, open_set (interior D).
-Proof. hammer_hook "Rtopology" "Rtopology.interior_P3". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.interior_P3".  
 intro; unfold open_set, interior; unfold neighbourhood;
 intros; elim H; intros.
 exists x0; unfold included; intros.
@@ -96,7 +96,7 @@ Qed.
 Lemma complementary_P1 :
 forall D:R -> Prop,
 ~ (exists y : R, intersection_domain D (complementary D) y).
-Proof. hammer_hook "Rtopology" "Rtopology.complementary_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.complementary_P1".  
 intro; red; intro; elim H; intros;
 unfold intersection_domain, complementary in H0; elim H0;
 intros; elim H2; assumption.
@@ -104,7 +104,7 @@ Qed.
 
 Lemma adherence_P2 :
 forall D:R -> Prop, closed_set D -> included (adherence D) D.
-Proof. hammer_hook "Rtopology" "Rtopology.adherence_P2". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.adherence_P2".  
 unfold closed_set; unfold open_set, complementary; intros;
 unfold included, adherence; intros; assert (H1 := classic (D x));
 elim H1; intro.
@@ -115,7 +115,7 @@ elim H6; assumption.
 Qed.
 
 Lemma adherence_P3 : forall D:R -> Prop, closed_set (adherence D).
-Proof. hammer_hook "Rtopology" "Rtopology.adherence_P3". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.adherence_P3".  
 intro; unfold closed_set, adherence;
 unfold open_set, complementary, point_adherent;
 intros;
@@ -152,7 +152,7 @@ included D1 D2 /\ included D2 D1.
 Infix "=_D" := eq_Dom (at level 70, no associativity).
 
 Lemma open_set_P1 : forall D:R -> Prop, open_set D <-> D =_D interior D.
-Proof. hammer_hook "Rtopology" "Rtopology.open_set_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.open_set_P1".  
 intro; split.
 intro; unfold eq_Dom; split.
 apply interior_P2; assumption.
@@ -163,7 +163,7 @@ apply (H _ H1).
 Qed.
 
 Lemma closed_set_P1 : forall D:R -> Prop, closed_set D <-> D =_D adherence D.
-Proof. hammer_hook "Rtopology" "Rtopology.closed_set_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.closed_set_P1".  
 intro; split.
 intro; unfold eq_Dom; split.
 apply adherence_P1.
@@ -185,7 +185,7 @@ Qed.
 Lemma neighbourhood_P1 :
 forall (D1 D2:R -> Prop) (x:R),
 included D1 D2 -> neighbourhood D1 x -> neighbourhood D2 x.
-Proof. hammer_hook "Rtopology" "Rtopology.neighbourhood_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.neighbourhood_P1".  
 unfold included, neighbourhood; intros; elim H0; intros; exists x0;
 intros; unfold included; unfold included in H1;
 intros; apply (H _ (H1 _ H2)).
@@ -194,7 +194,7 @@ Qed.
 Lemma open_set_P2 :
 forall D1 D2:R -> Prop,
 open_set D1 -> open_set D2 -> open_set (union_domain D1 D2).
-Proof. hammer_hook "Rtopology" "Rtopology.open_set_P2". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.open_set_P2".  
 unfold open_set; intros; unfold union_domain in H1; elim H1; intro.
 apply neighbourhood_P1 with D1.
 unfold included, union_domain; tauto.
@@ -207,7 +207,7 @@ Qed.
 Lemma open_set_P3 :
 forall D1 D2:R -> Prop,
 open_set D1 -> open_set D2 -> open_set (intersection_domain D1 D2).
-Proof. hammer_hook "Rtopology" "Rtopology.open_set_P3". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.open_set_P3".  
 unfold open_set; intros; unfold intersection_domain in H1; elim H1;
 intros.
 assert (H4 := H _ H2); assert (H5 := H0 _ H3);
@@ -230,18 +230,18 @@ apply (cond_pos del2).
 Qed.
 
 Lemma open_set_P4 : open_set (fun x:R => False).
-Proof. hammer_hook "Rtopology" "Rtopology.open_set_P4". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.open_set_P4".  
 unfold open_set; intros; elim H.
 Qed.
 
 Lemma open_set_P5 : open_set (fun x:R => True).
-Proof. hammer_hook "Rtopology" "Rtopology.open_set_P5". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.open_set_P5".  
 unfold open_set; intros; unfold neighbourhood.
 exists (mkposreal 1 Rlt_0_1); unfold included; intros; trivial.
 Qed.
 
 Lemma disc_P1 : forall (x:R) (del:posreal), open_set (disc x del).
-Proof. hammer_hook "Rtopology" "Rtopology.disc_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.disc_P1".  
 intros; assert (H := open_set_P1 (disc x del)).
 elim H; intros; apply H1.
 unfold eq_Dom; split.
@@ -269,7 +269,7 @@ continuity_pt f x <->
 neighbourhood W (f x) ->
 exists V : R -> Prop,
 neighbourhood V x /\ (forall y:R, V y -> W (f y))).
-Proof. hammer_hook "Rtopology" "Rtopology.continuity_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.continuity_P1".  
 intros; split.
 intros; unfold neighbourhood in H0.
 elim H0; intros del1 H1.
@@ -313,7 +313,7 @@ Definition image_rec (f:R -> R) (D:R -> Prop) (x:R) : Prop := D (f x).
 Lemma continuity_P2 :
 forall (f:R -> R) (D:R -> Prop),
 continuity f -> open_set D -> open_set (image_rec f D).
-Proof. hammer_hook "Rtopology" "Rtopology.continuity_P2". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.continuity_P2".  
 intros; unfold open_set in H0; unfold open_set; intros;
 assert (H2 := continuity_P1 f x); elim H2; intros H3 _;
 assert (H4 := H3 (H x)); unfold neighbourhood, image_rec;
@@ -328,7 +328,7 @@ Lemma continuity_P3 :
 forall f:R -> R,
 continuity f <->
 (forall D:R -> Prop, open_set D -> open_set (image_rec f D)).
-Proof. hammer_hook "Rtopology" "Rtopology.continuity_P3". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.continuity_P3".  
 intros; split.
 intros; apply continuity_P2; assumption.
 intros; unfold continuity; unfold continuity_pt;
@@ -355,7 +355,7 @@ exists V : R -> Prop,
 (exists W : R -> Prop,
 neighbourhood V x /\
 neighbourhood W y /\ ~ (exists y : R, intersection_domain V W y)).
-Proof. hammer_hook "Rtopology" "Rtopology.Rsepare". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.Rsepare".  
 intros x y Hsep; set (D := Rabs (x - y)).
 cut (0 < D / 2).
 intro; exists (disc x (mkposreal _ H)).
@@ -405,7 +405,7 @@ Lemma restriction_family :
 forall (f:family) (D:R -> Prop) (x:R),
 (exists y : R, (fun z1 z2:R => f z1 z2 /\ D z1) x y) ->
 intersection_domain (ind f) D x.
-Proof. hammer_hook "Rtopology" "Rtopology.restriction_family". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.restriction_family".  
 intros; elim H; intros; unfold intersection_domain; elim H0; intros;
 split.
 apply (cond_fam f0); exists x0; assumption.
@@ -425,7 +425,7 @@ exists D : R -> Prop, covering_finite X (subfamily f D).
 Lemma family_P1 :
 forall (f:family) (D:R -> Prop),
 family_open_set f -> family_open_set (subfamily f D).
-Proof. hammer_hook "Rtopology" "Rtopology.family_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.family_P1".  
 unfold family_open_set; intros; unfold subfamily;
 simpl; assert (H0 := classic (D x)).
 elim H0; intro.
@@ -447,7 +447,7 @@ exists m : R, (exists M : R, (forall x:R, D x -> m <= x <= M)).
 
 Lemma open_set_P6 :
 forall D1 D2:R -> Prop, open_set D1 -> D1 =_D D2 -> open_set D2.
-Proof. hammer_hook "Rtopology" "Rtopology.open_set_P6". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.open_set_P6".  
 unfold open_set; unfold neighbourhood; intros.
 unfold eq_Dom in H0; elim H0; intros.
 assert (H4 := H _ (H3 _ H1)).
@@ -457,7 +457,7 @@ Qed.
 
 
 Lemma compact_P1 : forall X:R -> Prop, compact X -> bounded X.
-Proof. hammer_hook "Rtopology" "Rtopology.compact_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_P1".  
 intros; unfold compact in H; set (D := fun x:R => True);
 set (g := fun x y:R => Rabs y < x);
 cut (forall x:R, (exists y : _, g x y) -> True);
@@ -514,7 +514,7 @@ Qed.
 
 
 Lemma compact_P2 : forall X:R -> Prop, compact X -> closed_set X.
-Proof. hammer_hook "Rtopology" "Rtopology.compact_P2". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_P2".  
 intros; assert (H0 := closed_set_P1 X); elim H0; clear H0; intros _ H0;
 apply H0; clear H0.
 unfold eq_Dom; split.
@@ -594,7 +594,7 @@ Qed.
 
 
 Lemma compact_EMP : compact (fun _:R => False).
-Proof. hammer_hook "Rtopology" "Rtopology.compact_EMP". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_EMP".  
 unfold compact; intros; exists (fun x:R => False);
 unfold covering_finite; split.
 unfold covering; intros; elim H0.
@@ -607,7 +607,7 @@ Qed.
 
 Lemma compact_eqDom :
 forall X1 X2:R -> Prop, compact X1 -> X1 =_D X2 -> compact X2.
-Proof. hammer_hook "Rtopology" "Rtopology.compact_eqDom". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_eqDom".  
 unfold compact; intros; unfold eq_Dom in H0; elim H0; clear H0;
 unfold included; intros; assert (H3 : covering_open_set X1 f0).
 unfold covering_open_set; unfold covering_open_set in H1; elim H1;
@@ -624,7 +624,7 @@ Qed.
 
 
 Lemma compact_P3 : forall a b:R, compact (fun c:R => a <= c <= b).
-Proof. hammer_hook "Rtopology" "Rtopology.compact_P3". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_P3".  
 intros a b; destruct (Rle_dec a b) as [Hle|Hnle].
 unfold compact; intros f0 (H,H5);
 set
@@ -824,7 +824,7 @@ Qed.
 
 Lemma compact_P4 :
 forall X F:R -> Prop, compact X -> closed_set F -> included F X -> compact F.
-Proof. hammer_hook "Rtopology" "Rtopology.compact_P4". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_P4".  
 unfold compact; intros; elim (classic (exists z : R, F z));
 intro Hyp_F_NE.
 set (D := ind f0); set (g := f f0); unfold closed_set in H0.
@@ -907,7 +907,7 @@ Qed.
 
 
 Lemma compact_P5 : forall X:R -> Prop, closed_set X -> bounded X -> compact X.
-Proof. hammer_hook "Rtopology" "Rtopology.compact_P5". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_P5".  
 intros; unfold bounded in H0.
 elim H0; clear H0; intros m H0.
 elim H0; clear H0; intros M H0.
@@ -918,7 +918,7 @@ Qed.
 
 Lemma compact_carac :
 forall X:R -> Prop, compact X <-> closed_set X /\ bounded X.
-Proof. hammer_hook "Rtopology" "Rtopology.compact_carac". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_carac".  
 intro; split.
 intro; split; [ apply (compact_P2 _ H) | apply (compact_P1 _ H) ].
 intro; elim H; clear H; intros; apply (compact_P5 _ H H0).
@@ -931,7 +931,7 @@ exists y : R, x = f y /\ D y.
 Lemma continuity_compact :
 forall (f:R -> R) (X:R -> Prop),
 (forall x:R, continuity_pt f x) -> compact X -> compact (image_dir f X).
-Proof. hammer_hook "Rtopology" "Rtopology.continuity_compact". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.continuity_compact".  
 unfold compact; intros; unfold covering_open_set in H1.
 elim H1; clear H1; intros.
 set (D := ind f1).
@@ -973,7 +973,7 @@ a <= b ->
 (forall c:R, a <= c <= b -> continuity_pt f c) ->
 exists g : R -> R,
 continuity g /\ (forall c:R, a <= c <= b -> g c = f c).
-Proof. hammer_hook "Rtopology" "Rtopology.prolongement_C0". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.prolongement_C0".  
 intros; elim H; intro.
 set
 (h :=
@@ -1166,7 +1166,7 @@ forall (f:R -> R) (a b:R),
 a <= b ->
 (forall c:R, a <= c <= b -> continuity_pt f c) ->
 exists Mx : R, (forall c:R, a <= c <= b -> f c <= f Mx) /\ a <= Mx <= b.
-Proof. hammer_hook "Rtopology" "Rtopology.continuity_ab_maj". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.continuity_ab_maj".  
 intros;
 cut
 (exists g : R -> R,
@@ -1267,7 +1267,7 @@ forall (f:R -> R) (a b:R),
 a <= b ->
 (forall c:R, a <= c <= b -> continuity_pt f c) ->
 exists mx : R, (forall c:R, a <= c <= b -> f mx <= f c) /\ a <= mx <= b.
-Proof. hammer_hook "Rtopology" "Rtopology.continuity_ab_min". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.continuity_ab_min".  
 intros.
 cut (forall c:R, a <= c <= b -> continuity_pt (- f0) c).
 intro; assert (H2 := continuity_ab_maj (- f0)%F a b H H1); elim H2;
@@ -1300,7 +1300,7 @@ fun x:R =>
 adherence
 (fun y:R => (exists p : nat, y = un p /\ x <= INR p) /\ D x))
 (x:R), (exists y : R, f x y) -> D x.
-Proof. hammer_hook "Rtopology" "Rtopology.ValAdh_un_exists". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.ValAdh_un_exists".  
 intros; elim H; intros; unfold f in H0; unfold adherence in H0;
 unfold point_adherent in H0;
 assert (H1 : neighbourhood (disc x0 (mkposreal _ Rlt_0_1)) x0).
@@ -1320,7 +1320,7 @@ intersection_family (mkfamily D f (ValAdh_un_exists un)).
 
 Lemma ValAdh_un_prop :
 forall (un:nat -> R) (x:R), ValAdh un x <-> ValAdh_un un x.
-Proof. hammer_hook "Rtopology" "Rtopology.ValAdh_un_prop". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.ValAdh_un_prop".  
 intros; split; intro.
 unfold ValAdh in H; unfold ValAdh_un;
 unfold intersection_family; simpl;
@@ -1352,7 +1352,7 @@ Qed.
 
 Lemma adherence_P4 :
 forall F G:R -> Prop, included F G -> included (adherence F) (adherence G).
-Proof. hammer_hook "Rtopology" "Rtopology.adherence_P4". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.adherence_P4".  
 unfold adherence, included; unfold point_adherent; intros;
 elim (H0 _ H1); unfold intersection_domain;
 intros; elim H2; clear H2; intros; exists x0; split;
@@ -1379,7 +1379,7 @@ forall g:family,
 family_closed_set g ->
 intersection_vide_in X g ->
 exists D : R -> Prop, intersection_vide_finite_in X (subfamily g D).
-Proof. hammer_hook "Rtopology" "Rtopology.compact_P6". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.compact_P6".  
 intros X H Hyp g H0 H1.
 set (D' := ind g).
 set (f' := fun x y:R => complementary (g x) y /\ D' x).
@@ -1454,7 +1454,7 @@ Qed.
 Theorem Bolzano_Weierstrass :
 forall (un:nat -> R) (X:R -> Prop),
 compact X -> (forall n:nat, X (un n)) ->  exists l : R, ValAdh un l.
-Proof. hammer_hook "Rtopology" "Rtopology.Bolzano_Weierstrass". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.Bolzano_Weierstrass".  
 intros; cut (exists l : R, ValAdh_un un l).
 intro; elim H1; intros; exists x; elim (ValAdh_un_prop un x); intros;
 apply (H4 H2).
@@ -1542,7 +1542,7 @@ X x -> X y -> Rabs (x - y) < delta -> Rabs (f x - f y) < eps).
 
 Lemma is_lub_u :
 forall (E:R -> Prop) (x y:R), is_lub E x -> is_lub E y -> x = y.
-Proof. hammer_hook "Rtopology" "Rtopology.is_lub_u". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.is_lub_u".  
 unfold is_lub; intros; elim H; elim H0; intros; apply Rle_antisym;
 [ apply (H4 _ H1) | apply (H2 _ H3) ].
 Qed.
@@ -1552,7 +1552,7 @@ forall X:R -> Prop,
 ~ (exists y : R, X y) \/
 (exists y : R, X y /\ (forall x:R, X x -> x = y)) \/
 (exists x : R, (exists y : R, X x /\ X y /\ x <> y)).
-Proof. hammer_hook "Rtopology" "Rtopology.domain_P1". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.domain_P1".  
 intro; elim (classic (exists y : R, X y)); intro.
 right; elim H; intros; elim (classic (exists y : R, X y /\ y <> x)); intro.
 right; elim H1; intros; elim H2; intros; exists x; exists x0; intros.
@@ -1571,7 +1571,7 @@ Theorem Heine :
 forall (f:R -> R) (X:R -> Prop),
 compact X ->
 (forall x:R, X x -> continuity_pt f x) -> uniform_continuity f X.
-Proof. hammer_hook "Rtopology" "Rtopology.Heine". Restart. 
+Proof. try hammer_hook "Rtopology" "Rtopology.Heine".  
 intros f0 X H0 H; elim (domain_P1 X); intro Hyp.
 
 unfold uniform_continuity; intros; exists (mkposreal _ Rlt_0_1);

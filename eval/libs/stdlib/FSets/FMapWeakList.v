@@ -41,7 +41,7 @@ Definition empty : t elt := nil.
 Definition Empty m := forall (a : key)(e:elt), ~ MapsTo a e m.
 
 Lemma empty_1 : Empty empty.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.empty_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.empty_1".  
 unfold Empty,empty.
 intros a e.
 intro abs.
@@ -51,7 +51,7 @@ Qed.
 Hint Resolve empty_1.
 
 Lemma empty_NoDup : NoDupA empty.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.empty_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.empty_NoDup".  
 unfold empty; auto.
 Qed.
 
@@ -60,7 +60,7 @@ Qed.
 Definition is_empty (l : t elt) : bool := if l then true else false.
 
 Lemma is_empty_1 :forall m, Empty m -> is_empty m = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.is_empty_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.is_empty_1".  
 unfold Empty, PX.MapsTo.
 intros m.
 case m;auto.
@@ -70,7 +70,7 @@ absurd (InA eqke (t0, e) ((t0, e) :: l));auto.
 Qed.
 
 Lemma is_empty_2 : forall m, is_empty m = true -> Empty m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.is_empty_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.is_empty_2".  
 intros m.
 case m;auto.
 intros p l abs.
@@ -86,7 +86,7 @@ match s with
 end.
 
 Lemma mem_1 : forall m (Hm:NoDupA m) x, In x m -> mem x m = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.mem_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.mem_1".  
 intros m Hm x; generalize Hm; clear Hm.
 functional induction (mem x m);intros NoDup belong1;trivial.
 inversion belong1. inversion H.
@@ -100,7 +100,7 @@ exists x0; auto.
 Qed.
 
 Lemma mem_2 : forall m (Hm:NoDupA m) x, mem x m = true -> In x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.mem_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.mem_2".  
 intros m Hm x; generalize Hm; clear Hm; unfold PX.In,PX.MapsTo.
 functional induction (mem x m); intros NoDup hyp; try discriminate.
 exists _x; auto.
@@ -118,14 +118,14 @@ match s with
 end.
 
 Lemma find_2 : forall m x e, find x m = Some e -> MapsTo x e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.find_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.find_2".  
 intros m x. unfold PX.MapsTo.
 functional induction (find x m);simpl;intros e' eqfind; inversion eqfind; auto.
 Qed.
 
 Lemma find_1 : forall m (Hm:NoDupA m) x e,
 MapsTo x e m -> find x m = Some e.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.find_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.find_1".  
 intros m Hm x e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (find x m);simpl; subst; try clear H_eq_1.
 
@@ -143,7 +143,7 @@ Qed.
 
 Lemma find_eq : forall m (Hm:NoDupA m) x x',
 X.eq x x' -> find x m = find x' m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.find_eq". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.find_eq".  
 induction m; simpl; auto; destruct a; intros.
 inversion_clear Hm.
 rewrite (IHm H1 x x'); auto.
@@ -162,14 +162,14 @@ match s with
 end.
 
 Lemma add_1 : forall m x y e, X.eq x y -> MapsTo y e (add x e m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_1".  
 intros m x y e; generalize y; clear y; unfold PX.MapsTo.
 functional induction (add x e m);simpl;auto.
 Qed.
 
 Lemma add_2 : forall m x y e e',
 ~ X.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_2".  
 intros m x  y e e'; generalize y e; clear y e; unfold PX.MapsTo.
 functional induction (add x e' m);simpl;auto.
 intros y' e'' eqky';  inversion_clear 1.
@@ -181,7 +181,7 @@ Qed.
 
 Lemma add_3 : forall m x y e e',
 ~ X.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_3". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_3".  
 intros m x y e e'. generalize y e; clear y e; unfold PX.MapsTo.
 functional induction (add x e' m);simpl;auto.
 intros; apply (In_inv_3 H0); auto.
@@ -191,7 +191,7 @@ Qed.
 
 Lemma add_3' : forall m x y e e',
 ~ X.eq x y -> InA eqk (y,e) (add x e' m) -> InA eqk (y,e) m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_3'". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_3'".  
 intros m x y e e'. generalize y e; clear y e.
 functional induction (add x e' m);simpl;auto.
 inversion_clear 2.
@@ -203,7 +203,7 @@ inversion_clear 2; auto.
 Qed.
 
 Lemma add_NoDup : forall m (Hm:NoDupA m) x e, NoDupA (add x e m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_NoDup".  
 induction m.
 simpl; constructor; auto; red; inversion 1.
 intros.
@@ -220,7 +220,7 @@ Qed.
 
 Lemma add_eq : forall m (Hm:NoDupA m) x a e,
 X.eq x a -> find x (add a e m) = Some e.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_eq". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_eq".  
 intros.
 apply find_1; auto.
 apply add_NoDup; auto.
@@ -229,7 +229,7 @@ Qed.
 
 Lemma add_not_eq : forall m (Hm:NoDupA m) x a e,
 ~X.eq x a -> find x (add a e m) = find x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_not_eq". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.add_not_eq".  
 intros.
 case_eq (find x m); intros.
 apply find_1; auto.
@@ -253,7 +253,7 @@ match s with
 end.
 
 Lemma remove_1 : forall m (Hm:NoDupA m) x y, X.eq x y -> ~ In y (remove x m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_1".  
 intros m Hm x y; generalize Hm; clear Hm.
 functional induction (remove x m);simpl;intros;auto.
 
@@ -277,7 +277,7 @@ Qed.
 
 Lemma remove_2 : forall m (Hm:NoDupA m) x y e,
 ~ X.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_2".  
 intros m Hm x y e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (remove x m);auto.
 inversion_clear 3; auto.
@@ -289,7 +289,7 @@ Qed.
 
 Lemma remove_3 : forall m (Hm:NoDupA m) x y e,
 MapsTo y e (remove x m) -> MapsTo y e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_3". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_3".  
 intros m Hm x y e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (remove x m);auto.
 do 2 inversion_clear 1; auto.
@@ -297,14 +297,14 @@ Qed.
 
 Lemma remove_3' : forall m (Hm:NoDupA m) x y e,
 InA eqk (y,e) (remove x m) -> InA eqk (y,e) m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_3'". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_3'".  
 intros m Hm x y e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (remove x m);auto.
 do 2 inversion_clear 1; auto.
 Qed.
 
 Lemma remove_NoDup : forall m (Hm:NoDupA m) x, NoDupA (remove x m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.remove_NoDup".  
 induction m.
 simpl; intuition.
 intros.
@@ -320,17 +320,17 @@ Qed.
 Definition elements (m: t elt) := m.
 
 Lemma elements_1 : forall m x e, MapsTo x e m -> InA eqke (x,e) (elements m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.elements_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.elements_1".  
 auto.
 Qed.
 
 Lemma elements_2 : forall m x e, InA eqke (x,e) (elements m) -> MapsTo x e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.elements_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.elements_2".  
 auto.
 Qed.
 
 Lemma elements_3w : forall m (Hm:NoDupA m), NoDupA (elements m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.elements_3w". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.elements_3w".  
 auto.
 Qed.
 
@@ -344,7 +344,7 @@ end.
 
 Lemma fold_1 : forall m (A:Type)(i:A)(f:key->elt->A->A),
 fold f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.fold_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.fold_1".  
 intros; functional induction (@fold A f m i); auto.
 Qed.
 
@@ -372,7 +372,7 @@ Definition Equivb cmp m m' :=
 
 Lemma submap_1 : forall m (Hm:NoDupA m) m' (Hm': NoDupA m') cmp,
 Submap cmp m m' -> submap cmp m m' = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.submap_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.submap_1".  
 unfold Submap, submap.
 induction m.
 simpl; auto.
@@ -393,7 +393,7 @@ Qed.
 
 Lemma submap_2 : forall m (Hm:NoDupA m) m' (Hm': NoDupA m') cmp,
 submap cmp m m' = true -> Submap cmp m m'.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.submap_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.submap_2".  
 unfold Submap, submap.
 induction m.
 simpl; auto.
@@ -434,7 +434,7 @@ Qed.
 
 Lemma equal_1 : forall m (Hm:NoDupA m) m' (Hm': NoDupA m') cmp,
 Equivb cmp m m' -> equal cmp m m' = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.equal_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.equal_1".  
 unfold Equivb, equal.
 intuition.
 apply andb_true_intro; split; apply submap_1; unfold Submap; firstorder.
@@ -442,7 +442,7 @@ Qed.
 
 Lemma equal_2 : forall m (Hm:NoDupA m) m' (Hm':NoDupA m') cmp,
 equal cmp m m' = true -> Equivb cmp m m'.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.equal_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.equal_2".  
 unfold Equivb, equal.
 intros.
 destruct (andb_prop _ _ H); clear H.
@@ -477,7 +477,7 @@ Variable elt elt' : Type.
 
 Lemma map_1 : forall (m:t elt)(x:key)(e:elt)(f:elt->elt'),
 MapsTo x e m -> MapsTo x (f e) (map f m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map_1".  
 intros m x e f.
 
 induction m.
@@ -494,7 +494,7 @@ Qed.
 
 Lemma map_2 : forall (m:t elt)(x:key)(f:elt->elt'),
 In x (map f m) -> In x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map_2".  
 intros m x f.
 
 induction m; simpl.
@@ -515,7 +515,7 @@ Qed.
 
 Lemma map_NoDup : forall m (Hm : NoDupA (@eqk elt) m)(f:elt->elt'),
 NoDupA (@eqk elt') (map f m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map_NoDup".  
 induction m; simpl; auto.
 intros.
 destruct a as (x',e').
@@ -534,7 +534,7 @@ Qed.
 Lemma mapi_1 : forall (m:t elt)(x:key)(e:elt)(f:key->elt->elt'),
 MapsTo x e m ->
 exists y, X.eq y x /\ MapsTo x (f y e) (mapi f m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.mapi_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.mapi_1".  
 intros m x e f.
 
 induction m.
@@ -554,7 +554,7 @@ Qed.
 
 Lemma mapi_2 : forall (m:t elt)(x:key)(f:key->elt->elt'),
 In x (mapi f m) -> In x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.mapi_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.mapi_2".  
 intros m x f.
 
 induction m; simpl.
@@ -575,7 +575,7 @@ Qed.
 
 Lemma mapi_NoDup : forall m (Hm : NoDupA (@eqk elt) m)(f: key->elt->elt'),
 NoDupA (@eqk elt') (mapi f m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.mapi_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.mapi_NoDup".  
 induction m; simpl; auto.
 intros.
 destruct a as (x',e').
@@ -613,7 +613,7 @@ Lemma fold_right_pair_NoDup :
 forall l r (Hl: NoDupA (eqk (elt:=oee')) l)
 (Hl: NoDupA (eqk (elt:=oee')) r),
 NoDupA (eqk (elt:=oee')) (fold_right_pair (add (elt:=oee')) r l).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.fold_right_pair_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.fold_right_pair_NoDup".  
 induction l; simpl; auto.
 destruct a; simpl; auto.
 inversion_clear 1.
@@ -624,7 +624,7 @@ Hint Resolve fold_right_pair_NoDup.
 Lemma combine_NoDup :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m'),
 NoDupA (@eqk oee') (combine m m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_NoDup".  
 unfold combine, combine_r, combine_l.
 intros.
 set (f1 := fun (k : key) (e : elt) => (Some e, find k m')).
@@ -651,7 +651,7 @@ end.
 Lemma combine_l_1 :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m')(x:key),
 find x (combine_l m m') = at_least_left (find x m) (find x m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_l_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_l_1".  
 unfold combine_l.
 intros.
 case_eq (find x m); intros.
@@ -670,7 +670,7 @@ Qed.
 Lemma combine_r_1 :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m')(x:key),
 find x (combine_r m m') = at_least_right (find x m) (find x m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_r_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_r_1".  
 unfold combine_r.
 intros.
 case_eq (find x m'); intros.
@@ -695,7 +695,7 @@ end.
 Lemma combine_1 :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m')(x:key),
 find x (combine m m') = at_least_one (find x m) (find x m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.combine_1".  
 unfold combine.
 intros.
 generalize (combine_r_1 Hm Hm' x).
@@ -739,7 +739,7 @@ fold_right_pair (option_cons (A:=elt'')) nil m1.
 Lemma map2_NoDup :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m'),
 NoDupA (@eqk elt'') (map2 m m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_NoDup". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_NoDup".  
 intros.
 unfold map2.
 assert (H0:=combine_NoDup Hm Hm').
@@ -771,7 +771,7 @@ end.
 Lemma map2_0 :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m')(x:key),
 find x (map2 m m') = at_least_one_then_f (find x m) (find x m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_0". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_0".  
 intros.
 unfold map2.
 assert (H:=combine_1 Hm Hm' x).
@@ -829,7 +829,7 @@ Lemma map2_1 :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m')(x:key),
 In x m \/ In x m' ->
 find x (map2 m m') = f (find x m) (find x m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_1".  
 intros.
 rewrite map2_0; auto.
 destruct H as [(e,H)|(e,H)].
@@ -842,7 +842,7 @@ Qed.
 Lemma map2_2 :
 forall m (Hm:NoDupA (@eqk elt) m) m' (Hm':NoDupA (@eqk elt') m')(x:key),
 In x (map2 m m') -> In x m \/ In x m'.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Raw.map2_2".  
 intros.
 destruct H as (e,H).
 generalize (map2_0 Hm Hm' x).
@@ -906,88 +906,88 @@ Definition eq_key : (key*elt) -> (key*elt) -> Prop := @Raw.PX.eqk elt.
 Definition eq_key_elt : (key*elt) -> (key*elt) -> Prop:= @Raw.PX.eqke elt.
 
 Lemma MapsTo_1 : forall m x y e, E.eq x y -> MapsTo x e m -> MapsTo y e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.MapsTo_1". Restart.  intros m; exact (@Raw.PX.MapsTo_eq elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.MapsTo_1".   intros m; exact (@Raw.PX.MapsTo_eq elt m.(this)). Qed.
 
 Lemma mem_1 : forall m x, In x m -> mem x m = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.mem_1". Restart.  intros m; exact (@Raw.mem_1 elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.mem_1".   intros m; exact (@Raw.mem_1 elt m.(this) m.(NoDup)). Qed.
 Lemma mem_2 : forall m x, mem x m = true -> In x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.mem_2". Restart.  intros m; exact (@Raw.mem_2 elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.mem_2".   intros m; exact (@Raw.mem_2 elt m.(this) m.(NoDup)). Qed.
 
 Lemma empty_1 : Empty empty.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.empty_1". Restart.  exact (@Raw.empty_1 elt). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.empty_1".   exact (@Raw.empty_1 elt). Qed.
 
 Lemma is_empty_1 : forall m, Empty m -> is_empty m = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.is_empty_1". Restart.  intros m; exact (@Raw.is_empty_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.is_empty_1".   intros m; exact (@Raw.is_empty_1 elt m.(this)). Qed.
 Lemma is_empty_2 :  forall m, is_empty m = true -> Empty m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.is_empty_2". Restart.  intros m; exact (@Raw.is_empty_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.is_empty_2".   intros m; exact (@Raw.is_empty_2 elt m.(this)). Qed.
 
 Lemma add_1 : forall m x y e, E.eq x y -> MapsTo y e (add x e m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.add_1". Restart.  intros m; exact (@Raw.add_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.add_1".   intros m; exact (@Raw.add_1 elt m.(this)). Qed.
 Lemma add_2 : forall m x y e e', ~ E.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.add_2". Restart.  intros m; exact (@Raw.add_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.add_2".   intros m; exact (@Raw.add_2 elt m.(this)). Qed.
 Lemma add_3 : forall m x y e e', ~ E.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.add_3". Restart.  intros m; exact (@Raw.add_3 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.add_3".   intros m; exact (@Raw.add_3 elt m.(this)). Qed.
 
 Lemma remove_1 : forall m x y, E.eq x y -> ~ In y (remove x m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.remove_1". Restart.  intros m; exact (@Raw.remove_1 elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.remove_1".   intros m; exact (@Raw.remove_1 elt m.(this) m.(NoDup)). Qed.
 Lemma remove_2 : forall m x y e, ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.remove_2". Restart.  intros m; exact (@Raw.remove_2 elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.remove_2".   intros m; exact (@Raw.remove_2 elt m.(this) m.(NoDup)). Qed.
 Lemma remove_3 : forall m x y e, MapsTo y e (remove x m) -> MapsTo y e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.remove_3". Restart.  intros m; exact (@Raw.remove_3 elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.remove_3".   intros m; exact (@Raw.remove_3 elt m.(this) m.(NoDup)). Qed.
 
 Lemma find_1 : forall m x e, MapsTo x e m -> find x m = Some e.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.find_1". Restart.  intros m; exact (@Raw.find_1 elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.find_1".   intros m; exact (@Raw.find_1 elt m.(this) m.(NoDup)). Qed.
 Lemma find_2 : forall m x e, find x m = Some e -> MapsTo x e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.find_2". Restart.  intros m; exact (@Raw.find_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.find_2".   intros m; exact (@Raw.find_2 elt m.(this)). Qed.
 
 Lemma elements_1 : forall m x e, MapsTo x e m -> InA eq_key_elt (x,e) (elements m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.elements_1". Restart.  intros m; exact (@Raw.elements_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.elements_1".   intros m; exact (@Raw.elements_1 elt m.(this)). Qed.
 Lemma elements_2 : forall m x e, InA eq_key_elt (x,e) (elements m) -> MapsTo x e m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.elements_2". Restart.  intros m; exact (@Raw.elements_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.elements_2".   intros m; exact (@Raw.elements_2 elt m.(this)). Qed.
 Lemma elements_3w : forall m, NoDupA eq_key (elements m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.elements_3w". Restart.  intros m; exact (@Raw.elements_3w elt m.(this) m.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.elements_3w".   intros m; exact (@Raw.elements_3w elt m.(this) m.(NoDup)). Qed.
 
 Lemma cardinal_1 : forall m, cardinal m = length (elements m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.cardinal_1". Restart.  intros; reflexivity. Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.cardinal_1".   intros; reflexivity. Qed.
 
 Lemma fold_1 : forall m (A : Type) (i : A) (f : key -> elt -> A -> A),
 fold f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.fold_1". Restart.  intros m; exact (@Raw.fold_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.fold_1".   intros m; exact (@Raw.fold_1 elt m.(this)). Qed.
 
 Lemma equal_1 : forall m m' cmp, Equivb cmp m m' -> equal cmp m m' = true.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.equal_1". Restart.  intros m m'; exact (@Raw.equal_1 elt m.(this) m.(NoDup) m'.(this) m'.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.equal_1".   intros m m'; exact (@Raw.equal_1 elt m.(this) m.(NoDup) m'.(this) m'.(NoDup)). Qed.
 Lemma equal_2 : forall m m' cmp, equal cmp m m' = true -> Equivb cmp m m'.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.equal_2". Restart.  intros m m'; exact (@Raw.equal_2 elt m.(this) m.(NoDup) m'.(this) m'.(NoDup)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.equal_2".   intros m m'; exact (@Raw.equal_2 elt m.(this) m.(NoDup) m'.(this) m'.(NoDup)). Qed.
 
 End Elt.
 
 Lemma map_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)(f:elt->elt'),
 MapsTo x e m -> MapsTo x (f e) (map f m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.map_1". Restart.  intros elt elt' m; exact (@Raw.map_1 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.map_1".   intros elt elt' m; exact (@Raw.map_1 elt elt' m.(this)). Qed.
 Lemma map_2 : forall (elt elt':Type)(m: t elt)(x:key)(f:elt->elt'),
 In x (map f m) -> In x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.map_2". Restart.  intros elt elt' m; exact (@Raw.map_2 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.map_2".   intros elt elt' m; exact (@Raw.map_2 elt elt' m.(this)). Qed.
 
 Lemma mapi_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)
 (f:key->elt->elt'), MapsTo x e m ->
 exists y, E.eq y x /\ MapsTo x (f y e) (mapi f m).
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.mapi_1". Restart.  intros elt elt' m; exact (@Raw.mapi_1 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.mapi_1".   intros elt elt' m; exact (@Raw.mapi_1 elt elt' m.(this)). Qed.
 Lemma mapi_2 : forall (elt elt':Type)(m: t elt)(x:key)
 (f:key->elt->elt'), In x (mapi f m) -> In x m.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.mapi_2". Restart.  intros elt elt' m; exact (@Raw.mapi_2 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.mapi_2".   intros elt elt' m; exact (@Raw.mapi_2 elt elt' m.(this)). Qed.
 
 Lemma map2_1 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x m \/ In x m' ->
 find x (map2 f m m') = f (find x m) (find x m').
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.map2_1". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.map2_1".  
 intros elt elt' elt'' m m' x f;
 exact (@Raw.map2_1 elt elt' elt'' f m.(this) m.(NoDup) m'.(this) m'.(NoDup) x).
 Qed.
 Lemma map2_2 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x (map2 f m m') -> In x m \/ In x m'.
-Proof. hammer_hook "FMapWeakList" "FMapWeakList.Make.map2_2". Restart. 
+Proof. try hammer_hook "FMapWeakList" "FMapWeakList.Make.map2_2".  
 intros elt elt' elt'' m m' x f;
 exact (@Raw.map2_2 elt elt' elt'' f m.(this) m.(NoDup) m'.(this) m'.(NoDup) x).
 Qed.

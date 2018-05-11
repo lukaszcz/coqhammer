@@ -35,21 +35,21 @@ Local Open Scope R_scope.
 
 
 Lemma INR_fact_neq_0 : forall n:nat, INR (fact n) <> 0.
-Proof. hammer_hook "Rfunctions" "Rfunctions.INR_fact_neq_0". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.INR_fact_neq_0".  
 intro; red; intro; apply (not_O_INR (fact n) (fact_neq_0 n));
 assumption.
 Qed.
 
 
 Lemma fact_simpl : forall n:nat, fact (S n) = (S n * fact n)%nat.
-Proof. hammer_hook "Rfunctions" "Rfunctions.fact_simpl". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.fact_simpl".  
 intro; reflexivity.
 Qed.
 
 
 Lemma simpl_fact :
 forall n:nat, / INR (fact (S n)) * / / INR (fact n) = / INR (S n).
-Proof. hammer_hook "Rfunctions" "Rfunctions.simpl_fact". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.simpl_fact".  
 intro; rewrite (Rinv_involutive (INR (fact n)) (INR_fact_neq_0 n));
 unfold fact at 1; cbv beta iota; fold fact;
 rewrite (mult_INR (S n) (fact n));
@@ -69,23 +69,23 @@ Qed.
 Infix "^" := pow : R_scope.
 
 Lemma pow_O : forall x:R, x ^ 0 = 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_O". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_O".  
 reflexivity.
 Qed.
 
 Lemma pow_1 : forall x:R, x ^ 1 = x.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_1". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_1".  
 simpl; auto with real.
 Qed.
 
 Lemma pow_add : forall (x:R) (n m:nat), x ^ (n + m) = x ^ n * x ^ m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_add". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_add".  
 intros x n; elim n; simpl; auto with real.
 intros n0 H' m; rewrite H'; auto with real.
 Qed.
 
 Lemma Rpow_mult_distr : forall (x y:R) (n:nat), (x * y) ^ n = x^n * y^n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Rpow_mult_distr". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Rpow_mult_distr".  
 intros x y n ; induction n.
 field.
 simpl.
@@ -94,7 +94,7 @@ rewrite IHn ; field.
 Qed.
 
 Lemma pow_nonzero : forall (x:R) (n:nat), x <> 0 -> x ^ n <> 0.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_nonzero". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_nonzero".  
 intro; simple induction n; simpl.
 intro; red; intro; apply R1_neq_R0; assumption.
 intros; red; intro; elim (Rmult_integral x (x ^ n0) H1).
@@ -106,21 +106,21 @@ Hint Resolve pow_O pow_1 pow_add pow_nonzero: real.
 
 Lemma pow_RN_plus :
 forall (x:R) (n m:nat), x <> 0 -> x ^ n = x ^ (n + m) * / x ^ m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_RN_plus". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_RN_plus".  
 intros x n; elim n; simpl; auto with real.
 intros n0 H' m H'0.
 rewrite Rmult_assoc; rewrite <- H'; auto.
 Qed.
 
 Lemma pow_lt : forall (x:R) (n:nat), 0 < x -> 0 < x ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_lt". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_lt".  
 intros x n; elim n; simpl; auto with real.
 intros n0 H' H'0; replace 0 with (x * 0); auto with real.
 Qed.
 Hint Resolve pow_lt: real.
 
 Lemma Rlt_pow_R1 : forall (x:R) (n:nat), 1 < x -> (0 < n)%nat -> 1 < x ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Rlt_pow_R1". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Rlt_pow_R1".  
 intros x n; elim n; simpl; auto with real.
 intros H' H'0; exfalso; omega.
 intros n0; case n0.
@@ -135,7 +135,7 @@ Qed.
 Hint Resolve Rlt_pow_R1: real.
 
 Lemma Rlt_pow : forall (x:R) (n m:nat), 1 < x -> (n < m)%nat -> x ^ n < x ^ m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Rlt_pow". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Rlt_pow".  
 intros x n m H' H'0; replace m with (m - n + n)%nat.
 rewrite pow_add.
 pattern (x ^ n) at 1; replace (x ^ n) with (1 * x ^ n);
@@ -157,14 +157,14 @@ Hint Resolve Rlt_pow: real.
 
 
 Lemma tech_pow_Rmult : forall (x:R) (n:nat), x * x ^ n = x ^ S n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.tech_pow_Rmult". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.tech_pow_Rmult".  
 simple induction n; simpl; trivial.
 Qed.
 
 
 Lemma tech_pow_Rplus :
 forall (x:R) (a n:nat), x ^ a + INR n * x ^ a = INR (S n) * x ^ a.
-Proof. hammer_hook "Rfunctions" "Rfunctions.tech_pow_Rplus". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.tech_pow_Rplus".  
 intros; pattern (x ^ a) at 1;
 rewrite <- (let (H1, H2) := Rmult_ne (x ^ a) in H1);
 rewrite (Rmult_comm (INR n) (x ^ a));
@@ -174,7 +174,7 @@ apply Rmult_comm.
 Qed.
 
 Lemma poly : forall (n:nat) (x:R), 0 < x -> 1 + INR n * x <= (1 + x) ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.poly". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.poly".  
 intros; elim n.
 simpl; cut (1 + 0 * x = 1).
 intro; rewrite H0; unfold Rle; right; reflexivity.
@@ -204,7 +204,7 @@ Qed.
 Lemma Power_monotonic :
 forall (x:R) (m n:nat),
 Rabs x > 1 -> (m <= n)%nat -> Rabs (x ^ m) <= Rabs (x ^ n).
-Proof. hammer_hook "Rfunctions" "Rfunctions.Power_monotonic". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Power_monotonic".  
 intros x m n H; induction  n as [| n Hrecn]; intros; inversion H0.
 unfold Rle; right; reflexivity.
 unfold Rle; right; reflexivity.
@@ -221,7 +221,7 @@ apply Rlt_le; assumption.
 Qed.
 
 Lemma RPow_abs : forall (x:R) (n:nat), Rabs x ^ n = Rabs (x ^ n).
-Proof. hammer_hook "Rfunctions" "Rfunctions.RPow_abs". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.RPow_abs".  
 intro; simple induction n; simpl.
 symmetry; apply Rabs_pos_eq; apply Rlt_le; apply Rlt_0_1.
 intros; rewrite H; symmetry; apply Rabs_mult.
@@ -233,7 +233,7 @@ forall x:R,
 Rabs x > 1 ->
 forall b:R,
 exists N : nat, (forall n:nat, (n >= N)%nat -> Rabs (x ^ n) >= b).
-Proof. hammer_hook "Rfunctions" "Rfunctions.Pow_x_infinity". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Pow_x_infinity".  
 intros; elim (archimed (b * / (Rabs x - 1))); intros; clear H1;
 cut (exists N : nat, INR N >= b * / (Rabs x - 1)).
 intro; elim H1; clear H1; intros; exists x0; intros;
@@ -273,7 +273,7 @@ omega.
 Qed.
 
 Lemma pow_ne_zero : forall n:nat, n <> 0%nat -> 0 ^ n = 0.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_ne_zero". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_ne_zero".  
 simple induction n.
 simpl; auto.
 intros; elim H; reflexivity.
@@ -281,7 +281,7 @@ intros; simpl; apply Rmult_0_l.
 Qed.
 
 Lemma Rinv_pow : forall (x:R) (n:nat), x <> 0 -> / x ^ n = (/ x) ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Rinv_pow". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Rinv_pow".  
 intros; elim n; simpl.
 apply Rinv_1.
 intro m; intro; rewrite Rinv_mult_distr.
@@ -296,7 +296,7 @@ Rabs x < 1 ->
 forall y:R,
 0 < y ->
 exists N : nat, (forall n:nat, (n >= N)%nat -> Rabs (x ^ n) < y).
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_lt_1_zero". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_lt_1_zero".  
 intros; elim (Req_dec x 0); intro.
 exists 1%nat; rewrite H1; intros n GE; rewrite pow_ne_zero.
 rewrite Rabs_R0; assumption.
@@ -344,7 +344,7 @@ red; intro; apply R1_neq_R0; assumption.
 Qed.
 
 Lemma pow_R1 : forall (r:R) (n:nat), r ^ n = 1 -> Rabs r = 1 \/ n = 0%nat.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_R1". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_R1".  
 intros r n H'.
 case (Req_dec (Rabs r) 1); auto; intros H'1.
 case (Rdichotomy _ _ H'1); intros H'2.
@@ -378,7 +378,7 @@ simpl; rewrite H; rewrite Rmult_0_l; auto with real.
 Qed.
 
 Lemma pow_Rsqr : forall (x:R) (n:nat), x ^ (2 * n) = Rsqr x ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_Rsqr". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_Rsqr".  
 intros; induction  n as [| n Hrecn].
 reflexivity.
 replace (2 * S n)%nat with (S (S (2 * n))).
@@ -389,7 +389,7 @@ ring.
 Qed.
 
 Lemma pow_le : forall (a:R) (n:nat), 0 <= a -> 0 <= a ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_le". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_le".  
 intros; induction  n as [| n Hrecn].
 simpl; left; apply Rlt_0_1.
 simpl; apply Rmult_le_pos; assumption.
@@ -397,7 +397,7 @@ Qed.
 
 
 Lemma pow_1_even : forall n:nat, (-1) ^ (2 * n) = 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_1_even". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_1_even".  
 intro; induction  n as [| n Hrecn].
 reflexivity.
 replace (2 * S n)%nat with (2 + 2 * n)%nat by ring.
@@ -406,14 +406,14 @@ Qed.
 
 
 Lemma pow_1_odd : forall n:nat, (-1) ^ S (2 * n) = -1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_1_odd". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_1_odd".  
 intro; replace (S (2 * n)) with (2 * n + 1)%nat by ring.
 rewrite pow_add; rewrite pow_1_even; simpl; ring.
 Qed.
 
 
 Lemma pow_1_abs : forall n:nat, Rabs ((-1) ^ n) = 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_1_abs". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_1_abs".  
 intro; induction  n as [| n Hrecn].
 simpl; apply Rabs_R1.
 replace (S n) with (n + 1)%nat; [ rewrite pow_add | ring ].
@@ -424,7 +424,7 @@ rewrite Rabs_Ropp; apply Rabs_R1.
 Qed.
 
 Lemma pow_mult : forall (x:R) (n1 n2:nat), x ^ (n1 * n2) = (x ^ n1) ^ n2.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_mult". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_mult".  
 intros; induction  n2 as [| n2 Hrecn2].
 simpl; replace (n1 * 0)%nat with 0%nat; [ reflexivity | ring ].
 replace (n1 * S n2)%nat with (n1 * n2 + n1)%nat.
@@ -437,7 +437,7 @@ ring.
 Qed.
 
 Lemma pow_incr : forall (x y:R) (n:nat), 0 <= x <= y -> x ^ n <= y ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_incr". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_incr".  
 intros.
 induction  n as [| n Hrecn].
 right; reflexivity.
@@ -454,7 +454,7 @@ apply Hrecn.
 Qed.
 
 Lemma pow_R1_Rle : forall (x:R) (k:nat), 1 <= x -> 1 <= x ^ k.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_R1_Rle". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_R1_Rle".  
 intros.
 induction  k as [| k Hreck].
 right; reflexivity.
@@ -468,7 +468,7 @@ Qed.
 
 Lemma Rle_pow :
 forall (x:R) (m n:nat), 1 <= x -> (m <= n)%nat -> x ^ m <= x ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Rle_pow". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Rle_pow".  
 intros.
 replace n with (n - m + m)%nat.
 rewrite pow_add.
@@ -482,14 +482,14 @@ symmetry ; apply le_plus_minus; assumption.
 Qed.
 
 Lemma pow1 : forall n:nat, 1 ^ n = 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow1". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow1".  
 intro; induction  n as [| n Hrecn].
 reflexivity.
 simpl; rewrite Hrecn; rewrite Rmult_1_r; reflexivity.
 Qed.
 
 Lemma pow_Rabs : forall (x:R) (n:nat), x ^ n <= Rabs x ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_Rabs". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_Rabs".  
 intros; induction  n as [| n Hrecn].
 right; reflexivity.
 simpl; destruct (Rcase_abs x) as [Hlt|Hle].
@@ -506,7 +506,7 @@ apply Hrecn.
 Qed.
 
 Lemma pow_maj_Rabs : forall (x y:R) (n:nat), Rabs y <= x -> y ^ n <= x ^ n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_maj_Rabs". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_maj_Rabs".  
 intros; cut (0 <= x).
 intro; apply Rle_trans with (Rabs y ^ n).
 apply pow_Rabs.
@@ -524,7 +524,7 @@ apply Rle_trans with (Rabs y); [ apply Rabs_pos | exact H ].
 Qed.
 
 Lemma Rsqr_pow2 : forall x, Rsqr x = x ^ 2.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Rsqr_pow2". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Rsqr_pow2".  
 intros; unfold Rsqr; simpl; rewrite Rmult_1_r; reflexivity.
 Qed.
 
@@ -550,7 +550,7 @@ Inductive Z_spec (x : Z) : Z -> Type :=
 | ZintNeg (n : nat) : x = - n -> Z_spec x (- n).
 
 Lemma intP (x : Z) : Z_spec x x.
-Proof. hammer_hook "Rfunctions" "Rfunctions.intP". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.intP".  
 destruct x as [|p|p].
 - now apply ZintNull.
 - rewrite <-positive_nat_Z at 2.
@@ -575,28 +575,28 @@ Local Infix "^Z" := powerRZ (at level 30, right associativity) : R_scope.
 
 Lemma Zpower_NR0 :
 forall (x:Z) (n:nat), (0 <= x)%Z -> (0 <= Zpower_nat x n)%Z.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Zpower_NR0". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Zpower_NR0".  
 induction n; unfold Zpower_nat; simpl; auto with zarith.
 Qed.
 
 Lemma powerRZ_O : forall x:R, x ^Z 0 = 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_O". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_O".  
 reflexivity.
 Qed.
 
 Lemma powerRZ_1 : forall x:R, x ^Z Z.succ 0 = x.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_1". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_1".  
 simpl; auto with real.
 Qed.
 
 Lemma powerRZ_NOR : forall (x:R) (z:Z), x <> 0 -> x ^Z z <> 0.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_NOR". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_NOR".  
 destruct z; simpl; auto with real.
 Qed.
 
 Lemma powerRZ_pos_sub (x:R) (n m:positive) : x <> 0 ->
 x ^Z (Z.pos_sub n m) = x ^ Pos.to_nat n * / x ^ Pos.to_nat m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_pos_sub". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_pos_sub".  
 intro Hx.
 rewrite Z.pos_sub_spec.
 case Pos.compare_spec; intro H; simpl.
@@ -615,7 +615,7 @@ Qed.
 
 Lemma powerRZ_add :
 forall (x:R) (n m:Z), x <> 0 -> x ^Z (n + m) = x ^Z n * x ^Z m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_add". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_add".  
 intros x [|n|n] [|m|m]; simpl; intros; auto with real.
 -
 rewrite Pos2Nat.inj_add; auto with real.
@@ -632,7 +632,7 @@ Hint Resolve powerRZ_O powerRZ_1 powerRZ_NOR powerRZ_add: real.
 
 Lemma Zpower_nat_powerRZ :
 forall n m:nat, IZR (Zpower_nat (Z.of_nat n) m) = INR n ^Z Z.of_nat m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Zpower_nat_powerRZ". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Zpower_nat_powerRZ".  
 intros n m; elim m; simpl; auto with real.
 intros m1 H'; rewrite SuccNat2Pos.id_succ; simpl.
 replace (Zpower_nat (Z.of_nat n) (S m1)) with
@@ -647,7 +647,7 @@ Qed.
 
 Lemma Zpower_pos_powerRZ :
 forall n m, IZR (Z.pow_pos n m) = IZR n ^Z Zpos m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Zpower_pos_powerRZ". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Zpower_pos_powerRZ".  
 intros.
 rewrite Zpower_pos_nat; simpl.
 induction (Pos.to_nat m).
@@ -658,20 +658,20 @@ now rewrite <- IHn0.
 Qed.
 
 Lemma powerRZ_lt : forall (x:R) (z:Z), 0 < x -> 0 < x ^Z z.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_lt". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_lt".  
 intros x z; case z; simpl; auto with real.
 Qed.
 Hint Resolve powerRZ_lt: real.
 
 Lemma powerRZ_le : forall (x:R) (z:Z), 0 < x -> 0 <= x ^Z z.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_le". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_le".  
 intros x z H'; apply Rlt_le; auto with real.
 Qed.
 Hint Resolve powerRZ_le: real.
 
 Lemma Zpower_nat_powerRZ_absolu :
 forall n m:Z, (0 <= m)%Z -> IZR (Zpower_nat n (Z.abs_nat m)) = IZR n ^Z m.
-Proof. hammer_hook "Rfunctions" "Rfunctions.Zpower_nat_powerRZ_absolu". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.Zpower_nat_powerRZ_absolu".  
 intros n m; case m; simpl; auto with zarith.
 intros p H'; elim (Pos.to_nat p); simpl; auto with zarith.
 intros n0 H'0; rewrite <- H'0; simpl; auto with zarith.
@@ -680,7 +680,7 @@ intros p H'; absurd (0 <= Zneg p)%Z; auto with zarith.
 Qed.
 
 Lemma powerRZ_R1 : forall n:Z, 1 ^Z n = 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_R1". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_R1".  
 intros n; case n; simpl; auto.
 intros p; elim (Pos.to_nat p); simpl; auto; intros n0 H'; rewrite H';
 ring.
@@ -694,7 +694,7 @@ Local Open Scope Z_scope.
 
 Lemma pow_powerRZ (r : R) (n : nat) :
 (r ^ n)%R = powerRZ r (Z_of_nat n).
-Proof. hammer_hook "Rfunctions" "Rfunctions.pow_powerRZ". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.pow_powerRZ".  
 induction n; [easy|simpl].
 now rewrite SuccNat2Pos.id_succ.
 Qed.
@@ -704,7 +704,7 @@ Lemma powerRZ_ind (P : Z -> R -> R -> Prop) :
 (forall x n, P (Z.of_nat n) x (x ^ n)%R) ->
 (forall x n, P ((-(Z.of_nat n))%Z) x (Rinv (x ^ n))) ->
 forall x (m : Z), P m x (powerRZ x m)%R.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_ind". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_ind".  
 intros ? ? ? x m.
 destruct (intP m) as [Hm|n Hm|n Hm].
 - easy.
@@ -716,7 +716,7 @@ now rewrite <- Pos2Z.opp_pos, <- positive_nat_Z.
 Qed.
 
 Lemma powerRZ_inv x alpha : (x <> 0)%R -> powerRZ (/ x) alpha = Rinv (powerRZ x alpha).
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_inv". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_inv".  
 intros; destruct (intP alpha).
 - now simpl; rewrite Rinv_1.
 - now rewrite <-!pow_powerRZ, ?Rinv_pow, ?pow_powerRZ.
@@ -728,7 +728,7 @@ destruct (- n).
 Qed.
 
 Lemma powerRZ_neg x : forall alpha, x <> R0 -> powerRZ x (- alpha) = powerRZ (/ x) alpha.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_neg". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_neg".  
 intros [|n|n] H ; simpl.
 - easy.
 - now rewrite Rinv_pow.
@@ -739,7 +739,7 @@ Qed.
 Lemma powerRZ_mult_distr :
 forall m x y, ((0 <= m)%Z \/ (x * y <> 0)%R) ->
 (powerRZ (x*y) m = powerRZ x m * powerRZ y m)%R.
-Proof. hammer_hook "Rfunctions" "Rfunctions.powerRZ_mult_distr". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.powerRZ_mult_distr".  
 intros m x0 y0 Hmxy.
 destruct (intP m) as [ | | n Hm ].
 - now simpl; rewrite Rmult_1_l.
@@ -803,7 +803,7 @@ sum_f_R0 (fun x:nat => f (x + s)%nat) (n - s).
 Lemma GP_finite :
 forall (x:R) (n:nat),
 sum_f_R0 (fun n:nat => x ^ n) n * (x - 1) = x ^ (n + 1) - 1.
-Proof. hammer_hook "Rfunctions" "Rfunctions.GP_finite". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.GP_finite".  
 intros; induction  n as [| n Hrecn]; simpl.
 ring.
 rewrite Rmult_plus_distr_r; rewrite Hrecn; cut ((n + 1)%nat = S n).
@@ -814,7 +814,7 @@ Qed.
 Lemma sum_f_R0_triangle :
 forall (x:nat -> R) (n:nat),
 Rabs (sum_f_R0 x n) <= sum_f_R0 (fun i:nat => Rabs (x i)) n.
-Proof. hammer_hook "Rfunctions" "Rfunctions.sum_f_R0_triangle". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.sum_f_R0_triangle".  
 intro; simple induction n; simpl.
 unfold Rle; right; reflexivity.
 intro m; intro;
@@ -837,7 +837,7 @@ Definition R_dist (x y:R) : R := Rabs (x - y).
 
 
 Lemma R_dist_pos : forall x y:R, R_dist x y >= 0.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_pos". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_pos".  
 intros; unfold R_dist; unfold Rabs; case (Rcase_abs (x - y));
 intro l.
 unfold Rge; left; apply (Ropp_gt_lt_0_contravar (x - y) l).
@@ -846,7 +846,7 @@ Qed.
 
 
 Lemma R_dist_sym : forall x y:R, R_dist x y = R_dist y x.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_sym". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_sym".  
 unfold R_dist; intros; split_Rabs; try ring.
 generalize (Ropp_gt_lt_0_contravar (y - x) Hlt0); intro;
 rewrite (Ropp_minus_distr y x) in H; generalize (Rlt_asym (x - y) 0 Hlt);
@@ -858,7 +858,7 @@ Qed.
 
 
 Lemma R_dist_refl : forall x y:R, R_dist x y = 0 <-> x = y.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_refl". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_refl".  
 unfold R_dist; intros; split_Rabs; split; intros.
 rewrite (Ropp_minus_distr x y) in H; symmetry;
 apply (Rminus_diag_uniq y x H).
@@ -869,13 +869,13 @@ apply (Rminus_diag_eq x y H).
 Qed.
 
 Lemma R_dist_eq : forall x:R, R_dist x x = 0.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_eq". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_eq".  
 unfold R_dist; intros; split_Rabs; intros; ring.
 Qed.
 
 
 Lemma R_dist_tri : forall x y z:R, R_dist x y <= R_dist x z + R_dist z y.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_tri". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_tri".  
 intros; unfold R_dist; replace (x - y) with (x - z + (z - y));
 [ apply (Rabs_triang (x - z) (z - y)) | ring ].
 Qed.
@@ -883,7 +883,7 @@ Qed.
 
 Lemma R_dist_plus :
 forall a b c d:R, R_dist (a + c) (b + d) <= R_dist a b + R_dist c d.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_plus". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_plus".  
 intros; unfold R_dist;
 replace (a + c - (b + d)) with (a - b + (c - d)).
 exact (Rabs_triang (a - b) (c - d)).
@@ -892,7 +892,7 @@ Qed.
 
 Lemma R_dist_mult_l : forall a b c,
 R_dist (a * b) (a * c) = Rabs a * R_dist b c.
-Proof. hammer_hook "Rfunctions" "Rfunctions.R_dist_mult_l". Restart. 
+Proof. try hammer_hook "Rfunctions" "Rfunctions.R_dist_mult_l".  
 unfold R_dist.
 intros a b c; rewrite <- Rmult_minus_distr_l, Rabs_mult; reflexivity.
 Qed.

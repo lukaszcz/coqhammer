@@ -27,24 +27,24 @@ Local Open Scope R_scope.
 
 
 Lemma Ropp_div : forall x y, -x/y = -(x/y).
-Proof. hammer_hook "Ratan" "Ratan.Ropp_div". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ropp_div".  
 intros x y; unfold Rdiv; rewrite <-Ropp_mult_distr_l_reverse; reflexivity.
 Qed.
 
 Definition pos_half_prf : 0 < /2.
-Proof. hammer_hook "Ratan" "Ratan.pos_half_prf". Restart.  fourier. Qed.
+Proof. try hammer_hook "Ratan" "Ratan.pos_half_prf".   fourier. Qed.
 
 Definition pos_half := mkposreal (/2) pos_half_prf.
 
 Lemma Boule_half_to_interval :
 forall x , Boule (/2) pos_half x -> 0 <= x <= 1.
-Proof. hammer_hook "Ratan" "Ratan.Boule_half_to_interval". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Boule_half_to_interval".  
 unfold Boule, pos_half; simpl.
 intros x b; apply Rabs_def2 in b; destruct b; split; fourier.
 Qed.
 
 Lemma Boule_lt : forall c r x, Boule c r x -> Rabs x < Rabs c + r.
-Proof. hammer_hook "Ratan" "Ratan.Boule_lt". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Boule_lt".  
 unfold Boule; intros c r x h.
 apply Rabs_def2 in h; destruct h; apply Rabs_def1;
 (destruct (Rle_lt_dec 0 c);[rewrite Rabs_pos_eq; fourier |
@@ -55,7 +55,7 @@ Qed.
 Lemma Un_cv_ext :
 forall un vn, (forall n, un n = vn n) ->
 forall l, Un_cv un l -> Un_cv vn l.
-Proof. hammer_hook "Ratan" "Ratan.Un_cv_ext". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Un_cv_ext".  
 intros un vn quv l P eps ep; destruct (P eps ep) as [N Pn]; exists N.
 intro n; rewrite <- quv; apply Pn.
 Qed.
@@ -66,7 +66,7 @@ Un_decreasing f -> Un_cv f 0 ->
 Un_cv (sum_f_R0 (tg_alt f)) l ->
 (N <= n)%nat ->
 R_dist (sum_f_R0 (tg_alt f) n) l <= f N.
-Proof. hammer_hook "Ratan" "Ratan.Alt_first_term_bound". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Alt_first_term_bound".  
 intros f l.
 assert (WLOG :
 forall n P, (forall k, (0 < k)%nat -> P k) ->
@@ -177,7 +177,7 @@ Un_cv (sum_f_R0 (tg_alt  (fun i => f i x))) (g x)) ->
 (forall x n, Boule c r x -> f n x <= h n) ->
 (Un_cv h 0) ->
 CVU (fun N x => sum_f_R0 (tg_alt (fun i => f i x)) N) g c r.
-Proof. hammer_hook "Ratan" "Ratan.Alt_CVU". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Alt_CVU".  
 intros f g h c r decr to0 to_g bound bound0 eps ep.
 assert (ep' : 0 <eps/2) by fourier.
 destruct (bound0 _ ep) as [N Pn]; exists N.
@@ -194,7 +194,7 @@ Qed.
 
 
 Lemma pow2_ge_0 : forall x, 0 <= x ^ 2.
-Proof. hammer_hook "Ratan" "Ratan.pow2_ge_0". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.pow2_ge_0".  
 intros x; destruct (Rle_lt_dec 0 x).
 replace (x ^ 2) with (x * x) by field.
 apply Rmult_le_pos; assumption.
@@ -203,7 +203,7 @@ apply Rmult_le_pos; fourier.
 Qed.
 
 Lemma pow2_abs : forall x,  Rabs x ^ 2 = x ^ 2.
-Proof. hammer_hook "Ratan" "Ratan.pow2_abs". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.pow2_abs".  
 intros x; destruct (Rle_lt_dec 0 x).
 rewrite Rabs_pos_eq;[field | assumption].
 rewrite <- Rabs_Ropp, Rabs_pos_eq;[field | fourier].
@@ -212,7 +212,7 @@ Qed.
 
 
 Lemma derivable_pt_tan : forall x, -PI/2 < x < PI/2 -> derivable_pt tan x.
-Proof. hammer_hook "Ratan" "Ratan.derivable_pt_tan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derivable_pt_tan".  
 intros x xint.
 unfold derivable_pt, tan.
 apply derivable_pt_div ; [reg | reg | ].
@@ -224,7 +224,7 @@ Qed.
 Lemma derive_pt_tan : forall (x:R),
 forall (Pr1: -PI/2 < x < PI/2),
 derive_pt tan x (derivable_pt_tan x Pr1) = 1 + (tan x)^2.
-Proof. hammer_hook "Ratan" "Ratan.derive_pt_tan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derive_pt_tan".  
 intros x pr.
 assert (cos x <> 0).
 apply Rgt_not_eq, cos_gt_0; rewrite <- ?Ropp_div; tauto.
@@ -240,7 +240,7 @@ a < b ->
 forall (pr:forall x, a < x < b -> derivable_pt f x),
 (forall t:R, forall (t_encad : a < t < b), 0 < derive_pt f t (pr t t_encad)) ->
 forall x y:R, a < x < b -> a < y < b -> x < y -> f x < f y.
-Proof. hammer_hook "Ratan" "Ratan.derive_increasing_interv". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derive_increasing_interv".  
 intros a b f a_lt_b pr Df_gt_0 x y x_encad y_encad x_lt_y.
 assert (derivable_id_interv : forall c : R, x < c < y -> derivable_pt id c).
 intros ; apply derivable_pt_id.
@@ -279,7 +279,7 @@ Qed.
 
 
 Lemma plus_Rsqr_gt_0 : forall x, 1 + x ^ 2 > 0.
-Proof. hammer_hook "Ratan" "Ratan.plus_Rsqr_gt_0". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.plus_Rsqr_gt_0".  
 intro m. replace 0 with (0+0) by intuition.
 apply Rplus_gt_ge_compat. intuition.
 elim (total_order_T m 0) ; intro s'. case s'.
@@ -296,7 +296,7 @@ Qed.
 
 Lemma PI2_lower_bound :
 forall x, 0 < x < 2 -> 0 < cos x  -> x < PI/2.
-Proof. hammer_hook "Ratan" "Ratan.PI2_lower_bound". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.PI2_lower_bound".  
 intros x [xp xlt2] cx.
 destruct (Rtotal_order x (PI/2)) as [xltpi2 | [xeqpi2 | xgtpi2]].
 assumption.
@@ -314,7 +314,7 @@ apply Rle_minus, Rmult_le_pos;[apply Rlt_le; assumption | fourier ].
 Qed.
 
 Lemma PI2_3_2 : 3/2 < PI/2.
-Proof. hammer_hook "Ratan" "Ratan.PI2_3_2". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.PI2_3_2".  
 apply PI2_lower_bound;[split; fourier | ].
 destruct (pre_cos_bound (3/2) 1) as [t _]; [fourier | fourier | ].
 apply Rlt_le_trans with (2 := t); clear t.
@@ -328,14 +328,14 @@ apply Rdiv_lt_0_compat ; now apply IZR_lt.
 Qed.
 
 Lemma PI2_1 : 1 < PI/2.
-Proof. hammer_hook "Ratan" "Ratan.PI2_1". Restart.  assert (t := PI2_3_2); fourier. Qed.
+Proof. try hammer_hook "Ratan" "Ratan.PI2_1".   assert (t := PI2_3_2); fourier. Qed.
 
 Lemma tan_increasing :
 forall x y:R,
 -PI/2 < x ->
 x < y ->
 y < PI/2 -> tan x < tan y.
-Proof. hammer_hook "Ratan" "Ratan.tan_increasing". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.tan_increasing".  
 intros x y Z_le_x x_lt_y y_le_1.
 assert (x_encad : -PI/2 < x < PI/2).
 split ; [assumption | apply Rlt_trans with (r2:=y) ; assumption].
@@ -354,7 +354,7 @@ Qed.
 
 Lemma tan_is_inj : forall x y, -PI/2 < x < PI/2 -> -PI/2 < y < PI/2 ->
 tan x = tan y -> x = y.
-Proof. hammer_hook "Ratan" "Ratan.tan_is_inj". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.tan_is_inj".  
 intros a b a_encad b_encad fa_eq_fb.
 case(total_order_T a b).
 intro s ; case s ; clear s.
@@ -369,7 +369,7 @@ Qed.
 Lemma exists_atan_in_frame :
 forall lb ub y, lb < ub -> -PI/2 < lb -> ub < PI/2 ->
 tan lb < y < tan ub -> {x | lb < x < ub /\ tan x = y}.
-Proof. hammer_hook "Ratan" "Ratan.exists_atan_in_frame". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.exists_atan_in_frame".  
 intros lb ub y lb_lt_ub lb_cond ub_cond y_encad.
 case y_encad ; intros y_encad1 y_encad2.
 assert (f_cont : forall a : R, lb <= a <= ub -> continuity_pt tan a).
@@ -411,7 +411,7 @@ Qed.
 
 
 Lemma tan_1_gt_1 : tan 1 > 1.
-Proof. hammer_hook "Ratan" "Ratan.tan_1_gt_1". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.tan_1_gt_1".  
 assert (0 < cos 1) by (apply cos_gt_0; assert (t:=PI2_1); fourier).
 assert (t1 : cos 1 <= 1 - 1/2 + 1/24).
 destruct (pre_cos_bound 1 0) as [_ t]; try fourier; revert t.
@@ -430,7 +430,7 @@ fourier.
 Qed.
 
 Definition frame_tan y : {x | 0 < x < PI/2 /\ Rabs y < tan x}.
-Proof. hammer_hook "Ratan" "Ratan.frame_tan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.frame_tan".  
 destruct (total_order_T (Rabs y) 1) as [Hs|Hgt].
 assert (yle1 : Rabs y <= 1) by (destruct Hs; fourier).
 clear Hs; exists 1; split;[split; [exact Rlt_0_1 | exact PI2_1] | ].
@@ -540,20 +540,20 @@ assumption.
 Qed.
 
 Lemma ub_opp : forall x, x < PI/2 -> -PI/2 < -x.
-Proof. hammer_hook "Ratan" "Ratan.ub_opp". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ub_opp".  
 intros x h; rewrite Ropp_div; apply Ropp_lt_contravar; assumption.
 Qed.
 
 Lemma pos_opp_lt : forall x, 0 < x -> -x < x.
-Proof. hammer_hook "Ratan" "Ratan.pos_opp_lt". Restart.  intros; fourier. Qed.
+Proof. try hammer_hook "Ratan" "Ratan.pos_opp_lt".   intros; fourier. Qed.
 
 Lemma tech_opp_tan : forall x y, -tan x < y -> tan (-x) < y.
-Proof. hammer_hook "Ratan" "Ratan.tech_opp_tan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.tech_opp_tan".  
 intros; rewrite tan_neg; assumption.
 Qed.
 
 Definition pre_atan (y : R) : {x : R | -PI/2 < x < PI/2 /\ tan x = y}.
-Proof. hammer_hook "Ratan" "Ratan.pre_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.pre_atan".  
 destruct (frame_tan y) as [ub [[ub0 ubpi2] Ptan_ub]].
 set (pr := (conj (tech_opp_tan _ _ (proj2 (Rabs_def2 _ _ Ptan_ub)))
 (proj1 (Rabs_def2 _ _ Ptan_ub)))).
@@ -566,17 +566,17 @@ Qed.
 Definition atan x := let (v, _) := pre_atan x in v.
 
 Lemma atan_bound : forall x, -PI/2 < atan x < PI/2.
-Proof. hammer_hook "Ratan" "Ratan.atan_bound". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_bound".  
 intros x; unfold atan; destruct (pre_atan x) as [v [int _]]; exact int.
 Qed.
 
 Lemma atan_right_inv : forall x, tan (atan x) = x.
-Proof. hammer_hook "Ratan" "Ratan.atan_right_inv". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_right_inv".  
 intros x; unfold atan; destruct (pre_atan x) as [v [_ q]]; exact q.
 Qed.
 
 Lemma atan_opp : forall x, atan (- x) = - atan x.
-Proof. hammer_hook "Ratan" "Ratan.atan_opp". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_opp".  
 intros x; generalize (atan_bound (-x)); rewrite Ropp_div;intros [a b].
 generalize (atan_bound x); rewrite Ropp_div; intros [c d].
 apply tan_is_inj; try rewrite Ropp_div; try split; try fourier.
@@ -584,7 +584,7 @@ rewrite tan_neg, !atan_right_inv; reflexivity.
 Qed.
 
 Lemma derivable_pt_atan : forall x, derivable_pt atan x.
-Proof. hammer_hook "Ratan" "Ratan.derivable_pt_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derivable_pt_atan".  
 intros x.
 destruct (frame_tan x) as [ub [[ub0 ubpi] P]].
 assert (lb_lt_ub : -ub < ub) by apply pos_opp_lt, ub0.
@@ -632,7 +632,7 @@ exact df_neq.
 Qed.
 
 Lemma atan_increasing : forall x y, x < y -> atan x < atan y.
-Proof. hammer_hook "Ratan" "Ratan.atan_increasing". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_increasing".  
 intros x y d.
 assert (t1 := atan_bound x).
 assert (t2 := atan_bound y).
@@ -647,7 +647,7 @@ solve[rewrite yx; apply Rle_refl].
 Qed.
 
 Lemma atan_0 : atan 0 = 0.
-Proof. hammer_hook "Ratan" "Ratan.atan_0". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_0".  
 apply tan_is_inj; try (apply atan_bound).
 assert (t := PI_RGT_0); rewrite Ropp_div; split; fourier.
 rewrite atan_right_inv, tan_0.
@@ -655,7 +655,7 @@ reflexivity.
 Qed.
 
 Lemma atan_1 : atan 1 = PI/4.
-Proof. hammer_hook "Ratan" "Ratan.atan_1". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_1".  
 assert (ut := PI_RGT_0).
 assert (-PI/2 < PI/4 < PI/2) by (rewrite Ropp_div; split; fourier).
 assert (t := atan_bound 1).
@@ -668,7 +668,7 @@ Qed.
 Lemma derive_pt_atan : forall x,
 derive_pt atan x (derivable_pt_atan x) =
 1 / (1 + x²).
-Proof. hammer_hook "Ratan" "Ratan.derive_pt_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derive_pt_atan".  
 intros x.
 destruct (frame_tan x) as [ub [[ub0 ubpi] Pub]].
 assert (lb_lt_ub : -ub < ub) by apply pos_opp_lt, ub0.
@@ -724,7 +724,7 @@ Qed.
 
 Lemma derivable_pt_lim_atan :
 forall x, derivable_pt_lim atan x (/(1 + x^2)).
-Proof. hammer_hook "Ratan" "Ratan.derivable_pt_lim_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derivable_pt_lim_atan".  
 intros x.
 apply derive_pt_eq_1 with (derivable_pt_atan x).
 replace (x ^ 2) with (x * x) by ring.
@@ -738,7 +738,7 @@ Qed.
 Definition Ratan_seq x :=  fun n => (x ^ (2 * n + 1) / INR (2 * n + 1))%R.
 
 Lemma Ratan_seq_decreasing : forall x, (0 <= x <= 1)%R -> Un_decreasing (Ratan_seq x).
-Proof. hammer_hook "Ratan" "Ratan.Ratan_seq_decreasing". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ratan_seq_decreasing".  
 intros x Hx n.
 unfold Ratan_seq, Rdiv.
 apply Rmult_le_compat. apply pow_le.
@@ -781,7 +781,7 @@ omega.
 Qed.
 
 Lemma Ratan_seq_converging : forall x, (0 <= x <= 1)%R -> Un_cv (Ratan_seq x) 0.
-Proof. hammer_hook "Ratan" "Ratan.Ratan_seq_converging". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ratan_seq_converging".  
 intros x Hx eps Heps.
 destruct (archimed (/ eps)) as (HN,_).
 assert (0 < up (/ eps))%Z.
@@ -853,13 +853,13 @@ Qed.
 
 Definition ps_atan_exists_01 (x : R) (Hx:0 <= x <= 1) :
 {l : R | Un_cv (fun N : nat => sum_f_R0 (tg_alt (Ratan_seq x)) N) l}.
-Proof. hammer_hook "Ratan" "Ratan.ps_atan_exists_01". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atan_exists_01".  
 exact (alternated_series (Ratan_seq x)
 (Ratan_seq_decreasing _ Hx) (Ratan_seq_converging _ Hx)).
 Defined.
 
 Lemma Ratan_seq_opp : forall x n, Ratan_seq (-x) n = -Ratan_seq x n.
-Proof. hammer_hook "Ratan" "Ratan.Ratan_seq_opp". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ratan_seq_opp".  
 intros x n; unfold Ratan_seq.
 rewrite !pow_add, !pow_mult, !pow_1.
 unfold Rdiv; replace ((-x) ^ 2) with (x ^ 2) by ring; ring.
@@ -868,7 +868,7 @@ Qed.
 Lemma sum_Ratan_seq_opp :
 forall x n, sum_f_R0 (tg_alt (Ratan_seq (- x))) n =
 - sum_f_R0 (tg_alt (Ratan_seq x)) n.
-Proof. hammer_hook "Ratan" "Ratan.sum_Ratan_seq_opp". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.sum_Ratan_seq_opp".  
 intros x n; replace (-sum_f_R0 (tg_alt (Ratan_seq x)) n) with
 (-1 * sum_f_R0 (tg_alt (Ratan_seq x)) n) by ring.
 rewrite scal_sum; apply sum_eq; intros i _; unfold tg_alt.
@@ -877,7 +877,7 @@ Qed.
 
 Definition ps_atan_exists_1 (x : R) (Hx : -1 <= x <= 1) :
 {l : R | Un_cv (fun N : nat => sum_f_R0 (tg_alt (Ratan_seq x)) N) l}.
-Proof. hammer_hook "Ratan" "Ratan.ps_atan_exists_1". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atan_exists_1".  
 destruct (Rle_lt_dec 0 x).
 assert (pr : 0 <= x <= 1) by tauto.
 exact (ps_atan_exists_01 x pr).
@@ -892,7 +892,7 @@ solve[intros; exists 0%nat; intros; rewrite R_dist_eq; auto].
 Qed.
 
 Definition in_int (x : R) : {-1 <= x <= 1}+{~ -1 <= x <= 1}.
-Proof. hammer_hook "Ratan" "Ratan.in_int". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.in_int".  
 destruct (Rle_lt_dec x 1).
 destruct (Rle_lt_dec (-1) x).
 left;split; auto.
@@ -909,7 +909,7 @@ end.
 
 
 Lemma ps_atan0_0 : ps_atan 0 = 0.
-Proof. hammer_hook "Ratan" "Ratan.ps_atan0_0". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atan0_0".  
 unfold ps_atan.
 destruct (in_int 0) as [h1 | h2].
 destruct (ps_atan_exists_1 0 h1) as [v P].
@@ -926,7 +926,7 @@ Qed.
 Lemma ps_atan_exists_1_opp :
 forall x h h', proj1_sig (ps_atan_exists_1 (-x) h) =
 -(proj1_sig (ps_atan_exists_1 x h')).
-Proof. hammer_hook "Ratan" "Ratan.ps_atan_exists_1_opp". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atan_exists_1_opp".  
 intros x h h'; destruct (ps_atan_exists_1 (-x) h) as [v Pv].
 destruct (ps_atan_exists_1 x h') as [u Pu]; simpl.
 assert (Pu' : Un_cv (fun N => (-1) * sum_f_R0 (tg_alt (Ratan_seq x)) N) (-1 * u)).
@@ -940,7 +940,7 @@ apply UL_sequence with (1:=Pv') (2:= Pu').
 Qed.
 
 Lemma ps_atan_opp : forall x, ps_atan (-x) = -ps_atan x.
-Proof. hammer_hook "Ratan" "Ratan.ps_atan_opp". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atan_opp".  
 intros x; unfold ps_atan.
 destruct (in_int (- x)) as [inside | outside].
 destruct (in_int x) as [ins' | outs'].
@@ -958,7 +958,7 @@ Lemma ps_atanSeq_continuity_pt_1 : forall (N:nat) (x:R),
 0 <= x ->
 x <= 1 ->
 continuity_pt (fun x => sum_f_R0 (tg_alt (Ratan_seq x)) N) x.
-Proof. hammer_hook "Ratan" "Ratan.ps_atanSeq_continuity_pt_1". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atanSeq_continuity_pt_1".  
 assert (Sublemma : forall (x:R) (N:nat), sum_f_R0 (tg_alt (Ratan_seq x)) N = x * (comp (fun x => sum_f_R0 (fun n => (fun i : nat => (-1) ^ i / INR (2 * i + 1)) n * x ^ n) N) (fun x => x ^ 2) x)).
 intros x N.
 induction N.
@@ -1024,7 +1024,7 @@ Definition Datan_seq := fun (x:R) (n:nat) => x ^ (2*n).
 
 Lemma pow_lt_1_compat : forall x n, 0 <= x < 1 -> (0 < n)%nat ->
 0 <= x ^ n < 1.
-Proof. hammer_hook "Ratan" "Ratan.pow_lt_1_compat". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.pow_lt_1_compat".  
 intros x n hx; induction 1; simpl.
 rewrite Rmult_1_r; tauto.
 split.
@@ -1033,12 +1033,12 @@ rewrite <- (Rmult_1_r 1); apply Rmult_le_0_lt_compat; intuition.
 Qed.
 
 Lemma Datan_seq_Rabs : forall x n, Datan_seq (Rabs x) n = Datan_seq x n.
-Proof. hammer_hook "Ratan" "Ratan.Datan_seq_Rabs". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_seq_Rabs".  
 intros x n; unfold Datan_seq; rewrite !pow_mult, pow2_abs; reflexivity.
 Qed.
 
 Lemma Datan_seq_pos : forall x n, 0 < x -> 0 < Datan_seq x n.
-Proof. hammer_hook "Ratan" "Ratan.Datan_seq_pos". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_seq_pos".  
 intros x n x_lb ; unfold Datan_seq ; induction n.
 simpl ; intuition.
 replace (x ^ (2 * S n)) with ((x ^ 2) * (x ^ (2 * n))).
@@ -1051,7 +1051,7 @@ Qed.
 
 Lemma Datan_sum_eq :forall x n,
 sum_f_R0 (tg_alt (Datan_seq x)) n = (1 - (- x ^ 2) ^ S n)/(1 + x ^ 2).
-Proof. hammer_hook "Ratan" "Ratan.Datan_sum_eq". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_sum_eq".  
 intros x n.
 assert (dif : - x ^ 2 <> 1).
 apply Rlt_not_eq; apply Rle_lt_trans with 0;[ | apply Rlt_0_1].
@@ -1064,7 +1064,7 @@ ring.
 Qed.
 
 Lemma Datan_seq_increasing : forall x y n, (n > 0)%nat -> 0 <= x < y -> Datan_seq x n < Datan_seq y n.
-Proof. hammer_hook "Ratan" "Ratan.Datan_seq_increasing". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_seq_increasing".  
 intros x y n n_lb x_encad ; assert (x_pos : x >= 0) by intuition.
 assert (y_pos : y > 0). apply Rle_lt_trans with (r2:=x) ; intuition.
 induction n.
@@ -1088,7 +1088,7 @@ rewrite pow_i ; intuition.
 Qed.
 
 Lemma Datan_seq_decreasing : forall x,  -1 < x -> x < 1 -> Un_decreasing (Datan_seq x).
-Proof. hammer_hook "Ratan" "Ratan.Datan_seq_decreasing". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_seq_decreasing".  
 intros x x_lb x_ub n.
 unfold Datan_seq.
 replace (2 * S n)%nat with (2 + 2 * n)%nat by ring.
@@ -1105,7 +1105,7 @@ omega.
 Qed.
 
 Lemma Datan_seq_CV_0 : forall x, -1 < x -> x < 1 -> Un_cv (Datan_seq x) 0.
-Proof. hammer_hook "Ratan" "Ratan.Datan_seq_CV_0". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_seq_CV_0".  
 intros x x_lb x_ub eps eps_pos.
 assert (x_ub2 : Rabs (x^2) < 1).
 rewrite Rabs_pos_eq;[ | apply pow2_ge_0].
@@ -1121,7 +1121,7 @@ Qed.
 
 Lemma Datan_lim : forall x, -1 < x -> x < 1 ->
 Un_cv (fun N : nat => sum_f_R0 (tg_alt (Datan_seq x)) N) (/ (1 + x ^ 2)).
-Proof. hammer_hook "Ratan" "Ratan.Datan_lim". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_lim".  
 intros x x_lb x_ub eps eps_pos.
 assert (Tool0 : 0 <= x ^ 2) by apply pow2_ge_0.
 assert (Tool1 : 0 < (1 + x ^ 2)).
@@ -1170,7 +1170,7 @@ Qed.
 Lemma Datan_CVU_prelim : forall c (r : posreal), Rabs c + r < 1 ->
 CVU (fun N x => sum_f_R0 (tg_alt (Datan_seq x)) N)
 (fun y : R => / (1 + y ^ 2)) c r.
-Proof. hammer_hook "Ratan" "Ratan.Datan_CVU_prelim". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_CVU_prelim".  
 intros c r ub_ub eps eps_pos.
 apply (Alt_CVU (fun x n => Datan_seq n x)
 (fun x => /(1 + x ^ 2))
@@ -1203,7 +1203,7 @@ Lemma Datan_is_datan : forall (N:nat) (x:R),
 -1 <= x ->
 x < 1 ->
 derivable_pt_lim (fun x => sum_f_R0 (tg_alt (Ratan_seq x)) N) x (sum_f_R0 (tg_alt (Datan_seq x)) N).
-Proof. hammer_hook "Ratan" "Ratan.Datan_is_datan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_is_datan".  
 assert (Tool : forall N, (-1) ^ (S (2 * N))  = - 1).
 intro n ; induction n.
 simpl ; field.
@@ -1301,7 +1301,7 @@ Qed.
 Lemma Ratan_CVU' :
 CVU (fun N x => sum_f_R0 (tg_alt (Ratan_seq x)) N)
 ps_atan (/2) (mkposreal (/2) pos_half_prf).
-Proof. hammer_hook "Ratan" "Ratan.Ratan_CVU'". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ratan_CVU'".  
 apply (Alt_CVU (fun i r => Ratan_seq r i) ps_atan PI_tg (/2) pos_half);
 lazy beta.
 now intros; apply Ratan_seq_decreasing, Boule_half_to_interval.
@@ -1322,7 +1322,7 @@ Qed.
 Lemma Ratan_CVU :
 CVU (fun N x => sum_f_R0 (tg_alt (Ratan_seq x)) N)
 ps_atan 0  (mkposreal 1 Rlt_0_1).
-Proof. hammer_hook "Ratan" "Ratan.Ratan_CVU". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ratan_CVU".  
 intros eps ep; destruct (Ratan_CVU' eps ep) as [N Pn].
 exists N; intros n x nN b_y.
 case (Rtotal_order 0 x) as [xgt0 | [x0 | x0]].
@@ -1348,7 +1348,7 @@ rewrite !Ropp_involutive; reflexivity.
 Qed.
 
 Lemma Alt_PI_tg : forall n, PI_tg n = Ratan_seq 1 n.
-Proof. hammer_hook "Ratan" "Ratan.Alt_PI_tg". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Alt_PI_tg".  
 intros n; unfold PI_tg, Ratan_seq, Rdiv; rewrite pow1, Rmult_1_l.
 reflexivity.
 Qed.
@@ -1356,7 +1356,7 @@ Qed.
 Lemma Ratan_is_ps_atan : forall eps, eps > 0 ->
 exists N, forall n, (n >= N)%nat -> forall x, -1 < x -> x < 1 ->
 Rabs (sum_f_R0 (tg_alt (Ratan_seq x)) n - ps_atan x) < eps.
-Proof. hammer_hook "Ratan" "Ratan.Ratan_is_ps_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Ratan_is_ps_atan".  
 intros eps ep.
 destruct (Ratan_CVU _ ep) as [N1 PN1].
 exists N1; intros n nN x xm1 x1; rewrite <- Rabs_Ropp, Ropp_minus_distr.
@@ -1365,7 +1365,7 @@ unfold Boule; simpl; rewrite Rminus_0_r; apply Rabs_def1; assumption.
 Qed.
 
 Lemma Datan_continuity : continuity (fun x => /(1+x ^ 2)).
-Proof. hammer_hook "Ratan" "Ratan.Datan_continuity". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_continuity".  
 apply continuity_inv.
 apply continuity_plus.
 apply continuity_const ; unfold constant ; intuition.
@@ -1379,7 +1379,7 @@ Qed.
 
 Lemma derivable_pt_lim_ps_atan : forall x, -1 < x < 1 ->
 derivable_pt_lim ps_atan x ((fun y => /(1 + y ^ 2)) x).
-Proof. hammer_hook "Ratan" "Ratan.derivable_pt_lim_ps_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derivable_pt_lim_ps_atan".  
 intros x x_encad.
 destruct (boule_in_interval (-1) 1 x x_encad) as [c [r [Pcr1 [P1 P2]]]].
 change (/ (1 + x ^ 2)) with ((fun u => /(1 + u ^ 2)) x).
@@ -1411,7 +1411,7 @@ Qed.
 
 Lemma derivable_pt_ps_atan :
 forall x, -1 < x < 1 -> derivable_pt ps_atan x.
-Proof. hammer_hook "Ratan" "Ratan.derivable_pt_ps_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.derivable_pt_ps_atan".  
 intros x x_encad.
 exists (/(1+x^2)) ; apply derivable_pt_lim_ps_atan; assumption.
 Qed.
@@ -1422,7 +1422,7 @@ exists alp : R,
 alp > 0 /\
 (forall x, x < 1 -> 0 < x -> R_dist x 1 < alp ->
 dist R_met (ps_atan x) (Alt_PI/4) < eps).
-Proof. hammer_hook "Ratan" "Ratan.ps_atan_continuity_pt_1". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.ps_atan_continuity_pt_1".  
 intros eps eps_pos.
 assert (eps_3_pos : eps / 3 > 0) by fourier.
 elim (Ratan_is_ps_atan (eps / 3) eps_3_pos) ; intros N1 HN1.
@@ -1471,7 +1471,7 @@ Qed.
 Lemma Datan_eq_DatanSeq_interv : forall x, -1 < x < 1 ->
 forall (Pratan:derivable_pt ps_atan x) (Prmymeta:derivable_pt atan x),
 derive_pt ps_atan x Pratan = derive_pt atan x Prmymeta.
-Proof. hammer_hook "Ratan" "Ratan.Datan_eq_DatanSeq_interv". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Datan_eq_DatanSeq_interv".  
 assert (freq : 0 < tan 1) by apply (Rlt_trans _ _ _ Rlt_0_1 tan_1_gt_1).
 intros x x_encad Pratan Prmymeta.
 rewrite pr_nu_var2_interv with (g:=ps_atan) (lb:=-1) (ub:=tan 1)
@@ -1494,7 +1494,7 @@ Qed.
 
 Lemma atan_eq_ps_atan :
 forall x, 0 < x < 1 -> atan x = ps_atan x.
-Proof. hammer_hook "Ratan" "Ratan.atan_eq_ps_atan". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.atan_eq_ps_atan".  
 intros x x_encad.
 assert (pr1 : forall c : R, 0 < c < x -> derivable_pt (atan - ps_atan) c).
 intros c c_encad.
@@ -1556,7 +1556,7 @@ Qed.
 
 
 Theorem Alt_PI_eq : Alt_PI = PI.
-Proof. hammer_hook "Ratan" "Ratan.Alt_PI_eq". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.Alt_PI_eq".  
 apply Rmult_eq_reg_r with (/4); fold (Alt_PI/4); fold (PI/4);
 [ | apply Rgt_not_eq; fourier].
 assert (0 < PI/6) by (apply PI6_RGT_0).
@@ -1607,7 +1607,7 @@ Lemma PI_ineq :
 forall N : nat,
 sum_f_R0 (tg_alt PI_tg) (S (2 * N)) <= PI / 4 <=
 sum_f_R0 (tg_alt PI_tg) (2 * N).
-Proof. hammer_hook "Ratan" "Ratan.PI_ineq". Restart. 
+Proof. try hammer_hook "Ratan" "Ratan.PI_ineq".  
 intros; rewrite <- Alt_PI_eq; apply Alt_PI_ineq.
 Qed.
 

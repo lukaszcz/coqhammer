@@ -67,7 +67,7 @@ Notation "x < y <= z" := (x < y /\ y <= z) : positive_scope.
 
 
 Lemma eq_dec : forall x y:positive, {x = y} + {x <> y}.
-Proof. hammer_hook "BinPos" "BinPos.Pos.eq_dec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.eq_dec".  
 decide equality.
 Defined.
 
@@ -77,62 +77,62 @@ Defined.
 
 
 Lemma xI_succ_xO p : p~1 = succ p~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.xI_succ_xO". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.xI_succ_xO".  
 reflexivity.
 Qed.
 
 Lemma succ_discr p : p <> succ p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_discr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_discr".  
 now destruct p.
 Qed.
 
 
 
 Lemma pred_double_spec p : pred_double p = pred (p~0).
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_double_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_double_spec".  
 reflexivity.
 Qed.
 
 Lemma succ_pred_double p : succ (pred_double p) = p~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_pred_double". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_pred_double".  
 induction p; simpl; now f_equal.
 Qed.
 
 Lemma pred_double_succ p : pred_double (succ p) = p~1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_double_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_double_succ".  
 induction p; simpl; now f_equal.
 Qed.
 
 Lemma double_succ p : (succ p)~0 = succ (succ p~0).
-Proof. hammer_hook "BinPos" "BinPos.Pos.double_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.double_succ".  
 now destruct p.
 Qed.
 
 Lemma pred_double_xO_discr p : pred_double p <> p~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_double_xO_discr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_double_xO_discr".  
 now destruct p.
 Qed.
 
 
 
 Lemma succ_not_1 p : succ p <> 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_not_1". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_not_1".  
 now destruct p.
 Qed.
 
 Lemma pred_succ p : pred (succ p) = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_succ".  
 destruct p; simpl; trivial. apply pred_double_succ.
 Qed.
 
 Lemma succ_pred_or p : p = 1 \/ succ (pred p) = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_pred_or". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_pred_or".  
 destruct p; simpl; auto.
 right; apply succ_pred_double.
 Qed.
 
 Lemma succ_pred p : p <> 1 -> succ (pred p) = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_pred". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_pred".  
 destruct p; intros H; simpl; trivial.
 apply succ_pred_double.
 now destruct H.
@@ -141,7 +141,7 @@ Qed.
 
 
 Lemma succ_inj p q : succ p = succ q -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_inj". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_inj".  
 revert q.
 induction p; intros [q|q| ] H; simpl in H; destr_eq H; f_equal; auto.
 elim (succ_not_1 p); auto.
@@ -151,7 +151,7 @@ Qed.
 
 
 Lemma pred_N_succ p : pred_N (succ p) = Npos p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_N_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_N_succ".  
 destruct p; simpl; trivial. f_equal. apply pred_double_succ.
 Qed.
 
@@ -162,26 +162,26 @@ Qed.
 
 
 Lemma add_1_r p : p + 1 = succ p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_1_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_1_r".  
 now destruct p.
 Qed.
 
 Lemma add_1_l p : 1 + p = succ p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_1_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_1_l".  
 now destruct p.
 Qed.
 
 
 
 Theorem add_carry_spec p q : add_carry p q = succ (p + q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_carry_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_carry_spec".  
 revert q. induction p; destruct q; simpl; now f_equal.
 Qed.
 
 
 
 Theorem add_comm p q : p + q = q + p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_comm". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_comm".  
 revert q. induction p; destruct q; simpl; f_equal; trivial.
 rewrite 2 add_carry_spec; now f_equal.
 Qed.
@@ -189,20 +189,20 @@ Qed.
 
 
 Theorem add_succ_r p q : p + succ q = succ (p + q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_succ_r".  
 revert q.
 induction p; destruct q; simpl; f_equal;
 auto using add_1_r; rewrite add_carry_spec; auto.
 Qed.
 
 Theorem add_succ_l p q : succ p + q = succ (p + q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_succ_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_succ_l".  
 rewrite add_comm, (add_comm p). apply add_succ_r.
 Qed.
 
 
 Lemma add_no_neutral p q : q + p <> p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_no_neutral". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_no_neutral".  
 revert q.
 induction p as [p IHp|p IHp| ]; intros [q|q| ] H;
 destr_eq H; apply (IHp q H).
@@ -212,12 +212,12 @@ Qed.
 
 Lemma add_carry_add p q r s :
 add_carry p r = add_carry q s -> p + r = q + s.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_carry_add". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_carry_add".  
 intros H; apply succ_inj; now rewrite <- 2 add_carry_spec.
 Qed.
 
 Lemma add_reg_r p q r : p + r = q + r -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_reg_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_reg_r".  
 revert p q. induction r.
 intros [p|p| ] [q|q| ] H; simpl; destr_eq H; f_equal;
 auto using add_carry_add; contradict H;
@@ -228,29 +228,29 @@ intros p q H. apply succ_inj. now rewrite <- 2 add_1_r.
 Qed.
 
 Lemma add_reg_l p q r : p + q = p + r -> q = r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_reg_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_reg_l".  
 rewrite 2 (add_comm p). now apply add_reg_r.
 Qed.
 
 Lemma add_cancel_r p q r : p + r = q + r <-> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_cancel_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_cancel_r".  
 split. apply add_reg_r. congruence.
 Qed.
 
 Lemma add_cancel_l p q r : r + p = r + q <-> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_cancel_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_cancel_l".  
 split. apply add_reg_l. congruence.
 Qed.
 
 Lemma add_carry_reg_r p q r :
 add_carry p r = add_carry q r -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_carry_reg_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_carry_reg_r".  
 intros H. apply add_reg_r with (r:=r); now apply add_carry_add.
 Qed.
 
 Lemma add_carry_reg_l p q r :
 add_carry p q = add_carry p r -> q = r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_carry_reg_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_carry_reg_l".  
 intros H; apply add_reg_r with (r:=p);
 rewrite (add_comm r), (add_comm q); now apply add_carry_add.
 Qed.
@@ -258,7 +258,7 @@ Qed.
 
 
 Theorem add_assoc p q r : p + (q + r) = p + q + r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_assoc". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_assoc".  
 revert q r. induction p.
 intros [q|q| ] [r|r| ]; simpl; f_equal; trivial;
 rewrite ?add_carry_spec, ?add_succ_r, ?add_succ_l, ?add_1_r;
@@ -272,20 +272,20 @@ Qed.
 
 
 Lemma add_xO p q : (p + q)~0 = p~0 + q~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_xO". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_xO".  
 now destruct p, q.
 Qed.
 
 Lemma add_xI_pred_double p q :
 (p + q)~0 = p~1 + pred_double q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_xI_pred_double". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_xI_pred_double".  
 change (p~1) with (p~0 + 1).
 now rewrite <- add_assoc, add_1_l, succ_pred_double.
 Qed.
 
 Lemma add_xO_pred_double p q :
 pred_double (p + q) = p~0 + pred_double q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_xO_pred_double". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_xO_pred_double".  
 revert q. induction p as [p IHp| p IHp| ]; destruct q; simpl;
 rewrite ?add_carry_spec, ?pred_double_succ, ?add_xI_pred_double;
 try reflexivity.
@@ -296,7 +296,7 @@ Qed.
 
 
 Lemma add_diag p : p + p = p~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_diag". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_diag".  
 induction p as [p IHp| p IHp| ]; simpl;
 now rewrite ?add_carry_spec, ?IHp.
 Qed.
@@ -320,7 +320,7 @@ end.
 Theorem peano_rect_succ (P:positive->Type) (a:P 1)
 (f:forall p, P p -> P (succ p)) (p:positive) :
 peano_rect P a f (succ p) = f _ (peano_rect P a f p).
-Proof. hammer_hook "BinPos" "BinPos.Pos.peano_rect_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.peano_rect_succ".  
 revert P a f. induction p; trivial.
 intros. simpl. now rewrite IHp.
 Qed.
@@ -328,7 +328,7 @@ Qed.
 Theorem peano_rect_base (P:positive->Type) (a:P 1)
 (f:forall p, P p -> P (succ p)) :
 peano_rect P a f 1 = a.
-Proof. hammer_hook "BinPos" "BinPos.Pos.peano_rect_base". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.peano_rect_base".  
 trivial.
 Qed.
 
@@ -343,7 +343,7 @@ Definition peano_ind (P:positive->Prop) := peano_rect P.
 Theorem peano_case :
 forall P:positive -> Prop,
 P 1 -> (forall n:positive, P (succ n)) -> forall p:positive, P p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.peano_case". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.peano_case".  
 intros; apply peano_ind; auto.
 Qed.
 
@@ -383,13 +383,13 @@ end).
 Theorem eq_dep_eq_positive :
 forall (P:positive->Type) (p:positive) (x y:P p),
 eq_dep positive P p x p y -> x = y.
-Proof. hammer_hook "BinPos" "BinPos.Pos.eq_dep_eq_positive". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.eq_dep_eq_positive".  
 apply eq_dep_eq_dec.
 decide equality.
 Qed.
 
 Theorem PeanoViewUnique : forall p (q q':PeanoView p), q = q'.
-Proof. hammer_hook "BinPos" "BinPos.Pos.PeanoViewUnique". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.PeanoViewUnique".  
 intros.
 induction q as [ | p q IHq ].
 apply eq_dep_eq_positive.
@@ -408,7 +408,7 @@ Qed.
 
 Lemma peano_equiv (P:positive->Type) (a:P 1) (f:forall p, P p -> P (succ p)) p :
 PeanoView_iter P a f p (peanoView p) = peano_rect P a f p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.peano_equiv". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.peano_equiv".  
 revert P a f. induction p using peano_rect.
 trivial.
 intros; simpl. rewrite peano_rect_succ.
@@ -422,24 +422,24 @@ Qed.
 
 
 Lemma mul_1_l p : 1 * p = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_1_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_1_l".  
 reflexivity.
 Qed.
 
 Lemma mul_1_r p : p * 1 = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_1_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_1_r".  
 induction p; simpl; now f_equal.
 Qed.
 
 
 
 Lemma mul_xO_r p q : p * q~0 = (p * q)~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_xO_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_xO_r".  
 induction p; simpl; f_equal; f_equal; trivial.
 Qed.
 
 Lemma mul_xI_r p q : p * q~1 = p + (p * q)~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_xI_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_xI_r".  
 induction p as [p IHp|p IHp| ]; simpl; f_equal; trivial.
 now rewrite IHp, 2 add_assoc, (add_comm p).
 Qed.
@@ -447,7 +447,7 @@ Qed.
 
 
 Theorem mul_comm p q : p * q = q * p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_comm". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_comm".  
 induction q as [q IHq|q IHq| ]; simpl; rewrite <- ? IHq;
 auto using mul_xI_r, mul_xO_r, mul_1_r.
 Qed.
@@ -456,7 +456,7 @@ Qed.
 
 Theorem mul_add_distr_l p q r :
 p * (q + r) = p * q + p * r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_add_distr_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_add_distr_l".  
 induction p as [p IHp|p IHp| ]; simpl.
 rewrite IHp. set (m:=(p*q)~0). set (n:=(p*r)~0).
 change ((p*q+p*r)~0) with (m+n).
@@ -469,14 +469,14 @@ Qed.
 
 Theorem mul_add_distr_r p q r :
 (p + q) * r = p * r + q * r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_add_distr_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_add_distr_r".  
 rewrite 3 (mul_comm _ r); apply mul_add_distr_l.
 Qed.
 
 
 
 Theorem mul_assoc p q r : p * (q * r) = p * q * r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_assoc". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_assoc".  
 induction p as [p IHp| p IHp | ]; simpl; rewrite ?IHp; trivial.
 now rewrite mul_add_distr_r.
 Qed.
@@ -484,27 +484,27 @@ Qed.
 
 
 Lemma mul_succ_l p q : (succ p) * q = q + p * q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_succ_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_succ_l".  
 induction p as [p IHp | p IHp | ]; simpl; trivial.
 now rewrite IHp, add_assoc, add_diag, <-add_xO.
 symmetry; apply add_diag.
 Qed.
 
 Lemma mul_succ_r p q : p * (succ q) = p + p * q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_succ_r".  
 rewrite mul_comm, mul_succ_l. f_equal. apply mul_comm.
 Qed.
 
 
 
 Lemma mul_xI_mul_xO_discr p q r : p~1 * r <> q~0 * r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_xI_mul_xO_discr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_xI_mul_xO_discr".  
 induction r; try discriminate.
 rewrite 2 mul_xO_r; intro H; destr_eq H; auto.
 Qed.
 
 Lemma mul_xO_discr p q : p~0 * q <> q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_xO_discr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_xO_discr".  
 induction q; try discriminate.
 rewrite mul_xO_r; injection; auto.
 Qed.
@@ -512,7 +512,7 @@ Qed.
 
 
 Theorem mul_reg_r p q r : p * r = q * r -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_reg_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_reg_r".  
 revert q r.
 induction p as [p IHp| p IHp| ]; intros [q|q| ] r H;
 reflexivity || apply f_equal || exfalso.
@@ -529,29 +529,29 @@ symmetry in H. contradict H. apply mul_xO_discr.
 Qed.
 
 Theorem mul_reg_l p q r : r * p = r * q -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_reg_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_reg_l".  
 rewrite 2 (mul_comm r). apply mul_reg_r.
 Qed.
 
 Lemma mul_cancel_r p q r : p * r = q * r <-> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_cancel_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_cancel_r".  
 split. apply mul_reg_r. congruence.
 Qed.
 
 Lemma mul_cancel_l p q r : r * p = r * q <-> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_cancel_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_cancel_l".  
 split. apply mul_reg_l. congruence.
 Qed.
 
 
 
 Lemma mul_eq_1_l p q : p * q = 1 -> p = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_eq_1_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_eq_1_l".  
 now destruct p, q.
 Qed.
 
 Lemma mul_eq_1_r p q : p * q = 1 -> q = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_eq_1_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_eq_1_r".  
 now destruct p, q.
 Qed.
 
@@ -560,12 +560,12 @@ Notation mul_eq_1 := mul_eq_1_l.
 
 
 Lemma square_xO p : p~0 * p~0 = (p*p)~0~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.square_xO". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.square_xO".  
 simpl. now rewrite mul_comm.
 Qed.
 
 Lemma square_xI p : p~1 * p~1 = (p*p+p)~0~1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.square_xI". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.square_xI".  
 simpl. rewrite mul_comm. simpl. f_equal.
 rewrite add_assoc, add_diag. simpl. now rewrite add_comm.
 Qed.
@@ -575,21 +575,21 @@ Qed.
 Lemma iter_swap_gen : forall A B (f:A->B)(g:A->A)(h:B->B),
 (forall a, f (g a) = h (f a)) -> forall p a,
 f (iter g a p) = iter h (f a) p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.iter_swap_gen". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.iter_swap_gen".  
 induction p; simpl; intros; now rewrite ?H, ?IHp.
 Qed.
 
 Theorem iter_swap :
 forall p (A:Type) (f:A -> A) (x:A),
 iter f (f x) p = f (iter f x p).
-Proof. hammer_hook "BinPos" "BinPos.Pos.iter_swap". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.iter_swap".  
 intros. symmetry. now apply iter_swap_gen.
 Qed.
 
 Theorem iter_succ :
 forall p (A:Type) (f:A -> A) (x:A),
 iter f x (succ p) = f (iter f x p).
-Proof. hammer_hook "BinPos" "BinPos.Pos.iter_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.iter_succ".  
 induction p as [p IHp|p IHp|]; intros; simpl; trivial.
 now rewrite !IHp, iter_swap.
 Qed.
@@ -597,7 +597,7 @@ Qed.
 Theorem iter_add :
 forall p q (A:Type) (f:A -> A) (x:A),
 iter f x (p+q) = iter f (iter f x q) p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.iter_add". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.iter_add".  
 induction p using peano_ind; intros.
 now rewrite add_1_l, iter_succ.
 now rewrite add_succ_l, !iter_succ, IHp.
@@ -607,7 +607,7 @@ Theorem iter_invariant :
 forall (p:positive) (A:Type) (f:A -> A) (Inv:A -> Prop),
 (forall x:A, Inv x -> Inv (f x)) ->
 forall x:A, Inv x -> Inv (iter f x p).
-Proof. hammer_hook "BinPos" "BinPos.Pos.iter_invariant". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.iter_invariant".  
 induction p as [p IHp|p IHp|]; simpl; trivial.
 intros A f Inv H x H0. apply H, IHp, IHp; trivial.
 intros A f Inv H x H0. apply IHp, IHp; trivial.
@@ -616,19 +616,19 @@ Qed.
 
 
 Lemma pow_1_r p : p^1 = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pow_1_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pow_1_r".  
 unfold pow. simpl. now rewrite mul_comm.
 Qed.
 
 Lemma pow_succ_r p q : p^(succ q) = p * p^q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pow_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pow_succ_r".  
 unfold pow. now rewrite iter_succ.
 Qed.
 
 
 
 Lemma square_spec p : square p = p * p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.square_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.square_spec".  
 induction p.
 - rewrite square_xI. simpl. now rewrite IHp.
 - rewrite square_xO. simpl. now rewrite IHp.
@@ -639,13 +639,13 @@ Qed.
 
 Lemma sub_mask_succ_r p q :
 sub_mask p (succ q) = sub_mask_carry p q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_succ_r".  
 revert q. induction p; destruct q; simpl; f_equal; trivial; now destruct p.
 Qed.
 
 Theorem sub_mask_carry_spec p q :
 sub_mask_carry p q = pred_mask (sub_mask p q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_carry_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_carry_spec".  
 revert q. induction p as [p IHp|p IHp| ]; destruct q; simpl;
 try reflexivity; rewrite ?IHp;
 destruct (sub_mask p q) as [|[r|r| ]|] || destruct p; auto.
@@ -657,7 +657,7 @@ Inductive SubMaskSpec (p q : positive) : mask -> Prop :=
 | SubIsNeg : forall r, p + r = q -> SubMaskSpec p q IsNeg.
 
 Theorem sub_mask_spec p q : SubMaskSpec p q (sub_mask p q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_spec".  
 revert q. induction p; destruct q; simpl; try constructor; trivial.
 
 destruct (IHp q); subst; try now constructor.
@@ -686,24 +686,24 @@ apply SubIsNeg with (pred_double q). now rewrite add_1_l, succ_pred_double.
 Qed.
 
 Theorem sub_mask_nul_iff p q : sub_mask p q = IsNul <-> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_nul_iff". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_nul_iff".  
 split.
 now case sub_mask_spec.
 intros <-. induction p; simpl; now rewrite ?IHp.
 Qed.
 
 Theorem sub_mask_diag p : sub_mask p p = IsNul.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_diag". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_diag".  
 now apply sub_mask_nul_iff.
 Qed.
 
 Lemma sub_mask_add p q r : sub_mask p q = IsPos r -> q + r = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_add". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_add".  
 case sub_mask_spec; congruence.
 Qed.
 
 Lemma sub_mask_add_diag_l p q : sub_mask (p+q) p = IsPos q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_add_diag_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_add_diag_l".  
 case sub_mask_spec.
 intros H. rewrite add_comm in H. elim (add_no_neutral _ _ H).
 intros r H. apply add_cancel_l in H. now f_equal.
@@ -711,19 +711,19 @@ intros r H. rewrite <- add_assoc, add_comm in H. elim (add_no_neutral _ _ H).
 Qed.
 
 Lemma sub_mask_pos_iff p q r : sub_mask p q = IsPos r <-> q + r = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_pos_iff". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_pos_iff".  
 split. apply sub_mask_add. intros <-; apply sub_mask_add_diag_l.
 Qed.
 
 Lemma sub_mask_add_diag_r p q : sub_mask p (p+q) = IsNeg.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_add_diag_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_add_diag_r".  
 case sub_mask_spec; trivial.
 intros H. symmetry in H; rewrite add_comm in H. elim (add_no_neutral _ _ H).
 intros r H. rewrite <- add_assoc, add_comm in H. elim (add_no_neutral _ _ H).
 Qed.
 
 Lemma sub_mask_neg_iff p q : sub_mask p q = IsNeg <-> exists r, p + r = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_neg_iff". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_neg_iff".  
 split.
 case sub_mask_spec; try discriminate. intros r Hr _; now exists r.
 intros (r,<-). apply sub_mask_add_diag_r.
@@ -733,17 +733,17 @@ Qed.
 
 
 Theorem eqb_eq p q : (p =? q) = true <-> p=q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.eqb_eq". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.eqb_eq".  
 revert q. induction p; destruct q; simpl; rewrite ?IHp; split; congruence.
 Qed.
 
 Theorem ltb_lt p q : (p <? q) = true <-> p < q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ltb_lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ltb_lt".  
 unfold ltb, lt. destruct compare; easy'.
 Qed.
 
 Theorem leb_le p q : (p <=? q) = true <-> p <= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.leb_le". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.leb_le".  
 unfold leb, le. destruct compare; easy'.
 Qed.
 
@@ -765,7 +765,7 @@ end.
 
 Lemma compare_cont_spec p q c :
 compare_cont c p q = switch_Eq c (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_spec".  
 unfold compare.
 revert q c.
 induction p; destruct q; simpl; trivial.
@@ -779,37 +779,37 @@ Qed.
 
 Theorem compare_cont_Eq p q c :
 compare_cont c p q = Eq -> c = Eq.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Eq". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Eq".  
 rewrite compare_cont_spec. now destruct (p ?= q).
 Qed.
 
 Lemma compare_cont_Lt_Gt p q :
 compare_cont Lt p q = Gt <-> p > q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_Gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_Gt".  
 rewrite compare_cont_spec. unfold gt. destruct (p ?= q); now split.
 Qed.
 
 Lemma compare_cont_Lt_Lt p q :
 compare_cont Lt p q = Lt <-> p <= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_Lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_Lt".  
 rewrite compare_cont_spec. unfold le. destruct (p ?= q); easy'.
 Qed.
 
 Lemma compare_cont_Gt_Lt p q :
 compare_cont Gt p q = Lt <-> p < q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_Lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_Lt".  
 rewrite compare_cont_spec. unfold lt. destruct (p ?= q); now split.
 Qed.
 
 Lemma compare_cont_Gt_Gt p q :
 compare_cont Gt p q = Gt <-> p >= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_Gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_Gt".  
 rewrite compare_cont_spec. unfold ge. destruct (p ?= q); easy'.
 Qed.
 
 Lemma compare_cont_Lt_not_Lt p q :
 compare_cont Lt p q <> Lt <-> p > q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_not_Lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_not_Lt".  
 rewrite compare_cont_Lt_Lt.
 unfold gt, le, compare.
 now destruct compare_cont; split; try apply comparison_eq_stable.
@@ -817,19 +817,19 @@ Qed.
 
 Lemma compare_cont_Lt_not_Gt p q :
 compare_cont Lt p q <> Gt <-> p <= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_not_Gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Lt_not_Gt".  
 apply not_iff_compat, compare_cont_Lt_Gt.
 Qed.
 
 Lemma compare_cont_Gt_not_Lt p q :
 compare_cont Gt p q <> Lt <-> p >= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_not_Lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_not_Lt".  
 apply not_iff_compat, compare_cont_Gt_Lt.
 Qed.
 
 Lemma compare_cont_Gt_not_Gt p q :
 compare_cont Gt p q <> Gt <-> p < q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_not_Gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_Gt_not_Gt".  
 rewrite compare_cont_Gt_Gt.
 unfold ge, lt, compare.
 now destruct compare_cont; split; try apply comparison_eq_stable.
@@ -838,18 +838,18 @@ Qed.
 
 
 Lemma compare_xO_xO p q : (p~0 ?= q~0) = (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_xO_xO". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_xO_xO".   reflexivity. Qed.
 
 Lemma compare_xI_xI p q : (p~1 ?= q~1) = (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_xI_xI". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_xI_xI".   reflexivity. Qed.
 
 Lemma compare_xI_xO p q :
 (p~1 ?= q~0) = switch_Eq Gt (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_xI_xO". Restart.  exact (compare_cont_spec p q Gt). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_xI_xO".   exact (compare_cont_spec p q Gt). Qed.
 
 Lemma compare_xO_xI p q :
 (p~0 ?= q~1) = switch_Eq Lt (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_xO_xI". Restart.  exact (compare_cont_spec p q Lt). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_xO_xI".   exact (compare_cont_spec p q Lt). Qed.
 
 Hint Rewrite compare_xO_xO compare_xI_xI compare_xI_xO compare_xO_xI : compare.
 
@@ -866,7 +866,7 @@ match p with
 end.
 
 Lemma compare_sub_mask p q : (p ?= q) = mask2cmp (sub_mask p q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_sub_mask". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_sub_mask".  
 revert q.
 induction p as [p IHp| p IHp| ]; intros [q|q| ]; simpl; trivial;
 specialize (IHp q); rewrite ?sub_mask_carry_spec;
@@ -878,13 +878,13 @@ Qed.
 
 
 Lemma lt_iff_add p q : p < q <-> exists r, p + r = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_iff_add". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_iff_add".  
 unfold "<". rewrite <- sub_mask_neg_iff, compare_sub_mask.
 destruct sub_mask; now split.
 Qed.
 
 Lemma gt_iff_add p q : p > q <-> exists r, q + r = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.gt_iff_add". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gt_iff_add".  
 unfold ">". rewrite compare_sub_mask.
 split.
 case_eq (sub_mask p q); try discriminate; intros r Hr _.
@@ -896,13 +896,13 @@ Qed.
 
 Theorem compare_cont_refl p c :
 compare_cont c p p = c.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_refl". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_refl".  
 now induction p.
 Qed.
 
 Lemma compare_cont_antisym p q c :
 CompOpp (compare_cont c p q) = compare_cont (CompOpp c) q p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_cont_antisym". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_cont_antisym".  
 revert q c.
 induction p as [p IHp|p IHp| ]; intros [q|q| ] c; simpl;
 trivial; apply IHp.
@@ -911,21 +911,21 @@ Qed.
 
 
 Lemma compare_eq_iff p q : (p ?= q) = Eq <-> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_eq_iff". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_eq_iff".  
 rewrite compare_sub_mask, <- sub_mask_nul_iff.
 destruct sub_mask; now split.
 Qed.
 
 Lemma compare_antisym p q : (q ?= p) = CompOpp (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_antisym". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_antisym".  
 unfold compare. now rewrite compare_cont_antisym.
 Qed.
 
 Lemma compare_lt_iff p q : (p ?= q) = Lt <-> p < q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_lt_iff". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_lt_iff".   reflexivity. Qed.
 
 Lemma compare_le_iff p q : (p ?= q) <> Gt <-> p <= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_le_iff". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_le_iff".   reflexivity. Qed.
 
 
 
@@ -938,32 +938,32 @@ Definition le_lteq := lt_eq_cases.
 
 
 Lemma gt_lt_iff p q : p > q <-> q < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.gt_lt_iff". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gt_lt_iff".  
 unfold lt, gt. now rewrite compare_antisym, CompOpp_iff.
 Qed.
 
 Lemma gt_lt p q : p > q -> q < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.gt_lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gt_lt".  
 apply gt_lt_iff.
 Qed.
 
 Lemma lt_gt p q : p < q -> q > p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_gt".  
 apply gt_lt_iff.
 Qed.
 
 Lemma ge_le_iff p q : p >= q <-> q <= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ge_le_iff". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ge_le_iff".  
 unfold le, ge. now rewrite compare_antisym, CompOpp_iff.
 Qed.
 
 Lemma ge_le p q : p >= q -> q <= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ge_le". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ge_le".  
 apply ge_le_iff.
 Qed.
 
 Lemma le_ge p q : p <= q -> q >= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_ge". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_ge".  
 apply ge_le_iff.
 Qed.
 
@@ -971,7 +971,7 @@ Qed.
 
 Lemma compare_succ_r p q :
 switch_Eq Gt (p ?= succ q) = switch_Eq Lt (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_succ_r".  
 revert q.
 induction p as [p IH|p IH| ]; intros [q|q| ]; simpl;
 simpl_compare; rewrite ?IH; trivial;
@@ -980,24 +980,24 @@ Qed.
 
 Lemma compare_succ_l p q :
 switch_Eq Lt (succ p ?= q) = switch_Eq Gt (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_succ_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_succ_l".  
 rewrite 2 (compare_antisym q). generalize (compare_succ_r q p).
 now do 2 destruct compare.
 Qed.
 
 Theorem lt_succ_r p q : p < succ q <-> p <= q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_succ_r".  
 unfold lt, le. generalize (compare_succ_r p q).
 do 2 destruct compare; try discriminate; now split.
 Qed.
 
 Lemma lt_succ_diag_r p : p < succ p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_succ_diag_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_succ_diag_r".  
 rewrite lt_iff_add. exists 1. apply add_1_r.
 Qed.
 
 Lemma compare_succ_succ p q : (succ p ?= succ q) = (p ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.compare_succ_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.compare_succ_succ".  
 revert q.
 induction p; destruct q; simpl; simpl_compare; trivial;
 apply compare_succ_l || apply compare_succ_r ||
@@ -1007,55 +1007,55 @@ Qed.
 
 
 Lemma le_1_l p : 1 <= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_1_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_1_l".  
 now destruct p.
 Qed.
 
 Lemma nlt_1_r p : ~ p < 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.nlt_1_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.nlt_1_r".  
 now destruct p.
 Qed.
 
 Lemma lt_1_succ p : 1 < succ p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_1_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_1_succ".  
 apply lt_succ_r, le_1_l.
 Qed.
 
 
 
 Lemma le_nlt p q : p <= q <-> ~ q < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_nlt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_nlt".  
 now rewrite <- ge_le_iff.
 Qed.
 
 Lemma lt_nle p q : p < q <-> ~ q <= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_nle". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_nle".  
 intros. unfold lt, le. rewrite compare_antisym.
 destruct compare; split; auto; easy'.
 Qed.
 
 Lemma lt_le_incl p q : p<q -> p<=q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_le_incl". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_le_incl".  
 intros. apply le_lteq. now left.
 Qed.
 
 Lemma lt_lt_succ n m : n < m -> n < succ m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_lt_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_lt_succ".  
 intros. now apply lt_succ_r, lt_le_incl.
 Qed.
 
 Lemma succ_lt_mono n m : n < m <-> succ n < succ m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_lt_mono". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_lt_mono".  
 unfold lt. now rewrite compare_succ_succ.
 Qed.
 
 Lemma succ_le_mono n m : n <= m <-> succ n <= succ m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_le_mono". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_le_mono".  
 unfold le. now rewrite compare_succ_succ.
 Qed.
 
 Lemma lt_trans n m p : n < m -> m < p -> n < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_trans". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_trans".  
 rewrite 3 lt_iff_add. intros (r,Hr) (s,Hs).
 exists (r+s). now rewrite add_assoc, Hr, Hs.
 Qed.
@@ -1064,42 +1064,42 @@ Theorem lt_ind : forall (A : positive -> Prop) (n : positive),
 A (succ n) ->
 (forall m : positive, n < m -> A m -> A (succ m)) ->
 forall m : positive, n < m -> A m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_ind". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_ind".  
 intros A n AB AS m. induction m using peano_ind; intros H.
 elim (nlt_1_r _ H).
 apply lt_succ_r, le_lteq in H. destruct H as [H|H]; subst; auto.
 Qed.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_strorder". Restart.  split. exact lt_irrefl. exact lt_trans. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_strorder".   split. exact lt_irrefl. exact lt_trans. Qed.
 
 Instance lt_compat : Proper (Logic.eq==>Logic.eq==>iff) lt.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_compat". Restart.  repeat red. intros. subst; auto. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_compat".   repeat red. intros. subst; auto. Qed.
 
 Lemma lt_total p q : p < q \/ p = q \/ q < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_total". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_total".  
 case (compare_spec p q); intuition.
 Qed.
 
 Lemma le_refl p : p <= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_refl". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_refl".  
 intros. unfold le. now rewrite compare_refl.
 Qed.
 
 Lemma le_lt_trans n m p : n <= m -> m < p -> n < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_lt_trans". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_lt_trans".  
 intros H H'. apply le_lteq in H. destruct H.
 now apply lt_trans with m. now subst.
 Qed.
 
 Lemma lt_le_trans n m p : n < m -> m <= p -> n < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_le_trans". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_le_trans".  
 intros H H'. apply le_lteq in H'. destruct H'.
 now apply lt_trans with m. now subst.
 Qed.
 
 Lemma le_trans n m p : n <= m -> m <= p -> n <= p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_trans". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_trans".  
 intros H H'.
 apply le_lteq in H. destruct H.
 apply le_lteq; left. now apply lt_le_trans with m.
@@ -1107,22 +1107,22 @@ now subst.
 Qed.
 
 Lemma le_succ_l n m : succ n <= m <-> n < m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_succ_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_succ_l".  
 rewrite <- lt_succ_r. symmetry. apply succ_lt_mono.
 Qed.
 
 Lemma le_antisym p q : p <= q -> q <= p -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_antisym". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_antisym".  
 rewrite le_lteq; destruct 1; auto.
 rewrite le_lteq; destruct 1; auto.
 elim (lt_irrefl p). now transitivity q.
 Qed.
 
 Instance le_preorder : PreOrder le.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_preorder". Restart.  split. exact le_refl. exact le_trans. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_preorder".   split. exact le_refl. exact le_trans. Qed.
 
 Instance le_partorder : PartialOrder Logic.eq le.
-Proof. hammer_hook "BinPos" "BinPos.Pos.le_partorder". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.le_partorder".  
 intros x y. change (x=y <-> x <= y <= x).
 split. intros; now subst.
 destruct 1; now apply le_antisym.
@@ -1131,53 +1131,53 @@ Qed.
 
 
 Lemma add_compare_mono_l p q r : (p+q ?= p+r) = (q ?= r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_compare_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_compare_mono_l".  
 revert p q r. induction p using peano_ind; intros q r.
 rewrite 2 add_1_l. apply compare_succ_succ.
 now rewrite 2 add_succ_l, compare_succ_succ.
 Qed.
 
 Lemma add_compare_mono_r p q r : (q+p ?= r+p) = (q ?= r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_compare_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_compare_mono_r".  
 rewrite 2 (add_comm _ p). apply add_compare_mono_l.
 Qed.
 
 
 
 Lemma lt_add_diag_r p q : p < p + q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_add_diag_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_add_diag_r".  
 rewrite lt_iff_add. now exists q.
 Qed.
 
 Lemma add_lt_mono_l p q r : q<r <-> p+q < p+r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_lt_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_lt_mono_l".  
 unfold lt. rewrite add_compare_mono_l. apply iff_refl.
 Qed.
 
 Lemma add_lt_mono_r p q r : q<r <-> q+p < r+p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_lt_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_lt_mono_r".  
 unfold lt. rewrite add_compare_mono_r. apply iff_refl.
 Qed.
 
 Lemma add_lt_mono p q r s : p<q -> r<s -> p+r<q+s.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_lt_mono". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_lt_mono".  
 intros. apply lt_trans with (p+s).
 now apply add_lt_mono_l.
 now apply add_lt_mono_r.
 Qed.
 
 Lemma add_le_mono_l p q r : q<=r <-> p+q<=p+r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_le_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_le_mono_l".  
 unfold le. rewrite add_compare_mono_l. apply iff_refl.
 Qed.
 
 Lemma add_le_mono_r p q r : q<=r <-> q+p<=r+p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_le_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_le_mono_r".  
 unfold le. rewrite add_compare_mono_r. apply iff_refl.
 Qed.
 
 Lemma add_le_mono p q r s : p<=q -> r<=s -> p+r <= q+s.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_le_mono". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_le_mono".  
 intros. apply le_trans with (p+s).
 now apply add_le_mono_l.
 now apply add_le_mono_r.
@@ -1186,7 +1186,7 @@ Qed.
 
 
 Lemma mul_compare_mono_l p q r : (p*q ?= p*r) = (q ?= r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_compare_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_compare_mono_l".  
 revert q r. induction p; simpl; trivial.
 intros q r. specialize (IHp q r).
 destruct (compare_spec q r).
@@ -1196,48 +1196,48 @@ now apply lt_gt, add_lt_mono, gt_lt.
 Qed.
 
 Lemma mul_compare_mono_r p q r : (q*p ?= r*p) = (q ?= r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_compare_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_compare_mono_r".  
 rewrite 2 (mul_comm _ p). apply mul_compare_mono_l.
 Qed.
 
 
 
 Lemma mul_lt_mono_l p q r : q<r <-> p*q < p*r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_lt_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_lt_mono_l".  
 unfold lt. rewrite mul_compare_mono_l. apply iff_refl.
 Qed.
 
 Lemma mul_lt_mono_r p q r : q<r <-> q*p < r*p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_lt_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_lt_mono_r".  
 unfold lt. rewrite mul_compare_mono_r. apply iff_refl.
 Qed.
 
 Lemma mul_lt_mono p q r s : p<q -> r<s -> p*r < q*s.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_lt_mono". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_lt_mono".  
 intros. apply lt_trans with (p*s).
 now apply mul_lt_mono_l.
 now apply mul_lt_mono_r.
 Qed.
 
 Lemma mul_le_mono_l p q r : q<=r <-> p*q<=p*r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_le_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_le_mono_l".  
 unfold le. rewrite mul_compare_mono_l. apply iff_refl.
 Qed.
 
 Lemma mul_le_mono_r p q r : q<=r <-> q*p<=r*p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_le_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_le_mono_r".  
 unfold le. rewrite mul_compare_mono_r. apply iff_refl.
 Qed.
 
 Lemma mul_le_mono p q r s : p<=q -> r<=s -> p*r <= q*s.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_le_mono". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_le_mono".  
 intros. apply le_trans with (p*s).
 now apply mul_le_mono_l.
 now apply mul_le_mono_r.
 Qed.
 
 Lemma lt_add_r p q : p < p+q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_add_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_add_r".  
 induction q using peano_ind.
 rewrite add_1_r. apply lt_succ_diag_r.
 apply lt_trans with (p+q); auto.
@@ -1245,13 +1245,13 @@ apply add_lt_mono_l, lt_succ_diag_r.
 Qed.
 
 Lemma lt_not_add_l p q : ~ p+q < p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.lt_not_add_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.lt_not_add_l".  
 intro H. elim (lt_irrefl p).
 apply lt_trans with (p+q); auto using lt_add_r.
 Qed.
 
 Lemma pow_gt_1 n p : 1<n -> 1<n^p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pow_gt_1". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pow_gt_1".  
 intros H. induction p using peano_ind.
 now rewrite pow_1_r.
 rewrite pow_succ_r.
@@ -1264,17 +1264,17 @@ Qed.
 
 
 Lemma sub_1_r p : sub p 1 = pred p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_1_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_1_r".  
 now destruct p.
 Qed.
 
 Lemma pred_sub p : pred p = sub p 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_sub". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_sub".  
 symmetry. apply sub_1_r.
 Qed.
 
 Theorem sub_succ_r p q : p - (succ q) = pred (p - q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_succ_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_succ_r".  
 unfold sub; rewrite sub_mask_succ_r, sub_mask_carry_spec.
 destruct (sub_mask p q) as [|[r|r| ]|]; auto.
 Qed.
@@ -1283,32 +1283,32 @@ Qed.
 
 Lemma sub_mask_pos' p q :
 q < p -> exists r, sub_mask p q = IsPos r /\ q + r = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_pos'". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_pos'".  
 rewrite lt_iff_add. intros (r,Hr). exists r. split; trivial.
 now apply sub_mask_pos_iff.
 Qed.
 
 Lemma sub_mask_pos p q :
 q < p -> exists r, sub_mask p q = IsPos r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_pos". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_pos".  
 intros H. destruct (sub_mask_pos' p q H) as (r & Hr & _). now exists r.
 Qed.
 
 Theorem sub_add p q : q < p -> (p-q)+q = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_add". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_add".  
 intros H. destruct (sub_mask_pos p q H) as (r,U).
 unfold sub. rewrite U. rewrite add_comm. now apply sub_mask_add.
 Qed.
 
 Lemma add_sub p q : (p+q)-q = p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_sub". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_sub".  
 intros. apply add_reg_r with q.
 rewrite sub_add; trivial.
 rewrite add_comm. apply lt_add_r.
 Qed.
 
 Lemma mul_sub_distr_l p q r : r<q -> p*(q-r) = p*q-p*r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_sub_distr_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_sub_distr_l".  
 intros H.
 apply add_reg_r with (p*r).
 rewrite <- mul_add_distr_l.
@@ -1318,12 +1318,12 @@ now apply mul_lt_mono_l.
 Qed.
 
 Lemma mul_sub_distr_r p q r : q<p -> (p-q)*r = p*r-q*r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_sub_distr_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_sub_distr_r".  
 intros H. rewrite 3 (mul_comm _ r). now apply mul_sub_distr_l.
 Qed.
 
 Lemma sub_lt_mono_l p q r: q<p -> p<r -> r-p < r-q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_lt_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_lt_mono_l".  
 intros Hqp Hpr.
 apply (add_lt_mono_r p).
 rewrite sub_add by trivial.
@@ -1335,7 +1335,7 @@ Qed.
 
 Lemma sub_compare_mono_l p q r :
 q<p -> r<p -> (p-q ?= p-r) = (r ?= q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_compare_mono_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_compare_mono_l".  
 intros Hqp Hrp.
 case (compare_spec r q); intros H. subst. apply compare_refl.
 apply sub_lt_mono_l; trivial.
@@ -1344,18 +1344,18 @@ Qed.
 
 Lemma sub_compare_mono_r p q r :
 p<q -> p<r -> (q-p ?= r-p) = (q ?= r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_compare_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_compare_mono_r".  
 intros. rewrite <- (add_compare_mono_r p), 2 sub_add; trivial.
 Qed.
 
 Lemma sub_lt_mono_r p q r : q<p -> r<q -> q-r < p-r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_lt_mono_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_lt_mono_r".  
 intros. unfold lt. rewrite sub_compare_mono_r; trivial.
 now apply lt_trans with q.
 Qed.
 
 Lemma sub_decr n m : m<n -> n-m < n.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_decr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_decr".  
 intros.
 apply add_lt_mono_r with m.
 rewrite sub_add; trivial.
@@ -1363,7 +1363,7 @@ apply lt_add_r.
 Qed.
 
 Lemma add_sub_assoc p q r : r<q -> p+(q-r) = p+q-r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_sub_assoc". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_sub_assoc".  
 intros.
 apply add_reg_r with r.
 rewrite <- add_assoc, !sub_add; trivial.
@@ -1371,7 +1371,7 @@ rewrite add_comm. apply lt_trans with q; trivial using lt_add_r.
 Qed.
 
 Lemma sub_add_distr p q r : q+r < p -> p-(q+r) = p-q-r.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_add_distr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_add_distr".  
 intros.
 assert (q < p)
 by (apply lt_trans with (q+r); trivial using lt_add_r).
@@ -1383,7 +1383,7 @@ apply (add_lt_mono_r q). rewrite sub_add; trivial.
 Qed.
 
 Lemma sub_sub_distr p q r : r<q -> q-r < p -> p-(q-r) = p+r-q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_sub_distr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_sub_distr".  
 intros.
 apply add_reg_r with ((q-r)+r).
 rewrite add_assoc, !sub_add; trivial.
@@ -1394,25 +1394,25 @@ Qed.
 
 
 Lemma sub_xO_xO n m : m<n -> n~0 - m~0 = (n-m)~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_xO_xO". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_xO_xO".  
 intros H. unfold sub. simpl.
 now destruct (sub_mask_pos n m H) as (p, ->).
 Qed.
 
 Lemma sub_xI_xI n m : m<n -> n~1 - m~1 = (n-m)~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_xI_xI". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_xI_xI".  
 intros H. unfold sub. simpl.
 now destruct (sub_mask_pos n m H) as (p, ->).
 Qed.
 
 Lemma sub_xI_xO n m : m<n -> n~1 - m~0 = (n-m)~1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_xI_xO". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_xI_xO".  
 intros H. unfold sub. simpl.
 now destruct (sub_mask_pos n m) as (p, ->).
 Qed.
 
 Lemma sub_xO_xI n m : n~0 - m~1 = pred_double (n-m).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_xO_xI". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_xO_xI".  
 unfold sub. simpl. rewrite sub_mask_carry_spec.
 now destruct (sub_mask n m) as [|[r|r|]|].
 Qed.
@@ -1420,35 +1420,35 @@ Qed.
 
 
 Lemma sub_mask_neg_iff' p q : sub_mask p q = IsNeg <-> p < q.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_neg_iff'". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_neg_iff'".  
 rewrite lt_iff_add. apply sub_mask_neg_iff.
 Qed.
 
 Lemma sub_mask_neg p q : p<q -> sub_mask p q = IsNeg.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_mask_neg". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_mask_neg".  
 apply sub_mask_neg_iff'.
 Qed.
 
 Lemma sub_le p q : p<=q -> p-q = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_le". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_le".  
 unfold le, sub. rewrite compare_sub_mask.
 destruct sub_mask; easy'.
 Qed.
 
 Lemma sub_lt p q : p<q -> p-q = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_lt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_lt".  
 intros. now apply sub_le, lt_le_incl.
 Qed.
 
 Lemma sub_diag p : p-p = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sub_diag". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sub_diag".  
 unfold sub. now rewrite sub_mask_diag.
 Qed.
 
 
 
 Lemma size_nat_monotone p q : p<q -> (size_nat p <= size_nat q)%nat.
-Proof. hammer_hook "BinPos" "BinPos.Pos.size_nat_monotone". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.size_nat_monotone".  
 assert (le0 : forall n, (0<=n)%nat) by (induction n; auto).
 assert (leS : forall n m, (n<=m -> S n <= S m)%nat) by (induction 1; auto).
 revert q.
@@ -1459,13 +1459,13 @@ destruct (compare_spec p q); subst; now auto.
 Qed.
 
 Lemma size_gt p : p < 2^(size p).
-Proof. hammer_hook "BinPos" "BinPos.Pos.size_gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.size_gt".  
 induction p; simpl; try rewrite pow_succ_r; try easy.
 apply le_succ_l in IHp. now apply le_succ_l.
 Qed.
 
 Lemma size_le p : 2^(size p) <= p~0.
-Proof. hammer_hook "BinPos" "BinPos.Pos.size_le". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.size_le".  
 induction p; simpl; try rewrite pow_succ_r; try easy.
 apply mul_le_mono_l.
 apply le_lteq; left. rewrite xI_succ_xO. apply lt_succ_r, IHp.
@@ -1476,23 +1476,23 @@ Qed.
 
 
 Lemma max_l : forall x y, y<=x -> max x y = x.
-Proof. hammer_hook "BinPos" "BinPos.Pos.max_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.max_l".  
 intros x y H. unfold max. case compare_spec; auto.
 intros H'. apply le_nlt in H. now elim H.
 Qed.
 
 Lemma max_r : forall x y, x<=y -> max x y = y.
-Proof. hammer_hook "BinPos" "BinPos.Pos.max_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.max_r".  
 unfold le, max. intros x y. destruct compare; easy'.
 Qed.
 
 Lemma min_l : forall x y, x<=y -> min x y = x.
-Proof. hammer_hook "BinPos" "BinPos.Pos.min_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.min_l".  
 unfold le, min. intros x y. destruct compare; easy'.
 Qed.
 
 Lemma min_r : forall x y, y<=x -> min x y = y.
-Proof. hammer_hook "BinPos" "BinPos.Pos.min_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.min_r".  
 intros x y H. unfold min. case compare_spec; auto.
 intros H'. apply le_nlt in H. now elim H'.
 Qed.
@@ -1506,74 +1506,74 @@ Ltac order := Private_Tac.order.
 
 
 Lemma max_1_l n : max 1 n = n.
-Proof. hammer_hook "BinPos" "BinPos.Pos.max_1_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.max_1_l".  
 unfold max. case compare_spec; auto.
 intros H. apply lt_nle in H. elim H. apply le_1_l.
 Qed.
 
 Lemma max_1_r n : max n 1 = n.
-Proof. hammer_hook "BinPos" "BinPos.Pos.max_1_r". Restart.  rewrite max_comm. apply max_1_l. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.max_1_r".   rewrite max_comm. apply max_1_l. Qed.
 
 Lemma min_1_l n : min 1 n = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.min_1_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.min_1_l".  
 unfold min. case compare_spec; auto.
 intros H. apply lt_nle in H. elim H. apply le_1_l.
 Qed.
 
 Lemma min_1_r n : min n 1 = 1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.min_1_r". Restart.  rewrite min_comm. apply min_1_l. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pos.min_1_r".   rewrite min_comm. apply min_1_l. Qed.
 
 
 
 Lemma succ_max_distr n m : succ (max n m) = max (succ n) (succ m).
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_max_distr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_max_distr".  
 symmetry. apply max_monotone.
 intros x x'. apply succ_le_mono.
 Qed.
 
 Lemma succ_min_distr n m : succ (min n m) = min (succ n) (succ m).
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_min_distr". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_min_distr".  
 symmetry. apply min_monotone.
 intros x x'. apply succ_le_mono.
 Qed.
 
 Lemma add_max_distr_l n m p : max (p + n) (p + m) = p + max n m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_max_distr_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_max_distr_l".  
 apply max_monotone. intros x x'. apply add_le_mono_l.
 Qed.
 
 Lemma add_max_distr_r n m p : max (n + p) (m + p) = max n m + p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_max_distr_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_max_distr_r".  
 rewrite 3 (add_comm _ p). apply add_max_distr_l.
 Qed.
 
 Lemma add_min_distr_l n m p : min (p + n) (p + m) = p + min n m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_min_distr_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_min_distr_l".  
 apply min_monotone. intros x x'. apply add_le_mono_l.
 Qed.
 
 Lemma add_min_distr_r n m p : min (n + p) (m + p) = min n m + p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.add_min_distr_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.add_min_distr_r".  
 rewrite 3 (add_comm _ p). apply add_min_distr_l.
 Qed.
 
 Lemma mul_max_distr_l n m p : max (p * n) (p * m) = p * max n m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_max_distr_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_max_distr_l".  
 apply max_monotone. intros x x'. apply mul_le_mono_l.
 Qed.
 
 Lemma mul_max_distr_r n m p : max (n * p) (m * p) = max n m * p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_max_distr_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_max_distr_r".  
 rewrite 3 (mul_comm _ p). apply mul_max_distr_l.
 Qed.
 
 Lemma mul_min_distr_l n m p : min (p * n) (p * m) = p * min n m.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_min_distr_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_min_distr_l".  
 apply min_monotone. intros x x'. apply mul_le_mono_l.
 Qed.
 
 Lemma mul_min_distr_r n m p : min (n * p) (m * p) = min n m * p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.mul_min_distr_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.mul_min_distr_r".  
 rewrite 3 (mul_comm _ p). apply mul_min_distr_l.
 Qed.
 
@@ -1584,7 +1584,7 @@ Lemma iter_op_succ : forall A (op:A->A->A),
 (forall x y z, op x (op y z) = op (op x y) z) ->
 forall p a,
 iter_op op (succ p) a = op a (iter_op op p a).
-Proof. hammer_hook "BinPos" "BinPos.Pos.iter_op_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.iter_op_succ".  
 induction p; simpl; intros; trivial.
 rewrite H. apply IHp.
 Qed.
@@ -1592,17 +1592,17 @@ Qed.
 
 
 Lemma of_nat_succ (n:nat) : of_succ_nat n = of_nat (S n).
-Proof. hammer_hook "BinPos" "BinPos.Pos.of_nat_succ". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.of_nat_succ".  
 induction n. trivial. simpl. f_equal. now rewrite IHn.
 Qed.
 
 Lemma pred_of_succ_nat (n:nat) : pred (of_succ_nat n) = of_nat n.
-Proof. hammer_hook "BinPos" "BinPos.Pos.pred_of_succ_nat". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.pred_of_succ_nat".  
 destruct n. trivial. simpl pred. rewrite pred_succ. apply of_nat_succ.
 Qed.
 
 Lemma succ_of_nat (n:nat) : n<>O -> succ (of_nat n) = of_succ_nat n.
-Proof. hammer_hook "BinPos" "BinPos.Pos.succ_of_nat". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.succ_of_nat".  
 rewrite of_nat_succ. destruct n; trivial. now destruct 1.
 Qed.
 
@@ -1615,7 +1615,7 @@ Inductive SqrtSpec : positive*mask -> positive -> Prop :=
 Lemma sqrtrem_step_spec f g p x :
 (f=xO \/ f=xI) -> (g=xO \/ g=xI) ->
 SqrtSpec p x -> SqrtSpec (sqrtrem_step f g p) (g (f x)).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sqrtrem_step_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sqrtrem_step_spec".  
 intros Hf Hg [ s _ -> | s r _ -> Hr ].
 
 unfold sqrtrem_step.
@@ -1642,7 +1642,7 @@ constructor. now rewrite Hfg, square_xO. apply lt_succ_r, GT.
 Qed.
 
 Lemma sqrtrem_spec p : SqrtSpec (sqrtrem p) p.
-Proof. hammer_hook "BinPos" "BinPos.Pos.sqrtrem_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sqrtrem_spec".  
 revert p. fix 1.
 destruct p; try destruct p; try (constructor; easy);
 apply sqrtrem_step_spec; auto.
@@ -1650,7 +1650,7 @@ Qed.
 
 Lemma sqrt_spec p :
 let s := sqrt p in s*s <= p < (succ s)*(succ s).
-Proof. hammer_hook "BinPos" "BinPos.Pos.sqrt_spec". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.sqrt_spec".  
 simpl.
 assert (H:=sqrtrem_spec p).
 unfold sqrt in *. destruct sqrtrem as (s,rm); simpl.
@@ -1668,7 +1668,7 @@ Qed.
 
 
 Lemma divide_add_cancel_l p q r : (p | r) -> (p | q + r) -> (p | q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.divide_add_cancel_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.divide_add_cancel_l".  
 intros (s,Hs) (t,Ht).
 exists (t-s).
 rewrite mul_sub_distr_r.
@@ -1680,7 +1680,7 @@ apply lt_add_r.
 Qed.
 
 Lemma divide_xO_xI p q r : (p | q~0) -> (p | r~1) -> (p | q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.divide_xO_xI". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.divide_xO_xI".  
 intros (s,Hs) (t,Ht).
 destruct p.
 destruct s; try easy. simpl in Hs. destr_eq Hs. now exists s.
@@ -1689,20 +1689,20 @@ exists q; now rewrite mul_1_r.
 Qed.
 
 Lemma divide_xO_xO p q : (p~0|q~0) <-> (p|q).
-Proof. hammer_hook "BinPos" "BinPos.Pos.divide_xO_xO". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.divide_xO_xO".  
 split; intros (r,H); simpl in *.
 rewrite mul_xO_r in H. destr_eq H. now exists r.
 exists r; simpl. rewrite mul_xO_r. f_equal; auto.
 Qed.
 
 Lemma divide_mul_l p q r : (p|q) -> (p|q*r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.divide_mul_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.divide_mul_l".  
 intros (s,H). exists (s*r).
 rewrite <- mul_assoc, (mul_comm r p), mul_assoc. now f_equal.
 Qed.
 
 Lemma divide_mul_r p q r : (p|r) -> (p|q*r).
-Proof. hammer_hook "BinPos" "BinPos.Pos.divide_mul_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.divide_mul_r".  
 rewrite mul_comm. apply divide_mul_l.
 Qed.
 
@@ -1710,7 +1710,7 @@ Qed.
 
 Lemma ggcdn_gcdn : forall n a b,
 fst (ggcdn n a b) = gcdn n a b.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ggcdn_gcdn". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ggcdn_gcdn".  
 induction n.
 simpl; auto.
 destruct a, b; simpl; auto; try case compare_spec; simpl; trivial;
@@ -1718,7 +1718,7 @@ rewrite <- IHn; destruct ggcdn as (g,(u,v)); simpl; auto.
 Qed.
 
 Lemma ggcd_gcd : forall a b, fst (ggcd a b) = gcd a b.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ggcd_gcd". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ggcd_gcd".  
 unfold ggcd, gcd. intros. apply ggcdn_gcdn.
 Qed.
 
@@ -1732,7 +1732,7 @@ end.
 Lemma ggcdn_correct_divisors : forall n a b,
 let '(g,(aa,bb)) := ggcdn n a b in
 a = g*aa /\ b = g*bb.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ggcdn_correct_divisors". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ggcdn_correct_divisors".  
 induction n.
 simpl; auto.
 destruct a, b; simpl; auto; try case compare_spec; try destr_pggcdn IHn.
@@ -1757,21 +1757,21 @@ Qed.
 Lemma ggcd_correct_divisors : forall a b,
 let '(g,(aa,bb)) := ggcd a b in
 a=g*aa /\ b=g*bb.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ggcd_correct_divisors". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ggcd_correct_divisors".  
 unfold ggcd. intros. apply ggcdn_correct_divisors.
 Qed.
 
 
 
 Lemma gcd_divide_l : forall a b, (gcd a b | a).
-Proof. hammer_hook "BinPos" "BinPos.Pos.gcd_divide_l". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gcd_divide_l".  
 intros a b. rewrite <- ggcd_gcd. generalize (ggcd_correct_divisors a b).
 destruct ggcd as (g,(aa,bb)); simpl. intros (H,_). exists aa.
 now rewrite mul_comm.
 Qed.
 
 Lemma gcd_divide_r : forall a b, (gcd a b | b).
-Proof. hammer_hook "BinPos" "BinPos.Pos.gcd_divide_r". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gcd_divide_r".  
 intros a b. rewrite <- ggcd_gcd. generalize (ggcd_correct_divisors a b).
 destruct ggcd as (g,(aa,bb)); simpl. intros (_,H). exists bb.
 now rewrite mul_comm.
@@ -1781,7 +1781,7 @@ Qed.
 
 Lemma gcdn_greatest : forall n a b, (size_nat a + size_nat b <= n)%nat ->
 forall p, (p|a) -> (p|b) -> (p|gcdn n a b).
-Proof. hammer_hook "BinPos" "BinPos.Pos.gcdn_greatest". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gcdn_greatest".  
 induction n.
 destruct a, b; simpl; inversion 1.
 destruct a, b; simpl; try case compare_spec; simpl; auto.
@@ -1828,7 +1828,7 @@ exists (gcdn n a b)~0. now rewrite mul_1_r.
 Qed.
 
 Lemma gcd_greatest : forall a b p, (p|a) -> (p|b) -> (p|gcd a b).
-Proof. hammer_hook "BinPos" "BinPos.Pos.gcd_greatest". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.gcd_greatest".  
 intros. apply gcdn_greatest; auto.
 Qed.
 
@@ -1837,7 +1837,7 @@ Qed.
 Lemma ggcd_greatest : forall a b,
 let (aa,bb) := snd (ggcd a b) in
 forall p, (p|aa) -> (p|bb) -> p=1.
-Proof. hammer_hook "BinPos" "BinPos.Pos.ggcd_greatest". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pos.ggcd_greatest".  
 intros. generalize (gcd_greatest a b) (ggcd_correct_divisors a b).
 rewrite <- ggcd_gcd. destruct ggcd as (g,(aa,bb)); simpl.
 intros H (EQa,EQb) p Hp1 Hp2; subst.
@@ -2071,28 +2071,28 @@ Notation Psize_pos_le := Pos.size_le (compat "8.3").
 
 
 Lemma Peqb_true_eq x y : Pos.eqb x y = true -> x=y.
-Proof. hammer_hook "BinPos" "BinPos.Peqb_true_eq". Restart.  apply Pos.eqb_eq. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Peqb_true_eq".   apply Pos.eqb_eq. Qed.
 Lemma Pcompare_eq_Gt p q : (p ?= q) = Gt <-> p > q.
-Proof. hammer_hook "BinPos" "BinPos.Pcompare_eq_Gt". Restart.  reflexivity. Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pcompare_eq_Gt".   reflexivity. Qed.
 Lemma Pplus_one_succ_r p : Pos.succ p = p + 1.
-Proof. hammer_hook "BinPos" "BinPos.Pplus_one_succ_r". Restart. exact ((eq_sym (Pos.add_1_r p))). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pplus_one_succ_r".  exact ((eq_sym (Pos.add_1_r p))). Qed.
 Lemma Pplus_one_succ_l p : Pos.succ p = 1 + p.
-Proof. hammer_hook "BinPos" "BinPos.Pplus_one_succ_l". Restart. exact ((eq_sym (Pos.add_1_l p))). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pplus_one_succ_l".  exact ((eq_sym (Pos.add_1_l p))). Qed.
 Lemma Pcompare_refl p : Pos.compare_cont Eq p p = Eq.
-Proof. hammer_hook "BinPos" "BinPos.Pcompare_refl". Restart. exact ((Pos.compare_cont_refl p Eq)). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pcompare_refl".  exact ((Pos.compare_cont_refl p Eq)). Qed.
 Lemma Pcompare_Eq_eq : forall p q, Pos.compare_cont Eq p q = Eq -> p = q.
-Proof. hammer_hook "BinPos" "BinPos.Pcompare_Eq_eq". Restart. exact (Pos.compare_eq). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Pcompare_Eq_eq".  exact (Pos.compare_eq). Qed.
 Lemma ZC4 p q : Pos.compare_cont Eq p q = CompOpp (Pos.compare_cont Eq q p).
-Proof. hammer_hook "BinPos" "BinPos.ZC4". Restart. exact ((Pos.compare_antisym q p)). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.ZC4".  exact ((Pos.compare_antisym q p)). Qed.
 Lemma Ppred_minus p : Pos.pred p = p - 1.
-Proof. hammer_hook "BinPos" "BinPos.Ppred_minus". Restart. exact ((eq_sym (Pos.sub_1_r p))). Qed.
+Proof. try hammer_hook "BinPos" "BinPos.Ppred_minus".  exact ((eq_sym (Pos.sub_1_r p))). Qed.
 
 Lemma Pminus_mask_Gt p q :
 p > q ->
 exists h : positive,
 Pos.sub_mask p q = IsPos h /\
 q + h = p /\ (h = 1 \/ Pos.sub_mask_carry p q = IsPos (Pos.pred h)).
-Proof. hammer_hook "BinPos" "BinPos.Pminus_mask_Gt". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pminus_mask_Gt".  
 intros H. apply Pos.gt_lt in H.
 destruct (Pos.sub_mask_pos p q H) as (r & U).
 exists r. repeat split; trivial.
@@ -2102,7 +2102,7 @@ rewrite Pos.sub_mask_carry_spec, U. destruct r; trivial. now elim NE.
 Qed.
 
 Lemma Pplus_minus : forall p q, p > q -> q+(p-q) = p.
-Proof. hammer_hook "BinPos" "BinPos.Pplus_minus". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Pplus_minus".  
 intros. rewrite Pos.add_comm. now apply Pos.sub_add, Pos.gt_lt.
 Qed.
 
@@ -2111,7 +2111,7 @@ Qed.
 
 
 Lemma Dcompare : forall r:comparison, r = Eq \/ r = Lt \/ r = Gt.
-Proof. hammer_hook "BinPos" "BinPos.Dcompare". Restart. 
+Proof. try hammer_hook "BinPos" "BinPos.Dcompare".  
 destruct r; auto.
 Qed.
 

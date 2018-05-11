@@ -39,10 +39,10 @@ Definition le := Qle.
 Definition compare := Qcompare.
 
 Instance lt_strorder : StrictOrder Qlt.
-Proof. hammer_hook "QOrderedType" "QOrderedType.Q_as_OT.lt_strorder". Restart.  split; [ exact Qlt_irrefl | exact Qlt_trans ]. Qed.
+Proof. try hammer_hook "QOrderedType" "QOrderedType.Q_as_OT.lt_strorder".   split; [ exact Qlt_irrefl | exact Qlt_trans ]. Qed.
 
 Instance lt_compat : Proper (Qeq==>Qeq==>iff) Qlt.
-Proof. hammer_hook "QOrderedType" "QOrderedType.Q_as_OT.lt_compat". Restart.  auto with *. Qed.
+Proof. try hammer_hook "QOrderedType" "QOrderedType.Q_as_OT.lt_compat".   auto with *. Qed.
 
 Definition le_lteq := Qle_lteq.
 Definition compare_spec := Qcompare_spec.

@@ -26,7 +26,7 @@ Definition Boule (x:R) (r:posreal) (y:R) : Prop := Rabs (y - x) < r.
 
 Lemma Boule_convex : forall c d x y z,
 Boule c d x -> Boule c d y -> x <= z <= y -> Boule c d z.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.Boule_convex". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.Boule_convex".  
 intros c d x y z bx b_y intz.
 unfold Boule in bx, b_y; apply Rabs_def2 in bx;
 apply Rabs_def2 in b_y; apply Rabs_def1;
@@ -36,7 +36,7 @@ Qed.
 
 Definition boule_of_interval x y (h : x < y) :
 {c :R & {r : posreal | c - r = x /\ c + r = y}}.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.boule_of_interval". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.boule_of_interval".  
 exists ((x + y)/2).
 assert (radius : 0 < (y - x)/2).
 unfold Rdiv; apply Rmult_lt_0_compat.
@@ -48,7 +48,7 @@ Qed.
 
 Definition boule_in_interval x y z (h : x < z < y) :
 {c : R & {r | Boule c r z /\  x < c - r /\ c + r < y}}.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.boule_in_interval". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.boule_in_interval".  
 assert (cmp : x * /2 + z * /2 < z * /2 + y * /2).
 destruct h as [h1 h2].
 rewrite Rplus_comm; apply Rplus_lt_compat_l, Rmult_lt_compat_r.
@@ -75,7 +75,7 @@ Qed.
 Lemma Ball_in_inter : forall c1 c2 r1 r2 x,
 Boule c1 r1 x -> Boule c2 r2 x ->
 {r3 : posreal | forall y, Boule x r3 y -> Boule c1 r1 y /\ Boule c2 r2 y}.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.Ball_in_inter". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.Ball_in_inter".  
 intros c1 c2 [r1 r1p] [r2 r2p] x; unfold Boule; simpl; intros in1 in2.
 assert (Rmax (c1 - r1)(c2 - r2) < x).
 apply Rmax_lub_lt;[revert in1 | revert in2]; intros h;
@@ -120,7 +120,7 @@ ring.
 Qed.
 
 Lemma Boule_center : forall x r, Boule x r x.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.Boule_center". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.Boule_center".  
 intros x [r rpos]; unfold Boule, Rminus; simpl; rewrite Rplus_opp_r.
 rewrite Rabs_pos_eq;[assumption | apply Rle_refl].
 Qed.
@@ -152,7 +152,7 @@ Lemma CVN_CVU :
 forall (fn:nat -> R -> R)
 (cv:forall x:R, {l:R | Un_cv (fun N:nat => SP fn N x) l })
 (r:posreal), CVN_r fn r -> CVU (fun n:nat => SP fn n) (SFL fn cv) 0 r.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.CVN_CVU". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.CVN_CVU".  
 intros; unfold CVU; intros.
 unfold CVN_r in X.
 elim X; intros An X0.
@@ -199,7 +199,7 @@ forall (fn:nat -> R -> R) (f:R -> R) (x:R) (r:posreal),
 CVU fn f x r ->
 (forall (n:nat) (y:R), Boule x r y -> continuity_pt (fn n) y) ->
 forall y:R, Boule x r y -> continuity_pt f y.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.CVU_continuity". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.CVU_continuity".  
 intros; unfold continuity_pt; unfold continue_in;
 unfold limit1_in; unfold limit_in;
 simpl; unfold R_dist; intros.
@@ -280,7 +280,7 @@ Lemma continuity_pt_finite_SF :
 forall (fn:nat -> R -> R) (N:nat) (x:R),
 (forall n:nat, (n <= N)%nat -> continuity_pt (fn n) x) ->
 continuity_pt (fun y:R => sum_f_R0 (fun k:nat => fn k y) N) x.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.continuity_pt_finite_SF". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.continuity_pt_finite_SF".  
 intros; induction  N as [| N HrecN].
 simpl; apply (H 0%nat); apply le_n.
 simpl;
@@ -302,7 +302,7 @@ forall (fn:nat -> R -> R)
 CVN_r fn r ->
 (forall (n:nat) (y:R), Boule 0 r y -> continuity_pt (fn n) y) ->
 forall y:R, Boule 0 r y -> continuity_pt (SFL fn cv) y.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.SFL_continuity_pt". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.SFL_continuity_pt".  
 intros; eapply CVU_continuity.
 apply CVN_CVU.
 apply X.
@@ -316,7 +316,7 @@ Lemma SFL_continuity :
 forall (fn:nat -> R -> R)
 (cv:forall x:R, { l:R | Un_cv (fun N:nat => SP fn N x) l }),
 CVN_R fn -> (forall n:nat, continuity (fn n)) -> continuity (SFL fn cv).
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.SFL_continuity". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.SFL_continuity".  
 intros; unfold continuity; intro.
 cut (0 < Rabs x + 1);
 [ intro | apply Rplus_le_lt_0_compat; [ apply Rabs_pos | apply Rlt_0_1 ] ].
@@ -334,7 +334,7 @@ Qed.
 Lemma CVN_R_CVS :
 forall fn:nat -> R -> R,
 CVN_R fn -> forall x:R, { l:R | Un_cv (fun N:nat => SP fn N x) l }.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.CVN_R_CVS". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.CVN_R_CVS".  
 intros; apply R_complete.
 unfold SP; set (An := fun N:nat => fn N x).
 change (Cauchy_crit_series An).
@@ -371,7 +371,7 @@ Qed.
 
 Lemma CVU_cv : forall f g c d, CVU f g c d ->
 forall x, Boule c d x -> Un_cv (fun n => f n x) (g x).
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.CVU_cv". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.CVU_cv".  
 intros f g c d cvu x bx eps ep; destruct (cvu eps ep) as [N Pn].
 exists N; intros n nN; rewrite R_dist_sym; apply Pn; assumption.
 Qed.
@@ -380,7 +380,7 @@ Qed.
 Lemma CVU_ext_lim :
 forall f g1 g2 c d, CVU f g1 c d -> (forall x, Boule c d x -> g1 x = g2 x) ->
 CVU f g2 c d.
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.CVU_ext_lim". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.CVU_ext_lim".  
 intros f g1 g2 c d cvu q eps ep; destruct (cvu _ ep) as [N Pn].
 exists N; intros; rewrite <- q; auto.
 Qed.
@@ -393,7 +393,7 @@ CVU f' g' c d ->
 (forall x, Boule c d x -> Un_cv (fun n => f n x) (g x)) ->
 (forall n x, Boule c d x -> derivable_pt_lim (f n) x (f' n x)) ->
 forall x, Boule c d x -> derivable_pt_lim g x (g' x).
-Proof. hammer_hook "PSeries_reg" "PSeries_reg.CVU_derivable". Restart. 
+Proof. try hammer_hook "PSeries_reg" "PSeries_reg.CVU_derivable".  
 intros f f' g g' c d cvu cvp dff' x bx.
 set (rho_ :=
 fun n y =>

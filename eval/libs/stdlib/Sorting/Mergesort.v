@@ -83,7 +83,7 @@ end.
 
 Theorem Sorted_merge : forall l1 l2,
 Sorted l1 -> Sorted l2 -> Sorted (merge l1 l2).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Sorted_merge". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Sorted_merge".  
 induction l1; induction l2; intros; simpl; auto.
 destruct (a <=? a0) eqn:Heq1.
 invert H.
@@ -101,7 +101,7 @@ destruct (a <=? b); constructor; auto.
 Qed.
 
 Theorem Permuted_merge : forall l1 l2, Permutation (l1++l2) (merge l1 l2).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Permuted_merge". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Permuted_merge".  
 induction l1; simpl merge; intro.
 assert (forall l, (fix merge_aux (l0 : list t) : list t := l0) l = l)
 as -> by (destruct l; trivial).
@@ -115,7 +115,7 @@ Qed.
 
 Theorem Sorted_merge_list_to_stack : forall stack l,
 SortedStack stack -> Sorted l -> SortedStack (merge_list_to_stack stack l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Sorted_merge_list_to_stack". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Sorted_merge_list_to_stack".  
 induction stack as [|[|]]; intros; simpl.
 auto.
 apply IHstack. destruct H as (_,H1). fold SortedStack in H1. auto.
@@ -125,7 +125,7 @@ Qed.
 
 Theorem Permuted_merge_list_to_stack : forall stack l,
 Permutation (l ++ flatten_stack stack) (flatten_stack (merge_list_to_stack stack l)).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Permuted_merge_list_to_stack". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Permuted_merge_list_to_stack".  
 induction stack as [|[]]; simpl; intros.
 reflexivity.
 rewrite app_assoc.
@@ -140,7 +140,7 @@ Qed.
 
 Theorem Sorted_merge_stack : forall stack,
 SortedStack stack -> Sorted (merge_stack stack).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Sorted_merge_stack". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Sorted_merge_stack".  
 induction stack as [|[|]]; simpl; intros.
 constructor; auto.
 apply Sorted_merge; tauto.
@@ -149,7 +149,7 @@ Qed.
 
 Theorem Permuted_merge_stack : forall stack,
 Permutation (flatten_stack stack) (merge_stack stack).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Permuted_merge_stack". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Permuted_merge_stack".  
 induction stack as [|[]]; simpl.
 trivial.
 transitivity (l ++ merge_stack stack).
@@ -160,7 +160,7 @@ Qed.
 
 Theorem Sorted_iter_merge : forall stack l,
 SortedStack stack -> Sorted (iter_merge stack l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Sorted_iter_merge". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Sorted_iter_merge".  
 intros stack l H; induction l in stack, H |- *; simpl.
 auto using Sorted_merge_stack.
 assert (Sorted [a]) by constructor.
@@ -169,7 +169,7 @@ Qed.
 
 Theorem Permuted_iter_merge : forall l stack,
 Permutation (flatten_stack stack ++ l) (iter_merge stack l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Permuted_iter_merge". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Permuted_iter_merge".  
 induction l; simpl; intros.
 rewrite app_nil_r. apply Permuted_merge_stack.
 change (a::l) with ([a]++l).
@@ -183,21 +183,21 @@ apply IHl.
 Qed.
 
 Theorem Sorted_sort : forall l, Sorted (sort l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Sorted_sort". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Sorted_sort".  
 intro; apply Sorted_iter_merge. constructor.
 Qed.
 
 Corollary LocallySorted_sort : forall l, Sorted.Sorted leb (sort l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.LocallySorted_sort". Restart.  intro; eapply Sorted_LocallySorted_iff, Sorted_sort; auto. Qed.
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.LocallySorted_sort".   intro; eapply Sorted_LocallySorted_iff, Sorted_sort; auto. Qed.
 
 Theorem Permuted_sort : forall l, Permutation l (sort l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.Permuted_sort". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.Permuted_sort".  
 intro; apply (Permuted_iter_merge l []).
 Qed.
 
 Corollary StronglySorted_sort : forall l,
 Transitive leb -> StronglySorted leb (sort l).
-Proof. hammer_hook "Mergesort" "Mergesort.Sort.StronglySorted_sort". Restart.  auto using Sorted_StronglySorted, LocallySorted_sort. Qed.
+Proof. try hammer_hook "Mergesort" "Mergesort.Sort.StronglySorted_sort".   auto using Sorted_StronglySorted, LocallySorted_sort. Qed.
 
 End Sort.
 
@@ -213,7 +213,7 @@ match x, y with
 end.
 Infix "<=?" := leb (at level 35).
 Theorem leb_total : forall a1 a2, a1 <=? a2 \/ a2 <=? a1.
-Proof. hammer_hook "Mergesort" "Mergesort.NatOrder.leb_total". Restart. 
+Proof. try hammer_hook "Mergesort" "Mergesort.NatOrder.leb_total".  
 induction a1; destruct a2; simpl; auto.
 Qed.
 End NatOrder.

@@ -26,7 +26,7 @@ Module Eq_rect_eq.
 Lemma eq_rect_eq :
 forall (U:Type) (p:U) (Q:U -> Type) (x:Q p) (h:p = p),
 x = eq_rect p Q x p h.
-Proof. hammer_hook "ProofIrrelevanceFacts" "ProofIrrelevanceFacts.ProofIrrelevanceTheory.Eq_rect_eq.eq_rect_eq". Restart. 
+Proof. try hammer_hook "ProofIrrelevanceFacts" "ProofIrrelevanceFacts.ProofIrrelevanceTheory.Eq_rect_eq.eq_rect_eq".  
 intros; rewrite M.proof_irrelevance with (p1:=h) (p2:=eq_refl p).
 reflexivity.
 Qed.
@@ -44,7 +44,7 @@ Scheme eq_indd := Induction for eq Sort Prop.
 Lemma subset_eq_compat :
 forall (U:Type) (P:U->Prop) (x y:U) (p:P x) (q:P y),
 x = y -> exist P x p = exist P y q.
-Proof. hammer_hook "ProofIrrelevanceFacts" "ProofIrrelevanceFacts.ProofIrrelevanceTheory.subset_eq_compat". Restart. 
+Proof. try hammer_hook "ProofIrrelevanceFacts" "ProofIrrelevanceFacts.ProofIrrelevanceTheory.subset_eq_compat".  
 intros.
 rewrite M.proof_irrelevance with (p1:=q) (p2:=eq_rect x P p y H).
 elim H using eq_indd.
@@ -54,7 +54,7 @@ Qed.
 Lemma subsetT_eq_compat :
 forall (U:Type) (P:U->Prop) (x y:U) (p:P x) (q:P y),
 x = y -> existT P x p = existT P y q.
-Proof. hammer_hook "ProofIrrelevanceFacts" "ProofIrrelevanceFacts.ProofIrrelevanceTheory.subsetT_eq_compat". Restart. 
+Proof. try hammer_hook "ProofIrrelevanceFacts" "ProofIrrelevanceFacts.ProofIrrelevanceTheory.subsetT_eq_compat".  
 intros.
 rewrite M.proof_irrelevance with (p1:=q) (p2:=eq_rect x P p y H).
 elim H using eq_indd.

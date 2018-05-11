@@ -18,7 +18,7 @@ Local Open Scope R_scope.
 Lemma tech1 :
 forall (An:nat -> R) (N:nat),
 (forall n:nat, (n <= N)%nat -> 0 < An n) -> 0 < sum_f_R0 An N.
-Proof. hammer_hook "PartSum" "PartSum.tech1". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech1".  
 intros; induction  N as [| N HrecN].
 simpl; apply H; apply le_n.
 simpl; apply Rplus_lt_0_compat.
@@ -32,7 +32,7 @@ forall (An:nat -> R) (m n:nat),
 (m < n)%nat ->
 sum_f_R0 An n =
 sum_f_R0 An m + sum_f_R0 (fun i:nat => An (S m + i)%nat) (n - S m).
-Proof. hammer_hook "PartSum" "PartSum.tech2". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech2".  
 intros; induction  n as [| n Hrecn].
 elim (lt_n_O _ H).
 cut ((m < n)%nat \/ m = n).
@@ -65,7 +65,7 @@ Qed.
 Lemma tech3 :
 forall (k:R) (N:nat),
 k <> 1 -> sum_f_R0 (fun i:nat => k ^ i) N = (1 - k ^ S N) / (1 - k).
-Proof. hammer_hook "PartSum" "PartSum.tech3". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech3".  
 intros; cut (1 - k <> 0).
 intro; induction  N as [| N HrecN].
 simpl; rewrite Rmult_1_r; unfold Rdiv; rewrite <- Rinv_r_sym.
@@ -92,7 +92,7 @@ Qed.
 Lemma tech4 :
 forall (An:nat -> R) (k:R) (N:nat),
 0 <= k -> (forall i:nat, An (S i) < k * An i) -> An N <= An 0%nat * k ^ N.
-Proof. hammer_hook "PartSum" "PartSum.tech4". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech4".  
 intros; induction  N as [| N HrecN].
 simpl; right; ring.
 apply Rle_trans with (k * An N).
@@ -107,7 +107,7 @@ Qed.
 
 Lemma tech5 :
 forall (An:nat -> R) (N:nat), sum_f_R0 An (S N) = sum_f_R0 An N + An (S N).
-Proof. hammer_hook "PartSum" "PartSum.tech5". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech5".  
 intros; reflexivity.
 Qed.
 
@@ -116,7 +116,7 @@ forall (An:nat -> R) (k:R) (N:nat),
 0 <= k ->
 (forall i:nat, An (S i) < k * An i) ->
 sum_f_R0 An N <= An 0%nat * sum_f_R0 (fun i:nat => k ^ i) N.
-Proof. hammer_hook "PartSum" "PartSum.tech6". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech6".  
 intros; induction  N as [| N HrecN].
 simpl; right; ring.
 apply Rle_trans with (An 0%nat * sum_f_R0 (fun i:nat => k ^ i) N + An (S N)).
@@ -128,7 +128,7 @@ apply tech4; assumption.
 Qed.
 
 Lemma tech7 : forall r1 r2:R, r1 <> 0 -> r2 <> 0 -> r1 <> r2 -> / r1 <> / r2.
-Proof. hammer_hook "PartSum" "PartSum.tech7". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech7".  
 intros; red; intro.
 assert (H3 := Rmult_eq_compat_l r1 _ _ H2).
 rewrite <- Rinv_r_sym in H3; [ idtac | assumption ].
@@ -142,7 +142,7 @@ Lemma tech11 :
 forall (An Bn Cn:nat -> R) (N:nat),
 (forall i:nat, An i = Bn i - Cn i) ->
 sum_f_R0 An N = sum_f_R0 Bn N - sum_f_R0 Cn N.
-Proof. hammer_hook "PartSum" "PartSum.tech11". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech11".  
 intros; induction  N as [| N HrecN].
 simpl; apply H.
 do 3 rewrite tech5; rewrite HrecN; rewrite (H (S N)); ring.
@@ -152,7 +152,7 @@ Lemma tech12 :
 forall (An:nat -> R) (x l:R),
 Un_cv (fun N:nat => sum_f_R0 (fun i:nat => An i * x ^ i) N) l ->
 Pser An x l.
-Proof. hammer_hook "PartSum" "PartSum.tech12". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.tech12".  
 intros; unfold Pser; unfold infinite_sum; unfold Un_cv in H;
 assumption.
 Qed.
@@ -160,7 +160,7 @@ Qed.
 Lemma scal_sum :
 forall (An:nat -> R) (N:nat) (x:R),
 x * sum_f_R0 An N = sum_f_R0 (fun i:nat => An i * x) N.
-Proof. hammer_hook "PartSum" "PartSum.scal_sum". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.scal_sum".  
 intros; induction  N as [| N HrecN].
 simpl; ring.
 do 2 rewrite tech5.
@@ -171,7 +171,7 @@ Lemma decomp_sum :
 forall (An:nat -> R) (N:nat),
 (0 < N)%nat ->
 sum_f_R0 An N = An 0%nat + sum_f_R0 (fun i:nat => An (S i)) (pred N).
-Proof. hammer_hook "PartSum" "PartSum.decomp_sum". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.decomp_sum".  
 intros; induction  N as [| N HrecN].
 elim (lt_irrefl _ H).
 cut ((0 < N)%nat \/ N = 0%nat).
@@ -194,7 +194,7 @@ Qed.
 Lemma plus_sum :
 forall (An Bn:nat -> R) (N:nat),
 sum_f_R0 (fun i:nat => An i + Bn i) N = sum_f_R0 An N + sum_f_R0 Bn N.
-Proof. hammer_hook "PartSum" "PartSum.plus_sum". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.plus_sum".  
 intros; induction  N as [| N HrecN].
 simpl; ring.
 do 3 rewrite tech5; rewrite HrecN; ring.
@@ -204,7 +204,7 @@ Lemma sum_eq :
 forall (An Bn:nat -> R) (N:nat),
 (forall i:nat, (i <= N)%nat -> An i = Bn i) ->
 sum_f_R0 An N = sum_f_R0 Bn N.
-Proof. hammer_hook "PartSum" "PartSum.sum_eq". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_eq".  
 intros; induction  N as [| N HrecN].
 simpl; apply H; apply le_n.
 do 2 rewrite tech5; rewrite HrecN.
@@ -216,7 +216,7 @@ Qed.
 Lemma uniqueness_sum :
 forall (An:nat -> R) (l1 l2:R),
 infinite_sum An l1 -> infinite_sum An l2 -> l1 = l2.
-Proof. hammer_hook "PartSum" "PartSum.uniqueness_sum". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.uniqueness_sum".  
 unfold infinite_sum; intros.
 case (Req_dec l1 l2); intro.
 assumption.
@@ -254,7 +254,7 @@ Qed.
 Lemma minus_sum :
 forall (An Bn:nat -> R) (N:nat),
 sum_f_R0 (fun i:nat => An i - Bn i) N = sum_f_R0 An N - sum_f_R0 Bn N.
-Proof. hammer_hook "PartSum" "PartSum.minus_sum". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.minus_sum".  
 intros; induction  N as [| N HrecN].
 simpl; ring.
 do 3 rewrite tech5; rewrite HrecN; ring.
@@ -264,7 +264,7 @@ Lemma sum_decomposition :
 forall (An:nat -> R) (N:nat),
 sum_f_R0 (fun l:nat => An (2 * l)%nat) (S N) +
 sum_f_R0 (fun l:nat => An (S (2 * l))) N = sum_f_R0 An (2 * S N).
-Proof. hammer_hook "PartSum" "PartSum.sum_decomposition". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_decomposition".  
 intros.
 induction  N as [| N HrecN].
 simpl; ring.
@@ -282,7 +282,7 @@ Lemma sum_Rle :
 forall (An Bn:nat -> R) (N:nat),
 (forall n:nat, (n <= N)%nat -> An n <= Bn n) ->
 sum_f_R0 An N <= sum_f_R0 Bn N.
-Proof. hammer_hook "PartSum" "PartSum.sum_Rle". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_Rle".  
 intros.
 induction  N as [| N HrecN].
 simpl; apply H.
@@ -302,7 +302,7 @@ Qed.
 Lemma Rsum_abs :
 forall (An:nat -> R) (N:nat),
 Rabs (sum_f_R0 An N) <= sum_f_R0 (fun l:nat => Rabs (An l)) N.
-Proof. hammer_hook "PartSum" "PartSum.Rsum_abs". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.Rsum_abs".  
 intros.
 induction  N as [| N HrecN].
 simpl.
@@ -317,7 +317,7 @@ Qed.
 
 Lemma sum_cte :
 forall (x:R) (N:nat), sum_f_R0 (fun _:nat => x) N = x * INR (S N).
-Proof. hammer_hook "PartSum" "PartSum.sum_cte". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_cte".  
 intros.
 induction  N as [| N HrecN].
 simpl; ring.
@@ -329,7 +329,7 @@ Qed.
 Lemma sum_growing :
 forall (An Bn:nat -> R) (N:nat),
 (forall n:nat, An n <= Bn n) -> sum_f_R0 An N <= sum_f_R0 Bn N.
-Proof. hammer_hook "PartSum" "PartSum.sum_growing". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_growing".  
 intros.
 induction  N as [| N HrecN].
 simpl; apply H.
@@ -344,7 +344,7 @@ Qed.
 Lemma Rabs_triang_gen :
 forall (An:nat -> R) (N:nat),
 Rabs (sum_f_R0 An N) <= sum_f_R0 (fun i:nat => Rabs (An i)) N.
-Proof. hammer_hook "PartSum" "PartSum.Rabs_triang_gen". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.Rabs_triang_gen".  
 intros.
 induction  N as [| N HrecN].
 simpl.
@@ -360,7 +360,7 @@ Qed.
 Lemma cond_pos_sum :
 forall (An:nat -> R) (N:nat),
 (forall n:nat, 0 <= An n) -> 0 <= sum_f_R0 An N.
-Proof. hammer_hook "PartSum" "PartSum.cond_pos_sum". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.cond_pos_sum".  
 intros.
 induction  N as [| N HrecN].
 simpl; apply H.
@@ -378,7 +378,7 @@ Cauchy_crit (fun N:nat => sum_f_R0 An N).
 Lemma cauchy_abs :
 forall An:nat -> R,
 Cauchy_crit_series (fun i:nat => Rabs (An i)) -> Cauchy_crit_series An.
-Proof. hammer_hook "PartSum" "PartSum.cauchy_abs". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.cauchy_abs".  
 unfold Cauchy_crit_series; unfold Cauchy_crit.
 intros.
 elim (H eps H0); intros.
@@ -446,7 +446,7 @@ Lemma cv_cauchy_1 :
 forall An:nat -> R,
 { l:R | Un_cv (fun N:nat => sum_f_R0 An N) l } ->
 Cauchy_crit_series An.
-Proof. hammer_hook "PartSum" "PartSum.cv_cauchy_1". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.cv_cauchy_1".  
 intros An (x,p).
 unfold Un_cv in p.
 unfold Cauchy_crit_series; unfold Cauchy_crit.
@@ -475,7 +475,7 @@ Lemma cv_cauchy_2 :
 forall An:nat -> R,
 Cauchy_crit_series An ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 An N) l }.
-Proof. hammer_hook "PartSum" "PartSum.cv_cauchy_2". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.cv_cauchy_2".  
 intros.
 apply R_complete.
 unfold Cauchy_crit_series in H.
@@ -486,7 +486,7 @@ Qed.
 Lemma sum_eq_R0 :
 forall (An:nat -> R) (N:nat),
 (forall n:nat, (n <= N)%nat -> An n = 0) -> sum_f_R0 An N = 0.
-Proof. hammer_hook "PartSum" "PartSum.sum_eq_R0". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_eq_R0".  
 intros; induction  N as [| N HrecN].
 simpl; apply H; apply le_n.
 rewrite tech5; rewrite HrecN;
@@ -502,7 +502,7 @@ Lemma sum_incr :
 forall (An:nat -> R) (N:nat) (l:R),
 Un_cv (fun n:nat => sum_f_R0 An n) l ->
 (forall n:nat, 0 <= An n) -> sum_f_R0 An N <= l.
-Proof. hammer_hook "PartSum" "PartSum.sum_incr". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_incr".  
 intros; destruct (total_order_T (sum_f_R0 An N) l) as [[Hlt|Heq]|Hgt].
 left; apply Hlt.
 right; apply Heq.
@@ -542,7 +542,7 @@ forall (An:nat -> R) (fn:nat -> R -> R) (x l1 l2:R),
 Un_cv (fun n:nat => SP fn n x) l1 ->
 Un_cv (fun n:nat => sum_f_R0 An n) l2 ->
 (forall n:nat, Rabs (fn n x) <= An n) -> Rabs l1 <= l2.
-Proof. hammer_hook "PartSum" "PartSum.sum_cv_maj". Restart. 
+Proof. try hammer_hook "PartSum" "PartSum.sum_cv_maj".  
 intros; destruct (total_order_T (Rabs l1) l2) as [[Hlt|Heq]|Hgt].
 left; apply Hlt.
 right; apply Heq.

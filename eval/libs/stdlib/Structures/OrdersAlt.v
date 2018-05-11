@@ -45,14 +45,14 @@ Include Update_DT O.
 Definition lt := O.lt.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.Update_OT.lt_strorder". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.Update_OT.lt_strorder".  
 split.
 intros x Hx. apply (O.lt_not_eq Hx); auto with *.
 exact O.lt_trans.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.Update_OT.lt_compat". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.Update_OT.lt_compat".  
 apply proper_sym_impl_iff_2; auto with *.
 intros x x' Hx y y' Hy H.
 assert (H0 : lt x' y).
@@ -73,7 +73,7 @@ match O.compare x y with
 end.
 
 Lemma compare_spec : forall x y, CompSpec eq lt x y (compare x y).
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.Update_OT.compare_spec". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.Update_OT.compare_spec".  
 intros; unfold compare; destruct O.compare; auto.
 Qed.
 
@@ -88,15 +88,15 @@ Include Backport_DT O.
 Definition lt := O.lt.
 
 Lemma lt_not_eq : forall x y, lt x y -> ~eq x y.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.Backport_OT.lt_not_eq". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.Backport_OT.lt_not_eq".  
 intros x y L E; rewrite E in L. apply (StrictOrder_Irreflexive y); auto.
 Qed.
 
 Lemma lt_trans : Transitive lt.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.Backport_OT.lt_trans". Restart.  apply O.lt_strorder. Qed.
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.Backport_OT.lt_trans".   apply O.lt_strorder. Qed.
 
 Definition compare : forall x y, Compare lt eq x y.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OrderedTypeAlt.compare". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OrderedTypeAlt.compare".  
 intros x y; destruct (CompSpec2Type (O.compare_spec x y));
 [apply EQ|apply LT|apply GT]; auto.
 Defined.
@@ -114,7 +114,7 @@ Definition eq x y := (x?=y) = Eq.
 Definition lt x y := (x?=y) = Lt.
 
 Instance eq_equiv : Equivalence eq.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.eq_equiv". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.eq_equiv".  
 split; red.
 
 unfold eq; intros x.
@@ -128,7 +128,7 @@ apply compare_trans.
 Qed.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.lt_strorder". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.lt_strorder".  
 split; repeat red; unfold lt; try apply compare_trans.
 intros x H.
 assert (eq x x) by reflexivity.
@@ -136,7 +136,7 @@ unfold eq in *; congruence.
 Qed.
 
 Lemma lt_eq : forall x y z, lt x y -> eq y z -> lt x z.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.lt_eq". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.lt_eq".  
 unfold lt, eq; intros x y z Hxy Hyz.
 destruct (compare x z) eqn:Hxz; auto.
 rewrite compare_sym, CompOpp_iff in Hyz. simpl in Hyz.
@@ -146,7 +146,7 @@ rewrite (compare_trans Hxy Hxz) in Hyz; discriminate.
 Qed.
 
 Lemma eq_lt : forall x y z, eq x y -> lt y z -> lt x z.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.eq_lt". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.eq_lt".  
 unfold lt, eq; intros x y z Hxy Hyz.
 destruct (compare x z) eqn:Hxz; auto.
 rewrite compare_sym, CompOpp_iff in Hxy. simpl in Hxy.
@@ -156,7 +156,7 @@ rewrite (compare_trans Hxz Hyz) in Hxy; discriminate.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.lt_compat". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.lt_compat".  
 apply proper_sym_impl_iff_2; auto with *.
 repeat red; intros.
 eapply lt_eq; eauto. eapply eq_lt; eauto. symmetry; auto.
@@ -165,7 +165,7 @@ Qed.
 Definition compare := O.compare.
 
 Lemma compare_spec : forall x y, CompSpec eq lt x y (compare x y).
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.compare_spec". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.compare_spec".  
 unfold eq, lt, compare; intros.
 destruct (O.compare x y) eqn:H; auto.
 apply CompGt.
@@ -173,7 +173,7 @@ rewrite compare_sym, H; auto.
 Qed.
 
 Definition eq_dec : forall x y, { eq x y } + { ~ eq x y }.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.eq_dec". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_from_Alt.eq_dec".  
 intros; unfold eq.
 case (x ?= y); [ left | right | right ]; auto; discriminate.
 Defined.
@@ -191,7 +191,7 @@ Infix "?=" := compare (at level 70, no associativity).
 
 Lemma compare_sym :
 forall x y, (y?=x) = CompOpp (x?=y).
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OrderedTypeAlt.compare_sym". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OrderedTypeAlt.compare_sym".  
 intros x y; unfold compare.
 destruct (compare_spec x y) as [U|U|U];
 destruct (compare_spec y x) as [V|V|V]; auto.
@@ -204,7 +204,7 @@ rewrite V in U. elim (StrictOrder_Irreflexive y); auto.
 Qed.
 
 Lemma compare_Eq : forall x y, compare x y = Eq <-> eq x y.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_to_Alt.compare_Eq". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_to_Alt.compare_Eq".  
 unfold compare.
 intros x y; destruct (compare_spec x y); intuition;
 try discriminate.
@@ -213,7 +213,7 @@ rewrite H0 in H. elim (StrictOrder_Irreflexive y); auto.
 Qed.
 
 Lemma compare_Lt : forall x y, compare x y = Lt <-> lt x y.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_to_Alt.compare_Lt". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_to_Alt.compare_Lt".  
 unfold compare.
 intros x y; destruct (compare_spec x y); intuition;
 try discriminate.
@@ -222,13 +222,13 @@ rewrite H in H0. elim (StrictOrder_Irreflexive x); auto.
 Qed.
 
 Lemma compare_Gt : forall x y, compare x y = Gt <-> lt y x.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OT_to_Alt.compare_Gt". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OT_to_Alt.compare_Gt".  
 intros x y. rewrite compare_sym, CompOpp_iff. apply compare_Lt.
 Qed.
 
 Lemma compare_trans :
 forall c x y z, (x?=y) = c -> (y?=z) = c -> (x?=z) = c.
-Proof. hammer_hook "OrdersAlt" "OrdersAlt.OrderedTypeAlt.compare_trans". Restart. 
+Proof. try hammer_hook "OrdersAlt" "OrdersAlt.OrderedTypeAlt.compare_trans".  
 intros c x y z.
 destruct c; unfold compare;
 rewrite ?compare_Eq, ?compare_Lt, ?compare_Gt;
