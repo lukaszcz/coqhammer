@@ -306,6 +306,84 @@ let eval (tm : coqterm) : coqvalue =
 (***************************************************************************************)
 (* Limited typechecking *)
 
+
+let rec check_bool args ctx tm =
+  let is_bool_tgt args ty =
+    let rec hlp args v =
+      match v with
+      | PROD(_, (_, ct, f)) ->
+          begin
+            match args with
+            | h :: args2 -> hlp args2 (f (lazy (eval h)))
+            | _ -> false
+          end
+      | FIX(_, v2) ->
+          hlp args (Lazy.force v2)
+      | N (TERM tm) ->
+          if args = [] then
+		  begin
+			if Lazy.force tm = Const "Prop" then true 
+			else false
+		  end
+          else false
+	  | N (CONST s) ->
+          if args = [] then
+		    s = "Coq.Init.Datatypes.bool"
+          else false	  
+	  | LAM (_, (_, ct, f)) ->
+          begin
+            match args with
+            | h :: args2 -> hlp args2 (f (lazy (eval h)))
+            | _ -> false
+          end
+      | _ -> false
+    in
+    hlp args (eval ty)
+  in
+  debug 4 (fun () -> print_header "check_bool" tm ctx);
+  match tm with
+  | Var(x) ->
+      begin
+        try is_bool_tgt args (List.assoc x ctx)
+        with Not_found ->
+          print_list (fun (name, _) -> print_string name) (List.rev ctx);
+          failwith ("check_bool: var not found:  [check_bool]" ^ x)
+      end
+  | Const(c) ->
+      begin
+        try is_bool_tgt args (coqdef_type (defhash_find c))
+        with _ -> false
+      end
+  | App(x, y) ->
+      check_bool (y :: args) ctx x
+  | Lam(vname, ty, body) ->
+      begin (* NOTE: the lambda case is incomplete, but this should be enough in practice *)
+        match args with
+        | _ :: args2 -> check_bool args2 ((vname, ty) :: ctx) body
+        | _ -> false
+      end
+  | Prod(vname, ty1, ty2) ->
+      if args = [] then
+        check_bool [] ((vname, ty1) :: ctx) ty2
+      else false
+  | Cast(v, ty2) -> is_bool_tgt args ty2
+  | Case(indname, matched_term, return_type, params_num, branches) ->
+	  (* Msg.info ("here in Case (_,_,_,_) match case [check_bool]  \n"); *)
+      (* NOTE: this is incorrect if `params_num' is smaller than the
+         number of arguments of the inductive type `indname' *)
+      is_bool_tgt args (App(return_type, matched_term))
+  | Fix(_, k, names, types, bodies) -> is_bool_tgt args (List.nth types k)
+  | Let(value, (name, ty, body)) -> check_bool args ctx (dsubst [(name, lazy (Cast(value, ty)))] body)
+  | SortProp | SortSet | SortType -> false
+  | Quant(_) | Equal(_) -> args = []
+  | _ -> failwith "check_bool"
+	  
+let check_bool ctx tm =
+  match tm with
+  | App(Const("~"), _) -> true
+  | App(App(Const(c), _), _) when is_bin_logop c -> true
+  | _ -> check_bool [] ctx tm
+
 let rec check_prop args ctx tm =
   let is_prop_tgt args ty =
     let rec hlp args v =
@@ -405,11 +483,31 @@ let check_type_target_is_prop ty =
     | FIX(_, v2) ->
       hlp (Lazy.force v2)
     | N (TERM tm) ->
-      Lazy.force tm = SortProp
+        Lazy.force tm = SortProp
     | _ ->
       false
   in
   hlp (eval ty)
+  
+let check_type_target_is_bool ty =
+  let rec hlp v =
+    match v with
+    | PROD(tm, (name, tm1, f)) -> hlp (f (lazy (N (VAR name))))
+    | LAM(tm, (name, tm1, f)) -> hlp (f (lazy (N (VAR name))))
+    | FIX(_, v2) -> hlp (Lazy.force v2)
+    | N (TERM tm) -> begin
+					   match Lazy.force tm with
+						   | Equal (c, Const ("Coq.Init.Datatypes.true")) -> (c, true)
+						   | _ ->  ((Lazy.force tm), false)
+					 end  
+	| N (CONST (c)) when (c = "Coq.Init.Datatypes.bool") -> 
+		 (Const c, true)
+	| N (CONST (c)) when c = "Coq.Init.Datatypes.is_true" -> 
+		  (Const c, true)
+    | _ -> (ty, false)	
+  in
+  hlp (eval ty)
+
 
 let check_type_target_is_type ty =
   let rec hlp v =
@@ -668,8 +766,8 @@ and lambda_lifting axname name fvars lvars1 tm =
   match body2 with
   | Fix(_) ->
     fix_lifting axname name fvars lvars body2
-  | Case(_) ->
-    case_lifting axname name fvars lvars body2
+  | Case(_) ->    
+       case_lifting axname name fvars lvars body2
   | _ ->
     let ax =
       mk_axiom axname
@@ -677,9 +775,17 @@ and lambda_lifting axname name fvars lvars1 tm =
            begin fun ctx ->
              let mk_eqv =
                if check_prop (List.rev_append lvars ctx) body2 then
-                 mk_equiv
-               else
-                 mk_eq
+			     begin
+                   mk_equiv
+				 end
+			   else if check_bool (List.rev_append lvars ctx) body2 then
+			     begin
+			       mk_eqb
+				 end
+			   else
+			     begin
+                   mk_eq
+				 end
              in
              let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
              in
@@ -771,9 +877,10 @@ and case_lifting axname0 name0 fvars lvars tm =
           try defhash_find indname with _ -> raise Not_found
         in
         assert (pnum = params_num);
-        if check_type_target_is_prop indty then
-          generic_match ()
+		if ( (fst (check_type_target_is_bool return_type) = SortProp) || indty = SortProp) then
+		   generic_match ()
         else
+		begin
           let fname = if name0 = "" then "$_case_" ^ indname ^ "_" ^ unique_id () else name0
           in
           let axname = if name0 = "" then fname else axname0
@@ -829,6 +936,8 @@ and case_lifting axname0 name0 fvars lvars tm =
                 let eqv =
                   if check_prop ctx cr then
                     mk_equiv case_repl2 cr
+				  else if check_bool ctx cr then
+				    mk_eqb case_repl2 cr
                   else
                     mk_eq case_repl2 cr
                 in
@@ -839,6 +948,7 @@ and case_lifting axname0 name0 fvars lvars tm =
             (mk_inversion params) indname axname fvars lvars constrs matched_term
             (hlp constrs branches params params_num (fvars @ lvars) tm);
           case_replacement
+	  end
       | _ ->
         failwith "case_lifting"
     end
@@ -880,9 +990,11 @@ and convert ctx tm =
       assert (x2 <> Const("$Proof"));
       App(Const("~"), x2)
   | App(App(Const("$HasType"), x), y) ->
+  
       type_to_guard ctx y (convert ctx x)
+  | App(Const (c), x) when c = "Coq.Init.Datatypes.is_true" -> convert_bool ctx x
   | App(x, y) ->
-      let x2 = convert ctx x
+	  let x2 = convert ctx x
       in
       if x2 = Const("$Proof") then
         Const("$Proof")
@@ -907,9 +1019,13 @@ and convert ctx tm =
       remove_let ctx tm
   | Prod(_) ->
       if check_prop ctx tm then
-        prop_to_formula ctx tm
+	    begin
+          prop_to_formula ctx tm
+		end
       else
-        remove_type ctx tm
+	    begin
+          remove_type ctx tm
+	    end
   | SortProp ->
       Const("Prop")
   | SortSet ->
@@ -925,6 +1041,18 @@ and convert ctx tm =
       tm
   | IndType(_) ->
       failwith "convert"
+	  
+and convert_bool ctx tm =
+  match tm with
+    | Const c -> Const c
+	| Var x -> Var x
+	| App (Const (c), x) when c = "Coq.Init.Datatypes.negb" -> Coqterms.mk_not (convert_bool ctx x)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.orb" -> Coqterms.mk_or (convert_bool ctx x) (convert_bool ctx y)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.andb" -> Coqterms.mk_and (convert_bool ctx x) (convert_bool ctx y)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.implb" -> Coqterms.mk_impl (convert_bool ctx x) (convert_bool ctx y)
+    | App (App (Const (c), x), y) when c = "Coq.Bool.Bool.eqb" || c = "mathcomp.ssreflect.eqtype.eqb" -> Coqterms.mk_equiv (convert_bool ctx x) (convert_bool ctx y)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Nat.eqb" -> Coqterms.mk_equiv (convert_bool ctx x) (convert_bool ctx y)
+	| _ -> tm
 
 and convert_term ctx tm =
   debug 3 (fun () -> print_header "convert_term" tm ctx);
@@ -934,7 +1062,7 @@ and convert_term ctx tm =
     | App(App(Const(c), _), _) when is_bin_logop c -> true
     | App(Const("~"), _) -> true
     | App(_) -> false
-    | _ -> check_prop ctx tm
+    | _ -> (check_prop ctx tm)
   in
   if should_lift then
     let name = "$_prop_" ^ unique_id ()
@@ -962,7 +1090,7 @@ and prop_to_formula ctx tm =
            (prop_to_formula ((vname, ty1) :: ctx) ty2))
   | _ ->
     convert ctx tm
-
+	
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
   debug 3 (fun () -> print_header_nonl "type_to_guard" ty ctx; print_coqterm x; print_newline ());
@@ -1173,18 +1301,20 @@ and add_def_eq_axiom (name, value, ty, srt) =
       ignore (lambda_lifting axname name [] [] value)
   | Fix(_) ->
       ignore (fix_lifting axname name [] [] value)
-  | Const(c) when c = name ->
-      ()
+  | Const(c) when c = name -> ()
   | _ ->
+    begin
       begin
         match ty with
         | SortProp ->
             add_axiom (mk_axiom axname (mk_equiv (Const(name)) (prop_to_formula [] value)))
         | SortType | SortSet ->
             add_def_eq_type_axiom axname name [] value
-        | _ ->
-            add_axiom (mk_axiom axname (mk_eq (Const(name)) (convert [] value)))
+		| Const (c) when c = "Coq.Init.Datatypes.bool" -> 
+			add_axiom (mk_axiom axname (mk_eqb (Const(name)) (convert [] value)))
+        | _ -> add_axiom (mk_axiom axname (mk_eq (Const(name)) (convert [] value)))
       end
+	end
 
 and add_injection_axioms constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
@@ -1333,7 +1463,9 @@ and add_def_axioms ((name, value, ty, srt) as def) =
   match value with
   | IndType(_, constrs, _) ->
     if srt = SortProp then
-      add_axiom (mk_axiom name (prop_to_formula [] ty))
+	  begin
+        add_axiom (mk_axiom name (prop_to_formula [] ty))
+      end
     else
       begin
         if check_type_target_is_prop ty then
@@ -1353,8 +1485,15 @@ and add_def_axioms ((name, value, ty, srt) as def) =
           end;
       end
   | _ ->
-    if srt = SortProp then
-      add_axiom (mk_axiom name (prop_to_formula [] ty))
+	if snd (check_type_target_is_bool ty) then
+	  begin
+	    add_axiom (mk_axiom name (convert [] ty));
+	 	add_def_eq_axiom def
+	  end
+    else if (check_type_target_is_prop ty ||  srt = SortProp) then
+	  begin
+        add_axiom (mk_axiom name (prop_to_formula [] ty))		
+	  end
     else
       begin
         add_typing_axiom name ty;

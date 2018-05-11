@@ -103,6 +103,8 @@ let mk_equiv = mk_binop "<=>"
 let mk_not = mk_uniop "~"
 let mk_forall = mk_quant "!"
 let mk_exists = mk_quant "?"
+let mk_eqb = mk_binop "?="
+
 
 let mk_eq x y = Equal(x, y)
 
