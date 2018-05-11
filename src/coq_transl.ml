@@ -1490,7 +1490,7 @@ and add_def_axioms ((name, value, ty, srt) as def) =
 	    add_axiom (mk_axiom name (convert [] ty));
 	 	add_def_eq_axiom def
 	  end
-    else if (check_type_target_is_prop ty ||  srt = SortProp) then
+    else if ( (* check_type_target_is_prop ty || *)  srt = SortProp) then
 	  begin
         add_axiom (mk_axiom name (prop_to_formula [] ty))		
 	  end
