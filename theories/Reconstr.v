@@ -1,8 +1,9 @@
 (* Coq v8.7 required *)
 (* author: Lukasz Czajka *)
-(* This file contains fragments based on the "crush" tactic of Adam Chlipala. *)
+(* This file contains reconstruction tactics for CoqHammer. *)
 (* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
+(* Fragments of this file are based on the "crush" tactic of Adam Chlipala. *)
 
 Require List Arith ZArith Bool.
 
@@ -14,9 +15,14 @@ Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : yhints.
 Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : yhints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : yhints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : yhints.
+Hint Rewrite -> Arith.PeanoNat.Nat.add_assoc : yhints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_assoc : yhints.
 Hint Rewrite -> ZArith.BinInt.Z.add_0_r : yhints.
+Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : yhints.
 Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : yhints.
 Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : yhints.
+Hint Rewrite -> ZArith.BinInt.Z.add_assoc : yhints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_assoc : yhints.
 Hint Rewrite -> List.in_app_iff : yhints.
 Hint Rewrite -> List.in_map_iff : yhints.
 Hint Rewrite -> List.in_inv : yhints.
@@ -567,7 +573,8 @@ Ltac rchange tp :=
   end.
 
 Ltac sintuition0 :=
-  simp_hyps; intuition (auto with nocore yhints); try yeasy; try subst; mcongr tt; try solve [ constructor ];
+  simp_hyps; intuition (auto with nocore yhints); try subst; simp_hyps; try yeasy;
+  mcongr tt; try solve [ constructor; auto with yhints ];
   auto with yhints; try yeasy.
 
 Ltac sintuition := simp_hyps; try subst; cbn in *; sintuition0.
@@ -945,7 +952,9 @@ Ltac yelles0 defs n rtrace gtrace :=
         | [ H : forall x y z u, _ _ |- _ _ ] =>
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ |- _ ] =>
-          solve [ isolve ] (* TODO: this may be improved? *)
+          solve [ isolve ]
+        | [ |- _ ] =>
+          solve [ econstructor; yelles0 defs k rtrace (gtrace, G) ]
         | [ H : forall x y z u v, _ _ |- _ _ ] =>
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ H : forall x y z u v w, _ _ |- _ _ ] =>
@@ -1016,8 +1025,8 @@ with doyelles defs n :=
                   isPropAtom T; yinversion H; unfolding defs; doyelles defs k
                 | [ |- ?A = ?B ] =>
                   progress (try ydestruct A; try ydestruct B);
-                    unfolding defs;
-                    yelles0 defs k Empty Empty
+                  unfolding defs;
+                  yelles0 defs k Empty Empty
                 | [ |- False ] =>
                   fail 1
                 | [ H : False |- _ ] =>
@@ -1071,12 +1080,6 @@ Ltac meauto3 f := meauto ltac:(fun _ => meauto2 f).
 
 Ltac ymeauto n := once meauto2 ltac:(fun _ => yelles n).
 
-Ltac pose_eq_axioms :=
-  generalize @eq_trans; intro at top;
-  generalize @eq_sym; intro at top;
-  generalize @eq_refl; intro at top;
-  generalize @f_equal; intro at top.
-
 Ltac yreconstr1 lems defs :=
   generalizing;
   repeat (yintros; repeat ysplit);
@@ -1126,7 +1129,6 @@ Ltac iauto n :=
 
 Ltac docrush :=
   sintuition; cbn in *; simp_hyps; forward_reasoning 2; simp_hyps; yisolve; try yelles 1;
-  try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try congruence;
   try match goal with
       | [ H : _ |- _ ] =>
@@ -1137,6 +1139,7 @@ Ltac docrush :=
         isPropAtom T; yinversion H; cbn in *; try subst; simp_hyps; eauto with yhints; yelles 1
       end;
   try yelles 2;
+  try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try ymeauto 0.
 
 Ltac ycrush := solve [ yisolve | eauto with yhints | docrush ].
@@ -1198,19 +1201,6 @@ Ltac hsimple hyps lems defs :=
   gunfolding defs;
   simp_hyps;
   try yellesd defs 2.
-
-Ltac hfirstorder hyps lems defs :=
-  hinit hyps lems defs;
-  firstorder (auto with nocore).
-
-Ltac heqfirstorder hyps lems defs :=
-  hinit hyps lems defs;
-  pose_eq_axioms;
-  firstorder (auto with nocore).
-
-Ltac hifirstorder hyps lems defs :=
-  hinit hyps lems defs;
-  firstorder isolve.
 
 Ltac hcrush hyps lems defs :=
   hinit hyps lems defs;

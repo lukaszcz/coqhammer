@@ -141,7 +141,7 @@ let process_file fname =
               if i + 1 = String.length s then "" else
                 (String.sub s (i + 1) (String.length s - i - 1))
             in
-            output_string oc (p ^ " try hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". " ^
+            output_string oc (p ^ " try hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Restart. " ^
                                 r ^ "\n");
             print_endline path
           end
@@ -150,7 +150,7 @@ let process_file fname =
             let pref = Queue.pop (Hashtbl.find nametab last2) in
             let path = pref ^ "." ^ last2 in
             let p = String.sub s 6 (String.length s - 7) in
-            output_string oc ("Proof. try hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". " ^
+            output_string oc ("Proof. try hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". Restart. " ^
                                  "exact (" ^ p ^ "). Qed.\n");
             print_endline path
           end
