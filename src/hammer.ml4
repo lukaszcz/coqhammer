@@ -43,6 +43,14 @@ let export_statement dir (file,str) =
   mkdir_rec diro;
   append fileo (str ^ "\n")
 
+let export_statement_2 dir fname str =
+  let fileo = match dir with
+             | None -> "./" ^ fname ^ ".p"
+             | Some s -> s ^ "/" ^ fname ^ ".p"
+  in
+  let diro = Filename.dirname fileo in
+  append fileo (str ^ "\n")
+  
 (***************************************************************************************)
 
 let mk_id x = Hh_term.Id x
@@ -219,6 +227,14 @@ let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
      Hh_term.string_of_hhterm hkind ^ "," ^ Hh_term.string_of_hhterm (Lazy.force hty) ^ "," ^
      Hh_term.string_of_hhterm (Lazy.force hterm) ^ ").")
 
+let string_of_hhdef_3 (const, hkind, hty, hterm) =
+  Hh_term.string_of_hhterm const
+  
+let string_of_hhdef_4 (const, hkind, hty, hterm) =
+   "tt(" ^ Hh_term.string_of_hhterm const ^ "," ^
+     Hh_term.string_of_hhterm hkind ^ "," ^ Hh_term.string_of_hhterm (Lazy.force hty) ^ "," ^
+     Hh_term.string_of_hhterm (Lazy.force hterm) ^ ")."
+
 let string_of_goal gl =
   string_of (econstr_to_constr (Proofview.Goal.concl gl))
 
@@ -249,6 +265,9 @@ let my_search () =
 
 let my_print_refl dir l : unit =
   List.iter (export_statement dir) l
+
+let my_print_refl_2 dir l : unit =
+  List.iter (export_statement_2 dir (fst l)) (snd l) 
 
 let unique_hhdefs hhdefs =
   let hash = Hashtbl.create 128 in
@@ -733,7 +752,7 @@ let hammer_hook_tac prefix name =
                   Opt.filter_program := true;
                   Opt.filter_classes := true;
                   Opt.filter_hurkens := true;
-                  let dir = "atp/problems/" ^ str in
+			      let dir = "./../atp/problems/" ^ str in
                   ignore (Sys.command ("mkdir -p " ^ dir));
                   let goal = get_goal gl in
                   let hyps = get_hyps gl in
@@ -833,4 +852,96 @@ let hammer_hook_tac prefix name =
 
 TACTIC EXTEND Hammer_hook_tac
 | [ "hammer_hook" string(prefix) string(name) ] -> [ hammer_hook_tac prefix name ]
+END
+
+(** a vernac to generate dependencies of a goal *)
+
+let contains s1 s2 =
+  try
+    let len = String.length s2 in
+    for i = 0 to String.length s1 - len do
+      if String.sub s1 i len = s2 then raise Exit
+    done;
+    false
+  with Exit -> true
+ 
+let rec findex a l i =
+  match l with
+    | []     -> raise Not_found
+	| x :: xs -> if contains x ("("^a^")") then i else findex a xs (i + 1) 
+
+let find_index a l = findex a l 0
+
+let uniq lst =
+   let unique_set = Hashtbl.create (List.length lst) in
+   List.iter (fun x -> Hashtbl.replace unique_set x ()) lst;
+   Hashtbl.fold (fun x () xs -> x :: xs) unique_set []
+
+let extracted_objects_vernac_in_file goal defs dir fname =
+   let l = Features.get_deps goal in
+   let sld  = (List.map string_of_hhdef_3 defs) in
+   let rec nonp l sld defs acc =
+     begin
+       match l with
+         | []      -> acc
+         | x :: xs -> try
+                        let i = find_index x sld in
+                        nonp xs sld defs ((List.nth defs i) :: acc)
+                      with Not_found -> nonp xs sld defs acc
+     end
+   in
+   let rec all_dep l sld defs dir fname acc =
+     let nl  = nonp l sld defs [] in
+     let npl = List.flatten (List.map (Features.get_deps) nl) in
+     if List.length npl = 0 then
+       begin
+         my_print_refl_2 dir
+         (fname, (List.map string_of_hhdef_4 (uniq (nl @ acc))))
+       end
+     else
+       begin
+         all_dep npl sld defs dir fname (nl @ acc)
+       end
+   in all_dep l sld defs dir fname []
+
+let extracted_objects_vernac_np goal defs =
+   let l = Features.get_deps goal in
+   let sld  = (List.map string_of_hhdef_3 defs) in
+   let rec nonp l sld defs acc =
+     begin
+       match l with
+         | []      -> acc
+         | x :: xs -> try
+                        let i = find_index x sld in
+                        nonp xs sld defs ((List.nth defs i) :: acc)
+                      with Not_found -> nonp xs sld defs acc
+     end
+   in
+   let rec all_dep l sld defs acc =
+     let nl  = nonp l sld defs [] in
+     let npl = List.flatten (List.map (Features.get_deps) nl) in
+     if List.length npl = 0 then
+       begin
+         uniq (nl @ acc)
+       end
+     else
+       begin
+         all_dep npl sld defs (nl @ acc)
+       end
+   in all_dep l sld defs []
+   
+   
+let hammer_gen_problems name =
+   let dir = "./../atp/problems" in
+   ignore (Sys.command ("mkdir -p " ^ dir));
+   let defs = get_defs () in
+   let glob = get_global name in
+   let (_, goal) = hhdef_of_global glob in
+   let fname1 = name ^ "_exact_deps" in
+   extracted_objects_vernac_in_file goal defs (Some dir) fname1;
+   let deps0 = extracted_objects_vernac_np goal defs in
+   Provers.write_atp_file (dir ^ "/" ^ name ^ ".atp.p") deps0 [] defs goal
+ 	
+VERNAC COMMAND EXTEND Hammer_gen_problems_vern CLASSIFIED AS QUERY
+| [ "Hammer_gen_problems" string (name) ] -> [ hammer_gen_problems name ]
 END

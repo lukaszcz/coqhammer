@@ -23,3 +23,5 @@ val predict : hhdef list (* hyps *) -> hhdef list (* defs *) -> hhdef (* goal *)
 
 (* `cleanup` resets the feature and dependency cache *)
 val cleanup : unit -> unit
+
+val get_deps: hhdef -> string list
