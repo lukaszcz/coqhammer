@@ -133,7 +133,7 @@ let process_file fname =
         then
           begin
             let pref = Queue.pop (Hashtbl.find nametab last2) in
-            let path = pref ^ "." ^ last2 in
+            let path = (*pref ^ "." ^*) last2 in
             let i = String.index s '.' in
             let p = String.sub s 0 (i + 1) in
             let r =
@@ -166,7 +166,7 @@ let process_file fname =
   let ic = open_in fname
   and oc = open_out ofname
   in
-  output_string oc "From Hammer Require Import Hammer.\n\n";
+  (* output_string oc "From Hammer Require Import Hammer.\n\n"; *)
   try
     pom prefix ic oc ""
   with End_of_file ->

@@ -6,7 +6,7 @@ all:
 	@echo "See README on how to invoke make."
 
 init: $(OFILES)
-problems/%.vo: problems/%.v
+problems/CC/doc/efiles/%.vo: problems/CC/doc/efiles/%.v
 	@mkdir -p logs/init
 	coqc "$<" > logs/init/`basename "$@" .vo`.log 2>&1
 
