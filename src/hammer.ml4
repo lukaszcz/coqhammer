@@ -931,7 +931,7 @@ let extracted_objects_vernac_np goal defs =
    in all_dep l sld defs []
    
    
-let hammer_gen_problems name =
+let hammer_gen_problems filename name =
    let dir = "./../atp/problems" in
    ignore (Sys.command ("mkdir -p " ^ dir));
    let defs = get_defs () in
@@ -940,8 +940,8 @@ let hammer_gen_problems name =
    let fname1 = name ^ "_exact_deps" in
    extracted_objects_vernac_in_file goal defs (Some dir) fname1;
    let deps0 = extracted_objects_vernac_np goal defs in
-   Provers.write_atp_file (dir ^ "/" ^ name ^ ".atp.p") deps0 [] defs goal
+   Provers.write_atp_file (dir ^ "/" ^ filename ^ "." ^ name ^ ".atp.p") deps0 [] defs goal
  	
 VERNAC COMMAND EXTEND Hammer_gen_problems_vern CLASSIFIED AS QUERY
-| [ "Hammer_gen_problems" string (name) ] -> [ hammer_gen_problems name ]
+| [ "Hammer_gen_problems" string (filename) string (name) ] -> [ hammer_gen_problems filename name ]
 END
