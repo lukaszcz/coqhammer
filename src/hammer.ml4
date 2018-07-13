@@ -945,3 +945,95 @@ let hammer_gen_problems filename name =
 VERNAC COMMAND EXTEND Hammer_gen_problems_vern CLASSIFIED AS QUERY
 | [ "Hammer_gen_problems" string (filename) string (name) ] -> [ hammer_gen_problems filename name ]
 END
+
+
+(********************************************* ********************************************************************)
+
+let hammer_reconstruct_tac prefix name =
+  try_goal_tactic
+    begin fun gl ->
+	  let fopt = open_in "coqhammer.opt" in
+	  let str = input_line fopt in
+	  close_in fopt;
+	  if str = "check" || str = "gen-atp" then
+	    begin
+	      ltac_apply "idtac" []
+		end
+	  else
+		begin
+		  let idx = String.index str '-' in
+		  let prover = String.sub str 0 idx in
+		  let extract =
+			if prover = "eprover" then
+			  Provers.extract_eprover_data
+			else if prover = "vampire" then
+			  Provers.extract_vampire_data
+			else if prover = "z3" then
+			  Provers.extract_z3_data
+			else
+			  failwith "unknown prover"
+		  in
+		  let dir = "atp/o/" ^ str
+		  and odir = "out/" ^ str
+		  in
+		  let fname = dir ^ "/" ^ name ^ ".p"
+		  and ofname =  odir ^ "/" ^ name ^ ".out"
+		  and tfname =  odir ^ "/" ^ name ^ ".try"
+		  in
+		  ignore (Sys.command ("mkdir -p " ^ odir));
+		  if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
+			not (Sys.file_exists ofname)
+		  then
+			try
+			  Msg.info ("Reconstructing theorem " ^ name ^ "...");
+			  let tries_num =
+				try
+				  let tfile = open_in tfname in
+				  let r = int_of_string (input_line tfile) in
+				  close_in tfile;
+				  r
+				with _ ->
+				  0
+			  in
+			  if tries_num < 2 then
+				begin
+				  ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
+										  " > \"" ^ tfname ^ "\""));
+				  let (deps, defs) = extract fname in
+				  let (deps, defs, args) = get_tac_args deps defs in
+				  run_tactics deps defs args
+					(fun _ _ _ -> ())
+					begin fun tac deps defs ->
+					  let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
+					  ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+					  Msg.info msg
+					end
+					(fun _ _ -> ())
+					begin fun () ->
+					  let msg = "Failure " ^ name ^ " " ^ str in
+					  ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+					  Msg.info msg
+					end
+				end
+			  else
+				begin
+				  let msg = "Failure " ^ name ^ " " ^ str ^ ": gave up after " ^
+					string_of_int tries_num ^ " tries"
+				  in
+				  ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+				  Msg.info msg;
+				  ltac_apply "idtac" []
+				end
+			with (HammerError s) ->
+			  Msg.info s;
+			  ltac_apply "idtac" []
+		  else
+			begin
+			  ltac_apply "idtac" []
+			end
+		end
+  end
+
+TACTIC EXTEND Hammer_reconstruct_tac
+| [ "hammer_reconstr" string(prefix) string(name) ] -> [ hammer_reconstruct_tac prefix name ]
+END

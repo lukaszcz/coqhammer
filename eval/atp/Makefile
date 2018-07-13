@@ -8,7 +8,7 @@
 FFILES=$(shell find i/f/ -type f | sort -R)
 
 # timeout (in seconds)
-TIM=30
+TIM=90
 
 all: eprover vampire z3 e-par0 e-par1 e-par2 e-par3 \
   e-14 e-18 e-19 \
