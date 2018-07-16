@@ -42,6 +42,15 @@ let remove_hammer_hook s =
   with Not_found ->
     s
 
+let contains s1 s2 =
+  try
+    let len = String.length s2 in
+    for i = 0 to String.length s1 - len do
+      if String.sub s1 i len = s2 then raise Exit
+    done;
+    false
+  with Exit -> true
+ 
 let process_file fname =
   let nametab = Hashtbl.create 64
   in
@@ -144,6 +153,19 @@ let process_file fname =
                                 r ^ "\n");
             print_endline path
           end
+	      else if contains s "Qed." then
+          begin
+			try
+              let pref = Queue.pop (Hashtbl.find nametab last2) in
+			  let path = pref ^ "." ^ last2 in
+			  try 
+			    let indot = String.rindex s '.' in
+                let p = String.sub s 0 (indot+1) in
+                output_string oc (p ^ " Hammer_gen_problems \"" ^ prefix ^ "\" \"" ^ path ^ "\".");
+			  with Not_found -> failwith "Qed. not found at the end of the proof text...";
+			  print_endline path	
+	        with Queue.Empty -> failwith "Queue is empty";
+		  end 
         else
           output_string oc (s ^ "\n")
       with Not_found | Queue.Empty ->
