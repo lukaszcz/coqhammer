@@ -219,6 +219,14 @@ let get_goal gl =
    lazy (hhterm_of (econstr_to_constr (Proofview.Goal.concl gl))),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
+let type_of_hhdef ((_, _, t, _) : Hh_term.hhdef) = Lazy.force t
+
+let get_goal_2 goal =
+  (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
+   mk_comb(mk_id "$Sort", mk_id "$Prop"),
+   lazy (type_of_hhdef goal),
+   lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
+
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
 
 let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
@@ -932,15 +940,18 @@ let extracted_objects_vernac_np goal defs =
    
    
 let hammer_gen_problems filename name =
-   let dir = "./atp/problems" in
-   ignore (Sys.command ("mkdir -p " ^ dir ^ "/" ^ filename));
-   let defs = get_defs () in
+   let dir = "./atp/problems" ^ "/" ^ filename in
+   ignore (Sys.command ("mkdir -p " ^ dir));
+   let defs  = get_defs () in
    let glob = get_global name in
    let (_, goal) = hhdef_of_global glob in
+   (*
    let fname1 = name ^ "_exact_deps" in
-(*   extracted_objects_vernac_in_file goal defs (Some dir) fname1; *)
+   extracted_objects_vernac_in_file goal defs (Some dir) fname1; 
+   *)
    let deps0 = extracted_objects_vernac_np goal defs in
-   Provers.write_atp_file (dir ^ "/" ^ filename ^ "/" ^ filename ^ "." ^ name ^ ".p") deps0 [] defs goal
+   let goal = get_goal_2 goal in
+   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") deps0 [] defs goal
  	
 VERNAC COMMAND EXTEND Hammer_gen_problems_vern CLASSIFIED AS QUERY
 | [ "Hammer_gen_problems" string (filename) string (name) ] -> [ hammer_gen_problems filename name ]
@@ -986,6 +997,7 @@ let hammer_reconstruct_tac prefix name =
 		  then
 			try
 			  Msg.info ("Reconstructing theorem " ^ name ^ "...");
+			  Printf.printf "%s\n" ("Reconstructing theorem " ^ name ^ "...");
 			  let tries_num =
 				try
 				  let tfile = open_in tfname in
@@ -995,7 +1007,7 @@ let hammer_reconstruct_tac prefix name =
 				with _ ->
 				  0
 			  in
-			  if tries_num < 2 then
+			  if tries_num < 5 then
 				begin
 				  ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
 										  " > \"" ^ tfname ^ "\""));
