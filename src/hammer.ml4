@@ -219,12 +219,12 @@ let get_goal gl =
    lazy (hhterm_of (econstr_to_constr (Proofview.Goal.concl gl))),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
-let type_of_hhdef ((_, _, t, _) : Hh_term.hhdef) = Lazy.force t
+let type_of_hhdef ((_, _, t, _) : Hh_term.hhdef) = t
 
 let get_goal_2 goal =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (type_of_hhdef goal),
+   (type_of_hhdef goal),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
@@ -951,7 +951,7 @@ let hammer_gen_problems filename name =
    *)
    let deps0 = extracted_objects_vernac_np goal defs in
    let goal = get_goal_2 goal in
-   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") deps0 [] defs goal
+   Provers.write_atp_file (dir ^ "/" ^ filename ^ "." ^ name ^ ".p") deps0 [] defs goal
  	
 VERNAC COMMAND EXTEND Hammer_gen_problems_vern CLASSIFIED AS QUERY
 | [ "Hammer_gen_problems" string (filename) string (name) ] -> [ hammer_gen_problems filename name ]
@@ -987,9 +987,9 @@ let hammer_reconstruct_tac prefix name =
 		  let dir = "atp/o/" ^ str
 		  and odir = "out/" ^ str
 		  in
-		  let fname = dir ^ "/" ^ name ^ ".p"
-		  and ofname =  odir ^ "/" ^ name ^ ".out"
-		  and tfname =  odir ^ "/" ^ name ^ ".try"
+		  let fname = dir ^ "/" ^ prefix ^ "." ^ name ^ ".p"
+		  and ofname =  odir ^ "/" ^ prefix ^ "." ^ name ^ ".out"
+		  and tfname =  odir ^ "/" ^ prefix ^ "." ^ name ^ ".try"
 		  in
 		  ignore (Sys.command ("mkdir -p " ^ odir));
 		  if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
@@ -1007,7 +1007,7 @@ let hammer_reconstruct_tac prefix name =
 				with _ ->
 				  0
 			  in
-			  if tries_num < 5 then
+			  if tries_num < 2 then
 				begin
 				  ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
 										  " > \"" ^ tfname ^ "\""));
