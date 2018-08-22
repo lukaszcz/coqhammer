@@ -51,9 +51,7 @@ Fixpoint asimp (e : aexpr) :=
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
   induction e; sauto.
-  Reconstr.htrivial Reconstr.AllHyps
-                    (@lem_aval_plus)
-                    Reconstr.Empty.
+  Reconstr.reasy (@lem_aval_plus) Reconstr.Empty.
 Qed.
 
 Inductive bexpr :=
@@ -118,18 +116,10 @@ Qed.
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
   induction e; sauto.
-  Reconstr.htrivial Reconstr.AllHyps
-                    (@lem_bval_not)
-                    Reconstr.Empty.
-  Reconstr.htrivial Reconstr.AllHyps
-                    (@lem_bval_and)
-                    Reconstr.Empty.
-  Reconstr.hsimple Reconstr.AllHyps
-                   (@lem_aval_asimp, @lem_bval_less)
-                   (@Coq.Init.Nat.ltb, @Coq.Init.Nat.leb).
-  Reconstr.heasy Reconstr.AllHyps
-                 (@Coq.Arith.PeanoNat.Nat.ltb_antisym, @lem_bval_less, @lem_aval_asimp, @Coq.Arith.PeanoNat.Nat.leb_antisym)
-                 (@Coq.Init.Nat.ltb).
+  - Reconstr.reasy (@lem_bval_not) Reconstr.Empty.
+  - Reconstr.reasy (@lem_bval_and) Reconstr.Empty.
+  - ycrush.
+  - ycrush.
 Qed.
 
 Inductive cmd :=
@@ -161,17 +151,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-                    (@SeqSem)
-                    Reconstr.Empty.
-  Reconstr.hobvious Reconstr.AllHyps
-                    (@SeqSem)
-                    Reconstr.Empty.
-
-  Restart.
-
-  pose SeqSem; scrush.
+  scrush. (* > 2s *)
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -180,28 +160,7 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  unfold equiv_cmd; sauto.
-  inversion H.
-  Reconstr.htrivial (@H0, @H4)
-                    (@SkipSem, @IfFalse)
-                    Reconstr.Empty.
-  Reconstr.hobvious (@H0, @H1, @H, @H6, @H5, @H3)
-                    (@SeqSem, @IfTrue)
-                    (@equiv_cmd).
-  inversion H; sauto.
-  Reconstr.hobvious (@H4, @H7, @H5)
-                    (@WhileTrue)
-                    Reconstr.Empty.
-  Reconstr.htrivial (@H5)
-                    (@WhileFalse)
-                    Reconstr.Empty.
-
-  Restart.
-
-  unfold equiv_cmd.
-  intros; split.
-  intro H; inversion H; pose SkipSem; pose SeqSem; pose IfFalse; pose IfTrue; scrush.
-  intro H; inversion H; pose WhileTrue; pose WhileFalse; scrush.
+  unfold equiv_cmd; intros; split; intro H; inversion H; ycrush.
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
@@ -210,19 +169,14 @@ Proof.
   assert (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s').
   intros p s' H.
   induction H; sauto.
-  pose WhileFalse; scrush.
-  Reconstr.hexhaustive 1 Reconstr.AllHyps
-                       (@WhileTrue)
-                       (@equiv_cmd).
-  scrush.
+  - ycrush.
+  - unfold equiv_cmd in *; ycrush.
+  - eauto.
 Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b c ~~ While b c'.
 Proof.
-  intros; unfold equiv_cmd.
-  Reconstr.hobvious Reconstr.AllHyps
-                    (@lem_while_cong_aux)
-                    (@equiv_cmd).
+  Reconstr.reasy (@lem_while_cong_aux) (@equiv_cmd).
 Qed.
 
 Lemma lem_big_step_deterministic :
@@ -300,51 +254,29 @@ Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').
 Proof.
   intros p s' H.
   induction H as [ | | | | | | b c s1 s2 ]; try yelles 1.
-  pose_rt; pose AssignSemS; scrush.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@lem_seq_comp)
-		    Reconstr.Empty.
-  pose_rt; pose IfTrueS; scrush.
-  pose_rt; pose IfFalseS; scrush.
-  pose_rt; pose WhileS; pose IfFalseS; scrush.
-  assert ((While b c, s1) -->* (Seq c (While b c), s1)).
-  pose_rt; pose WhileS; pose IfTrueS; scrush.
-  assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)).
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@lem_star_seq2)
-		    Reconstr.Empty.
-  pose_rt; pose SeqSemS1; scrush.
+  - Reconstr.reasy (@lem_seq_comp) Reconstr.Empty.
+  - pose_rt; pose IfTrueS; scrush.
+  - pose_rt; pose IfFalseS; scrush.
+  - pose_rt; pose WhileS; pose IfFalseS; ycrush.
+  - assert ((While b c, s1) -->* (Seq c (While b c), s1)) by
+        (pose_rt; pose WhileS; pose IfTrueS; ycrush).
+    assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)) by
+        Reconstr.reasy (@lem_star_seq2) Reconstr.Empty.
+    pose_rt; pose SeqSemS1; ycrush.
 Qed.
 
 Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
-  induction H; try yelles 1.
-  Reconstr.hobvious Reconstr.Empty
-		    (@big_step_ind, @Coq.Relations.Relation_Operators.rt_refl, @SeqSem, @SkipSem, @lem_big_to_small)
-		    (@state).
-  sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@SeqSem)
-		    Reconstr.Empty.
-  Reconstr.htrivial Reconstr.AllHyps
-		    (@IfTrue)
-		    Reconstr.Empty.
-  Reconstr.htrivial Reconstr.AllHyps
-		    (@IfFalse)
-		    Reconstr.Empty.
-  Reconstr.htrivial Reconstr.Empty
-		    (@lem_unfold_loop, @SkipSem)
-		    (@equiv_cmd).
+  induction H; sauto; try yelles 1.
+  Reconstr.reasy (@lem_unfold_loop) (@equiv_cmd).
 Qed.
 
 Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
   induction H; sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@lem_small_to_big_aux)
-		    Reconstr.Empty.
+  Reconstr.reasy (@lem_small_to_big_aux) Reconstr.Empty.
 Qed.
 
 Lemma lem_small_to_big : forall p s, p -->* (Skip, s) -> p ==> s.
@@ -352,18 +284,12 @@ Proof.
   assert (forall p p', p -->* p' -> forall s, p' = (Skip, s) -> p ==> s).
   intros p p' H.
   induction H; sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@cmd_ind, @small_step_ind, @SkipSem, @lem_small_to_big_aux)
-		    Reconstr.Empty.
-  Reconstr.hsimple Reconstr.AllHyps
-		   (@lem_small_to_big_aux_2)
-		   (@small_step_star, @Coq.Init.Datatypes.snd).
-  scrush.
+  - ycrush.
+  - Reconstr.rsimple (@lem_small_to_big_aux_2) (@small_step_star).
+  - ycrush.
 Qed.
 
 Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
-  Reconstr.hobvious Reconstr.Empty
-		    (@lem_small_to_big, @lem_big_to_small)
-		    Reconstr.Empty.
+  Reconstr.reasy (@lem_small_to_big, @lem_big_to_small) Reconstr.Empty.
 Qed.

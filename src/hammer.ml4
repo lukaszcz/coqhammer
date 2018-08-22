@@ -64,7 +64,7 @@ let get_current_context () =
 let hhterm_of_global glob =
   mk_id (string_of_path (path_of_global (Globnames.canonical_gr glob)))
 
-let hhterm_of_sort s = match Term.family_of_sort s with
+let hhterm_of_sort s = match Sorts.family s with
   | InProp -> mk_id "$Prop"
   | InSet  -> mk_id "$Set"
   | InType -> mk_id "$Type"
@@ -106,8 +106,8 @@ let hhterm_of_bool b =
   if b then mk_app (mk_id "$Bool") (mk_id "$True")
   else mk_app (mk_id "$Bool") (mk_id "$False")
 
-let rec hhterm_of (t : Term.constr) : Hh_term.hhterm =
-  match Term.kind_of_term t with
+let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
+  match Constr.kind t with
   | Rel n -> tuple [mk_id "$Rel"; mk_id (string_of_int n)]
   | Meta n -> raise (HammerError "Metavariables not supported.")
   | Var v -> hhterm_of_var v
@@ -152,7 +152,7 @@ let get_type_of env evmap t =
 (* only for constants *)
 let hhproof_of c =
   begin match Global.body_of_constant c with
-  | Some b -> hhterm_of b
+  | Some b -> hhterm_of (fst b)
   | None -> mk_id "$Axiom"
   end
 
@@ -279,7 +279,7 @@ let get_defs () : Hh_term.hhdef list =
                   (List.map hhdef_of_global (my_search ())))
 
 let get_tactic (s : string) =
-  (Nametab.locate_tactic (Libnames.qualid_of_string s))
+  (Tacenv.locate_tactic (Libnames.qualid_of_string s))
 
 let get_tacexpr tac args =
   Tacexpr.TacArg(None,
@@ -292,12 +292,12 @@ let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
 
 let ltac_lcall tac args =
   Tacexpr.TacArg(None,
-                 Tacexpr.TacCall(None, (ArgVar(None, Id.of_string tac),args)))
+                 Tacexpr.TacCall(None, (ArgVar CAst.(make @@ Id.of_string tac),args)))
 
 let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
   let fold arg (i, vars, lfun) =
     let id = Id.of_string ("x" ^ string_of_int i) in
-    let x = Tacexpr.Reference (ArgVar (None, id)) in
+    let x = Tacexpr.Reference (ArgVar CAst.(make @@ id)) in
     (succ i, x :: vars, Id.Map.add id arg lfun)
   in
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
@@ -308,10 +308,10 @@ let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
 
 let to_constr r =
   match r with
-  | VarRef(v) -> mkVar v
-  | ConstRef(c) -> mkConst c
-  | IndRef(i) -> mkInd i
-  | ConstructRef(cr) -> mkConstruct cr
+  | VarRef(v) -> Constr.mkVar v
+  | ConstRef(c) ->Constr.mkConst c
+  | IndRef(i) -> Constr.mkInd i
+  | ConstructRef(cr) -> Constr.mkConstruct cr
 
 let get_global s =
   Nametab.locate (Libnames.qualid_of_string s)
@@ -324,7 +324,7 @@ let mk_pair x y =
   let pr = get_constr "pair" in
   let tx = get_type_of env evmap x in
   let ty = get_type_of env evmap y in
-  mkApp (pr, [| tx; ty; x; y |])
+  Constr.mkApp (pr, [| tx; ty; x; y |])
 
 let rec mk_lst lst =
   match lst with
@@ -363,8 +363,8 @@ let get_tac_args deps defs =
 let check_goal_prop gl =
   let (evmap, env) = get_current_context () in
   let tp = EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl)) in
-  match Term.kind_of_term tp with
-  | Sort s -> Term.family_of_sort s = InProp
+  match Constr.kind tp with
+  | Sort s -> Sorts.family s = InProp
   | _ -> false
 
 (***************************************************************************************)

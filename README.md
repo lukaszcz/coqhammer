@@ -1,9 +1,9 @@
-CoqHammer 1.0.? for Coq 8.7
+CoqHammer 1.0.? for Coq 8.8.1
 
 Requirements
 ------------
 
-- [Coq 8.7](https://coq.inria.fr/download)
+- [Coq 8.8.1](https://coq.inria.fr/download)
 - automated provers ([Eprover](http://www.eprover.org), [Vampire](https://vprover.github.io/download.html), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
@@ -102,10 +102,9 @@ The most useful tactics are:
   introduce randomly named hypotheses into the context.
 
   It is nonetheless useful to sometimes use `sauto` before a call to
-  `hammer`. Then the list of hypotheses in the reconstruction tactic
-  may usually be replaced by `Reconstr.AllHyps`, removing any dependence
-  on auto-generated hypothesis names. Examples of this are provided in
-  [`examples/imp.v`](examples/imp.v) and [`examples/combs.v`](examples/combs.v).
+  `hammer`. Examples of this are provided in
+  [`examples/imp.v`](examples/imp.v) and
+  [`examples/combs.v`](examples/combs.v).
 
 * `ycrush`
 

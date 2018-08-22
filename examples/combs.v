@@ -85,30 +85,22 @@ Lemma vars_abstr :
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@Coq.Arith.PeanoNat.Nat.eqb_eq)
-		    Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
 Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@Coq.Arith.PeanoNat.Nat.eqb_neq)
-		    Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.eqb_refl, @Coq.Bool.Bool.not_true_iff_false) Reconstr.Empty.
 Qed.
 
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.htrivial Reconstr.AllHyps
-		    (@vars_abstr)
-		    Reconstr.Empty.
-  Reconstr.hsimple Reconstr.AllHyps
-		   (@novar_abstr, @hs_lem, @vars_abstr, @no_lams_transl)
-		   Reconstr.Empty.
+  - Reconstr.reasy (@vars_abstr) Reconstr.Empty.
+  - Reconstr.rsimple (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl) Reconstr.Empty.
 Qed.
 
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
@@ -154,22 +146,16 @@ Lemma transl_size :
 Proof.
   induction t; sauto; try omega.
   assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
-  Reconstr.htrivial Reconstr.AllHyps 
-                    (@Coq.Arith.Plus.plus_le_compat)
-                    Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_le_mono) Reconstr.Empty.
   assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
   auto with zarith.
-  Reconstr.heasy Reconstr.AllHyps
-		 (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r)
-		 Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r)  Reconstr.Empty.
   assert (size (abstr n (transl t)) <= 3 * size (transl t)).
   pose proof abstr_size; eauto with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
   pose proof le_trans; eauto with zarith.
   assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
-  Reconstr.heasy Reconstr.Empty
-	         (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_l, @Coq.Arith.PeanoNat.Nat.add_0_l, @Coq.Arith.PeanoNat.Nat.pow_succ_r')
-	         (@Coq.Arith.PeanoNat.Nat.b2n).
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.shiftl_1_l, @Coq.Arith.PeanoNat.Nat.pow_1_r, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r) Reconstr.Empty.
   ycrush.
 Qed.
 
@@ -201,18 +187,12 @@ Lemma transl_size_lb : forall (n : nat), size (transl (cex_term n)) >= 2^n.
 Proof.
   assert (forall (n m : nat), size (transl (long_term n m)) >= 2^n).
   induction n; sauto.
-  Reconstr.htrivial Reconstr.Empty
-		    (@size_nonneg)
-		    (@Coq.Init.Peano.ge, @Coq.Init.Peano.gt, @Coq.Init.Peano.lt).
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg) Reconstr.Empty.
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
-  Reconstr.htrivial Reconstr.Empty
-		    (@no_lams_transl, @abstr_size_lb)
-		    Reconstr.Empty.
+  Reconstr.reasy (@abstr_size_lb, @no_lams_transl) Reconstr.Empty.
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
   pose proof (IHn m); eauto with zarith.
-  Reconstr.htrivial Reconstr.AllHyps
-		    (@Coq.Arith.PeanoNat.Nat.mul_1_l, @Coq.Arith.PeanoNat.Nat.mul_succ_l)
-		    Reconstr.Empty.
+  scrush.
   now unfold cex_term.
 Qed.
 
@@ -231,9 +211,7 @@ Proof.
   pose proof Coq.Arith.EqNat.beq_nat_false.
   induction t; sauto; unfold orb; try yelles 2.
   assert (occurs v t1 = true \/ occurs v t2 = true).
-  Reconstr.htrivial Reconstr.AllHyps
-		    (@Coq.Bool.Bool.orb_prop)
-		    Reconstr.Empty.
+  Reconstr.reasy (@Coq.Bool.Bool.orb_prop) Reconstr.Empty.
   yelles 1.
 Qed.
 
@@ -273,45 +251,31 @@ Lemma vars_abstr2 :
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@Coq.Arith.PeanoNat.Nat.eqb_eq)
-		    Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
 Qed.
 
 Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr2 v t)).
 Proof.
   pose_hasvar.
   pose (u := t).
-  induction t; ydestruct (occurs v u); sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@Coq.Arith.PeanoNat.Nat.eqb_neq)
-		    Reconstr.Empty.
-  ycrush.
-  assert (HH: forall b1 b2, (b1 || b2)%bool = false -> b1 = false /\ b2 = false).
-  unfold orb; ycrush.
-  Reconstr.hcrush Reconstr.AllHyps
-	          (@occurs_spec)
-		  Reconstr.Empty.
+  induction t; destruct (occurs v u) eqn:?; sauto.
+  - Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.eqb_refl, @Coq.Bool.Bool.not_true_iff_false) Reconstr.Empty.
+  - Reconstr.rsimple (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) (@Coq.Init.Datatypes.orb).
+  - Reconstr.rscrush (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) (@Coq.Init.Datatypes.orb).
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.htrivial Reconstr.AllHyps
-		    (@vars_abstr2)
-		    Reconstr.Empty.
-  Reconstr.hsimple Reconstr.AllHyps
-		   (@novar_abstr2, @hs_lem, @vars_abstr2, @no_lams_transl2)
-		   Reconstr.Empty.
+  - Reconstr.reasy (@vars_abstr2) Reconstr.Empty.
+  - Reconstr.rsimple (@no_lams_transl2, @vars_abstr2, @novar_abstr2, @hs_lem) Reconstr.Empty.
 Qed.
 
 Lemma hasvar_inv :
   forall (t1 t2 : Term) (v : nat), ~(HasVar v (t1 @ t2)) -> ~(HasVar v t1) /\ ~(HasVar v t2).
 Proof.
-  Reconstr.htrivial Reconstr.Empty
-		    (@hs_app)
-		    Reconstr.Empty.
+  scrush.
 Qed.
 
 Lemma csubst_novar :
@@ -319,9 +283,7 @@ Lemma csubst_novar :
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.hblast Reconstr.AllHyps
-		  (@Coq.Arith.EqNat.beq_nat_eq)
-		  Reconstr.Empty.
+  Reconstr.rsimple (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
 Qed.
 
 Lemma abstr2_correct :

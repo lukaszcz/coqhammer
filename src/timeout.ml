@@ -7,9 +7,9 @@
    https://github.com/coq/coq/issues/7430
    https://github.com/coq/coq/issues/7408
 
- *)
+*)
 
-let my_timeout n f e =
+let my_timeout n f x e =
   let killed = ref false in
   let exited = ref false in
   let watchdog () =
@@ -42,7 +42,7 @@ let my_timeout n f e =
     Sys.set_signal Sys.sigalrm psh
   in
   try
-    let res = f () in
+    let res = f x in
     killed := true;
     restore_timeout ();
     res
@@ -60,5 +60,5 @@ let my_timeout n f e =
      Exninfo.iraise e
 
 let tclTIMEOUT n t =
-  Control.set_timeout { Control.timeout = my_timeout };
+  Control.set_timeout { Control.timeout = my_timeout }; (* comment this line out for Coq 8.8.0 *)
   Proofview.tclTIMEOUT n t

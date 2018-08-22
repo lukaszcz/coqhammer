@@ -11,22 +11,14 @@ Lemma lem_1 : forall f g,
 Proof.
   sauto.
   assert (c > 0 \/ c <= 0).
-  Reconstr.hobvious Reconstr.Empty
-		    Reconstr.Empty
-		    (@Coq.ZArith.BinInt.Z.le, @Coq.ZArith.BinInt.Z.gt).
+  Reconstr.reasy Reconstr.Empty (@Coq.ZArith.BinInt.Z.le, @Coq.ZArith.BinInt.Z.gt).
   sauto.
   assert (forall x, Z.abs (f x) <= 0).
-  Reconstr.hobvious Reconstr.AllHyps
-	            (@Coq.ZArith.BinInt.Z.mul_nonpos_nonneg, @Coq.ZArith.BinInt.Z.abs_nonneg, @Coq.ZArith.BinInt.Z.le_trans)
-		    Reconstr.Empty.
+  Reconstr.reasy (@Coq.ZArith.BinInt.Z.mul_nonpos_nonneg, @Coq.ZArith.BinInt.Z.abs_nonneg, @Coq.ZArith.BinInt.Z.le_trans) Reconstr.Empty.
   assert (forall x, Z.abs (g x) >= 0).
-  Reconstr.hobvious Reconstr.Empty
-	(@Coq.ZArith.BinInt.Z.ge_le_iff, @Coq.ZArith.BinInt.Z.le_refl, @Coq.ZArith.BinInt.Z.abs_spec, @Coq.ZArith.BinInt.Z.abs_nonneg, @Coq.ZArith.BinInt.Z.abs_eq)
-	(@Coq.ZArith.BinIntDef.Z.abs, @Coq.ZArith.BinInt.Z.ge).
+  Reconstr.reasy (@Coq.ZArith.BinInt.Z.abs_nonneg, @Coq.ZArith.BinInt.Z.ge_le_iff) Reconstr.Empty.
   exists 1; sauto.
-  Reconstr.hobvious Reconstr.AllHyps
-		    (@Coq.ZArith.BinInt.Z.abs_spec, @Coq.ZArith.BinInt.Z.le_trans)
-		    (@Coq.ZArith.BinInt.Z.ge, @Coq.ZArith.BinInt.Z.lt).
+  Reconstr.rblast (@Coq.ZArith.BinInt.Z.le_antisymm, @Coq.ZArith.BinInt.Z.lt_le_trans, @Coq.ZArith.BinInt.Z.lt_eq_cases, @Coq.ZArith.Zorder.Zle_0_pos, @Coq.ZArith.BinInt.Z.lt_nge) Reconstr.Empty.
   ycrush.
 Qed.
 
@@ -36,13 +28,9 @@ Lemma lem_2 : forall f g,
 Proof.
   sauto.
   assert (c > 0 \/ c <= 0).
-  Reconstr.hobvious Reconstr.Empty
-		    Reconstr.Empty
-		    (@Coq.ZArith.BinInt.Z.le, @Coq.ZArith.BinInt.Z.gt).
+  Reconstr.reasy Reconstr.Empty (@Coq.ZArith.BinInt.Z.le, @Coq.ZArith.BinInt.Z.gt).
   sauto.
   assert (forall x, Z.abs (f x) <= Z.abs (g x)).
-  Reconstr.heasy Reconstr.AllHyps
-		 (@Coq.ZArith.BinInt.Z.mul_nonpos_nonneg, @Coq.ZArith.BinInt.Z.abs_nonneg, @Coq.ZArith.BinInt.Z.le_trans)
-		 Reconstr.Empty.
+  Reconstr.reasy (@Coq.ZArith.BinInt.Z.mul_nonpos_nonneg, @Coq.ZArith.BinInt.Z.le_trans, @Coq.ZArith.BinInt.Z.abs_nonneg) Reconstr.Empty.
   exists 1; sauto.
 Qed.
