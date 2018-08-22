@@ -12,6 +12,8 @@ src/coq_convert.mli
 src/coq_convert.ml
 src/tptp_out.mli
 src/tptp_out.ml
+src/hashing.mli
+src/hashing.ml
 src/coq_transl.mli
 src/coq_transl.ml
 src/opt.ml
