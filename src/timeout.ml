@@ -60,5 +60,5 @@ let my_timeout n f x e =
      Exninfo.iraise e
 
 let tclTIMEOUT n t =
-  Control.set_timeout { Control.timeout = my_timeout }; (* comment this line out for Coq 8.8.0 *)
+  (* Control.set_timeout { Control.timeout = my_timeout }; *) (* comment this line out for Coq 8.8.0 *)
   Proofview.tclTIMEOUT n t
