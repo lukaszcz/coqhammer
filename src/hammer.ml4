@@ -1,6 +1,6 @@
 DECLARE PLUGIN "hammer_plugin"
 
-let hammer_version_string = "CoqHammer 1.0.? for Coq 8.7"
+let hammer_version_string = "CoqHammer 1.0.9 for Coq 8.8.1"
 
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
