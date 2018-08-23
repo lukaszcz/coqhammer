@@ -854,7 +854,7 @@ and convert ctx tm =
 	  (prop_to_formula ctx (subst_proof name ty body))
       else
 	Quant(op, (name, type_any,
-		   mk (type_to_guard ctx ty (Var(name)))
+		   mk (mk_guard ctx ty (Var(name)))
 		     (prop_to_formula ((name, ty) :: ctx) body)))
   | Equal(x, y) ->
       Equal(convert_term ctx x, convert_term ctx y)
@@ -871,7 +871,7 @@ and convert ctx tm =
       assert (x2 <> Const("$Proof"));
       App(Const("~"), x2)
   | App(App(Const("$HasType"), x), y) ->
-      type_to_guard ctx y (convert ctx x)
+      mk_guard ctx y (convert ctx x)
   | App(x, y) ->
       let x2 = convert ctx x
       in
@@ -949,10 +949,19 @@ and prop_to_formula ctx tm =
     else
       mk_forall vname type_any
 	(mk_impl
-	   (type_to_guard ctx ty1 (Var(vname)))
+	   (mk_guard ctx ty1 (Var(vname)))
 	   (prop_to_formula ((vname, ty1) :: ctx) ty2))
   | _ ->
     convert ctx tm
+
+(* `x' does not get converted *)
+and mk_guard ctx ty x =
+  debug 3 (fun () -> print_header_nonl "mk_guard" ty ctx; print_coqterm x; print_newline ());
+  match ty with
+  | Prod(_) ->
+     type_to_guard ctx (refresh_bvars ty) x
+  | _ ->
+     mk_hastype x (convert ctx ty)
 
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
@@ -992,7 +1001,7 @@ and mk_guarded_forall ctx vars cont =
     match vars with
     | (name, ty) :: vars2 ->
       mk_forall name type_any
-	(mk_impl (type_to_guard ctx ty (Var(name)))
+	(mk_impl (mk_guard ctx ty (Var(name)))
 	   (hlp ((name, ty) :: ctx) vars2))
     | [] ->
 	cont ctx
@@ -1165,10 +1174,10 @@ and add_typing_axiom name ty =
 		 (mk_long_app (Const(name)) ys))
 	  in
 	  add_axiom (mk_axiom ("$_tydef_" ^ name2) (fix_ax ax));
-	  add_axiom (mk_axiom ("$_typeof_" ^ name) (type_to_guard [] ty (Const(name2))))
+	  add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name2))))
 	end
       else
-	add_axiom (mk_axiom ("$_typeof_" ^ name) (type_to_guard [] ty (Const(name))))
+	add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name))))
     end
 
 and add_def_eq_axiom (name, value, ty, srt) =
