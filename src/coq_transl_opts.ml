@@ -47,6 +47,8 @@ let opt_eval_type_targets = false
 (* should the inversion axioms be more precise for non-propositional
    inductive types? *)
 let opt_precise_inversion = true
+(* should guard types be lifted? *)
+let opt_type_lifting = true
 
 (***************************************************************************************)
 (* Debugging *)
