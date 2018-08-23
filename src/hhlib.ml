@@ -1,3 +1,15 @@
+(* numbers from m up to but not including n *)
+let range m n =
+  let rec go acc i j =
+    if i >= j then acc else go (i :: acc) (i+1) j
+  in List.rev (go [] m n)
+
+let rec zip xs ys =
+  match xs with
+  | []    -> []
+  | x::vs -> match ys with
+	     | []    -> []
+	     | y::ws -> (x,y)::(zip vs ws)
 
 let unique cmp lst =
   let rec pom prev lst =
@@ -31,7 +43,7 @@ let rec drop n lst =
     match lst with
     | [] -> []
     | h :: t -> drop (n - 1) t
-       
+
 let rec rev_combine lst1 lst2 acc =
   match lst1, lst2 with
   | h1 :: t1, h2 :: t2 ->
