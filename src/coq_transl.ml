@@ -962,10 +962,14 @@ and type_to_guard ctx ty x =
     if check_prop ctx ty1 then
       mk_impl (prop_to_formula ctx ty1) (type_to_guard ctx (subst_proof vname ty1 ty2) x)
     else
+      (* refresh_bvars is necessary here to correctly translate
+	 e.g. Prod(x, Prod(x, ty1, ty2), ty3) *)
+      let ty1' = refresh_bvars ty1
+      in
       mk_forall vname type_any
 	(mk_impl
-	   (type_to_guard ctx ty1 (Var(vname)))
-	   (type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname))))))
+	   (type_to_guard ctx ty1' (Var(vname)))
+	   (type_to_guard ((vname, ty1') :: ctx) ty2 (App(x, (Var(vname))))))
   | _ ->
     mk_hastype x (convert ctx ty)
 

@@ -355,7 +355,8 @@ let dsubst lst tm =
       in
       ((name2, ty, v), List.remove_assoc n acc)
     with _ ->
-      ((name, ty, v), acc)
+      (* we're in this case if Var(name) does not occur free *)
+      ((refresh_varname name, ty, v), acc)
   in
   let rename_fix_names names n acc =
     let (names2, acc2, _) =
