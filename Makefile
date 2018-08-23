@@ -8,7 +8,7 @@ Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o Makefile.coq
 
 tests:
-	cd eval && $(MAKE) tests
+	cd tests && $(MAKE)
 
 clean: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq cleanall
