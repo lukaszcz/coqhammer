@@ -26,7 +26,7 @@ f2 (x + h) <> 0 ->
 l1 / (f2 x * f2 (x + h)) * (f2 x - f2 (x + h)) -
 f1 x / (f2 x * f2 (x + h)) * ((f2 (x + h) - f2 x) / h - l2) +
 l2 * f1 x / (Rsqr (f2 x) * f2 (x + h)) * (f2 (x + h) - f2 x).
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.formule".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.formule". Undo.  
 intros; unfold Rdiv, Rminus, Rsqr.
 repeat rewrite Rmult_plus_distr_r; repeat rewrite Rmult_plus_distr_l;
 repeat rewrite Rinv_mult_distr; try assumption.
@@ -72,7 +72,7 @@ h <> 0 ->
 Rabs h < alp_f1d ->
 Rabs h < Rmin eps_f2 alp_f2 ->
 Rabs (/ f2 (x + h) * ((f1 (x + h) - f1 x) / h - l1)) < eps / 4.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term1".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term1". Undo.  
 intros.
 assert (H7 := H3 h H6).
 assert (H8 := H2 h H4 H5).
@@ -112,7 +112,7 @@ h <> 0 ->
 Rabs h < alp_f2t2 ->
 Rabs h < Rmin eps_f2 alp_f2 ->
 l1 <> 0 -> Rabs (l1 / (f2 x * f2 (x + h)) * (f2 x - f2 (x + h))) < eps / 4.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term2".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term2". Undo.  
 intros.
 assert (H8 := H3 h H6).
 assert (H9 := H2 h H5).
@@ -187,7 +187,7 @@ Rabs h < Rmin eps_f2 alp_f2 ->
 f1 x <> 0 ->
 Rabs (f1 x / (f2 x * f2 (x + h)) * ((f2 (x + h) - f2 x) / h - l2)) <
 eps / 4.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term3".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term3". Undo.  
 intros.
 assert (H8 := H2 h H4 H5).
 assert (H9 := H3 h H6).
@@ -262,7 +262,7 @@ f1 x <> 0 ->
 l2 <> 0 ->
 Rabs (l2 * f1 x / (Rsqr (f2 x) * f2 (x + h)) * (f2 (x + h) - f2 x)) <
 eps / 4.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term4".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.maj_term4". Undo.  
 intros.
 assert (H9 := H2 h H5).
 assert (H10 := H3 h H6).
@@ -338,7 +338,7 @@ apply prod_neq_R0; assumption.
 Qed.
 
 Lemma D_x_no_cond : forall x a:R, a <> 0 -> D_x no_cond x (x + a).
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.D_x_no_cond".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.D_x_no_cond". Undo.  
 intros.
 unfold D_x, no_cond.
 split.
@@ -354,7 +354,7 @@ Qed.
 
 Lemma Rabs_4 :
 forall a b c d:R, Rabs (a + b + c + d) <= Rabs a + Rabs b + Rabs c + Rabs d.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.Rabs_4".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.Rabs_4". Undo.  
 intros.
 apply Rle_trans with (Rabs (a + b) + Rabs (c + d)).
 replace (a + b + c + d) with (a + b + (c + d)); [ apply Rabs_triang | ring ].
@@ -368,7 +368,7 @@ Qed.
 Lemma Rlt_4 :
 forall a b c d e f g h:R,
 a < b -> c < d -> e < f -> g < h -> a + c + e + g < b + d + f + h.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.Rlt_4".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.Rlt_4". Undo.  
 intros; apply Rlt_trans with (b + c + e + g).
 repeat apply Rplus_lt_compat_r; assumption.
 repeat rewrite Rplus_assoc; apply Rplus_lt_compat_l.
@@ -384,12 +384,12 @@ Notation Rmin_2 := Rmin_glb_lt (only parsing).
 
 
 Lemma quadruple : forall x:R, 4 * x = x + x + x + x.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.quadruple".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.quadruple". Undo.  
 intro; ring.
 Qed.
 
 Lemma quadruple_var : forall x:R, x = x / 4 + x / 4 + x / 4 + x / 4.
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.quadruple_var".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.quadruple_var". Undo.  
 intro; rewrite <- quadruple.
 unfold Rdiv; rewrite <- Rmult_assoc; rewrite Rinv_r_simpl_m; discrR.
 reflexivity.
@@ -401,7 +401,7 @@ forall (f:R -> R) (x0:R),
 continuity_pt f x0 ->
 f x0 <> 0 ->
 exists eps : posreal, (forall h:R, Rabs h < eps -> f (x0 + h) <> 0).
-Proof. try hammer_hook "Ranalysis2" "Ranalysis2.continuous_neq_0".  
+Proof. try hammer_hook "Ranalysis2" "Ranalysis2.continuous_neq_0". Undo.  
 intros; unfold continuity_pt in H; unfold continue_in in H;
 unfold limit1_in in H; unfold limit_in in H; elim (H (Rabs (f x0 / 2))).
 intros; elim H1; intros.

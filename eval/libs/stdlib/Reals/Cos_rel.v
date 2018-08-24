@@ -52,7 +52,7 @@ Theorem cos_plus_form :
 forall (x y:R) (n:nat),
 (0 < n)%nat ->
 A1 x (S n) * A1 y (S n) - B1 x n * B1 y n + Reste x y n = C1 x y (S n).
-Proof. try hammer_hook "Cos_rel" "Cos_rel.cos_plus_form".  
+Proof. try hammer_hook "Cos_rel" "Cos_rel.cos_plus_form". Undo.  
 intros.
 unfold A1, B1.
 rewrite
@@ -254,14 +254,14 @@ apply lt_O_Sn.
 Qed.
 
 Lemma pow_sqr : forall (x:R) (i:nat), x ^ (2 * i) = (x * x) ^ i.
-Proof. try hammer_hook "Cos_rel" "Cos_rel.pow_sqr".  
+Proof. try hammer_hook "Cos_rel" "Cos_rel.pow_sqr". Undo.  
 intros.
 assert (H := pow_Rsqr x i).
 unfold Rsqr in H; exact H.
 Qed.
 
 Lemma A1_cvg : forall x:R, Un_cv (A1 x) (cos x).
-Proof. try hammer_hook "Cos_rel" "Cos_rel.A1_cvg".  
+Proof. try hammer_hook "Cos_rel" "Cos_rel.A1_cvg". Undo.  
 intro.
 unfold cos; destruct (exist_cos (Rsqr x)) as (x0,p).
 unfold cos_in, cos_n, infinite_sum, R_dist in p.
@@ -281,7 +281,7 @@ apply pow_sqr.
 Qed.
 
 Lemma C1_cvg : forall x y:R, Un_cv (C1 x y) (cos (x + y)).
-Proof. try hammer_hook "Cos_rel" "Cos_rel.C1_cvg".  
+Proof. try hammer_hook "Cos_rel" "Cos_rel.C1_cvg". Undo.  
 intros.
 unfold cos.
 destruct (exist_cos (Rsqr (x + y))) as (x0,p).
@@ -304,7 +304,7 @@ apply pow_sqr.
 Qed.
 
 Lemma B1_cvg : forall x:R, Un_cv (B1 x) (sin x).
-Proof. try hammer_hook "Cos_rel" "Cos_rel.B1_cvg".  
+Proof. try hammer_hook "Cos_rel" "Cos_rel.B1_cvg". Undo.  
 intro.
 case (Req_dec x 0); intro.
 rewrite H.

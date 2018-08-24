@@ -16,7 +16,7 @@ Hint Resolve Qlt_le_weak : qarith.
 Definition Qabs (x:Q) := let (n,d):=x in (Z.abs n#d).
 
 Lemma Qabs_case : forall (x:Q) (P : Q -> Type), (0 <= x -> P x) -> (x <= 0 -> P (- x)) -> P (Qabs x).
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_case".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_case". Undo.  
 intros x P H1 H2.
 destruct x as [[|xn|xn] xd];
 [apply H1|apply H1|apply H2];
@@ -35,7 +35,7 @@ congruence.
 Qed.
 
 Lemma Qabs_pos : forall x, 0 <= x -> Qabs x == x.
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_pos".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_pos". Undo.  
 intros x H.
 apply Qabs_case.
 reflexivity.
@@ -46,7 +46,7 @@ apply Qle_antisym; assumption.
 Qed.
 
 Lemma Qabs_neg : forall x, x <= 0 -> Qabs x == - x.
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_neg".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_neg". Undo.  
 intros x H.
 apply Qabs_case.
 intros H0.
@@ -64,12 +64,12 @@ apply (Qopp_le_compat x 0).
 Qed.
 
 Lemma Zabs_Qabs : forall n d, (Z.abs n#d)==Qabs (n#d).
-Proof. try hammer_hook "Qabs" "Qabs.Zabs_Qabs".  
+Proof. try hammer_hook "Qabs" "Qabs.Zabs_Qabs". Undo.  
 intros [|n|n]; reflexivity.
 Qed.
 
 Lemma Qabs_opp : forall x, Qabs (-x) == Qabs x.
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_opp".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_opp". Undo.  
 intros x.
 do 2 apply Qabs_case; try (intros; ring);
 (intros H0 H1;
@@ -82,7 +82,7 @@ assumption.
 Qed.
 
 Lemma Qabs_triangle : forall x y, Qabs (x+y) <= Qabs x + Qabs y.
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_triangle".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_triangle". Undo.  
 intros [xn xd] [yn yd].
 unfold Qplus.
 unfold Qle.
@@ -95,7 +95,7 @@ apply Z.abs_triangle.
 Qed.
 
 Lemma Qabs_Qmult : forall a b, Qabs (a*b) == (Qabs a)*(Qabs b).
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_Qmult".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_Qmult". Undo.  
 intros [an ad] [bn bd].
 simpl.
 rewrite Z.abs_mul.
@@ -103,14 +103,14 @@ reflexivity.
 Qed.
 
 Lemma Qabs_Qminus x y: Qabs (x - y) = Qabs (y - x).
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_Qminus".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_Qminus". Undo.  
 unfold Qminus, Qopp. simpl.
 rewrite Pos.mul_comm, <- Z.abs_opp.
 do 2 f_equal. ring.
 Qed.
 
 Lemma Qle_Qabs : forall a, a <= Qabs a.
-Proof. try hammer_hook "Qabs" "Qabs.Qle_Qabs".  
+Proof. try hammer_hook "Qabs" "Qabs.Qle_Qabs". Undo.  
 intros a.
 apply Qabs_case; auto with *.
 intros H.
@@ -121,7 +121,7 @@ assumption.
 Qed.
 
 Lemma Qabs_triangle_reverse : forall x y, Qabs x - Qabs y <= Qabs (x - y).
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_triangle_reverse".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_triangle_reverse". Undo.  
 intros x y.
 rewrite Qle_minus_iff.
 setoid_replace (Qabs (x - y) + - (Qabs x - Qabs y)) with ((Qabs (x - y) + Qabs y) + - Qabs x) by ring.
@@ -133,7 +133,7 @@ ring.
 Qed.
 
 Lemma Qabs_Qle_condition x y: Qabs x <= y <-> -y <= x <= y.
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_Qle_condition".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_Qle_condition". Undo.  
 split.
 split.
 rewrite <- (Qopp_opp x).
@@ -148,7 +148,7 @@ intros. rewrite <- (Qopp_opp y). now apply Qopp_le_compat.
 Qed.
 
 Lemma Qabs_diff_Qle_condition x y r: Qabs (x - y) <= r <-> x - r <= y <= x + r.
-Proof. try hammer_hook "Qabs" "Qabs.Qabs_diff_Qle_condition".  
+Proof. try hammer_hook "Qabs" "Qabs.Qabs_diff_Qle_condition". Undo.  
 intros. unfold Qminus.
 rewrite Qabs_Qle_condition.
 rewrite <- (Qplus_le_l (-r) (x+-y) (y+r)).

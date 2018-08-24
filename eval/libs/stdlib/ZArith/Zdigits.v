@@ -30,7 +30,7 @@ match b with
 end.
 
 Lemma binary_value : forall n:nat, Bvector n -> Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.binary_value".  
+Proof. try hammer_hook "Zdigits" "Zdigits.binary_value". Undo.  
 refine (nat_rect _ _ _); intros.
 exact 0%Z.
 
@@ -39,7 +39,7 @@ exact (bit_value h + 2 * H H2)%Z.
 Defined.
 
 Lemma two_compl_value : forall n:nat, Bvector (S n) -> Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.two_compl_value".  
+Proof. try hammer_hook "Zdigits" "Zdigits.two_compl_value". Undo.  
 simple induction n; intros.
 inversion H.
 exact (- bit_value h)%Z.
@@ -73,7 +73,7 @@ end.
 
 Lemma Zmod2_twice :
 forall z:Z, z = (2 * Zmod2 z + bit_value (Z.odd z))%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Zmod2_twice".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Zmod2_twice". Undo.  
 destruct z; simpl.
 trivial.
 
@@ -93,7 +93,7 @@ trivial.
 Qed.
 
 Lemma Z_to_binary : forall n:nat, Z -> Bvector n.
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary". Undo.  
 simple induction n; intros.
 exact Bnil.
 
@@ -101,7 +101,7 @@ exact (Bcons (Z.odd H0) n0 (H (Z.div2 H0))).
 Defined.
 
 Lemma Z_to_two_compl : forall n:nat, Z -> Bvector (S n).
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl". Undo.  
 simple induction n; intros.
 exact (Bcons (Z.odd H) 0 Bnil).
 
@@ -118,7 +118,7 @@ Lemma binary_value_Sn :
 forall (n:nat) (b:bool) (bv:Bvector n),
 binary_value (S n) ( b :: bv) =
 (bit_value b + 2 * binary_value n bv)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.binary_value_Sn".  
+Proof. try hammer_hook "Zdigits" "Zdigits.binary_value_Sn". Undo.  
 intros; auto.
 Qed.
 
@@ -126,14 +126,14 @@ Lemma Z_to_binary_Sn :
 forall (n:nat) (b:bool) (z:Z),
 (z >= 0)%Z ->
 Z_to_binary (S n) (bit_value b + 2 * z) = Bcons b n (Z_to_binary n z).
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary_Sn".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary_Sn". Undo.  
 destruct b; destruct z; simpl; auto.
 intro H; elim H; trivial.
 Qed.
 
 Lemma binary_value_pos :
 forall (n:nat) (bv:Bvector n), (binary_value n bv >= 0)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.binary_value_pos".  
+Proof. try hammer_hook "Zdigits" "Zdigits.binary_value_pos". Undo.  
 induction bv as [| a n v IHbv]; cbn.
 omega.
 
@@ -145,7 +145,7 @@ Lemma two_compl_value_Sn :
 forall (n:nat) (bv:Bvector (S n)) (b:bool),
 two_compl_value (S n) (Bcons b (S n) bv) =
 (bit_value b + 2 * two_compl_value n bv)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.two_compl_value_Sn".  
+Proof. try hammer_hook "Zdigits" "Zdigits.two_compl_value_Sn". Undo.  
 intros; auto.
 Qed.
 
@@ -153,7 +153,7 @@ Lemma Z_to_two_compl_Sn :
 forall (n:nat) (b:bool) (z:Z),
 Z_to_two_compl (S n) (bit_value b + 2 * z) =
 Bcons b (S n) (Z_to_two_compl n z).
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl_Sn".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl_Sn". Undo.  
 destruct b; destruct z as [| p| p]; auto.
 destruct p as [p| p| ]; auto.
 destruct p as [p| p| ]; simpl; auto.
@@ -164,21 +164,21 @@ Lemma Z_to_binary_Sn_z :
 forall (n:nat) (z:Z),
 Z_to_binary (S n) z =
 Bcons (Z.odd z) n (Z_to_binary n (Z.div2 z)).
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary_Sn_z".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary_Sn_z". Undo.  
 intros; auto.
 Qed.
 
 Lemma Z_div2_value :
 forall z:Z,
 (z >= 0)%Z -> (bit_value (Z.odd z) + 2 * Z.div2 z)%Z = z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_div2_value".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_div2_value". Undo.  
 destruct z as [| p| p]; auto.
 destruct p; auto.
 intro H; elim H; trivial.
 Qed.
 
 Lemma Pdiv2 : forall z:Z, (z >= 0)%Z -> (Z.div2 z >= 0)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Pdiv2".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Pdiv2". Undo.  
 destruct z as [| p| p].
 auto.
 
@@ -192,7 +192,7 @@ Lemma Zdiv2_two_power_nat :
 forall (z:Z) (n:nat),
 (z >= 0)%Z ->
 (z < two_power_nat (S n))%Z -> (Z.div2 z < two_power_nat n)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Zdiv2_two_power_nat".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Zdiv2_two_power_nat". Undo.  
 intros.
 enough (2 * Z.div2 z < 2 * two_power_nat n)%Z by omega.
 rewrite <- two_power_nat_S.
@@ -205,13 +205,13 @@ Lemma Z_to_two_compl_Sn_z :
 forall (n:nat) (z:Z),
 Z_to_two_compl (S n) z =
 Bcons (Z.odd z) (S n) (Z_to_two_compl n (Zmod2 z)).
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl_Sn_z".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl_Sn_z". Undo.  
 intros; auto.
 Qed.
 
 Lemma Zeven_bit_value :
 forall z:Z, Zeven.Zeven z -> bit_value (Z.odd z) = 0%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Zeven_bit_value".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Zeven_bit_value". Undo.  
 destruct z; unfold bit_value; auto.
 destruct p; tauto || (intro H; elim H).
 destruct p; tauto || (intro H; elim H).
@@ -219,7 +219,7 @@ Qed.
 
 Lemma Zodd_bit_value :
 forall z:Z, Zeven.Zodd z -> bit_value (Z.odd z) = 1%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Zodd_bit_value".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Zodd_bit_value". Undo.  
 destruct z; unfold bit_value; auto.
 intros; elim H.
 destruct p; tauto || (intros; elim H).
@@ -229,7 +229,7 @@ Qed.
 Lemma Zge_minus_two_power_nat_S :
 forall (n:nat) (z:Z),
 (z >= - two_power_nat (S n))%Z -> (Zmod2 z >= - two_power_nat n)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Zge_minus_two_power_nat_S".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Zge_minus_two_power_nat_S". Undo.  
 intros n z; rewrite (two_power_nat_S n).
 generalize (Zmod2_twice z).
 destruct (Zeven.Zeven_odd_dec z) as [H| H].
@@ -241,7 +241,7 @@ Qed.
 Lemma Zlt_two_power_nat_S :
 forall (n:nat) (z:Z),
 (z < two_power_nat (S n))%Z -> (Zmod2 z < two_power_nat n)%Z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Zlt_two_power_nat_S".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Zlt_two_power_nat_S". Undo.  
 intros n z; rewrite (two_power_nat_S n).
 generalize (Zmod2_twice z).
 destruct (Zeven.Zeven_odd_dec z) as [H| H].
@@ -258,7 +258,7 @@ Section COHERENT_VALUE.
 
 Lemma binary_to_Z_to_binary :
 forall (n:nat) (bv:Bvector n), Z_to_binary n (binary_value n bv) = bv.
-Proof. try hammer_hook "Zdigits" "Zdigits.binary_to_Z_to_binary".  
+Proof. try hammer_hook "Zdigits" "Zdigits.binary_to_Z_to_binary". Undo.  
 induction bv as [| a n bv IHbv].
 auto.
 
@@ -272,7 +272,7 @@ Qed.
 Lemma two_compl_to_Z_to_two_compl :
 forall (n:nat) (bv:Bvector n) (b:bool),
 Z_to_two_compl n (two_compl_value n (Bcons b n bv)) = Bcons b n bv.
-Proof. try hammer_hook "Zdigits" "Zdigits.two_compl_to_Z_to_two_compl".  
+Proof. try hammer_hook "Zdigits" "Zdigits.two_compl_to_Z_to_two_compl". Undo.  
 induction bv as [| a n bv IHbv]; intro b.
 destruct b; auto.
 
@@ -285,7 +285,7 @@ Lemma Z_to_binary_to_Z :
 forall (n:nat) (z:Z),
 (z >= 0)%Z ->
 (z < two_power_nat n)%Z -> binary_value n (Z_to_binary n z) = z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary_to_Z".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_binary_to_Z". Undo.  
 induction n as [| n IHn].
 unfold two_power_nat, shift_nat; simpl; intros; omega.
 
@@ -303,7 +303,7 @@ Lemma Z_to_two_compl_to_Z :
 forall (n:nat) (z:Z),
 (z >= - two_power_nat n)%Z ->
 (z < two_power_nat n)%Z -> two_compl_value n (Z_to_two_compl n z) = z.
-Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl_to_Z".  
+Proof. try hammer_hook "Zdigits" "Zdigits.Z_to_two_compl_to_Z". Undo.  
 induction n as [| n IHn].
 unfold two_power_nat, shift_nat; simpl; intros.
 assert (z = (-1)%Z \/ z = 0%Z). omega.

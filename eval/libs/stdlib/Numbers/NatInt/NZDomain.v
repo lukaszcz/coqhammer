@@ -17,7 +17,7 @@ Local Notation "f ^ n" := (fun x => nat_rect _ x (fun _ => f) n).
 
 Instance nat_rect_wd n {A} (R:relation A) :
 Proper (R==>(R==>R)==>R) (fun x f => nat_rect (fun _ => _) x (fun _ => f) n).
-Proof. try hammer_hook "NZDomain" "NZDomain.nat_rect_wd".  
+Proof. try hammer_hook "NZDomain" "NZDomain.nat_rect_wd". Undo.  
 intros x y eq_xy f g eq_fg; induction n; [assumption | now apply eq_fg].
 Qed.
 
@@ -29,7 +29,7 @@ Include NZBaseProp NZ.
 
 
 Lemma itersucc_or_itersucc n m : exists k, n == (S^k) m \/ m == (S^k) n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.itersucc_or_itersucc".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.itersucc_or_itersucc". Undo.  
 revert n.
 apply central_induction with (z:=m).
 { intros x y eq_xy; apply ex_iff_morphism.
@@ -53,7 +53,7 @@ Qed.
 
 
 Lemma succ_swap_pred : forall k n m, n == (S^k) m -> m == (P^k) n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_swap_pred".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_swap_pred". Undo.  
 induction k.
 simpl; auto with *.
 simpl; intros. apply pred_wd in H. rewrite pred_succ in H. apply IHk in H; auto.
@@ -63,7 +63,7 @@ Qed.
 
 
 Lemma itersucc_or_iterpred : forall n m, exists k, n == (S^k) m \/ n == (P^k) m.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.itersucc_or_iterpred".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.itersucc_or_iterpred". Undo.  
 intros n m. destruct (itersucc_or_itersucc n m) as (k,[H|H]).
 exists k; left; auto.
 exists k; right. apply succ_swap_pred; auto.
@@ -73,7 +73,7 @@ Qed.
 
 Lemma itersucc0_or_iterpred0 :
 forall n, exists p:nat, n == (S^p) 0 \/ n == (P^p) 0.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.itersucc0_or_iterpred0".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.itersucc0_or_iterpred0". Undo.  
 intros n. exact (itersucc_or_iterpred n 0).
 Qed.
 
@@ -82,13 +82,13 @@ Qed.
 Definition initial n := forall m, n ~= S m.
 
 Lemma initial_alt : forall n, initial n <-> S (P n) ~= n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_alt".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_alt". Undo.  
 split. intros Bn EQ. symmetry in EQ. destruct (Bn _ EQ).
 intros NEQ m EQ. apply NEQ. rewrite EQ, pred_succ; auto with *.
 Qed.
 
 Lemma initial_alt2 : forall n, initial n <-> ~exists m, n == S m.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_alt2".   firstorder. Qed.
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_alt2". Undo.   firstorder. Qed.
 
 
 
@@ -99,7 +99,7 @@ Hypothesis Initial : initial init.
 
 
 Lemma initial_unique : forall m, initial m -> m == init.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_unique".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_unique". Undo.  
 intros m Im. destruct (itersucc_or_itersucc init m) as (p,[H|H]).
 destruct p. now simpl in *. destruct (Initial _ H).
 destruct p. now simpl in *. destruct (Im _ H).
@@ -108,7 +108,7 @@ Qed.
 
 
 Lemma initial_ancestor : forall m, exists p, m == (S^p) init.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_ancestor".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.initial_ancestor". Undo.  
 intros m. destruct (itersucc_or_itersucc init m) as (p,[H|H]).
 destruct p; simpl in *; auto. exists O; auto with *. destruct (Initial _ H).
 exists p; auto.
@@ -121,7 +121,7 @@ Qed.
 Section SuccPred.
 Hypothesis eq_decidable : forall n m, n==m \/ n~=m.
 Lemma succ_pred_approx : forall n, ~initial n -> S (P n) == n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_pred_approx".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_pred_approx". Undo.  
 intros n NB. rewrite initial_alt in NB.
 destruct (eq_decidable (S (P n)) n); auto.
 elim NB; auto.
@@ -136,12 +136,12 @@ Section InitialDontExists.
 Hypothesis succ_onto : forall n, exists m, n == S m.
 
 Lemma succ_onto_gives_succ_pred : forall n, S (P n) == n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_onto_gives_succ_pred".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_onto_gives_succ_pred". Undo.  
 intros n. destruct (succ_onto n) as (m,H). rewrite H, pred_succ; auto with *.
 Qed.
 
 Lemma succ_onto_pred_injective : forall n m, P n == P m -> n == m.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_onto_pred_injective".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.succ_onto_pred_injective". Undo.  
 intros n m. intros H; apply succ_wd in H.
 rewrite !succ_onto_gives_succ_pred in H; auto.
 Qed.
@@ -160,7 +160,7 @@ Lemma bi_induction_pred :
 forall A : t -> Prop, Proper (eq==>iff) A ->
 A 0 -> (forall n, A n -> A (S n)) -> (forall n, A n -> A (P n)) ->
 forall n, A n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.bi_induction_pred".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.bi_induction_pred". Undo.  
 intros. apply bi_induction; auto.
 clear n. intros n; split; auto.
 intros G; apply H2 in G. rewrite pred_succ in G; auto.
@@ -170,7 +170,7 @@ Lemma central_induction_pred :
 forall A : t -> Prop, Proper (eq==>iff) A -> forall n0,
 A n0 -> (forall n, A n -> A (S n)) -> (forall n, A n -> A (P n)) ->
 forall n, A n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.central_induction_pred".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZDomainProp.central_induction_pred". Undo.  
 intros.
 assert (A 0).
 destruct (itersucc_or_iterpred 0 n0) as (k,[Hk|Hk]); rewrite Hk; clear Hk.
@@ -190,17 +190,17 @@ Notation "[ n ]" := (ofnat n) (at level 7) : ofnat.
 Local Open Scope ofnat.
 
 Lemma ofnat_zero : [O] == 0.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNat.ofnat_zero".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNat.ofnat_zero". Undo.  
 reflexivity.
 Qed.
 
 Lemma ofnat_succ : forall n, [Datatypes.S n] == succ [n].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNat.ofnat_succ".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNat.ofnat_succ". Undo.  
 now unfold ofnat.
 Qed.
 
 Lemma ofnat_pred : forall n, n<>O -> [Peano.pred n] == P [n].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNat.ofnat_pred".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNat.ofnat_pred". Undo.  
 unfold ofnat. destruct n. destruct 1; auto.
 intros _. simpl. symmetry. apply pred_succ.
 Qed.
@@ -219,7 +219,7 @@ Local Open Scope ofnat.
 
 Theorem ofnat_S_gt_0 :
 forall n : nat, 0 < [Datatypes.S n].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_S_gt_0".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_S_gt_0". Undo.  
 unfold ofnat.
 intros n; induction n as [| n IH]; simpl in *.
 apply lt_succ_diag_r.
@@ -228,12 +228,12 @@ Qed.
 
 Theorem ofnat_S_neq_0 :
 forall n : nat, 0 ~= [Datatypes.S n].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_S_neq_0".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_S_neq_0". Undo.  
 intros. apply lt_neq, ofnat_S_gt_0.
 Qed.
 
 Lemma ofnat_injective : forall n m, [n]==[m] -> n = m.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_injective".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_injective". Undo.  
 induction n as [|n IH]; destruct m; auto.
 intros H; elim (ofnat_S_neq_0 _ H).
 intros H; symmetry in H; elim (ofnat_S_neq_0 _ H).
@@ -241,14 +241,14 @@ intros. f_equal. apply IH. now rewrite <- succ_inj_wd.
 Qed.
 
 Lemma ofnat_eq : forall n m, [n]==[m] <-> n = m.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_eq".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_eq". Undo.  
 split. apply ofnat_injective. intros; now subst.
 Qed.
 
 
 
 Lemma ofnat_lt : forall n m : nat, [n]<[m] <-> (n<m)%nat.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_lt".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_lt". Undo.  
 induction n as [|n IH]; destruct m; repeat rewrite ofnat_zero; split.
 intro H; elim (lt_irrefl _ H).
 inversion 1.
@@ -261,7 +261,7 @@ rewrite !ofnat_succ, <- succ_lt_mono, IH; auto with arith.
 Qed.
 
 Lemma ofnat_le : forall n m : nat, [n]<=[m] <-> (n<=m)%nat.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_le".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOrd.ofnat_le". Undo.  
 intros. rewrite lt_eq_cases, ofnat_lt, ofnat_eq.
 split.
 destruct 1; subst; auto with arith.
@@ -278,21 +278,21 @@ Include NZOfNat NZ.
 Local Open Scope ofnat.
 
 Lemma ofnat_add_l : forall n m, [n]+m == (S^n) m.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_add_l".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_add_l". Undo.  
 induction n; intros.
 apply add_0_l.
 rewrite ofnat_succ, add_succ_l. simpl. now f_equiv.
 Qed.
 
 Lemma ofnat_add : forall n m, [n+m] == [n]+[m].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_add".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_add". Undo.  
 intros. rewrite ofnat_add_l.
 induction n; simpl. reflexivity.
 now f_equiv.
 Qed.
 
 Lemma ofnat_mul : forall n m, [n*m] == [n]*[m].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_mul".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_mul". Undo.  
 induction n; simpl; intros.
 symmetry. apply mul_0_l.
 rewrite plus_comm.
@@ -301,14 +301,14 @@ now f_equiv.
 Qed.
 
 Lemma ofnat_sub_r : forall n m, n-[m] == (P^m) n.
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_sub_r".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_sub_r". Undo.  
 induction m; simpl; intros.
 apply sub_0_r.
 rewrite sub_succ_r. now f_equiv.
 Qed.
 
 Lemma ofnat_sub : forall n m, m<=n -> [n-m] == [n]-[m].
-Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_sub".  
+Proof. try hammer_hook "NZDomain" "NZDomain.NZOfNatOps.ofnat_sub". Undo.  
 intros n m H. rewrite ofnat_sub_r.
 revert n H. induction m. intros.
 rewrite <- minus_n_O. now simpl.

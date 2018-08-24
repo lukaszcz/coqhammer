@@ -45,7 +45,7 @@ Lemma sincl_add_x :
 forall (A B:Ensemble U) (x:U),
 ~ In U A x ->
 Strict_Included U (Add U A x) (Add U B x) -> Strict_Included U A B.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.sincl_add_x".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.sincl_add_x". Undo.  
 intros A B x H' H'0; red.
 lapply (Strict_Included_inv U (Add U A x) (Add U B x)); auto with sets.
 clear H'0; intro H'0; split.
@@ -59,7 +59,7 @@ Qed.
 
 Lemma incl_soustr_in :
 forall (X:Ensemble U) (x:U), In U X x -> Included U (Subtract U X x) X.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr_in".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr_in". Undo.  
 intros X x H'; red.
 intros x0 H'0; elim H'0; auto with sets.
 Qed.
@@ -67,7 +67,7 @@ Qed.
 Lemma incl_soustr :
 forall (X Y:Ensemble U) (x:U),
 Included U X Y -> Included U (Subtract U X x) (Subtract U Y x).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr". Undo.  
 intros X Y x H'; red.
 intros x0 H'0; elim H'0.
 intros H'1 H'2.
@@ -76,7 +76,7 @@ Qed.
 
 Lemma incl_soustr_add_l :
 forall (X:Ensemble U) (x:U), Included U (Subtract U (Add U X x) x) X.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr_add_l".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr_add_l". Undo.  
 intros X x; red.
 intros x0 H'; elim H'; auto with sets.
 intro H'0; elim H'0; auto with sets.
@@ -86,7 +86,7 @@ Qed.
 Lemma incl_soustr_add_r :
 forall (X:Ensemble U) (x:U),
 ~ In U X x -> Included U X (Subtract U (Add U X x) x).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr_add_r".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_soustr_add_r". Undo.  
 intros X x H'; red.
 intros x0 H'0; try assumption.
 apply Subtract_intro; auto with sets.
@@ -97,7 +97,7 @@ Hint Resolve incl_soustr_add_r: sets.
 Lemma add_soustr_2 :
 forall (X:Ensemble U) (x:U),
 In U X x -> Included U X (Add U (Subtract U X x) x).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.add_soustr_2".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.add_soustr_2". Undo.  
 intros X x H'; red.
 intros x0 H'0; try assumption.
 elim (classic (x = x0)); intro K; auto with sets.
@@ -107,7 +107,7 @@ Qed.
 Lemma add_soustr_1 :
 forall (X:Ensemble U) (x:U),
 In U X x -> Included U (Add U (Subtract U X x) x) X.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.add_soustr_1".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.add_soustr_1". Undo.  
 intros X x H'; red.
 intros x0 H'0; elim H'0; auto with sets.
 intros y H'1; elim H'1; auto with sets.
@@ -118,7 +118,7 @@ Qed.
 Lemma add_soustr_xy :
 forall (X:Ensemble U) (x y:U),
 x <> y -> Subtract U (Add U X x) y = Add U (Subtract U X y) x.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.add_soustr_xy".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.add_soustr_xy". Undo.  
 intros X x y H'; apply Extensionality_Ensembles.
 split; red.
 intros x0 H'0; elim H'0; auto with sets.
@@ -138,7 +138,7 @@ Lemma incl_st_add_soustr :
 forall (X Y:Ensemble U) (x:U),
 ~ In U X x ->
 Strict_Included U (Add U X x) Y -> Strict_Included U X (Subtract U Y x).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_st_add_soustr".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.incl_st_add_soustr". Undo.  
 intros X Y x H' H'0; apply sincl_add_x with (x := x); auto using add_soustr_1 with sets.
 split.
 elim H'0.
@@ -154,14 +154,14 @@ Qed.
 
 Lemma Sub_Add_new :
 forall (X:Ensemble U) (x:U), ~ In U X x -> X = Subtract U (Add U X x) x.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Sub_Add_new".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Sub_Add_new". Undo.  
 auto using incl_soustr_add_l with sets.
 Qed.
 
 Lemma Simplify_add :
 forall (X X0:Ensemble U) (x:U),
 ~ In U X x -> ~ In U X0 x -> Add U X x = Add U X0 x -> X = X0.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Simplify_add".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Simplify_add". Undo.  
 intros X X0 x H' H'0 H'1; try assumption.
 rewrite (Sub_Add_new X x); auto with sets.
 rewrite (Sub_Add_new X0 x); auto with sets.
@@ -172,7 +172,7 @@ Lemma Included_Add :
 forall (X A:Ensemble U) (x:U),
 Included U X (Add U A x) ->
 Included U X A \/ (exists A' : _, X = Add U A' x /\ Included U A' A).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Included_Add".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Included_Add". Undo.  
 intros X A x H'0; try assumption.
 elim (classic (In U X x)).
 intro H'1; right; try assumption.
@@ -207,7 +207,7 @@ forall A x y:Ensemble U,
 covers (Ensemble U) (Power_set_PO U A) y x ->
 Strict_Included U x y /\
 (forall z:Ensemble U, Included U x z -> Included U z y -> x = z \/ z = y).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.setcover_inv".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.setcover_inv". Undo.  
 intros A x y H'; elim H'.
 unfold Strict_Rel_of; simpl.
 intros H'0 H'1; split; [ auto with sets | idtac ].
@@ -226,7 +226,7 @@ Included U a A ->
 forall x:U,
 In U A x ->
 ~ In U a x -> covers (Ensemble U) (Power_set_PO U A) (Add U a x) a.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Add_covers".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Add_covers". Undo.  
 intros A a H' x H'0 H'1; try assumption.
 apply setcover_intro; auto with sets.
 red.
@@ -262,7 +262,7 @@ Included U a A ->
 Included U a' A ->
 covers (Ensemble U) (Power_set_PO U A) a' a ->
 exists x : _, a' = Add U a x /\ In U A x /\ ~ In U a x.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.covers_Add".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.covers_Add". Undo.  
 intros A a a' H' H'0 H'1; try assumption.
 elim (setcover_inv A a a'); auto with sets.
 intros H'6 H'7.
@@ -294,7 +294,7 @@ Included U a A ->
 Included U a' A ->
 (covers (Ensemble U) (Power_set_PO U A) a' a <->
 (exists x : _, a' = Add U a x /\ In U A x /\ ~ In U a x)).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.covers_is_Add".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.covers_is_Add". Undo.  
 intros A a a' H' H'0; split; intro K.
 apply covers_Add with (A := A); auto with sets.
 elim K.
@@ -306,7 +306,7 @@ Theorem Singleton_atomic :
 forall (x:U) (A:Ensemble U),
 In U A x ->
 covers (Ensemble U) (Power_set_PO U A) (Singleton U x) (Empty_set U).
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Singleton_atomic".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.Singleton_atomic". Undo.  
 intros x A H'.
 rewrite <- (Empty_set_zero' U x).
 apply Add_covers; auto with sets.
@@ -315,7 +315,7 @@ Qed.
 Lemma less_than_singleton :
 forall (X:Ensemble U) (x:U),
 Strict_Included U X (Singleton U x) -> X = Empty_set U.
-Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.less_than_singleton".  
+Proof. try hammer_hook "Powerset_Classical_facts" "Powerset_Classical_facts.less_than_singleton". Undo.  
 intros X x H'; try assumption.
 red in H'.
 lapply (Singleton_atomic x (Full_set U));

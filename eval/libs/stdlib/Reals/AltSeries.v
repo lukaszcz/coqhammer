@@ -25,7 +25,7 @@ Lemma CV_ALT_step0 :
 forall Un:nat -> R,
 Un_decreasing Un ->
 Un_growing (fun N:nat => sum_f_R0 (tg_alt Un) (S (2 * N))).
-Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step0".  
+Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step0". Undo.  
 intros; unfold Un_growing; intro.
 cut ((2 * S n)%nat = S (S (2 * n))).
 intro; rewrite H0.
@@ -47,7 +47,7 @@ Lemma CV_ALT_step1 :
 forall Un:nat -> R,
 Un_decreasing Un ->
 Un_decreasing (fun N:nat => sum_f_R0 (tg_alt Un) (2 * N)).
-Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step1".  
+Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step1". Undo.  
 intros; unfold Un_decreasing; intro.
 cut ((2 * S n)%nat = S (S (2 * n))).
 intro; rewrite H0; do 2 rewrite tech5; repeat rewrite Rplus_assoc.
@@ -70,7 +70,7 @@ forall (Un:nat -> R) (N:nat),
 Un_decreasing Un ->
 positivity_seq Un ->
 sum_f_R0 (fun i:nat => tg_alt Un (S i)) (S (2 * N)) <= 0.
-Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step2".  
+Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step2". Undo.  
 intros; induction  N as [| N HrecN].
 simpl; unfold tg_alt; simpl; rewrite Rmult_1_r.
 replace (-1 * -1 * Un 2%nat) with (Un 2%nat); [ idtac | ring ].
@@ -102,7 +102,7 @@ Lemma CV_ALT_step3 :
 forall (Un:nat -> R) (N:nat),
 Un_decreasing Un ->
 positivity_seq Un -> sum_f_R0 (fun i:nat => tg_alt Un (S i)) N <= 0.
-Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step3".  
+Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step3". Undo.  
 intros; induction  N as [| N HrecN].
 simpl; unfold tg_alt; simpl; rewrite Rmult_1_r.
 apply Rplus_le_reg_l with (Un 1%nat).
@@ -134,7 +134,7 @@ forall Un:nat -> R,
 Un_decreasing Un ->
 positivity_seq Un ->
 has_ub (fun N:nat => sum_f_R0 (tg_alt Un) (S (2 * N))).
-Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step4".  
+Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT_step4". Undo.  
 intros; unfold has_ub; unfold bound.
 exists (Un 0%nat).
 unfold is_upper_bound; intros; elim H1; intros.
@@ -154,7 +154,7 @@ Un_decreasing Un ->
 positivity_seq Un ->
 Un_cv Un 0 ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 (tg_alt Un) N) l }.
-Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT".  
+Proof. try hammer_hook "AltSeries" "AltSeries.CV_ALT". Undo.  
 intros.
 assert (H2 := CV_ALT_step0 _ H).
 assert (H3 := CV_ALT_step4 _ H H0).
@@ -220,7 +220,7 @@ forall Un:nat -> R,
 Un_decreasing Un ->
 Un_cv Un 0 ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 (tg_alt Un) N) l }.
-Proof. try hammer_hook "AltSeries" "AltSeries.alternated_series".  
+Proof. try hammer_hook "AltSeries" "AltSeries.alternated_series". Undo.  
 intros; apply CV_ALT.
 assumption.
 unfold positivity_seq; apply decreasing_ineq; assumption.
@@ -233,7 +233,7 @@ Un_decreasing Un ->
 Un_cv Un 0 ->
 Un_cv (fun N:nat => sum_f_R0 (tg_alt Un) N) l ->
 sum_f_R0 (tg_alt Un) (S (2 * N)) <= l <= sum_f_R0 (tg_alt Un) (2 * N).
-Proof. try hammer_hook "AltSeries" "AltSeries.alternated_series_ineq".  
+Proof. try hammer_hook "AltSeries" "AltSeries.alternated_series_ineq". Undo.  
 intros.
 cut (Un_cv (fun N:nat => sum_f_R0 (tg_alt Un) (2 * N)) l).
 cut (Un_cv (fun N:nat => sum_f_R0 (tg_alt Un) (S (2 * N))) l).
@@ -279,13 +279,13 @@ Qed.
 Definition PI_tg (n:nat) := / INR (2 * n + 1).
 
 Lemma PI_tg_pos : forall n:nat, 0 <= PI_tg n.
-Proof. try hammer_hook "AltSeries" "AltSeries.PI_tg_pos".  
+Proof. try hammer_hook "AltSeries" "AltSeries.PI_tg_pos". Undo.  
 intro; unfold PI_tg; left; apply Rinv_0_lt_compat; apply lt_INR_0;
 replace (2 * n + 1)%nat with (S (2 * n)); [ apply lt_O_Sn | ring ].
 Qed.
 
 Lemma PI_tg_decreasing : Un_decreasing PI_tg.
-Proof. try hammer_hook "AltSeries" "AltSeries.PI_tg_decreasing".  
+Proof. try hammer_hook "AltSeries" "AltSeries.PI_tg_decreasing". Undo.  
 unfold PI_tg, Un_decreasing; intro.
 apply Rmult_le_reg_l with (INR (2 * n + 1)).
 apply lt_INR_0.
@@ -306,7 +306,7 @@ apply not_O_INR; replace (2 * n + 1)%nat with (S (2 * n));
 Qed.
 
 Lemma PI_tg_cv : Un_cv PI_tg 0.
-Proof. try hammer_hook "AltSeries" "AltSeries.PI_tg_cv".  
+Proof. try hammer_hook "AltSeries" "AltSeries.PI_tg_cv". Undo.  
 unfold Un_cv; unfold R_dist; intros.
 cut (0 < 2 * eps);
 [ intro | apply Rmult_lt_0_compat; [ prove_sup0 | assumption ] ].
@@ -377,7 +377,7 @@ Qed.
 
 Lemma exist_PI :
 { l:R | Un_cv (fun N:nat => sum_f_R0 (tg_alt PI_tg) N) l }.
-Proof. try hammer_hook "AltSeries" "AltSeries.exist_PI".  
+Proof. try hammer_hook "AltSeries" "AltSeries.exist_PI". Undo.  
 apply alternated_series.
 apply PI_tg_decreasing.
 apply PI_tg_cv.
@@ -391,7 +391,7 @@ Lemma Alt_PI_ineq :
 forall N:nat,
 sum_f_R0 (tg_alt PI_tg) (S (2 * N)) <= Alt_PI / 4 <=
 sum_f_R0 (tg_alt PI_tg) (2 * N).
-Proof. try hammer_hook "AltSeries" "AltSeries.Alt_PI_ineq".  
+Proof. try hammer_hook "AltSeries" "AltSeries.Alt_PI_ineq". Undo.  
 intro; apply alternated_series_ineq.
 apply PI_tg_decreasing.
 apply PI_tg_cv.
@@ -403,7 +403,7 @@ rewrite <- Rinv_r_sym; [ rewrite Rmult_1_r; reflexivity | discrR ].
 Qed.
 
 Lemma Alt_PI_RGT_0 : 0 < Alt_PI.
-Proof. try hammer_hook "AltSeries" "AltSeries.Alt_PI_RGT_0".  
+Proof. try hammer_hook "AltSeries" "AltSeries.Alt_PI_RGT_0". Undo.  
 assert (H := Alt_PI_ineq 0).
 apply Rmult_lt_reg_l with (/ 4).
 apply Rinv_0_lt_compat; prove_sup0.

@@ -100,14 +100,14 @@ Qed.
 Lemma continuity_pt_plus :
 forall f1 f2 (x0:R),
 continuity_pt f1 x0 -> continuity_pt f2 x0 -> continuity_pt (f1 + f2) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_plus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_plus". Undo.  
 unfold continuity_pt, plus_fct; unfold continue_in; intros;
 apply limit_plus; assumption.
 Qed.
 
 Lemma continuity_pt_opp :
 forall f (x0:R), continuity_pt f x0 -> continuity_pt (- f) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_opp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_opp". Undo.  
 unfold continuity_pt, opp_fct; unfold continue_in; intros;
 apply limit_Ropp; assumption.
 Qed.
@@ -115,7 +115,7 @@ Qed.
 Lemma continuity_pt_minus :
 forall f1 f2 (x0:R),
 continuity_pt f1 x0 -> continuity_pt f2 x0 -> continuity_pt (f1 - f2) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_minus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_minus". Undo.  
 unfold continuity_pt, minus_fct; unfold continue_in; intros;
 apply limit_minus; assumption.
 Qed.
@@ -123,13 +123,13 @@ Qed.
 Lemma continuity_pt_mult :
 forall f1 f2 (x0:R),
 continuity_pt f1 x0 -> continuity_pt f2 x0 -> continuity_pt (f1 * f2) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_mult".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_mult". Undo.  
 unfold continuity_pt, mult_fct; unfold continue_in; intros;
 apply limit_mul; assumption.
 Qed.
 
 Lemma continuity_pt_const : forall f (x0:R), constant f -> continuity_pt f x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_const".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_const". Undo.  
 unfold constant, continuity_pt; unfold continue_in;
 unfold limit1_in; unfold limit_in;
 intros; exists 1; split;
@@ -141,7 +141,7 @@ Qed.
 Lemma continuity_pt_scal :
 forall f (a x0:R),
 continuity_pt f x0 -> continuity_pt (mult_real_fct a f) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_scal".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_scal". Undo.  
 unfold continuity_pt, mult_real_fct; unfold continue_in;
 intros; apply (limit_mul (fun x:R => a) f (D_x no_cond x0) a (f x0) x0).
 unfold limit1_in; unfold limit_in; intros; exists 1; split.
@@ -152,7 +152,7 @@ Qed.
 
 Lemma continuity_pt_inv :
 forall f (x0:R), continuity_pt f x0 -> f x0 <> 0 -> continuity_pt (/ f) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_inv".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_inv". Undo.  
 intros.
 replace (/ f)%F with (fun x:R => / f x).
 unfold continuity_pt; unfold continue_in; intros;
@@ -161,7 +161,7 @@ unfold inv_fct; reflexivity.
 Qed.
 
 Lemma div_eq_inv : forall f1 f2, (f1 / f2)%F = (f1 * / f2)%F.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.div_eq_inv".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.div_eq_inv". Undo.  
 intros; reflexivity.
 Qed.
 
@@ -169,7 +169,7 @@ Lemma continuity_pt_div :
 forall f1 f2 (x0:R),
 continuity_pt f1 x0 ->
 continuity_pt f2 x0 -> f2 x0 <> 0 -> continuity_pt (f1 / f2) x0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_div".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_div". Undo.  
 intros; rewrite (div_eq_inv f1 f2); apply continuity_pt_mult;
 [ assumption | apply continuity_pt_inv; assumption ].
 Qed.
@@ -177,7 +177,7 @@ Qed.
 Lemma continuity_pt_comp :
 forall f1 f2 (x:R),
 continuity_pt f1 x -> continuity_pt f2 (f1 x) -> continuity_pt (f2 o f1) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_comp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_pt_comp". Undo.  
 unfold continuity_pt; unfold continue_in; intros;
 unfold comp.
 cut
@@ -216,44 +216,44 @@ Qed.
 
 Lemma continuity_plus :
 forall f1 f2, continuity f1 -> continuity f2 -> continuity (f1 + f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_plus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_plus". Undo.  
 unfold continuity; intros;
 apply (continuity_pt_plus f1 f2 x (H x) (H0 x)).
 Qed.
 
 Lemma continuity_opp : forall f, continuity f -> continuity (- f).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_opp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_opp". Undo.  
 unfold continuity; intros; apply (continuity_pt_opp f x (H x)).
 Qed.
 
 Lemma continuity_minus :
 forall f1 f2, continuity f1 -> continuity f2 -> continuity (f1 - f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_minus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_minus". Undo.  
 unfold continuity; intros;
 apply (continuity_pt_minus f1 f2 x (H x) (H0 x)).
 Qed.
 
 Lemma continuity_mult :
 forall f1 f2, continuity f1 -> continuity f2 -> continuity (f1 * f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_mult".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_mult". Undo.  
 unfold continuity; intros;
 apply (continuity_pt_mult f1 f2 x (H x) (H0 x)).
 Qed.
 
 Lemma continuity_const : forall f, constant f -> continuity f.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_const".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_const". Undo.  
 unfold continuity; intros; apply (continuity_pt_const f x H).
 Qed.
 
 Lemma continuity_scal :
 forall f (a:R), continuity f -> continuity (mult_real_fct a f).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_scal".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_scal". Undo.  
 unfold continuity; intros; apply (continuity_pt_scal f a x (H x)).
 Qed.
 
 Lemma continuity_inv :
 forall f, continuity f -> (forall x:R, f x <> 0) -> continuity (/ f).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_inv".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_inv". Undo.  
 unfold continuity; intros; apply (continuity_pt_inv f x (H x) (H0 x)).
 Qed.
 
@@ -261,14 +261,14 @@ Lemma continuity_div :
 forall f1 f2,
 continuity f1 ->
 continuity f2 -> (forall x:R, f2 x <> 0) -> continuity (f1 / f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_div".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_div". Undo.  
 unfold continuity; intros;
 apply (continuity_pt_div f1 f2 x (H x) (H0 x) (H1 x)).
 Qed.
 
 Lemma continuity_comp :
 forall f1 f2, continuity f1 -> continuity f2 -> continuity (f2 o f1).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_comp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.continuity_comp". Undo.  
 unfold continuity; intros.
 apply (continuity_pt_comp f1 f2 x (H x) (H0 (f1 x))).
 Qed.
@@ -321,7 +321,7 @@ forall f (x l1 l2:R),
 limit1_in (fun h:R => (f (x + h) - f x) / h) (fun h:R => h <> 0) l1 0 ->
 limit1_in (fun h:R => (f (x + h) - f x) / h) (fun h:R => h <> 0) l2 0 ->
 l1 = l2.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_step1".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_step1". Undo.  
 intros;
 apply
 (single_limit (fun h:R => (f (x + h) - f x) / h) (
@@ -350,7 +350,7 @@ Lemma uniqueness_step2 :
 forall f (x l:R),
 derivable_pt_lim f x l ->
 limit1_in (fun h:R => (f (x + h) - f x) / h) (fun h:R => h <> 0) l 0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_step2".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_step2". Undo.  
 unfold derivable_pt_lim; intros; unfold limit1_in;
 unfold limit_in; intros.
 assert (H1 := H eps H0).
@@ -370,7 +370,7 @@ Lemma uniqueness_step3 :
 forall f (x l:R),
 limit1_in (fun h:R => (f (x + h) - f x) / h) (fun h:R => h <> 0) l 0 ->
 derivable_pt_lim f x l.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_step3".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_step3". Undo.  
 unfold limit1_in, derivable_pt_lim; unfold limit_in;
 unfold dist; simpl; intros.
 elim (H eps H0).
@@ -385,7 +385,7 @@ Qed.
 Lemma uniqueness_limite :
 forall f (x l1 l2:R),
 derivable_pt_lim f x l1 -> derivable_pt_lim f x l2 -> l1 = l2.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_limite".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.uniqueness_limite". Undo.  
 intros.
 assert (H1 := uniqueness_step2 _ _ _ H).
 assert (H2 := uniqueness_step2 _ _ _ H0).
@@ -396,7 +396,7 @@ Qed.
 Lemma derive_pt_eq :
 forall f (x l:R) (pr:derivable_pt f x),
 derive_pt f x pr = l <-> derivable_pt_lim f x l.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_eq".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_eq". Undo.  
 intros; split.
 intro; assert (H1 := proj2_sig pr); unfold derive_pt in H; rewrite H in H1;
 assumption.
@@ -410,7 +410,7 @@ Qed.
 Lemma derive_pt_eq_0 :
 forall f (x l:R) (pr:derivable_pt f x),
 derivable_pt_lim f x l -> derive_pt f x pr = l.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_eq_0".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_eq_0". Undo.  
 intros; elim (derive_pt_eq f x l pr); intros.
 apply (H1 H).
 Qed.
@@ -419,7 +419,7 @@ Qed.
 Lemma derive_pt_eq_1 :
 forall f (x l:R) (pr:derivable_pt f x),
 derive_pt f x pr = l -> derivable_pt_lim f x l.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_eq_1".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_eq_1". Undo.  
 intros; elim (derive_pt_eq f x l pr); intros.
 apply (H0 H).
 Qed.
@@ -431,7 +431,7 @@ Qed.
 Lemma derive_pt_D_in :
 forall f (df:R -> R) (x:R) (pr:derivable_pt f x),
 D_in f df no_cond x <-> derive_pt f x pr = df x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_D_in".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_D_in". Undo.  
 intros; split.
 unfold D_in; unfold limit1_in; unfold limit_in;
 simpl; unfold R_dist; intros.
@@ -465,7 +465,7 @@ Qed.
 Lemma derivable_pt_lim_D_in :
 forall f (df:R -> R) (x:R),
 D_in f df no_cond x <-> derivable_pt_lim f x (df x).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_D_in".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_D_in". Undo.  
 intros; split.
 unfold D_in; unfold limit1_in; unfold limit_in;
 simpl; unfold R_dist; intros.
@@ -544,14 +544,14 @@ Qed.
 
 Lemma derivable_derive :
 forall f (x:R) (pr:derivable_pt f x),  exists l : R, derive_pt f x pr = l.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_derive".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_derive". Undo.  
 intros; exists (proj1_sig pr).
 unfold derive_pt; reflexivity.
 Qed.
 
 Theorem derivable_continuous_pt :
 forall f (x:R), derivable_pt f x -> continuity_pt f x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_continuous_pt".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_continuous_pt". Undo.  
 intros f x X.
 generalize (derivable_derive f x X); intro.
 elim H; intros l H1.
@@ -567,7 +567,7 @@ unfold fct_cte; reflexivity.
 Qed.
 
 Theorem derivable_continuous : forall f, derivable f -> continuity f.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_continuous".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_continuous". Undo.  
 unfold derivable, continuity; intros f X x.
 apply (derivable_continuous_pt f x (X x)).
 Qed.
@@ -606,7 +606,7 @@ Qed.
 
 Lemma derivable_pt_lim_opp :
 forall f (x l:R), derivable_pt_lim f x l -> derivable_pt_lim (- f) x (- l).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_opp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_opp". Undo.  
 intros.
 apply uniqueness_step3.
 assert (H1 := uniqueness_step2 _ _ _ H).
@@ -630,7 +630,7 @@ Lemma derivable_pt_lim_minus :
 forall f1 f2 (x l1 l2:R),
 derivable_pt_lim f1 x l1 ->
 derivable_pt_lim f2 x l2 -> derivable_pt_lim (f1 - f2) x (l1 - l2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_minus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_minus". Undo.  
 intros.
 apply uniqueness_step3.
 assert (H1 := uniqueness_step2 _ _ _ H).
@@ -660,7 +660,7 @@ forall f1 f2 (x l1 l2:R),
 derivable_pt_lim f1 x l1 ->
 derivable_pt_lim f2 x l2 ->
 derivable_pt_lim (f1 * f2) x (l1 * f2 x + f1 x * l2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_mult".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_mult". Undo.  
 intros.
 assert (H1 := derivable_pt_lim_D_in f1 (fun y:R => l1) x).
 elim H1; intros.
@@ -680,7 +680,7 @@ apply (Dmult no_cond (fun y:R => l1) (fun y:R => l2) f1 f2 x); assumption.
 Qed.
 
 Lemma derivable_pt_lim_const : forall a x:R, derivable_pt_lim (fct_cte a) x 0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_const".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_const". Undo.  
 intros; unfold fct_cte, derivable_pt_lim.
 intros; exists (mkposreal 1 Rlt_0_1); intros; unfold Rminus;
 rewrite Rplus_opp_r; unfold Rdiv; rewrite Rmult_0_l;
@@ -690,7 +690,7 @@ Qed.
 Lemma derivable_pt_lim_scal :
 forall f (a x l:R),
 derivable_pt_lim f x l -> derivable_pt_lim (mult_real_fct a f) x (a * l).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_scal".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_scal". Undo.  
 intros.
 assert (H0 := derivable_pt_lim_const a x).
 replace (mult_real_fct a f) with (fct_cte a * f)%F.
@@ -718,7 +718,7 @@ unfold Rdiv; rewrite Rmult_comm; apply derivable_pt_lim_scal; assumption.
 Qed.
 
 Lemma derivable_pt_lim_id : forall x:R, derivable_pt_lim id x 1.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_id".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_id". Undo.  
 intro; unfold derivable_pt_lim.
 intros eps Heps; exists (mkposreal eps Heps); intros h H1 H2;
 unfold id; replace ((x + h - x) / h - 1) with 0.
@@ -734,7 +734,7 @@ assumption.
 Qed.
 
 Lemma derivable_pt_lim_Rsqr : forall x:R, derivable_pt_lim Rsqr x (2 * x).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_Rsqr".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_Rsqr". Undo.  
 intro; unfold derivable_pt_lim.
 unfold Rsqr; intros eps Heps; exists (mkposreal eps Heps);
 intros h H1 H2; replace (((x + h) * (x + h) - x * x) / h - 2 * x) with h.
@@ -751,7 +751,7 @@ Lemma derivable_pt_lim_comp :
 forall f1 f2 (x l1 l2:R),
 derivable_pt_lim f1 x l1 ->
 derivable_pt_lim f2 (f1 x) l2 -> derivable_pt_lim (f2 o f1) x (l2 * l1).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_comp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_comp". Undo.  
 intros; assert (H1 := derivable_pt_lim_D_in f1 (fun y:R => l1) x).
 elim H1; intros.
 assert (H4 := H3 H).
@@ -787,7 +787,7 @@ Qed.
 Lemma derivable_pt_plus :
 forall f1 f2 (x:R),
 derivable_pt f1 x -> derivable_pt f2 x -> derivable_pt (f1 + f2) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_plus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_plus". Undo.  
 unfold derivable_pt; intros f1 f2 x X X0.
 elim X; intros.
 elim X0; intros.
@@ -797,7 +797,7 @@ Qed.
 
 Lemma derivable_pt_opp :
 forall f (x:R), derivable_pt f x -> derivable_pt (- f) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_opp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_opp". Undo.  
 unfold derivable_pt; intros f x X.
 elim X; intros.
 exists (- x0).
@@ -807,7 +807,7 @@ Qed.
 Lemma derivable_pt_minus :
 forall f1 f2 (x:R),
 derivable_pt f1 x -> derivable_pt f2 x -> derivable_pt (f1 - f2) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_minus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_minus". Undo.  
 unfold derivable_pt; intros f1 f2 x X X0.
 elim X; intros.
 elim X0; intros.
@@ -818,7 +818,7 @@ Qed.
 Lemma derivable_pt_mult :
 forall f1 f2 (x:R),
 derivable_pt f1 x -> derivable_pt f2 x -> derivable_pt (f1 * f2) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_mult".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_mult". Undo.  
 unfold derivable_pt; intros f1 f2 x X X0.
 elim X; intros.
 elim X0; intros.
@@ -827,7 +827,7 @@ apply derivable_pt_lim_mult; assumption.
 Qed.
 
 Lemma derivable_pt_const : forall a x:R, derivable_pt (fct_cte a) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_const".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_const". Undo.  
 intros; unfold derivable_pt.
 exists 0.
 apply derivable_pt_lim_const.
@@ -835,7 +835,7 @@ Qed.
 
 Lemma derivable_pt_scal :
 forall f (a x:R), derivable_pt f x -> derivable_pt (mult_real_fct a f) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_scal".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_scal". Undo.  
 unfold derivable_pt; intros f1 a x X.
 elim X; intros.
 exists (a * x0).
@@ -843,14 +843,14 @@ apply derivable_pt_lim_scal; assumption.
 Qed.
 
 Lemma derivable_pt_id : forall x:R, derivable_pt id x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_id".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_id". Undo.  
 unfold derivable_pt; intro.
 exists 1.
 apply derivable_pt_lim_id.
 Qed.
 
 Lemma derivable_pt_Rsqr : forall x:R, derivable_pt Rsqr x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_Rsqr".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_Rsqr". Undo.  
 unfold derivable_pt; intro; exists (2 * x).
 apply derivable_pt_lim_Rsqr.
 Qed.
@@ -858,7 +858,7 @@ Qed.
 Lemma derivable_pt_comp :
 forall f1 f2 (x:R),
 derivable_pt f1 x -> derivable_pt f2 (f1 x) -> derivable_pt (f2 o f1) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_comp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_comp". Undo.  
 unfold derivable_pt; intros f1 f2 x X X0.
 elim X; intros.
 elim X0; intros.
@@ -868,57 +868,57 @@ Qed.
 
 Lemma derivable_plus :
 forall f1 f2, derivable f1 -> derivable f2 -> derivable (f1 + f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_plus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_plus". Undo.  
 unfold derivable; intros f1 f2 X X0 x.
 apply (derivable_pt_plus _ _ x (X _) (X0 _)).
 Qed.
 
 Lemma derivable_opp : forall f, derivable f -> derivable (- f).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_opp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_opp". Undo.  
 unfold derivable; intros f X x.
 apply (derivable_pt_opp _ x (X _)).
 Qed.
 
 Lemma derivable_minus :
 forall f1 f2, derivable f1 -> derivable f2 -> derivable (f1 - f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_minus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_minus". Undo.  
 unfold derivable; intros f1 f2 X X0 x.
 apply (derivable_pt_minus _ _ x (X _) (X0 _)).
 Qed.
 
 Lemma derivable_mult :
 forall f1 f2, derivable f1 -> derivable f2 -> derivable (f1 * f2).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_mult".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_mult". Undo.  
 unfold derivable; intros f1 f2 X X0 x.
 apply (derivable_pt_mult _ _ x (X _) (X0 _)).
 Qed.
 
 Lemma derivable_const : forall a:R, derivable (fct_cte a).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_const".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_const". Undo.  
 unfold derivable; intros.
 apply derivable_pt_const.
 Qed.
 
 Lemma derivable_scal :
 forall f (a:R), derivable f -> derivable (mult_real_fct a f).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_scal".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_scal". Undo.  
 unfold derivable; intros f a X x.
 apply (derivable_pt_scal _ a x (X _)).
 Qed.
 
 Lemma derivable_id : derivable id.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_id".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_id". Undo.  
 unfold derivable; intro; apply derivable_pt_id.
 Qed.
 
 Lemma derivable_Rsqr : derivable Rsqr.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_Rsqr".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_Rsqr". Undo.  
 unfold derivable; intro; apply derivable_pt_Rsqr.
 Qed.
 
 Lemma derivable_comp :
 forall f1 f2, derivable f1 -> derivable f2 -> derivable (f2 o f1).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_comp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_comp". Undo.  
 unfold derivable; intros f1 f2 X X0 x.
 apply (derivable_pt_comp _ _ x (X _) (X0 _)).
 Qed.
@@ -927,7 +927,7 @@ Lemma derive_pt_plus :
 forall f1 f2 (x:R) (pr1:derivable_pt f1 x) (pr2:derivable_pt f2 x),
 derive_pt (f1 + f2) x (derivable_pt_plus _ _ _ pr1 pr2) =
 derive_pt f1 x pr1 + derive_pt f2 x pr2.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_plus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_plus". Undo.  
 intros.
 assert (H := derivable_derive f1 x pr1).
 assert (H0 := derivable_derive f2 x pr2).
@@ -947,7 +947,7 @@ Qed.
 Lemma derive_pt_opp :
 forall f (x:R) (pr1:derivable_pt f x),
 derive_pt (- f) x (derivable_pt_opp _ _ pr1) = - derive_pt f x pr1.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_opp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_opp". Undo.  
 intros.
 assert (H := derivable_derive f x pr1).
 assert (H0 := derivable_derive (- f)%F x (derivable_pt_opp _ _ pr1)).
@@ -963,7 +963,7 @@ Lemma derive_pt_minus :
 forall f1 f2 (x:R) (pr1:derivable_pt f1 x) (pr2:derivable_pt f2 x),
 derive_pt (f1 - f2) x (derivable_pt_minus _ _ _ pr1 pr2) =
 derive_pt f1 x pr1 - derive_pt f2 x pr2.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_minus".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_minus". Undo.  
 intros.
 assert (H := derivable_derive f1 x pr1).
 assert (H0 := derivable_derive f2 x pr2).
@@ -984,7 +984,7 @@ Lemma derive_pt_mult :
 forall f1 f2 (x:R) (pr1:derivable_pt f1 x) (pr2:derivable_pt f2 x),
 derive_pt (f1 * f2) x (derivable_pt_mult _ _ _ pr1 pr2) =
 derive_pt f1 x pr1 * f2 x + f1 x * derive_pt f2 x pr2.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_mult".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_mult". Undo.  
 intros.
 assert (H := derivable_derive f1 x pr1).
 assert (H0 := derivable_derive f2 x pr2).
@@ -1003,7 +1003,7 @@ Qed.
 
 Lemma derive_pt_const :
 forall a x:R, derive_pt (fct_cte a) x (derivable_pt_const a x) = 0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_const".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_const". Undo.  
 intros.
 apply derive_pt_eq_0.
 apply derivable_pt_lim_const.
@@ -1013,7 +1013,7 @@ Lemma derive_pt_scal :
 forall f (a x:R) (pr:derivable_pt f x),
 derive_pt (mult_real_fct a f) x (derivable_pt_scal _ _ _ pr) =
 a * derive_pt f x pr.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_scal".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_scal". Undo.  
 intros.
 assert (H := derivable_derive f x pr).
 assert
@@ -1027,7 +1027,7 @@ apply derivable_pt_lim_scal; assumption.
 Qed.
 
 Lemma derive_pt_id : forall x:R, derive_pt id x (derivable_pt_id _) = 1.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_id".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_id". Undo.  
 intros.
 apply derive_pt_eq_0.
 apply derivable_pt_lim_id.
@@ -1035,7 +1035,7 @@ Qed.
 
 Lemma derive_pt_Rsqr :
 forall x:R, derive_pt Rsqr x (derivable_pt_Rsqr _) = 2 * x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_Rsqr".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_Rsqr". Undo.  
 intros.
 apply derive_pt_eq_0.
 apply derivable_pt_lim_Rsqr.
@@ -1045,7 +1045,7 @@ Lemma derive_pt_comp :
 forall f1 f2 (x:R) (pr1:derivable_pt f1 x) (pr2:derivable_pt f2 (f1 x)),
 derive_pt (f2 o f1) x (derivable_pt_comp _ _ _ pr1 pr2) =
 derive_pt f2 (f1 x) pr2 * derive_pt f1 x pr1.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_comp".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_comp". Undo.  
 intros.
 assert (H := derivable_derive f1 x pr1).
 assert (H0 := derivable_derive f2 (f1 x) pr2).
@@ -1068,7 +1068,7 @@ Definition pow_fct (n:nat) (y:R) : R := y ^ n.
 Lemma derivable_pt_lim_pow_pos :
 forall (x:R) (n:nat),
 (0 < n)%nat -> derivable_pt_lim (fun y:R => y ^ n) x (INR n * x ^ pred n).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_pow_pos".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_pow_pos". Undo.  
 intros.
 induction  n as [| n Hrecn].
 elim (lt_irrefl _ H).
@@ -1108,7 +1108,7 @@ Qed.
 Lemma derivable_pt_lim_pow :
 forall (x:R) (n:nat),
 derivable_pt_lim (fun y:R => y ^ n) x (INR n * x ^ pred n).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_pow".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_lim_pow". Undo.  
 intros.
 induction  n as [| n Hrecn].
 simpl.
@@ -1121,21 +1121,21 @@ Qed.
 
 Lemma derivable_pt_pow :
 forall (n:nat) (x:R), derivable_pt (fun y:R => y ^ n) x.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_pow".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pt_pow". Undo.  
 intros; unfold derivable_pt.
 exists (INR n * x ^ pred n).
 apply derivable_pt_lim_pow.
 Qed.
 
 Lemma derivable_pow : forall n:nat, derivable (fun y:R => y ^ n).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pow".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derivable_pow". Undo.  
 intro; unfold derivable; intro; apply derivable_pt_pow.
 Qed.
 
 Lemma derive_pt_pow :
 forall (n:nat) (x:R),
 derive_pt (fun y:R => y ^ n) x (derivable_pt_pow n x) = INR n * x ^ pred n.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_pow".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.derive_pt_pow". Undo.  
 intros; apply derive_pt_eq_0.
 apply derivable_pt_lim_pow.
 Qed.
@@ -1143,7 +1143,7 @@ Qed.
 Lemma pr_nu :
 forall f (x:R) (pr1 pr2:derivable_pt f x),
 derive_pt f x pr1 = derive_pt f x pr2.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.pr_nu".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.pr_nu". Undo.  
 intros f x (x0,H0) (x1,H1).
 apply (uniqueness_limite f x x0 x1 H0 H1).
 Qed.
@@ -1158,7 +1158,7 @@ forall f (a b c:R) (pr:derivable_pt f c),
 a < c ->
 c < b ->
 (forall x:R, a < x -> x < b -> f x <= f c) -> derive_pt f c pr = 0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.deriv_maximum".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.deriv_maximum". Undo.  
 intros; case (Rtotal_order 0 (derive_pt f c pr)); intro.
 assert (H3 := derivable_derive f c pr).
 elim H3; intros l H4; rewrite H4 in H2.
@@ -1521,7 +1521,7 @@ forall f (a b c:R) (pr:derivable_pt f c),
 a < c ->
 c < b ->
 (forall x:R, a < x -> x < b -> f c <= f x) -> derive_pt f c pr = 0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.deriv_minimum".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.deriv_minimum". Undo.  
 intros.
 rewrite <- (Ropp_involutive (derive_pt f c pr)).
 apply Ropp_eq_0_compat.
@@ -1537,7 +1537,7 @@ Theorem deriv_constant2 :
 forall f (a b c:R) (pr:derivable_pt f c),
 a < c ->
 c < b -> (forall x:R, a < x -> x < b -> f x = f c) -> derive_pt f c pr = 0.
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.deriv_constant2".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.deriv_constant2". Undo.  
 intros.
 eapply deriv_maximum with a b; try assumption.
 intros; right; apply (H1 x H2 H3).
@@ -1547,7 +1547,7 @@ Qed.
 Lemma nonneg_derivative_0 :
 forall f (pr:derivable f),
 increasing f -> forall x:R, 0 <= derive_pt f x (pr x).
-Proof. try hammer_hook "Ranalysis1" "Ranalysis1.nonneg_derivative_0".  
+Proof. try hammer_hook "Ranalysis1" "Ranalysis1.nonneg_derivative_0". Undo.  
 intros; unfold increasing in H.
 assert (H0 := derivable_derive f x (pr x)).
 elim H0; intros l H1.

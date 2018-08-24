@@ -29,22 +29,22 @@ Variable f : A -> B.
 Variables x y z : A.
 
 Lemma identity_sym : identity x y -> identity y x.
-Proof. try hammer_hook "Logic_Type" "Logic_Type.identity_sym".  
+Proof. try hammer_hook "Logic_Type" "Logic_Type.identity_sym". Undo.  
 destruct 1; trivial.
 Defined.
 
 Lemma identity_trans : identity x y -> identity y z -> identity x z.
-Proof. try hammer_hook "Logic_Type" "Logic_Type.identity_trans".  
+Proof. try hammer_hook "Logic_Type" "Logic_Type.identity_trans". Undo.  
 destruct 2; trivial.
 Defined.
 
 Lemma identity_congr : identity x y -> identity (f x) (f y).
-Proof. try hammer_hook "Logic_Type" "Logic_Type.identity_congr".  
+Proof. try hammer_hook "Logic_Type" "Logic_Type.identity_congr". Undo.  
 destruct 1; trivial.
 Defined.
 
 Lemma not_identity_sym : notT (identity x y) -> notT (identity y x).
-Proof. try hammer_hook "Logic_Type" "Logic_Type.not_identity_sym".  
+Proof. try hammer_hook "Logic_Type" "Logic_Type.not_identity_sym". Undo.  
 red; intros H H'; apply H; destruct H'; trivial.
 Qed.
 

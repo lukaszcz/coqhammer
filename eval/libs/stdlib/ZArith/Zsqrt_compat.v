@@ -154,7 +154,7 @@ forall n:Z,
 0 <= n ->
 Zsqrt_plain n * Zsqrt_plain n <= n <
 (Zsqrt_plain n + 1) * (Zsqrt_plain n + 1).
-Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_interval".  
+Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_interval". Undo.  
 intros [|p|p] Hp.
 - now compute.
 - unfold Zsqrt_plain.
@@ -165,7 +165,7 @@ Qed.
 
 
 Theorem Zsqrt_plain_is_pos: forall n, 0 <= n ->  0 <= Zsqrt_plain n.
-Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_plain_is_pos".  
+Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_plain_is_pos". Undo.  
 intros n m; case (Zsqrt_interval n); auto with zarith.
 intros H1 H2; case (Z.le_gt_cases 0 (Zsqrt_plain n)); auto.
 intros H3; contradict H2; auto; apply Z.le_ngt.
@@ -179,7 +179,7 @@ Qed.
 
 
 Theorem Zsqrt_square_id: forall a, 0 <= a ->  Zsqrt_plain (a * a) = a.
-Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_square_id".  
+Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_square_id". Undo.  
 intros a H.
 generalize (Zsqrt_plain_is_pos (a * a)); auto with zarith; intros Haa.
 case (Zsqrt_interval (a * a)); auto with zarith.
@@ -197,7 +197,7 @@ Qed.
 
 Theorem Zsqrt_le:
 forall p q, 0 <= p <= q  ->  Zsqrt_plain p <= Zsqrt_plain q.
-Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_le".  
+Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_le". Undo.  
 intros p q [H1 H2].
 Z.le_elim H2; [ | subst q; auto with zarith].
 case (Z.le_gt_cases (Zsqrt_plain p) (Zsqrt_plain q)); auto; intros H3.
@@ -215,7 +215,7 @@ Qed.
 
 
 Lemma Zsqrt_equiv : forall n, Zsqrt_plain n = Z.sqrt n.
-Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_equiv".  
+Proof. try hammer_hook "Zsqrt_compat" "Zsqrt_compat.Zsqrt_equiv". Undo.  
 intros. destruct (Z_le_gt_dec 0 n).
 symmetry. apply Z.sqrt_unique; trivial.
 now apply Zsqrt_interval.

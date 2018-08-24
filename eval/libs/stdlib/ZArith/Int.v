@@ -103,32 +103,32 @@ Module MoreInt (Import I:Int).
 Local Notation int := I.t.
 
 Lemma eqb_eq n p : (n =? p) = true <-> n == p.
-Proof. try hammer_hook "Int" "Int.MoreInt.eqb_eq".  
+Proof. try hammer_hook "Int" "Int.MoreInt.eqb_eq". Undo.  
 now rewrite i2z_eqb, Z.eqb_eq.
 Qed.
 
 Lemma eqb_neq n p : (n =? p) = false <-> ~(n == p).
-Proof. try hammer_hook "Int" "Int.MoreInt.eqb_neq".  
+Proof. try hammer_hook "Int" "Int.MoreInt.eqb_neq". Undo.  
 rewrite <- eqb_eq. destruct (n =? p); intuition.
 Qed.
 
 Lemma ltb_lt n p : (n <? p) = true <-> n < p.
-Proof. try hammer_hook "Int" "Int.MoreInt.ltb_lt".  
+Proof. try hammer_hook "Int" "Int.MoreInt.ltb_lt". Undo.  
 now rewrite i2z_ltb, Z.ltb_lt.
 Qed.
 
 Lemma ltb_nlt n p : (n <? p) = false <-> ~(n < p).
-Proof. try hammer_hook "Int" "Int.MoreInt.ltb_nlt".  
+Proof. try hammer_hook "Int" "Int.MoreInt.ltb_nlt". Undo.  
 rewrite <- ltb_lt. destruct (n <? p); intuition.
 Qed.
 
 Lemma leb_le n p : (n <=? p) = true <-> n <= p.
-Proof. try hammer_hook "Int" "Int.MoreInt.leb_le".  
+Proof. try hammer_hook "Int" "Int.MoreInt.leb_le". Undo.  
 now rewrite i2z_leb, Z.leb_le.
 Qed.
 
 Lemma leb_nle n p : (n <=? p) = false <-> ~(n <= p).
-Proof. try hammer_hook "Int" "Int.MoreInt.leb_nle".  
+Proof. try hammer_hook "Int" "Int.MoreInt.leb_nle". Undo.  
 rewrite <- leb_le. destruct (n <=? p); intuition.
 Qed.
 
@@ -347,22 +347,22 @@ match e with
 end.
 
 Lemma norm_ei_correct (e:ExprI) : ez2z (norm_ei e) = i2z (ei2i e).
-Proof. try hammer_hook "Int" "Int.MoreInt.norm_ei_correct".  
+Proof. try hammer_hook "Int" "Int.MoreInt.norm_ei_correct". Undo.  
 induction e; simpl; i2z; auto; try congruence.
 Qed.
 
 Lemma norm_ez_correct (e:ExprZ) : ez2z (norm_ez e) = ez2z e.
-Proof. try hammer_hook "Int" "Int.MoreInt.norm_ez_correct".  
+Proof. try hammer_hook "Int" "Int.MoreInt.norm_ez_correct". Undo.  
 induction e; simpl; i2z; auto; try congruence; apply norm_ei_correct.
 Qed.
 
 Lemma norm_ep_correct (e:ExprP) : ep2p (norm_ep e) <-> ep2p e.
-Proof. try hammer_hook "Int" "Int.MoreInt.norm_ep_correct".  
+Proof. try hammer_hook "Int" "Int.MoreInt.norm_ep_correct". Undo.  
 induction e; simpl; rewrite ?norm_ez_correct; intuition.
 Qed.
 
 Lemma norm_ep_correct2 (e:ExprP) : ep2p (norm_ep e) -> ep2p e.
-Proof. try hammer_hook "Int" "Int.MoreInt.norm_ep_correct2".  
+Proof. try hammer_hook "Int" "Int.MoreInt.norm_ep_correct2". Undo.  
 intros; destruct (norm_ep_correct e); auto.
 Qed.
 
@@ -401,13 +401,13 @@ Definition leb := Z.leb.
 
 Definition eq_dec := Z.eq_dec.
 Definition gt_le_dec i j : {i > j} + { i <= j }.
-Proof. try hammer_hook "Int" "Int.Int.gt_le_dec".  
+Proof. try hammer_hook "Int" "Int.Int.gt_le_dec". Undo.  
 generalize (Z.ltb_spec j i).
 destruct (j <? i); [left|right]; inversion H; trivial.
 now apply Z.lt_gt.
 Defined.
 Definition ge_lt_dec i j : {i >= j} + { i < j }.
-Proof. try hammer_hook "Int" "Int.Int.ge_lt_dec".  
+Proof. try hammer_hook "Int" "Int.Int.ge_lt_dec". Undo.  
 generalize (Z.ltb_spec i j).
 destruct (i <? j); [right|left]; inversion H; trivial.
 now apply Z.le_ge.
@@ -420,21 +420,21 @@ Lemma i2z_1 : i2z _1 = 1.  Proof. reflexivity. Qed.
 Lemma i2z_2 : i2z _2 = 2.  Proof. reflexivity. Qed.
 Lemma i2z_3 : i2z _3 = 3.  Proof. reflexivity. Qed.
 Lemma i2z_add n p : i2z (n + p) = i2z n + i2z p.
-Proof. try hammer_hook "Int" "Int.Int.i2z_add".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_add". Undo.   reflexivity. Qed.
 Lemma i2z_opp n : i2z (- n) = - i2z n.
-Proof. try hammer_hook "Int" "Int.Int.i2z_opp".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_opp". Undo.   reflexivity. Qed.
 Lemma i2z_sub n p : i2z (n - p) = i2z n - i2z p.
-Proof. try hammer_hook "Int" "Int.Int.i2z_sub".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_sub". Undo.   reflexivity. Qed.
 Lemma i2z_mul n p : i2z (n * p) = i2z n * i2z p.
-Proof. try hammer_hook "Int" "Int.Int.i2z_mul".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_mul". Undo.   reflexivity. Qed.
 Lemma i2z_max n p : i2z (max n p) = Z.max (i2z n) (i2z p).
-Proof. try hammer_hook "Int" "Int.Int.i2z_max".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_max". Undo.   reflexivity. Qed.
 Lemma i2z_eqb n p : eqb n p = Z.eqb (i2z n) (i2z p).
-Proof. try hammer_hook "Int" "Int.Int.i2z_eqb".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_eqb". Undo.   reflexivity. Qed.
 Lemma i2z_leb n p : leb n p = Z.leb (i2z n) (i2z p).
-Proof. try hammer_hook "Int" "Int.Int.i2z_leb".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_leb". Undo.   reflexivity. Qed.
 Lemma i2z_ltb n p : ltb n p = Z.ltb (i2z n) (i2z p).
-Proof. try hammer_hook "Int" "Int.Int.i2z_ltb".   reflexivity. Qed.
+Proof. try hammer_hook "Int" "Int.Int.i2z_ltb". Undo.   reflexivity. Qed.
 
 
 Notation plus := add (compat "8.4").

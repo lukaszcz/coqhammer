@@ -32,7 +32,7 @@ forall (An:nat -> R) (n k:nat),
 (k < n)%nat ->
 prod_f_R0 An n =
 prod_f_R0 An k * prod_f_R0 (fun l:nat => An (k +1+l)%nat) (n - k -1).
-Proof. try hammer_hook "Rprod" "Rprod.prod_SO_split".  
+Proof. try hammer_hook "Rprod" "Rprod.prod_SO_split". Undo.  
 intros; induction  n as [| n Hrecn].
 absurd (k < 0)%nat; omega.
 cut (k = n \/ (k < n)%nat);[intro; elim H0; intro|omega].
@@ -50,7 +50,7 @@ Qed.
 Lemma prod_SO_pos :
 forall (An:nat -> R) (N:nat),
 (forall n:nat, (n <= N)%nat -> 0 <= An n) -> 0 <= prod_f_R0 An N.
-Proof. try hammer_hook "Rprod" "Rprod.prod_SO_pos".  
+Proof. try hammer_hook "Rprod" "Rprod.prod_SO_pos". Undo.  
 intros; induction  N as [| N HrecN].
 simpl; apply H; trivial.
 simpl; apply Rmult_le_pos.
@@ -64,7 +64,7 @@ Lemma prod_SO_Rle :
 forall (An Bn:nat -> R) (N:nat),
 (forall n:nat, (n <= N)%nat -> 0 <= An n <= Bn n) ->
 prod_f_R0 An N <= prod_f_R0 Bn N.
-Proof. try hammer_hook "Rprod" "Rprod.prod_SO_Rle".  
+Proof. try hammer_hook "Rprod" "Rprod.prod_SO_Rle". Undo.  
 intros; induction  N as [| N HrecN].
 elim  H with O; trivial.
 simpl; apply Rle_trans with (prod_f_R0 An N * Bn (S N)).
@@ -86,7 +86,7 @@ forall n:nat, INR (fact n) = prod_f_R0 (fun k:nat =>
 | left   _ => 1%R
 | right _ => INR k
 end)) n.
-Proof. try hammer_hook "Rprod" "Rprod.fact_prodSO".  
+Proof. try hammer_hook "Rprod" "Rprod.fact_prodSO". Undo.  
 intro; induction  n as [| n Hrecn].
 reflexivity.
 simpl; rewrite <- Hrecn.
@@ -95,7 +95,7 @@ intros; repeat rewrite plus_INR;rewrite mult_INR;ring.
 Qed.
 
 Lemma le_n_2n : forall n:nat, (n <= 2 * n)%nat.
-Proof. try hammer_hook "Rprod" "Rprod.le_n_2n".  
+Proof. try hammer_hook "Rprod" "Rprod.le_n_2n". Undo.  
 simple induction n.
 replace (2 * 0)%nat with 0%nat; [ apply le_n | ring ].
 intros; replace (2 * S n0)%nat with (S (S (2 * n0))).
@@ -110,7 +110,7 @@ Lemma RfactN_fact2N_factk :
 forall N k:nat,
 (k <= 2 * N)%nat ->
 Rsqr (INR (fact N)) <= INR (fact (2 * N - k)) * INR (fact k).
-Proof. try hammer_hook "Rprod" "Rprod.RfactN_fact2N_factk".  
+Proof. try hammer_hook "Rprod" "Rprod.RfactN_fact2N_factk". Undo.  
 assert (forall (n:nat), 0 <= (if eq_nat_dec n 0 then 1 else INR n)).
 intros; case (eq_nat_dec n 0); auto with real.
 assert (forall (n:nat), (0 < n)%nat ->
@@ -166,14 +166,14 @@ Qed.
 
 
 Lemma INR_fact_lt_0 : forall n:nat, 0 < INR (fact n).
-Proof. try hammer_hook "Rprod" "Rprod.INR_fact_lt_0".  
+Proof. try hammer_hook "Rprod" "Rprod.INR_fact_lt_0". Undo.  
 intro; apply lt_INR_0; apply neq_O_lt; red; intro;
 elim (fact_neq_0 n); symmetry ; assumption.
 Qed.
 
 
 Lemma C_maj : forall N k:nat, (k <= 2 * N)%nat -> C (2 * N) k <= C (2 * N) N.
-Proof. try hammer_hook "Rprod" "Rprod.C_maj".  
+Proof. try hammer_hook "Rprod" "Rprod.C_maj". Undo.  
 intros; unfold C; unfold Rdiv; apply Rmult_le_compat_l.
 apply pos_INR.
 replace (2 * N - N)%nat with N.

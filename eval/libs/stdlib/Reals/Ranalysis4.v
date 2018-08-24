@@ -22,7 +22,7 @@ Local Open Scope R_scope.
 Lemma derivable_pt_inv :
 forall (f:R -> R) (x:R),
 f x <> 0 -> derivable_pt f x -> derivable_pt (/ f) x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_inv".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_inv". Undo.  
 intros f x H X; cut (derivable_pt (fct_cte 1 / f) x -> derivable_pt (/ f) x).
 intro X0; apply X0.
 apply derivable_pt_div.
@@ -43,7 +43,7 @@ Qed.
 Lemma pr_nu_var :
 forall (f g:R -> R) (x:R) (pr1:derivable_pt f x) (pr2:derivable_pt g x),
 f = g -> derive_pt f x pr1 = derive_pt g x pr2.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.pr_nu_var".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.pr_nu_var". Undo.  
 unfold derivable_pt, derive_pt; intros f g x (x0,p0) (x1,p1) ->.
 apply uniqueness_limite with g x; assumption.
 Qed.
@@ -52,7 +52,7 @@ Qed.
 Lemma pr_nu_var2 :
 forall (f g:R -> R) (x:R) (pr1:derivable_pt f x) (pr2:derivable_pt g x),
 (forall h:R, f h = g h) -> derive_pt f x pr1 = derive_pt g x pr2.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.pr_nu_var2".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.pr_nu_var2". Undo.  
 unfold derivable_pt, derive_pt; intros f g x (x0,p0) (x1,p1) H.
 assert (H0 := uniqueness_step2 _ _ _ p0).
 assert (H1 := uniqueness_step2 _ _ _ p1).
@@ -74,7 +74,7 @@ Qed.
 
 Lemma derivable_inv :
 forall f:R -> R, (forall x:R, f x <> 0) -> derivable f -> derivable (/ f).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_inv".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_inv". Undo.  
 intros f H X.
 unfold derivable; intro x.
 apply derivable_pt_inv.
@@ -86,7 +86,7 @@ Lemma derive_pt_inv :
 forall (f:R -> R) (x:R) (pr:derivable_pt f x) (na:f x <> 0),
 derive_pt (/ f) x (derivable_pt_inv f x na pr) =
 - derive_pt f x pr / Rsqr (f x).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_inv".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_inv". Undo.  
 intros;
 replace (derive_pt (/ f) x (derivable_pt_inv f x na pr)) with
 (derive_pt (fct_cte 1 / f) x
@@ -101,7 +101,7 @@ Qed.
 
 
 Lemma Rabs_derive_1 : forall x:R, 0 < x -> derivable_pt_lim Rabs x 1.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rabs_derive_1".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rabs_derive_1". Undo.  
 intros.
 unfold derivable_pt_lim; intros.
 exists (mkposreal x H); intros.
@@ -125,7 +125,7 @@ left; apply H.
 Qed.
 
 Lemma Rabs_derive_2 : forall x:R, x < 0 -> derivable_pt_lim Rabs x (-1).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rabs_derive_2".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rabs_derive_2". Undo.  
 intros.
 unfold derivable_pt_lim; intros.
 cut (0 < - x).
@@ -148,7 +148,7 @@ Qed.
 
 
 Lemma Rderivable_pt_abs : forall x:R, x <> 0 -> derivable_pt Rabs x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rderivable_pt_abs".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rderivable_pt_abs". Undo.  
 intros.
 destruct (total_order_T x 0) as [[Hlt|Heq]|Hgt].
 unfold derivable_pt; exists (-1).
@@ -160,7 +160,7 @@ Qed.
 
 
 Lemma Rcontinuity_abs : continuity Rabs.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rcontinuity_abs".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.Rcontinuity_abs". Undo.  
 unfold continuity; intro.
 case (Req_dec x 0); intro.
 unfold continuity_pt; unfold continue_in;
@@ -179,7 +179,7 @@ Qed.
 Lemma continuity_finite_sum :
 forall (An:nat -> R) (N:nat),
 continuity (fun y:R => sum_f_R0 (fun k:nat => An k * y ^ k) N).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.continuity_finite_sum".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.continuity_finite_sum". Undo.  
 intros; unfold continuity; intro.
 induction  N as [| N HrecN].
 simpl.
@@ -204,7 +204,7 @@ forall (An:nat -> R) (x:R) (N:nat),
 (0 < N)%nat ->
 derivable_pt_lim (fun y:R => sum_f_R0 (fun k:nat => An k * y ^ k) N) x
 (sum_f_R0 (fun k:nat => INR (S k) * An (S k) * x ^ k) (pred N)).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_fs".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_fs". Undo.  
 intros; induction  N as [| N HrecN].
 elim (lt_irrefl _ H).
 cut (N = 0%nat \/ (0 < N)%nat).
@@ -263,7 +263,7 @@ match N with
 | O => 0
 | _ => sum_f_R0 (fun k:nat => INR (S k) * An (S k) * x ^ k) (pred N)
 end.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_finite_sum".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_finite_sum". Undo.  
 intros.
 induction  N as [| N HrecN].
 simpl.
@@ -276,7 +276,7 @@ Qed.
 Lemma derivable_pt_finite_sum :
 forall (An:nat -> R) (N:nat) (x:R),
 derivable_pt (fun y:R => sum_f_R0 (fun k:nat => An k * y ^ k) N) x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_finite_sum".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_finite_sum". Undo.  
 intros.
 unfold derivable_pt.
 assert (H := derivable_pt_lim_finite_sum An x N).
@@ -290,13 +290,13 @@ Qed.
 Lemma derivable_finite_sum :
 forall (An:nat -> R) (N:nat),
 derivable (fun y:R => sum_f_R0 (fun k:nat => An k * y ^ k) N).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_finite_sum".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_finite_sum". Undo.  
 intros; unfold derivable; intro; apply derivable_pt_finite_sum.
 Qed.
 
 
 Lemma derivable_pt_lim_cosh : forall x:R, derivable_pt_lim cosh x (sinh x).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_cosh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_cosh". Undo.  
 intro.
 unfold cosh, sinh; unfold Rdiv.
 replace (fun x0:R => (exp x0 + exp (- x0)) * / 2) with
@@ -316,7 +316,7 @@ unfold plus_fct, mult_real_fct, comp, opp_fct, id, fct_cte; ring.
 Qed.
 
 Lemma derivable_pt_lim_sinh : forall x:R, derivable_pt_lim sinh x (cosh x).
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_sinh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_lim_sinh". Undo.  
 intro.
 unfold cosh, sinh; unfold Rdiv.
 replace (fun x0:R => (exp x0 - exp (- x0)) * / 2) with
@@ -336,7 +336,7 @@ unfold plus_fct, mult_real_fct, comp, opp_fct, id, fct_cte; ring.
 Qed.
 
 Lemma derivable_pt_exp : forall x:R, derivable_pt exp x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_exp".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_exp". Undo.  
 intro.
 unfold derivable_pt.
 exists (exp x).
@@ -344,7 +344,7 @@ apply derivable_pt_lim_exp.
 Qed.
 
 Lemma derivable_pt_cosh : forall x:R, derivable_pt cosh x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_cosh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_cosh". Undo.  
 intro.
 unfold derivable_pt.
 exists (sinh x).
@@ -352,7 +352,7 @@ apply derivable_pt_lim_cosh.
 Qed.
 
 Lemma derivable_pt_sinh : forall x:R, derivable_pt sinh x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_sinh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_pt_sinh". Undo.  
 intro.
 unfold derivable_pt.
 exists (cosh x).
@@ -360,37 +360,37 @@ apply derivable_pt_lim_sinh.
 Qed.
 
 Lemma derivable_exp : derivable exp.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_exp".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_exp". Undo.  
 unfold derivable; apply derivable_pt_exp.
 Qed.
 
 Lemma derivable_cosh : derivable cosh.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_cosh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_cosh". Undo.  
 unfold derivable; apply derivable_pt_cosh.
 Qed.
 
 Lemma derivable_sinh : derivable sinh.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_sinh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derivable_sinh". Undo.  
 unfold derivable; apply derivable_pt_sinh.
 Qed.
 
 Lemma derive_pt_exp :
 forall x:R, derive_pt exp x (derivable_pt_exp x) = exp x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_exp".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_exp". Undo.  
 intro; apply derive_pt_eq_0.
 apply derivable_pt_lim_exp.
 Qed.
 
 Lemma derive_pt_cosh :
 forall x:R, derive_pt cosh x (derivable_pt_cosh x) = sinh x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_cosh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_cosh". Undo.  
 intro; apply derive_pt_eq_0.
 apply derivable_pt_lim_cosh.
 Qed.
 
 Lemma derive_pt_sinh :
 forall x:R, derive_pt sinh x (derivable_pt_sinh x) = cosh x.
-Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_sinh".  
+Proof. try hammer_hook "Ranalysis4" "Ranalysis4.derive_pt_sinh". Undo.  
 intro; apply derive_pt_eq_0.
 apply derivable_pt_lim_sinh.
 Qed.

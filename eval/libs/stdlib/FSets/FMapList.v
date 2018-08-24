@@ -43,7 +43,7 @@ Definition empty : t elt := nil.
 Definition Empty m := forall (a : key)(e:elt) , ~ MapsTo a e m.
 
 Lemma empty_1 : Empty empty.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.empty_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.empty_1". Undo.  
 unfold Empty,empty.
 intros a e.
 intro abs.
@@ -52,7 +52,7 @@ Qed.
 Hint Resolve empty_1.
 
 Lemma empty_sorted : Sort empty.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.empty_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.empty_sorted". Undo.  
 unfold empty; auto.
 Qed.
 
@@ -61,7 +61,7 @@ Qed.
 Definition is_empty (l : t elt) : bool := if l then true else false.
 
 Lemma is_empty_1 :forall m, Empty m -> is_empty m = true.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.is_empty_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.is_empty_1". Undo.  
 unfold Empty, PX.MapsTo.
 intros m.
 case m;auto.
@@ -70,7 +70,7 @@ absurd (InA eqke (k, e) ((k, e) :: l));auto.
 Qed.
 
 Lemma is_empty_2 : forall m, is_empty m = true -> Empty m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.is_empty_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.is_empty_2". Undo.  
 intros m.
 case m;auto.
 intros p l abs.
@@ -91,7 +91,7 @@ end
 end.
 
 Lemma mem_1 : forall m (Hm:Sort m) x, In x m -> mem x m = true.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.mem_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.mem_1". Undo.  
 intros m Hm x; generalize Hm; clear Hm.
 functional induction (mem x m);intros sorted belong1;trivial.
 
@@ -108,7 +108,7 @@ absurd (X.eq x k');auto.
 Qed.
 
 Lemma mem_2 : forall m (Hm:Sort m) x, mem x m = true -> In x m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.mem_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.mem_2". Undo.  
 intros m Hm x; generalize Hm; clear Hm; unfold PX.In,PX.MapsTo.
 functional induction (mem x m); intros sorted hyp;try ((inversion hyp);fail).
 exists _x; auto.
@@ -131,13 +131,13 @@ end
 end.
 
 Lemma find_2 :  forall m x e, find x m = Some e -> MapsTo x e m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.find_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.find_2". Undo.  
 intros m x. unfold PX.MapsTo.
 functional induction (find x m);simpl;intros e' eqfind; inversion eqfind; auto.
 Qed.
 
 Lemma find_1 :  forall m (Hm:Sort m) x e, MapsTo x e m -> find x m = Some e.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.find_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.find_1". Undo.  
 intros m Hm x e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (find x m);simpl; subst; try clear H_eq_1.
 
@@ -169,7 +169,7 @@ end
 end.
 
 Lemma add_1 : forall m x y e, X.eq x y -> MapsTo y e (add x e m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.add_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.add_1". Undo.  
 intros m x y e; generalize y; clear y.
 unfold PX.MapsTo.
 functional induction (add x e m);simpl;auto.
@@ -177,7 +177,7 @@ Qed.
 
 Lemma add_2 : forall m x y e e',
 ~ X.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.add_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.add_2". Undo.  
 intros m x  y e e'.
 generalize y e; clear y e; unfold PX.MapsTo.
 functional induction (add x e' m) ;simpl;auto;  clear e0.
@@ -193,7 +193,7 @@ Qed.
 
 Lemma add_3 : forall m x y e e',
 ~ X.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.add_3".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.add_3". Undo.  
 intros m x y e e'. generalize y e; clear y e; unfold PX.MapsTo.
 functional induction (add x e' m);simpl; intros.
 apply (In_inv_3 H0); compute; auto.
@@ -205,7 +205,7 @@ Qed.
 
 Lemma add_Inf : forall (m:t elt)(x x':key)(e e':elt),
 Inf (x',e') m -> ltk (x',e') (x,e) -> Inf (x',e') (add x e m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.add_Inf".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.add_Inf". Undo.  
 induction m.
 simpl; intuition.
 intros.
@@ -217,7 +217,7 @@ Qed.
 Hint Resolve add_Inf.
 
 Lemma add_sorted : forall m (Hm:Sort m) x e, Sort (add x e m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.add_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.add_sorted". Undo.  
 induction m.
 simpl; intuition.
 intros.
@@ -241,7 +241,7 @@ end
 end.
 
 Lemma remove_1 : forall m (Hm:Sort m) x y, X.eq x y -> ~ In y (remove x m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_1". Undo.  
 intros m Hm x y; generalize Hm; clear Hm.
 functional induction (remove x m);simpl;intros;subst.
 
@@ -265,7 +265,7 @@ Qed.
 
 Lemma remove_2 : forall m (Hm:Sort m) x y e,
 ~ X.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_2". Undo.  
 intros m Hm x y e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (remove x m);subst;auto;
 match goal with
@@ -281,7 +281,7 @@ Qed.
 
 Lemma remove_3 : forall m (Hm:Sort m) x y e,
 MapsTo y e (remove x m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_3".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_3". Undo.  
 intros m Hm x y e; generalize Hm; clear Hm; unfold PX.MapsTo.
 functional induction (remove x m);subst;auto.
 inversion_clear 1; inversion_clear 1; auto.
@@ -289,7 +289,7 @@ Qed.
 
 Lemma remove_Inf : forall (m:t elt)(Hm : Sort m)(x x':key)(e':elt),
 Inf (x',e') m -> Inf (x',e') (remove x m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_Inf".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_Inf". Undo.  
 induction m.
 simpl; intuition.
 intros.
@@ -303,7 +303,7 @@ Qed.
 Hint Resolve remove_Inf.
 
 Lemma remove_sorted : forall m (Hm:Sort m) x, Sort (remove x m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.remove_sorted". Undo.  
 induction m.
 simpl; intuition.
 intros.
@@ -317,23 +317,23 @@ Definition elements (m: t elt) := m.
 
 Lemma elements_1 : forall m x e,
 MapsTo x e m -> InA eqke (x,e) (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_1". Undo.  
 auto.
 Qed.
 
 Lemma elements_2 : forall m x e,
 InA eqke (x,e) (elements m) -> MapsTo x e m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_2". Undo.  
 auto.
 Qed.
 
 Lemma elements_3 : forall m (Hm:Sort m), sort ltk (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_3".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_3". Undo.  
 auto.
 Qed.
 
 Lemma elements_3w : forall m (Hm:Sort m), NoDupA eqk (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_3w".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.elements_3w". Undo.  
 intros.
 apply Sort_NoDupA.
 apply elements_3; auto.
@@ -349,7 +349,7 @@ end.
 
 Lemma fold_1 : forall m (A:Type)(i:A)(f:key->elt->A->A),
 fold f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.fold_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.fold_1". Undo.  
 intros; functional induction (fold f m i); auto.
 Qed.
 
@@ -372,7 +372,7 @@ Definition Equivb cmp m m' :=
 
 Lemma equal_1 : forall m (Hm:Sort m) m' (Hm': Sort m') cmp,
 Equivb cmp m m' -> equal cmp m m' = true.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.equal_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.equal_1". Undo.  
 intros m Hm m' Hm' cmp; generalize Hm Hm'; clear Hm Hm'.
 functional induction (equal cmp m m'); simpl; subst;auto; unfold Equivb;
 intuition; subst.
@@ -447,7 +447,7 @@ Qed.
 
 Lemma equal_2 : forall m (Hm:Sort m) m' (Hm:Sort m') cmp,
 equal cmp m m' = true -> Equivb cmp m m'.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.equal_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.equal_2". Undo.  
 intros m Hm m' Hm' cmp; generalize Hm Hm'; clear Hm Hm'.
 functional induction (equal cmp m m'); simpl; subst;auto; unfold Equivb;
 intuition; try discriminate; subst;
@@ -494,7 +494,7 @@ Qed.
 Lemma equal_cons : forall cmp l1 l2 x y, Sort (x::l1) -> Sort (y::l2) ->
 eqk x y -> cmp (snd x) (snd y) = true ->
 (Equivb cmp l1 l2 <-> Equivb cmp (x :: l1) (y :: l2)).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.equal_cons".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.equal_cons". Undo.  
 intros.
 inversion H; subst.
 inversion H0; subst.
@@ -538,7 +538,7 @@ Variable elt elt' : Type.
 
 Lemma map_1 : forall (m:t elt)(x:key)(e:elt)(f:elt->elt'),
 MapsTo x e m -> MapsTo x (f e) (map f m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map_1". Undo.  
 intros m x e f.
 
 induction m.
@@ -554,7 +554,7 @@ Qed.
 
 Lemma map_2 : forall (m:t elt)(x:key)(f:elt->elt'),
 In x (map f m) -> In x m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map_2". Undo.  
 intros m x f.
 
 induction m; simpl.
@@ -576,7 +576,7 @@ Qed.
 Lemma map_lelistA : forall (m: t elt)(x:key)(e:elt)(e':elt')(f:elt->elt'),
 lelistA (@ltk elt) (x,e) m ->
 lelistA (@ltk elt') (x,e') (map f m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map_lelistA".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map_lelistA". Undo.  
 induction m; simpl; auto.
 intros.
 destruct a as (x0,e0).
@@ -587,7 +587,7 @@ Hint Resolve map_lelistA.
 
 Lemma map_sorted : forall (m: t elt)(Hm : sort (@ltk elt) m)(f:elt -> elt'),
 sort (@ltk elt') (map f m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map_sorted". Undo.  
 induction m; simpl; auto.
 intros.
 destruct a as (x',e').
@@ -601,7 +601,7 @@ Qed.
 Lemma mapi_1 : forall (m:t elt)(x:key)(e:elt)(f:key->elt->elt'),
 MapsTo x e m ->
 exists y, X.eq y x /\ MapsTo x (f y e) (mapi f m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_1". Undo.  
 intros m x e f.
 
 induction m.
@@ -622,7 +622,7 @@ Qed.
 
 Lemma mapi_2 : forall (m:t elt)(x:key)(f:key->elt->elt'),
 In x (mapi f m) -> In x m.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_2". Undo.  
 intros m x f.
 
 induction m; simpl.
@@ -644,7 +644,7 @@ Qed.
 Lemma mapi_lelistA : forall (m: t elt)(x:key)(e:elt)(f:key->elt->elt'),
 lelistA (@ltk elt) (x,e) m ->
 lelistA (@ltk elt') (x,f x e) (mapi f m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_lelistA".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_lelistA". Undo.  
 induction m; simpl; auto.
 intros.
 destruct a as (x',e').
@@ -655,7 +655,7 @@ Hint Resolve mapi_lelistA.
 
 Lemma mapi_sorted : forall m (Hm : sort (@ltk elt) m)(f: key ->elt -> elt'),
 sort (@ltk elt') (mapi f m).
-Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.mapi_sorted". Undo.  
 induction m; simpl; auto.
 intros.
 destruct a as (x',e').
@@ -731,7 +731,7 @@ let m1 : t (option elt'') := map (fun p => f (fst p) (snd p)) m0 in
 fold_right_pair (option_cons (A:=elt'')) m1 nil.
 
 Lemma map2_alt_equiv : forall m m', map2_alt m m' = map2 m m'.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_alt_equiv".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_alt_equiv". Undo.  
 unfold map2_alt.
 induction m.
 simpl; auto; intros.
@@ -759,7 +759,7 @@ forall m m' (x:key)(e:elt)(e':elt')(e'':oee'),
 lelistA (@ltk elt) (x,e) m ->
 lelistA (@ltk elt') (x,e') m' ->
 lelistA (@ltk oee') (x,e'') (combine m m').
-Proof. try hammer_hook "FMapList" "FMapList.Raw.combine_lelistA".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.combine_lelistA". Undo.  
 induction m.
 intros.
 simpl.
@@ -783,7 +783,7 @@ Hint Resolve combine_lelistA.
 Lemma combine_sorted :
 forall m (Hm : sort (@ltk elt) m) m' (Hm' : sort (@ltk elt') m'),
 sort (@ltk oee') (combine m m').
-Proof. try hammer_hook "FMapList" "FMapList.Raw.combine_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.combine_sorted". Undo.  
 induction m.
 intros; clear Hm.
 simpl.
@@ -817,7 +817,7 @@ Qed.
 Lemma map2_sorted :
 forall m (Hm : sort (@ltk elt) m) m' (Hm' : sort (@ltk elt') m'),
 sort (@ltk elt'') (map2 m m').
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_sorted".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_sorted". Undo.  
 intros.
 rewrite <- map2_alt_equiv.
 unfold map2_alt.
@@ -854,7 +854,7 @@ end.
 Lemma combine_1 :
 forall m (Hm : sort (@ltk elt) m) m' (Hm' : sort (@ltk elt') m') (x:key),
 find x (combine m m') = at_least_one (find x m) (find x m').
-Proof. try hammer_hook "FMapList" "FMapList.Raw.combine_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.combine_1". Undo.  
 induction m.
 intros.
 simpl.
@@ -903,7 +903,7 @@ end.
 Lemma map2_0 :
 forall m (Hm : sort (@ltk elt) m) m' (Hm' : sort (@ltk elt') m') (x:key),
 find x (map2 m m') = at_least_one_then_f (find x m) (find x m').
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_0".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_0". Undo.  
 intros.
 rewrite <- map2_alt_equiv.
 unfold map2_alt.
@@ -984,7 +984,7 @@ Lemma map2_1 :
 forall m (Hm : sort (@ltk elt) m) m' (Hm' : sort (@ltk elt') m')(x:key),
 In x m \/ In x m' ->
 find x (map2 m m') = f (find x m) (find x m').
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_1". Undo.  
 intros.
 rewrite map2_0; auto.
 destruct H as [(e,H)|(e,H)].
@@ -997,7 +997,7 @@ Qed.
 Lemma map2_2 :
 forall m (Hm : sort (@ltk elt) m) m' (Hm' : sort (@ltk elt') m')(x:key),
 In x (map2 m m') -> In x m \/ In x m'.
-Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Raw.map2_2". Undo.  
 intros.
 destruct H as (e,H).
 generalize (map2_0 Hm Hm' x).
@@ -1062,90 +1062,90 @@ Definition eq_key_elt : (key*elt) -> (key*elt) -> Prop:= @Raw.PX.eqke elt.
 Definition lt_key : (key*elt) -> (key*elt) -> Prop := @Raw.PX.ltk elt.
 
 Lemma MapsTo_1 : forall m x y e, E.eq x y -> MapsTo x e m -> MapsTo y e m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.MapsTo_1".   intros m; exact (@Raw.PX.MapsTo_eq elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.MapsTo_1". Undo.   intros m; exact (@Raw.PX.MapsTo_eq elt m.(this)). Qed.
 
 Lemma mem_1 : forall m x, In x m -> mem x m = true.
-Proof. try hammer_hook "FMapList" "FMapList.Make.mem_1".   intros m; exact (@Raw.mem_1 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.mem_1". Undo.   intros m; exact (@Raw.mem_1 elt m.(this) m.(sorted)). Qed.
 Lemma mem_2 : forall m x, mem x m = true -> In x m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.mem_2".   intros m; exact (@Raw.mem_2 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.mem_2". Undo.   intros m; exact (@Raw.mem_2 elt m.(this) m.(sorted)). Qed.
 
 Lemma empty_1 : Empty empty.
-Proof. try hammer_hook "FMapList" "FMapList.Make.empty_1".   exact (@Raw.empty_1 elt). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.empty_1". Undo.   exact (@Raw.empty_1 elt). Qed.
 
 Lemma is_empty_1 : forall m, Empty m -> is_empty m = true.
-Proof. try hammer_hook "FMapList" "FMapList.Make.is_empty_1".   intros m; exact (@Raw.is_empty_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.is_empty_1". Undo.   intros m; exact (@Raw.is_empty_1 elt m.(this)). Qed.
 Lemma is_empty_2 :  forall m, is_empty m = true -> Empty m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.is_empty_2".   intros m; exact (@Raw.is_empty_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.is_empty_2". Undo.   intros m; exact (@Raw.is_empty_2 elt m.(this)). Qed.
 
 Lemma add_1 : forall m x y e, E.eq x y -> MapsTo y e (add x e m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.add_1".   intros m; exact (@Raw.add_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.add_1". Undo.   intros m; exact (@Raw.add_1 elt m.(this)). Qed.
 Lemma add_2 : forall m x y e e', ~ E.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.add_2".   intros m; exact (@Raw.add_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.add_2". Undo.   intros m; exact (@Raw.add_2 elt m.(this)). Qed.
 Lemma add_3 : forall m x y e e', ~ E.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.add_3".   intros m; exact (@Raw.add_3 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.add_3". Undo.   intros m; exact (@Raw.add_3 elt m.(this)). Qed.
 
 Lemma remove_1 : forall m x y, E.eq x y -> ~ In y (remove x m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.remove_1".   intros m; exact (@Raw.remove_1 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.remove_1". Undo.   intros m; exact (@Raw.remove_1 elt m.(this) m.(sorted)). Qed.
 Lemma remove_2 : forall m x y e, ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.remove_2".   intros m; exact (@Raw.remove_2 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.remove_2". Undo.   intros m; exact (@Raw.remove_2 elt m.(this) m.(sorted)). Qed.
 Lemma remove_3 : forall m x y e, MapsTo y e (remove x m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.remove_3".   intros m; exact (@Raw.remove_3 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.remove_3". Undo.   intros m; exact (@Raw.remove_3 elt m.(this) m.(sorted)). Qed.
 
 Lemma find_1 : forall m x e, MapsTo x e m -> find x m = Some e.
-Proof. try hammer_hook "FMapList" "FMapList.Make.find_1".   intros m; exact (@Raw.find_1 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.find_1". Undo.   intros m; exact (@Raw.find_1 elt m.(this) m.(sorted)). Qed.
 Lemma find_2 : forall m x e, find x m = Some e -> MapsTo x e m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.find_2".   intros m; exact (@Raw.find_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.find_2". Undo.   intros m; exact (@Raw.find_2 elt m.(this)). Qed.
 
 Lemma elements_1 : forall m x e, MapsTo x e m -> InA eq_key_elt (x,e) (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.elements_1".   intros m; exact (@Raw.elements_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.elements_1". Undo.   intros m; exact (@Raw.elements_1 elt m.(this)). Qed.
 Lemma elements_2 : forall m x e, InA eq_key_elt (x,e) (elements m) -> MapsTo x e m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.elements_2".   intros m; exact (@Raw.elements_2 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.elements_2". Undo.   intros m; exact (@Raw.elements_2 elt m.(this)). Qed.
 Lemma elements_3 : forall m, sort lt_key (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.elements_3".   intros m; exact (@Raw.elements_3 elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.elements_3". Undo.   intros m; exact (@Raw.elements_3 elt m.(this) m.(sorted)). Qed.
 Lemma elements_3w : forall m, NoDupA eq_key (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.elements_3w".   intros m; exact (@Raw.elements_3w elt m.(this) m.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.elements_3w". Undo.   intros m; exact (@Raw.elements_3w elt m.(this) m.(sorted)). Qed.
 
 Lemma cardinal_1 : forall m, cardinal m = length (elements m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.cardinal_1".   intros; reflexivity. Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.cardinal_1". Undo.   intros; reflexivity. Qed.
 
 Lemma fold_1 : forall m (A : Type) (i : A) (f : key -> elt -> A -> A),
 fold f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
-Proof. try hammer_hook "FMapList" "FMapList.Make.fold_1".   intros m; exact (@Raw.fold_1 elt m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.fold_1". Undo.   intros m; exact (@Raw.fold_1 elt m.(this)). Qed.
 
 Lemma equal_1 : forall m m' cmp, Equivb cmp m m' -> equal cmp m m' = true.
-Proof. try hammer_hook "FMapList" "FMapList.Make.equal_1".   intros m m'; exact (@Raw.equal_1 elt m.(this) m.(sorted) m'.(this) m'.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.equal_1". Undo.   intros m m'; exact (@Raw.equal_1 elt m.(this) m.(sorted) m'.(this) m'.(sorted)). Qed.
 Lemma equal_2 : forall m m' cmp, equal cmp m m' = true -> Equivb cmp m m'.
-Proof. try hammer_hook "FMapList" "FMapList.Make.equal_2".   intros m m'; exact (@Raw.equal_2 elt m.(this) m.(sorted) m'.(this) m'.(sorted)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.equal_2". Undo.   intros m m'; exact (@Raw.equal_2 elt m.(this) m.(sorted) m'.(this) m'.(sorted)). Qed.
 
 End Elt.
 
 Lemma map_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)(f:elt->elt'),
 MapsTo x e m -> MapsTo x (f e) (map f m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.map_1".   intros elt elt' m; exact (@Raw.map_1 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.map_1". Undo.   intros elt elt' m; exact (@Raw.map_1 elt elt' m.(this)). Qed.
 Lemma map_2 : forall (elt elt':Type)(m: t elt)(x:key)(f:elt->elt'),
 In x (map f m) -> In x m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.map_2".   intros elt elt' m; exact (@Raw.map_2 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.map_2". Undo.   intros elt elt' m; exact (@Raw.map_2 elt elt' m.(this)). Qed.
 
 Lemma mapi_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)
 (f:key->elt->elt'), MapsTo x e m ->
 exists y, E.eq y x /\ MapsTo x (f y e) (mapi f m).
-Proof. try hammer_hook "FMapList" "FMapList.Make.mapi_1".   intros elt elt' m; exact (@Raw.mapi_1 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.mapi_1". Undo.   intros elt elt' m; exact (@Raw.mapi_1 elt elt' m.(this)). Qed.
 Lemma mapi_2 : forall (elt elt':Type)(m: t elt)(x:key)
 (f:key->elt->elt'), In x (mapi f m) -> In x m.
-Proof. try hammer_hook "FMapList" "FMapList.Make.mapi_2".   intros elt elt' m; exact (@Raw.mapi_2 elt elt' m.(this)). Qed.
+Proof. try hammer_hook "FMapList" "FMapList.Make.mapi_2". Undo.   intros elt elt' m; exact (@Raw.mapi_2 elt elt' m.(this)). Qed.
 
 Lemma map2_1 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x m \/ In x m' ->
 find x (map2 f m m') = f (find x m) (find x m').
-Proof. try hammer_hook "FMapList" "FMapList.Make.map2_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Make.map2_1". Undo.  
 intros elt elt' elt'' m m' x f;
 exact (@Raw.map2_1 elt elt' elt'' f m.(this) m.(sorted) m'.(this) m'.(sorted) x).
 Qed.
 Lemma map2_2 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x (map2 f m m') -> In x m \/ In x m'.
-Proof. try hammer_hook "FMapList" "FMapList.Make.map2_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Make.map2_2". Undo.  
 intros elt elt' elt'' m m' x f;
 exact (@Raw.map2_2 elt elt' elt'' f m.(this) m.(sorted) m'.(this) m'.(sorted) x).
 Qed.
@@ -1196,7 +1196,7 @@ end.
 Definition lt m m' := lt_list m.(this) m'.(this).
 
 Lemma eq_equal : forall m m', eq m m' <-> equal cmp m m' = true.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_equal".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_equal". Undo.  
 intros (l,Hl); induction l.
 intros (l',Hl'); unfold eq; simpl.
 destruct l'; unfold equal; simpl; intuition.
@@ -1224,7 +1224,7 @@ unfold equal, eq in H6; simpl in H6; auto.
 Qed.
 
 Lemma eq_1 : forall m m', Equivb cmp m m' -> eq m m'.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_1".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_1". Undo.  
 intros.
 generalize (@equal_1 D.t m m' cmp).
 generalize (@eq_equal m m').
@@ -1232,7 +1232,7 @@ intuition.
 Qed.
 
 Lemma eq_2 : forall m m', eq m m' -> Equivb cmp m m'.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_2".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_2". Undo.  
 intros.
 generalize (@equal_2 D.t m m' cmp).
 generalize (@eq_equal m m').
@@ -1240,7 +1240,7 @@ intuition.
 Qed.
 
 Lemma eq_refl : forall m : t, eq m m.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_refl".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_refl". Undo.  
 intros (m,Hm); induction m; unfold eq; simpl; auto.
 destruct a.
 destruct (X.compare t0 t0) as [Hlt|Heq|Hlt]; auto.
@@ -1253,7 +1253,7 @@ apply (MapS.Raw.MX.lt_antirefl Hlt); auto.
 Qed.
 
 Lemma eq_sym : forall m1 m2 : t, eq m1 m2 -> eq m2 m1.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_sym".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_sym". Undo.  
 intros (m,Hm); induction m;
 intros (m', Hm'); destruct m'; unfold eq; simpl;
 try destruct a as (x,e); try destruct p as (x',e'); auto.
@@ -1263,7 +1263,7 @@ apply (IHm H0 (Build_slist H4)); auto.
 Qed.
 
 Lemma eq_trans : forall m1 m2 m3 : t, eq m1 m2 -> eq m2 m3 -> eq m1 m3.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_trans".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.eq_trans". Undo.  
 intros (m1,Hm1); induction m1;
 intros (m2, Hm2); destruct m2;
 intros (m3, Hm3); destruct m3; unfold eq; simpl;
@@ -1279,7 +1279,7 @@ apply (IHm1 H1 (Build_slist H6) (Build_slist H8)); intuition.
 Qed.
 
 Lemma lt_trans : forall m1 m2 m3 : t, lt m1 m2 -> lt m2 m3 -> lt m1 m3.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.lt_trans".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.lt_trans". Undo.  
 intros (m1,Hm1); induction m1;
 intros (m2, Hm2); destruct m2;
 intros (m3, Hm3); destruct m3; unfold lt; simpl;
@@ -1300,7 +1300,7 @@ apply (IHm1 H2 (Build_slist H6) (Build_slist H8)); intuition.
 Qed.
 
 Lemma lt_not_eq : forall m1 m2 : t, lt m1 m2 -> ~ eq m1 m2.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.lt_not_eq".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.lt_not_eq". Undo.  
 intros (m1,Hm1); induction m1;
 intros (m2, Hm2); destruct m2; unfold eq, lt; simpl;
 try destruct a as (x,e);
@@ -1315,7 +1315,7 @@ Qed.
 Ltac cmp_solve := unfold eq, lt; simpl; try Raw.MX.elim_comp; auto.
 
 Definition compare : forall m1 m2, Compare lt eq m1 m2.
-Proof. try hammer_hook "FMapList" "FMapList.Make_ord.compare".  
+Proof. try hammer_hook "FMapList" "FMapList.Make_ord.compare". Undo.  
 intros (m1,Hm1); induction m1;
 intros (m2, Hm2); destruct m2;
 [ apply EQ | apply LT | apply GT | ]; cmp_solve.

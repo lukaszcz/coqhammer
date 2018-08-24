@@ -66,7 +66,7 @@ abstract_subset_proofs ; simpl in * |- ; pi_subset_proofs ; clear_dups.
 Ltac pi := repeat f_equal ; apply proof_irrelevance.
 
 Lemma subset_eq : forall A (P : A -> Prop) (n m : sig P), n = m <-> `n = `m.
-Proof. try hammer_hook "Subset" "Subset.subset_eq".  
+Proof. try hammer_hook "Subset" "Subset.subset_eq". Undo.  
 destruct n as (x,p).
 destruct m as (x',p').
 simpl.
@@ -88,7 +88,7 @@ fn (exist _ x eq_refl).
 Lemma match_eq_rewrite : forall (A B : Type) (x : A) (fn : {y : A | y = x} -> B)
 (y : {y:A | y = x}),
 match_eq A B x fn = fn y.
-Proof. try hammer_hook "Subset" "Subset.match_eq_rewrite".  
+Proof. try hammer_hook "Subset" "Subset.match_eq_rewrite". Undo.  
 intros.
 unfold match_eq.
 f_equal.

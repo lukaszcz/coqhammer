@@ -30,7 +30,7 @@ Local Open Scope string_scope.
 
 
 Definition string_dec : forall s1 s2 : string, {s1 = s2} + {s1 <> s2}.
-Proof. try hammer_hook "String" "String.string_dec".  
+Proof. try hammer_hook "String" "String.string_dec". Undo.  
 decide equality; apply ascii_dec.
 Defined.
 
@@ -72,7 +72,7 @@ end.
 
 Theorem get_correct :
 forall s1 s2 : string, (forall n : nat, get n s1 = get n s2) <-> s1 = s2.
-Proof. try hammer_hook "String" "String.get_correct".  
+Proof. try hammer_hook "String" "String.get_correct". Undo.  
 intros s1; elim s1; simpl.
 intros s2; case s2; simpl; split; auto.
 intros H; generalize (H 0); intros H1; inversion H1.
@@ -94,7 +94,7 @@ Qed.
 Theorem append_correct1 :
 forall (s1 s2 : string) (n : nat),
 n < length s1 -> get n s1 = get n (s1 ++ s2).
-Proof. try hammer_hook "String" "String.append_correct1".  
+Proof. try hammer_hook "String" "String.append_correct1". Undo.  
 intros s1; elim s1; simpl; auto.
 intros s2 n H; inversion H.
 intros a s1' Rec s2 n; case n; simpl; auto.
@@ -107,7 +107,7 @@ Qed.
 Theorem append_correct2 :
 forall (s1 s2 : string) (n : nat),
 get n s2 = get (n + length s1) (s1 ++ s2).
-Proof. try hammer_hook "String" "String.append_correct2".  
+Proof. try hammer_hook "String" "String.append_correct2". Undo.  
 intros s1; elim s1; simpl; auto.
 intros s2 n; rewrite plus_comm; simpl; auto.
 intros a s1' Rec s2 n; case n; simpl; auto.
@@ -133,7 +133,7 @@ end.
 Theorem substring_correct1 :
 forall (s : string) (n m p : nat),
 p < m -> get p (substring n m s) = get (p + n) s.
-Proof. try hammer_hook "String" "String.substring_correct1".  
+Proof. try hammer_hook "String" "String.substring_correct1". Undo.  
 intros s; elim s; simpl; auto.
 intros n; case n; simpl; auto.
 intros m; case m; simpl; auto.
@@ -150,7 +150,7 @@ Qed.
 
 Theorem substring_correct2 :
 forall (s : string) (n m p : nat), m <= p -> get p (substring n m s) = None.
-Proof. try hammer_hook "String" "String.substring_correct2".  
+Proof. try hammer_hook "String" "String.substring_correct2". Undo.  
 intros s; elim s; simpl; auto.
 intros n; case n; simpl; auto.
 intros m; case m; simpl; auto.
@@ -185,7 +185,7 @@ end.
 Theorem prefix_correct :
 forall s1 s2 : string,
 prefix s1 s2 = true <-> substring 0 (length s1) s2 = s1.
-Proof. try hammer_hook "String" "String.prefix_correct".  
+Proof. try hammer_hook "String" "String.prefix_correct". Undo.  
 intros s1; elim s1; simpl; auto.
 intros s2; case s2; simpl; split; auto.
 intros a s1' Rec s2; case s2; simpl; auto.
@@ -230,7 +230,7 @@ Opaque prefix.
 Theorem index_correct1 :
 forall (n m : nat) (s1 s2 : string),
 index n s1 s2 = Some m -> substring m (length s1) s2 = s1.
-Proof. try hammer_hook "String" "String.index_correct1".  
+Proof. try hammer_hook "String" "String.index_correct1". Undo.  
 intros n m s1 s2; generalize n m s1; clear n m s1; elim s2; simpl;
 auto.
 intros n; case n; simpl; auto.
@@ -262,7 +262,7 @@ Theorem index_correct2 :
 forall (n m : nat) (s1 s2 : string),
 index n s1 s2 = Some m ->
 forall p : nat, n <= p -> p < m -> substring p (length s1) s2 <> s1.
-Proof. try hammer_hook "String" "String.index_correct2".  
+Proof. try hammer_hook "String" "String.index_correct2". Undo.  
 intros n m s1 s2; generalize n m s1; clear n m s1; elim s2; simpl;
 auto.
 intros n; case n; simpl; auto.
@@ -306,7 +306,7 @@ Theorem index_correct3 :
 forall (n m : nat) (s1 s2 : string),
 index n s1 s2 = None ->
 s1 <> EmptyString -> n <= m -> substring m (length s1) s2 <> s1.
-Proof. try hammer_hook "String" "String.index_correct3".  
+Proof. try hammer_hook "String" "String.index_correct3". Undo.  
 intros n m s1 s2; generalize n m s1; clear n m s1; elim s2; simpl;
 auto.
 intros n; case n; simpl; auto.
@@ -346,7 +346,7 @@ Transparent prefix.
 Theorem index_correct4 :
 forall (n : nat) (s : string),
 index n EmptyString s = None -> length s < n.
-Proof. try hammer_hook "String" "String.index_correct4".  
+Proof. try hammer_hook "String" "String.index_correct4". Undo.  
 intros n s; generalize n; clear n; elim s; simpl; auto.
 intros n; case n; simpl; auto.
 intros; discriminate.

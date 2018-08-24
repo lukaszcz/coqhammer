@@ -49,13 +49,13 @@ Definition eq_trans := @eq_trans t.
 Definition lt := lt.
 
 Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.lt_trans".   unfold lt; intros; apply lt_trans with y; auto. Qed.
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.lt_trans". Undo.   unfold lt; intros; apply lt_trans with y; auto. Qed.
 
 Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.lt_not_eq".   unfold lt, eq; intros; omega. Qed.
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.lt_not_eq". Undo.   unfold lt, eq; intros; omega. Qed.
 
 Definition compare x y : Compare lt eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.compare".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.compare". Undo.  
 case_eq (nat_compare x y); intro.
 - apply EQ. now apply nat_compare_eq.
 - apply LT. now apply nat_compare_Lt_lt.
@@ -82,13 +82,13 @@ Definition eq_trans := @eq_trans t.
 Definition lt (x y:Z) := (x<y).
 
 Lemma lt_trans : forall x y z, x<y -> y<z -> x<z.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.lt_trans".   intros; omega. Qed.
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.lt_trans". Undo.   intros; omega. Qed.
 
 Lemma lt_not_eq : forall x y, x<y -> ~ x=y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.lt_not_eq".   intros; omega. Qed.
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.lt_not_eq". Undo.   intros; omega. Qed.
 
 Definition compare x y : Compare lt eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.compare".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.compare". Undo.  
 case_eq (x ?= y); intro.
 - apply EQ. now apply Z.compare_eq.
 - apply LT. assumption.
@@ -115,12 +115,12 @@ Definition lt := Pos.lt.
 Definition lt_trans := Pos.lt_trans.
 
 Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Z_as_OT.lt_not_eq".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Z_as_OT.lt_not_eq". Undo.  
 intros x y H. contradict H. rewrite H. apply Pos.lt_irrefl.
 Qed.
 
 Definition compare x y : Compare lt eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Z_as_OT.compare".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Z_as_OT.compare". Undo.  
 case_eq (x ?= y); intros H.
 - apply EQ. now apply Pos.compare_eq.
 - apply LT; assumption.
@@ -146,7 +146,7 @@ Definition lt_trans := N.lt_trans.
 Definition lt_not_eq := N.lt_neq.
 
 Definition compare x y : Compare lt eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Positive_as_OT.compare".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Positive_as_OT.compare". Undo.  
 case_eq (x ?= y)%N; intro.
 - apply EQ. now apply N.compare_eq.
 - apply LT. assumption.
@@ -173,22 +173,22 @@ O1.lt (fst x) (fst y) \/
 (O1.eq (fst x) (fst y) /\ O2.lt (snd x) (snd y)).
 
 Lemma eq_refl : forall x : t, eq x x.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_refl".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_refl". Undo.  
 intros (x1,x2); red; simpl; auto.
 Qed.
 
 Lemma eq_sym : forall x y : t, eq x y -> eq y x.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_sym".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_sym". Undo.  
 intros (x1,x2) (y1,y2); unfold eq; simpl; intuition.
 Qed.
 
 Lemma eq_trans : forall x y z : t, eq x y -> eq y z -> eq x z.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_trans".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_trans". Undo.  
 intros (x1,x2) (y1,y2) (z1,z2); unfold eq; simpl; intuition eauto.
 Qed.
 
 Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Z_as_OT.lt_trans".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Z_as_OT.lt_trans". Undo.  
 intros (x1,x2) (y1,y2) (z1,z2); unfold eq, lt; simpl; intuition.
 left; eauto.
 left; eapply MO1.lt_eq; eauto.
@@ -197,7 +197,7 @@ right; split; eauto.
 Qed.
 
 Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Positive_as_OT.lt_not_eq".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Positive_as_OT.lt_not_eq". Undo.  
 intros (x1,x2) (y1,y2); unfold eq, lt; simpl; intuition.
 apply (O1.lt_not_eq H0 H1).
 apply (O2.lt_not_eq H3 H2).
@@ -215,7 +215,7 @@ apply GT; unfold lt; auto.
 Defined.
 
 Definition eq_dec : forall x y : t, {eq x y} + {~ eq x y}.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_dec".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.UsualOrderedType.eq_dec". Undo.  
 intros; elim (compare x y); intro H; [ right | left | right ]; auto.
 auto using lt_not_eq.
 assert (~ eq y x); auto using lt_not_eq, eq_sym.
@@ -247,7 +247,7 @@ Definition lt:=bits_lt.
 
 Lemma bits_lt_trans :
 forall x y z : positive, bits_lt x y -> bits_lt y z -> bits_lt x z.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.PositiveOrderedTypeBits.bits_lt_trans".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.PositiveOrderedTypeBits.bits_lt_trans". Undo.  
 induction x.
 induction y; destruct z; simpl; eauto; intuition.
 induction y; destruct z; simpl; eauto; intuition.
@@ -255,17 +255,17 @@ induction y; destruct z; simpl; eauto; intuition.
 Qed.
 
 Lemma lt_trans : forall x y z : t, lt x y -> lt y z -> lt x z.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Positive_as_OT.lt_trans".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Positive_as_OT.lt_trans". Undo.  
 exact bits_lt_trans.
 Qed.
 
 Lemma bits_lt_antirefl : forall x : positive, ~ bits_lt x x.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.PositiveOrderedTypeBits.bits_lt_antirefl".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.PositiveOrderedTypeBits.bits_lt_antirefl". Undo.  
 induction x; simpl; auto.
 Qed.
 
 Lemma lt_not_eq : forall x y : t, lt x y -> ~ eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.N_as_OT.lt_not_eq".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.N_as_OT.lt_not_eq". Undo.  
 intros; intro.
 rewrite <- H0 in H; clear H0 y.
 unfold lt in H.
@@ -273,7 +273,7 @@ exact (bits_lt_antirefl x H).
 Qed.
 
 Definition compare : forall x y : t, Compare lt eq x y.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.N_as_OT.compare".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.N_as_OT.compare". Undo.  
 induction x; destruct y.
 -
 destruct (IHx y) as [l|e|g].
@@ -302,7 +302,7 @@ apply EQ; red; auto.
 Qed.
 
 Lemma eq_dec (x y: positive): {x = y} + {x <> y}.
-Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.eq_dec".  
+Proof. try hammer_hook "OrderedTypeEx" "OrderedTypeEx.Nat_as_OT.eq_dec". Undo.  
 intros. case_eq (x ?= y); intros.
 - left. now apply Pos.compare_eq.
 - right. intro. subst y. now rewrite (Pos.compare_refl x) in *.

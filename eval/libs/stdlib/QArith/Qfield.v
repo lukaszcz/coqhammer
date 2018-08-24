@@ -15,7 +15,7 @@ Require Import NArithRing.
 
 
 Definition Qsrt : ring_theory 0 1 Qplus Qmult Qminus Qopp Qeq.
-Proof. try hammer_hook "Qfield" "Qfield.Qsrt".  
+Proof. try hammer_hook "Qfield" "Qfield.Qsrt". Undo.  
 constructor.
 exact Qplus_0_l.
 exact Qplus_comm.
@@ -29,7 +29,7 @@ exact Qplus_opp_r.
 Qed.
 
 Definition Qsft : field_theory 0 1 Qplus Qmult Qminus Qopp Qdiv Qinv Qeq.
-Proof. try hammer_hook "Qfield" "Qfield.Qsft".  
+Proof. try hammer_hook "Qfield" "Qfield.Qsft". Undo.  
 constructor.
 exact Qsrt.
 discriminate.
@@ -41,7 +41,7 @@ exact Hp.
 Qed.
 
 Lemma Qpower_theory : power_theory 1 Qmult Qeq Z.of_N Qpower.
-Proof. try hammer_hook "Qfield" "Qfield.Qpower_theory".  
+Proof. try hammer_hook "Qfield" "Qfield.Qpower_theory". Undo.  
 constructor.
 intros r [|n];
 reflexivity.
@@ -134,11 +134,11 @@ Qed.
 End Examples.
 
 Lemma Qopp_plus : forall a b,  -(a+b) == -a + -b.
-Proof. try hammer_hook "Qfield" "Qfield.Qopp_plus".  
+Proof. try hammer_hook "Qfield" "Qfield.Qopp_plus". Undo.  
 intros; ring.
 Qed.
 
 Lemma Qopp_opp : forall q, - -q==q.
-Proof. try hammer_hook "Qfield" "Qfield.Qopp_opp".  
+Proof. try hammer_hook "Qfield" "Qfield.Qopp_opp". Undo.  
 intros; ring.
 Qed.

@@ -45,7 +45,7 @@ Typeclasses Opaque complement iffT.
 
 
 Lemma complement_inverse R : complement (flip R) = flip (complement R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.complement_inverse".   reflexivity. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.complement_inverse". Undo.   reflexivity. Qed.
 
 Class Irreflexive (R : crelation A) :=
 irreflexivity : Reflexive (complement R).
@@ -75,7 +75,7 @@ StrictOrder_Transitive :> Transitive R }.
 
 
 Global Instance StrictOrder_Asymmetric `(StrictOrder R) : Asymmetric R.
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.StrictOrder_Asymmetric".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.StrictOrder_Asymmetric". Undo.   firstorder. Qed.
 
 
 
@@ -107,12 +107,12 @@ is_subrelation : forall {x y}, R x y -> R' x y.
 
 
 Lemma subrelation_symmetric R `(Symmetric R) : subrelation (flip R) R.
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.subrelation_symmetric".   hnf. intros x y H'. red in H'. apply symmetry. assumption. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.subrelation_symmetric". Undo.   hnf. intros x y H'. red in H'. apply symmetry. assumption. Qed.
 
 Section flip.
 
 Lemma flip_Reflexive `{Reflexive R} : Reflexive (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_Reflexive".   tauto. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_Reflexive". Undo.   tauto. Qed.
 
 Program Definition flip_Irreflexive `(Irreflexive R) : Irreflexive (flip R) :=
 irreflexivity (R:=R).
@@ -128,21 +128,21 @@ fun x y z H H' => transitivity (R:=R) H' H.
 
 Program Definition flip_Antisymmetric `(Antisymmetric eqA R) :
 Antisymmetric eqA (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_Antisymmetric".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_Antisymmetric". Undo.   firstorder. Qed.
 
 
 
 Lemma flip_PreOrder `(PreOrder R) : PreOrder (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_PreOrder".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_PreOrder". Undo.   firstorder. Qed.
 
 Lemma flip_StrictOrder `(StrictOrder R) : StrictOrder (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_StrictOrder".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_StrictOrder". Undo.   firstorder. Qed.
 
 Lemma flip_PER `(PER R) : PER (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_PER".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_PER". Undo.   firstorder. Qed.
 
 Lemma flip_Equivalence `(Equivalence R) : Equivalence (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_Equivalence".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.flip_Equivalence". Undo.   firstorder. Qed.
 
 End flip.
 
@@ -150,10 +150,10 @@ Section complement.
 
 Definition complement_Irreflexive `(Reflexive R)
 : Irreflexive (complement R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.complement_Irreflexive".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.complement_Irreflexive". Undo.   firstorder. Qed.
 
 Definition complement_Symmetric `(Symmetric R) : Symmetric (complement R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.complement_Symmetric".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.complement_Symmetric". Undo.   firstorder. Qed.
 End complement.
 
 
@@ -261,11 +261,11 @@ Program Instance arrow_Reflexive : Reflexive arrow.
 Program Instance arrow_Transitive : Transitive arrow.
 
 Instance iffT_Reflexive : Reflexive iffT.
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.iffT_Reflexive".   firstorder. Defined.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.iffT_Reflexive". Undo.   firstorder. Defined.
 Instance iffT_Symmetric : Symmetric iffT.
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.iffT_Symmetric".   firstorder. Defined.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.iffT_Symmetric". Undo.   firstorder. Defined.
 Instance iffT_Transitive : Transitive iffT.
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.iffT_Transitive".   firstorder. Defined.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.iffT_Transitive". Undo.   firstorder. Defined.
 
 
 
@@ -292,13 +292,13 @@ fun x y => sum (R x y) (R' x y).
 
 Global Instance relation_equivalence_equivalence :
 Equivalence relation_equivalence.
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.relation_equivalence_equivalence".   split; red; unfold relation_equivalence, iffT. firstorder.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.relation_equivalence_equivalence". Undo.   split; red; unfold relation_equivalence, iffT. firstorder.
 firstorder.
 intros. specialize (X x0 y0). specialize (X0 x0 y0). firstorder.
 Qed.
 
 Global Instance relation_implication_preorder : PreOrder (@subrelation A).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.relation_implication_preorder".   firstorder. Qed.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.relation_implication_preorder". Undo.   firstorder. Qed.
 
 
 
@@ -308,13 +308,13 @@ partial_order_equivalence : relation_equivalence eqA (relation_conjunction R (fl
 
 
 Global Instance partial_order_antisym `(PartialOrder eqA R) : ! Antisymmetric A eqA R.
-Proof with auto. try hammer_hook "CRelationClasses" "CRelationClasses.partial_order_antisym".  
+Proof with auto. try hammer_hook "CRelationClasses" "CRelationClasses.partial_order_antisym". Undo.  
 reduce_goal.
 apply H. firstorder.
 Qed.
 
 Lemma PartialOrder_inverse `(PartialOrder eqA R) : PartialOrder eqA (flip R).
-Proof. try hammer_hook "CRelationClasses" "CRelationClasses.PartialOrder_inverse".   unfold flip; constructor; unfold flip. intros. apply H. apply symmetry. apply X.
+Proof. try hammer_hook "CRelationClasses" "CRelationClasses.PartialOrder_inverse". Undo.   unfold flip; constructor; unfold flip. intros. apply H. apply symmetry. apply X.
 unfold relation_conjunction. intros [H1 H2]. apply H. constructor; assumption. Qed.
 End Binary.
 

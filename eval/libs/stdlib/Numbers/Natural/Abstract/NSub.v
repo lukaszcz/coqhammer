@@ -16,26 +16,26 @@ Module Type NSubProp (Import N : NAxiomsMiniSig').
 Include NMulOrderProp N.
 
 Theorem sub_0_l : forall n, 0 - n == 0.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_0_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_0_l". Undo.  
 induct n.
 apply sub_0_r.
 intros n IH; rewrite sub_succ_r; rewrite IH. now apply pred_0.
 Qed.
 
 Theorem sub_succ : forall n m, S n - S m == n - m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_succ".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_succ". Undo.  
 intro n; induct m.
 rewrite sub_succ_r. do 2 rewrite sub_0_r. now rewrite pred_succ.
 intros m IH. rewrite sub_succ_r. rewrite IH. now rewrite sub_succ_r.
 Qed.
 
 Theorem sub_diag : forall n, n - n == 0.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_diag".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_diag". Undo.  
 induct n. apply sub_0_r. intros n IH; rewrite sub_succ; now rewrite IH.
 Qed.
 
 Theorem sub_gt : forall n m, n > m -> n - m ~= 0.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_gt".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_gt". Undo.  
 intros n m H; elim H using lt_ind_rel; clear n m H.
 solve_proper.
 intro; rewrite sub_0_r; apply neq_succ_0.
@@ -43,7 +43,7 @@ intros; now rewrite sub_succ.
 Qed.
 
 Theorem add_sub_assoc : forall n m p, p <= m -> n + (m - p) == (n + m) - p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_assoc".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_assoc". Undo.  
 intros n m p; induct p.
 intro; now do 2 rewrite sub_0_r.
 intros p IH H. do 2 rewrite sub_succ_r.
@@ -53,39 +53,39 @@ reflexivity.
 Qed.
 
 Theorem sub_succ_l : forall n m, n <= m -> S m - n == S (m - n).
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_succ_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_succ_l". Undo.  
 intros n m H. rewrite <- (add_1_l m). rewrite <- (add_1_l (m - n)).
 symmetry; now apply add_sub_assoc.
 Qed.
 
 Theorem add_sub : forall n m, (n + m) - m == n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub". Undo.  
 intros n m. rewrite <- add_sub_assoc by (apply le_refl).
 rewrite sub_diag; now rewrite add_0_r.
 Qed.
 
 Theorem sub_add : forall n m, n <= m -> (m - n) + n == m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_add".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_add". Undo.  
 intros n m H. rewrite add_comm. rewrite add_sub_assoc by assumption.
 rewrite add_comm. apply add_sub.
 Qed.
 
 Theorem add_sub_eq_l : forall n m p, m + p == n -> n - m == p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_eq_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_eq_l". Undo.  
 intros n m p H. symmetry.
 assert (H1 : m + p - m == n - m) by now rewrite H.
 rewrite add_comm in H1. now rewrite add_sub in H1.
 Qed.
 
 Theorem add_sub_eq_r : forall n m p, m + p == n -> n - p == m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_eq_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_eq_r". Undo.  
 intros n m p H; rewrite add_comm in H; now apply add_sub_eq_l.
 Qed.
 
 
 
 Theorem add_sub_eq_nz : forall n m p, p ~= 0 -> n - m == p -> m + p == n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_eq_nz".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_eq_nz". Undo.  
 intros n m p H; double_induct n m.
 intros m H1; rewrite sub_0_l in H1. symmetry in H1; false_hyp H1 H.
 intro n; rewrite sub_0_r; now rewrite add_0_l.
@@ -94,14 +94,14 @@ rewrite add_succ_l; now rewrite H1.
 Qed.
 
 Theorem sub_add_distr : forall n m p, n - (m + p) == (n - m) - p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_add_distr".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_add_distr". Undo.  
 intros n m; induct p.
 rewrite add_0_r; now rewrite sub_0_r.
 intros p IH. rewrite add_succ_r; do 2 rewrite sub_succ_r. now rewrite IH.
 Qed.
 
 Theorem add_sub_swap : forall n m p, p <= n -> n + m - p == n - p + m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_swap".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_sub_swap". Undo.  
 intros n m p H.
 rewrite (add_comm n m).
 rewrite <- add_sub_assoc by assumption.
@@ -111,7 +111,7 @@ Qed.
 
 
 Theorem le_sub_l : forall n m, n - m <= n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_sub_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_sub_l". Undo.  
 intro n; induct m.
 rewrite sub_0_r; now apply eq_le_incl.
 intros m IH. rewrite sub_succ_r.
@@ -119,7 +119,7 @@ apply le_trans with (n - m); [apply le_pred_l | assumption].
 Qed.
 
 Theorem sub_0_le : forall n m, n - m == 0 <-> n <= m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_0_le".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_0_le". Undo.  
 double_induct n m.
 intro m; split; intro; [apply le_0_l | apply sub_0_l].
 intro m; rewrite sub_0_r; split; intro H;
@@ -128,7 +128,7 @@ intros n m H. rewrite <- succ_le_mono. now rewrite sub_succ.
 Qed.
 
 Theorem sub_add_le : forall n m, n <= n - m + m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_add_le".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_add_le". Undo.  
 intros.
 destruct (le_ge_cases n m) as [LE|GE].
 rewrite <- sub_0_le in LE. rewrite LE; nzsimpl.
@@ -138,7 +138,7 @@ Qed.
 
 Theorem le_sub_le_add_r : forall n m p,
 n - p <= m <-> n <= m + p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_sub_le_add_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_sub_le_add_r". Undo.  
 intros n m p.
 split; intros LE.
 rewrite (add_le_mono_r _ _ p) in LE.
@@ -149,13 +149,13 @@ rewrite (add_le_mono_r _ _ p). now rewrite sub_add.
 Qed.
 
 Theorem le_sub_le_add_l : forall n m p, n - m <= p <-> n <= m + p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_sub_le_add_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_sub_le_add_l". Undo.  
 intros n m p. rewrite add_comm; apply le_sub_le_add_r.
 Qed.
 
 Theorem lt_sub_lt_add_r : forall n m p,
 n - p < m -> n < m + p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_sub_lt_add_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_sub_lt_add_r". Undo.  
 intros n m p LT.
 rewrite (add_lt_mono_r _ _ p) in LT.
 apply le_lt_trans with (n-p+p); auto using sub_add_le.
@@ -164,12 +164,12 @@ Qed.
 
 
 Theorem lt_sub_lt_add_l : forall n m p, n - m < p -> n < m + p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_sub_lt_add_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_sub_lt_add_l". Undo.  
 intros n m p. rewrite add_comm; apply lt_sub_lt_add_r.
 Qed.
 
 Theorem le_add_le_sub_r : forall n m p, n + p <= m -> n <= m - p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_add_le_sub_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_add_le_sub_r". Undo.  
 intros n m p LE.
 apply (add_le_mono_r _ _ p).
 rewrite sub_add. assumption.
@@ -180,12 +180,12 @@ Qed.
 
 
 Theorem le_add_le_sub_l : forall n m p, n + p <= m -> p <= m - n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_add_le_sub_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_add_le_sub_l". Undo.  
 intros n m p. rewrite add_comm; apply le_add_le_sub_r.
 Qed.
 
 Theorem lt_add_lt_sub_r : forall n m p, n + p < m <-> n < m - p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_add_lt_sub_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_add_lt_sub_r". Undo.  
 intros n m p.
 destruct (le_ge_cases p m) as [LE|GE].
 rewrite <- (sub_add p m) at 1 by assumption.
@@ -198,12 +198,12 @@ now elim (nlt_0_r n).
 Qed.
 
 Theorem lt_add_lt_sub_l : forall n m p, n + p < m <-> p < m - n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_add_lt_sub_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_add_lt_sub_l". Undo.  
 intros n m p. rewrite add_comm; apply lt_add_lt_sub_r.
 Qed.
 
 Theorem sub_lt : forall n m, m <= n -> 0 < m -> n - m < n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_lt".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_lt". Undo.  
 intros n m LE LT.
 assert (LE' := le_sub_l n m). rewrite lt_eq_cases in LE'.
 destruct LE' as [LT'|EQ]. assumption.
@@ -212,12 +212,12 @@ rewrite (add_lt_mono_r _ _ n), add_0_l in LT. order.
 Qed.
 
 Lemma sub_le_mono_r : forall n m p, n <= m -> n-p <= m-p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_le_mono_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_le_mono_r". Undo.  
 intros. rewrite le_sub_le_add_r. transitivity m. assumption. apply sub_add_le.
 Qed.
 
 Lemma sub_le_mono_l : forall n m p, n <= m -> p-m <= p-n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_le_mono_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.sub_le_mono_l". Undo.  
 intros. rewrite le_sub_le_add_r.
 transitivity (p-n+n); [ apply sub_add_le | now apply add_le_mono_l].
 Qed.
@@ -225,7 +225,7 @@ Qed.
 
 
 Theorem mul_pred_r : forall n m, n * (P m) == n * m - n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.mul_pred_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.mul_pred_r". Undo.  
 intros n m; cases m.
 now rewrite pred_0, mul_0_r, sub_0_l.
 intro m; rewrite pred_succ, mul_succ_r, <- add_sub_assoc.
@@ -234,7 +234,7 @@ now apply eq_le_incl.
 Qed.
 
 Theorem mul_sub_distr_r : forall n m p, (n - m) * p == n * p - m * p.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.mul_sub_distr_r".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.mul_sub_distr_r". Undo.  
 intros n m p; induct n.
 now rewrite sub_0_l, mul_0_l, sub_0_l.
 intros n IH. destruct (le_gt_cases m n) as [H | H].
@@ -249,7 +249,7 @@ apply mul_0_l.
 Qed.
 
 Theorem mul_sub_distr_l : forall n m p, p * (n - m) == p * n - p * m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.mul_sub_distr_l".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.mul_sub_distr_l". Undo.  
 intros n m p; rewrite (mul_comm p (n - m)), (mul_comm p n), (mul_comm p m).
 apply mul_sub_distr_r.
 Qed.
@@ -260,14 +260,14 @@ Definition le_alt n m := exists p, p + n == m.
 Definition lt_alt n m := exists p, S p + n == m.
 
 Lemma le_equiv : forall n m, le_alt n m <-> n <= m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_equiv".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_equiv". Undo.  
 split.
 intros (p,H). rewrite <- H, add_comm. apply le_add_r.
 intro H. exists (m-n). now apply sub_add.
 Qed.
 
 Lemma lt_equiv : forall n m, lt_alt n m <-> n < m.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_equiv".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_equiv". Undo.  
 split.
 intros (p,H). rewrite <- H, add_succ_l, lt_succ_r, add_comm. apply le_add_r.
 intro H. exists (m-S n). rewrite add_succ_l, <- add_succ_r.
@@ -275,13 +275,13 @@ apply sub_add. now rewrite le_succ_l.
 Qed.
 
 Instance le_alt_wd : Proper (eq==>eq==>iff) le_alt.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_alt_wd".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_alt_wd". Undo.  
 intros x x' Hx y y' Hy; unfold le_alt.
 setoid_rewrite Hx. setoid_rewrite Hy. auto with *.
 Qed.
 
 Instance lt_alt_wd : Proper (eq==>eq==>iff) lt_alt.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_alt_wd".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.lt_alt_wd". Undo.  
 intros x x' Hx y y' Hy; unfold lt_alt.
 setoid_rewrite Hx. setoid_rewrite Hy. auto with *.
 Qed.
@@ -289,7 +289,7 @@ Qed.
 
 
 Theorem le_alt_dichotomy : forall n m, le_alt n m \/ le_alt m n.
-Proof. try hammer_hook "NSub" "NSub.NSubProp.le_alt_dichotomy".  
+Proof. try hammer_hook "NSub" "NSub.NSubProp.le_alt_dichotomy". Undo.  
 intros n m; induct n.
 left; exists m; apply add_0_r.
 intros n IH.
@@ -303,7 +303,7 @@ Qed.
 
 Theorem add_dichotomy :
 forall n m, (exists p, p + n == m) \/ (exists p, p + m == n).
-Proof. try hammer_hook "NSub" "NSub.NSubProp.add_dichotomy".   exact le_alt_dichotomy. Qed.
+Proof. try hammer_hook "NSub" "NSub.NSubProp.add_dichotomy". Undo.   exact le_alt_dichotomy. Qed.
 
 End NSubProp.
 

@@ -59,7 +59,7 @@ Module Int31ring := CyclicRing Int31Cyclic.
 
 
 Lemma Int31_canonic : forall x y, phi x = phi y -> x = y.
-Proof. try hammer_hook "Ring31" "Ring31.Int31_canonic".  
+Proof. try hammer_hook "Ring31" "Ring31.Int31_canonic". Undo.  
 intros x y EQ.
 now rewrite <- (phi_inv_phi x), <- (phi_inv_phi y), EQ.
 Qed.
@@ -69,18 +69,18 @@ forall A (R R':A->A->Prop) zero one add mul sub opp,
 (forall x y : A, R x y -> R' x y) ->
 ring_theory zero one add mul sub opp R ->
 ring_theory zero one add mul sub opp R'.
-Proof. try hammer_hook "Ring31" "Ring31.ring_theory_switch_eq".  
+Proof. try hammer_hook "Ring31" "Ring31.ring_theory_switch_eq". Undo.  
 intros A R R' zero one add mul sub opp Impl Ring.
 constructor; intros; apply Impl; apply Ring.
 Qed.
 
 Lemma Int31Ring : ring_theory 0 1 add31 mul31 sub31 opp31 Logic.eq.
-Proof. try hammer_hook "Ring31" "Ring31.Int31Ring".  
+Proof. try hammer_hook "Ring31" "Ring31.Int31Ring". Undo.  
 exact (ring_theory_switch_eq _ _ _ _ _ _ _ _ _ Int31_canonic Int31ring.CyclicRing).
 Qed.
 
 Lemma eqb31_eq : forall x y, eqb31 x y = true <-> x=y.
-Proof. try hammer_hook "Ring31" "Ring31.eqb31_eq".  
+Proof. try hammer_hook "Ring31" "Ring31.eqb31_eq". Undo.  
 unfold eqb31. intros x y.
 rewrite Cyclic31.spec_compare. case Z.compare_spec.
 intuition. apply Int31_canonic; auto.
@@ -89,7 +89,7 @@ intuition; subst; auto with zarith; try discriminate.
 Qed.
 
 Lemma eqb31_correct : forall x y, eqb31 x y = true -> x=y.
-Proof. try hammer_hook "Ring31" "Ring31.eqb31_correct".   now apply eqb31_eq. Qed.
+Proof. try hammer_hook "Ring31" "Ring31.eqb31_correct". Undo.   now apply eqb31_eq. Qed.
 
 Add Ring Int31Ring : Int31Ring
 (decidable eqb31_correct,

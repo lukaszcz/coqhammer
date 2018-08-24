@@ -31,7 +31,7 @@ Hint Rewrite div_0_l mod_0_l div_1_r mod_1_r : nz.
 
 
 Lemma pow_sub_r : forall a b c, a~=0 -> 0<=c<=b -> a^(b-c) == a^b / a^c.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow_sub_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow_sub_r". Undo.  
 intros a b c Ha (H,H'). rewrite <- (sub_simpl_r b c) at 2.
 rewrite pow_add_r; trivial.
 rewrite div_mul. reflexivity.
@@ -41,7 +41,7 @@ Qed.
 
 Lemma pow_div_l : forall a b c, b~=0 -> 0<=c -> a mod b == 0 ->
 (a/b)^c == a^c / b^c.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow_div_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow_div_l". Undo.  
 intros a b c Hb Hc H. rewrite (div_mod a b Hb) at 2.
 rewrite H, add_0_r, pow_mul_l, mul_comm, div_mul. reflexivity.
 now apply pow_nonzero.
@@ -55,7 +55,7 @@ Local Coercion b2z : bool >-> t.
 Instance b2z_wd : Proper (Logic.eq ==> eq) b2z := _.
 
 Lemma exists_div2 a : exists a' (b:bool), a == 2*a' + b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.exists_div2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.exists_div2". Undo.  
 elim (Even_or_Odd a); [intros (a',H)| intros (a',H)].
 exists a'. exists false. now nzsimpl.
 exists a'. exists true. now simpl.
@@ -64,7 +64,7 @@ Qed.
 
 
 Lemma testbit_0_r a (b:bool) : testbit (2*a+b) 0 = b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_0_r". Undo.  
 destruct b; simpl; rewrite ?add_0_r.
 apply testbit_odd_0.
 apply testbit_even_0.
@@ -72,7 +72,7 @@ Qed.
 
 Lemma testbit_succ_r a (b:bool) n : 0<=n ->
 testbit (2*a+b) (succ n) = testbit a n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_succ_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_succ_r". Undo.  
 destruct b; simpl; rewrite ?add_0_r.
 now apply testbit_odd_succ.
 now apply testbit_even_succ.
@@ -83,7 +83,7 @@ Qed.
 
 
 Lemma testbit_spec' a n : 0<=n -> a.[n] == (a / 2^n) mod 2.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_spec'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_spec'". Undo.  
 intro Hn. revert a. apply le_ind with (4:=Hn).
 solve_proper.
 intros a. nzsimpl.
@@ -102,7 +102,7 @@ Qed.
 
 Lemma testbit_spec a n : 0<=n ->
 exists l h, 0<=l<2^n /\ a == l + (a.[n] + 2*h)*2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_spec".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_spec". Undo.  
 intro Hn. exists (a mod 2^n). exists (a / 2^n / 2). split.
 apply mod_pos_bound; order_pos.
 rewrite add_comm, mul_comm, (add_comm a.[n]).
@@ -112,7 +112,7 @@ Qed.
 
 Lemma testbit_true : forall a n, 0<=n ->
 (a.[n] = true <-> (a / 2^n) mod 2 == 1).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_true".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_true". Undo.  
 intros a n Hn.
 rewrite <- testbit_spec' by trivial.
 destruct a.[n]; split; simpl; now try order'.
@@ -120,7 +120,7 @@ Qed.
 
 Lemma testbit_false : forall a n, 0<=n ->
 (a.[n] = false <-> (a / 2^n) mod 2 == 0).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_false".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_false". Undo.  
 intros a n Hn.
 rewrite <- testbit_spec' by trivial.
 destruct a.[n]; split; simpl; now try order'.
@@ -128,7 +128,7 @@ Qed.
 
 Lemma testbit_eqb : forall a n, 0<=n ->
 a.[n] = eqb ((a / 2^n) mod 2) 1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_eqb".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_eqb". Undo.  
 intros a n Hn.
 apply eq_true_iff_eq. now rewrite testbit_true, eqb_eq.
 Qed.
@@ -136,18 +136,18 @@ Qed.
 
 
 Lemma b2z_inj : forall (a0 b0:bool), a0 == b0 -> a0 = b0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.b2z_inj".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.b2z_inj". Undo.  
 intros [|] [|]; simpl; trivial; order'.
 Qed.
 
 Lemma add_b2z_double_div2 : forall (a0:bool) a, (a0+2*a)/2 == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_b2z_double_div2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_b2z_double_div2". Undo.  
 intros a0 a. rewrite mul_comm, div_add by order'.
 now rewrite div_small, add_0_l by (destruct a0; split; simpl; order').
 Qed.
 
 Lemma add_b2z_double_bit0 : forall (a0:bool) a, (a0+2*a).[0] = a0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_b2z_double_bit0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_b2z_double_bit0". Undo.  
 intros a0 a. apply b2z_inj.
 rewrite testbit_spec' by order.
 nzsimpl. rewrite mul_comm, mod_add by order'.
@@ -155,12 +155,12 @@ now rewrite mod_small by (destruct a0; split; simpl; order').
 Qed.
 
 Lemma b2z_div2 : forall (a0:bool), a0/2 == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.b2z_div2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.b2z_div2". Undo.  
 intros a0. rewrite <- (add_b2z_double_div2 a0 0). now nzsimpl.
 Qed.
 
 Lemma b2z_bit0 : forall (a0:bool), a0.[0] = a0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.b2z_bit0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.b2z_bit0". Undo.  
 intros a0. rewrite <- (add_b2z_double_bit0 a0 0) at 2. now nzsimpl.
 Qed.
 
@@ -168,7 +168,7 @@ Qed.
 
 Lemma testbit_unique : forall a n (a0:bool) l h,
 0<=l<2^n -> a == l + (a0 + 2*h)*2^n -> a.[n] = a0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_unique".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_unique". Undo.  
 intros a n a0 l h Hl EQ.
 assert (0<=n).
 destruct (le_gt_cases 0 n) as [Hn|Hn]; trivial.
@@ -184,7 +184,7 @@ Qed.
 
 
 Lemma bits_0 : forall n, 0.[n] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_0". Undo.  
 intros n.
 destruct (le_gt_cases 0 n).
 apply testbit_false; trivial. nzsimpl; order_nz.
@@ -194,7 +194,7 @@ Qed.
 
 
 Lemma bits_opp : forall a n, 0<=n -> (-a).[n] = negb (P a).[n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_opp".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_opp". Undo.  
 intros a n Hn.
 destruct (testbit_spec (-a) n Hn) as (l & h & Hl & EQ).
 fold (b2z (-a).[n]) in EQ.
@@ -227,14 +227,14 @@ Qed.
 
 
 Lemma bits_m1 : forall n, 0<=n -> (-1).[n] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_m1".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_m1". Undo.  
 intros. now rewrite bits_opp, one_succ, pred_succ, bits_0.
 Qed.
 
 
 
 Lemma bit0_odd : forall a, a.[0] = odd a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit0_odd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit0_odd". Undo.  
 intros. symmetry.
 destruct (exists_div2 a) as (a' & b & EQ).
 rewrite EQ, testbit_0_r, add_comm, odd_add_mul_2.
@@ -242,26 +242,26 @@ destruct b; simpl; apply odd_1 || apply odd_0.
 Qed.
 
 Lemma bit0_eqb : forall a, a.[0] = eqb (a mod 2) 1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit0_eqb".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit0_eqb". Undo.  
 intros a. rewrite testbit_eqb by order. now nzsimpl.
 Qed.
 
 Lemma bit0_mod : forall a, a.[0] == a mod 2.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit0_mod".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit0_mod". Undo.  
 intros a. rewrite testbit_spec' by order. now nzsimpl.
 Qed.
 
 
 
 Lemma testbit_odd : forall a n, a.[n] = odd (a>>n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_odd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_odd". Undo.  
 intros. now rewrite <- bit0_odd, shiftr_spec, add_0_l.
 Qed.
 
 
 
 Lemma bit_log2 : forall a, 0<a -> a.[log2 a] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit_log2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit_log2". Undo.  
 intros a Ha.
 assert (Ha' := log2_nonneg a).
 destruct (log2_spec_alt a Ha) as (r & EQ & Hr).
@@ -275,7 +275,7 @@ Qed.
 
 Lemma bits_above_log2 : forall a n, 0<=a -> log2 a < n ->
 a.[n] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_above_log2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_above_log2". Undo.  
 intros a n Ha H.
 assert (Hn : 0<=n).
 transitivity (log2 a). apply log2_nonneg. order'.
@@ -289,7 +289,7 @@ Qed.
 
 
 Lemma bit_log2_neg : forall a, a < -1 -> a.[log2 (P (-a))] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit_log2_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bit_log2_neg". Undo.  
 intros a Ha.
 rewrite <- (opp_involutive a) at 1.
 rewrite bits_opp.
@@ -302,7 +302,7 @@ Qed.
 
 Lemma bits_above_log2_neg : forall a n, a < 0 -> log2 (P (-a)) < n ->
 a.[n] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_above_log2_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_above_log2_neg". Undo.  
 intros a n Ha H.
 assert (Hn : 0<=n).
 transitivity (log2 (P (-a))). apply log2_nonneg. order'.
@@ -315,7 +315,7 @@ Qed.
 
 Lemma bits_iff_nonneg : forall a n, log2 (abs a) < n ->
 (0<=a <-> a.[n] = false).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_nonneg". Undo.  
 intros a n Hn. split; intros H.
 rewrite abs_eq in Hn; trivial. now apply bits_above_log2.
 destruct (le_gt_cases 0 a); trivial.
@@ -327,13 +327,13 @@ Qed.
 
 Lemma bits_iff_nonneg' : forall a,
 0<=a <-> a.[S (log2 (abs a))] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_nonneg'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_nonneg'". Undo.  
 intros. apply bits_iff_nonneg. apply lt_succ_diag_r.
 Qed.
 
 Lemma bits_iff_nonneg_ex : forall a,
 0<=a <-> (exists k, forall m, k<m -> a.[m] = false).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_nonneg_ex".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_nonneg_ex". Undo.  
 intros a. split.
 intros Ha. exists (log2 a). intros m Hm. now apply bits_above_log2.
 intros (k,Hk). destruct (le_gt_cases k (log2 (abs a))).
@@ -345,19 +345,19 @@ Qed.
 
 Lemma bits_iff_neg : forall a n, log2 (abs a) < n ->
 (a<0 <-> a.[n] = true).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_neg". Undo.  
 intros a n Hn.
 now rewrite lt_nge, <- not_false_iff_true, (bits_iff_nonneg a n).
 Qed.
 
 Lemma bits_iff_neg' : forall a, a<0 <-> a.[S (log2 (abs a))] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_neg'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_neg'". Undo.  
 intros. apply bits_iff_neg. apply lt_succ_diag_r.
 Qed.
 
 Lemma bits_iff_neg_ex : forall a,
 a<0 <-> (exists k, forall m, k<m -> a.[m] = true).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_neg_ex".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_iff_neg_ex". Undo.  
 intros a. split.
 intros Ha. exists (log2 (P (-a))). intros m Hm. now apply bits_above_log2_neg.
 intros (k,Hk). destruct (le_gt_cases k (log2 (abs a))).
@@ -370,7 +370,7 @@ Qed.
 
 
 Lemma div2_bits : forall a n, 0<=n -> (a/2).[n] = a.[S n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_bits".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_bits". Undo.  
 intros a n Hn.
 apply eq_true_iff_eq. rewrite 2 testbit_true by order_pos.
 rewrite pow_succ_r by trivial.
@@ -378,7 +378,7 @@ now rewrite div_div by order_pos.
 Qed.
 
 Lemma div_pow2_bits : forall a n m, 0<=n -> 0<=m -> (a/2^n).[m] = a.[m+n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div_pow2_bits".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div_pow2_bits". Undo.  
 intros a n m Hn. revert a m. apply le_ind with (4:=Hn).
 solve_proper.
 intros a m Hm. now nzsimpl.
@@ -388,7 +388,7 @@ now rewrite IH, div2_bits by order_pos.
 Qed.
 
 Lemma double_bits_succ : forall a n, (2*a).[S n] = a.[n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.double_bits_succ".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.double_bits_succ". Undo.  
 intros a n.
 destruct (le_gt_cases 0 n) as [Hn|Hn].
 now rewrite <- div2_bits, mul_comm, div_mul by order'.
@@ -399,12 +399,12 @@ now rewrite Hn, bit0_odd, odd_mul, odd_2.
 Qed.
 
 Lemma double_bits : forall a n, (2*a).[n] = a.[P n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.double_bits".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.double_bits". Undo.  
 intros a n. rewrite <- (succ_pred n) at 1. apply double_bits_succ.
 Qed.
 
 Lemma mul_pow2_bits_add : forall a n m, 0<=n -> (a*2^n).[n+m] = a.[m].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mul_pow2_bits_add".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mul_pow2_bits_add". Undo.  
 intros a n m Hn. revert a m. apply le_ind with (4:=Hn).
 solve_proper.
 intros a m. now nzsimpl.
@@ -414,14 +414,14 @@ now rewrite double_bits_succ.
 Qed.
 
 Lemma mul_pow2_bits : forall a n m, 0<=n -> (a*2^n).[m] = a.[m-n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mul_pow2_bits".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mul_pow2_bits". Undo.  
 intros.
 rewrite <- (add_simpl_r m n) at 1. rewrite add_sub_swap, add_comm.
 now apply mul_pow2_bits_add.
 Qed.
 
 Lemma mul_pow2_bits_low : forall a n m, m<n -> (a*2^n).[m] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mul_pow2_bits_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mul_pow2_bits_low". Undo.  
 intros.
 destruct (le_gt_cases 0 n).
 rewrite mul_pow2_bits by trivial.
@@ -433,7 +433,7 @@ Qed.
 
 Lemma mod_pow2_bits_high : forall a n m, 0<=n<=m ->
 (a mod 2^n).[m] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mod_pow2_bits_high".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mod_pow2_bits_high". Undo.  
 intros a n m (Hn,H).
 destruct (mod_pos_bound a (2^n)) as [LE LT]. order_pos.
 le_elim LE.
@@ -445,7 +445,7 @@ Qed.
 
 Lemma mod_pow2_bits_low : forall a n m, m<n ->
 (a mod 2^n).[m] = a.[m].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mod_pow2_bits_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.mod_pow2_bits_low". Undo.  
 intros a n m H.
 destruct (le_gt_cases 0 m) as [Hm|Hm]; [|now rewrite !testbit_neg_r].
 rewrite testbit_eqb; trivial.
@@ -464,14 +464,14 @@ Qed.
 Definition eqf (f g:t -> bool) := forall n:t, f n = g n.
 
 Instance eqf_equiv : Equivalence eqf.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.eqf_equiv".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.eqf_equiv". Undo.  
 split; congruence.
 Qed.
 
 Local Infix "===" := eqf (at level 70, no associativity).
 
 Instance testbit_eqf : Proper (eq==>eqf) testbit.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_eqf".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.testbit_eqf". Undo.  
 intros a a' Ha n. now rewrite Ha.
 Qed.
 
@@ -479,7 +479,7 @@ Qed.
 
 Lemma bits_inj_0 :
 forall a, (forall n, a.[n] = false) -> a == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj_0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj_0". Undo.  
 intros a H. destruct (lt_trichotomy a 0) as [Ha|[Ha|Ha]]; trivial.
 apply (bits_above_log2_neg a (S (log2 (P (-a))))) in Ha.
 now rewrite H in Ha.
@@ -490,7 +490,7 @@ Qed.
 
 
 Lemma bits_inj : forall a b, testbit a === testbit b -> a == b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj". Undo.  
 assert (AUX : forall n, 0<=n -> forall a b,
 0<=a<2^n -> testbit a === testbit b -> a == b).
 intros n Hn. apply le_ind with (4:=Hn).
@@ -526,7 +526,7 @@ now rewrite 2 testbit_neg_r.
 Qed.
 
 Lemma bits_inj_iff : forall a b, testbit a === testbit b <-> a == b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj_iff". Undo.  
 split. apply bits_inj. intros EQ; now rewrite EQ.
 Qed.
 
@@ -534,7 +534,7 @@ Qed.
 
 Lemma bits_inj' : forall a b,
 (forall n, 0<=n -> a.[n] = b.[n]) -> a == b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj'". Undo.  
 intros a b H. apply bits_inj.
 intros n. destruct (le_gt_cases 0 n).
 now apply H.
@@ -542,7 +542,7 @@ now rewrite 2 testbit_neg_r.
 Qed.
 
 Lemma bits_inj_iff' : forall a b, (forall n, 0<=n -> a.[n] = b.[n]) <-> a == b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj_iff'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.bits_inj_iff'". Undo.  
 split. apply bits_inj'. intros EQ n Hn; now rewrite EQ.
 Qed.
 
@@ -555,7 +555,7 @@ Hint Rewrite lxor_spec lor_spec land_spec ldiff_spec bits_0 : bitwise.
 Lemma are_bits : forall (f:t->bool), Proper (eq==>Logic.eq) f ->
 ((exists n, forall m, 0<=m -> f m = n.[m]) <->
 (exists k, forall m, k<=m -> f m = f k)).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.are_bits".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.are_bits". Undo.  
 intros f Hf. split.
 intros (a,H).
 destruct (le_gt_cases 0 a).
@@ -600,7 +600,7 @@ Qed.
 
 
 Lemma shiftl_spec : forall a n m, 0<=m -> (a << n).[m] = a.[m-n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_spec".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_spec". Undo.  
 intros.
 destruct (le_gt_cases n m).
 now apply shiftl_spec_high.
@@ -610,36 +610,36 @@ Qed.
 
 
 Lemma shiftr_opp_r : forall a n, a >> (-n) == a << n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_opp_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_opp_r". Undo.  
 intros. bitwise. now rewrite shiftr_spec, shiftl_spec, add_opp_r.
 Qed.
 
 Lemma shiftl_opp_r : forall a n, a << (-n) == a >> n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_opp_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_opp_r". Undo.  
 intros. bitwise. now rewrite shiftr_spec, shiftl_spec, sub_opp_r.
 Qed.
 
 
 
 Lemma shiftr_div_pow2 : forall a n, 0<=n -> a >> n == a / 2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_div_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_div_pow2". Undo.  
 intros. bitwise. now rewrite shiftr_spec, div_pow2_bits.
 Qed.
 
 Lemma shiftr_mul_pow2 : forall a n, n<=0 -> a >> n == a * 2^(-n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_mul_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_mul_pow2". Undo.  
 intros. bitwise. rewrite shiftr_spec, mul_pow2_bits; trivial.
 now rewrite sub_opp_r.
 now apply opp_nonneg_nonpos.
 Qed.
 
 Lemma shiftl_mul_pow2 : forall a n, 0<=n -> a << n == a * 2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_mul_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_mul_pow2". Undo.  
 intros. bitwise. now rewrite shiftl_spec, mul_pow2_bits.
 Qed.
 
 Lemma shiftl_div_pow2 : forall a n, n<=0 -> a << n == a / 2^(-n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_div_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_div_pow2". Undo.  
 intros. bitwise. rewrite shiftl_spec, div_pow2_bits; trivial.
 now rewrite add_opp_r.
 now apply opp_nonneg_nonpos.
@@ -648,7 +648,7 @@ Qed.
 
 
 Instance shiftr_wd : Proper (eq==>eq==>eq) shiftr.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_wd". Undo.  
 intros a a' Ha n n' Hn.
 destruct (le_ge_cases n 0) as [H|H]; assert (H':=H); rewrite Hn in H'.
 now rewrite 2 shiftr_mul_pow2, Ha, Hn.
@@ -656,14 +656,14 @@ now rewrite 2 shiftr_div_pow2, Ha, Hn.
 Qed.
 
 Instance shiftl_wd : Proper (eq==>eq==>eq) shiftl.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_wd". Undo.  
 intros a a' Ha n n' Hn. now rewrite <- 2 shiftr_opp_r, Ha, Hn.
 Qed.
 
 
 
 Lemma shiftl_spec_alt : forall a n m, 0<=n -> (a << n).[m+n] = a.[m].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_spec_alt".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_spec_alt". Undo.  
 intros. now rewrite shiftl_mul_pow2, mul_pow2_bits, add_simpl_r.
 Qed.
 
@@ -671,7 +671,7 @@ Qed.
 
 Lemma shiftl_shiftl : forall a n m, 0<=n ->
 (a << n) << m == a << (n+m).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_shiftl".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_shiftl". Undo.  
 intros a n p Hn. bitwise.
 rewrite 2 (shiftl_spec _ _ m) by trivial.
 rewrite add_comm, sub_add_distr.
@@ -683,19 +683,19 @@ Qed.
 
 Lemma shiftr_shiftl_l : forall a n m, 0<=n ->
 (a << n) >> m == a << (n-m).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_shiftl_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_shiftl_l". Undo.  
 intros. now rewrite <- shiftl_opp_r, shiftl_shiftl, add_opp_r.
 Qed.
 
 Lemma shiftr_shiftl_r : forall a n m, 0<=n ->
 (a << n) >> m == a >> (m-n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_shiftl_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_shiftl_r". Undo.  
 intros. now rewrite <- 2 shiftl_opp_r, shiftl_shiftl, opp_sub_distr, add_comm.
 Qed.
 
 Lemma shiftr_shiftr : forall a n m, 0<=m ->
 (a >> n) >> m == a >> (n+m).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_shiftr".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_shiftr". Undo.  
 intros a n p Hn. bitwise.
 rewrite 3 shiftr_spec; trivial.
 now rewrite (add_comm n p), add_assoc.
@@ -705,7 +705,7 @@ Qed.
 
 
 Lemma shiftl_1_l : forall n, 1 << n == 2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_1_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_1_l". Undo.  
 intros n. destruct (le_gt_cases 0 n).
 now rewrite shiftl_mul_pow2, mul_1_l.
 rewrite shiftl_div_pow2, div_1_l, pow_neg_r; try order.
@@ -713,17 +713,17 @@ apply pow_gt_1. order'. now apply opp_pos_neg.
 Qed.
 
 Lemma shiftl_0_r : forall a, a << 0 == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_0_r". Undo.  
 intros. rewrite shiftl_mul_pow2 by order. now nzsimpl.
 Qed.
 
 Lemma shiftr_0_r : forall a, a >> 0 == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_0_r". Undo.  
 intros. now rewrite <- shiftl_opp_r, opp_0, shiftl_0_r.
 Qed.
 
 Lemma shiftl_0_l : forall n, 0 << n == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_0_l". Undo.  
 intros.
 destruct (le_ge_cases 0 n).
 rewrite shiftl_mul_pow2 by trivial. now nzsimpl.
@@ -732,12 +732,12 @@ rewrite <- opp_nonneg_nonpos in H. nzsimpl; order_nz.
 Qed.
 
 Lemma shiftr_0_l : forall n, 0 >> n == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_0_l". Undo.  
 intros. now rewrite <- shiftl_opp_r, shiftl_0_l.
 Qed.
 
 Lemma shiftl_eq_0_iff : forall a n, 0<=n -> (a << n == 0 <-> a == 0).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_eq_0_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_eq_0_iff". Undo.  
 intros a n Hn.
 rewrite shiftl_mul_pow2 by trivial. rewrite eq_mul_0. split.
 intros [H | H]; trivial. contradict H; order_nz.
@@ -746,7 +746,7 @@ Qed.
 
 Lemma shiftr_eq_0_iff : forall a n,
 a >> n == 0 <-> a==0 \/ (0<a /\ log2 a < n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_eq_0_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_eq_0_iff". Undo.  
 intros a n.
 destruct (le_gt_cases 0 n) as [Hn|Hn].
 rewrite shiftr_div_pow2, div_small_iff by order_nz.
@@ -769,7 +769,7 @@ destruct H. generalize (log2_nonneg a); order.
 Qed.
 
 Lemma shiftr_eq_0 : forall a n, 0<=a -> log2 a < n -> a >> n == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_eq_0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_eq_0". Undo.  
 intros a n Ha H. apply shiftr_eq_0_iff.
 le_elim Ha. right. now split. now left.
 Qed.
@@ -777,17 +777,17 @@ Qed.
 
 
 Lemma div2_div : forall a, div2 a == a/2.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_div".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_div". Undo.  
 intros. rewrite div2_spec, shiftr_div_pow2. now nzsimpl. order'.
 Qed.
 
 Instance div2_wd : Proper (eq==>eq) div2.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_wd". Undo.  
 intros a a' Ha. now rewrite 2 div2_div, Ha.
 Qed.
 
 Lemma div2_odd : forall a, a == 2*(div2 a) + odd a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_odd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_odd". Undo.  
 intros a. rewrite div2_div, <- bit0_odd, bit0_mod.
 apply div_mod. order'.
 Qed.
@@ -795,97 +795,97 @@ Qed.
 
 
 Instance lxor_wd : Proper (eq ==> eq ==> eq) lxor.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_wd". Undo.  
 intros a a' Ha b b' Hb. bitwise. now rewrite Ha, Hb.
 Qed.
 
 Instance land_wd : Proper (eq ==> eq ==> eq) land.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_wd". Undo.  
 intros a a' Ha b b' Hb. bitwise. now rewrite Ha, Hb.
 Qed.
 
 Instance lor_wd : Proper (eq ==> eq ==> eq) lor.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_wd". Undo.  
 intros a a' Ha b b' Hb. bitwise. now rewrite Ha, Hb.
 Qed.
 
 Instance ldiff_wd : Proper (eq ==> eq ==> eq) ldiff.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_wd".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_wd". Undo.  
 intros a a' Ha b b' Hb. bitwise. now rewrite Ha, Hb.
 Qed.
 
 Lemma lxor_eq : forall a a', lxor a a' == 0 -> a == a'.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_eq".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_eq". Undo.  
 intros a a' H. bitwise. apply xorb_eq.
 now rewrite <- lxor_spec, H, bits_0.
 Qed.
 
 Lemma lxor_nilpotent : forall a, lxor a a == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_nilpotent".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_nilpotent". Undo.  
 intros. bitwise. apply xorb_nilpotent.
 Qed.
 
 Lemma lxor_eq_0_iff : forall a a', lxor a a' == 0 <-> a == a'.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_eq_0_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_eq_0_iff". Undo.  
 split. apply lxor_eq. intros EQ; rewrite EQ; apply lxor_nilpotent.
 Qed.
 
 Lemma lxor_0_l : forall a, lxor 0 a == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_0_l". Undo.  
 intros. bitwise. apply xorb_false_l.
 Qed.
 
 Lemma lxor_0_r : forall a, lxor a 0 == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_0_r". Undo.  
 intros. bitwise. apply xorb_false_r.
 Qed.
 
 Lemma lxor_comm : forall a b, lxor a b == lxor b a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_comm".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_comm". Undo.  
 intros. bitwise. apply xorb_comm.
 Qed.
 
 Lemma lxor_assoc :
 forall a b c, lxor (lxor a b) c == lxor a (lxor b c).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_assoc".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_assoc". Undo.  
 intros. bitwise. apply xorb_assoc.
 Qed.
 
 Lemma lor_0_l : forall a, lor 0 a == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_0_l". Undo.  
 intros. bitwise. trivial.
 Qed.
 
 Lemma lor_0_r : forall a, lor a 0 == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_0_r". Undo.  
 intros. bitwise. apply orb_false_r.
 Qed.
 
 Lemma lor_comm : forall a b, lor a b == lor b a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_comm".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_comm". Undo.  
 intros. bitwise. apply orb_comm.
 Qed.
 
 Lemma lor_assoc :
 forall a b c, lor a (lor b c) == lor (lor a b) c.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_assoc".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_assoc". Undo.  
 intros. bitwise. apply orb_assoc.
 Qed.
 
 Lemma lor_diag : forall a, lor a a == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_diag".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_diag". Undo.  
 intros. bitwise. apply orb_diag.
 Qed.
 
 Lemma lor_eq_0_l : forall a b, lor a b == 0 -> a == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_eq_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_eq_0_l". Undo.  
 intros a b H. bitwise.
 apply (orb_false_iff a.[m] b.[m]).
 now rewrite <- lor_spec, H, bits_0.
 Qed.
 
 Lemma lor_eq_0_iff : forall a b, lor a b == 0 <-> a == 0 /\ b == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_eq_0_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_eq_0_iff". Undo.  
 intros a b. split.
 split. now apply lor_eq_0_l in H.
 rewrite lor_comm in H. now apply lor_eq_0_l in H.
@@ -893,86 +893,86 @@ intros (EQ,EQ'). now rewrite EQ, lor_0_l.
 Qed.
 
 Lemma land_0_l : forall a, land 0 a == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_0_l". Undo.  
 intros. bitwise. trivial.
 Qed.
 
 Lemma land_0_r : forall a, land a 0 == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_0_r". Undo.  
 intros. bitwise. apply andb_false_r.
 Qed.
 
 Lemma land_comm : forall a b, land a b == land b a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_comm".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_comm". Undo.  
 intros. bitwise. apply andb_comm.
 Qed.
 
 Lemma land_assoc :
 forall a b c, land a (land b c) == land (land a b) c.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_assoc".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_assoc". Undo.  
 intros. bitwise. apply andb_assoc.
 Qed.
 
 Lemma land_diag : forall a, land a a == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_diag".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_diag". Undo.  
 intros. bitwise. apply andb_diag.
 Qed.
 
 Lemma ldiff_0_l : forall a, ldiff 0 a == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_0_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_0_l". Undo.  
 intros. bitwise. trivial.
 Qed.
 
 Lemma ldiff_0_r : forall a, ldiff a 0 == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_0_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_0_r". Undo.  
 intros. bitwise. now rewrite andb_true_r.
 Qed.
 
 Lemma ldiff_diag : forall a, ldiff a a == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_diag".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_diag". Undo.  
 intros. bitwise. apply andb_negb_r.
 Qed.
 
 Lemma lor_land_distr_l : forall a b c,
 lor (land a b) c == land (lor a c) (lor b c).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_land_distr_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_land_distr_l". Undo.  
 intros. bitwise. apply orb_andb_distrib_l.
 Qed.
 
 Lemma lor_land_distr_r : forall a b c,
 lor a (land b c) == land (lor a b) (lor a c).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_land_distr_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_land_distr_r". Undo.  
 intros. bitwise. apply orb_andb_distrib_r.
 Qed.
 
 Lemma land_lor_distr_l : forall a b c,
 land (lor a b) c == lor (land a c) (land b c).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_lor_distr_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_lor_distr_l". Undo.  
 intros. bitwise. apply andb_orb_distrib_l.
 Qed.
 
 Lemma land_lor_distr_r : forall a b c,
 land a (lor b c) == lor (land a b) (land a c).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_lor_distr_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_lor_distr_r". Undo.  
 intros. bitwise. apply andb_orb_distrib_r.
 Qed.
 
 Lemma ldiff_ldiff_l : forall a b c,
 ldiff (ldiff a b) c == ldiff a (lor b c).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ldiff_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ldiff_l". Undo.  
 intros. bitwise. now rewrite negb_orb, andb_assoc.
 Qed.
 
 Lemma lor_ldiff_and : forall a b,
 lor (ldiff a b) (land a b) == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_ldiff_and".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_ldiff_and". Undo.  
 intros. bitwise.
 now rewrite <- andb_orb_distrib_r, orb_comm, orb_negb_r, andb_true_r.
 Qed.
 
 Lemma land_ldiff : forall a b,
 land (ldiff a b) b == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_ldiff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_ldiff". Undo.  
 intros. bitwise.
 now rewrite <-andb_assoc, (andb_comm (negb _)), andb_negb_r, andb_false_r.
 Qed.
@@ -983,29 +983,29 @@ Definition setbit a n := lor a (1 << n).
 Definition clearbit a n := ldiff a (1 << n).
 
 Lemma setbit_spec' : forall a n, setbit a n == lor a (2^n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_spec'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_spec'". Undo.  
 intros. unfold setbit. now rewrite shiftl_1_l.
 Qed.
 
 Lemma clearbit_spec' : forall a n, clearbit a n == ldiff a (2^n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_spec'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_spec'". Undo.  
 intros. unfold clearbit. now rewrite shiftl_1_l.
 Qed.
 
 Instance setbit_wd : Proper (eq==>eq==>eq) setbit.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_wd".   unfold setbit. solve_proper. Qed.
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_wd". Undo.   unfold setbit. solve_proper. Qed.
 
 Instance clearbit_wd : Proper (eq==>eq==>eq) clearbit.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_wd".   unfold clearbit. solve_proper. Qed.
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_wd". Undo.   unfold clearbit. solve_proper. Qed.
 
 Lemma pow2_bits_true : forall n, 0<=n -> (2^n).[n] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow2_bits_true".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow2_bits_true". Undo.  
 intros. rewrite <- (mul_1_l (2^n)).
 now rewrite mul_pow2_bits, sub_diag, bit0_odd, odd_1.
 Qed.
 
 Lemma pow2_bits_false : forall n m, n~=m -> (2^n).[m] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow2_bits_false".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow2_bits_false". Undo.  
 intros.
 destruct (le_gt_cases 0 n); [|now rewrite pow_neg_r, bits_0].
 destruct (le_gt_cases n m).
@@ -1017,7 +1017,7 @@ rewrite <- (mul_1_l (2^n)), mul_pow2_bits_low; trivial.
 Qed.
 
 Lemma pow2_bits_eqb : forall n m, 0<=n -> (2^n).[m] = eqb n m.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow2_bits_eqb".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.pow2_bits_eqb". Undo.  
 intros n m Hn. apply eq_true_iff_eq. rewrite eqb_eq. split.
 destruct (eq_decidable n m) as [H|H]. trivial.
 now rewrite (pow2_bits_false _ _ H).
@@ -1026,31 +1026,31 @@ Qed.
 
 Lemma setbit_eqb : forall a n m, 0<=n ->
 (setbit a n).[m] = eqb n m || a.[m].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_eqb".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_eqb". Undo.  
 intros. now rewrite setbit_spec', lor_spec, pow2_bits_eqb, orb_comm.
 Qed.
 
 Lemma setbit_iff : forall a n m, 0<=n ->
 ((setbit a n).[m] = true <-> n==m \/ a.[m] = true).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_iff". Undo.  
 intros. now rewrite setbit_eqb, orb_true_iff, eqb_eq.
 Qed.
 
 Lemma setbit_eq : forall a n, 0<=n -> (setbit a n).[n] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_eq".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_eq". Undo.  
 intros. apply setbit_iff; trivial. now left.
 Qed.
 
 Lemma setbit_neq : forall a n m, 0<=n -> n~=m ->
 (setbit a n).[m] = a.[m].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_neq".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.setbit_neq". Undo.  
 intros a n m Hn H. rewrite setbit_eqb; trivial.
 rewrite <- eqb_eq in H. apply not_true_is_false in H. now rewrite H.
 Qed.
 
 Lemma clearbit_eqb : forall a n m,
 (clearbit a n).[m] = a.[m] && negb (eqb n m).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_eqb".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_eqb". Undo.  
 intros.
 destruct (le_gt_cases 0 m); [| now rewrite 2 testbit_neg_r].
 rewrite clearbit_spec', ldiff_spec. f_equal. f_equal.
@@ -1061,20 +1061,20 @@ Qed.
 
 Lemma clearbit_iff : forall a n m,
 (clearbit a n).[m] = true <-> a.[m] = true /\ n~=m.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_iff". Undo.  
 intros. rewrite clearbit_eqb, andb_true_iff, <- eqb_eq.
 now rewrite negb_true_iff, not_true_iff_false.
 Qed.
 
 Lemma clearbit_eq : forall a n, (clearbit a n).[n] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_eq".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_eq". Undo.  
 intros. rewrite clearbit_eqb, (proj2 (eqb_eq _ _) (eq_refl n)).
 apply andb_false_r.
 Qed.
 
 Lemma clearbit_neq : forall a n m, n~=m ->
 (clearbit a n).[m] = a.[m].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_neq".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.clearbit_neq". Undo.  
 intros a n m H. rewrite clearbit_eqb.
 rewrite <- eqb_eq in H. apply not_true_is_false in H. rewrite H.
 apply andb_true_r.
@@ -1084,49 +1084,49 @@ Qed.
 
 Lemma shiftl_lxor : forall a b n,
 (lxor a b) << n == lxor (a << n) (b << n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_lxor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_lxor". Undo.  
 intros. bitwise. now rewrite !shiftl_spec, lxor_spec.
 Qed.
 
 Lemma shiftr_lxor : forall a b n,
 (lxor a b) >> n == lxor (a >> n) (b >> n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_lxor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_lxor". Undo.  
 intros. bitwise. now rewrite !shiftr_spec, lxor_spec.
 Qed.
 
 Lemma shiftl_land : forall a b n,
 (land a b) << n == land (a << n) (b << n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_land".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_land". Undo.  
 intros. bitwise. now rewrite !shiftl_spec, land_spec.
 Qed.
 
 Lemma shiftr_land : forall a b n,
 (land a b) >> n == land (a >> n) (b >> n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_land".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_land". Undo.  
 intros. bitwise. now rewrite !shiftr_spec, land_spec.
 Qed.
 
 Lemma shiftl_lor : forall a b n,
 (lor a b) << n == lor (a << n) (b << n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_lor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_lor". Undo.  
 intros. bitwise. now rewrite !shiftl_spec, lor_spec.
 Qed.
 
 Lemma shiftr_lor : forall a b n,
 (lor a b) >> n == lor (a >> n) (b >> n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_lor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_lor". Undo.  
 intros. bitwise. now rewrite !shiftr_spec, lor_spec.
 Qed.
 
 Lemma shiftl_ldiff : forall a b n,
 (ldiff a b) << n == ldiff (a << n) (b << n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_ldiff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_ldiff". Undo.  
 intros. bitwise. now rewrite !shiftl_spec, ldiff_spec.
 Qed.
 
 Lemma shiftr_ldiff : forall a b n,
 (ldiff a b) >> n == ldiff (a >> n) (b >> n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_ldiff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_ldiff". Undo.  
 intros. bitwise. now rewrite !shiftr_spec, ldiff_spec.
 Qed.
 
@@ -1135,127 +1135,127 @@ Qed.
 Definition lnot a := P (-a).
 
 Instance lnot_wd : Proper (eq==>eq) lnot.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_wd".   unfold lnot. solve_proper. Qed.
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_wd". Undo.   unfold lnot. solve_proper. Qed.
 
 Lemma lnot_spec : forall a n, 0<=n -> (lnot a).[n] = negb a.[n].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_spec".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_spec". Undo.  
 intros. unfold lnot. rewrite <- (opp_involutive a) at 2.
 rewrite bits_opp, negb_involutive; trivial.
 Qed.
 
 Lemma lnot_involutive : forall a, lnot (lnot a) == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_involutive".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_involutive". Undo.  
 intros a. bitwise. now rewrite 2 lnot_spec, negb_involutive.
 Qed.
 
 Lemma lnot_0 : lnot 0 == -1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_0". Undo.  
 unfold lnot. now rewrite opp_0, <- sub_1_r, sub_0_l.
 Qed.
 
 Lemma lnot_m1 : lnot (-1) == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_m1".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_m1". Undo.  
 unfold lnot. now rewrite opp_involutive, one_succ, pred_succ.
 Qed.
 
 
 
 Lemma lor_m1_r : forall a, lor a (-1) == -1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_m1_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_m1_r". Undo.  
 intros. bitwise. now rewrite bits_m1, orb_true_r.
 Qed.
 
 Lemma lor_m1_l : forall a, lor (-1) a == -1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_m1_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_m1_l". Undo.  
 intros. now rewrite lor_comm, lor_m1_r.
 Qed.
 
 Lemma land_m1_r : forall a, land a (-1) == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_m1_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_m1_r". Undo.  
 intros. bitwise. now rewrite bits_m1, andb_true_r.
 Qed.
 
 Lemma land_m1_l : forall a, land (-1) a == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_m1_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_m1_l". Undo.  
 intros. now rewrite land_comm, land_m1_r.
 Qed.
 
 Lemma ldiff_m1_r : forall a, ldiff a (-1) == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_m1_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_m1_r". Undo.  
 intros. bitwise. now rewrite bits_m1, andb_false_r.
 Qed.
 
 Lemma ldiff_m1_l : forall a, ldiff (-1) a == lnot a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_m1_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_m1_l". Undo.  
 intros. bitwise. now rewrite lnot_spec, bits_m1.
 Qed.
 
 Lemma lor_lnot_diag : forall a, lor a (lnot a) == -1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_lnot_diag".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_lnot_diag". Undo.  
 intros a. bitwise. rewrite lnot_spec, bits_m1; trivial.
 now destruct a.[m].
 Qed.
 
 Lemma add_lnot_diag : forall a, a + lnot a == -1.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_lnot_diag".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_lnot_diag". Undo.  
 intros a. unfold lnot.
 now rewrite add_pred_r, add_opp_r, sub_diag, one_succ, opp_succ, opp_0.
 Qed.
 
 Lemma ldiff_land : forall a b, ldiff a b == land a (lnot b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_land".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_land". Undo.  
 intros. bitwise. now rewrite lnot_spec.
 Qed.
 
 Lemma land_lnot_diag : forall a, land a (lnot a) == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_lnot_diag".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_lnot_diag". Undo.  
 intros. now rewrite <- ldiff_land, ldiff_diag.
 Qed.
 
 Lemma lnot_lor : forall a b, lnot (lor a b) == land (lnot a) (lnot b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_lor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_lor". Undo.  
 intros a b. bitwise. now rewrite !lnot_spec, lor_spec, negb_orb.
 Qed.
 
 Lemma lnot_land : forall a b, lnot (land a b) == lor (lnot a) (lnot b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_land".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_land". Undo.  
 intros a b. bitwise. now rewrite !lnot_spec, land_spec, negb_andb.
 Qed.
 
 Lemma lnot_ldiff : forall a b, lnot (ldiff a b) == lor (lnot a) b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_ldiff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_ldiff". Undo.  
 intros a b. bitwise.
 now rewrite !lnot_spec, ldiff_spec, negb_andb, negb_involutive.
 Qed.
 
 Lemma lxor_lnot_lnot : forall a b, lxor (lnot a) (lnot b) == lxor a b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_lnot_lnot".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_lnot_lnot". Undo.  
 intros a b. bitwise. now rewrite !lnot_spec, xorb_negb_negb.
 Qed.
 
 Lemma lnot_lxor_l : forall a b, lnot (lxor a b) == lxor (lnot a) b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_lxor_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_lxor_l". Undo.  
 intros a b. bitwise. now rewrite !lnot_spec, !lxor_spec, negb_xorb_l.
 Qed.
 
 Lemma lnot_lxor_r : forall a b, lnot (lxor a b) == lxor a (lnot b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_lxor_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_lxor_r". Undo.  
 intros a b. bitwise. now rewrite !lnot_spec, !lxor_spec, negb_xorb_r.
 Qed.
 
 Lemma lxor_m1_r : forall a, lxor a (-1) == lnot a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_m1_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_m1_r". Undo.  
 intros. now rewrite <- (lxor_0_r (lnot a)), <- lnot_m1, lxor_lnot_lnot.
 Qed.
 
 Lemma lxor_m1_l : forall a, lxor (-1) a == lnot a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_m1_l".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_m1_l". Undo.  
 intros. now rewrite lxor_comm, lxor_m1_r.
 Qed.
 
 Lemma lxor_lor : forall a b, land a b == 0 ->
 lxor a b == lor a b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_lor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_lor". Undo.  
 intros a b H. bitwise.
 assert (a.[m] && b.[m] = false)
 by now rewrite <- land_spec, H, bits_0.
@@ -1263,7 +1263,7 @@ now destruct a.[m], b.[m].
 Qed.
 
 Lemma lnot_shiftr : forall a n, 0<=n -> lnot (a >> n) == (lnot a) >> n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_shiftr".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_shiftr". Undo.  
 intros a n Hn. bitwise.
 now rewrite lnot_spec, 2 shiftr_spec, lnot_spec by order_pos.
 Qed.
@@ -1273,10 +1273,10 @@ Qed.
 Definition ones n := P (1<<n).
 
 Instance ones_wd : Proper (eq==>eq) ones.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_wd".   unfold ones. solve_proper. Qed.
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_wd". Undo.   unfold ones. solve_proper. Qed.
 
 Lemma ones_equiv : forall n, ones n == P (2^n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_equiv".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_equiv". Undo.  
 intros. unfold ones.
 destruct (le_gt_cases 0 n).
 now rewrite shiftl_mul_pow2, mul_1_l.
@@ -1287,14 +1287,14 @@ Qed.
 
 Lemma ones_add : forall n m, 0<=n -> 0<=m ->
 ones (m+n) == 2^m * ones n + ones m.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_add".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_add". Undo.  
 intros n m Hn Hm. rewrite !ones_equiv.
 rewrite <- !sub_1_r, mul_sub_distr_l, mul_1_r, <- pow_add_r by trivial.
 rewrite add_sub_assoc, sub_add. reflexivity.
 Qed.
 
 Lemma ones_div_pow2 : forall n m, 0<=m<=n -> ones n / 2^m == ones (n-m).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_div_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_div_pow2". Undo.  
 intros n m (Hm,H). symmetry. apply div_unique with (ones m).
 left. rewrite ones_equiv. split.
 rewrite <- lt_succ_r, succ_pred. order_pos.
@@ -1304,7 +1304,7 @@ apply ones_add; trivial. now apply le_0_sub.
 Qed.
 
 Lemma ones_mod_pow2 : forall n m, 0<=m<=n -> (ones n) mod (2^m) == ones m.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_mod_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_mod_pow2". Undo.  
 intros n m (Hm,H). symmetry. apply mod_unique with (ones (n-m)).
 left. rewrite ones_equiv. split.
 rewrite <- lt_succ_r, succ_pred. order_pos.
@@ -1314,7 +1314,7 @@ apply ones_add; trivial. now apply le_0_sub.
 Qed.
 
 Lemma ones_spec_low : forall n m, 0<=m<n -> (ones n).[m] = true.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_spec_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_spec_low". Undo.  
 intros n m (Hm,H). apply testbit_true; trivial.
 rewrite ones_div_pow2 by (split; order).
 rewrite <- (pow_1_r 2). rewrite ones_mod_pow2.
@@ -1323,7 +1323,7 @@ split. order'. apply le_add_le_sub_r. nzsimpl. now apply le_succ_l.
 Qed.
 
 Lemma ones_spec_high : forall n m, 0<=n<=m -> (ones n).[m] = false.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_spec_high".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_spec_high". Undo.  
 intros n m (Hn,H). le_elim Hn.
 apply bits_above_log2; rewrite ones_equiv.
 rewrite <-lt_succ_r, succ_pred; order_pos.
@@ -1333,7 +1333,7 @@ Qed.
 
 Lemma ones_spec_iff : forall n m, 0<=n ->
 ((ones n).[m] = true <-> 0<=m<n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_spec_iff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ones_spec_iff". Undo.  
 intros n m Hn. split. intros H.
 destruct (lt_ge_cases m 0) as [Hm|Hm].
 now rewrite testbit_neg_r in H.
@@ -1344,7 +1344,7 @@ Qed.
 
 Lemma lor_ones_low : forall a n, 0<=a -> log2 a < n ->
 lor a (ones n) == ones n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_ones_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_ones_low". Undo.  
 intros a n Ha H. bitwise. destruct (le_gt_cases n m).
 rewrite ones_spec_high, bits_above_log2; try split; trivial.
 now apply lt_le_trans with n.
@@ -1353,7 +1353,7 @@ rewrite ones_spec_low, orb_true_r; try split; trivial.
 Qed.
 
 Lemma land_ones : forall a n, 0<=n -> land a (ones n) == a mod 2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_ones".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_ones". Undo.  
 intros a n Hn. bitwise. destruct (le_gt_cases n m).
 rewrite ones_spec_high, mod_pow2_bits_high, andb_false_r;
 try split; trivial.
@@ -1363,7 +1363,7 @@ Qed.
 
 Lemma land_ones_low : forall a n, 0<=a -> log2 a < n ->
 land a (ones n) == a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_ones_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_ones_low". Undo.  
 intros a n Ha H.
 assert (Hn : 0<=n) by (generalize (log2_nonneg a); order).
 rewrite land_ones; trivial. apply mod_small.
@@ -1373,7 +1373,7 @@ Qed.
 
 Lemma ldiff_ones_r : forall a n, 0<=n ->
 ldiff a (ones n) == (a >> n) << n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ones_r".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ones_r". Undo.  
 intros a n Hn. bitwise. destruct (le_gt_cases n m).
 rewrite ones_spec_high, shiftl_spec_high, shiftr_spec; trivial.
 rewrite sub_add; trivial. apply andb_true_r.
@@ -1385,7 +1385,7 @@ Qed.
 
 Lemma ldiff_ones_r_low : forall a n, 0<=a -> log2 a < n ->
 ldiff a (ones n) == 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ones_r_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ones_r_low". Undo.  
 intros a n Ha H. bitwise. destruct (le_gt_cases n m).
 rewrite ones_spec_high, bits_above_log2; trivial.
 now apply lt_le_trans with n.
@@ -1395,7 +1395,7 @@ Qed.
 
 Lemma ldiff_ones_l_low : forall a n, 0<=a -> log2 a < n ->
 ldiff (ones n) a == lxor a (ones n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ones_l_low".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_ones_l_low". Undo.  
 intros a n Ha H. bitwise. destruct (le_gt_cases n m).
 rewrite ones_spec_high, bits_above_log2; trivial.
 now apply lt_le_trans with n.
@@ -1406,7 +1406,7 @@ Qed.
 
 
 Lemma shiftl_nonneg : forall a n, 0 <= (a << n) <-> 0 <= a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_nonneg". Undo.  
 intros a n.
 destruct (le_ge_cases 0 n) as [Hn|Hn].
 
@@ -1435,32 +1435,32 @@ rewrite add_opp_r. now apply lt_add_lt_sub_r.
 Qed.
 
 Lemma shiftl_neg : forall a n, (a << n) < 0 <-> a < 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftl_neg". Undo.  
 intros a n. now rewrite 2 lt_nge, shiftl_nonneg.
 Qed.
 
 Lemma shiftr_nonneg : forall a n, 0 <= (a >> n) <-> 0 <= a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_nonneg". Undo.  
 intros. rewrite <- shiftl_opp_r. apply shiftl_nonneg.
 Qed.
 
 Lemma shiftr_neg : forall a n, (a >> n) < 0 <-> a < 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.shiftr_neg". Undo.  
 intros a n. now rewrite 2 lt_nge, shiftr_nonneg.
 Qed.
 
 Lemma div2_nonneg : forall a, 0 <= div2 a <-> 0 <= a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_nonneg". Undo.  
 intros. rewrite div2_spec. apply shiftr_nonneg.
 Qed.
 
 Lemma div2_neg : forall a, div2 a < 0 <-> a < 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.div2_neg". Undo.  
 intros a. now rewrite 2 lt_nge, div2_nonneg.
 Qed.
 
 Lemma lor_nonneg : forall a b, 0 <= lor a b <-> 0<=a /\ 0<=b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_nonneg". Undo.  
 intros a b.
 rewrite 3 bits_iff_nonneg_ex. split. intros (k,Hk).
 split; exists k; intros m Hm; apply (orb_false_elim a.[m] b.[m]);
@@ -1471,49 +1471,49 @@ intros m Hm; rewrite lor_spec, Hk, Hk'; trivial; order.
 Qed.
 
 Lemma lor_neg : forall a b, lor a b < 0 <-> a < 0 \/ b < 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lor_neg". Undo.  
 intros a b. rewrite 3 lt_nge, lor_nonneg. split.
 apply not_and. apply le_decidable.
 now intros [H|H] (H',H'').
 Qed.
 
 Lemma lnot_nonneg : forall a, 0 <= lnot a <-> a < 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_nonneg". Undo.  
 intros a; unfold lnot.
 now rewrite <- opp_succ, opp_nonneg_nonpos, le_succ_l.
 Qed.
 
 Lemma lnot_neg : forall a, lnot a < 0 <-> 0 <= a.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lnot_neg". Undo.  
 intros a. now rewrite le_ngt, lt_nge, lnot_nonneg.
 Qed.
 
 Lemma land_nonneg : forall a b, 0 <= land a b <-> 0<=a \/ 0<=b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_nonneg". Undo.  
 intros a b.
 now rewrite <- (lnot_involutive (land a b)), lnot_land, lnot_nonneg,
 lor_neg, !lnot_neg.
 Qed.
 
 Lemma land_neg : forall a b, land a b < 0 <-> a < 0 /\ b < 0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.land_neg". Undo.  
 intros a b.
 now rewrite <- (lnot_involutive (land a b)), lnot_land, lnot_neg,
 lor_nonneg, !lnot_nonneg.
 Qed.
 
 Lemma ldiff_nonneg : forall a b, 0 <= ldiff a b <-> 0<=a \/ b<0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_nonneg". Undo.  
 intros. now rewrite ldiff_land, land_nonneg, lnot_nonneg.
 Qed.
 
 Lemma ldiff_neg : forall a b, ldiff a b < 0 <-> a<0 /\ 0<=b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_neg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_neg". Undo.  
 intros. now rewrite ldiff_land, land_neg, lnot_neg.
 Qed.
 
 Lemma lxor_nonneg : forall a b, 0 <= lxor a b <-> (0<=a <-> 0<=b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_nonneg".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.lxor_nonneg". Undo.  
 assert (H : forall a b, 0<=a -> 0<=b -> 0<=lxor a b).
 intros a b. rewrite 3 bits_iff_nonneg_ex. intros (k,Hk) (k', Hk').
 destruct (le_ge_cases k k'); [ exists k' | exists k];
@@ -1542,7 +1542,7 @@ Lemma log2_bits_unique : forall a n,
 a.[n] = true ->
 (forall m, n<m -> a.[m] = false) ->
 log2 a == n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_bits_unique".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_bits_unique". Undo.  
 intros a n H H'.
 destruct (lt_trichotomy a 0) as [Ha|[Ha|Ha]].
 
@@ -1561,7 +1561,7 @@ now rewrite bits_above_log2 in H by order.
 Qed.
 
 Lemma log2_shiftr : forall a n, 0<a -> log2 (a >> n) == max 0 (log2 a - n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_shiftr".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_shiftr". Undo.  
 intros a n Ha.
 destruct (le_gt_cases 0 (log2 a - n));
 [rewrite max_r | rewrite max_l]; try order.
@@ -1577,14 +1577,14 @@ apply shiftr_eq_0_iff. right. now split.
 Qed.
 
 Lemma log2_shiftl : forall a n, 0<a -> 0<=n -> log2 (a << n) == log2 a + n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_shiftl".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_shiftl". Undo.  
 intros a n Ha Hn.
 rewrite shiftl_mul_pow2, add_comm by trivial.
 now apply log2_mul_pow2.
 Qed.
 
 Lemma log2_shiftl' : forall a n, 0<a -> log2 (a << n) == max 0 (log2 a + n).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_shiftl'".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_shiftl'". Undo.  
 intros a n Ha.
 rewrite <- shiftr_opp_r, log2_shiftr by trivial.
 destruct (le_gt_cases 0 (log2 a + n));
@@ -1593,7 +1593,7 @@ Qed.
 
 Lemma log2_lor : forall a b, 0<=a -> 0<=b ->
 log2 (lor a b) == max (log2 a) (log2 b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_lor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_lor". Undo.  
 assert (AUX : forall a b, 0<=a -> a<=b -> log2 (lor a b) == log2 b).
 intros a b Ha H.
 le_elim Ha; [|now rewrite <- Ha, lor_0_l].
@@ -1611,7 +1611,7 @@ Qed.
 
 Lemma log2_land : forall a b, 0<=a -> 0<=b ->
 log2 (land a b) <= min (log2 a) (log2 b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_land".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_land". Undo.  
 assert (AUX : forall a b, 0<=a -> a<=b -> log2 (land a b) <= log2 a).
 intros a b Ha Hb.
 apply le_ngt. intros LT.
@@ -1629,7 +1629,7 @@ Qed.
 
 Lemma log2_lxor : forall a b, 0<=a -> 0<=b ->
 log2 (lxor a b) <= max (log2 a) (log2 b).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_lxor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.log2_lxor". Undo.  
 assert (AUX : forall a b, 0<=a -> a<=b -> log2 (lxor a b) <= log2 b).
 intros a b Ha Hb.
 apply le_ngt. intros LT.
@@ -1654,19 +1654,19 @@ Local Notation nextcarry a b c := ((a&&b) || (c && (a||b))).
 Local Notation lnextcarry a b c := (lor (land a b) (land c (lor a b))).
 
 Lemma add_bit0 : forall a b, (a+b).[0] = xorb a.[0] b.[0].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_bit0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_bit0". Undo.  
 intros. now rewrite !bit0_odd, odd_add.
 Qed.
 
 Lemma add3_bit0 : forall a b c,
 (a+b+c).[0] = xor3 a.[0] b.[0] c.[0].
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add3_bit0".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add3_bit0". Undo.  
 intros. now rewrite !add_bit0.
 Qed.
 
 Lemma add3_bits_div2 : forall (a0 b0 c0 : bool),
 (a0 + b0 + c0)/2 == nextcarry a0 b0 c0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add3_bits_div2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add3_bits_div2". Undo.  
 assert (H : 1+1 == 2) by now nzsimpl'.
 intros [|] [|] [|]; simpl; rewrite ?add_0_l, ?add_0_r, ?H;
 (apply div_same; order') || (apply div_small; split; order') || idtac.
@@ -1675,7 +1675,7 @@ Qed.
 
 Lemma add_carry_div2 : forall a b (c0:bool),
 (a + b + c0)/2 == a/2 + b/2 + nextcarry a.[0] b.[0] c0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_carry_div2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_carry_div2". Undo.  
 intros.
 rewrite <- add3_bits_div2.
 rewrite (add_comm ((a/2)+_)).
@@ -1694,7 +1694,7 @@ Lemma add_carry_bits_aux : forall n, 0<=n ->
 forall a b (c0:bool), -(2^n) <= a < 2^n -> -(2^n) <= b < 2^n ->
 exists c,
 a+b+c0 == lxor3 a b c /\ c/2 == lnextcarry a b c /\ c.[0] = c0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_carry_bits_aux".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_carry_bits_aux". Undo.  
 intros n Hn. apply le_ind with (4:=Hn).
 solve_proper.
 
@@ -1765,7 +1765,7 @@ Qed.
 
 Lemma add_carry_bits : forall a b (c0:bool), exists c,
 a+b+c0 == lxor3 a b c /\ c/2 == lnextcarry a b c /\ c.[0] = c0.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_carry_bits".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_carry_bits". Undo.  
 intros a b c0.
 set (n := max (abs a) (abs b)).
 apply (add_carry_bits_aux n).
@@ -1793,7 +1793,7 @@ Qed.
 
 Lemma add_bit1 : forall a b,
 (a+b).[1] = xor3 a.[1] b.[1] (a.[0] && b.[0]).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_bit1".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_bit1". Undo.  
 intros a b.
 destruct (add_carry_bits a b false) as (c & EQ1 & EQ2 & Hc).
 simpl in EQ1; rewrite add_0_r in EQ1. rewrite EQ1.
@@ -1808,7 +1808,7 @@ Qed.
 Lemma nocarry_equiv : forall a b c,
 c/2 == lnextcarry a b c -> c.[0] = false ->
 (c == 0 <-> land a b == 0).
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.nocarry_equiv".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.nocarry_equiv". Undo.  
 intros a b c H H'.
 split. intros EQ; rewrite EQ in *.
 rewrite div_0_l in H by order'.
@@ -1828,7 +1828,7 @@ Qed.
 
 Lemma add_nocarry_lxor : forall a b, land a b == 0 ->
 a+b == lxor a b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_nocarry_lxor".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_nocarry_lxor". Undo.  
 intros a b H.
 destruct (add_carry_bits a b false) as (c & EQ1 & EQ2 & Hc).
 simpl in EQ1; rewrite add_0_r in EQ1. rewrite EQ1.
@@ -1839,7 +1839,7 @@ Qed.
 
 
 Lemma ldiff_le : forall a b, 0<=b -> ldiff a b == 0 -> 0 <= a <= b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_le".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.ldiff_le". Undo.  
 assert (AUX : forall n, 0<=n ->
 forall a b, 0 <= a < 2^n -> 0<=b -> ldiff a b == 0 -> a <= b).
 intros n Hn. apply le_ind with (4:=Hn); clear n Hn.
@@ -1873,7 +1873,7 @@ Qed.
 
 Lemma sub_nocarry_ldiff : forall a b, ldiff b a == 0 ->
 a-b == ldiff a b.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.sub_nocarry_ldiff".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.sub_nocarry_ldiff". Undo.  
 intros a b H.
 apply add_cancel_r with b.
 rewrite sub_add.
@@ -1890,7 +1890,7 @@ Qed.
 
 Lemma add_nocarry_lt_pow2 : forall a b n, land a b == 0 ->
 a < 2^n -> b < 2^n -> a+b < 2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_nocarry_lt_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_nocarry_lt_pow2". Undo.  
 intros a b n H Ha Hb.
 destruct (le_gt_cases a 0) as [Ha'|Ha'].
 apply le_lt_trans with (0+b). now apply add_le_mono_r. now nzsimpl.
@@ -1909,7 +1909,7 @@ Qed.
 
 Lemma add_nocarry_mod_lt_pow2 : forall a b n, 0<=n -> land a b == 0 ->
 a mod 2^n + b mod 2^n < 2^n.
-Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_nocarry_mod_lt_pow2".  
+Proof. try hammer_hook "ZBits" "ZBits.ZBitsProp.add_nocarry_mod_lt_pow2". Undo.  
 intros a b n Hn H.
 apply add_nocarry_lt_pow2.
 bitwise.

@@ -53,7 +53,7 @@ Program Instance equiv_symmetric `(sa : Equivalence A) : Symmetric equiv | 1.
 Program Instance equiv_transitive `(sa : Equivalence A) : Transitive equiv | 1.
 
 Next Obligation.
-Proof. try hammer_hook "Equivalence" "Equivalence.equiv_transitive".   intros A R sa x y z Hxy Hyz.
+Proof. try hammer_hook "Equivalence" "Equivalence.equiv_transitive". Undo.   intros A R sa x y z Hxy Hyz.
 now transitivity y.
 Qed.
 
@@ -111,7 +111,7 @@ forall (x y : A), R x y -> R' (proj1_sig f x) (proj1_sig g y)).
 Solve Obligations with unfold respecting in * ; simpl_relation ; program_simpl.
 
 Next Obligation.
-Proof. try hammer_hook "Equivalence" "Equivalence.respecting_equiv".  
+Proof. try hammer_hook "Equivalence" "Equivalence.respecting_equiv". Undo.  
 intros. intros f g h H H' x y Rxy.
 unfold respecting in *. program_simpl. transitivity (g y); auto. firstorder.
 Qed.
@@ -122,13 +122,13 @@ End Respecting.
 
 Instance pointwise_reflexive {A} `(reflb : Reflexive B eqB) :
 Reflexive (pointwise_relation A eqB) | 9.
-Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_reflexive".   firstorder. Qed.
+Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_reflexive". Undo.   firstorder. Qed.
 Instance pointwise_symmetric {A} `(symb : Symmetric B eqB) :
 Symmetric (pointwise_relation A eqB) | 9.
-Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_symmetric".   firstorder. Qed.
+Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_symmetric". Undo.   firstorder. Qed.
 Instance pointwise_transitive {A} `(transb : Transitive B eqB) :
 Transitive (pointwise_relation A eqB) | 9.
-Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_transitive".   firstorder. Qed.
+Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_transitive". Undo.   firstorder. Qed.
 Instance pointwise_equivalence {A} `(eqb : Equivalence B eqB) :
 Equivalence (pointwise_relation A eqB) | 9.
-Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_equivalence".   split; apply _. Qed.
+Proof. try hammer_hook "Equivalence" "Equivalence.pointwise_equivalence". Undo.   split; apply _. Qed.

@@ -18,17 +18,17 @@ Definition Setoid_Theory := @Equivalence.
 Definition Build_Setoid_Theory := @Build_Equivalence.
 
 Definition Seq_refl A Aeq (s : Setoid_Theory A Aeq) : forall x:A, Aeq x x.
-Proof. try hammer_hook "Setoid" "Setoid.Seq_refl".  
+Proof. try hammer_hook "Setoid" "Setoid.Seq_refl". Undo.  
 unfold Setoid_Theory in s. intros ; reflexivity.
 Defined.
 
 Definition Seq_sym A Aeq (s : Setoid_Theory A Aeq) : forall x y:A, Aeq x y -> Aeq y x.
-Proof. try hammer_hook "Setoid" "Setoid.Seq_sym".  
+Proof. try hammer_hook "Setoid" "Setoid.Seq_sym". Undo.  
 unfold Setoid_Theory in s. intros ; symmetry ; assumption.
 Defined.
 
 Definition Seq_trans A Aeq (s : Setoid_Theory A Aeq) : forall x y z:A, Aeq x y -> Aeq y z -> Aeq x z.
-Proof. try hammer_hook "Setoid" "Setoid.Seq_trans".  
+Proof. try hammer_hook "Setoid" "Setoid.Seq_trans". Undo.  
 unfold Setoid_Theory in s. intros ; transitivity y ; assumption.
 Defined.
 
@@ -59,7 +59,7 @@ apply (Seq_refl _ _ H); auto
 end.
 
 Definition gen_st : forall A : Set, Setoid_Theory _ (@eq A).
-Proof. try hammer_hook "Setoid" "Setoid.gen_st".  
+Proof. try hammer_hook "Setoid" "Setoid.gen_st". Undo.  
 constructor; congruence.
 Qed.
 

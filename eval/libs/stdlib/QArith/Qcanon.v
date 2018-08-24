@@ -26,7 +26,7 @@ Open Scope Qc_scope.
 
 Lemma Qred_identity :
 forall q:Q, Z.gcd (Qnum q) (QDen q) = 1%Z -> Qred q = q.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qred_identity".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qred_identity". Undo.  
 intros (a,b) H; simpl in *.
 rewrite <- Z.ggcd_gcd in H.
 generalize (Z.ggcd_correct_divisors a ('b)).
@@ -36,7 +36,7 @@ Qed.
 
 Lemma Qred_identity2 :
 forall q:Q, Qred q = q -> Z.gcd (Qnum q) (QDen q) = 1%Z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qred_identity2".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qred_identity2". Undo.  
 intros (a,b) H; simpl in *.
 generalize (Z.gcd_nonneg a ('b)) (Z.ggcd_correct_divisors a ('b)).
 rewrite <- Z.ggcd_gcd.
@@ -49,7 +49,7 @@ apply Pos.mul_reg_r with b. now rewrite Pos.mul_1_l.
 Qed.
 
 Lemma Qred_iff : forall q:Q, Qred q = q <-> Z.gcd (Qnum q) (QDen q) = 1%Z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qred_iff".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qred_iff". Undo.  
 split; intros.
 apply Qred_identity2; auto.
 apply Qred_identity; auto.
@@ -58,7 +58,7 @@ Qed.
 
 
 Lemma Qc_is_canon : forall q q' : Qc, q == q' -> q = q'.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qc_is_canon".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qc_is_canon". Undo.  
 intros (q,hq) (q',hq') H. simpl in *.
 assert (H' := Qred_complete _ _ H).
 rewrite hq, hq' in H'. subst q'. f_equal.
@@ -67,14 +67,14 @@ Qed.
 Hint Resolve Qc_is_canon.
 
 Theorem Qc_decomp: forall q q': Qc, (q:Q) = q' -> q = q'.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qc_decomp".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qc_decomp". Undo.  
 intros. apply Qc_is_canon. now rewrite H.
 Qed.
 
 
 
 Lemma Qred_involutive : forall q:Q, Qred (Qred q) = Qred q.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qred_involutive".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qred_involutive". Undo.  
 intros; apply Qred_complete.
 apply Qred_correct.
 Qed.
@@ -83,7 +83,7 @@ Definition Q2Qc (q:Q) : Qc := Qcmake (Qred q) (Qred_involutive q).
 Arguments Q2Qc q%Q.
 
 Lemma Q2Qc_eq_iff (q q' : Q) : Q2Qc q = Q2Qc q' <-> q == q'.
-Proof. try hammer_hook "Qcanon" "Qcanon.Q2Qc_eq_iff".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Q2Qc_eq_iff". Undo.  
 split; intro H.
 - now injection H as H%Qred_eq_iff.
 - apply Qc_is_canon. simpl. now rewrite H.
@@ -107,36 +107,36 @@ Definition Qccompare (p q : Qc) := (Qcompare p q).
 Notation "p ?= q" := (Qccompare p q) : Qc_scope.
 
 Lemma Qceq_alt : forall p q, (p = q) <-> (p ?= q) = Eq.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qceq_alt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qceq_alt". Undo.  
 unfold Qccompare.
 intros; rewrite <- Qeq_alt.
 split; auto. now intros <-.
 Qed.
 
 Lemma Qclt_alt : forall p q, (p<q) <-> (p?=q = Lt).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_alt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_alt". Undo.  
 intros; exact (Qlt_alt p q).
 Qed.
 
 Lemma Qcgt_alt : forall p q, (p>q) <-> (p?=q = Gt).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcgt_alt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcgt_alt". Undo.  
 intros; exact (Qgt_alt p q).
 Qed.
 
 Lemma Qcle_alt : forall p q, (p<=q) <-> (p?=q <> Gt).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_alt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_alt". Undo.  
 intros; exact (Qle_alt p q).
 Qed.
 
 Lemma Qcge_alt : forall p q, (p>=q) <-> (p?=q <> Lt).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcge_alt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcge_alt". Undo.  
 intros; exact (Qge_alt p q).
 Qed.
 
 
 
 Theorem Qc_eq_dec : forall x y:Qc, {x=y} + {x<>y}.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qc_eq_dec".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qc_eq_dec". Undo.  
 intros.
 destruct (Qeq_dec x y) as [H|H]; auto.
 right; contradict H; subst; auto with qarith.
@@ -160,7 +160,7 @@ Infix "/" := Qcdiv : Qc_scope.
 
 
 Lemma Q_apart_0_1 : 1 <> 0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Q_apart_0_1".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Q_apart_0_1". Undo.  
 unfold Q2Qc.
 intros H; discriminate H.
 Qed.
@@ -175,95 +175,95 @@ Opaque Qred.
 
 
 Theorem Qcplus_assoc : forall x y z, x+(y+z)=(x+y)+z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_assoc".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_assoc". Undo.  
 intros; qc; apply Qplus_assoc.
 Qed.
 
 
 
 Lemma Qcplus_0_l : forall x, 0+x = x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_0_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_0_l". Undo.  
 intros; qc; apply Qplus_0_l.
 Qed.
 
 Lemma Qcplus_0_r : forall x, x+0 = x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_0_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_0_r". Undo.  
 intros; qc; apply Qplus_0_r.
 Qed.
 
 
 
 Theorem Qcplus_comm : forall x y, x+y = y+x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_comm".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_comm". Undo.  
 intros; qc; apply Qplus_comm.
 Qed.
 
 
 
 Lemma Qcopp_involutive : forall q, - -q = q.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcopp_involutive".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcopp_involutive". Undo.  
 intros; qc; apply Qopp_involutive.
 Qed.
 
 Theorem Qcplus_opp_r : forall q, q+(-q) = 0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_opp_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_opp_r". Undo.  
 intros; qc; apply Qplus_opp_r.
 Qed.
 
 
 
 Theorem Qcmult_assoc : forall n m p, n*(m*p)=(n*m)*p.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_assoc".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_assoc". Undo.  
 intros; qc; apply Qmult_assoc.
 Qed.
 
 
 
 Lemma Qcmult_0_l : forall n, 0*n = 0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_0_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_0_l". Undo.  
 intros; qc; split.
 Qed.
 
 Theorem Qcmult_0_r : forall n, n*0=0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_0_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_0_r". Undo.  
 intros; qc; rewrite Qmult_comm; split.
 Qed.
 
 
 
 Lemma Qcmult_1_l : forall n, 1*n = n.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_1_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_1_l". Undo.  
 intros; qc; apply Qmult_1_l.
 Qed.
 
 Theorem Qcmult_1_r : forall n, n*1=n.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_1_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_1_r". Undo.  
 intros; qc; apply Qmult_1_r.
 Qed.
 
 
 
 Theorem Qcmult_comm : forall x y, x*y=y*x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_comm".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_comm". Undo.  
 intros; qc; apply Qmult_comm.
 Qed.
 
 
 
 Theorem Qcmult_plus_distr_r : forall x y z, x*(y+z)=(x*y)+(x*z).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_plus_distr_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_plus_distr_r". Undo.  
 intros; qc; apply Qmult_plus_distr_r.
 Qed.
 
 Theorem Qcmult_plus_distr_l : forall x y z, (x+y)*z=(x*z)+(y*z).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_plus_distr_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_plus_distr_l". Undo.  
 intros; qc; apply Qmult_plus_distr_l.
 Qed.
 
 
 
 Theorem Qcmult_integral : forall x y, x*y=0 -> x=0 \/ y=0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_integral".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_integral". Undo.  
 intros.
 destruct (Qmult_integral x y); try qc; auto.
 injection H as H.
@@ -273,31 +273,31 @@ rewrite H; auto with qarith.
 Qed.
 
 Theorem Qcmult_integral_l : forall x y, ~ x = 0 -> x*y = 0 -> y = 0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_integral_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_integral_l". Undo.  
 intros; destruct (Qcmult_integral _ _ H0); tauto.
 Qed.
 
 
 
 Theorem Qcmult_inv_r : forall x, x<>0 -> x*(/x) = 1.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_inv_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_inv_r". Undo.  
 intros; qc; apply Qmult_inv_r; auto.
 Qed.
 
 Theorem Qcmult_inv_l : forall x, x<>0 -> (/x)*x = 1.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_inv_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_inv_l". Undo.  
 intros.
 rewrite Qcmult_comm.
 apply Qcmult_inv_r; auto.
 Qed.
 
 Lemma Qcinv_mult_distr : forall p q, / (p * q) = /p * /q.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcinv_mult_distr".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcinv_mult_distr". Undo.  
 intros; qc; apply Qinv_mult_distr.
 Qed.
 
 Theorem Qcdiv_mult_l : forall x y, y<>0 -> (x*y)/y = x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcdiv_mult_l".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcdiv_mult_l". Undo.  
 unfold Qcdiv.
 intros.
 rewrite <- Qcmult_assoc.
@@ -306,7 +306,7 @@ apply Qcmult_1_r.
 Qed.
 
 Theorem Qcmult_div_r : forall x y, ~ y = 0 -> y*(x/y) = x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_div_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_div_r". Undo.  
 unfold Qcdiv.
 intros.
 rewrite Qcmult_assoc.
@@ -319,23 +319,23 @@ Qed.
 
 
 Lemma Qcle_refl : forall x, x<=x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_refl".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_refl". Undo.  
 unfold Qcle; intros; simpl; apply Qle_refl.
 Qed.
 
 Lemma Qcle_antisym : forall x y, x<=y -> y<=x -> x=y.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_antisym".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_antisym". Undo.  
 unfold Qcle; intros; simpl in *.
 apply Qc_is_canon; apply Qle_antisym; auto.
 Qed.
 
 Lemma Qcle_trans : forall x y z, x<=y -> y<=z -> x<=z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_trans".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_trans". Undo.  
 unfold Qcle; intros; eapply Qle_trans; eauto.
 Qed.
 
 Lemma Qclt_not_eq : forall x y, x<y -> x<>y.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_not_eq".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_not_eq". Undo.  
 unfold Qclt; intros; simpl in *.
 intro; destruct (Qlt_not_eq _ _ H).
 subst; auto with qarith.
@@ -344,49 +344,49 @@ Qed.
 
 
 Lemma Qclt_le_weak : forall x y, x<y -> x<=y.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_le_weak".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_le_weak". Undo.  
 unfold Qcle, Qclt; intros; apply Qlt_le_weak; auto.
 Qed.
 
 Lemma Qcle_lt_trans : forall x y z, x<=y -> y<z -> x<z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_lt_trans".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_lt_trans". Undo.  
 unfold Qcle, Qclt; intros; eapply Qle_lt_trans; eauto.
 Qed.
 
 Lemma Qclt_le_trans : forall x y z, x<y -> y<=z -> x<z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_le_trans".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_le_trans". Undo.  
 unfold Qcle, Qclt; intros; eapply Qlt_le_trans; eauto.
 Qed.
 
 Lemma Qclt_trans : forall x y z, x<y -> y<z -> x<z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_trans".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_trans". Undo.  
 unfold Qclt; intros; eapply Qlt_trans; eauto.
 Qed.
 
 
 
 Lemma Qcnot_lt_le : forall x y, ~ x<y -> y<=x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcnot_lt_le".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcnot_lt_le". Undo.  
 unfold Qcle, Qclt; intros; apply Qnot_lt_le; auto.
 Qed.
 
 Lemma Qcnot_le_lt : forall x y, ~ x<=y -> y<x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcnot_le_lt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcnot_le_lt". Undo.  
 unfold Qcle, Qclt; intros; apply Qnot_le_lt; auto.
 Qed.
 
 Lemma Qclt_not_le : forall x y, x<y -> ~ y<=x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_not_le".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_not_le". Undo.  
 unfold Qcle, Qclt; intros; apply Qlt_not_le; auto.
 Qed.
 
 Lemma Qcle_not_lt : forall x y, x<=y -> ~ y<x.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_not_lt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_not_lt". Undo.  
 unfold Qcle, Qclt; intros; apply Qle_not_lt; auto.
 Qed.
 
 Lemma Qcle_lt_or_eq : forall x y, x<=y -> x<y \/ x=y.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_lt_or_eq".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_lt_or_eq". Undo.  
 unfold Qcle, Qclt; intros x y H.
 destruct (Qle_lt_or_eq _ _ H); [left|right]; trivial.
 now apply Qc_is_canon.
@@ -395,7 +395,7 @@ Qed.
 
 
 Lemma Qc_dec : forall x y, {x<y} + {y<x} + {x=y}.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qc_dec".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qc_dec". Undo.  
 unfold Qclt, Qcle; intros.
 destruct (Q_dec x y) as [H|H].
 left; auto.
@@ -403,28 +403,28 @@ right; apply Qc_is_canon; auto.
 Defined.
 
 Lemma Qclt_le_dec : forall x y, {x<y} + {y<=x}.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_le_dec".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_le_dec". Undo.  
 unfold Qclt, Qcle; intros; apply Qlt_le_dec; auto.
 Defined.
 
 
 
 Lemma Qcopp_le_compat : forall p q, p<=q -> -q <= -p.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcopp_le_compat".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcopp_le_compat". Undo.  
 unfold Qcle, Qcopp; intros; simpl in *.
 repeat rewrite Qred_correct.
 apply Qopp_le_compat; auto.
 Qed.
 
 Lemma Qcle_minus_iff : forall p q, p <= q <-> 0 <= q+-p.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_minus_iff".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcle_minus_iff". Undo.  
 unfold Qcle, Qcminus; intros; simpl in *.
 repeat rewrite Qred_correct.
 apply Qle_minus_iff; auto.
 Qed.
 
 Lemma Qclt_minus_iff : forall p q, p < q <-> 0 < q+-p.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_minus_iff".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qclt_minus_iff". Undo.  
 unfold Qclt, Qcplus, Qcopp; intros; simpl in *.
 repeat rewrite Qred_correct.
 apply Qlt_minus_iff; auto.
@@ -432,28 +432,28 @@ Qed.
 
 Lemma Qcplus_le_compat :
 forall x y z t, x<=y -> z<=t -> x+z <= y+t.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_le_compat".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcplus_le_compat". Undo.  
 unfold Qcplus, Qcle; intros; simpl in *.
 repeat rewrite Qred_correct.
 apply Qplus_le_compat; auto.
 Qed.
 
 Lemma Qcmult_le_compat_r : forall x y z, x <= y -> 0 <= z -> x*z <= y*z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_le_compat_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_le_compat_r". Undo.  
 unfold Qcmult, Qcle; intros; simpl in *.
 repeat rewrite Qred_correct.
 apply Qmult_le_compat_r; auto.
 Qed.
 
 Lemma Qcmult_lt_0_le_reg_r : forall x y z, 0 <  z  -> x*z <= y*z -> x <= y.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_lt_0_le_reg_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_lt_0_le_reg_r". Undo.  
 unfold Qcmult, Qcle, Qclt; intros; simpl in *.
 rewrite !Qred_correct in * |-.
 eapply Qmult_lt_0_le_reg_r; eauto.
 Qed.
 
 Lemma Qcmult_lt_compat_r : forall x y z, 0 < z  -> x < y -> x*z < y*z.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_lt_compat_r".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcmult_lt_compat_r". Undo.  
 unfold Qcmult, Qclt; intros; simpl in *.
 rewrite !Qred_correct in *.
 eapply Qmult_lt_compat_r; eauto.
@@ -470,13 +470,13 @@ end.
 Notation " q ^ n " := (Qcpower q n) : Qc_scope.
 
 Lemma Qcpower_1 : forall n, 1^n = 1.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcpower_1".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcpower_1". Undo.  
 induction n; simpl; auto with qarith.
 rewrite IHn; auto with qarith.
 Qed.
 
 Lemma Qcpower_0 : forall n, n<>O -> 0^n = 0.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcpower_0".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcpower_0". Undo.  
 destruct n; simpl.
 destruct 1; auto.
 intros.
@@ -484,7 +484,7 @@ now apply Qc_is_canon.
 Qed.
 
 Lemma Qcpower_pos : forall p n, 0 <= p -> 0 <= p^n.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcpower_pos".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcpower_pos". Undo.  
 induction n; simpl; auto with qarith.
 easy.
 intros.
@@ -501,13 +501,13 @@ Definition Qc_eq_bool (x y : Qc) :=
 if Qc_eq_dec x y then true else false.
 
 Lemma Qc_eq_bool_correct : forall x y : Qc, Qc_eq_bool x y = true -> x=y.
-Proof. try hammer_hook "Qcanon" "Qcanon.Qc_eq_bool_correct".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qc_eq_bool_correct". Undo.  
 intros x y; unfold Qc_eq_bool; case (Qc_eq_dec x y); simpl; auto.
 intros _ H; inversion H.
 Qed.
 
 Definition Qcrt : ring_theory 0 1 Qcplus Qcmult Qcminus Qcopp (eq(A:=Qc)).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcrt".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcrt". Undo.  
 constructor.
 exact Qcplus_0_l.
 exact Qcplus_comm.
@@ -522,7 +522,7 @@ Qed.
 
 Definition Qcft :
 field_theory 0%Qc 1%Qc Qcplus Qcmult Qcminus Qcopp Qcdiv Qcinv (eq(A:=Qc)).
-Proof. try hammer_hook "Qcanon" "Qcanon.Qcft".  
+Proof. try hammer_hook "Qcanon" "Qcanon.Qcft". Undo.  
 constructor.
 exact Qcrt.
 exact Q_apart_0_1.
@@ -535,7 +535,7 @@ Add Field Qcfield : Qcft.
 
 
 Example test_field : (forall x y : Qc, y<>0 -> (x/y)*y = x)%Qc.
-Proof. try hammer_hook "Qcanon" "Qcanon.test_field".  
+Proof. try hammer_hook "Qcanon" "Qcanon.test_field". Undo.  
 intros.
 field.
 auto.

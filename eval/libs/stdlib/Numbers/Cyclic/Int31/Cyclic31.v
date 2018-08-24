@@ -33,7 +33,7 @@ Section Basics.
 
 
 Lemma iszero_eq0 : forall x, iszero x = true -> x=0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.iszero_eq0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.iszero_eq0". Undo.  
 destruct x; simpl; intros.
 repeat
 match goal with H:(if ?d then _ else _) = true |- _ =>
@@ -43,32 +43,32 @@ reflexivity.
 Qed.
 
 Lemma iszero_not_eq0 : forall x, iszero x = false -> x<>0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.iszero_not_eq0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.iszero_not_eq0". Undo.  
 intros x H Eq; rewrite Eq in H; simpl in *; discriminate.
 Qed.
 
 Lemma sneakl_shiftr : forall x,
 x = sneakl (firstr x) (shiftr x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sneakl_shiftr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sneakl_shiftr". Undo.  
 destruct x; simpl; auto.
 Qed.
 
 Lemma sneakr_shiftl : forall x,
 x = sneakr (firstl x) (shiftl x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sneakr_shiftl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sneakr_shiftl". Undo.  
 destruct x; simpl; auto.
 Qed.
 
 Lemma twice_zero : forall x,
 twice x = 0 <-> twice_plus_one x = 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.twice_zero".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.twice_zero". Undo.  
 destruct x; simpl in *; split;
 intro H; injection H; intros; subst; auto.
 Qed.
 
 Lemma twice_or_twice_plus_one : forall x,
 x = twice (shiftr x) \/ x = twice_plus_one (shiftr x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.twice_or_twice_plus_one".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.twice_or_twice_plus_one". Undo.  
 intros; case_eq (firstr x); intros.
 destruct x; simpl in *; rewrite H; auto.
 destruct x; simpl in *; rewrite H; auto.
@@ -82,31 +82,31 @@ Definition nshiftr x := nat_rect _ x (fun _ => shiftr).
 
 Lemma nshiftr_S :
 forall n x, nshiftr x (S n) = shiftr (nshiftr x n).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_S".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_S". Undo.  
 reflexivity.
 Qed.
 
 Lemma nshiftr_S_tail :
 forall n x, nshiftr x (S n) = nshiftr (shiftr x) n.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_S_tail".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_S_tail". Undo.  
 intros n; elim n; simpl; auto.
 intros; now f_equal.
 Qed.
 
 Lemma nshiftr_n_0 : forall n, nshiftr 0 n = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_n_0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_n_0". Undo.  
 induction n; simpl; auto.
 rewrite IHn; auto.
 Qed.
 
 Lemma nshiftr_size : forall x, nshiftr x size = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_size".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_size". Undo.  
 destruct x; simpl; auto.
 Qed.
 
 Lemma nshiftr_above_size : forall k x, size<=k ->
 nshiftr x k = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_above_size".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_above_size". Undo.  
 intros.
 replace k with ((k-size)+size)%nat by omega.
 induction (k-size)%nat; auto.
@@ -120,30 +120,30 @@ Definition nshiftl x := nat_rect _ x (fun _ => shiftl).
 
 Lemma nshiftl_S :
 forall n x, nshiftl x (S n) = shiftl (nshiftl x n).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_S".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_S". Undo.  
 reflexivity.
 Qed.
 
 Lemma nshiftl_S_tail :
 forall n x, nshiftl x (S n) = nshiftl (shiftl x) n.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_S_tail".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_S_tail". Undo.  
 intros n; elim n; simpl; intros; now f_equal.
 Qed.
 
 Lemma nshiftl_n_0 : forall n, nshiftl 0 n = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_n_0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_n_0". Undo.  
 induction n; simpl; auto.
 rewrite IHn; auto.
 Qed.
 
 Lemma nshiftl_size : forall x, nshiftl x size = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_size".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_size". Undo.  
 destruct x; simpl; auto.
 Qed.
 
 Lemma nshiftl_above_size : forall k x, size<=k ->
 nshiftl x k = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_above_size".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftl_above_size". Undo.  
 intros.
 replace k with ((k-size)+size)%nat by omega.
 induction (k-size)%nat; auto.
@@ -153,13 +153,13 @@ Qed.
 
 Lemma firstr_firstl :
 forall x, firstr x = firstl (nshiftl x (pred size)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.firstr_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.firstr_firstl". Undo.  
 destruct x; simpl; auto.
 Qed.
 
 Lemma firstl_firstr :
 forall x, firstl x = firstr (nshiftr x (pred size)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.firstl_firstr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.firstl_firstr". Undo.  
 destruct x; simpl; auto.
 Qed.
 
@@ -167,13 +167,13 @@ Qed.
 
 Lemma nshiftr_predsize_0_firstl : forall x,
 nshiftr x (pred size) = 0 -> firstl x = D0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_predsize_0_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_predsize_0_firstl". Undo.  
 destruct x; compute; intros H; injection H; intros; subst; auto.
 Qed.
 
 Lemma nshiftr_0_propagates : forall n p x, n <= p ->
 nshiftr x n = 0 -> nshiftr x p = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_0_propagates".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_0_propagates". Undo.  
 intros.
 replace p with ((p-n)+n)%nat by omega.
 induction (p-n)%nat.
@@ -183,7 +183,7 @@ Qed.
 
 Lemma nshiftr_0_firstl : forall n x, n < size ->
 nshiftr x n = 0 -> firstl x = D0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_0_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.nshiftr_0_firstl". Undo.  
 intros.
 apply nshiftr_predsize_0_firstl.
 apply nshiftr_0_propagates with n; auto; omega.
@@ -197,7 +197,7 @@ Lemma int31_ind_sneakl : forall P : int31->Prop,
 P 0 ->
 (forall x d, P x -> P (sneakl d x)) ->
 forall x, P x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.int31_ind_sneakl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.int31_ind_sneakl". Undo.  
 intros.
 assert (forall n, n<=size -> P (nshiftr x (size - n))).
 induction n; intros.
@@ -215,7 +215,7 @@ P 0 ->
 (forall x, P x -> P (twice x)) ->
 (forall x, P x -> P (twice_plus_one x)) ->
 forall x, P x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.int31_ind_twice".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.int31_ind_twice". Undo.  
 induction x using int31_ind_sneakl; auto.
 destruct d; auto.
 Qed.
@@ -232,7 +232,7 @@ Variable (A:Type)(case0:A)(caserec:digits->int31->A->A).
 Lemma recr_aux_eqn : forall n x, iszero x = false ->
 recr_aux (S n) A case0 caserec x =
 caserec (firstr x) (shiftr x) (recr_aux n A case0 caserec (shiftr x)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.recr_aux_eqn".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.recr_aux_eqn". Undo.  
 intros; simpl; rewrite H; auto.
 Qed.
 
@@ -240,7 +240,7 @@ Lemma recr_aux_converges :
 forall n p x, n <= size -> n <= p ->
 recr_aux n A case0 caserec (nshiftr x (size - n)) =
 recr_aux p A case0 caserec (nshiftr x (size - n)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.recr_aux_converges".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.recr_aux_converges". Undo.  
 induction n.
 simpl minus; intros.
 rewrite nshiftr_size; destruct p; simpl; auto.
@@ -258,7 +258,7 @@ Qed.
 Lemma recr_eqn : forall x, iszero x = false ->
 recr A case0 caserec x =
 caserec (firstr x) (shiftr x) (recr A case0 caserec (shiftr x)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.recr_eqn".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.recr_eqn". Undo.  
 intros.
 unfold recr.
 change x with (nshiftr x (size - size)).
@@ -283,7 +283,7 @@ Hypothesis case0_caserec : caserec D0 0 case0 = case0.
 
 Lemma recrbis_aux_equiv : forall n x,
 recrbis_aux n A case0 caserec x = recr_aux n A case0 caserec x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.recrbis_aux_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.recrbis_aux_equiv". Undo.  
 induction n; simpl; auto; intros.
 case_eq (iszero x); intros; [ | f_equal; auto ].
 rewrite (iszero_eq0 _ H); simpl; auto.
@@ -293,7 +293,7 @@ Qed.
 
 Lemma recrbis_equiv : forall x,
 recrbis A case0 caserec x = recr A case0 caserec x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.recrbis_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.recrbis_equiv". Undo.  
 intros; apply recrbis_aux_equiv; auto.
 Qed.
 
@@ -314,7 +314,7 @@ end.
 Definition incrbis_aux n x := recrbis_aux n _ In Incr x.
 
 Lemma incrbis_aux_equiv : forall x, incrbis_aux size x = incr x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incrbis_aux_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incrbis_aux_equiv". Undo.  
 unfold incr, recr, incrbis_aux; fold Incr; intros.
 apply recrbis_aux_equiv; auto.
 Qed.
@@ -323,7 +323,7 @@ Qed.
 
 Lemma incr_eqn1 :
 forall x, firstr x = D0 -> incr x = twice_plus_one (shiftr x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_eqn1".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_eqn1". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H0); simpl; auto.
@@ -333,7 +333,7 @@ Qed.
 
 Lemma incr_eqn2 :
 forall x, firstr x = D1 -> incr x = twice (incr (shiftr x)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_eqn2".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_eqn2". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H0) in H; simpl in H; discriminate.
@@ -342,14 +342,14 @@ rewrite H; auto.
 Qed.
 
 Lemma incr_twice : forall x, incr (twice x) = twice_plus_one x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_twice".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_twice". Undo.  
 intros.
 rewrite incr_eqn1; destruct x; simpl; auto.
 Qed.
 
 Lemma incr_twice_plus_one_firstl :
 forall x, firstl x = D0 -> incr (twice_plus_one x) = twice (incr x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_twice_plus_one_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_twice_plus_one_firstl". Undo.  
 intros.
 rewrite incr_eqn2; [ | destruct x; simpl; auto ].
 f_equal; f_equal.
@@ -372,7 +372,7 @@ match b with D0 => Z.double | D1 => Z.succ_double end.
 Definition phibis_aux n x := recrbis_aux n _ Z0 Phi x.
 
 Lemma phibis_aux_equiv : forall x, phibis_aux size x = phi x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_equiv". Undo.  
 unfold phi, recr, phibis_aux; fold Phi; intros.
 apply recrbis_aux_equiv; auto.
 Qed.
@@ -381,7 +381,7 @@ Qed.
 
 Lemma phi_eqn1 : forall x, firstr x = D0 ->
 phi x = Z.double (phi (shiftr x)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_eqn1".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_eqn1". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H0); simpl; auto.
@@ -391,7 +391,7 @@ Qed.
 
 Lemma phi_eqn2 : forall x, firstr x = D1 ->
 phi x = Z.succ_double (phi (shiftr x)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_eqn2".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_eqn2". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H0) in H; simpl in H; discriminate.
@@ -401,7 +401,7 @@ Qed.
 
 Lemma phi_twice_firstl : forall x, firstl x = D0 ->
 phi (twice x) = Z.double (phi x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice_firstl". Undo.  
 intros.
 rewrite phi_eqn1; auto; [ | destruct x; auto ].
 f_equal; f_equal.
@@ -410,7 +410,7 @@ Qed.
 
 Lemma phi_twice_plus_one_firstl : forall x, firstl x = D0 ->
 phi (twice_plus_one x) = Z.succ_double (phi x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice_plus_one_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice_plus_one_firstl". Undo.  
 intros.
 rewrite phi_eqn2; auto; [ | destruct x; auto ].
 f_equal; f_equal.
@@ -422,7 +422,7 @@ End Phi.
 
 
 Lemma phibis_aux_pos : forall n x, (0 <= phibis_aux n x)%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_pos".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_pos". Undo.  
 induction n.
 simpl; unfold phibis_aux; simpl; auto with zarith.
 intros.
@@ -436,7 +436,7 @@ Qed.
 Lemma phibis_aux_bounded :
 forall n x, n <= size ->
 (phibis_aux n (nshiftr x (size-n)) < 2 ^ (Z.of_nat n))%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_bounded".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_bounded". Undo.  
 induction n.
 simpl minus; unfold phibis_aux; simpl; auto with zarith.
 intros.
@@ -456,7 +456,7 @@ rewrite Z.succ_double_spec; auto with zarith.
 Qed.
 
 Lemma phi_nonneg : forall x, (0 <= phi x)%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_nonneg".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_nonneg". Undo.  
 intros.
 rewrite <- phibis_aux_equiv.
 apply phibis_aux_pos.
@@ -465,7 +465,7 @@ Qed.
 Hint Resolve phi_nonneg : zarith.
 
 Lemma phi_bounded  : forall x, (0 <= phi x < 2 ^ (Z.of_nat size))%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_bounded".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_bounded". Undo.  
 intros. split; [auto with zarith|].
 rewrite <- phibis_aux_equiv.
 change x with (nshiftr x (size-size)).
@@ -475,7 +475,7 @@ Qed.
 Lemma phibis_aux_lowerbound :
 forall n x, firstr (nshiftr x n) = D1 ->
 (2 ^ Z.of_nat n <= phibis_aux (S n) x)%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_lowerbound".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phibis_aux_lowerbound". Undo.  
 induction n.
 intros.
 unfold nshiftr in H; simpl in *.
@@ -500,7 +500,7 @@ Qed.
 
 Lemma phi_lowerbound :
 forall x, firstl x = D1 -> (2^(Z.of_nat (pred size)) <= phi x)%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_lowerbound".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_lowerbound". Undo.  
 intros.
 generalize (phibis_aux_lowerbound (pred size) x).
 rewrite <- firstl_firstr.
@@ -518,18 +518,18 @@ Definition EqShiftL n x y :=
 nshiftl x n = nshiftl y n.
 
 Lemma EqShiftL_zero : forall x y, EqShiftL O x y <-> x = y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_zero".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_zero". Undo.  
 unfold EqShiftL; intros; unfold nshiftl; simpl; split; auto.
 Qed.
 
 Lemma EqShiftL_size : forall k x y, size<=k -> EqShiftL k x y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_size".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_size". Undo.  
 red; intros; rewrite 2 nshiftl_above_size; auto.
 Qed.
 
 Lemma EqShiftL_le : forall k k' x y, k <= k' ->
 EqShiftL k x y -> EqShiftL k' x y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_le".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_le". Undo.  
 unfold EqShiftL; intros.
 replace k' with ((k'-k)+k)%nat by omega.
 remember (k'-k)%nat as n.
@@ -540,7 +540,7 @@ Qed.
 
 Lemma EqShiftL_firstr : forall k x y, k < size ->
 EqShiftL k x y -> firstr x = firstr y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_firstr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_firstr". Undo.  
 intros.
 rewrite 2 firstr_firstl.
 f_equal.
@@ -551,7 +551,7 @@ Qed.
 
 Lemma EqShiftL_twice : forall k x y,
 EqShiftL k (twice x) (twice y) <-> EqShiftL (S k) x y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_twice".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_twice". Undo.  
 intros; unfold EqShiftL.
 rewrite 2 nshiftl_S_tail; split; auto.
 Qed.
@@ -563,7 +563,7 @@ Qed.
 Definition i2l := recrbis _ nil (fun d _ rec => d::rec).
 
 Lemma i2l_length : forall x, length (i2l x) = size.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_length".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_length". Undo.  
 intros; reflexivity.
 Qed.
 
@@ -576,25 +576,25 @@ end.
 Definition l2i l := lshiftl l On.
 
 Lemma l2i_i2l : forall x, l2i (i2l x) = x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.l2i_i2l".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.l2i_i2l". Undo.  
 destruct x; compute; auto.
 Qed.
 
 Lemma i2l_sneakr : forall x d,
 i2l (sneakr d x) = tail (i2l x) ++ d::nil.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_sneakr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_sneakr". Undo.  
 destruct x; compute; auto.
 Qed.
 
 Lemma i2l_sneakl : forall x d,
 i2l (sneakl d x) = d :: removelast (i2l x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_sneakl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_sneakl". Undo.  
 destruct x; compute; auto.
 Qed.
 
 Lemma i2l_l2i : forall l, length l = size ->
 i2l (l2i l) = l.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_l2i".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_l2i". Undo.  
 repeat (destruct l as [ |? l]; [intros; discriminate | ]).
 destruct l; [ | intros; discriminate].
 intros _; compute; auto.
@@ -608,7 +608,7 @@ end.
 
 Lemma i2l_nshiftl : forall n x, n<=size ->
 i2l (nshiftl x n) = cstlist _ D0 n ++ firstn (size-n) (i2l x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_nshiftl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.i2l_nshiftl". Undo.  
 induction n.
 intros.
 assert (firstn (size-0) (i2l x) = i2l x).
@@ -640,7 +640,7 @@ Qed.
 
 Lemma EqShiftL_i2l : forall k x y,
 EqShiftL k x y  <-> firstn (size-k) (i2l x) = firstn (size-k) (i2l y).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_i2l".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_i2l". Undo.  
 intros.
 destruct (le_lt_dec size k) as [Hle|Hlt].
 split; intros.
@@ -665,7 +665,7 @@ Qed.
 
 Lemma EqShiftL_twice_plus_one : forall k x y,
 EqShiftL k (twice_plus_one x) (twice_plus_one y) <-> EqShiftL (S k) x y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_twice_plus_one".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_twice_plus_one". Undo.  
 intros.
 destruct (le_lt_dec size k) as [Hle|Hlt].
 split; intros; apply EqShiftL_size; auto.
@@ -688,7 +688,7 @@ Qed.
 
 Lemma EqShiftL_shiftr : forall k x y, EqShiftL k x y ->
 EqShiftL (S k) (shiftr x) (shiftr y).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_shiftr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_shiftr". Undo.  
 intros.
 destruct (le_lt_dec size (S k)) as [Hle|Hlt].
 apply EqShiftL_size; auto.
@@ -711,7 +711,7 @@ Lemma EqShiftL_incrbis : forall n k x y, n<=size ->
 (n+k=S size)%nat ->
 EqShiftL k x y ->
 EqShiftL k (incrbis_aux n x) (incrbis_aux n y).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_incrbis".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_incrbis". Undo.  
 induction n; simpl; intros.
 red; auto.
 destruct (eq_nat_dec k size).
@@ -731,7 +731,7 @@ Qed.
 
 Lemma EqShiftL_incr : forall x y,
 EqShiftL 1 x y -> EqShiftL 1 (incr x) (incr y).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_incr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.EqShiftL_incr". Undo.  
 intros.
 rewrite <- 2 incrbis_aux_equiv.
 apply EqShiftL_incrbis; auto.
@@ -743,7 +743,7 @@ End EqShiftL.
 
 Lemma incr_twice_plus_one :
 forall x, incr (twice_plus_one x) = twice (incr x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_twice_plus_one".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_twice_plus_one". Undo.  
 intros.
 rewrite incr_eqn2; [ | destruct x; simpl; auto].
 apply EqShiftL_incr.
@@ -751,7 +751,7 @@ red; destruct x; simpl; auto.
 Qed.
 
 Lemma incr_firstr : forall x, firstr (incr x) <> firstr x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_firstr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_firstr". Undo.  
 intros.
 case_eq (firstr x); intros.
 rewrite incr_eqn1; auto.
@@ -762,7 +762,7 @@ Qed.
 
 Lemma incr_inv : forall x y,
 incr x = twice_plus_one y -> x = twice y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_inv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.incr_inv". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H0) in *; simpl in *.
@@ -782,7 +782,7 @@ Qed.
 
 Lemma phi_inv_double_plus_one : forall z,
 phi_inv (Z.succ_double z) = twice_plus_one (phi_inv z).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_double_plus_one".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_double_plus_one". Undo.  
 destruct z; simpl; auto.
 induction p; simpl.
 rewrite 2 incr_twice; auto.
@@ -794,14 +794,14 @@ Qed.
 
 Lemma phi_inv_double : forall z,
 phi_inv (Z.double z) = twice (phi_inv z).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_double".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_double". Undo.  
 destruct z; simpl; auto.
 rewrite incr_twice_plus_one; auto.
 Qed.
 
 Lemma phi_inv_incr : forall z,
 phi_inv (Z.succ z) = incr (phi_inv z).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_incr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_incr". Undo.  
 destruct z.
 simpl; auto.
 simpl; auto.
@@ -825,7 +825,7 @@ Lemma phi_inv_phi_aux :
 forall n x, n <= size ->
 phi_inv (phibis_aux n (nshiftr x (size-n))) =
 nshiftr x (size-n).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_phi_aux".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_phi_aux". Undo.  
 induction n.
 intros; simpl minus.
 rewrite nshiftr_size; auto.
@@ -851,7 +851,7 @@ destruct y; simpl in H1; rewrite H1; auto.
 Qed.
 
 Lemma phi_inv_phi : forall x, phi_inv (phi x) = x.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_phi".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_phi". Undo.  
 intros.
 rewrite <- phibis_aux_equiv.
 replace x with (nshiftr x (size - size)) by auto.
@@ -876,7 +876,7 @@ end.
 
 Lemma p2ibis_bounded : forall n p,
 nshiftr (snd (p2ibis n p)) n = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.p2ibis_bounded".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.p2ibis_bounded". Undo.  
 induction n.
 simpl; intros; auto.
 simpl p2ibis; intros.
@@ -910,7 +910,7 @@ Local Open Scope Z_scope.
 Lemma p2ibis_spec : forall n p, (n<=size)%nat ->
 Zpos p = (Z.of_N (fst (p2ibis n p)))*2^(Z.of_nat n) +
 phi (snd (p2ibis n p)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.p2ibis_spec".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.p2ibis_spec". Undo.  
 induction n; intros.
 simpl; rewrite Pos.mul_1_r; auto.
 replace (2^(Z.of_nat (S n)))%Z with (2*2^(Z.of_nat n))%Z by
@@ -939,7 +939,7 @@ Qed.
 
 Lemma phi_inv_positive_p2ibis : forall n p, (n<=size)%nat ->
 EqShiftL (size-n) (phi_inv_positive p) (snd (p2ibis n p)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_positive_p2ibis".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_inv_positive_p2ibis". Undo.  
 induction n.
 intros.
 apply EqShiftL_size; auto.
@@ -956,7 +956,7 @@ Qed.
 
 Lemma phi_phi_inv_positive : forall p,
 phi (phi_inv_positive p) = (Zpos p) mod (2^(Z.of_nat size)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_phi_inv_positive".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_phi_inv_positive". Undo.  
 intros.
 replace (phi_inv_positive p) with (snd (p2ibis size p)).
 rewrite (p2ibis_spec size p) by auto.
@@ -973,7 +973,7 @@ Qed.
 
 Lemma double_twice_firstl : forall x, firstl x = D0 ->
 (Twon*x = twice x)%int31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.double_twice_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.double_twice_firstl". Undo.  
 intros.
 unfold mul31.
 rewrite <- Z.double_spec, <- phi_twice_firstl, phi_inv_phi; auto.
@@ -981,7 +981,7 @@ Qed.
 
 Lemma double_twice_plus_one_firstl : forall x, firstl x = D0 ->
 (Twon*x+In = twice_plus_one x)%int31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.double_twice_plus_one_firstl".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.double_twice_plus_one_firstl". Undo.  
 intros.
 rewrite double_twice_firstl; auto.
 unfold add31.
@@ -991,7 +991,7 @@ Qed.
 
 Lemma p2i_p2ibis : forall n p, (n<=size)%nat ->
 p2i n p = p2ibis n p.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.p2i_p2ibis".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.p2i_p2ibis". Undo.  
 induction n; simpl; auto; intros.
 destruct p; auto; specialize IHn with p;
 generalize (p2ibis_bounded n p);
@@ -1005,7 +1005,7 @@ Qed.
 
 Lemma positive_to_int31_phi_inv_positive : forall p,
 snd (positive_to_int31 p) = phi_inv_positive p.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.positive_to_int31_phi_inv_positive".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.positive_to_int31_phi_inv_positive". Undo.  
 intros; unfold positive_to_int31.
 rewrite p2i_p2ibis; auto.
 symmetry.
@@ -1016,7 +1016,7 @@ Qed.
 Lemma positive_to_int31_spec : forall p,
 Zpos p = (Z.of_N (fst (positive_to_int31 p)))*2^(Z.of_nat size) +
 phi (snd (positive_to_int31 p)).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.positive_to_int31_spec".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.positive_to_int31_spec". Undo.  
 unfold positive_to_int31.
 intros; rewrite p2i_p2ibis; auto.
 apply p2ibis_spec; auto.
@@ -1026,7 +1026,7 @@ Qed.
 
 Lemma phi_twice : forall x,
 phi (twice x) = (Z.double (phi x)) mod 2^(Z.of_nat size).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice". Undo.  
 intros.
 pattern x at 1; rewrite <- (phi_inv_phi x).
 rewrite <- phi_inv_double.
@@ -1040,7 +1040,7 @@ Qed.
 
 Lemma phi_twice_plus_one : forall x,
 phi (twice_plus_one x) = (Z.succ_double (phi x)) mod 2^(Z.of_nat size).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice_plus_one".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_twice_plus_one". Undo.  
 intros.
 pattern x at 1; rewrite <- (phi_inv_phi x).
 rewrite <- phi_inv_double_plus_one.
@@ -1054,7 +1054,7 @@ Qed.
 
 Lemma phi_incr : forall x,
 phi (incr x) = (Z.succ (phi x)) mod 2^(Z.of_nat size).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_incr".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_incr". Undo.  
 intros.
 pattern x at 1; rewrite <- (phi_inv_phi x).
 rewrite <- phi_inv_incr.
@@ -1071,7 +1071,7 @@ Qed.
 
 Lemma phi_phi_inv_negative :
 forall p, phi (incr (complement_negative p)) = (Zneg p) mod 2^(Z.of_nat size).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_phi_inv_negative".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_phi_inv_negative". Undo.  
 induction p.
 
 simpl complement_negative.
@@ -1093,7 +1093,7 @@ Qed.
 
 Lemma phi_phi_inv :
 forall z, phi (phi_inv z) = z mod 2 ^ (Z.of_nat size).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_phi_inv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_phi_inv". Undo.  
 destruct z.
 simpl; auto.
 apply phi_phi_inv_positive.
@@ -1166,7 +1166,7 @@ Notation "[| x |]" := (phi x)  (at level 0, x at level 99).
 Local Notation wB := (2 ^ (Z.of_nat size)).
 
 Lemma wB_pos : wB > 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.wB_pos".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.wB_pos". Undo.  
 auto with zarith.
 Qed.
 
@@ -1180,38 +1180,38 @@ Notation "[|| x ||]" :=
 (zn2z_to_Z wB phi x)  (at level 0, x at level 99).
 
 Lemma spec_zdigits : [| 31 |] = 31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_zdigits".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_zdigits". Undo.  
 reflexivity.
 Qed.
 
 Lemma spec_more_than_1_digit: 1 < 31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_more_than_1_digit".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_more_than_1_digit". Undo.  
 auto with zarith.
 Qed.
 
 Lemma spec_0   : [| 0 |] = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_0". Undo.  
 reflexivity.
 Qed.
 
 Lemma spec_1   : [| 1 |] = 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_1".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_1". Undo.  
 reflexivity.
 Qed.
 
 Lemma spec_m1 : [| Tn |] = wB - 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_m1".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_m1". Undo.  
 reflexivity.
 Qed.
 
 Lemma spec_compare : forall x y,
 (x ?= y)%int31 = ([|x|] ?= [|y|]).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_compare".   reflexivity. Qed.
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_compare". Undo.   reflexivity. Qed.
 
 
 
 Lemma spec_add_c  : forall x y, [+|add31c x y|] = [|x|] + [|y|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_c". Undo.  
 intros; unfold add31c, add31, interp_carry; rewrite phi_phi_inv.
 generalize (phi_bounded x)(phi_bounded y); intros.
 set (X:=[|x|]) in *; set (Y:=[|y|]) in *; clearbody X Y.
@@ -1229,12 +1229,12 @@ destruct Z.compare; intros;
 Qed.
 
 Lemma spec_succ_c : forall x, [+|add31c x 1|] = [|x|] + 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_succ_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_succ_c". Undo.  
 intros; apply spec_add_c.
 Qed.
 
 Lemma spec_add_carry_c : forall x y, [+|add31carryc x y|] = [|x|] + [|y|] + 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_carry_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_carry_c". Undo.  
 intros.
 unfold add31carryc, interp_carry; rewrite phi_phi_inv.
 generalize (phi_bounded x)(phi_bounded y); intros.
@@ -1253,27 +1253,27 @@ destruct Z.compare; intros;
 Qed.
 
 Lemma spec_add : forall x y, [|x+y|] = ([|x|] + [|y|]) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add". Undo.  
 intros; apply phi_phi_inv.
 Qed.
 
 Lemma spec_add_carry :
 forall x y, [|x+y+1|] = ([|x|] + [|y|] + 1) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_carry".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_carry". Undo.  
 unfold add31; intros.
 repeat rewrite phi_phi_inv.
 apply Zplus_mod_idemp_l.
 Qed.
 
 Lemma spec_succ : forall x, [|x+1|] = ([|x|] + 1) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_succ".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_succ". Undo.  
 intros; rewrite <- spec_1; apply spec_add.
 Qed.
 
 
 
 Lemma spec_sub_c : forall x y, [-|sub31c x y|] = [|x|] - [|y|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub_c". Undo.  
 unfold sub31c, sub31, interp_carry; intros.
 rewrite phi_phi_inv.
 generalize (phi_bounded x)(phi_bounded y); intros.
@@ -1292,7 +1292,7 @@ destruct Z.compare; intros;
 Qed.
 
 Lemma spec_sub_carry_c : forall x y, [-|sub31carryc x y|] = [|x|] - [|y|] - 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub_carry_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub_carry_c". Undo.  
 unfold sub31carryc, sub31, interp_carry; intros.
 rewrite phi_phi_inv.
 generalize (phi_bounded x)(phi_bounded y); intros.
@@ -1311,30 +1311,30 @@ destruct Z.compare; intros;
 Qed.
 
 Lemma spec_sub : forall x y, [|x-y|] = ([|x|] - [|y|]) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub". Undo.  
 intros; apply phi_phi_inv.
 Qed.
 
 Lemma spec_sub_carry :
 forall x y, [|x-y-1|] = ([|x|] - [|y|] - 1) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub_carry".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sub_carry". Undo.  
 unfold sub31; intros.
 repeat rewrite phi_phi_inv.
 apply Zminus_mod_idemp_l.
 Qed.
 
 Lemma spec_opp_c : forall x, [-|sub31c 0 x|] = -[|x|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_opp_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_opp_c". Undo.  
 intros; apply spec_sub_c.
 Qed.
 
 Lemma spec_opp : forall x, [|0 - x|] = (-[|x|]) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_opp".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_opp". Undo.  
 intros; apply phi_phi_inv.
 Qed.
 
 Lemma spec_opp_carry : forall x, [|0 - x - 1|] = wB - [|x|] - 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_opp_carry".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_opp_carry". Undo.  
 unfold sub31; intros.
 repeat rewrite phi_phi_inv.
 change [|1|] with 1; change [|0|] with 0.
@@ -1344,19 +1344,19 @@ rewrite Zmod_small; generalize (phi_bounded x); romega.
 Qed.
 
 Lemma spec_pred_c : forall x, [-|sub31c x 1|] = [|x|] - 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_pred_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_pred_c". Undo.  
 intros; apply spec_sub_c.
 Qed.
 
 Lemma spec_pred : forall x, [|x-1|] = ([|x|] - 1) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_pred".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_pred". Undo.  
 intros; apply spec_sub.
 Qed.
 
 
 
 Lemma phi2_phi_inv2 : forall x, [||phi_inv2 x||] = x mod (wB^2).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi2_phi_inv2".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi2_phi_inv2". Undo.  
 assert (forall z, (z / wB) mod wB * wB + z mod wB = z mod wB ^ 2).
 intros.
 assert ((z/wB) mod wB = z/wB - (z/wB/wB)*wB).
@@ -1376,7 +1376,7 @@ change base with wB; auto.
 Qed.
 
 Lemma spec_mul_c : forall x y, [|| mul31c x y ||] = [|x|] * [|y|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_mul_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_mul_c". Undo.  
 unfold mul31c; intros.
 rewrite phi2_phi_inv2.
 apply Zmod_small.
@@ -1386,12 +1386,12 @@ auto using Z.mul_lt_mono_nonneg with zarith.
 Qed.
 
 Lemma spec_mul : forall x y, [|x*y|] = ([|x|] * [|y|]) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_mul".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_mul". Undo.  
 intros; apply phi_phi_inv.
 Qed.
 
 Lemma spec_square_c : forall x, [|| mul31c x x ||] = [|x|] * [|x|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_square_c".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_square_c". Undo.  
 intros; apply spec_mul_c.
 Qed.
 
@@ -1403,7 +1403,7 @@ wB/2 <= [|b|] ->
 let (q,r) := div3121 a1 a2 b in
 [|a1|] *wB+ [|a2|] = [|q|] * [|b|] + [|r|] /\
 0 <= [|r|] < [|b|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_div21".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_div21". Undo.  
 unfold div3121; intros.
 generalize (phi_bounded a1)(phi_bounded a2)(phi_bounded b); intros.
 assert ([|b|]>0) by (auto with zarith).
@@ -1434,7 +1434,7 @@ Lemma spec_div : forall a b, 0 < [|b|] ->
 let (q,r) := div31 a b in
 [|a|] = [|q|] * [|b|] + [|r|] /\
 0 <= [|r|] < [|b|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_div".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_div". Undo.  
 unfold div31; intros.
 assert ([|b|]>0) by (auto with zarith).
 generalize (Z_div_mod [|a|] [|b|] H0) (Z_div_pos [|a|] [|b|] H0).
@@ -1456,7 +1456,7 @@ Qed.
 
 Lemma spec_mod :  forall a b, 0 < [|b|] ->
 [|let (_,r) := (a/b)%int31 in r|] = [|a|] mod [|b|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_mod".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_mod". Undo.  
 unfold div31; intros.
 assert ([|b|]>0) by (auto with zarith).
 unfold Z.modulo.
@@ -1470,7 +1470,7 @@ Qed.
 
 Lemma phi_gcd : forall i j,
 [|gcd31 i j|] = Zgcdn (2*size) [|j|] [|i|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_gcd".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_gcd". Undo.  
 unfold gcd31.
 induction (2*size)%nat; intros.
 reflexivity.
@@ -1488,7 +1488,7 @@ rewrite H1 in H; destruct H as [H _]; compute in H; elim H; auto.
 Qed.
 
 Lemma spec_gcd : forall a b, Zis_gcd [|a|] [|b|] [|gcd31 a b|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_gcd".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_gcd". Undo.  
 intros.
 rewrite phi_gcd.
 apply Zis_gcd_sym.
@@ -1504,7 +1504,7 @@ Qed.
 
 Lemma iter_int31_iter_nat : forall A f i a,
 iter_int31 i A f a = iter_nat (Z.abs_nat [|i|]) A f a.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.iter_int31_iter_nat".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.iter_int31_iter_nat". Undo.  
 intros.
 unfold iter_int31.
 rewrite <- recrbis_equiv; auto; unfold recrbis.
@@ -1539,7 +1539,7 @@ end.
 
 Lemma addmuldiv31_equiv : forall p x y,
 addmuldiv31 p x y = addmuldiv31_alt (Z.abs_nat [|p|]) x y.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.addmuldiv31_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.addmuldiv31_equiv". Undo.  
 intros.
 unfold addmuldiv31.
 rewrite iter_int31_iter_nat.
@@ -1555,7 +1555,7 @@ Qed.
 Lemma spec_add_mul_div : forall x y p, [|p|] <= Zpos 31 ->
 [| addmuldiv31 p x y |] =
 ([|x|] * (2 ^ [|p|]) + [|y|] / (2 ^ ((Zpos 31) - [|p|]))) mod wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_mul_div".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_add_mul_div". Undo.  
 intros.
 rewrite addmuldiv31_equiv.
 assert ([|p|] = Z.of_nat (Z.abs_nat [|p|])).
@@ -1621,7 +1621,7 @@ Qed.
 Lemma shift_unshift_mod_2 : forall n p a, 0 <= p <= n ->
 ((a * 2 ^ (n - p)) mod (2^n) / 2 ^ (n - p)) mod (2^n) =
 a mod 2 ^ p.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.shift_unshift_mod_2".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.shift_unshift_mod_2". Undo.  
 intros.
 rewrite Zmod_small.
 rewrite Zmod_eq by (auto with zarith).
@@ -1651,7 +1651,7 @@ Qed.
 
 Lemma spec_pos_mod : forall w p,
 [|ZnZ.pos_mod p w|] = [|w|] mod (2 ^ [|p|]).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_pos_mod".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_pos_mod". Undo.  
 unfold int31_ops, ZnZ.pos_mod, compare31.
 change [|31|] with 31%Z.
 assert (forall w p, 31<=p -> [|w|] = [|w|] mod 2^p).
@@ -1686,7 +1686,7 @@ Qed.
 
 
 Lemma spec_head00:  forall x, [|x|] = 0 -> [|head031 x|] = Zpos 31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_head00".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_head00". Undo.  
 intros.
 generalize (phi_inv_phi x).
 rewrite H; simpl phi_inv.
@@ -1705,7 +1705,7 @@ end.
 
 Lemma head031_equiv :
 forall x, [|head031 x|] = Z.of_nat (head031_alt size x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.head031_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.head031_equiv". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H).
@@ -1750,7 +1750,7 @@ rewrite (iszero_eq0 _ H0) in H; discriminate.
 Qed.
 
 Lemma phi_nz : forall x, 0 < [|x|] <-> x <> 0%int31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_nz".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.phi_nz". Undo.  
 split; intros.
 red; intro; subst x; discriminate.
 assert ([|x|]<>0%Z).
@@ -1761,7 +1761,7 @@ Qed.
 
 Lemma spec_head0  : forall x,  0 < [|x|] ->
 wB/ 2 <= 2 ^ ([|head031 x|]) * [|x|] < wB.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_head0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_head0". Undo.  
 intros.
 rewrite head031_equiv.
 assert (nshiftl x size = 0%int31).
@@ -1794,7 +1794,7 @@ apply phi_lowerbound; auto.
 Qed.
 
 Lemma spec_tail00:  forall x, [|x|] = 0 -> [|tail031 x|] = Zpos 31.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_tail00".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_tail00". Undo.  
 intros.
 generalize (phi_inv_phi x).
 rewrite H; simpl phi_inv.
@@ -1813,7 +1813,7 @@ end.
 
 Lemma tail031_equiv :
 forall x, [|tail031 x|] = Z.of_nat (tail031_alt size x).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.tail031_equiv".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.tail031_equiv". Undo.  
 intros.
 case_eq (iszero x); intros.
 rewrite (iszero_eq0 _ H).
@@ -1859,7 +1859,7 @@ Qed.
 
 Lemma spec_tail0  : forall x, 0 < [|x|] ->
 exists y, 0 <= y /\ [|x|] = (2 * y + 1) * (2 ^ [|tail031 x|]).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_tail0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_tail0". Undo.  
 intros.
 rewrite tail031_equiv.
 assert (nshiftr x size = 0%int31).
@@ -1897,14 +1897,14 @@ Qed.
 
 
 Lemma quotient_by_2 a: a - 1 <= (a/2) + (a/2).
-Proof. try hammer_hook "Cyclic31" "Cyclic31.quotient_by_2".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.quotient_by_2". Undo.  
 case (Z_mod_lt a 2); auto with zarith.
 intros H1; rewrite Zmod_eq_full; auto with zarith.
 Qed.
 
 Lemma sqrt_main_trick j k: 0 <= j -> 0 <= k ->
 (j * k) + j <= ((j + k)/2 + 1)  ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_main_trick".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_main_trick". Undo.  
 intros Hj; generalize Hj k; pattern j; apply natlike_ind;
 auto; clear k j Hj.
 intros _ k Hk; repeat rewrite Z.add_0_l.
@@ -1927,7 +1927,7 @@ apply f_equal2 with (f := Z.div); auto with zarith.
 Qed.
 
 Lemma sqrt_main i j: 0 <= i -> 0 < j -> i < ((j + (i/j))/2 + 1) ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_main".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_main". Undo.  
 intros Hi Hj.
 assert (Hij: 0 <= i/j) by (apply Z_div_pos; auto with zarith).
 apply Z.lt_le_trans with (2 := sqrt_main_trick _ _ (Z.lt_le_incl _ _ Hj) Hij).
@@ -1935,7 +1935,7 @@ pattern i at 1; rewrite (Z_div_mod_eq i j); case (Z_mod_lt i j); auto with zarit
 Qed.
 
 Lemma sqrt_init i: 1 < i -> i < (i/2 + 1) ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_init".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_init". Undo.  
 intros Hi.
 assert (H1: 0 <= i - 2) by auto with zarith.
 assert (H2: 1 <= (i / 2) ^ 2); auto with zarith.
@@ -1953,14 +1953,14 @@ auto with zarith.
 Qed.
 
 Lemma sqrt_test_true i j: 0 <= i -> 0 < j -> i/j >= j -> j ^ 2 <= i.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_test_true".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_test_true". Undo.  
 intros Hi Hj Hd; rewrite Z.pow_2_r.
 apply Z.le_trans with (j * (i/j)); auto with zarith.
 apply Z_mult_div_ge; auto with zarith.
 Qed.
 
 Lemma sqrt_test_false i j: 0 <= i -> 0 < j -> i/j < j ->  (j + (i/j))/2 < j.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_test_false".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt_test_false". Undo.  
 intros Hi Hj H; case (Z.le_gt_cases j ((j + (i/j))/2)); auto.
 intros H1; contradict H; apply Z.le_ngt.
 assert (2 * j <= j + (i/j)); auto with zarith.
@@ -1974,7 +1974,7 @@ match (fst (i/j) ?= j)%int31 with
 Lt => rec i (fst ((j + fst(i/j))/2))%int31
 | _ =>  j
 end.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt31_step_def".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt31_step_def". Undo.  
 unfold sqrt31_step; case div31; intros.
 simpl; case compare31; auto.
 Qed.
@@ -1993,7 +1993,7 @@ Lemma sqrt31_step_correct rec i j:
 0 < [|j1|] < [|j|] -> [|i|] < ([|j1|] + 1) ^ 2 ->
 [|rec i j1|] ^ 2 <= [|i|] < ([|rec i j1|] + 1) ^ 2) ->
 [|sqrt31_step rec i j|] ^ 2 <= [|i|] < ([|sqrt31_step rec i j|] + 1) ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt31_step_correct".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt31_step_correct". Undo.  
 assert (Hp2: 0 < [|2|]) by exact (eq_refl Lt).
 intros Hi Hj Hij H31 Hrec; rewrite sqrt31_step_def.
 rewrite spec_compare, div31_phi; auto.
@@ -2023,7 +2023,7 @@ Lemma iter31_sqrt_correct n rec i j: 0 < [|i|] -> 0 < [|j|] ->
 [|i|] < ([|j1|] + 1) ^ 2 -> 2 * [|j1|] < 2 ^ (Z.of_nat size) ->
 [|rec i j1|] ^ 2 <= [|i|] < ([|rec i j1|] + 1) ^ 2) ->
 [|iter31_sqrt n rec i j|] ^ 2 <= [|i|] < ([|iter31_sqrt n rec i j|] + 1) ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.iter31_sqrt_correct".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.iter31_sqrt_correct". Undo.  
 revert rec i j; elim n; unfold iter31_sqrt; fold iter31_sqrt; clear n.
 intros rec i j Hi Hj Hij H31 Hrec; apply sqrt31_step_correct; auto with zarith.
 intros; apply Hrec; auto with zarith.
@@ -2041,7 +2041,7 @@ Qed.
 
 Lemma spec_sqrt : forall x,
 [|sqrt31 x|] ^ 2 <= [|x|] < ([|sqrt31 x|] + 1) ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sqrt".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sqrt". Undo.  
 intros i; unfold sqrt31.
 rewrite spec_compare. case Z.compare_spec; change [|1|] with 1;
 intros Hi; auto with zarith.
@@ -2082,14 +2082,14 @@ end in rec ih il m
 | _ =>  j
 end
 end.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt312_step_def".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt312_step_def". Undo.  
 unfold sqrt312_step; case div3121; intros.
 simpl; case compare31; auto.
 Qed.
 
 Lemma sqrt312_lower_bound ih il j:
 phi2 ih  il  < ([|j|] + 1) ^ 2 -> [|ih|] <= [|j|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt312_lower_bound".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt312_lower_bound". Undo.  
 intros H1.
 case (phi_bounded j); intros Hbj _.
 case (phi_bounded il); intros Hbil _.
@@ -2104,7 +2104,7 @@ Qed.
 
 Lemma div312_phi ih il j: (2^30 <= [|j|] -> [|ih|] < [|j|] ->
 [|fst (div3121 ih il j)|] = phi2 ih il/[|j|])%Z.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.div312_phi".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.div312_phi". Undo.  
 intros Hj Hj1.
 generalize (spec_div21 ih il j Hj Hj1).
 case div3121; intros q r (Hq, Hr).
@@ -2118,7 +2118,7 @@ Lemma sqrt312_step_correct rec ih il j:
 [|rec ih il j1|] ^ 2 <= phi2 ih il < ([|rec ih il j1|] + 1) ^ 2) ->
 [|sqrt312_step rec ih il  j|] ^ 2 <= phi2 ih il
 < ([|sqrt312_step rec ih il j|] + 1) ^  2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt312_step_correct".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.sqrt312_step_correct". Undo.  
 assert (Hp2: (0 < [|2|])%Z) by exact (eq_refl Lt).
 intros Hih Hj Hij Hrec; rewrite sqrt312_step_def.
 assert (H1: ([|ih|] <= [|j|])) by (apply sqrt312_lower_bound with il; auto).
@@ -2213,7 +2213,7 @@ phi2 ih il < ([|j1|] + 1) ^ 2 ->
 [|rec ih il j1|] ^ 2 <= phi2 ih il < ([|rec ih il j1|] + 1) ^ 2)  ->
 [|iter312_sqrt n rec ih il j|] ^ 2 <= phi2 ih il
 < ([|iter312_sqrt n rec ih il j|] + 1) ^ 2.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.iter312_sqrt_correct".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.iter312_sqrt_correct". Undo.  
 revert rec ih il j; elim n; unfold iter312_sqrt; fold iter312_sqrt; clear n.
 intros rec ih il j Hi Hj Hij Hrec; apply sqrt312_step_correct; auto with zarith.
 intros; apply Hrec; auto with zarith.
@@ -2237,7 +2237,7 @@ wB/ 4 <= [|x|] ->
 let (s,r) := sqrt312 x y in
 [||WW x y||] = [|s|] ^ 2 + [+|r|] /\
 [+|r|] <= 2 * [|s|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sqrt2".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_sqrt2". Undo.  
 intros ih il Hih; unfold sqrt312.
 change [||WW ih il||] with (phi2 ih il).
 assert (Hbin: forall s, s * s + 2* s + 1 = (s + 1) ^ 2) by
@@ -2395,7 +2395,7 @@ Qed.
 
 
 Lemma spec_eq0 : forall x, ZnZ.eq0 x = true -> [|x|] = 0.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_eq0".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_eq0". Undo.  
 clear; unfold ZnZ.eq0, int31_ops.
 unfold compare31; intros.
 change [|0|] with 0 in H.
@@ -2407,7 +2407,7 @@ Qed.
 
 Lemma spec_is_even : forall x,
 if ZnZ.is_even x then [|x|] mod 2 = 0 else [|x|] mod 2 = 1.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_is_even".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_is_even". Undo.  
 unfold ZnZ.is_even, int31_ops; intros.
 generalize (spec_div x 2).
 destruct (x/2)%int31 as (q,r); intros.
@@ -2424,7 +2424,7 @@ Qed.
 
 
 Lemma log2_phi_bounded x : Z.log2 [|x|] < Z.of_nat size.
-Proof. try hammer_hook "Cyclic31" "Cyclic31.log2_phi_bounded".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.log2_phi_bounded". Undo.  
 destruct (phi_bounded x) as (H,H').
 Z.le_elim H.
 - now apply Z.log2_lt_pow2.
@@ -2432,7 +2432,7 @@ Z.le_elim H.
 Qed.
 
 Lemma spec_lor x y : [| ZnZ.lor x y |] = Z.lor [|x|] [|y|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_lor".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_lor". Undo.  
 unfold ZnZ.lor,int31_ops. unfold lor31.
 rewrite phi_phi_inv.
 apply Z.mod_small; split; trivial.
@@ -2443,7 +2443,7 @@ apply Z.max_lub_lt; apply log2_phi_bounded.
 Qed.
 
 Lemma spec_land x y : [| ZnZ.land x y |] = Z.land [|x|] [|y|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_land".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_land". Undo.  
 unfold ZnZ.land, int31_ops. unfold land31.
 rewrite phi_phi_inv.
 apply Z.mod_small; split; trivial.
@@ -2455,7 +2455,7 @@ apply Z.min_lt_iff; left; apply log2_phi_bounded.
 Qed.
 
 Lemma spec_lxor x y : [| ZnZ.lxor x y |] = Z.lxor [|x|] [|y|].
-Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_lxor".  
+Proof. try hammer_hook "Cyclic31" "Cyclic31.spec_lxor". Undo.  
 unfold ZnZ.lxor, int31_ops. unfold lxor31.
 rewrite phi_phi_inv.
 apply Z.mod_small; split; trivial.

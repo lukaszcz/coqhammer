@@ -21,25 +21,25 @@ Decidable_spec : Decidable_witness = true <-> P
 
 Lemma Decidable_sound : forall P (H : Decidable P),
 Decidable_witness = true -> P.
-Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_sound".  
+Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_sound". Undo.  
 intros P H Hp; apply -> Decidable_spec; assumption.
 Qed.
 
 Lemma Decidable_complete : forall P (H : Decidable P),
 P -> Decidable_witness = true.
-Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_complete".  
+Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_complete". Undo.  
 intros P H Hp; apply <- Decidable_spec; assumption.
 Qed.
 
 Lemma Decidable_sound_alt : forall P (H : Decidable P),
 ~ P -> Decidable_witness = false.
-Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_sound_alt".  
+Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_sound_alt". Undo.  
 intros P [wit spec] Hd; simpl; destruct wit; tauto.
 Qed.
 
 Lemma Decidable_complete_alt : forall P (H : Decidable P),
 Decidable_witness = false -> ~ P.
-Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_complete_alt".  
+Proof. try hammer_hook "DecidableClass" "DecidableClass.Decidable_complete_alt". Undo.  
 intros P [wit spec] Hd Hc; simpl in *; intuition congruence.
 Qed.
 

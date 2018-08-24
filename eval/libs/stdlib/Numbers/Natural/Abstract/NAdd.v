@@ -19,7 +19,7 @@ Include NBaseProp N.
 
 
 Theorem eq_add_0 : forall n m, n + m == 0 <-> n == 0 /\ m == 0.
-Proof. try hammer_hook "NAdd" "NAdd.NAddProp.eq_add_0".  
+Proof. try hammer_hook "NAdd" "NAdd.NAddProp.eq_add_0". Undo.  
 intros n m; induct n.
 nzsimpl; intuition.
 intros n IH. nzsimpl.
@@ -32,7 +32,7 @@ Qed.
 Theorem eq_add_succ :
 forall n m, (exists p, n + m == S p) <->
 (exists n', n == S n') \/ (exists m', m == S m').
-Proof. try hammer_hook "NAdd" "NAdd.NAddProp.eq_add_succ".  
+Proof. try hammer_hook "NAdd" "NAdd.NAddProp.eq_add_succ". Undo.  
 intros n m; cases n.
 split; intro H.
 destruct H as [p H]. rewrite add_0_l in H; right; now exists p.
@@ -46,7 +46,7 @@ Qed.
 
 Theorem eq_add_1 : forall n m,
 n + m == 1 -> n == 1 /\ m == 0 \/ n == 0 /\ m == 1.
-Proof. try hammer_hook "NAdd" "NAdd.NAddProp.eq_add_1".  
+Proof. try hammer_hook "NAdd" "NAdd.NAddProp.eq_add_1". Undo.  
 intros n m. rewrite one_succ. intro H.
 assert (H1 : exists p, n + m == S p) by now exists 0.
 apply eq_add_succ in H1. destruct H1 as [[n' H1] | [m' H1]].
@@ -57,7 +57,7 @@ apply eq_add_0 in H. destruct H as [H2 H3]; rewrite H3 in H1; now split.
 Qed.
 
 Theorem succ_add_discr : forall n m, m ~= S (n + m).
-Proof. try hammer_hook "NAdd" "NAdd.NAddProp.succ_add_discr".  
+Proof. try hammer_hook "NAdd" "NAdd.NAddProp.succ_add_discr". Undo.  
 intro n; induct m.
 apply neq_sym. apply neq_succ_0.
 intros m IH H. apply succ_inj in H. rewrite add_succ_r in H.
@@ -65,14 +65,14 @@ unfold not in IH; now apply IH.
 Qed.
 
 Theorem add_pred_l : forall n m, n ~= 0 -> P n + m == P (n + m).
-Proof. try hammer_hook "NAdd" "NAdd.NAddProp.add_pred_l".  
+Proof. try hammer_hook "NAdd" "NAdd.NAddProp.add_pred_l". Undo.  
 intros n m; cases n.
 intro H; now elim H.
 intros n IH; rewrite add_succ_l; now do 2 rewrite pred_succ.
 Qed.
 
 Theorem add_pred_r : forall n m, m ~= 0 -> n + P m == P (n + m).
-Proof. try hammer_hook "NAdd" "NAdd.NAddProp.add_pred_r".  
+Proof. try hammer_hook "NAdd" "NAdd.NAddProp.add_pred_r". Undo.  
 intros n m H; rewrite (add_comm n (P m));
 rewrite (add_comm n m); now apply add_pred_l.
 Qed.

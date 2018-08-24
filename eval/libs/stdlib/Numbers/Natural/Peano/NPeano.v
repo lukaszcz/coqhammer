@@ -37,9 +37,9 @@ Notation even_spec := Nat.even_spec (compat "8.4").
 Notation odd_spec := Nat.odd_spec (compat "8.4").
 
 Lemma Even_equiv n : Even n <-> Even.even n.
-Proof. try hammer_hook "NPeano" "NPeano.Even_equiv".   symmetry. apply Even.even_equiv. Qed.
+Proof. try hammer_hook "NPeano" "NPeano.Even_equiv". Undo.   symmetry. apply Even.even_equiv. Qed.
 Lemma Odd_equiv n : Odd n <-> Even.odd n.
-Proof. try hammer_hook "NPeano" "NPeano.Odd_equiv".   symmetry. apply Even.odd_equiv. Qed.
+Proof. try hammer_hook "NPeano" "NPeano.Odd_equiv". Undo.   symmetry. apply Even.odd_equiv. Qed.
 
 Notation divmod := Nat.divmod (compat "8.4").
 Notation div := Nat.div (compat "8.4").

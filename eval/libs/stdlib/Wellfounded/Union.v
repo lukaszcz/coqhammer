@@ -25,7 +25,7 @@ commut A R1 R2 ->
 forall x y:A,
 clos_trans A R1 y x ->
 forall z:A, R2 z y ->  exists2 y' : A, R2 y' x & clos_trans A R1 z y'.
-Proof. try hammer_hook "Union" "Union.strip_commut".  
+Proof. try hammer_hook "Union" "Union.strip_commut". Undo.  
 induction 2 as [x y| x y z H0 IH1 H1 IH2]; intros.
 elim H with y x z; auto with sets; intros x0 H2 H3.
 exists x0; auto with sets.
@@ -40,7 +40,7 @@ Qed.
 Lemma Acc_union :
 commut A R1 R2 ->
 (forall x:A, Acc R2 x -> Acc R1 x) -> forall a:A, Acc R2 a -> Acc Union a.
-Proof. try hammer_hook "Union" "Union.Acc_union".  
+Proof. try hammer_hook "Union" "Union.Acc_union". Undo.  
 induction 3 as [x H1 H2].
 apply Acc_intro; intros.
 elim H3; intros; auto with sets.
@@ -66,7 +66,7 @@ Qed.
 
 Theorem wf_union :
 commut A R1 R2 -> well_founded R1 -> well_founded R2 -> well_founded Union.
-Proof. try hammer_hook "Union" "Union.wf_union".  
+Proof. try hammer_hook "Union" "Union.wf_union". Undo.  
 unfold well_founded.
 intros.
 apply Acc_union; auto with sets.

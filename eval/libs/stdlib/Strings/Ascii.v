@@ -35,7 +35,7 @@ end.
 
 
 Definition ascii_dec : forall a b : ascii, {a = b} + {a <> b}.
-Proof. try hammer_hook "Ascii" "Ascii.ascii_dec".  
+Proof. try hammer_hook "Ascii" "Ascii.ascii_dec". Undo.  
 decide equality; apply bool_dec.
 Defined.
 
@@ -88,13 +88,13 @@ Definition nat_of_ascii (a : ascii) : nat := N.to_nat (N_of_ascii a).
 
 Theorem ascii_N_embedding :
 forall a : ascii, ascii_of_N (N_of_ascii a) = a.
-Proof. try hammer_hook "Ascii" "Ascii.ascii_N_embedding".  
+Proof. try hammer_hook "Ascii" "Ascii.ascii_N_embedding". Undo.  
 destruct a as [[|][|][|][|][|][|][|][|]]; vm_compute; reflexivity.
 Qed.
 
 Theorem N_ascii_embedding :
 forall n:N, (n < 256)%N -> N_of_ascii (ascii_of_N n) = n.
-Proof. try hammer_hook "Ascii" "Ascii.N_ascii_embedding".  
+Proof. try hammer_hook "Ascii" "Ascii.N_ascii_embedding". Undo.  
 destruct n.
 reflexivity.
 do 8 (destruct p; [ | | intros; vm_compute; reflexivity ]);
@@ -103,13 +103,13 @@ Qed.
 
 Theorem ascii_nat_embedding :
 forall a : ascii, ascii_of_nat (nat_of_ascii a) = a.
-Proof. try hammer_hook "Ascii" "Ascii.ascii_nat_embedding".  
+Proof. try hammer_hook "Ascii" "Ascii.ascii_nat_embedding". Undo.  
 destruct a as [[|][|][|][|][|][|][|][|]]; compute; reflexivity.
 Qed.
 
 Theorem nat_ascii_embedding :
 forall n : nat, n < 256 -> nat_of_ascii (ascii_of_nat n) = n.
-Proof. try hammer_hook "Ascii" "Ascii.nat_ascii_embedding".  
+Proof. try hammer_hook "Ascii" "Ascii.nat_ascii_embedding". Undo.  
 intros. unfold nat_of_ascii, ascii_of_nat.
 rewrite N_ascii_embedding.
 apply Nat2N.id.

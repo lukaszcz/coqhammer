@@ -25,7 +25,7 @@ Definition ltof (a b:A) := f a < f b.
 Definition gtof (a b:A) := f b > f a.
 
 Theorem well_founded_ltof : well_founded ltof.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_ltof".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_ltof". Undo.  
 assert (H : forall n (a:A), f a < n -> Acc ltof a).
 { induction n.
 - intros; absurd (f a < 0); auto with arith.
@@ -35,7 +35,7 @@ intros a. apply (H (S (f a))). auto with arith.
 Defined.
 
 Theorem well_founded_gtof : well_founded gtof.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_gtof".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_gtof". Undo.  
 exact well_founded_ltof.
 Defined.
 
@@ -44,7 +44,7 @@ Defined.
 Theorem induction_ltof1 :
 forall P:A -> Set,
 (forall x:A, (forall y:A, ltof y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_ltof1".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_ltof1". Undo.  
 intros P F.
 assert (H : forall n (a:A), f a < n -> P a).
 { induction n.
@@ -57,21 +57,21 @@ Defined.
 Theorem induction_gtof1 :
 forall P:A -> Set,
 (forall x:A, (forall y:A, gtof y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_gtof1".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_gtof1". Undo.  
 exact induction_ltof1.
 Defined.
 
 Theorem induction_ltof2 :
 forall P:A -> Set,
 (forall x:A, (forall y:A, ltof y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_ltof2".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_ltof2". Undo.  
 exact (well_founded_induction well_founded_ltof).
 Defined.
 
 Theorem induction_gtof2 :
 forall P:A -> Set,
 (forall x:A, (forall y:A, gtof y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_gtof2".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.induction_gtof2". Undo.  
 exact induction_ltof2.
 Defined.
 
@@ -82,7 +82,7 @@ Variable R : A -> A -> Prop.
 Hypothesis H_compat : forall x y:A, R x y -> f x < f y.
 
 Theorem well_founded_lt_compat : well_founded R.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_lt_compat".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_lt_compat". Undo.  
 assert (H : forall n (a:A), f a < n -> Acc R a).
 { induction n.
 - intros; absurd (f a < 0); auto with arith.
@@ -94,44 +94,44 @@ Defined.
 End Well_founded_Nat.
 
 Lemma lt_wf : well_founded lt.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf". Undo.  
 exact (well_founded_ltof nat (fun m => m)).
 Defined.
 
 Lemma lt_wf_rec1 :
 forall n (P:nat -> Set), (forall n, (forall m, m < n -> P m) -> P n) -> P n.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_rec1".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_rec1". Undo.  
 exact (fun p P F => induction_ltof1 nat (fun m => m) P F p).
 Defined.
 
 Lemma lt_wf_rec :
 forall n (P:nat -> Set), (forall n, (forall m, m < n -> P m) -> P n) -> P n.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_rec".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_rec". Undo.  
 exact (fun p P F => induction_ltof2 nat (fun m => m) P F p).
 Defined.
 
 Lemma lt_wf_ind :
 forall n (P:nat -> Prop), (forall n, (forall m, m < n -> P m) -> P n) -> P n.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_ind".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_ind". Undo.  
 intro p; intros; elim (lt_wf p); auto with arith.
 Qed.
 
 Lemma gt_wf_rec :
 forall n (P:nat -> Set), (forall n, (forall m, n > m -> P m) -> P n) -> P n.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.gt_wf_rec".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.gt_wf_rec". Undo.  
 exact lt_wf_rec.
 Defined.
 
 Lemma gt_wf_ind :
 forall n (P:nat -> Prop), (forall n, (forall m, n > m -> P m) -> P n) -> P n.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.gt_wf_ind".  exact (lt_wf_ind). Qed.
+Proof. try hammer_hook "Wf_nat" "Wf_nat.gt_wf_ind". Undo.  exact (lt_wf_ind). Qed.
 
 Lemma lt_wf_double_rec :
 forall P:nat -> nat -> Set,
 (forall n m,
 (forall p q, p < n -> P p q) ->
 (forall p, p < m -> P n p) -> P n m) -> forall n m, P n m.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_double_rec".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_double_rec". Undo.  
 intros P Hrec p; pattern p; apply lt_wf_rec.
 intros n H q; pattern q; apply lt_wf_rec; auto with arith.
 Defined.
@@ -141,7 +141,7 @@ forall P:nat -> nat -> Prop,
 (forall n m,
 (forall p (q:nat), p < n -> P p q) ->
 (forall p, p < m -> P n p) -> P n m) -> forall n m, P n m.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_double_ind".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.lt_wf_double_ind". Undo.  
 intros P Hrec p; pattern p; apply lt_wf_ind.
 intros n H q; pattern q; apply lt_wf_ind; auto with arith.
 Qed.
@@ -159,7 +159,7 @@ Definition inv_lt_rel x y := exists2 n, F x n & (forall m, F y m -> n < m).
 
 Hypothesis F_compat : forall x y:A, R x y -> inv_lt_rel x y.
 Remark acc_lt_rel : forall x:A, (exists n, F x n) -> Acc R x.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.acc_lt_rel".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.acc_lt_rel". Undo.  
 intros x [n fxn]; generalize dependent x.
 pattern n; apply lt_wf_ind; intros.
 constructor; intros.
@@ -168,7 +168,7 @@ apply (H x0); auto.
 Qed.
 
 Theorem well_founded_inv_lt_rel_compat : well_founded R.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_inv_lt_rel_compat".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_inv_lt_rel_compat". Undo.  
 constructor; intros.
 case (F_compat y a); trivial; intros.
 apply acc_lt_rel; trivial.
@@ -179,7 +179,7 @@ End LT_WF_REL.
 
 Lemma well_founded_inv_rel_inv_lt_rel :
 forall (A:Set) (F:A -> nat -> Prop), well_founded (inv_lt_rel A F).
-Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_inv_rel_inv_lt_rel".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.well_founded_inv_rel_inv_lt_rel". Undo.  
 intros; apply (well_founded_inv_lt_rel_compat A (inv_lt_rel A F) F); trivial.
 Qed.
 
@@ -197,7 +197,7 @@ exists! x, P x /\ forall x', P x' -> R x x'.
 Lemma dec_inh_nat_subset_has_unique_least_element :
 forall P:nat->Prop, (forall n, P n \/ ~ P n) ->
 (exists n, P n) -> has_unique_least_element le P.
-Proof. try hammer_hook "Wf_nat" "Wf_nat.dec_inh_nat_subset_has_unique_least_element".  
+Proof. try hammer_hook "Wf_nat" "Wf_nat.dec_inh_nat_subset_has_unique_least_element". Undo.  
 intros P Pdec (n0,HPn0).
 assert
 (forall n, (exists n', n'<n /\ P n' /\ forall n'', P n'' -> n'<=n'')

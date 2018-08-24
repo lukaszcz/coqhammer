@@ -352,7 +352,7 @@ end.
 
 
 Lemma ltb_tree_iff : forall x s, lt_tree x s <-> ltb_tree x s = true.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.ltb_tree_iff".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.ltb_tree_iff". Undo.  
 induction s as [|c l IHl y r IHr]; simpl.
 unfold lt_tree; intuition_in.
 elim_compare x y.
@@ -363,7 +363,7 @@ unfold lt_tree; intuition_in; order.
 Qed.
 
 Lemma gtb_tree_iff : forall x s, gt_tree x s <-> gtb_tree x s = true.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gtb_tree_iff".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gtb_tree_iff". Undo.  
 induction s as [|c l IHl y r IHr]; simpl.
 unfold gt_tree; intuition_in.
 elim_compare x y.
@@ -374,7 +374,7 @@ split; intros; try discriminate. assert (X.lt x y) by auto. order.
 Qed.
 
 Lemma isok_iff : forall s, Ok s <-> isok s = true.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.isok_iff".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.isok_iff". Undo.  
 induction s as [|c l IHl y r IHr]; simpl.
 intuition_in.
 rewrite !andb_true_iff, <- IHl, <-IHr, <- ltb_tree_iff, <- gtb_tree_iff.
@@ -382,19 +382,19 @@ intuition_in.
 Qed.
 
 Instance isok_Ok s : isok s = true -> Ok s | 10.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.isok_Ok".   intros; apply <- isok_iff; auto. Qed.
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.isok_Ok". Undo.   intros; apply <- isok_iff; auto. Qed.
 
 
 
 Lemma In_1 :
 forall s x y, X.eq x y -> InT x s -> InT y s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_1".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_1". Undo.  
 induction s; simpl; intuition_in; eauto.
 Qed.
 Local Hint Immediate In_1.
 
 Instance In_compat : Proper (X.eq==>eq==>iff) InT.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_compat".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_compat". Undo.  
 apply proper_sym_impl_iff_2; auto with *.
 repeat red; intros; subst. apply In_1 with x; auto.
 Qed.
@@ -402,38 +402,38 @@ Qed.
 Lemma In_node_iff :
 forall c l x r y,
 InT y (Node c l x r) <-> InT y l \/ X.eq y x \/ InT y r.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_node_iff".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_node_iff". Undo.  
 intuition_in.
 Qed.
 
 Lemma In_leaf_iff : forall x, InT x Leaf <-> False.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_leaf_iff".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.In_leaf_iff". Undo.  
 intuition_in.
 Qed.
 
 
 
 Lemma lt_leaf : forall x : elt, lt_tree x Leaf.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_leaf".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_leaf". Undo.  
 red; inversion 1.
 Qed.
 
 Lemma gt_leaf : forall x : elt, gt_tree x Leaf.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_leaf".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_leaf". Undo.  
 red; inversion 1.
 Qed.
 
 Lemma lt_tree_node :
 forall (x y : elt) (l r : tree) (i : Info.t),
 lt_tree x l -> lt_tree x r -> X.lt y x -> lt_tree x (Node i l y r).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_node".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_node". Undo.  
 unfold lt_tree; intuition_in; order.
 Qed.
 
 Lemma gt_tree_node :
 forall (x y : elt) (l r : tree) (i : Info.t),
 gt_tree x l -> gt_tree x r -> X.lt x y -> gt_tree x (Node i l y r).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_node".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_node". Undo.  
 unfold gt_tree; intuition_in; order.
 Qed.
 
@@ -441,36 +441,36 @@ Local Hint Resolve lt_leaf gt_leaf lt_tree_node gt_tree_node.
 
 Lemma lt_tree_not_in :
 forall (x : elt) (t : tree), lt_tree x t -> ~ InT x t.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_not_in".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_not_in". Undo.  
 intros; intro; order.
 Qed.
 
 Lemma lt_tree_trans :
 forall x y, X.lt x y -> forall t, lt_tree x t -> lt_tree y t.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_trans".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_trans". Undo.  
 eauto.
 Qed.
 
 Lemma gt_tree_not_in :
 forall (x : elt) (t : tree), gt_tree x t -> ~ InT x t.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_not_in".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_not_in". Undo.  
 intros; intro; order.
 Qed.
 
 Lemma gt_tree_trans :
 forall x y, X.lt y x -> forall t, gt_tree x t -> gt_tree y t.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_trans".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_trans". Undo.  
 eauto.
 Qed.
 
 Instance lt_tree_compat : Proper (X.eq ==> Logic.eq ==> iff) lt_tree.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_compat".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_tree_compat". Undo.  
 apply proper_sym_impl_iff_2; auto.
 intros x x' Hx s s' Hs H y Hy. subst. setoid_rewrite <- Hx; auto.
 Qed.
 
 Instance gt_tree_compat : Proper (X.eq ==> Logic.eq ==> iff) gt_tree.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_compat".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.gt_tree_compat". Undo.  
 apply proper_sym_impl_iff_2; auto.
 intros x x' Hx s s' Hs H y Hy. subst. setoid_rewrite <- Hx; auto.
 Qed.
@@ -495,19 +495,19 @@ end.
 
 
 Lemma empty_spec : Empty empty.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.empty_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.empty_spec". Undo.  
 intros x H. inversion H.
 Qed.
 
 Instance empty_ok : Ok empty.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.empty_ok".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.empty_ok". Undo.  
 auto.
 Qed.
 
 
 
 Lemma is_empty_spec : forall s, is_empty s = true <-> Empty s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.is_empty_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.is_empty_spec". Undo.  
 destruct s as [|c r x l]; simpl; auto.
 - split; auto. intros _ x H. inv.
 - split; auto. try discriminate. intro H; elim (H x); auto.
@@ -516,7 +516,7 @@ Qed.
 
 
 Lemma mem_spec : forall s x `{Ok s}, mem x s = true <-> InT x s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mem_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mem_spec". Undo.  
 split.
 - induct s x; now auto.
 - induct s x; intuition_in; order.
@@ -528,13 +528,13 @@ Functional Scheme min_elt_ind := Induction for min_elt Sort Prop.
 Functional Scheme max_elt_ind := Induction for max_elt Sort Prop.
 
 Lemma min_elt_spec1 s x : min_elt s = Some x -> InT x s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.min_elt_spec1".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.min_elt_spec1". Undo.  
 functional induction (min_elt s); auto; inversion 1; auto.
 Qed.
 
 Lemma min_elt_spec2 s x y `{Ok s} :
 min_elt s = Some x -> InT y s -> ~ X.lt y x.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.min_elt_spec2".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.min_elt_spec2". Undo.  
 revert y.
 functional induction (min_elt s);
 try rename _x0 into r; try rename _x2 into l1, _x3 into x1, _x4 into r1.
@@ -551,7 +551,7 @@ order.
 Qed.
 
 Lemma min_elt_spec3 s : min_elt s = None -> Empty s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.min_elt_spec3".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.min_elt_spec3". Undo.  
 functional induction (min_elt s).
 red; red; inversion 2.
 inversion 1.
@@ -560,13 +560,13 @@ destruct (IHo H0 _x3); auto.
 Qed.
 
 Lemma max_elt_spec1 s x : max_elt s = Some x -> InT x s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.max_elt_spec1".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.max_elt_spec1". Undo.  
 functional induction (max_elt s); auto; inversion 1; auto.
 Qed.
 
 Lemma max_elt_spec2 s x y `{Ok s} :
 max_elt s = Some x -> InT y s -> ~ X.lt x y.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.max_elt_spec2".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.max_elt_spec2". Undo.  
 revert y.
 functional induction (max_elt s);
 try rename _x0 into r; try rename _x2 into l1, _x3 into x1, _x4 into r1.
@@ -583,7 +583,7 @@ order.
 Qed.
 
 Lemma max_elt_spec3 s : max_elt s = None -> Empty s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.max_elt_spec3".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.max_elt_spec3". Undo.  
 functional induction (max_elt s).
 red; red; inversion 2.
 inversion 1.
@@ -592,19 +592,19 @@ destruct (IHo H0 _x3); auto.
 Qed.
 
 Lemma choose_spec1 : forall s x, choose s = Some x -> InT x s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.choose_spec1".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.choose_spec1". Undo.  
 exact min_elt_spec1.
 Qed.
 
 Lemma choose_spec2 : forall s, choose s = None -> Empty s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.choose_spec2".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.choose_spec2". Undo.  
 exact min_elt_spec3.
 Qed.
 
 Lemma choose_spec3 : forall s s' x x' `{Ok s, Ok s'},
 choose s = Some x -> choose s' = Some x' ->
 Equal s s' -> X.eq x x'.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.choose_spec3".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.choose_spec3". Undo.  
 unfold choose, Equal; intros s s' x x' Hb Hb' Hx Hx' H.
 assert (~X.lt x x').
 apply min_elt_spec2 with s'; auto.
@@ -619,7 +619,7 @@ Qed.
 
 Lemma elements_spec1' : forall s acc x,
 InA X.eq x (elements_aux acc s) <-> InT x s \/ InA X.eq x acc.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec1'".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec1'". Undo.  
 induction s as [ | c l Hl x r Hr ]; simpl; auto.
 intuition.
 inversion H0.
@@ -630,7 +630,7 @@ intuition; inversion_clear H3; intuition.
 Qed.
 
 Lemma elements_spec1 : forall s x, InA X.eq x (elements s) <-> InT x s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec1".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec1". Undo.  
 intros; generalize (elements_spec1' s nil x); intuition.
 inversion_clear H0.
 Qed.
@@ -638,7 +638,7 @@ Qed.
 Lemma elements_spec2' : forall s acc `{Ok s}, sort X.lt acc ->
 (forall x y : elt, InA X.eq x acc -> InT y s -> X.lt y x) ->
 sort X.lt (elements_aux acc s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec2'".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec2'". Undo.  
 induction s as [ | c l Hl y r Hr]; simpl; intuition.
 inv.
 apply Hl; auto.
@@ -654,20 +654,20 @@ destruct (elements_spec1' r acc x); intuition eauto.
 Qed.
 
 Lemma elements_spec2 : forall s `(Ok s), sort X.lt (elements s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec2".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec2". Undo.  
 intros; unfold elements; apply elements_spec2'; auto.
 intros; inversion H0.
 Qed.
 Local Hint Resolve elements_spec2.
 
 Lemma elements_spec2w : forall s `(Ok s), NoDupA X.eq (elements s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec2w".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_spec2w". Undo.  
 intros. eapply SortA_NoDupA; eauto with *.
 Qed.
 
 Lemma elements_aux_cardinal :
 forall s acc, (length acc + cardinal s)%nat = length (elements_aux acc s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_aux_cardinal".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_aux_cardinal". Undo.  
 simple induction s; simpl; intuition.
 rewrite <- H.
 simpl.
@@ -676,7 +676,7 @@ now rewrite <- Nat.add_succ_r, Nat.add_assoc.
 Qed.
 
 Lemma elements_cardinal : forall s : tree, cardinal s = length (elements s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_cardinal".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_cardinal". Undo.  
 exact (fun s => elements_aux_cardinal s nil).
 Qed.
 
@@ -684,7 +684,7 @@ Definition cardinal_spec (s:tree)(Hs:Ok s) := elements_cardinal s.
 
 Lemma elements_app :
 forall s acc, elements_aux acc s = elements s ++ acc.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_app".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_app". Undo.  
 induction s; simpl; intros; auto.
 rewrite IHs1, IHs2.
 unfold elements; simpl.
@@ -693,14 +693,14 @@ Qed.
 
 Lemma elements_node c l x r :
 elements (Node c l x r) = elements l ++ x :: elements r.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_node".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_node". Undo.  
 unfold elements; simpl.
 now rewrite !elements_app, !app_nil_r.
 Qed.
 
 Lemma rev_elements_app :
 forall s acc, rev_elements_aux acc s = rev_elements s ++ acc.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.rev_elements_app".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.rev_elements_app". Undo.  
 induction s; simpl; intros; auto.
 rewrite IHs1, IHs2.
 unfold rev_elements; simpl.
@@ -709,13 +709,13 @@ Qed.
 
 Lemma rev_elements_node c l x r :
 rev_elements (Node c l x r) = rev_elements r ++ x :: rev_elements l.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.rev_elements_node".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.rev_elements_node". Undo.  
 unfold rev_elements; simpl.
 now rewrite !rev_elements_app, !app_nil_r.
 Qed.
 
 Lemma rev_elements_rev s : rev_elements s = rev (elements s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.rev_elements_rev".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.rev_elements_rev". Undo.  
 induction s as [|c l IHl x r IHr]; trivial.
 rewrite elements_node, rev_elements_node, IHl, IHr, rev_app_distr.
 simpl. now rewrite !app_ass.
@@ -729,7 +729,7 @@ Lemma sorted_app_inv l1 l2 :
 sort X.lt (l1++l2) ->
 sort X.lt l1 /\ sort X.lt l2 /\
 forall x1 x2, InA X.eq x1 l1 -> InA X.eq x2 l2 -> X.lt x1 x2.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.sorted_app_inv".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.sorted_app_inv". Undo.  
 induction l1 as [|a1 l1 IHl1].
 - simpl; repeat split; auto.
 intros. now rewrite InA_nil in *.
@@ -747,7 +747,7 @@ rewrite InA_app_iff; auto_tc.
 Qed.
 
 Lemma elements_sort_ok s : sort X.lt (elements s) -> Ok s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_sort_ok".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.elements_sort_ok". Undo.  
 induction s as [|c l IHl x r IHr].
 - auto.
 - rewrite elements_node.
@@ -766,7 +766,7 @@ Qed.
 
 Lemma for_all_spec s f : Proper (X.eq==>eq) f ->
 (for_all f s = true <-> For_all (fun x => f x = true) s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.for_all_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.for_all_spec". Undo.  
 intros Hf; unfold For_all.
 induction s as [|i l IHl x r IHr]; simpl; auto.
 - split; intros; inv; auto.
@@ -776,7 +776,7 @@ Qed.
 
 Lemma exists_spec s f : Proper (X.eq==>eq) f ->
 (exists_ f s = true <-> Exists (fun x => f x = true) s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.exists_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.exists_spec". Undo.  
 intros Hf; unfold Exists.
 induction s as [|i l IHl x r IHr]; simpl; auto.
 - split.
@@ -794,7 +794,7 @@ Qed.
 
 Lemma fold_spec' {A} (f : elt -> A -> A) (s : tree) (i : A) (acc : list elt) :
 fold_left (flip f) (elements_aux acc s) i = fold_left (flip f) acc (fold f s i).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.fold_spec'".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.fold_spec'". Undo.  
 revert i acc.
 induction s as [|c l IHl x r IHr]; simpl; intros; auto.
 rewrite IHl.
@@ -804,7 +804,7 @@ Qed.
 
 Lemma fold_spec (s:tree) {A} (i : A) (f : elt -> A -> A) :
 fold f s i = fold_left (flip f) (elements s) i.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.fold_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.fold_spec". Undo.  
 revert i. unfold elements.
 induction s as [|c l IHl x r IHr]; simpl; intros; auto.
 rewrite fold_spec'.
@@ -819,7 +819,7 @@ Lemma subsetl_spec : forall subset_l1 l1 x1 c1 s2
 `{Ok (Node c1 l1 x1 Leaf), Ok s2},
 (forall s `{Ok s}, (subset_l1 s = true <-> Subset l1 s)) ->
 (subsetl subset_l1 x1 s2 = true <-> Subset (Node c1 l1 x1 Leaf) s2 ).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.subsetl_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.subsetl_spec". Undo.  
 induction s2 as [|c2 l2 IHl2 x2 r2 IHr2]; simpl; intros.
 unfold Subset; intuition; try discriminate.
 assert (H': InT x1 Leaf) by auto; inversion H'.
@@ -850,7 +850,7 @@ Lemma subsetr_spec : forall subset_r1 r1 x1 c1 s2,
 bst (Node c1 Leaf x1 r1) -> bst s2 ->
 (forall s, bst s -> (subset_r1 s = true <-> Subset r1 s)) ->
 (subsetr subset_r1 x1 s2 = true <-> Subset (Node c1 Leaf x1 r1) s2).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.subsetr_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.subsetr_spec". Undo.  
 induction s2 as [|c2 l2 IHl2 x2 r2 IHr2]; simpl; intros.
 unfold Subset; intuition; try discriminate.
 assert (H': InT x1 Leaf) by auto; inversion H'.
@@ -878,7 +878,7 @@ Qed.
 
 Lemma subset_spec : forall s1 s2 `{Ok s1, Ok s2},
 (subset s1 s2 = true <-> Subset s1 s2).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.subset_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.subset_spec". Undo.  
 induction s1 as [|c1 l1 IHl1 x1 r1 IHr1]; simpl; intros.
 unfold Subset; intuition_in.
 destruct s2 as [|c2 l2 x2 r2]; simpl; intros.
@@ -918,10 +918,10 @@ Module L := MSetInterface.MakeListOrdering X.
 
 Definition eq := Equal.
 Instance eq_equiv : Equivalence eq.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.eq_equiv".   firstorder. Qed.
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.eq_equiv". Undo.   firstorder. Qed.
 
 Lemma eq_Leq : forall s s', eq s s' <-> L.eq (elements s) (elements s').
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.eq_Leq".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.eq_Leq". Undo.  
 unfold eq, Equal, L.eq; intros.
 setoid_rewrite elements_spec1.
 firstorder.
@@ -934,7 +934,7 @@ exists s1' s2', Ok s1' /\ Ok s2' /\ eq s1 s1' /\ eq s2 s2'
 Declare Equivalent Keys L.eq equivlistA.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_strorder".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_strorder". Undo.  
 split.
 intros s (s1 & s2 & B1 & B2 & E1 & E2 & L).
 assert (eqlistA X.eq (elements s1) (elements s2)).
@@ -953,7 +953,7 @@ rewrite H; auto.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_compat".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.lt_compat". Undo.  
 intros s1 s2 E12 s3 s4 E34. split.
 intros (s1' & s3' & B1 & B3 & E1 & E3 & LT).
 exists s1', s3'; do 2 (split; trivial).
@@ -978,13 +978,13 @@ end.
 Lemma flatten_e_elements :
 forall l x r c e,
 elements l ++ flatten_e (More x r e) = elements (Node c l x r) ++ flatten_e e.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.flatten_e_elements".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.flatten_e_elements". Undo.  
 intros. now rewrite elements_node, app_ass.
 Qed.
 
 Lemma cons_1 : forall s e,
 flatten_e (cons s e) = elements s ++ flatten_e e.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.cons_1".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.cons_1". Undo.  
 induction s; simpl; auto; intros.
 rewrite IHs1; apply flatten_e_elements.
 Qed.
@@ -997,7 +997,7 @@ Local Hint Unfold Cmp flip.
 
 Lemma compare_end_Cmp :
 forall e2, Cmp (compare_end e2) nil (flatten_e e2).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_end_Cmp".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_end_Cmp". Undo.  
 destruct e2; simpl; constructor; auto. reflexivity.
 Qed.
 
@@ -1005,14 +1005,14 @@ Lemma compare_more_Cmp : forall x1 cont x2 r2 e2 l,
 Cmp (cont (cons r2 e2)) l (elements r2 ++ flatten_e e2) ->
 Cmp (compare_more x1 cont (More x2 r2 e2)) (x1::l)
 (flatten_e (More x2 r2 e2)).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_more_Cmp".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_more_Cmp". Undo.  
 simpl; intros; elim_compare x1 x2; simpl; red; auto.
 Qed.
 
 Lemma compare_cont_Cmp : forall s1 cont e2 l,
 (forall e, Cmp (cont e) l (flatten_e e)) ->
 Cmp (compare_cont s1 cont e2) (elements s1 ++ l) (flatten_e e2).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_cont_Cmp".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_cont_Cmp". Undo.  
 induction s1 as [|c1 l1 Hl1 x1 r1 Hr1]; intros; auto.
 rewrite elements_node, app_ass; simpl.
 apply Hl1; auto. clear e2. intros [|x2 r2 e2].
@@ -1023,7 +1023,7 @@ Qed.
 
 Lemma compare_Cmp : forall s1 s2,
 Cmp (compare s1 s2) (elements s1) (elements s2).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_Cmp".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_Cmp". Undo.  
 intros; unfold compare.
 rewrite <- (app_nil_r (elements s1)).
 replace (elements s2) with (flatten_e (cons s2 End)) by
@@ -1035,7 +1035,7 @@ Qed.
 
 Lemma compare_spec : forall s1 s2 `{Ok s1, Ok s2},
 CompSpec eq lt s1 s2 (compare s1 s2).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.compare_spec". Undo.  
 intros.
 destruct (compare_Cmp s1 s2); constructor.
 rewrite eq_Leq; auto.
@@ -1048,7 +1048,7 @@ Qed.
 
 Lemma equal_spec : forall s1 s2 `{Ok s1, Ok s2},
 equal s1 s2 = true <-> eq s1 s2.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.equal_spec".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.equal_spec". Undo.  
 unfold equal; intros s1 s2 B1 B2.
 destruct (@compare_spec s1 s2 B1 B2) as [H|H|H];
 split; intros H'; auto; try discriminate.
@@ -1059,7 +1059,7 @@ Qed.
 
 
 Lemma mindepth_maxdepth s : mindepth s <= maxdepth s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mindepth_maxdepth".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mindepth_maxdepth". Undo.  
 induction s; simpl; auto.
 rewrite <- Nat.succ_le_mono.
 transitivity (mindepth s1). apply Nat.le_min_l.
@@ -1067,7 +1067,7 @@ transitivity (maxdepth s1). trivial. apply Nat.le_max_l.
 Qed.
 
 Lemma maxdepth_cardinal s : cardinal s < 2^(maxdepth s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.maxdepth_cardinal".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.maxdepth_cardinal". Undo.  
 unfold Peano.lt.
 induction s as [|c l IHl x r IHr].
 - auto.
@@ -1079,7 +1079,7 @@ try apply IHl; try apply IHr; apply Nat.pow_le_mono; auto.
 Qed.
 
 Lemma mindepth_cardinal s : 2^(mindepth s) <= S (cardinal s).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mindepth_cardinal".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mindepth_cardinal". Undo.  
 unfold Peano.lt.
 induction s as [|c l IHl x r IHr].
 - auto.
@@ -1092,14 +1092,14 @@ Qed.
 
 Lemma maxdepth_log_cardinal s : s <> Leaf ->
 Nat.log2 (cardinal s) < maxdepth s.
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.maxdepth_log_cardinal".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.maxdepth_log_cardinal". Undo.  
 intros H.
 apply Nat.log2_lt_pow2. destruct s; simpl; intuition.
 apply maxdepth_cardinal.
 Qed.
 
 Lemma mindepth_log_cardinal s : mindepth s <= Nat.log2 (S (cardinal s)).
-Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mindepth_log_cardinal".  
+Proof. try hammer_hook "MSetGenTree" "MSetGenTree.Props.mindepth_log_cardinal". Undo.  
 apply Nat.log2_le_pow2. auto with arith.
 apply mindepth_cardinal.
 Qed.

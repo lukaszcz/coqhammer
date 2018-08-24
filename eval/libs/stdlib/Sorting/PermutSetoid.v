@@ -40,7 +40,7 @@ end.
 Lemma list_contents_app :
 forall l m:list A,
 meq (list_contents (l ++ m)) (munion (list_contents l) (list_contents m)).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.list_contents_app".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.list_contents_app". Undo.  
 simple induction l; simpl; auto with datatypes.
 intros.
 apply meq_trans with
@@ -53,19 +53,19 @@ Qed.
 Definition permutation (l m:list A) := meq (list_contents l) (list_contents m).
 
 Lemma permut_refl : forall l:list A, permutation l l.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_refl".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_refl". Undo.  
 unfold permutation; auto with datatypes.
 Qed.
 
 Lemma permut_sym :
 forall l1 l2 : list A, permutation l1 l2 -> permutation l2 l1.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_sym".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_sym". Undo.  
 unfold permutation, meq; intros; symmetry; trivial.
 Qed.
 
 Lemma permut_trans :
 forall l m n:list A, permutation l m -> permutation m n -> permutation l n.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_trans".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_trans". Undo.  
 unfold permutation; intros.
 apply meq_trans with (list_contents m); auto with datatypes.
 Qed.
@@ -73,7 +73,7 @@ Qed.
 Lemma permut_cons_eq :
 forall l m:list A,
 permutation l m -> forall a a', eqA a a' -> permutation (a :: l) (a' :: m).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_cons_eq".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_cons_eq". Undo.  
 unfold permutation; simpl; intros.
 apply meq_trans with (munion (singletonBag a') (list_contents l)).
 apply meq_left, meq_singleton; auto.
@@ -83,14 +83,14 @@ Qed.
 Lemma permut_cons :
 forall l m:list A,
 permutation l m -> forall a:A, permutation (a :: l) (a :: m).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_cons".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_cons". Undo.  
 unfold permutation; simpl; auto with datatypes.
 Qed.
 
 Lemma permut_app :
 forall l l' m m':list A,
 permutation l l' -> permutation m m' -> permutation (l ++ m) (l' ++ m').
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_app".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_app". Undo.  
 unfold permutation; intros.
 apply meq_trans with (munion (list_contents l) (list_contents m));
 auto using permut_cons, list_contents_app with datatypes.
@@ -104,7 +104,7 @@ Lemma permut_add_inside_eq :
 forall a a' l1 l2 l3 l4, eqA a a' ->
 permutation (l1 ++ l2) (l3 ++ l4) ->
 permutation (l1 ++ a :: l2) (l3 ++ a' :: l4).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_inside_eq".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_inside_eq". Undo.  
 unfold permutation, meq in *; intros.
 specialize H0 with a0.
 repeat rewrite list_contents_app in *; simpl in *.
@@ -117,7 +117,7 @@ Lemma permut_add_inside :
 forall a l1 l2 l3 l4,
 permutation (l1 ++ l2) (l3 ++ l4) ->
 permutation (l1 ++ a :: l2) (l3 ++ a :: l4).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_inside".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_inside". Undo.  
 unfold permutation, meq in *; intros.
 generalize (H a0); clear H.
 do 4 rewrite list_contents_app.
@@ -130,7 +130,7 @@ Lemma permut_add_cons_inside_eq :
 forall a a' l l1 l2, eqA a a' ->
 permutation l (l1 ++ l2) ->
 permutation (a :: l) (l1 ++ a' :: l2).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_cons_inside_eq".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_cons_inside_eq". Undo.  
 intros;
 replace (a :: l) with ([] ++ a :: l); trivial;
 apply permut_add_inside_eq; trivial.
@@ -140,7 +140,7 @@ Lemma permut_add_cons_inside :
 forall a l l1 l2,
 permutation l (l1 ++ l2) ->
 permutation (a :: l) (l1 ++ a :: l2).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_cons_inside".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_add_cons_inside". Undo.  
 intros;
 replace (a :: l) with ([] ++ a :: l); trivial;
 apply permut_add_inside; trivial.
@@ -148,13 +148,13 @@ Qed.
 
 Lemma permut_middle :
 forall (l m:list A) (a:A), permutation (a :: l ++ m) (l ++ a :: m).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_middle".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_middle". Undo.  
 intros; apply permut_add_cons_inside; auto using permut_sym, permut_refl.
 Qed.
 
 Lemma permut_sym_app :
 forall l1 l2, permutation (l1 ++ l2) (l2 ++ l1).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_sym_app".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_sym_app". Undo.  
 intros l1 l2;
 unfold permutation, meq;
 intro a; do 2 rewrite list_contents_app; simpl;
@@ -163,7 +163,7 @@ Qed.
 
 Lemma permut_rev :
 forall l, permutation l (rev l).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_rev".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_rev". Undo.  
 induction l.
 simpl; trivial using permut_refl.
 simpl.
@@ -174,14 +174,14 @@ Qed.
 
 Lemma permut_conv_inv :
 forall e l1 l2, permutation (e :: l1) (e :: l2) -> permutation l1 l2.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_conv_inv".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_conv_inv". Undo.  
 intros e l1 l2; unfold permutation, meq; simpl; intros H a;
 generalize (H a); apply plus_reg_l.
 Qed.
 
 Lemma permut_app_inv1 :
 forall l l1 l2, permutation (l1 ++ l) (l2 ++ l) -> permutation l1 l2.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_app_inv1".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_app_inv1". Undo.  
 intros l l1 l2; unfold permutation, meq; simpl;
 intros H a; generalize (H a); clear H.
 do 2 rewrite list_contents_app.
@@ -195,14 +195,14 @@ Qed.
 
 Fact if_eqA_then : forall a a' (B:Type)(b b':B),
 eqA a a' -> (if eqA_dec a a' then b else b') = b.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_then".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_then". Undo.  
 intros. destruct eqA_dec as [_|NEQ]; auto.
 contradict NEQ; auto.
 Qed.
 
 Lemma permut_app_inv2 :
 forall l l1 l2, permutation (l ++ l1) (l ++ l2) -> permutation l1 l2.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_app_inv2".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_app_inv2". Undo.  
 intros l l1 l2; unfold permutation, meq; simpl;
 intros H a; generalize (H a); clear H.
 do 2 rewrite list_contents_app.
@@ -214,7 +214,7 @@ Qed.
 Lemma permut_remove_hd_eq :
 forall l l1 l2 a b, eqA a b ->
 permutation (a :: l) (l1 ++ b :: l2) -> permutation l (l1 ++ l2).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_remove_hd_eq".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_remove_hd_eq". Undo.  
 unfold permutation, meq; simpl; intros l l1 l2 a b Heq H a0.
 specialize H with a0.
 rewrite list_contents_app in *; simpl in *.
@@ -229,19 +229,19 @@ Qed.
 Lemma permut_remove_hd :
 forall l l1 l2 a,
 permutation (a :: l) (l1 ++ a :: l2) -> permutation l (l1 ++ l2).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_remove_hd".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_remove_hd". Undo.  
 eauto using permut_remove_hd_eq, Equivalence_Reflexive.
 Qed.
 
 Fact if_eqA_else : forall a a' (B:Type)(b b':B),
 ~eqA a a' -> (if eqA_dec a a' then b else b') = b'.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_else".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_else". Undo.  
 intros. decide (eqA_dec a a') with H; auto.
 Qed.
 
 Fact if_eqA_refl : forall a (B:Type)(b b':B),
 (if eqA_dec a a then b else b') = b.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_refl".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_refl". Undo.  
 intros; apply (decide_left (eqA_dec a a)); auto with *.
 Qed.
 
@@ -249,7 +249,7 @@ Qed.
 
 Global Instance if_eqA (B:Type)(b b':B) :
 Proper (eqA==>eqA==>@eq _) (fun x y => if eqA_dec x y then b else b').
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA". Undo.  
 intros x x' Hxx' y y' Hyy'.
 intros; destruct (eqA_dec x y) as [H|H];
 destruct (eqA_dec x' y') as [H'|H']; auto.
@@ -260,7 +260,7 @@ Qed.
 Fact if_eqA_rewrite_l : forall a1 a1' a2 (B:Type)(b b':B),
 eqA a1 a1' -> (if eqA_dec a1 a2 then b else b') =
 (if eqA_dec a1' a2 then b else b').
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_rewrite_l".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_rewrite_l". Undo.  
 intros; destruct (eqA_dec a1 a2) as [A1|A1];
 destruct (eqA_dec a1' a2) as [A1'|A1']; auto.
 contradict A1'; transitivity a1; eauto with *.
@@ -270,7 +270,7 @@ Qed.
 Fact if_eqA_rewrite_r : forall a1 a2 a2' (B:Type)(b b':B),
 eqA a2 a2' -> (if eqA_dec a1 a2 then b else b') =
 (if eqA_dec a1 a2' then b else b').
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_rewrite_r".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.if_eqA_rewrite_r". Undo.  
 intros; destruct (eqA_dec a1 a2) as [A2|A2];
 destruct (eqA_dec a1 a2') as [A2'|A2']; auto.
 contradict A2'; transitivity a2; eauto with *.
@@ -280,7 +280,7 @@ Qed.
 
 Global Instance multiplicity_eqA (l:list A) :
 Proper (eqA==>@eq _) (multiplicity (list_contents l)).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_eqA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_eqA". Undo.  
 intros x x' Hxx'.
 induction l as [|y l Hl]; simpl; auto.
 rewrite (@if_eqA_rewrite_r y x x'); auto.
@@ -288,7 +288,7 @@ Qed.
 
 Lemma multiplicity_InA :
 forall l a, InA eqA a l <-> 0 < multiplicity (list_contents l) a.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_InA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_InA". Undo.  
 induction l.
 simpl.
 split; inversion 1.
@@ -301,7 +301,7 @@ Qed.
 
 Lemma multiplicity_InA_O :
 forall l a, ~ InA eqA a l -> multiplicity (list_contents l) a = 0.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_InA_O".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_InA_O". Undo.  
 intros l a; rewrite multiplicity_InA;
 destruct (multiplicity (list_contents l) a); auto with arith.
 destruct 1; auto with arith.
@@ -309,13 +309,13 @@ Qed.
 
 Lemma multiplicity_InA_S :
 forall l a, InA eqA a l -> multiplicity (list_contents l) a >= 1.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_InA_S".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_InA_S". Undo.  
 intros l a; rewrite multiplicity_InA; auto with arith.
 Qed.
 
 Lemma multiplicity_NoDupA : forall l,
 NoDupA eqA l <-> (forall a, multiplicity (list_contents l) a <= 1).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_NoDupA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.multiplicity_NoDupA". Undo.  
 induction l.
 simpl.
 split; auto with arith.
@@ -337,7 +337,7 @@ Qed.
 
 Lemma permut_InA_InA :
 forall l1 l2 e, permutation l1 l2 -> InA eqA e l1 -> InA eqA e l2.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_InA_InA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_InA_InA". Undo.  
 intros l1 l2 e.
 do 2 rewrite multiplicity_InA.
 unfold permutation, meq.
@@ -346,14 +346,14 @@ Qed.
 
 Lemma permut_cons_InA :
 forall l1 l2 e, permutation (e :: l1) l2 -> InA eqA e l2.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_cons_InA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_cons_InA". Undo.  
 intros; apply (permut_InA_InA (e:=e) H); auto with *.
 Qed.
 
 
 Lemma permut_nil :
 forall l, permutation l [] -> l = [].
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_nil".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_nil". Undo.  
 intro l; destruct l as [ | e l ]; trivial.
 assert (InA eqA e (e::l)) by (auto with *).
 intro Abs; generalize (permut_InA_InA Abs H).
@@ -364,7 +364,7 @@ Qed.
 
 Lemma permut_length_1:
 forall a b, permutation [a] [b] -> eqA a b.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_length_1".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_length_1". Undo.  
 intros a b; unfold permutation, meq.
 intro P; specialize (P b); simpl in *.
 rewrite if_eqA_refl in *.
@@ -374,7 +374,7 @@ Qed.
 Lemma permut_length_2 :
 forall a1 b1 a2 b2, permutation [a1; b1] [a2; b2] ->
 (eqA a1 a2) /\ (eqA b1 b2) \/ (eqA a1 b2) /\ (eqA a2 b1).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_length_2".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_length_2". Undo.  
 intros a1 b1 a2 b2 P.
 assert (H:=permut_cons_InA P).
 inversion_clear H.
@@ -395,7 +395,7 @@ Qed.
 
 Lemma permut_length :
 forall l1 l2, permutation l1 l2 -> length l1 = length l2.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_length".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_length". Undo.  
 induction l1; intros l2 H.
 rewrite (permut_nil (permut_sym H)); auto.
 assert (H0:=permut_cons_InA H).
@@ -415,7 +415,7 @@ Qed.
 Lemma NoDupA_equivlistA_permut :
 forall l l', NoDupA eqA l -> NoDupA eqA l' ->
 equivlistA eqA l l' -> permutation l l'.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.NoDupA_equivlistA_permut".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.NoDupA_equivlistA_permut". Undo.  
 intros.
 red; unfold meq; intros.
 rewrite multiplicity_NoDupA in H, H0.
@@ -445,7 +445,7 @@ forall f,
 (Proper (eqA==>eqB) f) ->
 forall l1 l2, permutation _ eqA_dec l1 l2 ->
 permutation _ eqB_dec (map f l1) (map f l2).
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_map".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_map". Undo.  
 intros f; induction l1.
 intros l2 P; rewrite (permut_nil eqA_equiv (permut_sym P)); apply permut_refl.
 intros l2 P.
@@ -486,7 +486,7 @@ Hypothesis eqA_equiv : Equivalence eqA.
 
 Lemma Permutation_impl_permutation : forall l l',
 Permutation l l' -> permutation _ eqA_dec l l'.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.Permutation_impl_permutation".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.Permutation_impl_permutation". Undo.  
 induction 1.
 apply permut_refl.
 apply permut_cons; auto using Equivalence_Reflexive.
@@ -497,7 +497,7 @@ apply permut_trans with l'; trivial.
 Qed.
 
 Lemma permut_eqA : forall l l', Forall2 eqA l l' -> permutation _ eqA_dec l l'.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_eqA".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permut_eqA". Undo.  
 induction 1.
 apply permut_refl.
 apply permut_cons_eq; trivial.
@@ -506,7 +506,7 @@ Qed.
 Lemma permutation_Permutation : forall l l',
 permutation _ eqA_dec l l' <->
 exists l'', Permutation l l'' /\ Forall2 eqA l'' l'.
-Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permutation_Permutation".  
+Proof. try hammer_hook "PermutSetoid" "PermutSetoid.permutation_Permutation". Undo.  
 split; intro H.
 
 induction l in l', H |- *.

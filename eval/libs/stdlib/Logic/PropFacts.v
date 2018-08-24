@@ -17,7 +17,7 @@ Theorem injection_is_involution_in_Prop
 (inj : forall A B, (f A <-> f B) -> (A <-> B))
 (ext : forall A B, A <-> B -> f A <-> f B)
 : forall A, f (f A) <-> A.
-Proof. try hammer_hook "PropFacts" "PropFacts.injection_is_involution_in_Prop".  
+Proof. try hammer_hook "PropFacts" "PropFacts.injection_is_involution_in_Prop". Undo.  
 intros.
 enough (f (f (f A)) <-> f A) by (apply inj; assumption).
 split; intro H.

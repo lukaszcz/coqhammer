@@ -24,7 +24,7 @@ Notation iter := @Z.iter (compat "8.3").
 
 Lemma iter_nat_of_Z : forall n A f x, 0 <= n ->
 Z.iter n f x = iter_nat (Z.abs_nat n) A f x.
-Proof. try hammer_hook "Zmisc" "Zmisc.iter_nat_of_Z".  
+Proof. try hammer_hook "Zmisc" "Zmisc.iter_nat_of_Z". Undo.  
 intros n A f x; case n; auto.
 intros p _; unfold Z.iter, Z.abs_nat; apply Pos2Nat.inj_iter.
 intros p abs; case abs; trivial.

@@ -21,7 +21,7 @@ match Rcase_abs x with
 end.
 
 Lemma sqrt_pos : forall x : R, 0 <= sqrt x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_pos".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_pos". Undo.  
 intros x.
 unfold sqrt.
 destruct (Rcase_abs x) as [H|H].
@@ -30,13 +30,13 @@ apply Rsqrt_positivity.
 Qed.
 
 Lemma sqrt_positivity : forall x:R, 0 <= x -> 0 <= sqrt x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_positivity".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_positivity". Undo.  
 intros x _.
 apply sqrt_pos.
 Qed.
 
 Lemma sqrt_sqrt : forall x:R, 0 <= x -> sqrt x * sqrt x = x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_sqrt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_sqrt". Undo.  
 intros.
 unfold sqrt.
 case (Rcase_abs x) as [Hlt|Hge].
@@ -45,12 +45,12 @@ rewrite Rsqrt_Rsqrt; reflexivity.
 Qed.
 
 Lemma sqrt_0 : sqrt 0 = 0.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_0". Undo.  
 apply Rsqr_eq_0; unfold Rsqr; apply sqrt_sqrt; right; reflexivity.
 Qed.
 
 Lemma sqrt_1 : sqrt 1 = 1.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_1".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_1". Undo.  
 apply (Rsqr_inj (sqrt 1) 1);
 [ apply sqrt_positivity; left
 | left
@@ -59,19 +59,19 @@ apply Rlt_0_1.
 Qed.
 
 Lemma sqrt_eq_0 : forall x:R, 0 <= x -> sqrt x = 0 -> x = 0.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_eq_0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_eq_0". Undo.  
 intros; cut (Rsqr (sqrt x) = 0).
 intro; unfold Rsqr in H1; rewrite sqrt_sqrt in H1; assumption.
 rewrite H0; apply Rsqr_0.
 Qed.
 
 Lemma sqrt_lem_0 : forall x y:R, 0 <= x -> 0 <= y -> sqrt x = y -> y * y = x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lem_0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lem_0". Undo.  
 intros; rewrite <- H1; apply (sqrt_sqrt x H).
 Qed.
 
 Lemma sqrt_lem_1 : forall x y:R, 0 <= x -> 0 <= y -> y * y = x -> sqrt x = y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lem_1".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lem_1". Undo.  
 intros; apply Rsqr_inj;
 [ apply (sqrt_positivity x H)
 | assumption
@@ -79,12 +79,12 @@ intros; apply Rsqr_inj;
 Qed.
 
 Lemma sqrt_def : forall x:R, 0 <= x -> sqrt x * sqrt x = x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_def".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_def". Undo.  
 intros; apply (sqrt_sqrt x H).
 Qed.
 
 Lemma sqrt_square : forall x:R, 0 <= x -> sqrt (x * x) = x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_square".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_square". Undo.  
 intros;
 apply
 (Rsqr_inj (sqrt (Rsqr x)) x (sqrt_positivity (Rsqr x) (Rle_0_sqr x)) H);
@@ -92,7 +92,7 @@ unfold Rsqr; apply (sqrt_sqrt (Rsqr x) (Rle_0_sqr x)).
 Qed.
 
 Lemma sqrt_Rsqr : forall x:R, 0 <= x -> sqrt (Rsqr x) = x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_Rsqr".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_Rsqr". Undo.  
 intros; unfold Rsqr; apply sqrt_square; assumption.
 Qed.
 
@@ -101,18 +101,18 @@ intros; simpl; rewrite Rmult_1_r, sqrt_square; auto.
 Qed.
 
 Lemma sqrt_Rsqr_abs : forall x:R, sqrt (Rsqr x) = Rabs x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_Rsqr_abs".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_Rsqr_abs". Undo.  
 intro x; rewrite Rsqr_abs; apply sqrt_Rsqr; apply Rabs_pos.
 Qed.
 
 Lemma Rsqr_sqrt : forall x:R, 0 <= x -> Rsqr (sqrt x) = x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.Rsqr_sqrt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.Rsqr_sqrt". Undo.  
 intros x H1; unfold Rsqr; apply (sqrt_sqrt x H1).
 Qed.
 
 Lemma sqrt_mult_alt :
 forall x y : R, 0 <= x -> sqrt (x * y) = sqrt x * sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_mult_alt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_mult_alt". Undo.  
 intros x y Hx.
 unfold sqrt at 3.
 destruct (Rcase_abs y) as [Hy|Hy].
@@ -142,13 +142,13 @@ Qed.
 
 Lemma sqrt_mult :
 forall x y:R, 0 <= x -> 0 <= y -> sqrt (x * y) = sqrt x * sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_mult".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_mult". Undo.  
 intros x y Hx _.
 now apply sqrt_mult_alt.
 Qed.
 
 Lemma sqrt_lt_R0 : forall x:R, 0 < x -> 0 < sqrt x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_R0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_R0". Undo.  
 intros x H1; apply Rsqr_incrst_0;
 [ rewrite Rsqr_0; rewrite Rsqr_sqrt; [ assumption | left; assumption ]
 | right; reflexivity
@@ -157,7 +157,7 @@ Qed.
 
 Lemma sqrt_div_alt :
 forall x y : R, 0 < y -> sqrt (x / y) = sqrt x / sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_div_alt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_div_alt". Undo.  
 intros x y Hy.
 unfold sqrt at 2.
 destruct (Rcase_abs x) as [Hx|Hx].
@@ -190,14 +190,14 @@ Qed.
 
 Lemma sqrt_div :
 forall x y:R, 0 <= x -> 0 < y -> sqrt (x / y) = sqrt x / sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_div".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_div". Undo.  
 intros x y _ H.
 now apply sqrt_div_alt.
 Qed.
 
 Lemma sqrt_lt_0_alt :
 forall x y : R, sqrt x < sqrt y -> x < y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_0_alt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_0_alt". Undo.  
 intros x y.
 unfold sqrt at 2.
 destruct (Rcase_abs y) as [Hy|Hy].
@@ -217,14 +217,14 @@ now rewrite 2!Rsqrt_Rsqrt in Hxy.
 Qed.
 
 Lemma sqrt_lt_0 : forall x y:R, 0 <= x -> 0 <= y -> sqrt x < sqrt y -> x < y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_0". Undo.  
 intros x y _ _.
 apply sqrt_lt_0_alt.
 Qed.
 
 Lemma sqrt_lt_1_alt :
 forall x y : R, 0 <= x < y -> sqrt x < sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_1_alt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_1_alt". Undo.  
 intros x y (Hx, Hxy).
 apply Rsqr_incrst_0 ; try apply sqrt_pos.
 rewrite 2!Rsqr_sqrt.
@@ -235,7 +235,7 @@ exact Hx.
 Qed.
 
 Lemma sqrt_lt_1 : forall x y:R, 0 <= x -> 0 <= y -> x < y -> sqrt x < sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_1".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_lt_1". Undo.  
 intros x y Hx _ Hxy.
 apply sqrt_lt_1_alt.
 now split.
@@ -243,7 +243,7 @@ Qed.
 
 Lemma sqrt_le_0 :
 forall x y:R, 0 <= x -> 0 <= y -> sqrt x <= sqrt y -> x <= y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_le_0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_le_0". Undo.  
 intros x y H1 H2 H3;
 generalize
 (Rsqr_incr_1 (sqrt x) (sqrt y) H3 (sqrt_positivity x H1)
@@ -253,7 +253,7 @@ Qed.
 
 Lemma sqrt_le_1_alt :
 forall x y : R, x <= y -> sqrt x <= sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_le_1_alt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_le_1_alt". Undo.  
 intros x y [Hxy|Hxy].
 destruct (Rle_or_lt 0 x) as [Hx|Hx].
 apply Rlt_le.
@@ -269,13 +269,13 @@ Qed.
 
 Lemma sqrt_le_1 :
 forall x y:R, 0 <= x -> 0 <= y -> x <= y -> sqrt x <= sqrt y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_le_1".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_le_1". Undo.  
 intros x y _ _ Hxy.
 now apply sqrt_le_1_alt.
 Qed.
 
 Lemma sqrt_inj : forall x y:R, 0 <= x -> 0 <= y -> sqrt x = sqrt y -> x = y.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_inj".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_inj". Undo.  
 intros; cut (Rsqr (sqrt x) = Rsqr (sqrt y)).
 intro; rewrite (Rsqr_sqrt x H) in H2; rewrite (Rsqr_sqrt y H0) in H2;
 assumption.
@@ -284,7 +284,7 @@ Qed.
 
 Lemma sqrt_less_alt :
 forall x : R, 1 < x -> sqrt x < x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_less_alt".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_less_alt". Undo.  
 intros x Hx.
 assert (Hx1 := Rle_lt_trans _ _ _ Rle_0_1 Hx).
 assert (Hx2 := Rlt_le _ _ Hx1).
@@ -296,13 +296,13 @@ apply sqrt_pos.
 Qed.
 
 Lemma sqrt_less : forall x:R, 0 <= x -> 1 < x -> sqrt x < x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_less".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_less". Undo.  
 intros x _.
 apply sqrt_less_alt.
 Qed.
 
 Lemma sqrt_more : forall x:R, 0 < x -> x < 1 -> x < sqrt x.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_more".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_more". Undo.  
 intros x H1 H2;
 generalize (sqrt_lt_1 x 1 (Rlt_le 0 x H1) (Rlt_le 0 1 Rlt_0_1) H2);
 intro H3; rewrite sqrt_1 in H3; generalize (Rmult_ne (sqrt x));
@@ -314,7 +314,7 @@ Qed.
 Lemma sqrt_cauchy :
 forall a b c d:R,
 a * c + b * d <= sqrt (Rsqr a + Rsqr b) * sqrt (Rsqr c + Rsqr d).
-Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_cauchy".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.sqrt_cauchy". Undo.  
 intros a b c d; apply Rsqr_incr_0_var;
 [ rewrite Rsqr_mult; repeat rewrite Rsqr_sqrt; unfold Rsqr;
 [ replace ((a * c + b * d) * (a * c + b * d)) with
@@ -359,7 +359,7 @@ Lemma Rsqr_sol_eq_0_1 :
 forall (a:nonzeroreal) (b c x:R),
 Delta_is_pos a b c ->
 x = sol_x1 a b c \/ x = sol_x2 a b c -> a * Rsqr x + b * x + c = 0.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.Rsqr_sol_eq_0_1".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.Rsqr_sol_eq_0_1". Undo.  
 intros; elim H0; intro.
 rewrite H1.
 unfold sol_x1, Delta, Rsqr.
@@ -383,7 +383,7 @@ Lemma Rsqr_sol_eq_0_0 :
 forall (a:nonzeroreal) (b c x:R),
 Delta_is_pos a b c ->
 a * Rsqr x + b * x + c = 0 -> x = sol_x1 a b c \/ x = sol_x2 a b c.
-Proof. try hammer_hook "R_sqrt" "R_sqrt.Rsqr_sol_eq_0_0".  
+Proof. try hammer_hook "R_sqrt" "R_sqrt.Rsqr_sol_eq_0_0". Undo.  
 intros; rewrite (canonical_Rsqr a b c x) in H0; rewrite Rplus_comm in H0;
 generalize
 (Rplus_opp_r_uniq ((4 * a * c - Rsqr b) / (4 * a))

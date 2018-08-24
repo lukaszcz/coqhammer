@@ -33,10 +33,10 @@ end.
 Definition floor (a:positive) := Zpos (floor_pos a).
 
 Lemma floor_gt0 : forall p:positive, floor p > 0.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.floor_gt0".   reflexivity. Qed.
+Proof. try hammer_hook "Zcomplements" "Zcomplements.floor_gt0". Undo.   reflexivity. Qed.
 
 Lemma floor_ok : forall p:positive, floor p <= Zpos p < 2 * floor p.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.floor_ok".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.floor_ok". Undo.  
 unfold floor. induction p; simpl.
 - rewrite !Pos2Z.inj_xI, (Pos2Z.inj_xO (xO _)), Pos2Z.inj_xO. omega.
 - rewrite (Pos2Z.inj_xO (xO _)), (Pos2Z.inj_xO p), Pos2Z.inj_xO. omega.
@@ -50,7 +50,7 @@ Theorem Z_lt_abs_rec :
 forall P:Z -> Set,
 (forall n:Z, (forall m:Z, Z.abs m < Z.abs n -> P m) -> P n) ->
 forall n:Z, P n.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Z_lt_abs_rec".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Z_lt_abs_rec". Undo.  
 intros P HP p.
 set (Q := fun z => 0 <= z -> P z * P (- z)).
 enough (H:Q (Z.abs p)) by
@@ -70,7 +70,7 @@ Theorem Z_lt_abs_induction :
 forall P:Z -> Prop,
 (forall n:Z, (forall m:Z, Z.abs m < Z.abs n -> P m) -> P n) ->
 forall n:Z, P n.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Z_lt_abs_induction".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Z_lt_abs_induction". Undo.  
 intros P HP p.
 set (Q := fun z => 0 <= z -> P z /\ P (- z)) in *.
 enough (Q (Z.abs p)) by
@@ -90,13 +90,13 @@ Qed.
 
 Lemma Zcase_sign :
 forall (n:Z) (P:Prop), (n = 0 -> P) -> (n > 0 -> P) -> (n < 0 -> P) -> P.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Zcase_sign".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Zcase_sign". Undo.  
 intros x P Hzero Hpos Hneg.
 destruct x; [apply Hzero|apply Hpos|apply Hneg]; easy.
 Qed.
 
 Lemma sqr_pos n : n * n >= 0.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.sqr_pos".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.sqr_pos". Undo.  
 Z.swap_greater. apply Z.square_nonneg.
 Qed.
 
@@ -121,7 +121,7 @@ Variable A : Type.
 Implicit Type l : list A.
 
 Lemma Zlength_correct l : Zlength l = Z.of_nat (length l).
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_correct".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_correct". Undo.  
 assert (H : forall l acc, Zlength_aux acc A l = acc + Z.of_nat (length l)).
 clear l. induction l.
 auto with zarith.
@@ -131,15 +131,15 @@ unfold Zlength. now rewrite H.
 Qed.
 
 Lemma Zlength_nil : Zlength (A:=A) nil = 0.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_nil".   reflexivity. Qed.
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_nil". Undo.   reflexivity. Qed.
 
 Lemma Zlength_cons (x:A) l : Zlength (x :: l) = Z.succ (Zlength l).
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_cons".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_cons". Undo.  
 intros. now rewrite !Zlength_correct, <- Nat2Z.inj_succ.
 Qed.
 
 Lemma Zlength_nil_inv l : Zlength l = 0 -> l = nil.
-Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_nil_inv".  
+Proof. try hammer_hook "Zcomplements" "Zcomplements.Zlength_nil_inv". Undo.  
 rewrite Zlength_correct.
 destruct l as [|x l]; auto.
 now rewrite <- Nat2Z.inj_0, Nat2Z.inj_iff.

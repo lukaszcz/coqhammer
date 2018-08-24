@@ -173,13 +173,13 @@ Set Implicit Arguments.
 
 Lemma decide_left : forall (C:Prop) (decide:{C}+{~C}),
 C -> forall P:{C}+{~C}->Prop, (forall H:C, P (left _ H)) -> P decide.
-Proof. try hammer_hook "Tactics" "Tactics.decide_left".  
+Proof. try hammer_hook "Tactics" "Tactics.decide_left". Undo.  
 intros; destruct decide. apply H0. contradiction.
 Qed.
 
 Lemma decide_right : forall (C:Prop) (decide:{C}+{~C}),
 ~C -> forall P:{C}+{~C}->Prop, (forall H:~C, P (right _ H)) -> P decide.
-Proof. try hammer_hook "Tactics" "Tactics.decide_right".  
+Proof. try hammer_hook "Tactics" "Tactics.decide_right". Undo.  
 intros; destruct decide. contradiction. apply H0.
 Qed.
 

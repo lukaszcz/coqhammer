@@ -33,20 +33,20 @@ end.
 
 
 Lemma Rmin_case : forall r1 r2 (P:R -> Type), P r1 -> P r2 -> P (Rmin r1 r2).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_case".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_case". Undo.  
 intros r1 r2 P H1 H2; unfold Rmin; case (Rle_dec r1 r2); auto.
 Qed.
 
 
 Lemma Rmin_case_strong : forall r1 r2 (P:R -> Type),
 (r1 <= r2 -> P r1) -> (r2 <= r1 -> P r2) -> P (Rmin r1 r2).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_case_strong".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_case_strong". Undo.  
 intros r1 r2 P H1 H2; unfold Rmin; destruct (Rle_dec r1 r2); auto with real.
 Qed.
 
 
 Lemma Rmin_Rgt_l : forall r1 r2 r, Rmin r1 r2 > r -> r1 > r /\ r2 > r.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_Rgt_l".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_Rgt_l". Undo.  
 intros r1 r2 r; unfold Rmin; case (Rle_dec r1 r2) as [Hle|Hnle]; intros.
 split.
 assumption.
@@ -58,14 +58,14 @@ Qed.
 
 
 Lemma Rmin_Rgt_r : forall r1 r2 r, r1 > r /\ r2 > r -> Rmin r1 r2 > r.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_Rgt_r".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_Rgt_r". Undo.  
 intros; unfold Rmin; case (Rle_dec r1 r2); elim H; clear H; intros;
 assumption.
 Qed.
 
 
 Lemma Rmin_Rgt : forall r1 r2 r, Rmin r1 r2 > r <-> r1 > r /\ r2 > r.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_Rgt".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_Rgt". Undo.  
 intros; split.
 exact (Rmin_Rgt_l r1 r2 r).
 exact (Rmin_Rgt_r r1 r2 r).
@@ -73,71 +73,71 @@ Qed.
 
 
 Lemma Rmin_l : forall x y:R, Rmin x y <= x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_l".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_l". Undo.  
 intros; unfold Rmin; case (Rle_dec x y); intro H1;
 [ right; reflexivity | auto with real ].
 Qed.
 
 
 Lemma Rmin_r : forall x y:R, Rmin x y <= y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_r".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_r". Undo.  
 intros; unfold Rmin; case (Rle_dec x y); intro H1;
 [ assumption | auto with real ].
 Qed.
 
 
 Lemma Rmin_left : forall x y, x <= y -> Rmin x y = x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_left".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_left". Undo.  
 intros; apply Rmin_case_strong; auto using Rle_antisym.
 Qed.
 
 
 Lemma Rmin_right : forall x y, y <= x -> Rmin x y = y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_right".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_right". Undo.  
 intros; apply Rmin_case_strong; auto using Rle_antisym.
 Qed.
 
 
 Lemma Rle_min_compat_r : forall x y z, x <= y -> Rmin x z <= Rmin y z.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_min_compat_r".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_min_compat_r". Undo.  
 intros; do 2 (apply Rmin_case_strong; intro); eauto using Rle_trans, Rle_refl.
 Qed.
 
 
 Lemma Rle_min_compat_l : forall x y z, x <= y -> Rmin z x <= Rmin z y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_min_compat_l".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_min_compat_l". Undo.  
 intros; do 2 (apply Rmin_case_strong; intro); eauto using Rle_trans, Rle_refl.
 Qed.
 
 
 Lemma Rmin_comm : forall x y:R, Rmin x y = Rmin y x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_comm".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_comm". Undo.  
 intros; unfold Rmin; case (Rle_dec x y); case (Rle_dec y x); intros;
 try reflexivity || (apply Rle_antisym; assumption || auto with real).
 Qed.
 
 
 Lemma Rmin_stable_in_posreal : forall x y:posreal, 0 < Rmin x y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_stable_in_posreal".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_stable_in_posreal". Undo.  
 intros; apply Rmin_Rgt_r; split; [ apply (cond_pos x) | apply (cond_pos y) ].
 Qed.
 
 
 Lemma Rmin_pos : forall x y:R, 0 < x -> 0 < y -> 0 < Rmin x y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_pos".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_pos". Undo.  
 intros; unfold Rmin.
 case (Rle_dec x y); intro; assumption.
 Qed.
 
 
 Lemma Rmin_glb : forall x y z:R, z <= x -> z <= y -> z <= Rmin x y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_glb".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_glb". Undo.  
 intros; unfold Rmin; case (Rle_dec x y); intro; assumption.
 Qed.
 
 
 Lemma Rmin_glb_lt : forall x y z:R, z < x -> z < y -> z < Rmin x y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_glb_lt".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_glb_lt". Undo.  
 intros; unfold Rmin; case (Rle_dec x y); intro; assumption.
 Qed.
 
@@ -154,20 +154,20 @@ end.
 
 
 Lemma Rmax_case : forall r1 r2 (P:R -> Type), P r1 -> P r2 -> P (Rmax r1 r2).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_case".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_case". Undo.  
 intros r1 r2 P H1 H2; unfold Rmax; case (Rle_dec r1 r2); auto.
 Qed.
 
 
 Lemma Rmax_case_strong : forall r1 r2 (P:R -> Type),
 (r2 <= r1 -> P r1) -> (r1 <= r2 -> P r2) -> P (Rmax r1 r2).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_case_strong".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_case_strong". Undo.  
 intros r1 r2 P H1 H2; unfold Rmax; case (Rle_dec r1 r2); auto with real.
 Qed.
 
 
 Lemma Rmax_Rle : forall r1 r2 r, r <= Rmax r1 r2 <-> r <= r1 \/ r <= r2.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_Rle".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_Rle". Undo.  
 intros; split.
 unfold Rmax; case (Rle_dec r1 r2); intros; auto.
 intro; unfold Rmax; case (Rle_dec r1 r2) as [|Hnle]; elim H; clear H; intros;
@@ -178,7 +178,7 @@ apply (Rlt_le r r1 (Rle_lt_trans r r2 r1 H H0)).
 Qed.
 
 Lemma Rmax_comm : forall x y:R, Rmax x y = Rmax y x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_comm".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_comm". Undo.  
 intros p q; unfold Rmax; case (Rle_dec p q); case (Rle_dec q p); auto;
 intros H1 H2; apply Rle_antisym; auto with real.
 Qed.
@@ -189,14 +189,14 @@ Notation RmaxSym := Rmax_comm (only parsing).
 
 
 Lemma Rmax_l : forall x y:R, x <= Rmax x y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_l".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_l". Undo.  
 intros; unfold Rmax; case (Rle_dec x y); intro H1;
 [ assumption | auto with real ].
 Qed.
 
 
 Lemma Rmax_r : forall x y:R, y <= Rmax x y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_r".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_r". Undo.  
 intros; unfold Rmax; case (Rle_dec x y); intro H1;
 [ right; reflexivity | auto with real ].
 Qed.
@@ -208,32 +208,32 @@ Notation RmaxLess2 := Rmax_r (only parsing).
 
 
 Lemma Rmax_left : forall x y, y <= x -> Rmax x y = x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_left".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_left". Undo.  
 intros; apply Rmax_case_strong; auto using Rle_antisym.
 Qed.
 
 
 Lemma Rmax_right : forall x y, x <= y -> Rmax x y = y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_right".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_right". Undo.  
 intros; apply Rmax_case_strong; auto using Rle_antisym.
 Qed.
 
 
 Lemma Rle_max_compat_r : forall x y z, x <= y -> Rmax x z <= Rmax y z.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_max_compat_r".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_max_compat_r". Undo.  
 intros; do 2 (apply Rmax_case_strong; intro); eauto using Rle_trans, Rle_refl.
 Qed.
 
 
 Lemma Rle_max_compat_l : forall x y z, x <= y -> Rmax z x <= Rmax z y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_max_compat_l".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_max_compat_l". Undo.  
 intros; do 2 (apply Rmax_case_strong; intro); eauto using Rle_trans, Rle_refl.
 Qed.
 
 
 Lemma RmaxRmult :
 forall (p q:R) r, 0 <= r -> Rmax (r * p) (r * q) = r * Rmax p q.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.RmaxRmult".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.RmaxRmult". Undo.  
 intros p q r H; unfold Rmax.
 case (Rle_dec p q); case (Rle_dec (r * p) (r * q)); auto; intros H1 H2; auto.
 case H; intros E1.
@@ -247,26 +247,26 @@ Qed.
 
 
 Lemma Rmax_stable_in_negreal : forall x y:negreal, Rmax x y < 0.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_stable_in_negreal".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_stable_in_negreal". Undo.  
 intros; unfold Rmax; case (Rle_dec x y); intro;
 [ apply (cond_neg y) | apply (cond_neg x) ].
 Qed.
 
 
 Lemma Rmax_lub : forall x y z:R, x <= z -> y <= z -> Rmax x y <= z.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_lub".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_lub". Undo.  
 intros; unfold Rmax; case (Rle_dec x y); intro; assumption.
 Qed.
 
 
 Lemma Rmax_lub_lt : forall x y z:R, x < z -> y < z -> Rmax x y < z.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_lub_lt".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_lub_lt". Undo.  
 intros; unfold Rmax; case (Rle_dec x y); intro; assumption.
 Qed.
 
 Lemma Rmax_Rlt : forall x y z,
 Rmax x y < z <-> x < z /\ y < z.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_Rlt".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_Rlt". Undo.  
 intros x y z; split.
 unfold Rmax; case (Rle_dec x y).
 intros xy yz; split;[apply Rle_lt_trans with y|]; assumption.
@@ -276,7 +276,7 @@ Qed.
 
 
 Lemma Rmax_neg : forall x y:R, x < 0 -> y < 0 -> Rmax x y < 0.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_neg".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_neg". Undo.  
 intros; unfold Rmax.
 case (Rle_dec x y); intro; assumption.
 Qed.
@@ -287,7 +287,7 @@ Qed.
 
 
 Lemma Rcase_abs : forall r, {r < 0} + {r >= 0}.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rcase_abs".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rcase_abs". Undo.  
 intro; generalize (Rle_dec 0 r); intro X; elim X; intro H; clear X.
 right; apply (Rle_ge 0 r H).
 left; fold (0 > r); apply (Rnot_le_lt 0 r H).
@@ -302,27 +302,27 @@ end.
 
 
 Lemma Rabs_R0 : Rabs 0 = 0.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_R0".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_R0". Undo.  
 unfold Rabs; case (Rcase_abs 0); auto; intro.
 generalize (Rlt_irrefl 0); intro; exfalso; auto.
 Qed.
 
 Lemma Rabs_R1 : Rabs 1 = 1.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_R1".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_R1". Undo.  
 unfold Rabs; case (Rcase_abs 1); auto with real.
 intros H; absurd (1 < 0); auto with real.
 Qed.
 
 
 Lemma Rabs_no_R0 : forall r, r <> 0 -> Rabs r <> 0.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_no_R0".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_no_R0". Undo.  
 intros; unfold Rabs; case (Rcase_abs r); intro; auto.
 apply Ropp_neq_0_compat; auto.
 Qed.
 
 
 Lemma Rabs_left : forall r, r < 0 -> Rabs r = - r.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_left".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_left". Undo.  
 intros; unfold Rabs; case (Rcase_abs r); trivial; intro;
 absurd (r >= 0).
 exact (Rlt_not_ge r 0 H).
@@ -331,7 +331,7 @@ Qed.
 
 
 Lemma Rabs_right : forall r, r >= 0 -> Rabs r = r.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_right".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_right". Undo.  
 intros; unfold Rabs; case (Rcase_abs r) as [Hlt|Hge].
 absurd (r >= 0).
 exact (Rlt_not_ge r 0 Hlt).
@@ -340,7 +340,7 @@ trivial.
 Qed.
 
 Lemma Rabs_left1 : forall a:R, a <= 0 -> Rabs a = - a.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_left1".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_left1". Undo.  
 intros a H; case H; intros H1.
 apply Rabs_left; auto.
 rewrite H1; simpl; rewrite Rabs_right; auto with real.
@@ -348,7 +348,7 @@ Qed.
 
 
 Lemma Rabs_pos : forall x:R, 0 <= Rabs x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_pos".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_pos". Undo.  
 intros; unfold Rabs; case (Rcase_abs x) as [Hlt|Hge].
 generalize (Ropp_lt_gt_contravar x 0 Hlt); intro; unfold Rgt in H;
 rewrite Ropp_0 in H; left; assumption.
@@ -356,14 +356,14 @@ apply Rge_le; assumption.
 Qed.
 
 Lemma Rle_abs : forall x:R, x <= Rabs x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_abs".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rle_abs". Undo.  
 intro; unfold Rabs; case (Rcase_abs x); intros; fourier.
 Qed.
 
 Definition RRle_abs := Rle_abs.
 
 Lemma Rabs_le : forall a b, -b <= a <= b -> Rabs a <= b.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_le".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_le". Undo.  
 intros a b; unfold Rabs; case Rcase_abs.
 intros _ [it _]; apply Ropp_le_cancel; rewrite Ropp_involutive; exact it.
 intros _ [_ it]; exact it.
@@ -371,27 +371,27 @@ Qed.
 
 
 Lemma Rabs_pos_eq : forall x:R, 0 <= x -> Rabs x = x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_pos_eq".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_pos_eq". Undo.  
 intros; unfold Rabs; case (Rcase_abs x) as [Hlt|Hge];
 [ generalize (Rgt_not_le 0 x Hlt); intro; exfalso; auto | trivial ].
 Qed.
 
 
 Lemma Rabs_Rabsolu : forall x:R, Rabs (Rabs x) = Rabs x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Rabsolu".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Rabsolu". Undo.  
 intro; apply (Rabs_pos_eq (Rabs x) (Rabs_pos x)).
 Qed.
 
 
 Lemma Rabs_pos_lt : forall x:R, x <> 0 -> 0 < Rabs x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_pos_lt".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_pos_lt". Undo.  
 intros; destruct (Rabs_pos x) as [|Heq]; auto.
 apply Rabs_no_R0 in H; symmetry in Heq; contradiction.
 Qed.
 
 
 Lemma Rabs_minus_sym : forall x y:R, Rabs (x - y) = Rabs (y - x).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_minus_sym".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_minus_sym". Undo.  
 intros; unfold Rabs; case (Rcase_abs (x - y)) as [Hlt|Hge];
 case (Rcase_abs (y - x)) as [Hlt'|Hge'].
 apply Rminus_lt, Rlt_asym in Hlt; apply Rminus_lt in Hlt'; contradiction.
@@ -407,7 +407,7 @@ Qed.
 
 
 Lemma Rabs_mult : forall x y:R, Rabs (x * y) = Rabs x * Rabs y.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_mult".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_mult". Undo.  
 intros; unfold Rabs; case (Rcase_abs (x * y)) as [Hlt|Hge];
 case (Rcase_abs x) as [Hltx|Hgex];
 case (Rcase_abs y) as [Hlty|Hgey]; auto.
@@ -437,7 +437,7 @@ Qed.
 
 
 Lemma Rabs_Rinv : forall r, r <> 0 -> Rabs (/ r) = / Rabs r.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Rinv".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Rinv". Undo.  
 intro; unfold Rabs; case (Rcase_abs r) as [Hlt|Hge];
 case (Rcase_abs (/ r)) as [Hlt'|Hge']; auto;
 intros.
@@ -452,7 +452,7 @@ contradiction (refl_equal 0).
 Qed.
 
 Lemma Rabs_Ropp : forall x:R, Rabs (- x) = Rabs x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Ropp".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Ropp". Undo.  
 intro; replace (-x) with (-1 * x) by ring.
 rewrite Rabs_mult.
 replace (Rabs (-1)) with 1.
@@ -467,7 +467,7 @@ Qed.
 
 
 Lemma Rabs_triang : forall a b:R, Rabs (a + b) <= Rabs a + Rabs b.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_triang".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_triang". Undo.  
 intros a b; unfold Rabs; case (Rcase_abs (a + b)) as [Hlt|Hge];
 case (Rcase_abs a) as [Hlta|Hgea];
 case (Rcase_abs b) as [Hltb|Hgeb].
@@ -525,7 +525,7 @@ Qed.
 
 
 Lemma Rabs_triang_inv : forall a b:R, Rabs a - Rabs b <= Rabs (a - b).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_triang_inv".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_triang_inv". Undo.  
 intros; apply (Rplus_le_reg_l (Rabs b) (Rabs a - Rabs b) (Rabs (a - b)));
 unfold Rminus; rewrite <- (Rplus_assoc (Rabs b) (Rabs a) (- Rabs b));
 rewrite (Rplus_comm (Rabs b) (Rabs a));
@@ -540,7 +540,7 @@ Qed.
 
 
 Lemma Rabs_triang_inv2 : forall a b:R, Rabs (Rabs a - Rabs b) <= Rabs (a - b).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_triang_inv2".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_triang_inv2". Undo.  
 cut
 (forall a b:R, Rabs b <= Rabs a -> Rabs (Rabs a - Rabs b) <= Rabs (a - b)).
 intros; destruct (Rtotal_order (Rabs a) (Rabs b)) as [Hlt| [Heq| Hgt]].
@@ -561,7 +561,7 @@ Qed.
 
 
 Lemma Rabs_def1 : forall x a:R, x < a -> - a < x -> Rabs x < a.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_def1".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_def1". Undo.  
 unfold Rabs; intros; case (Rcase_abs x); intro.
 generalize (Ropp_lt_gt_contravar (- a) x H0); unfold Rgt;
 rewrite Ropp_involutive; intro; assumption.
@@ -570,7 +570,7 @@ Qed.
 
 
 Lemma Rabs_def2 : forall x a:R, Rabs x < a -> x < a /\ - a < x.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_def2".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_def2". Undo.  
 unfold Rabs; intro x; case (Rcase_abs x) as [Hlt|Hge]; intros.
 generalize (Ropp_gt_lt_0_contravar x Hlt); unfold Rgt; intro;
 generalize (Rlt_trans 0 (- x) a H0 H); intro; split.
@@ -585,7 +585,7 @@ Qed.
 
 Lemma RmaxAbs :
 forall (p q:R) r, p <= q -> q <= r -> Rabs q <= Rmax (Rabs p) (Rabs r).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.RmaxAbs".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.RmaxAbs". Undo.  
 intros p q r H' H'0; case (Rle_or_lt 0 p); intros H'1.
 repeat rewrite Rabs_right; auto with real.
 apply Rle_trans with r; auto with real.
@@ -610,7 +610,7 @@ apply RmaxLess1; auto.
 Qed.
 
 Lemma Rabs_Zabs : forall z:Z, Rabs (IZR z) = IZR (Z.abs z).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Zabs".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rabs_Zabs". Undo.  
 intros z; case z; unfold Zabs.
 apply Rabs_R0.
 now intros p0; apply Rabs_pos_eq, (IZR_le 0).
@@ -620,7 +620,7 @@ now apply Rabs_pos_eq, (IZR_le 0).
 Qed.
 
 Lemma abs_IZR : forall z, IZR (Z.abs z) = Rabs (IZR z).
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.abs_IZR".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.abs_IZR". Undo.  
 intros.
 now rewrite Rabs_Zabs.
 Qed.
@@ -638,7 +638,7 @@ now intros w; rewrite Rmax_right; [ | apply Rge_le, Ropp_le_ge_contravar].
 Qed.
 
 Lemma Rmax_assoc : forall a b c, Rmax a (Rmax b c) = Rmax (Rmax a b) c.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_assoc".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmax_assoc". Undo.  
 intros a b c.
 unfold Rmax; destruct (Rle_dec b c); destruct (Rle_dec a b);
 destruct (Rle_dec a c); destruct (Rle_dec b c); auto with real;
@@ -651,7 +651,7 @@ end.
 Qed.
 
 Lemma Rminmax : forall a b, Rmin a b <= Rmax a b.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rminmax".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rminmax". Undo.  
 intros a b; destruct (Rle_dec a b).
 rewrite Rmin_left, Rmax_right; assumption.
 now rewrite Rmin_right, Rmax_left; assumption ||
@@ -660,7 +660,7 @@ Qed.
 
 Lemma Rmin_assoc : forall x y z, Rmin x (Rmin y z) =
 Rmin (Rmin x y) z.
-Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_assoc".  
+Proof. try hammer_hook "Rbasic_fun" "Rbasic_fun.Rmin_assoc". Undo.  
 intros a b c.
 unfold Rmin; destruct (Rle_dec b c); destruct (Rle_dec a b);
 destruct (Rle_dec a c); destruct (Rle_dec b c); auto with real;

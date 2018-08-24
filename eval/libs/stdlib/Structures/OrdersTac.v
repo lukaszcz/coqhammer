@@ -42,27 +42,27 @@ Include EqLtLeNotation O.
 
 
 Lemma eq_refl : forall x, x==x.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.eq_refl".   reflexivity. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.eq_refl". Undo.   reflexivity. Qed.
 
 Lemma le_refl : forall x, x<=x.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.le_refl".   intros; rewrite P.le_lteq; right; reflexivity. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.le_refl". Undo.   intros; rewrite P.le_lteq; right; reflexivity. Qed.
 
 Lemma lt_irrefl : forall x, ~ x<x.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.lt_irrefl".   intros. apply StrictOrder_Irreflexive. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.lt_irrefl". Undo.   intros. apply StrictOrder_Irreflexive. Qed.
 
 
 
 Lemma eq_sym : forall x y, x==y -> y==x.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.eq_sym".   auto with *. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.eq_sym". Undo.   auto with *. Qed.
 
 Lemma le_antisym : forall x y, x<=y -> y<=x -> x==y.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.le_antisym".  
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.le_antisym". Undo.  
 intros x y; rewrite 2 P.le_lteq. intuition.
 elim (StrictOrder_Irreflexive x); transitivity y; auto.
 Qed.
 
 Lemma neq_sym : forall x y, ~x==y -> ~y==x.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.neq_sym".   auto using eq_sym. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.neq_sym". Undo.   auto using eq_sym. Qed.
 
 
 
@@ -77,7 +77,7 @@ match o with OEQ => O.eq | OLT => O.lt | OLE => O.le end.
 Local Notation "#" := interp_ord.
 
 Lemma trans : forall o o' x y z, #o x y -> #o' y z -> #(o+o') x z.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.trans".  
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.trans". Undo.  
 destruct o, o'; simpl; intros x y z;
 rewrite ?P.le_lteq; intuition auto;
 subst_eqns; eauto using (StrictOrder_Transitive x y z) with *.
@@ -94,32 +94,32 @@ Definition eq_le x y z : x==y -> y<=z -> x<=z := @trans OEQ OLE x y z.
 Definition le_eq x y z : x<=y -> y==z -> x<=z := @trans OLE OEQ x y z.
 
 Lemma eq_neq : forall x y z, x==y -> ~y==z -> ~x==z.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.eq_neq".   eauto using eq_trans, eq_sym. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.eq_neq". Undo.   eauto using eq_trans, eq_sym. Qed.
 
 Lemma neq_eq : forall x y z, ~x==y -> y==z -> ~x==z.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.neq_eq".   eauto using eq_trans, eq_sym. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.neq_eq". Undo.   eauto using eq_trans, eq_sym. Qed.
 
 
 
 Lemma not_neq_eq : forall x y, ~~x==y -> x==y.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.not_neq_eq".  
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.not_neq_eq". Undo.  
 intros x y H. destruct (P.lt_total x y) as [H'|[H'|H']]; auto;
 destruct H; intro H; rewrite H in H'; eapply lt_irrefl; eauto.
 Qed.
 
 Lemma not_ge_lt : forall x y, ~y<=x -> x<y.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.not_ge_lt".  
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.not_ge_lt". Undo.  
 intros x y H. destruct (P.lt_total x y); auto.
 destruct H. rewrite P.le_lteq. intuition.
 Qed.
 
 Lemma not_gt_le : forall x y, ~y<x -> x<=y.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.not_gt_le".  
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.not_gt_le". Undo.  
 intros x y H. rewrite P.le_lteq. generalize (P.lt_total x y); intuition.
 Qed.
 
 Lemma le_neq_lt : forall x y, x<=y -> ~x==y -> x<y.
-Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.le_neq_lt".   auto using not_ge_lt, le_antisym. Qed.
+Proof. try hammer_hook "OrdersTac" "OrdersTac.OrderFacts.le_neq_lt". Undo.   auto using not_ge_lt, le_antisym. Qed.
 
 End OrderFacts.
 

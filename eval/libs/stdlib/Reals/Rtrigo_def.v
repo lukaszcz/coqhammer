@@ -18,14 +18,14 @@ Definition exp_in (x l:R) : Prop :=
 infinite_sum (fun i:nat => / INR (fact i) * x ^ i) l.
 
 Lemma exp_cof_no_R0 : forall n:nat, / INR (fact n) <> 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exp_cof_no_R0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exp_cof_no_R0". Undo.  
 intro.
 apply Rinv_neq_0_compat.
 apply INR_fact_neq_0.
 Qed.
 
 Lemma exist_exp : forall x:R, { l:R | exp_in x l }.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_exp".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_exp". Undo.  
 intro;
 generalize
 (Alembert_C3 (fun n:nat => / INR (fact n)) x exp_cof_no_R0 Alembert_exp).
@@ -36,13 +36,13 @@ Defined.
 Definition exp (x:R) : R := proj1_sig (exist_exp x).
 
 Lemma pow_i : forall i:nat, (0 < i)%nat -> 0 ^ i = 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.pow_i".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.pow_i". Undo.  
 intros; apply pow_ne_zero.
 red; intro; rewrite H0 in H; elim (lt_irrefl _ H).
 Qed.
 
 Lemma exist_exp0 : { l:R | exp_in 0 l }.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_exp0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_exp0". Undo.  
 exists 1.
 unfold exp_in; unfold infinite_sum; intros.
 exists 0%nat.
@@ -60,7 +60,7 @@ Defined.
 
 
 Lemma exp_0 : exp 0 = 1.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exp_0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exp_0". Undo.  
 cut (exp_in 0 (exp 0)).
 cut (exp_in 0 1).
 unfold exp_in; intros; eapply uniqueness_sum.
@@ -78,13 +78,13 @@ Definition sinh (x:R) : R := (exp x - exp (- x)) / 2.
 Definition tanh (x:R) : R := sinh x / cosh x.
 
 Lemma cosh_0 : cosh 0 = 1.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cosh_0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cosh_0". Undo.  
 unfold cosh; rewrite Ropp_0; rewrite exp_0.
 unfold Rdiv; rewrite <- Rinv_r_sym; [ reflexivity | discrR ].
 Qed.
 
 Lemma sinh_0 : sinh 0 = 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sinh_0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sinh_0". Undo.  
 unfold sinh; rewrite Ropp_0; rewrite exp_0.
 unfold Rminus, Rdiv; rewrite Rplus_opp_r; apply Rmult_0_l.
 Qed.
@@ -93,7 +93,7 @@ Definition cos_n (n:nat) : R := (-1) ^ n / INR (fact (2 * n)).
 
 Lemma simpl_cos_n :
 forall n:nat, cos_n (S n) / cos_n n = - / INR (2 * S n * (2 * n + 1)).
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.simpl_cos_n".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.simpl_cos_n". Undo.  
 intro; unfold cos_n; replace (S n) with (n + 1)%nat; [ idtac | ring ].
 rewrite pow_add; unfold Rdiv; rewrite Rinv_mult_distr.
 rewrite Rinv_involutive.
@@ -127,7 +127,7 @@ Qed.
 
 Lemma archimed_cor1 :
 forall eps:R, 0 < eps ->  exists N : nat, / INR N < eps /\ (0 < N)%nat.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.archimed_cor1".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.archimed_cor1". Undo.  
 intros; cut (/ eps < IZR (up (/ eps))).
 intro; cut (0 <= up (/ eps))%Z.
 intro; assert (H2 := IZN _ H1); elim H2; intros; exists (max x 1).
@@ -167,7 +167,7 @@ elim H0; intros; assumption.
 Qed.
 
 Lemma Alembert_cos : Un_cv (fun n:nat => Rabs (cos_n (S n) / cos_n n)) 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.Alembert_cos".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.Alembert_cos". Undo.  
 unfold Un_cv; intros.
 assert (H0 := archimed_cor1 eps H).
 elim H0; intros; exists x.
@@ -220,7 +220,7 @@ apply lt_O_Sn.
 Qed.
 
 Lemma cosn_no_R0 : forall n:nat, cos_n n <> 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cosn_no_R0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cosn_no_R0". Undo.  
 intro; unfold cos_n; unfold Rdiv; apply prod_neq_R0.
 apply pow_nonzero; discrR.
 apply Rinv_neq_0_compat.
@@ -233,7 +233,7 @@ infinite_sum (fun i:nat => cos_n i * x ^ i) l.
 
 
 Lemma exist_cos : forall x:R, { l:R | cos_in x l }.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_cos".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_cos". Undo.  
 intro; generalize (Alembert_C3 cos_n x cosn_no_R0 Alembert_cos).
 unfold Pser, cos_in; trivial.
 Qed.
@@ -246,7 +246,7 @@ Definition sin_n (n:nat) : R := (-1) ^ n / INR (fact (2 * n + 1)).
 
 Lemma simpl_sin_n :
 forall n:nat, sin_n (S n) / sin_n n = - / INR ((2 * S n + 1) * (2 * S n)).
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.simpl_sin_n".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.simpl_sin_n". Undo.  
 intro; unfold sin_n; replace (S n) with (n + 1)%nat; [ idtac | ring ].
 rewrite pow_add; unfold Rdiv; rewrite Rinv_mult_distr.
 rewrite Rinv_involutive.
@@ -291,7 +291,7 @@ apply Rinv_neq_0_compat; apply INR_fact_neq_0.
 Qed.
 
 Lemma Alembert_sin : Un_cv (fun n:nat => Rabs (sin_n (S n) / sin_n n)) 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.Alembert_sin".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.Alembert_sin". Undo.  
 unfold Un_cv; intros; assert (H0 := archimed_cor1 eps H).
 elim H0; intros; exists x.
 intros; rewrite simpl_sin_n; unfold R_dist; unfold Rminus;
@@ -339,7 +339,7 @@ apply lt_O_Sn.
 Qed.
 
 Lemma sin_no_R0 : forall n:nat, sin_n n <> 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sin_no_R0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sin_no_R0". Undo.  
 intro; unfold sin_n; unfold Rdiv; apply prod_neq_R0.
 apply pow_nonzero; discrR.
 apply Rinv_neq_0_compat; apply INR_fact_neq_0.
@@ -351,7 +351,7 @@ infinite_sum (fun i:nat => sin_n i * x ^ i) l.
 
 
 Lemma exist_sin : forall x:R, { l:R | sin_in x l }.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_sin".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_sin". Undo.  
 intro; generalize (Alembert_C3 sin_n x sin_no_R0 Alembert_sin).
 unfold Pser, sin_n; trivial.
 Defined.
@@ -365,27 +365,27 @@ Definition sin (x:R) : R := let (a,_) := exist_sin (Rsqr x) in x * a.
 
 
 Lemma cos_sym : forall x:R, cos x = cos (- x).
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cos_sym".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cos_sym". Undo.  
 intros; unfold cos; replace (Rsqr (- x)) with (Rsqr x).
 reflexivity.
 apply Rsqr_neg.
 Qed.
 
 Lemma sin_antisym : forall x:R, sin (- x) = - sin x.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sin_antisym".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sin_antisym". Undo.  
 intro; unfold sin; replace (Rsqr (- x)) with (Rsqr x);
 [ idtac | apply Rsqr_neg ].
 case (exist_sin (Rsqr x)); intros; ring.
 Qed.
 
 Lemma sin_0 : sin 0 = 0.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sin_0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.sin_0". Undo.  
 unfold sin; case (exist_sin (Rsqr 0)).
 intros; ring.
 Qed.
 
 Lemma exist_cos0 : { l:R | cos_in 0 l }.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_cos0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.exist_cos0". Undo.  
 exists 1.
 unfold cos_in; unfold infinite_sum; intros; exists 0%nat.
 intros.
@@ -404,7 +404,7 @@ Defined.
 
 
 Lemma cos_0 : cos 0 = 1.
-Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cos_0".  
+Proof. try hammer_hook "Rtrigo_def" "Rtrigo_def.cos_0". Undo.  
 cut (cos_in 0 (cos 0)).
 cut (cos_in 0 1).
 unfold cos_in; intros; eapply uniqueness_sum.

@@ -66,14 +66,14 @@ Infix "&&" := andb : bool_scope.
 
 
 Lemma andb_prop : forall a b:bool, andb a b = true -> a = true /\ b = true.
-Proof. try hammer_hook "Datatypes" "Datatypes.andb_prop".  
+Proof. try hammer_hook "Datatypes" "Datatypes.andb_prop". Undo.  
 destruct a, b; repeat split; assumption.
 Qed.
 Hint Resolve andb_prop: bool.
 
 Lemma andb_true_intro :
 forall b1 b2:bool, b1 = true /\ b2 = true -> andb b1 b2 = true.
-Proof. try hammer_hook "Datatypes" "Datatypes.andb_true_intro".  
+Proof. try hammer_hook "Datatypes" "Datatypes.andb_true_intro". Undo.  
 destruct b1; destruct b2; simpl; intros [? ?]; assumption.
 Qed.
 Hint Resolve andb_true_intro: bool.
@@ -94,19 +94,19 @@ Definition is_true b := b = true.
 
 Lemma eq_true_ind_r :
 forall (P : bool -> Prop) (b : bool), P b -> eq_true b -> P true.
-Proof. try hammer_hook "Datatypes" "Datatypes.eq_true_ind_r".  
+Proof. try hammer_hook "Datatypes" "Datatypes.eq_true_ind_r". Undo.  
 intros P b H H0; destruct H0 in H; assumption.
 Defined.
 
 Lemma eq_true_rec_r :
 forall (P : bool -> Set) (b : bool), P b -> eq_true b -> P true.
-Proof. try hammer_hook "Datatypes" "Datatypes.eq_true_rec_r".  
+Proof. try hammer_hook "Datatypes" "Datatypes.eq_true_rec_r". Undo.  
 intros P b H H0; destruct H0 in H; assumption.
 Defined.
 
 Lemma eq_true_rect_r :
 forall (P : bool -> Type) (b : bool), P b -> eq_true b -> P true.
-Proof. try hammer_hook "Datatypes" "Datatypes.eq_true_rect_r".  
+Proof. try hammer_hook "Datatypes" "Datatypes.eq_true_rect_r". Undo.  
 intros P b H H0; destruct H0 in H; assumption.
 Defined.
 
@@ -190,14 +190,14 @@ Hint Resolve pair inl inr: core.
 
 Lemma surjective_pairing :
 forall (A B:Type) (p:A * B), p = pair (fst p) (snd p).
-Proof. try hammer_hook "Datatypes" "Datatypes.surjective_pairing".  
+Proof. try hammer_hook "Datatypes" "Datatypes.surjective_pairing". Undo.  
 destruct p; reflexivity.
 Qed.
 
 Lemma injective_projections :
 forall (A B:Type) (p1 p2:A * B),
 fst p1 = fst p2 -> snd p1 = snd p2 -> p1 = p2.
-Proof. try hammer_hook "Datatypes" "Datatypes.injective_projections".  
+Proof. try hammer_hook "Datatypes" "Datatypes.injective_projections". Undo.  
 destruct p1; destruct p2; simpl; intros Hfst Hsnd.
 rewrite Hfst; rewrite Hsnd; reflexivity.
 Qed.
@@ -254,7 +254,7 @@ Inductive comparison : Set :=
 | Gt : comparison.
 
 Lemma comparison_eq_stable : forall c c' : comparison, ~~ c = c' -> c = c'.
-Proof. try hammer_hook "Datatypes" "Datatypes.comparison_eq_stable".  
+Proof. try hammer_hook "Datatypes" "Datatypes.comparison_eq_stable". Undo.  
 destruct c, c'; intro H; reflexivity || destruct H; discriminate.
 Qed.
 
@@ -266,17 +266,17 @@ match r with
 end.
 
 Lemma CompOpp_involutive : forall c, CompOpp (CompOpp c) = c.
-Proof. try hammer_hook "Datatypes" "Datatypes.CompOpp_involutive".  
+Proof. try hammer_hook "Datatypes" "Datatypes.CompOpp_involutive". Undo.  
 destruct c; reflexivity.
 Qed.
 
 Lemma CompOpp_inj : forall c c', CompOpp c = CompOpp c' -> c = c'.
-Proof. try hammer_hook "Datatypes" "Datatypes.CompOpp_inj".  
+Proof. try hammer_hook "Datatypes" "Datatypes.CompOpp_inj". Undo.  
 destruct c; destruct c'; auto; discriminate.
 Qed.
 
 Lemma CompOpp_iff : forall c c', CompOpp c = c' <-> c = CompOpp c'.
-Proof. try hammer_hook "Datatypes" "Datatypes.CompOpp_iff".  
+Proof. try hammer_hook "Datatypes" "Datatypes.CompOpp_iff". Undo.  
 split; intros; apply CompOpp_inj; rewrite CompOpp_involutive; auto.
 Qed.
 
@@ -298,7 +298,7 @@ Hint Constructors CompareSpecT.
 
 Lemma CompareSpec2Type : forall Peq Plt Pgt c,
 CompareSpec Peq Plt Pgt c -> CompareSpecT Peq Plt Pgt c.
-Proof. try hammer_hook "Datatypes" "Datatypes.CompareSpec2Type".  
+Proof. try hammer_hook "Datatypes" "Datatypes.CompareSpec2Type". Undo.  
 destruct c; intros H; constructor; inversion_clear H; auto.
 Defined.
 
@@ -313,7 +313,7 @@ Hint Unfold CompSpec CompSpecT.
 
 Lemma CompSpec2Type : forall A (eq lt:A->A->Prop) x y c,
 CompSpec eq lt x y c -> CompSpecT eq lt x y c.
-Proof. try hammer_hook "Datatypes" "Datatypes.CompSpec2Type".   intros. apply CompareSpec2Type; assumption. Defined.
+Proof. try hammer_hook "Datatypes" "Datatypes.CompSpec2Type". Undo.   intros. apply CompareSpec2Type; assumption. Defined.
 
 
 

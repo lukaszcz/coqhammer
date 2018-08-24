@@ -72,7 +72,7 @@ Variable c : Z.
 Let f (z:Z) := Z.abs_nat (c - z).
 
 Lemma Zwf_up_well_founded : well_founded (Zwf_up c).
-Proof. try hammer_hook "Zwf" "Zwf.Zwf_up_well_founded".  
+Proof. try hammer_hook "Zwf" "Zwf.Zwf_up_well_founded". Undo.  
 apply well_founded_lt_compat with (f := f).
 unfold Zwf_up, f.
 intros.

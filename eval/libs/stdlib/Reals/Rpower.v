@@ -29,13 +29,13 @@ Require Import Fourier.
 Local Open Scope R_scope.
 
 Lemma P_Rmin : forall (P:R -> Prop) (x y:R), P x -> P y -> P (Rmin x y).
-Proof. try hammer_hook "Rpower" "Rpower.P_Rmin".  
+Proof. try hammer_hook "Rpower" "Rpower.P_Rmin". Undo.  
 intros P x y H1 H2; unfold Rmin; case (Rle_dec x y); intro;
 assumption.
 Qed.
 
 Lemma exp_le_3 : exp 1 <= 3.
-Proof. try hammer_hook "Rpower" "Rpower.exp_le_3".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_le_3". Undo.  
 assert (exp_1 : exp 1 <> 0).
 assert (H0 := exp_pos 1); red; intro; rewrite H in H0;
 elim (Rlt_irrefl _ H0).
@@ -98,7 +98,7 @@ Qed.
 
 
 Theorem exp_increasing : forall x y:R, x < y -> exp x < exp y.
-Proof. try hammer_hook "Rpower" "Rpower.exp_increasing".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_increasing". Undo.  
 intros x y H.
 assert (H0 : derivable exp).
 apply derivable_exp.
@@ -114,7 +114,7 @@ apply H.
 Qed.
 
 Theorem exp_lt_inv : forall x y:R, exp x < exp y -> x < y.
-Proof. try hammer_hook "Rpower" "Rpower.exp_lt_inv".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_lt_inv". Undo.  
 intros x y H; case (Rtotal_order x y); [ intros H1 | intros [H1| H1] ].
 assumption.
 rewrite H1 in H; elim (Rlt_irrefl _ H).
@@ -123,7 +123,7 @@ elim (Rlt_irrefl _ (Rlt_trans _ _ _ H H2)).
 Qed.
 
 Lemma exp_ineq1 : forall x:R, 0 < x -> 1 + x < exp x.
-Proof. try hammer_hook "Rpower" "Rpower.exp_ineq1".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_ineq1". Undo.  
 intros; apply Rplus_lt_reg_l with (- exp 0); rewrite <- (Rplus_comm (exp x));
 assert (H0 := MVT_cor1 exp 0 x derivable_exp H); elim H0;
 intros; elim H1; intros; unfold Rminus in H2; rewrite H2;
@@ -138,7 +138,7 @@ symmetry ; apply derive_pt_eq_0; apply derivable_pt_lim_exp.
 Qed.
 
 Lemma ln_exists1 : forall y:R, 1 <= y -> { z:R | y = exp z }.
-Proof. try hammer_hook "Rpower" "Rpower.ln_exists1".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_exists1". Undo.  
 intros; set (f := fun x:R => exp x - y).
 assert (H0 : 0 < y) by (apply Rlt_le_trans with 1; auto with real).
 cut (f 0 <= 0); [intro H1|].
@@ -164,7 +164,7 @@ Qed.
 
 
 Lemma ln_exists : forall y:R, 0 < y -> { z:R | y = exp z }.
-Proof. try hammer_hook "Rpower" "Rpower.ln_exists".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_exists". Undo.  
 intros; destruct (Rle_dec 1 y) as [Hle|Hnle].
 apply (ln_exists1 _ Hle).
 assert (H0 : 1 <= / y).
@@ -199,7 +199,7 @@ match Rlt_dec 0 x with
 end.
 
 Lemma exp_ln : forall x:R, 0 < x -> exp (ln x) = x.
-Proof. try hammer_hook "Rpower" "Rpower.exp_ln".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_ln". Undo.  
 intros; unfold ln; decide (Rlt_dec 0 x) with H.
 unfold Rln;
 case (ln_exists (mkposreal x H) (cond_pos (mkposreal x H))) as (?,Hex).
@@ -207,14 +207,14 @@ symmetry; apply Hex.
 Qed.
 
 Theorem exp_inv : forall x y:R, exp x = exp y -> x = y.
-Proof. try hammer_hook "Rpower" "Rpower.exp_inv".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_inv". Undo.  
 intros x y H; case (Rtotal_order x y); [ intros H1 | intros [H1| H1] ]; auto;
 assert (H2 := exp_increasing _ _ H1); rewrite H in H2;
 elim (Rlt_irrefl _ H2).
 Qed.
 
 Theorem exp_Ropp : forall x:R, exp (- x) = / exp x.
-Proof. try hammer_hook "Rpower" "Rpower.exp_Ropp".  
+Proof. try hammer_hook "Rpower" "Rpower.exp_Ropp". Undo.  
 intros x; assert (H : exp x <> 0).
 assert (H := exp_pos x); red; intro; rewrite H0 in H;
 elim (Rlt_irrefl _ H).
@@ -230,7 +230,7 @@ Qed.
 
 
 Theorem ln_increasing : forall x y:R, 0 < x -> x < y -> ln x < ln y.
-Proof. try hammer_hook "Rpower" "Rpower.ln_increasing".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_increasing". Undo.  
 intros x y H H0; apply exp_lt_inv.
 repeat rewrite exp_ln.
 apply H0.
@@ -239,19 +239,19 @@ apply H.
 Qed.
 
 Theorem ln_exp : forall x:R, ln (exp x) = x.
-Proof. try hammer_hook "Rpower" "Rpower.ln_exp".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_exp". Undo.  
 intros x; apply exp_inv.
 apply exp_ln.
 apply exp_pos.
 Qed.
 
 Theorem ln_1 : ln 1 = 0.
-Proof. try hammer_hook "Rpower" "Rpower.ln_1".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_1". Undo.  
 rewrite <- exp_0; rewrite ln_exp; reflexivity.
 Qed.
 
 Theorem ln_lt_inv : forall x y:R, 0 < x -> 0 < y -> ln x < ln y -> x < y.
-Proof. try hammer_hook "Rpower" "Rpower.ln_lt_inv".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_lt_inv". Undo.  
 intros x y H H0 H1; rewrite <- (exp_ln x); try rewrite <- (exp_ln y).
 apply exp_increasing; apply H1.
 assumption.
@@ -259,7 +259,7 @@ assumption.
 Qed.
 
 Theorem ln_inv : forall x y:R, 0 < x -> 0 < y -> ln x = ln y -> x = y.
-Proof. try hammer_hook "Rpower" "Rpower.ln_inv".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_inv". Undo.  
 intros x y H H0 H'0; case (Rtotal_order x y); [ intros H1 | intros [H1| H1] ];
 auto.
 assert (H2 := ln_increasing _ _ H H1); rewrite H'0 in H2;
@@ -269,7 +269,7 @@ elim (Rlt_irrefl _ H2).
 Qed.
 
 Theorem ln_mult : forall x y:R, 0 < x -> 0 < y -> ln (x * y) = ln x + ln y.
-Proof. try hammer_hook "Rpower" "Rpower.ln_mult".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_mult". Undo.  
 intros x y H H0; apply exp_inv.
 rewrite exp_plus.
 repeat rewrite exp_ln.
@@ -280,7 +280,7 @@ apply Rmult_lt_0_compat; assumption.
 Qed.
 
 Theorem ln_Rinv : forall x:R, 0 < x -> ln (/ x) = - ln x.
-Proof. try hammer_hook "Rpower" "Rpower.ln_Rinv".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_Rinv". Undo.  
 intros x H; apply exp_inv; repeat rewrite exp_ln || rewrite exp_Ropp.
 reflexivity.
 assumption.
@@ -289,7 +289,7 @@ Qed.
 
 Theorem ln_continue :
 forall y:R, 0 < y -> continue_in ln (fun x:R => 0 < x) y.
-Proof. try hammer_hook "Rpower" "Rpower.ln_continue".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_continue". Undo.  
 intros y H.
 unfold continue_in, limit1_in, limit_in; intros eps Heps.
 cut (1 < exp eps); [ intros H1 | idtac ].
@@ -388,13 +388,13 @@ Local Infix "^R" := Rpower (at level 30, right associativity) : R_scope.
 
 
 Theorem Rpower_plus : forall x y z:R, z ^R (x + y) = z ^R x * z ^R y.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_plus".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_plus". Undo.  
 intros x y z; unfold Rpower.
 rewrite Rmult_plus_distr_r; rewrite exp_plus; auto.
 Qed.
 
 Theorem Rpower_mult : forall x y z:R, (x ^R y) ^R z = x ^R (y * z).
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_mult".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_mult". Undo.  
 intros x y z; unfold Rpower.
 rewrite ln_exp.
 replace (z * (y * ln x)) with (y * z * ln x).
@@ -403,19 +403,19 @@ ring.
 Qed.
 
 Theorem Rpower_O : forall x:R, 0 < x -> x ^R 0 = 1.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_O".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_O". Undo.  
 intros x _; unfold Rpower.
 rewrite Rmult_0_l; apply exp_0.
 Qed.
 
 Theorem Rpower_1 : forall x:R, 0 < x -> x ^R 1 = x.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_1".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_1". Undo.  
 intros x H; unfold Rpower.
 rewrite Rmult_1_l; apply exp_ln; apply H.
 Qed.
 
 Theorem Rpower_pow : forall (n:nat) (x:R), 0 < x -> x ^R INR n = x ^ n.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_pow".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_pow". Undo.  
 intros n; elim n; simpl; auto; fold INR.
 intros x H; apply Rpower_O; auto.
 intros n1; case n1.
@@ -426,7 +426,7 @@ Qed.
 
 Theorem Rpower_lt :
 forall x y z:R, 1 < x -> 0 <= y -> y < z -> x ^R y < x ^R z.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_lt".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_lt". Undo.  
 intros x y z H H0 H1.
 unfold Rpower.
 apply exp_increasing.
@@ -438,7 +438,7 @@ apply H1.
 Qed.
 
 Theorem Rpower_sqrt : forall x:R, 0 < x -> x ^R (/ 2) = sqrt x.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_sqrt".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_sqrt". Undo.  
 intros x H.
 apply ln_inv.
 unfold Rpower; apply exp_pos.
@@ -461,14 +461,14 @@ apply not_O_INR; discriminate.
 Qed.
 
 Theorem Rpower_Ropp : forall x y:R, x ^R (- y) = / x ^R y.
-Proof. try hammer_hook "Rpower" "Rpower.Rpower_Ropp".  
+Proof. try hammer_hook "Rpower" "Rpower.Rpower_Ropp". Undo.  
 unfold Rpower.
 intros x y; rewrite Ropp_mult_distr_l_reverse.
 apply exp_Ropp.
 Qed.
 
 Lemma powerRZ_Rpower x z : (0 < x)%R -> powerRZ x z = Rpower x (IZR z).
-Proof. try hammer_hook "Rpower" "Rpower.powerRZ_Rpower".  
+Proof. try hammer_hook "Rpower" "Rpower.powerRZ_Rpower". Undo.  
 intros Hx.
 assert (x <> 0)%R
 by now intros Habs; rewrite Habs in Hx; apply (Rlt_irrefl 0).
@@ -483,14 +483,14 @@ Qed.
 
 Theorem Rle_Rpower :
 forall e n m:R, 1 < e -> 0 <= n -> n <= m -> e ^R n <= e ^R m.
-Proof. try hammer_hook "Rpower" "Rpower.Rle_Rpower".  
+Proof. try hammer_hook "Rpower" "Rpower.Rle_Rpower". Undo.  
 intros e n m H H0 H1; case H1.
 intros H2; left; apply Rpower_lt; assumption.
 intros H2; rewrite H2; right; reflexivity.
 Qed.
 
 Theorem ln_lt_2 : / 2 < ln 2.
-Proof. try hammer_hook "Rpower" "Rpower.ln_lt_2".  
+Proof. try hammer_hook "Rpower" "Rpower.ln_lt_2". Undo.  
 apply Rmult_lt_reg_l with (r := 2).
 prove_sup0.
 rewrite Rinv_r.
@@ -510,7 +510,7 @@ Qed.
 Theorem limit1_ext :
 forall (f g:R -> R) (D:R -> Prop) (l x:R),
 (forall x:R, D x -> f x = g x) -> limit1_in f D l x -> limit1_in g D l x.
-Proof. try hammer_hook "Rpower" "Rpower.limit1_ext".  
+Proof. try hammer_hook "Rpower" "Rpower.limit1_ext". Undo.  
 intros f g D l x H; unfold limit1_in, limit_in.
 intros H0 eps H1; case (H0 eps); auto.
 intros x0 [H2 H3]; exists x0; split; auto.
@@ -520,7 +520,7 @@ Qed.
 Theorem limit1_imp :
 forall (f:R -> R) (D D1:R -> Prop) (l x:R),
 (forall x:R, D1 x -> D x) -> limit1_in f D l x -> limit1_in f D1 l x.
-Proof. try hammer_hook "Rpower" "Rpower.limit1_imp".  
+Proof. try hammer_hook "Rpower" "Rpower.limit1_imp". Undo.  
 intros f D D1 l x H; unfold limit1_in, limit_in.
 intros H0 eps H1; case (H0 eps H1); auto.
 intros alpha [H2 H3]; exists alpha; split; auto.
@@ -528,7 +528,7 @@ intros d [H4 H5]; apply H3; split; auto.
 Qed.
 
 Theorem Rinv_Rdiv : forall x y:R, x <> 0 -> y <> 0 -> / (x / y) = y / x.
-Proof. try hammer_hook "Rpower" "Rpower.Rinv_Rdiv".  
+Proof. try hammer_hook "Rpower" "Rpower.Rinv_Rdiv". Undo.  
 intros x y H1 H2; unfold Rdiv; rewrite Rinv_mult_distr.
 rewrite Rinv_involutive.
 apply Rmult_comm.
@@ -538,7 +538,7 @@ apply Rinv_neq_0_compat; assumption.
 Qed.
 
 Theorem Dln : forall y:R, 0 < y -> D_in ln Rinv (fun x:R => 0 < x) y.
-Proof. try hammer_hook "Rpower" "Rpower.Dln".  
+Proof. try hammer_hook "Rpower" "Rpower.Dln". Undo.  
 intros y Hy; unfold D_in.
 apply limit1_ext with
 (f := fun x:R => / ((exp (ln x) - exp (ln y)) / (ln x - ln y))).
@@ -584,7 +584,7 @@ red; intro; rewrite H in Hy; elim (Rlt_irrefl _ Hy).
 Qed.
 
 Lemma derivable_pt_lim_ln : forall x:R, 0 < x -> derivable_pt_lim ln x (/ x).
-Proof. try hammer_hook "Rpower" "Rpower.derivable_pt_lim_ln".  
+Proof. try hammer_hook "Rpower" "Rpower.derivable_pt_lim_ln". Undo.  
 intros; assert (H0 := Dln x H); unfold D_in in H0; unfold limit1_in in H0;
 unfold limit_in in H0; simpl in H0; unfold R_dist in H0;
 unfold derivable_pt_lim; intros; elim (H0 _ H1);
@@ -624,7 +624,7 @@ Qed.
 Theorem D_in_imp :
 forall (f g:R -> R) (D D1:R -> Prop) (x:R),
 (forall x:R, D1 x -> D x) -> D_in f g D x -> D_in f g D1 x.
-Proof. try hammer_hook "Rpower" "Rpower.D_in_imp".  
+Proof. try hammer_hook "Rpower" "Rpower.D_in_imp". Undo.  
 intros f g D D1 x H; unfold D_in.
 intros H0; apply limit1_imp with (D := D_x D x); auto.
 intros x1 [H1 H2]; split; auto.
@@ -633,7 +633,7 @@ Qed.
 Theorem D_in_ext :
 forall (f g h:R -> R) (D:R -> Prop) (x:R),
 f x = g x -> D_in h f D x -> D_in h g D x.
-Proof. try hammer_hook "Rpower" "Rpower.D_in_ext".  
+Proof. try hammer_hook "Rpower" "Rpower.D_in_ext". Undo.  
 intros f g h D x H; unfold D_in.
 rewrite H; auto.
 Qed.
@@ -643,7 +643,7 @@ forall y z:R,
 0 < y ->
 D_in (fun x:R => x ^R z) (fun x:R => z * x ^R (z - 1)) (
 fun x:R => 0 < x) y.
-Proof. try hammer_hook "Rpower" "Rpower.Dpower".  
+Proof. try hammer_hook "Rpower" "Rpower.Dpower". Undo.  
 intros y z H;
 apply D_in_imp with (D := Dgf (fun x:R => 0 < x) (fun x:R => True) ln).
 intros x H0; repeat split.
@@ -673,7 +673,7 @@ Qed.
 Theorem derivable_pt_lim_power :
 forall x y:R,
 0 < x -> derivable_pt_lim (fun x => x ^R y) x (y * x ^R (y - 1)).
-Proof. try hammer_hook "Rpower" "Rpower.derivable_pt_lim_power".  
+Proof. try hammer_hook "Rpower" "Rpower.derivable_pt_lim_power". Undo.  
 intros x y H.
 unfold Rminus; rewrite Rpower_plus.
 rewrite Rpower_Ropp.
@@ -702,7 +702,7 @@ rewrite <- exp_plus, ln_mult, Rmult_plus_distr_l; auto.
 Qed.
 
 Lemma Rle_Rpower_l a b c: 0 <= c -> 0 < a <= b -> Rpower a c <= Rpower b c.
-Proof. try hammer_hook "Rpower" "Rpower.Rle_Rpower_l".  
+Proof. try hammer_hook "Rpower" "Rpower.Rle_Rpower_l". Undo.  
 intros [c0 | c0];
 [ | intros; rewrite <- c0, !Rpower_O; [apply Rle_refl | |] ].
 intros [a0 [ab|ab]].

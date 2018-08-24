@@ -40,19 +40,19 @@ Qed.
 
 Global Instance PermutationA_cons :
 Proper (eqA ==> PermutationA ==> PermutationA) (@cons A).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_cons".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_cons". Undo.  
 repeat intro. now apply permA_skip.
 Qed.
 
 Lemma PermutationA_app_head l₁ l₂ l :
 PermutationA l₁ l₂ -> PermutationA (l ++ l₁) (l ++ l₂).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app_head".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app_head". Undo.  
 induction l; trivial; intros. apply permA_skip; intuition.
 Qed.
 
 Global Instance PermutationA_app :
 Proper (PermutationA ==> PermutationA ==> PermutationA) (@app A).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app". Undo.  
 intros l₁ l₂ Pl k₁ k₂ Pk.
 induction Pl.
 - easy.
@@ -66,13 +66,13 @@ Qed.
 
 Lemma PermutationA_app_tail l₁ l₂ l :
 PermutationA l₁ l₂ -> PermutationA (l₁ ++ l) (l₂ ++ l).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app_tail".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app_tail". Undo.  
 intros E. now rewrite E.
 Qed.
 
 Lemma PermutationA_cons_append l x :
 PermutationA (x :: l) (l ++ x :: nil).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_cons_append".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_cons_append". Undo.  
 induction l.
 - easy.
 - simpl. rewrite <-IHl. intuition.
@@ -80,7 +80,7 @@ Qed.
 
 Lemma PermutationA_app_comm l₁ l₂ :
 PermutationA (l₁ ++ l₂) (l₂ ++ l₁).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app_comm".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_app_comm". Undo.  
 induction l₁.
 - now rewrite app_nil_r.
 - rewrite <-app_comm_cons, IHl₁, app_comm_cons.
@@ -89,20 +89,20 @@ Qed.
 
 Lemma PermutationA_cons_app l l₁ l₂ x :
 PermutationA l (l₁ ++ l₂) -> PermutationA (x :: l) (l₁ ++ x :: l₂).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_cons_app".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_cons_app". Undo.  
 intros E. rewrite E.
 now rewrite app_comm_cons, (PermutationA_cons_append l₁ x), <- app_assoc.
 Qed.
 
 Lemma PermutationA_middle l₁ l₂ x :
 PermutationA (x :: l₁ ++ l₂) (l₁ ++ x :: l₂).
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_middle".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_middle". Undo.  
 now apply PermutationA_cons_app.
 Qed.
 
 Lemma PermutationA_equivlistA l₁ l₂ :
 PermutationA l₁ l₂ -> equivlistA eqA l₁ l₂.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_equivlistA".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_equivlistA". Undo.  
 induction 1.
 - reflexivity.
 - now apply equivlistA_cons_proper.
@@ -113,7 +113,7 @@ Qed.
 Lemma NoDupA_equivlistA_PermutationA l₁ l₂ :
 NoDupA eqA l₁ -> NoDupA eqA l₂ ->
 equivlistA eqA l₁ l₂ -> PermutationA l₁ l₂.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.NoDupA_equivlistA_PermutationA".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.NoDupA_equivlistA_PermutationA". Undo.  
 intros Pl₁. revert l₂. induction Pl₁ as [|x l₁ E1].
 - intros l₂ _ H₂. symmetry in H₂. now rewrite (equivlistA_nil_eq eqA).
 - intros l₂ Pl₂ E2.
@@ -128,7 +128,7 @@ Qed.
 Lemma Permutation_eqlistA_commute l₁ l₂ l₃ :
 eqlistA eqA l₁ l₂ -> Permutation l₂ l₃ ->
 exists l₂', Permutation l₁ l₂' /\ eqlistA eqA l₂' l₃.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.Permutation_eqlistA_commute".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.Permutation_eqlistA_commute". Undo.  
 intros E P. revert l₁ E.
 induction P; intros.
 - inversion_clear E. now exists nil.
@@ -146,7 +146,7 @@ Qed.
 Lemma PermutationA_decompose l₁ l₂ :
 PermutationA l₁ l₂ ->
 exists l, Permutation l₁ l /\ eqlistA eqA l l₂.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_decompose".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_decompose". Undo.  
 induction 1.
 - now exists nil.
 - destruct IHPermutationA as (l,(P,E)). exists (x₁::l); auto.
@@ -160,7 +160,7 @@ Qed.
 
 Lemma Permutation_PermutationA l₁ l₂ :
 Permutation l₁ l₂ -> PermutationA l₁ l₂.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.Permutation_PermutationA".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.Permutation_PermutationA". Undo.  
 induction 1.
 - constructor.
 - now constructor.
@@ -170,21 +170,21 @@ Qed.
 
 Lemma eqlistA_PermutationA l₁ l₂ :
 eqlistA eqA l₁ l₂ -> PermutationA l₁ l₂.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.eqlistA_PermutationA".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.eqlistA_PermutationA". Undo.  
 induction 1; now constructor.
 Qed.
 
 Lemma NoDupA_equivlistA_decompose l1 l2 :
 NoDupA eqA l1 -> NoDupA eqA l2 -> equivlistA eqA l1 l2 ->
 exists l, Permutation l1 l /\ eqlistA eqA l l2.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.NoDupA_equivlistA_decompose".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.NoDupA_equivlistA_decompose". Undo.  
 intros. apply PermutationA_decompose.
 now apply NoDupA_equivlistA_PermutationA.
 Qed.
 
 Lemma PermutationA_preserves_NoDupA l₁ l₂ :
 PermutationA l₁ l₂ -> NoDupA eqA l₁ -> NoDupA eqA l₂.
-Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_preserves_NoDupA".  
+Proof. try hammer_hook "SetoidPermutation" "SetoidPermutation.PermutationA_preserves_NoDupA". Undo.  
 induction 1; trivial.
 - inversion_clear 1; constructor; auto.
 apply PermutationA_equivlistA in H0. contradict H2.

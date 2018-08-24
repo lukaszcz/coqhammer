@@ -25,18 +25,18 @@ Ltac auto' := trivial; try rewrite <- neq_0_lt_0; auto using le_0_l.
 Ltac wrap l := intros; apply l; auto'.
 
 Lemma pow_succ_r' : forall a b, a^(S b) == a * a^b.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_succ_r'".   wrap pow_succ_r. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_succ_r'". Undo.   wrap pow_succ_r. Qed.
 
 
 
 Lemma pow_0_l : forall a, a~=0 -> 0^a == 0.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_0_l".   wrap pow_0_l. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_0_l". Undo.   wrap pow_0_l. Qed.
 
 Definition pow_1_r : forall a, a^1 == a
 := pow_1_r.
 
 Lemma pow_1_l : forall a, 1^a == 1.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_1_l".   wrap pow_1_l. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_1_l". Undo.   wrap pow_1_l. Qed.
 
 Definition pow_2_r : forall a, a^2 == a*a
 := pow_2_r.
@@ -44,24 +44,24 @@ Definition pow_2_r : forall a, a^2 == a*a
 
 
 Lemma pow_add_r : forall a b c, a^(b+c) == a^b * a^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_add_r".   wrap pow_add_r. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_add_r". Undo.   wrap pow_add_r. Qed.
 
 Lemma pow_mul_l : forall a b c, (a*b)^c == a^c * b^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_mul_l".   wrap pow_mul_l. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_mul_l". Undo.   wrap pow_mul_l. Qed.
 
 Lemma pow_mul_r : forall a b c, a^(b*c) == (a^b)^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_mul_r".   wrap pow_mul_r. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_mul_r". Undo.   wrap pow_mul_r. Qed.
 
 
 
 Lemma pow_eq_0 : forall a b, b~=0 -> a^b == 0 -> a == 0.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_eq_0".   intros. apply (pow_eq_0 a b); trivial. auto'. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_eq_0". Undo.   intros. apply (pow_eq_0 a b); trivial. auto'. Qed.
 
 Lemma pow_nonzero : forall a b, a~=0 -> a^b ~= 0.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_nonzero".   wrap pow_nonzero. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_nonzero". Undo.   wrap pow_nonzero. Qed.
 
 Lemma pow_eq_0_iff : forall a b, a^b == 0 <-> b~=0 /\ a==0.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_eq_0_iff".  
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_eq_0_iff". Undo.  
 intros a b. split.
 rewrite pow_eq_0_iff. intros [H |[H H']].
 generalize (le_0_l b); order. split; order.
@@ -71,25 +71,25 @@ Qed.
 
 
 Lemma pow_lt_mono_l : forall a b c, c~=0 -> a<b -> a^c < b^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_l".   wrap pow_lt_mono_l. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_l". Undo.   wrap pow_lt_mono_l. Qed.
 
 Lemma pow_le_mono_l : forall a b c, a<=b -> a^c <= b^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_l".   wrap pow_le_mono_l. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_l". Undo.   wrap pow_le_mono_l. Qed.
 
 Lemma pow_gt_1 : forall a b, 1<a -> b~=0 -> 1<a^b.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_gt_1".   wrap pow_gt_1. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_gt_1". Undo.   wrap pow_gt_1. Qed.
 
 Lemma pow_lt_mono_r : forall a b c, 1<a -> b<c -> a^b < a^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_r".   wrap pow_lt_mono_r. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_r". Undo.   wrap pow_lt_mono_r. Qed.
 
 
 
 Lemma pow_le_mono_r : forall a b c, a~=0 -> b<=c -> a^b <= a^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_r".   wrap pow_le_mono_r. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_r". Undo.   wrap pow_le_mono_r. Qed.
 
 Lemma pow_le_mono : forall a b c d, a~=0 -> a<=c -> b<=d ->
 a^b <= c^d.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono".   wrap pow_le_mono. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono". Undo.   wrap pow_le_mono. Qed.
 
 Definition pow_lt_mono : forall a b c d, 0<a<c -> 0<b<d ->
 a^b < c^d
@@ -98,50 +98,50 @@ a^b < c^d
 
 
 Lemma pow_inj_l : forall a b c, c~=0 -> a^c == b^c -> a == b.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_inj_l".   intros; eapply pow_inj_l; eauto; auto'. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_inj_l". Undo.   intros; eapply pow_inj_l; eauto; auto'. Qed.
 
 Lemma pow_inj_r : forall a b c, 1<a -> a^b == a^c -> b == c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_inj_r".   intros; eapply pow_inj_r; eauto; auto'. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_inj_r". Undo.   intros; eapply pow_inj_r; eauto; auto'. Qed.
 
 
 
 Lemma pow_lt_mono_l_iff : forall a b c, c~=0 ->
 (a<b <-> a^c < b^c).
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_l_iff".   wrap pow_lt_mono_l_iff. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_l_iff". Undo.   wrap pow_lt_mono_l_iff. Qed.
 
 Lemma pow_le_mono_l_iff : forall a b c, c~=0 ->
 (a<=b <-> a^c <= b^c).
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_l_iff".   wrap pow_le_mono_l_iff. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_l_iff". Undo.   wrap pow_le_mono_l_iff. Qed.
 
 Lemma pow_lt_mono_r_iff : forall a b c, 1<a ->
 (b<c <-> a^b < a^c).
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_r_iff".   wrap pow_lt_mono_r_iff. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_lt_mono_r_iff". Undo.   wrap pow_lt_mono_r_iff. Qed.
 
 Lemma pow_le_mono_r_iff : forall a b c, 1<a ->
 (b<=c <-> a^b <= a^c).
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_r_iff".   wrap pow_le_mono_r_iff. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_le_mono_r_iff". Undo.   wrap pow_le_mono_r_iff. Qed.
 
 
 
 Lemma pow_gt_lin_r : forall a b, 1<a -> b < a^b.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_gt_lin_r".   wrap pow_gt_lin_r. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_gt_lin_r". Undo.   wrap pow_gt_lin_r. Qed.
 
 
 
 Lemma pow_add_lower : forall a b c, c~=0 ->
 a^c + b^c <= (a+b)^c.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_add_lower".   wrap pow_add_lower. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_add_lower". Undo.   wrap pow_add_lower. Qed.
 
 
 
 Lemma pow_add_upper : forall a b c, c~=0 ->
 (a+b)^c <= 2^(pred c) * (a^c + b^c).
-Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_add_upper".   wrap pow_add_upper. Qed.
+Proof. try hammer_hook "NPow" "NPow.NPowProp.pow_add_upper". Undo.   wrap pow_add_upper. Qed.
 
 
 
 Lemma even_pow : forall a b, b~=0 -> even (a^b) = even a.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.even_pow".  
+Proof. try hammer_hook "NPow" "NPow.NPowProp.even_pow". Undo.  
 intros a b Hb. rewrite neq_0_lt_0 in Hb.
 apply lt_ind with (4:=Hb). solve_proper.
 now nzsimpl.
@@ -150,7 +150,7 @@ rewrite pow_succ_r', even_mul, IH. now destruct (even a).
 Qed.
 
 Lemma odd_pow : forall a b, b~=0 -> odd (a^b) = odd a.
-Proof. try hammer_hook "NPow" "NPow.NPowProp.odd_pow".  
+Proof. try hammer_hook "NPow" "NPow.NPowProp.odd_pow". Undo.  
 intros. now rewrite <- !negb_even, even_pow.
 Qed.
 

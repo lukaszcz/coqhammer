@@ -31,7 +31,7 @@ Require Export Rpower.
 Local Open Scope R_scope.
 
 Definition AppVar : R.
-Proof. try hammer_hook "Ranalysis_reg" "Ranalysis_reg.AppVar".  
+Proof. try hammer_hook "Ranalysis_reg" "Ranalysis_reg.AppVar". Undo.  
 exact R0.
 Qed.
 

@@ -133,7 +133,7 @@ Definition I (x:El1 U) : U0 :=
 
 
 Lemma Omega : El0 (∀₀¹ i:U⟶₁u0, induct i ⟶₀ i ·₁ WF).
-Proof. try hammer_hook "Hurkens" "Hurkens.Generic.Omega".  
+Proof. try hammer_hook "Hurkens" "Hurkens.Generic.Omega". Undo.  
 refine (λ₀¹ i, λ₀ y, _).
 refine (y·₀[_]·₀_).
 unfold le,WF,induct. simplify.
@@ -146,7 +146,7 @@ exact h0.
 Qed.
 
 Lemma lemma1 : El0 (induct (λ₁ u, I u)).
-Proof. try hammer_hook "Hurkens" "Hurkens.Generic.lemma1".  
+Proof. try hammer_hook "Hurkens" "Hurkens.Generic.lemma1". Undo.  
 unfold induct.
 refine (λ₀¹ x, λ₀ p, _). simplify.
 refine (λ₀ q,_).
@@ -167,7 +167,7 @@ exact h'.
 Qed.
 
 Lemma lemma2 : El0 ((∀₀¹i:U⟶₁u0, induct i ⟶₀ i·₁WF) ⟶₀ F).
-Proof. try hammer_hook "Hurkens" "Hurkens.Generic.lemma2".  
+Proof. try hammer_hook "Hurkens" "Hurkens.Generic.lemma2". Undo.  
 refine (λ₀ x, _).
 assert (El0 (I WF)) as h.
 { generalize (x·₀[λ₁ u, I u]·₀lemma1). simplify.
@@ -184,7 +184,7 @@ exact h0.
 Qed.
 
 Theorem paradox : El0 F.
-Proof. try hammer_hook "Hurkens" "Hurkens.Generic.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.Generic.paradox". Undo.  
 exact (lemma2·₀Omega).
 Qed.
 
@@ -225,7 +225,7 @@ Hypothesis u12u0_counit : forall (b:U1), u02u1 (u12u0 b) -> b.
 
 
 Theorem paradox : forall F:U1, F.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToImpredicativeUniverse.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToImpredicativeUniverse.paradox". Undo.  
 intros F.
 Generic.paradox h.
 
@@ -273,7 +273,7 @@ Variable M : Prop -> Prop.
 Hypothesis incr : forall A B:Prop, (A->B) -> M A -> M B.
 
 Lemma strength: forall A (P:A->Prop), M(forall x:A,P x) -> forall x:A,M(P x).
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.strength".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.strength". Undo.  
 intros A P h x.
 eapply incr in h; eauto.
 Qed.
@@ -284,13 +284,13 @@ Definition MProp := { P:Prop | M P -> P }.
 Definition El : MProp -> Prop := @proj1_sig _ _.
 
 Lemma modal : forall P:MProp, M(El P) -> El P.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.modal".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.modal". Undo.  
 intros [P m]. cbn.
 exact m.
 Qed.
 
 Definition Forall {A:Type} (P:A->MProp) : MProp.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.Forall".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.Forall". Undo.  
 unshelve (refine (exist _ _ _)).
 + exact (forall x:A, El (P x)).
 + intros h x.
@@ -311,7 +311,7 @@ Hypothesis p2p2 : forall A:MProp, El A -> El (b2p (p2b A)).
 
 
 Theorem paradox : forall B:MProp, El B.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToModalProposition.paradox". Undo.  
 intros B.
 Generic.paradox h.
 
@@ -373,7 +373,7 @@ Hypothesis p2p2 : forall A:NProp, El A -> El (b2p (p2b A)).
 
 
 Theorem paradox : forall B:NProp, El B.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToNegativeProp.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractToNegativeProp.paradox". Undo.  
 intros B.
 unshelve (refine ((fun h => _) (NoRetractToModalProposition.paradox _ _ _ _ _ _ _ _))).
 + exact (fun P => ~~P).
@@ -415,7 +415,7 @@ Hypothesis p2p2 : forall A:NProp, El A -> El (b2p (p2b A)).
 
 
 Theorem mparadox : forall B:NProp, El B.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromSmallPropositionToProp.mparadox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromSmallPropositionToProp.mparadox". Undo.  
 intros B.
 unshelve (refine ((fun h => _) (NoRetractToModalProposition.paradox _ _ _ _ _ _ _ _))).
 + exact (fun P => P).
@@ -445,7 +445,7 @@ Hypothesis p2p2 : forall A:Prop, A -> b2p (p2b A).
 
 
 Theorem paradox : forall B:Prop, B.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromSmallPropositionToProp.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromSmallPropositionToProp.paradox". Undo.  
 intros B.
 unshelve (refine (mparadox (exist _ bool (fun x => x)) _ _ _ _
 (exist _ B (fun x => x)))).
@@ -482,7 +482,7 @@ Hypothesis up_down : forall (A:Type1), up (down A) = A :> Type1.
 
 
 Theorem paradox : forall P:Prop, P.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromTypeToProp.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromTypeToProp.paradox". Undo.  
 intros P.
 Generic.paradox h.
 
@@ -543,14 +543,14 @@ Let down (X:U) : A := @eq_rect _ _ (fun X => X) X _ h.
 Let up   (X:A) : U := @eq_rect_r _ _ (fun X => X) X _ h.
 
 Lemma up_down : forall (X:U), up (down X) = X.
-Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromTypeToProp.Paradox.up_down".  
+Proof. try hammer_hook "Hurkens" "Hurkens.NoRetractFromTypeToProp.Paradox.up_down". Undo.  
 unfold up,down.
 rewrite <- h.
 reflexivity.
 Qed.
 
 Theorem paradox : False.
-Proof. try hammer_hook "Hurkens" "Hurkens.TypeNeqSmallType.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.TypeNeqSmallType.paradox". Undo.  
 Generic.paradox p.
 
 + exact U.
@@ -602,7 +602,7 @@ End TypeNeqSmallType.
 Module PropNeqType.
 
 Theorem paradox : Prop <> Type.
-Proof. try hammer_hook "Hurkens" "Hurkens.PropNeqType.paradox".  
+Proof. try hammer_hook "Hurkens" "Hurkens.PropNeqType.paradox". Undo.  
 intros h.
 unshelve (refine (TypeNeqSmallType.paradox _ _)).
 + exact Prop.

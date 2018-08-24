@@ -26,7 +26,7 @@ forall An:nat -> R,
 (forall n:nat, 0 < An n) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) 0 ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 An N) l }.
-Proof. try hammer_hook "Alembert" "Alembert.Alembert_C1".  
+Proof. try hammer_hook "Alembert" "Alembert.Alembert_C1". Undo.  
 intros An H H0.
 cut
 ({ l:R | is_lub (EUn (fun N:nat => sum_f_R0 An N)) l } ->
@@ -119,7 +119,7 @@ forall An:nat -> R,
 (forall n:nat, An n <> 0) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) 0 ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 An N) l }.
-Proof. try hammer_hook "Alembert" "Alembert.Alembert_C2".  
+Proof. try hammer_hook "Alembert" "Alembert.Alembert_C2". Undo.  
 intros.
 set (Vn := fun i:nat => (2 * Rabs (An i) + An i) / 2).
 set (Wn := fun i:nat => (2 * Rabs (An i) - An i) / 2).
@@ -338,7 +338,7 @@ x <> 0 ->
 (forall n:nat, An n <> 0) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) 0 ->
 { l:R | Pser An x l }.
-Proof. try hammer_hook "Alembert" "Alembert.AlembertC3_step1".  
+Proof. try hammer_hook "Alembert" "Alembert.AlembertC3_step1". Undo.  
 intros; set (Bn := fun i:nat => An i * x ^ i).
 cut (forall n:nat, Bn n <> 0).
 intro; cut (Un_cv (fun n:nat => Rabs (Bn (S n) / Bn n)) 0).
@@ -378,7 +378,7 @@ Defined.
 
 Lemma AlembertC3_step2 :
 forall (An:nat -> R) (x:R), x = 0 -> { l:R | Pser An x l }.
-Proof. try hammer_hook "Alembert" "Alembert.AlembertC3_step2".  
+Proof. try hammer_hook "Alembert" "Alembert.AlembertC3_step2". Undo.  
 intros; exists (An 0%nat).
 unfold Pser; unfold infinite_sum; intros; exists 0%nat; intros;
 replace (sum_f_R0 (fun n0:nat => An n0 * x ^ n0) n) with (An 0%nat).
@@ -396,7 +396,7 @@ forall (An:nat -> R) (x:R),
 (forall n:nat, An n <> 0) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) 0 ->
 { l:R | Pser An x l }.
-Proof. try hammer_hook "Alembert" "Alembert.Alembert_C3".  
+Proof. try hammer_hook "Alembert" "Alembert.Alembert_C3". Undo.  
 intros; destruct (total_order_T x 0) as [[Hlt|Heq]|Hgt].
 cut (x <> 0).
 intro; apply AlembertC3_step1; assumption.
@@ -413,7 +413,7 @@ forall (An:nat -> R) (k:R),
 (forall n:nat, 0 < An n) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) k ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 An N) l }.
-Proof. try hammer_hook "Alembert" "Alembert.Alembert_C4".  
+Proof. try hammer_hook "Alembert" "Alembert.Alembert_C4". Undo.  
 intros An k Hyp H H0.
 cut
 ({ l:R | is_lub (EUn (fun N:nat => sum_f_R0 An N)) l } ->
@@ -529,7 +529,7 @@ forall (An:nat -> R) (k:R),
 (forall n:nat, An n <> 0) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) k ->
 { l:R | Un_cv (fun N:nat => sum_f_R0 An N) l }.
-Proof. try hammer_hook "Alembert" "Alembert.Alembert_C5".  
+Proof. try hammer_hook "Alembert" "Alembert.Alembert_C5". Undo.  
 intros.
 cut
 ({ l:R | Un_cv (fun N:nat => sum_f_R0 An N) l } ->
@@ -573,7 +573,7 @@ forall (An:nat -> R) (x k:R),
 (forall n:nat, An n <> 0) ->
 Un_cv (fun n:nat => Rabs (An (S n) / An n)) k ->
 Rabs x < / k -> { l:R | Pser An x l }.
-Proof. try hammer_hook "Alembert" "Alembert.Alembert_C6".  
+Proof. try hammer_hook "Alembert" "Alembert.Alembert_C6". Undo.  
 intros.
 cut { l:R | Un_cv (fun N:nat => sum_f_R0 (fun i:nat => An i * x ^ i) N) l }.
 intro X.

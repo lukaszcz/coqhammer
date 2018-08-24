@@ -30,167 +30,167 @@ Variable x y z : elt.
 
 Lemma mem_eq:
 E.eq x y -> mem x s=mem y s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.mem_eq".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.mem_eq". Undo.  
 intro H; rewrite H; auto.
 Qed.
 
 Lemma equal_mem_1:
 (forall a, mem a s=mem a s') -> equal s s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_mem_1". Undo.  
 intros; apply equal_1; unfold Equal; intros.
 do 2 rewrite mem_iff; rewrite H; tauto.
 Qed.
 
 Lemma equal_mem_2:
 equal s s'=true -> forall a, mem a s=mem a s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_mem_2". Undo.  
 intros; rewrite (equal_2 H); auto.
 Qed.
 
 Lemma subset_mem_1:
 (forall a, mem a s=true->mem a s'=true) -> subset s s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_mem_1". Undo.  
 intros; apply subset_1; unfold Subset; intros a.
 do 2 rewrite mem_iff; auto.
 Qed.
 
 Lemma subset_mem_2:
 subset s s'=true -> forall a, mem a s=true -> mem a s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_mem_2". Undo.  
 intros H a; do 2 rewrite <- mem_iff; apply subset_2; auto.
 Qed.
 
 Lemma empty_mem: mem x empty=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.empty_mem".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.empty_mem". Undo.  
 rewrite <- not_mem_iff; auto with set.
 Qed.
 
 Lemma is_empty_equal_empty: is_empty s = equal s empty.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.is_empty_equal_empty".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.is_empty_equal_empty". Undo.  
 apply bool_1; split; intros.
 auto with set.
 rewrite <- is_empty_iff; auto with set.
 Qed.
 
 Lemma choose_mem_1: choose s=Some x -> mem x s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_1". Undo.  
 auto with set.
 Qed.
 
 Lemma choose_mem_2: choose s=None -> is_empty s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_2". Undo.  
 auto with set.
 Qed.
 
 Lemma add_mem_1: mem x (add x s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_mem_1". Undo.  
 auto with set relations.
 Qed.
 
 Lemma add_mem_2: ~E.eq x y -> mem y (add x s)=mem y s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_mem_2". Undo.  
 apply add_neq_b.
 Qed.
 
 Lemma remove_mem_1: mem x (remove x s)=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_mem_1". Undo.  
 rewrite <- not_mem_iff; auto with set relations.
 Qed.
 
 Lemma remove_mem_2: ~E.eq x y -> mem y (remove x s)=mem y s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_mem_2". Undo.  
 apply remove_neq_b.
 Qed.
 
 Lemma singleton_equal_add:
 equal (singleton x) (add x empty)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_equal_add".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_equal_add". Undo.  
 rewrite (singleton_equal_add x); auto with set.
 Qed.
 
 Lemma union_mem:
 mem x (union s s')=mem x s || mem x s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_mem".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_mem". Undo.  
 apply union_b.
 Qed.
 
 Lemma inter_mem:
 mem x (inter s s')=mem x s && mem x s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_mem".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_mem". Undo.  
 apply inter_b.
 Qed.
 
 Lemma diff_mem:
 mem x (diff s s')=mem x s && negb (mem x s').
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_mem".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_mem". Undo.  
 apply diff_b.
 Qed.
 
 
 
 Lemma mem_3 : ~In x s -> mem x s=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.mem_3". Undo.  
 intros; rewrite <- not_mem_iff; auto.
 Qed.
 
 Lemma mem_4 : mem x s=false -> ~In x s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.mem_4".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.mem_4". Undo.  
 intros; rewrite not_mem_iff; auto.
 Qed.
 
 
 
 Lemma equal_refl: equal s s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_refl".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_refl". Undo.  
 auto with set.
 Qed.
 
 Lemma equal_sym: equal s s'=equal s' s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_sym".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_sym". Undo.  
 intros; apply bool_1; do 2 rewrite <- equal_iff; intuition.
 Qed.
 
 Lemma equal_trans:
 equal s s'=true -> equal s' s''=true -> equal s s''=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_trans".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_trans". Undo.  
 intros; rewrite (equal_2 H); auto.
 Qed.
 
 Lemma equal_equal:
 equal s s'=true -> equal s s''=equal s' s''.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_equal". Undo.  
 intros; rewrite (equal_2 H); auto.
 Qed.
 
 Lemma equal_cardinal:
 equal s s'=true -> cardinal s=cardinal s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_cardinal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.equal_cardinal". Undo.  
 auto with set.
 Qed.
 
 
 
 Lemma subset_refl: subset s s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_refl".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_refl". Undo.  
 auto with set.
 Qed.
 
 Lemma subset_antisym:
 subset s s'=true -> subset s' s=true -> equal s s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_antisym".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_antisym". Undo.  
 auto with set.
 Qed.
 
 Lemma subset_trans:
 subset s s'=true -> subset s' s''=true -> subset s s''=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_trans".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_trans". Undo.  
 do 3 rewrite <- subset_iff; intros.
 apply subset_trans with s'; auto.
 Qed.
 
 Lemma subset_equal:
 equal s s'=true -> subset s s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_equal". Undo.  
 auto with set.
 Qed.
 
@@ -198,7 +198,7 @@ Qed.
 
 Lemma choose_mem_3:
 is_empty s=false -> {x:elt|choose s=Some x /\ mem x s=true}.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_3". Undo.  
 intros.
 generalize (@choose_1 s) (@choose_2 s).
 destruct (choose s);intros.
@@ -208,7 +208,7 @@ intros; rewrite (is_empty_1 H1) in H; discriminate.
 Qed.
 
 Lemma choose_mem_4: choose empty=None.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_4".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.choose_mem_4". Undo.  
 generalize (@choose_1 empty).
 case (@choose empty);intros;auto.
 elim (@empty_1 e); auto.
@@ -218,13 +218,13 @@ Qed.
 
 Lemma add_mem_3:
 mem y s=true -> mem y (add x s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_mem_3". Undo.  
 auto with set.
 Qed.
 
 Lemma add_equal:
 mem x s=true -> equal (add x s) s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_equal". Undo.  
 auto with set.
 Qed.
 
@@ -232,26 +232,26 @@ Qed.
 
 Lemma remove_mem_3:
 mem y (remove x s)=true -> mem y s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_mem_3". Undo.  
 rewrite remove_b; intros H;destruct (andb_prop _ _ H); auto.
 Qed.
 
 Lemma remove_equal:
 mem x s=false -> equal (remove x s) s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_equal". Undo.  
 intros; apply equal_1; apply remove_equal.
 rewrite not_mem_iff; auto.
 Qed.
 
 Lemma add_remove:
 mem x s=true -> equal (add x (remove x s)) s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_remove".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_remove". Undo.  
 intros; apply equal_1; apply add_remove; auto with set.
 Qed.
 
 Lemma remove_add:
 mem x s=false -> equal (remove x (add x s)) s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_add".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_add". Undo.  
 intros; apply equal_1; apply remove_add; auto.
 rewrite not_mem_iff; auto.
 Qed.
@@ -259,7 +259,7 @@ Qed.
 
 
 Lemma is_empty_cardinal: is_empty s = zerob (cardinal s).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.is_empty_cardinal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.is_empty_cardinal". Undo.  
 intros; apply bool_1; split; intros.
 rewrite MP.cardinal_1; simpl; auto with set.
 assert (cardinal s = 0) by (apply zerob_true_elim; auto).
@@ -269,18 +269,18 @@ Qed.
 
 
 Lemma singleton_mem_1: mem x (singleton x)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_mem_1". Undo.  
 auto with set relations.
 Qed.
 
 Lemma singleton_mem_2: ~E.eq x y -> mem y (singleton x)=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_mem_2". Undo.  
 intros; rewrite singleton_b.
 unfold eqb; destruct (E.eq_dec x y); intuition.
 Qed.
 
 Lemma singleton_mem_3: mem y (singleton x)=true -> E.eq x y.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.singleton_mem_3". Undo.  
 intros; apply singleton_1; auto with set.
 Qed.
 
@@ -288,117 +288,117 @@ Qed.
 
 Lemma union_sym:
 equal (union s s') (union s' s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_sym".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_sym". Undo.  
 auto with set.
 Qed.
 
 Lemma union_subset_equal:
 subset s s'=true -> equal (union s s') s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_equal". Undo.  
 auto with set.
 Qed.
 
 Lemma union_equal_1:
 equal s s'=true-> equal (union s s'') (union s' s'')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_equal_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_equal_1". Undo.  
 auto with set.
 Qed.
 
 Lemma union_equal_2:
 equal s' s''=true-> equal (union s s') (union s s'')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_equal_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_equal_2". Undo.  
 auto with set.
 Qed.
 
 Lemma union_assoc:
 equal (union (union s s') s'') (union s (union s' s''))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_assoc".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_assoc". Undo.  
 auto with set.
 Qed.
 
 Lemma add_union_singleton:
 equal (add x s) (union (singleton x) s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_union_singleton".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_union_singleton". Undo.  
 auto with set.
 Qed.
 
 Lemma union_add:
 equal (union (add x s) s') (add x (union s s'))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_add".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_add". Undo.  
 auto with set.
 Qed.
 
 
 
 Lemma union_subset_1: subset s (union s s')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_1". Undo.  
 auto with set.
 Qed.
 
 Lemma union_subset_2: subset s' (union s s')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_2". Undo.  
 auto with set.
 Qed.
 
 Lemma union_subset_3:
 subset s s''=true -> subset s' s''=true ->
 subset (union s s') s''=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_subset_3". Undo.  
 intros; apply subset_1; apply union_subset_3; auto with set.
 Qed.
 
 
 
 Lemma inter_sym: equal (inter s s') (inter s' s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_sym".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_sym". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_subset_equal:
 subset s s'=true -> equal (inter s s') s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_equal". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_equal_1:
 equal s s'=true -> equal (inter s s'') (inter s' s'')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_equal_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_equal_1". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_equal_2:
 equal s' s''=true -> equal (inter s s') (inter s s'')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_equal_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_equal_2". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_assoc:
 equal (inter (inter s s') s'') (inter s (inter s' s''))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_assoc".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_assoc". Undo.  
 auto with set.
 Qed.
 
 Lemma union_inter_1:
 equal (inter (union s s') s'') (union (inter s s'') (inter s' s''))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_inter_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_inter_1". Undo.  
 auto with set.
 Qed.
 
 Lemma union_inter_2:
 equal (union (inter s s') s'') (inter (union s s'') (union s' s''))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_inter_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_inter_2". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_add_1: mem x s'=true ->
 equal (inter (add x s) s') (add x (inter s s'))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_add_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_add_1". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_add_2: mem x s'=false ->
 equal (inter (add x s) s') (inter s s')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_add_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_add_2". Undo.  
 intros; apply equal_1; apply inter_add_2.
 rewrite not_mem_iff; auto.
 Qed.
@@ -406,50 +406,50 @@ Qed.
 
 
 Lemma inter_subset_1: subset (inter s s') s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_1". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_subset_2: subset (inter s s') s'=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_2". Undo.  
 auto with set.
 Qed.
 
 Lemma inter_subset_3:
 subset s'' s=true -> subset s'' s'=true ->
 subset s'' (inter s s')=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.inter_subset_3". Undo.  
 intros; apply subset_1; apply inter_subset_3; auto with set.
 Qed.
 
 
 
 Lemma diff_subset: subset (diff s s') s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_subset".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_subset". Undo.  
 auto with set.
 Qed.
 
 Lemma diff_subset_equal:
 subset s s'=true -> equal (diff s s') empty=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_subset_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_subset_equal". Undo.  
 auto with set.
 Qed.
 
 Lemma remove_inter_singleton:
 equal (remove x s) (diff s (singleton x))=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_inter_singleton".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_inter_singleton". Undo.  
 auto with set.
 Qed.
 
 Lemma diff_inter_empty:
 equal (inter (diff s s') (inter s s')) empty=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_inter_empty".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_inter_empty". Undo.  
 auto with set.
 Qed.
 
 Lemma diff_inter_all:
 equal (union (diff s s') (inter s s')) s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_inter_all".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.diff_inter_all". Undo.  
 auto with set.
 Qed.
 
@@ -470,7 +470,7 @@ Lemma set_rec:  forall (P:t->Type),
 (forall s s', equal s s'=true -> P s -> P s') ->
 (forall s x, mem x s=false -> P s -> P (add x s)) ->
 P empty -> forall s, P s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.set_rec".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.set_rec". Undo.  
 intros.
 apply set_induction; auto; intros.
 apply X with empty; auto with set.
@@ -483,7 +483,7 @@ Qed.
 
 Lemma exclusive_set : forall s s' x,
 ~(In x s/\In x s') <-> mem x s && mem x s'=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exclusive_set".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exclusive_set". Undo.  
 intros; do 2 rewrite mem_iff.
 destruct (mem x s); destruct (mem x s'); intuition.
 Qed.
@@ -495,38 +495,38 @@ Variables (i:A).
 Variables (s s':t)(x:elt).
 
 Lemma fold_empty: (fold f empty i) = i.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_empty".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_empty". Undo.  
 apply fold_empty; auto.
 Qed.
 
 Lemma fold_equal:
 equal s s'=true -> eqA (fold f s i) (fold f s' i).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_equal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_equal". Undo.  
 intros; apply fold_equal with (eqA:=eqA); auto with set.
 Qed.
 
 Lemma fold_add:
 mem x s=false -> eqA (fold f (add x s) i) (f x (fold f s i)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_add".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_add". Undo.  
 intros; apply fold_add with (eqA:=eqA); auto.
 rewrite not_mem_iff; auto.
 Qed.
 
 Lemma add_fold:
 mem x s=true -> eqA (fold f (add x s) i) (fold f s i).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_fold".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_fold". Undo.  
 intros; apply add_fold with (eqA:=eqA); auto with set.
 Qed.
 
 Lemma remove_fold_1:
 mem x s=true -> eqA (f x (fold f (remove x s) i)) (fold f s i).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_fold_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_fold_1". Undo.  
 intros; apply remove_fold_1 with (eqA:=eqA); auto with set.
 Qed.
 
 Lemma remove_fold_2:
 mem x s=false -> eqA (fold f (remove x s) i) (fold f s i).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_fold_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_fold_2". Undo.  
 intros; apply remove_fold_2 with (eqA:=eqA); auto.
 rewrite not_mem_iff; auto.
 Qed.
@@ -534,7 +534,7 @@ Qed.
 Lemma fold_union:
 (forall x, mem x s && mem x s'=false) ->
 eqA (fold f (union s s') i) (fold f s (fold f s' i)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_union".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_union". Undo.  
 intros; apply fold_union with (eqA:=eqA); auto.
 intros; rewrite exclusive_set; auto.
 Qed.
@@ -545,40 +545,40 @@ End Fold.
 
 Lemma add_cardinal_1:
 forall s x, mem x s=true -> cardinal (add x s)=cardinal s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_cardinal_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_cardinal_1". Undo.  
 auto with set.
 Qed.
 
 Lemma add_cardinal_2:
 forall s x, mem x s=false -> cardinal (add x s)=S (cardinal s).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_cardinal_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_cardinal_2". Undo.  
 intros; apply add_cardinal_2; auto.
 rewrite not_mem_iff; auto.
 Qed.
 
 Lemma remove_cardinal_1:
 forall s x, mem x s=true -> S (cardinal (remove x s))=cardinal s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_cardinal_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_cardinal_1". Undo.  
 intros; apply remove_cardinal_1; auto with set.
 Qed.
 
 Lemma remove_cardinal_2:
 forall s x, mem x s=false -> cardinal (remove x s)=cardinal s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_cardinal_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.remove_cardinal_2". Undo.  
 intros; apply Equal_cardinal; apply equal_2; auto with set.
 Qed.
 
 Lemma union_cardinal:
 forall s s', (forall x, mem x s && mem x s'=false) ->
 cardinal (union s s')=cardinal s+cardinal s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_cardinal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_cardinal". Undo.  
 intros; apply union_cardinal; auto; intros.
 rewrite exclusive_set; auto.
 Qed.
 
 Lemma subset_cardinal:
 forall s s', subset s s'=true -> cardinal s<=cardinal s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_cardinal".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.subset_cardinal". Undo.  
 intros; apply subset_cardinal; auto with set.
 Qed.
 
@@ -590,18 +590,18 @@ Variable f:elt->bool.
 Variable Comp: Proper (E.eq==>Logic.eq) f.
 
 Let Comp' : Proper (E.eq==>Logic.eq) (fun x =>negb (f x)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.Bool.Comp'".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.Bool.Comp'". Undo.  
 repeat red; intros; f_equal; auto.
 Qed.
 
 Lemma filter_mem: forall s x, mem x (filter f s)=mem x s && f x.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_mem".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_mem". Undo.  
 intros; apply filter_b; auto.
 Qed.
 
 Lemma for_all_filter:
 forall s, for_all f s=is_empty (filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_filter".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_filter". Undo.  
 intros; apply bool_1; split; intros.
 apply is_empty_1.
 unfold Empty; intros.
@@ -618,7 +618,7 @@ Qed.
 
 Lemma exists_filter :
 forall s, exists_ f s=negb (is_empty (filter f s)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_filter".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_filter". Undo.  
 intros; apply bool_1; split; intros.
 destruct (exists_2 Comp H) as (a,(Ha1,Ha2)).
 apply bool_6.
@@ -633,19 +633,19 @@ Qed.
 
 Lemma partition_filter_1:
 forall s, equal (fst (partition f s)) (filter f s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.partition_filter_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.partition_filter_1". Undo.  
 auto with set.
 Qed.
 
 Lemma partition_filter_2:
 forall s, equal (snd (partition f s)) (filter (fun x => negb (f x)) s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.partition_filter_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.partition_filter_2". Undo.  
 auto with set.
 Qed.
 
 Lemma filter_add_1 : forall s x, f x = true ->
 filter f (add x s) [=] add x (filter f s).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_add_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_add_1". Undo.  
 red; intros; set_iff; do 2 (rewrite filter_iff; auto); set_iff.
 intuition.
 rewrite <- H; apply Comp; auto with relations.
@@ -653,7 +653,7 @@ Qed.
 
 Lemma filter_add_2 : forall s x, f x = false ->
 filter f (add x s) [=] filter f s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_add_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_add_2". Undo.  
 red; intros; do 2 (rewrite filter_iff; auto); set_iff.
 intuition.
 assert (f x = f a) by (apply Comp; auto).
@@ -662,7 +662,7 @@ Qed.
 
 Lemma add_filter_1 : forall s s' x,
 f x=true -> (Add x s s') -> (Add x (filter f s) (filter f s')).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_filter_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_filter_1". Undo.  
 unfold Add, MP.Add; intros.
 repeat rewrite filter_iff; auto.
 rewrite H0; clear H0.
@@ -672,7 +672,7 @@ Qed.
 
 Lemma add_filter_2 : forall s s' x,
 f x=false -> (Add x s s') -> filter f s [=] filter f s'.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_filter_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.add_filter_2". Undo.  
 unfold Add, MP.Add, Equal; intros.
 repeat rewrite filter_iff; auto.
 rewrite H0; clear H0.
@@ -683,7 +683,7 @@ Qed.
 Lemma union_filter: forall f g,
 Proper (E.eq==>Logic.eq) f -> Proper (E.eq==>Logic.eq) g ->
 forall s, union (filter f s) (filter g s) [=] filter (fun x=>orb (f x) (g x)) s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_filter".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.union_filter". Undo.  
 clear Comp' Comp f.
 intros.
 assert (Proper (E.eq==>Logic.eq) (fun x => orb (f x) (g x))).
@@ -697,7 +697,7 @@ tauto.
 Qed.
 
 Lemma filter_union: forall s s', filter f (union s s') [=] union (filter f s) (filter f s').
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_union".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.filter_union". Undo.  
 unfold Equal; intros; set_iff; repeat rewrite filter_iff; auto; set_iff; tauto.
 Qed.
 
@@ -705,7 +705,7 @@ Qed.
 
 Lemma for_all_mem_1: forall s,
 (forall x, (mem x s)=true->(f x)=true) -> (for_all f s)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_1". Undo.  
 intros.
 rewrite for_all_filter; auto.
 rewrite is_empty_equal_empty.
@@ -718,7 +718,7 @@ Qed.
 
 Lemma for_all_mem_2: forall s,
 (for_all f s)=true -> forall x,(mem x s)=true -> (f x)=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_2". Undo.  
 intros.
 rewrite for_all_filter in H; auto.
 rewrite is_empty_equal_empty in H.
@@ -731,7 +731,7 @@ Qed.
 
 Lemma for_all_mem_3:
 forall s x,(mem x s)=true -> (f x)=false -> (for_all f s)=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_3". Undo.  
 intros.
 apply (bool_eq_ind (for_all f s));intros;auto.
 rewrite for_all_filter in H1; auto.
@@ -746,7 +746,7 @@ Qed.
 
 Lemma for_all_mem_4:
 forall s, for_all f s=false -> {x:elt | mem x s=true /\ f x=false}.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_4".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_mem_4". Undo.  
 intros.
 rewrite for_all_filter in H; auto.
 destruct (choose_mem_3 _ H) as (x,(H0,H1));intros.
@@ -761,7 +761,7 @@ Qed.
 
 Lemma for_all_exists:
 forall s, exists_ f s = negb (for_all (fun x =>negb (f x)) s).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_exists".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.for_all_exists". Undo.  
 intros.
 rewrite for_all_b; auto.
 rewrite exists_b; auto.
@@ -776,13 +776,13 @@ Variable f:elt->bool.
 Variable Comp: Proper (E.eq==>Logic.eq) f.
 
 Let Comp' : Proper (E.eq==>Logic.eq) (fun x => negb (f x)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.Bool'.Comp'".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.Bool'.Comp'". Undo.  
 repeat red; intros; f_equal; auto.
 Qed.
 
 Lemma exists_mem_1:
 forall s, (forall x, mem x s=true->f x=false) -> exists_ f s=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_1".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_1". Undo.  
 intros.
 rewrite for_all_exists; auto.
 rewrite for_all_mem_1;auto with bool.
@@ -792,7 +792,7 @@ Qed.
 
 Lemma exists_mem_2:
 forall s, exists_ f s=false -> forall x, mem x s=true -> f x=false.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_2".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_2". Undo.  
 intros.
 rewrite for_all_exists in H; auto.
 rewrite negb_false_iff in H.
@@ -802,7 +802,7 @@ Qed.
 
 Lemma exists_mem_3:
 forall s x, mem x s=true -> f x=true -> exists_ f s=true.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_3".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_3". Undo.  
 intros.
 rewrite for_all_exists; auto.
 rewrite negb_true_iff.
@@ -812,7 +812,7 @@ Qed.
 
 Lemma exists_mem_4:
 forall s, exists_ f s=true -> {x:elt | (mem x s)=true /\ (f x)=true}.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_4".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.exists_mem_4". Undo.  
 intros.
 rewrite for_all_exists in H; auto.
 rewrite negb_true_iff in H.
@@ -835,7 +835,7 @@ Lemma sum_plus :
 forall f g,
 Proper (E.eq==>Logic.eq) f -> Proper (E.eq==>Logic.eq) g ->
 forall s, sum (fun x =>f x+g x) s = sum f s + sum g s.
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.sum_plus".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.sum_plus". Undo.  
 unfold sum.
 intros f g Hf Hg.
 assert (fc : compat_opL (fun x:elt =>plus (f x))) by
@@ -858,7 +858,7 @@ Qed.
 
 Lemma sum_filter : forall f : elt -> bool, Proper (E.eq==>Logic.eq) f ->
 forall s, (sum (fun x => if f x then 1 else 0) s) = (cardinal (filter f s)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.sum_filter".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.sum_filter". Undo.  
 unfold sum; intros f Hf.
 assert (st : Equivalence (@Logic.eq nat)) by (split; congruence).
 assert (cc : compat_opL (fun x => plus (if f x then 1 else 0))) by
@@ -890,7 +890,7 @@ Proper (E.eq==>eqA==>eqA) f -> transpose eqA f ->
 Proper (E.eq==>eqA==>eqA) g -> transpose eqA g ->
 forall (i:A)(s:t),(forall x:elt, (In x s) -> forall y, (eqA (f x y) (g x y))) ->
 (eqA (fold f s i) (fold g s i)).
-Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_compat".  
+Proof. try hammer_hook "MSetEqProperties" "MSetEqProperties.WEqPropertiesOn.fold_compat". Undo.  
 intros A eqA st f g fc ft gc gt i.
 intro s; pattern s; apply set_rec; intros.
 transitivity (fold f s0 i).

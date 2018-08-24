@@ -24,7 +24,7 @@ Definition Nbound (I:nat -> Prop) : Prop :=
 exists n : nat, (forall i:nat, I i -> (i <= n)%nat).
 
 Lemma IZN_var : forall z:Z, (0 <= z)%Z -> {n : nat | z = Z.of_nat n}.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.IZN_var".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.IZN_var". Undo.  
 intros; apply Z_of_nat_complete_inf; assumption.
 Qed.
 
@@ -32,7 +32,7 @@ Lemma Nzorn :
 forall I:nat -> Prop,
 (exists n : nat, I n) ->
 Nbound I -> { n:nat | I n /\ (forall i:nat, I i -> (i <= n)%nat) }.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.Nzorn".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.Nzorn". Undo.  
 intros I H H0; set (E := fun x:R =>  exists i : nat, I i /\ INR i = x);
 assert (H1 : bound E).
 unfold Nbound in H0; elim H0; intros N H1; unfold bound;
@@ -172,7 +172,7 @@ end.
 Lemma StepFun_P1 :
 forall (a b:R) (f:StepFun a b),
 adapted_couple f a b (subdivision f) (subdivision_val f).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P1".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P1". Undo.  
 intros a b f; unfold subdivision_val; case (projT2 (pre f)) as (x,H);
 apply H.
 Qed.
@@ -180,7 +180,7 @@ Qed.
 Lemma StepFun_P2 :
 forall (a b:R) (f:R -> R) (l lf:Rlist),
 adapted_couple f a b l lf -> adapted_couple f b a l lf.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P2".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P2". Undo.  
 unfold adapted_couple; intros; decompose [and] H; clear H;
 repeat split; try assumption.
 rewrite H2; unfold Rmin; case (Rle_dec a b); intro;
@@ -197,7 +197,7 @@ Lemma StepFun_P3 :
 forall a b c:R,
 a <= b ->
 adapted_couple (fct_cte c) a b (cons a (cons b nil)) (cons c nil).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P3".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P3". Undo.  
 intros; unfold adapted_couple; repeat split.
 unfold ordered_Rlist; intros; simpl in H0; inversion H0;
 [ simpl; assumption | elim (le_Sn_O _ H2) ].
@@ -208,7 +208,7 @@ inversion H0; [ reflexivity | elim (le_Sn_O _ H3) ].
 Qed.
 
 Lemma StepFun_P4 : forall a b c:R, IsStepFun (fct_cte c) a b.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P4".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P4". Undo.  
 intros; unfold IsStepFun; destruct (Rle_dec a b) as [Hle|Hnle].
 apply existT with (cons a (cons b nil)); unfold is_subdivision;
 apply existT with (cons c nil); apply (StepFun_P3 c Hle).
@@ -220,7 +220,7 @@ Qed.
 Lemma StepFun_P5 :
 forall (a b:R) (f:R -> R) (l:Rlist),
 is_subdivision f a b l -> is_subdivision f b a l.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P5".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P5". Undo.  
 destruct 1 as (x,(H0,(H1,(H2,(H3,H4))))); exists x;
 repeat split; try assumption.
 rewrite H1; apply Rmin_comm.
@@ -229,7 +229,7 @@ Qed.
 
 Lemma StepFun_P6 :
 forall (f:R -> R) (a b:R), IsStepFun f a b -> IsStepFun f b a.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P6".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P6". Undo.  
 unfold IsStepFun; intros; elim X; intros; apply existT with x;
 apply StepFun_P5; assumption.
 Qed.
@@ -239,7 +239,7 @@ forall (a b r1 r2 r3:R) (f:R -> R) (l lf:Rlist),
 a <= b ->
 adapted_couple f a b (cons r1 (cons r2 l)) (cons r3 lf) ->
 adapted_couple f r2 b (cons r2 l) lf.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P7".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P7". Undo.  
 unfold adapted_couple; intros; decompose [and] H0; clear H0;
 assert (H5 : Rmax a b = b).
 unfold Rmax; decide (Rle_dec a b) with H; reflexivity.
@@ -264,7 +264,7 @@ Qed.
 Lemma StepFun_P8 :
 forall (f:R -> R) (l1 lf1:Rlist) (a b:R),
 adapted_couple f a b l1 lf1 -> a = b -> Int_SF lf1 l1 = 0.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P8".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P8". Undo.  
 simple induction l1.
 intros; induction  lf1 as [| r lf1 Hreclf1]; reflexivity.
 simple induction r0.
@@ -293,7 +293,7 @@ Qed.
 Lemma StepFun_P9 :
 forall (a b:R) (f:R -> R) (l lf:Rlist),
 adapted_couple f a b l lf -> a <> b -> (2 <= Rlength l)%nat.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P9".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P9". Undo.  
 intros; unfold adapted_couple in H; decompose [and] H; clear H;
 induction  l as [| r l Hrecl];
 [ simpl in H4; discriminate
@@ -311,7 +311,7 @@ a <= b ->
 adapted_couple f a b l lf ->
 exists l' : Rlist,
 (exists lf' : Rlist, adapted_couple_opt f a b l' lf').
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P10".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P10". Undo.  
 simple induction l.
 intros; unfold adapted_couple in H0; decompose [and] H0; simpl in H4;
 discriminate.
@@ -507,7 +507,7 @@ forall (a b r r1 r3 s1 s2 r4:R) (r2 lf1 s3 lf2:Rlist)
 a < b ->
 adapted_couple f a b (cons r (cons r1 r2)) (cons r3 lf1) ->
 adapted_couple_opt f a b (cons s1 (cons s2 s3)) (cons r4 lf2) -> r1 <= s2.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P11".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P11". Undo.  
 intros; unfold adapted_couple_opt in H1; elim H1; clear H1; intros;
 unfold adapted_couple in H0, H1; decompose [and] H0;
 decompose [and] H1; clear H0 H1; assert (H12 : r = s1).
@@ -628,7 +628,7 @@ Qed.
 Lemma StepFun_P12 :
 forall (a b:R) (f:R -> R) (l lf:Rlist),
 adapted_couple_opt f a b l lf -> adapted_couple_opt f b a l lf.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P12".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P12". Undo.  
 unfold adapted_couple_opt; unfold adapted_couple; intros;
 decompose [and] H; clear H; repeat split; try assumption.
 rewrite H0; unfold Rmin; case (Rle_dec a b); intro;
@@ -647,7 +647,7 @@ forall (a b r r1 r3 s1 s2 r4:R) (r2 lf1 s3 lf2:Rlist)
 a <> b ->
 adapted_couple f a b (cons r (cons r1 r2)) (cons r3 lf1) ->
 adapted_couple_opt f a b (cons s1 (cons s2 s3)) (cons r4 lf2) -> r1 <= s2.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P13".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P13". Undo.  
 intros; destruct (total_order_T a b) as [[Hlt|Heq]|Hgt].
 eapply StepFun_P11; [ apply Hlt | apply H0 | apply H1 ].
 elim H; assumption.
@@ -660,7 +660,7 @@ forall (f:R -> R) (l1 l2 lf1 lf2:Rlist) (a b:R),
 a <= b ->
 adapted_couple f a b l1 lf1 ->
 adapted_couple_opt f a b l2 lf2 -> Int_SF lf1 l1 = Int_SF lf2 l2.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P14".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P14". Undo.  
 simple induction l1.
 intros l2 lf1 lf2 a b Hyp H H0; unfold adapted_couple in H; decompose [and] H;
 clear H H0 H2 H3 H1 H6; simpl in H4; discriminate.
@@ -865,7 +865,7 @@ Lemma StepFun_P15 :
 forall (f:R -> R) (l1 l2 lf1 lf2:Rlist) (a b:R),
 adapted_couple f a b l1 lf1 ->
 adapted_couple_opt f a b l2 lf2 -> Int_SF lf1 l1 = Int_SF lf2 l2.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P15".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P15". Undo.  
 intros; destruct (Rle_dec a b) as [Hle|Hnle];
 [ apply (StepFun_P14 Hle H H0)
 | assert (H1 : b <= a);
@@ -879,7 +879,7 @@ forall (f:R -> R) (l lf:Rlist) (a b:R),
 adapted_couple f a b l lf ->
 exists l' : Rlist,
 (exists lf' : Rlist, adapted_couple_opt f a b l' lf').
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P16".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P16". Undo.  
 intros; destruct (Rle_dec a b) as [Hle|Hnle];
 [ apply (StepFun_P10 Hle H)
 | assert (H1 : b <= a);
@@ -893,14 +893,14 @@ Lemma StepFun_P17 :
 forall (f:R -> R) (l1 l2 lf1 lf2:Rlist) (a b:R),
 adapted_couple f a b l1 lf1 ->
 adapted_couple f a b l2 lf2 -> Int_SF lf1 l1 = Int_SF lf2 l2.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P17".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P17". Undo.  
 intros; elim (StepFun_P16 H); intros l' [lf' H1]; rewrite (StepFun_P15 H H1);
 rewrite (StepFun_P15 H0 H1); reflexivity.
 Qed.
 
 Lemma StepFun_P18 :
 forall a b c:R, RiemannInt_SF (mkStepFun (StepFun_P4 a b c)) = c * (b - a).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P18".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P18". Undo.  
 intros; unfold RiemannInt_SF; case (Rle_dec a b); intro.
 replace
 (Int_SF (subdivision_val (mkStepFun (StepFun_P4 a b c)))
@@ -924,7 +924,7 @@ Lemma StepFun_P19 :
 forall (l1:Rlist) (f g:R -> R) (l:R),
 Int_SF (FF l1 (fun x:R => f x + l * g x)) l1 =
 Int_SF (FF l1 f) l1 + l * Int_SF (FF l1 g) l1.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P19".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P19". Undo.  
 intros; induction  l1 as [| r l1 Hrecl1];
 [ simpl; ring
 | induction  l1 as [| r0 l1 Hrecl0]; simpl;
@@ -934,7 +934,7 @@ Qed.
 Lemma StepFun_P20 :
 forall (l:Rlist) (f:R -> R),
 (0 < Rlength l)%nat -> Rlength l = S (Rlength (FF l f)).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P20".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P20". Undo.  
 intros l f H; induction l;
 [ elim (lt_irrefl _ H)
 | simpl; rewrite RList_P18; rewrite RList_P14; reflexivity ].
@@ -943,7 +943,7 @@ Qed.
 Lemma StepFun_P21 :
 forall (a b:R) (f:R -> R) (l:Rlist),
 is_subdivision f a b l -> adapted_couple f a b l (FF l f).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P21".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P21". Undo.  
 intros * (x & H & H1 & H0 & H2 & H4).
 repeat split; try assumption.
 apply StepFun_P20; rewrite H2; apply lt_O_Sn.
@@ -982,7 +982,7 @@ forall (a b:R) (f g:R -> R) (lf lg:Rlist),
 a <= b ->
 is_subdivision f a b lf ->
 is_subdivision g a b lg -> is_subdivision f a b (cons_ORlist lf lg).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P22".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P22". Undo.  
 unfold is_subdivision; intros a b f g lf lg Hyp X X0; elim X; elim X0;
 clear X X0; intros lg0 p lf0 p0; assert (Hyp_min : Rmin a b = a).
 unfold Rmin; decide (Rle_dec a b) with Hyp; reflexivity.
@@ -1218,7 +1218,7 @@ Lemma StepFun_P23 :
 forall (a b:R) (f g:R -> R) (lf lg:Rlist),
 is_subdivision f a b lf ->
 is_subdivision g a b lg -> is_subdivision f a b (cons_ORlist lf lg).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P23".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P23". Undo.  
 intros; case (Rle_dec a b); intro;
 [ apply StepFun_P22 with g; assumption
 | apply StepFun_P5; apply StepFun_P22 with g;
@@ -1232,7 +1232,7 @@ forall (a b:R) (f g:R -> R) (lf lg:Rlist),
 a <= b ->
 is_subdivision f a b lf ->
 is_subdivision g a b lg -> is_subdivision g a b (cons_ORlist lf lg).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P24".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P24". Undo.  
 unfold is_subdivision; intros a b f g lf lg Hyp X X0; elim X; elim X0;
 clear X X0; intros lg0 p lf0 p0; assert (Hyp_min : Rmin a b = a).
 unfold Rmin; decide (Rle_dec a b) with Hyp; reflexivity.
@@ -1465,7 +1465,7 @@ Lemma StepFun_P25 :
 forall (a b:R) (f g:R -> R) (lf lg:Rlist),
 is_subdivision f a b lf ->
 is_subdivision g a b lg -> is_subdivision g a b (cons_ORlist lf lg).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P25".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P25". Undo.  
 intros a b f g lf lg H H0; case (Rle_dec a b); intro;
 [ apply StepFun_P24 with f; assumption
 | apply StepFun_P5; apply StepFun_P24 with f;
@@ -1479,7 +1479,7 @@ forall (a b l:R) (f g:R -> R) (l1:Rlist),
 is_subdivision f a b l1 ->
 is_subdivision g a b l1 ->
 is_subdivision (fun x:R => f x + l * g x) a b l1.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P26".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P26". Undo.  
 intros a b l f g l1 (x0,(H0,(H1,(H2,(H3,H4)))))
 (x,(_,(_,(_,(_,H9))))).
 exists (FF l1 (fun x:R => f x + l * g x)); repeat split; try assumption.
@@ -1524,7 +1524,7 @@ forall (a b l:R) (f g:R -> R) (lf lg:Rlist),
 is_subdivision f a b lf ->
 is_subdivision g a b lg ->
 is_subdivision (fun x:R => f x + l * g x) a b (cons_ORlist lf lg).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P27".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P27". Undo.  
 intros a b l f g lf lg H H0; apply StepFun_P26;
 [ apply StepFun_P23 with g; assumption
 | apply StepFun_P25 with f; assumption ].
@@ -1533,7 +1533,7 @@ Qed.
 
 Lemma StepFun_P28 :
 forall (a b l:R) (f g:StepFun a b), IsStepFun (fun x:R => f x + l * g x) a b.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P28".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P28". Undo.  
 intros a b l f g; unfold IsStepFun; assert (H := pre f);
 assert (H0 := pre g); unfold IsStepFun in H, H0; elim H;
 elim H0; intros; apply existT with (cons_ORlist x0 x);
@@ -1542,7 +1542,7 @@ Qed.
 
 Lemma StepFun_P29 :
 forall (a b:R) (f:StepFun a b), is_subdivision f a b (subdivision f).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P29".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P29". Undo.  
 intros a b f; unfold is_subdivision;
 apply existT with (subdivision_val f); apply StepFun_P1.
 Qed.
@@ -1551,7 +1551,7 @@ Lemma StepFun_P30 :
 forall (a b l:R) (f g:StepFun a b),
 RiemannInt_SF (mkStepFun (StepFun_P28 l f g)) =
 RiemannInt_SF f + l * RiemannInt_SF g.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P30".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P30". Undo.  
 intros a b l f g; unfold RiemannInt_SF; case (Rle_dec a b);
 (intro;
 replace
@@ -1588,7 +1588,7 @@ Lemma StepFun_P31 :
 forall (a b:R) (f:R -> R) (l lf:Rlist),
 adapted_couple f a b l lf ->
 adapted_couple (fun x:R => Rabs (f x)) a b l (app_Rlist lf Rabs).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P31".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P31". Undo.  
 unfold adapted_couple; intros; decompose [and] H; clear H;
 repeat split; try assumption.
 symmetry ; rewrite H3; rewrite RList_P18; reflexivity.
@@ -1600,7 +1600,7 @@ Qed.
 
 Lemma StepFun_P32 :
 forall (a b:R) (f:StepFun a b), IsStepFun (fun x:R => Rabs (f x)) a b.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P32".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P32". Undo.  
 intros a b f; unfold IsStepFun; apply existT with (subdivision f);
 unfold is_subdivision;
 apply existT with (app_Rlist (subdivision_val f) Rabs);
@@ -1610,7 +1610,7 @@ Qed.
 Lemma StepFun_P33 :
 forall l2 l1:Rlist,
 ordered_Rlist l1 -> Rabs (Int_SF l2 l1) <= Int_SF (app_Rlist l2 Rabs) l1.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P33".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P33". Undo.  
 simple induction l2; intros.
 simpl; rewrite Rabs_R0; right; reflexivity.
 simpl; induction  l1 as [| r1 l1 Hrecl1].
@@ -1629,7 +1629,7 @@ Lemma StepFun_P34 :
 forall (a b:R) (f:StepFun a b),
 a <= b ->
 Rabs (RiemannInt_SF f) <= RiemannInt_SF (mkStepFun (StepFun_P32 f)).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P34".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P34". Undo.  
 intros; unfold RiemannInt_SF; decide (Rle_dec a b) with H.
 replace
 (Int_SF (subdivision_val (mkStepFun (StepFun_P32 f)))
@@ -1650,7 +1650,7 @@ pos_Rl l 0 = a ->
 pos_Rl l (pred (Rlength l)) = b ->
 (forall x:R, a < x < b -> f x <= g x) ->
 Int_SF (FF l f) l <= Int_SF (FF l g) l.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P35".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P35". Undo.  
 simple induction l; intros.
 right; reflexivity.
 simpl; induction  r0 as [| r0 r1 Hrecr0].
@@ -1717,7 +1717,7 @@ is_subdivision f a b l ->
 is_subdivision g a b l ->
 (forall x:R, a < x < b -> f x <= g x) ->
 RiemannInt_SF f <= RiemannInt_SF g.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P36".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P36". Undo.  
 intros; unfold RiemannInt_SF; decide (Rle_dec a b) with H.
 replace (Int_SF (subdivision_val f) (subdivision f)) with (Int_SF (FF l f) l).
 replace (Int_SF (subdivision_val g) (subdivision g)) with (Int_SF (FF l g) l).
@@ -1740,7 +1740,7 @@ forall (a b:R) (f g:StepFun a b),
 a <= b ->
 (forall x:R, a < x < b -> f x <= g x) ->
 RiemannInt_SF f <= RiemannInt_SF g.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P37".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P37". Undo.  
 intros; eapply StepFun_P36; try assumption.
 eapply StepFun_P25; apply StepFun_P29.
 eapply StepFun_P23; apply StepFun_P29.
@@ -1757,7 +1757,7 @@ g b = f b /\
 (i < pred (Rlength l))%nat ->
 constant_D_eq g (co_interval (pos_Rl l i) (pos_Rl l (S i)))
 (f (pos_Rl l i))) }.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P38".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P38". Undo.  
 intros l a b f; generalize a; clear a; induction l.
 intros a H H0 H1; simpl in H0; simpl in H1;
 exists (mkStepFun (StepFun_P4 a b (f b))); split.
@@ -1879,7 +1879,7 @@ Qed.
 Lemma StepFun_P39 :
 forall (a b:R) (f:StepFun a b),
 RiemannInt_SF f = - RiemannInt_SF (mkStepFun (StepFun_P6 (pre f))).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P39".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P39". Undo.  
 intros; unfold RiemannInt_SF; case (Rle_dec a b); case (Rle_dec b a);
 intros.
 assert (H : adapted_couple f a b (subdivision f) (subdivision_val f));
@@ -1917,7 +1917,7 @@ b < c ->
 adapted_couple f a b l1 lf1 ->
 adapted_couple f b c l2 lf2 ->
 adapted_couple f a c (cons_Rlist l1 l2) (FF (cons_Rlist l1 l2) f).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P40".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P40". Undo.  
 intros f a b c l1 l2 lf1 lf2 H H0 H1 H2; unfold adapted_couple in H1, H2;
 unfold adapted_couple; decompose [and] H1;
 decompose [and] H2; clear H1 H2; repeat split.
@@ -2136,7 +2136,7 @@ Qed.
 Lemma StepFun_P41 :
 forall (f:R -> R) (a b c:R),
 a <= b -> b <= c -> IsStepFun f a b -> IsStepFun f b c -> IsStepFun f a c.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P41".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P41". Undo.  
 intros f a b c H H0 (l1,(lf1,H1)) (l2,(lf2,H2));
 destruct (total_order_T a b) as [[Hltab|Hab]|Hgtab].
 destruct (total_order_T b c) as [[Hltbc|Hbc]|Hgtbc].
@@ -2153,7 +2153,7 @@ forall (l1 l2:Rlist) (f:R -> R),
 pos_Rl l1 (pred (Rlength l1)) = pos_Rl l2 0 ->
 Int_SF (FF (cons_Rlist l1 l2) f) (cons_Rlist l1 l2) =
 Int_SF (FF l1 f) l1 + Int_SF (FF l2 f) l2.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P42".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P42". Undo.  
 intros l1 l2 f; induction l1 as [| r l1 IHl1]; intros H;
 [ simpl; ring
 | destruct l1 as [| r0 r1];
@@ -2168,7 +2168,7 @@ forall (f:R -> R) (a b c:R) (pr1:IsStepFun f a b)
 (pr2:IsStepFun f b c) (pr3:IsStepFun f a c),
 RiemannInt_SF (mkStepFun pr1) + RiemannInt_SF (mkStepFun pr2) =
 RiemannInt_SF (mkStepFun pr3).
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P43".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P43". Undo.  
 intros f; intros.
 pose proof pr1 as (l1,(lf1,H1)).
 pose proof pr2 as (l2,(lf2,H2)).
@@ -2388,7 +2388,7 @@ Qed.
 Lemma StepFun_P44 :
 forall (f:R -> R) (a b c:R),
 IsStepFun f a b -> a <= c <= b -> IsStepFun f a c.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P44".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P44". Undo.  
 intros f; intros; assert (H0 : a <= b).
 elim H; intros; apply Rle_trans with c; assumption.
 elim H; clear H; intros; unfold IsStepFun in X; unfold is_subdivision in X;
@@ -2500,7 +2500,7 @@ Qed.
 Lemma StepFun_P45 :
 forall (f:R -> R) (a b c:R),
 IsStepFun f a b -> a <= c <= b -> IsStepFun f c b.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P45".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P45". Undo.  
 intros f; intros; assert (H0 : a <= b).
 elim H; intros; apply Rle_trans with c; assumption.
 elim H; clear H; intros; unfold IsStepFun in X; unfold is_subdivision in X;
@@ -2575,7 +2575,7 @@ Qed.
 Lemma StepFun_P46 :
 forall (f:R -> R) (a b c:R),
 IsStepFun f a b -> IsStepFun f b c -> IsStepFun f a c.
-Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P46".  
+Proof. try hammer_hook "RiemannInt_SF" "RiemannInt_SF.StepFun_P46". Undo.  
 intros f; intros; case (Rle_dec a b); case (Rle_dec b c); intros.
 apply StepFun_P41 with b; assumption.
 case (Rle_dec a c); intro.

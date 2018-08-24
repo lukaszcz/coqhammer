@@ -203,12 +203,12 @@ choose s = Some x -> choose s' = Some y -> Equal s s' -> E.eq x y
 Definition lt_trans : forall s s' s'', lt s s' -> lt s' s'' -> lt s s''
 := @StrictOrder_Transitive _ _ M.lt_strorder.
 Lemma lt_not_eq : forall s s',  lt s s' -> ~ eq s s'.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Backport_Sets.lt_not_eq".  
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Backport_Sets.lt_not_eq". Undo.  
 unfold lt, eq. intros s s' Hlt Heq. rewrite Heq in Hlt.
 apply (StrictOrder_Irreflexive s'); auto.
 Qed.
 Definition compare : forall s s', Compare lt eq s s'.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Backport_Sets.compare".  
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Backport_Sets.compare". Undo.  
 intros s s'; destruct (CompSpec2Type (M.compare_spec s s'));
 [ apply EQ | apply LT | apply GT ]; auto.
 Defined.
@@ -264,7 +264,7 @@ Definition choose : t -> option elt := M.choose.
 Module MF := FSetFacts.WFacts M.
 
 Instance In_compat : Proper (E.eq==>Logic.eq==>iff) In.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.In_compat".   intros x x' Hx s s' Hs. subst. apply MF.In_eq_iff; auto. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.In_compat". Undo.   intros x x' Hx s s' Hs. subst. apply MF.In_eq_iff; auto. Qed.
 
 Instance eq_equiv : Equivalence eq := _.
 
@@ -273,29 +273,29 @@ Variable s s': t.
 Variable x y : elt.
 
 Lemma mem_spec : mem x s = true <-> In x s.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.mem_spec".   intros; symmetry; apply MF.mem_iff. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.mem_spec". Undo.   intros; symmetry; apply MF.mem_iff. Qed.
 
 Lemma equal_spec : equal s s' = true <-> Equal s s'.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.equal_spec".   intros; symmetry; apply MF.equal_iff. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.equal_spec". Undo.   intros; symmetry; apply MF.equal_iff. Qed.
 
 Lemma subset_spec : subset s s' = true <-> Subset s s'.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.subset_spec".   intros; symmetry; apply MF.subset_iff. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.subset_spec". Undo.   intros; symmetry; apply MF.subset_iff. Qed.
 
 Definition empty_spec : Empty empty := M.empty_1.
 
 Lemma is_empty_spec : is_empty s = true <-> Empty s.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.is_empty_spec".   intros; symmetry; apply MF.is_empty_iff. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.is_empty_spec". Undo.   intros; symmetry; apply MF.is_empty_iff. Qed.
 
 Declare Equivalent Keys In M.In.
 
 Lemma add_spec : In y (add x s) <-> E.eq y x \/ In y s.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.add_spec".   intros. rewrite MF.add_iff. intuition. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.add_spec". Undo.   intros. rewrite MF.add_iff. intuition. Qed.
 
 Lemma remove_spec : In y (remove x s) <-> In y s /\ ~E.eq y x.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.remove_spec".   intros. rewrite MF.remove_iff. intuition. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.remove_spec". Undo.   intros. rewrite MF.remove_iff. intuition. Qed.
 
 Lemma singleton_spec : In y (singleton x) <-> E.eq y x.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.singleton_spec".   intros; rewrite MF.singleton_iff. intuition. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.singleton_spec". Undo.   intros; rewrite MF.singleton_iff. intuition. Qed.
 
 Definition union_spec : In x (union s s') <-> In x s \/ In x s'
 := @MF.union_iff s s' x.
@@ -310,7 +310,7 @@ Definition cardinal_spec : cardinal s = length (elements s)
 := @M.cardinal_1 s.
 
 Lemma elements_spec1 : InA E.eq x (elements s) <-> In x s.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.elements_spec1".   intros; symmetry; apply MF.elements_iff. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.elements_spec1". Undo.   intros; symmetry; apply MF.elements_iff. Qed.
 
 Definition elements_spec2w : NoDupA E.eq (elements s)
 := @M.elements_3w s.
@@ -330,11 +330,11 @@ Equal (snd (partition f s)) (filter (fun x => negb (f x)) s)
 
 Lemma for_all_spec : forall f, Proper (E.eq==>Logic.eq) f ->
 (for_all f s = true <-> For_all (fun x => f x = true) s).
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.for_all_spec".   intros; symmetry; apply MF.for_all_iff; auto. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.for_all_spec". Undo.   intros; symmetry; apply MF.for_all_iff; auto. Qed.
 
 Lemma exists_spec : forall f, Proper (E.eq==>Logic.eq) f ->
 (exists_ f s = true <-> Exists (fun x => f x = true) s).
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.exists_spec".   intros; symmetry; apply MF.exists_iff; auto. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_WSets.exists_spec". Undo.   intros; symmetry; apply MF.exists_iff; auto. Qed.
 
 End Spec.
 
@@ -379,14 +379,14 @@ choose s = Some x -> choose s' = Some y -> Equal s s' -> E.eq x y
 := M.choose_3.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_Sets.lt_strorder".  
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_Sets.lt_strorder". Undo.  
 split.
 intros x Hx. apply (M.lt_not_eq Hx); auto with *.
 exact M.lt_trans.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_Sets.lt_compat".  
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_Sets.lt_compat". Undo.  
 apply proper_sym_impl_iff_2; auto with *.
 intros s s' Hs u u' Hu H.
 assert (H0 : lt s' u).
@@ -407,7 +407,7 @@ match M.compare s s' with
 end.
 
 Lemma compare_spec : forall s s', CompSpec eq lt s s' (compare s s').
-Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_Sets.compare_spec".   intros; unfold compare; destruct M.compare; auto. Qed.
+Proof. try hammer_hook "FSetCompat" "FSetCompat.Update_Sets.compare_spec". Undo.   intros; unfold compare; destruct M.compare; auto. Qed.
 
 Module E := E.
 

@@ -48,14 +48,14 @@ Hint Rewrite pow_0_r pow_succ_r : nz.
 
 
 Lemma pow_0_l : forall a, 0<a -> 0^a == 0.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_0_l".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_0_l". Undo.  
 intros a Ha.
 destruct (lt_exists_pred _ _ Ha) as (a' & EQ & Ha').
 rewrite EQ. now nzsimpl.
 Qed.
 
 Lemma pow_0_l' : forall a, a~=0 -> 0^a == 0.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_0_l'".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_0_l'". Undo.  
 intros a Ha.
 destruct (lt_trichotomy a 0) as [LT|[EQ|GT]]; try order.
 now rewrite pow_neg_r.
@@ -63,12 +63,12 @@ now apply pow_0_l.
 Qed.
 
 Lemma pow_1_r : forall a, a^1 == a.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_1_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_1_r". Undo.  
 intros. now nzsimpl'.
 Qed.
 
 Lemma pow_1_l : forall a, 0<=a -> 1^a == 1.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_1_l".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_1_l". Undo.  
 apply le_ind; intros. solve_proper.
 now nzsimpl.
 now nzsimpl.
@@ -77,7 +77,7 @@ Qed.
 Hint Rewrite pow_1_r pow_1_l : nz.
 
 Lemma pow_2_r : forall a, a^2 == a*a.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_2_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_2_r". Undo.  
 intros. rewrite two_succ. nzsimpl; order'.
 Qed.
 
@@ -86,7 +86,7 @@ Hint Rewrite pow_2_r : nz.
 
 
 Lemma pow_eq_0 : forall a b, 0<=b -> a^b == 0 -> a == 0.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_eq_0".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_eq_0". Undo.  
 intros a b Hb. apply le_ind with (4:=Hb).
 solve_proper.
 rewrite pow_0_r. order'.
@@ -97,12 +97,12 @@ now apply IH.
 Qed.
 
 Lemma pow_nonzero : forall a b, a~=0 -> 0<=b -> a^b ~= 0.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_nonzero".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_nonzero". Undo.  
 intros a b Ha Hb. contradict Ha. now apply pow_eq_0 with b.
 Qed.
 
 Lemma pow_eq_0_iff : forall a b, a^b == 0 <-> b<0 \/ (0<b /\ a==0).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_eq_0_iff".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_eq_0_iff". Undo.  
 intros a b. split.
 intros H.
 destruct (lt_trichotomy b 0) as [Hb|[Hb|Hb]].
@@ -117,7 +117,7 @@ Qed.
 
 Lemma pow_add_r : forall a b c, 0<=b -> 0<=c ->
 a^(b+c) == a^b * a^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_add_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_add_r". Undo.  
 intros a b c Hb. apply le_ind with (4:=Hb). solve_proper.
 now nzsimpl.
 clear b Hb. intros b Hb IH Hc.
@@ -128,7 +128,7 @@ Qed.
 
 Lemma pow_mul_l : forall a b c,
 (a*b)^c == a^c * b^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_mul_l".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_mul_l". Undo.  
 intros a b c.
 destruct (lt_ge_cases c 0) as [Hc|Hc].
 rewrite !(pow_neg_r _ _ Hc). now nzsimpl.
@@ -141,7 +141,7 @@ Qed.
 
 Lemma pow_mul_r : forall a b c, 0<=b -> 0<=c ->
 a^(b*c) == (a^b)^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_mul_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_mul_r". Undo.  
 intros a b c Hb. apply le_ind with (4:=Hb). solve_proper.
 intros. now nzsimpl.
 clear b Hb. intros b Hb IH Hc.
@@ -153,7 +153,7 @@ Qed.
 
 
 Lemma pow_nonneg : forall a b, 0<=a -> 0<=a^b.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_nonneg".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_nonneg". Undo.  
 intros a b Ha.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
 now rewrite !(pow_neg_r _ _ Hb).
@@ -164,7 +164,7 @@ nzsimpl; trivial. now apply mul_nonneg_nonneg.
 Qed.
 
 Lemma pow_pos_nonneg : forall a b, 0<a -> 0<=b -> 0<a^b.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_pos_nonneg".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_pos_nonneg". Undo.  
 intros a b Ha Hb. apply le_ind with (4:=Hb). solve_proper.
 nzsimpl; order'.
 clear b Hb. intros b Hb IH.
@@ -174,7 +174,7 @@ Qed.
 
 
 Lemma pow_lt_mono_l : forall a b c, 0<c -> 0<=a<b -> a^c < b^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_l".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_l". Undo.  
 intros a b c Hc. apply lt_ind with (4:=Hc). solve_proper.
 intros (Ha,H). nzsimpl; trivial; order.
 clear c Hc. intros c Hc IH (Ha,H).
@@ -185,7 +185,7 @@ apply IH. now split.
 Qed.
 
 Lemma pow_le_mono_l : forall a b c, 0<=a<=b -> a^c <= b^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_l".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_l". Undo.  
 intros a b c (Ha,H).
 destruct (lt_trichotomy c 0) as [Hc|[Hc|Hc]].
 rewrite !(pow_neg_r _ _ Hc); now nzsimpl.
@@ -195,7 +195,7 @@ apply lt_le_incl, pow_lt_mono_l; now try split.
 Qed.
 
 Lemma pow_gt_1 : forall a b, 1<a -> (0<b <-> 1<a^b).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_gt_1".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_gt_1". Undo.  
 intros a b Ha. split; intros Hb.
 rewrite <- (pow_1_l b) by order.
 apply pow_lt_mono_l; try split; order'.
@@ -205,7 +205,7 @@ rewrite H, pow_0_r in Hb. order.
 Qed.
 
 Lemma pow_lt_mono_r : forall a b c, 1<a -> 0<=c -> b<c -> a^b < a^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_r". Undo.  
 intros a b c Ha Hc H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
 rewrite pow_neg_r by trivial. apply pow_pos_nonneg; order'.
@@ -222,7 +222,7 @@ Qed.
 
 
 Lemma pow_le_mono_r : forall a b c, 0<a -> b<=c -> a^b <= a^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_r". Undo.  
 intros a b c Ha H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
 rewrite (pow_neg_r _ _ Hb). apply pow_nonneg; order.
@@ -235,7 +235,7 @@ Qed.
 
 Lemma pow_le_mono : forall a b c d, 0<a<=c -> b<=d ->
 a^b <= c^d.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono". Undo.  
 intros. transitivity (a^d).
 apply pow_le_mono_r; intuition order.
 apply pow_le_mono_l; intuition order.
@@ -243,7 +243,7 @@ Qed.
 
 Lemma pow_lt_mono : forall a b c d, 0<a<c -> 0<b<d ->
 a^b < c^d.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono". Undo.  
 intros a b c d (Ha,Hac) (Hb,Hbd).
 apply le_succ_l in Ha; rewrite <- one_succ in Ha.
 apply lt_eq_cases in Ha; destruct Ha as [Ha|Ha]; [|rewrite <- Ha].
@@ -257,7 +257,7 @@ Qed.
 
 Lemma pow_inj_l : forall a b c, 0<=a -> 0<=b -> 0<c ->
 a^c == b^c -> a == b.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_inj_l".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_inj_l". Undo.  
 intros a b c Ha Hb Hc EQ.
 destruct (lt_trichotomy a b) as [LT|[EQ'|GT]]; trivial.
 assert (a^c < b^c) by (apply pow_lt_mono_l; try split; trivial).
@@ -268,7 +268,7 @@ Qed.
 
 Lemma pow_inj_r : forall a b c, 1<a -> 0<=b -> 0<=c ->
 a^b == a^c -> b == c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_inj_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_inj_r". Undo.  
 intros a b c Ha Hb Hc EQ.
 destruct (lt_trichotomy b c) as [LT|[EQ'|GT]]; trivial.
 assert (a^b < a^c) by (apply pow_lt_mono_r; try split; trivial).
@@ -281,7 +281,7 @@ Qed.
 
 Lemma pow_lt_mono_l_iff : forall a b c, 0<=a -> 0<=b -> 0<c ->
 (a<b <-> a^c < b^c).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_l_iff".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_l_iff". Undo.  
 intros a b c Ha Hb Hc.
 split; intro LT.
 apply pow_lt_mono_l; try split; trivial.
@@ -292,7 +292,7 @@ Qed.
 
 Lemma pow_le_mono_l_iff : forall a b c, 0<=a -> 0<=b -> 0<c ->
 (a<=b <-> a^c <= b^c).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_l_iff".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_l_iff". Undo.  
 intros a b c Ha Hb Hc.
 split; intro LE.
 apply pow_le_mono_l; try split; trivial.
@@ -303,7 +303,7 @@ Qed.
 
 Lemma pow_lt_mono_r_iff : forall a b c, 1<a -> 0<=c ->
 (b<c <-> a^b < a^c).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_r_iff".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_lt_mono_r_iff". Undo.  
 intros a b c Ha Hc.
 split; intro LT.
 now apply pow_lt_mono_r.
@@ -314,7 +314,7 @@ Qed.
 
 Lemma pow_le_mono_r_iff : forall a b c, 1<a -> 0<=c ->
 (b<=c <-> a^b <= a^c).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_r_iff".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_le_mono_r_iff". Undo.  
 intros a b c Ha Hc.
 split; intro LE.
 apply pow_le_mono_r; order'.
@@ -326,7 +326,7 @@ Qed.
 
 
 Lemma pow_gt_lin_r : forall a b, 1<a -> 0<=b -> b < a^b.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_gt_lin_r".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_gt_lin_r". Undo.  
 intros a b Ha Hb. apply le_ind with (4:=Hb). solve_proper.
 nzsimpl. order'.
 clear b Hb. intros b Hb IH. nzsimpl; trivial.
@@ -343,7 +343,7 @@ Qed.
 
 Lemma pow_add_lower : forall a b c, 0<=a -> 0<=b -> 0<c ->
 a^c + b^c <= (a+b)^c.
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_add_lower".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_add_lower". Undo.  
 intros a b c Ha Hb Hc. apply lt_ind with (4:=Hc). solve_proper.
 nzsimpl; order.
 clear c Hc. intros c Hc IH.
@@ -366,7 +366,7 @@ Qed.
 
 Lemma pow_add_upper : forall a b c, 0<=a -> 0<=b -> 0<c ->
 (a+b)^c <= 2^(pred c) * (a^c + b^c).
-Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_add_upper".  
+Proof. try hammer_hook "NZPow" "NZPow.NZPowProp.pow_add_upper". Undo.  
 assert (aux : forall a b c, 0<=a<=b -> 0<c ->
 (a + b) * (a ^ c + b ^ c) <= 2 * (a * a ^ c + b * b ^ c)).
 

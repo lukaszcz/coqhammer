@@ -18,17 +18,17 @@ Module Type ZParityProp (Import Z : ZAxiomsSig')
 Include NZParityProp Z Z ZP.
 
 Lemma odd_pred : forall n, odd (P n) = even n.
-Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.odd_pred".  
+Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.odd_pred". Undo.  
 intros. rewrite <- (succ_pred n) at 2. symmetry. apply even_succ.
 Qed.
 
 Lemma even_pred : forall n, even (P n) = odd n.
-Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.even_pred".  
+Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.even_pred". Undo.  
 intros. rewrite <- (succ_pred n) at 2. symmetry. apply odd_succ.
 Qed.
 
 Lemma even_opp : forall n, even (-n) = even n.
-Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.even_opp".  
+Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.even_opp". Undo.  
 assert (H : forall n, Even n -> Even (-n)).
 intros n (m,H). exists (-m). rewrite mul_opp_r. now f_equiv.
 intros. rewrite eq_iff_eq_true, !even_spec.
@@ -37,17 +37,17 @@ apply H.
 Qed.
 
 Lemma odd_opp : forall n, odd (-n) = odd n.
-Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.odd_opp".  
+Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.odd_opp". Undo.  
 intros. rewrite <- !negb_even. now rewrite even_opp.
 Qed.
 
 Lemma even_sub : forall n m, even (n-m) = Bool.eqb (even n) (even m).
-Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.even_sub".  
+Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.even_sub". Undo.  
 intros. now rewrite <- add_opp_r, even_add, even_opp.
 Qed.
 
 Lemma odd_sub : forall n m, odd (n-m) = xorb (odd n) (odd m).
-Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.odd_sub".  
+Proof. try hammer_hook "ZParity" "ZParity.ZParityProp.odd_sub". Undo.  
 intros. now rewrite <- add_opp_r, odd_add, odd_opp.
 Qed.
 

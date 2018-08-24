@@ -64,7 +64,7 @@ Variable D : PO U.
 Lemma Strict_Rel_Transitive_with_Rel :
 forall x y z:U,
 Strict_Rel_of U D x y -> @Rel_of U D y z -> Strict_Rel_of U D x z.
-Proof. try hammer_hook "Partial_Order" "Partial_Order.Strict_Rel_Transitive_with_Rel".  
+Proof. try hammer_hook "Partial_Order" "Partial_Order.Strict_Rel_Transitive_with_Rel". Undo.  
 unfold Strict_Rel_of at 1.
 red.
 elim D; simpl.
@@ -80,7 +80,7 @@ Qed.
 Lemma Strict_Rel_Transitive_with_Rel_left :
 forall x y z:U,
 @Rel_of U D x y -> Strict_Rel_of U D y z -> Strict_Rel_of U D x z.
-Proof. try hammer_hook "Partial_Order" "Partial_Order.Strict_Rel_Transitive_with_Rel_left".  
+Proof. try hammer_hook "Partial_Order" "Partial_Order.Strict_Rel_Transitive_with_Rel_left". Undo.  
 unfold Strict_Rel_of at 1.
 red.
 elim D; simpl.

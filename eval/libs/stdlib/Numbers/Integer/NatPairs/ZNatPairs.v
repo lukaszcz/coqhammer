@@ -79,10 +79,10 @@ Infix "<=" := Z.le : ZScope.
 Local Open Scope ZScope.
 
 Lemma sub_add_opp : forall n m, Z.sub n m = Z.add n (Z.opp m).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_add_opp".   reflexivity. Qed.
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_add_opp". Undo.   reflexivity. Qed.
 
 Instance eq_equiv : Equivalence Z.eq.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.eq_equiv".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.eq_equiv". Undo.  
 split.
 unfold Reflexive, Z.eq. reflexivity.
 unfold Symmetric, Z.eq; now symmetry.
@@ -93,48 +93,48 @@ now rewrite add_shuffle1, (add_comm m1).
 Qed.
 
 Instance pair_wd : Proper (N.eq==>N.eq==>Z.eq) (@pair N.t N.t).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.pair_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.pair_wd". Undo.  
 intros n1 n2 H1 m1 m2 H2; unfold Z.eq; simpl; now rewrite H1, H2.
 Qed.
 
 Instance succ_wd : Proper (Z.eq ==> Z.eq) Z.succ.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.succ_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.succ_wd". Undo.  
 unfold Z.succ, Z.eq; intros n m H; simpl.
 do 2 rewrite add_succ_l; now rewrite H.
 Qed.
 
 Instance pred_wd : Proper (Z.eq ==> Z.eq) Z.pred.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.pred_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.pred_wd". Undo.  
 unfold Z.pred, Z.eq; intros n m H; simpl.
 do 2 rewrite add_succ_r; now rewrite H.
 Qed.
 
 Instance add_wd : Proper (Z.eq ==> Z.eq ==> Z.eq) Z.add.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.add_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.add_wd". Undo.  
 unfold Z.eq, Z.add; intros n1 m1 H1 n2 m2 H2; simpl.
 now rewrite add_shuffle1, H1, H2, add_shuffle1.
 Qed.
 
 Instance opp_wd : Proper (Z.eq ==> Z.eq) Z.opp.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.opp_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.opp_wd". Undo.  
 unfold Z.eq, Z.opp; intros (n1,n2) (m1,m2) H; simpl in *.
 now rewrite (add_comm n2), (add_comm m2).
 Qed.
 
 Instance sub_wd : Proper (Z.eq ==> Z.eq ==> Z.eq) Z.sub.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_wd". Undo.  
 intros n1 m1 H1 n2 m2 H2. rewrite 2 sub_add_opp. now do 2 f_equiv.
 Qed.
 
 Lemma mul_comm : forall n m, n*m == m*n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_comm".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_comm". Undo.  
 intros (n1,n2) (m1,m2); compute.
 rewrite (add_comm (m1*n2)%N).
 do 2 f_equiv; apply mul_comm.
 Qed.
 
 Instance mul_wd : Proper (Z.eq ==> Z.eq ==> Z.eq) Z.mul.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_wd". Undo.  
 assert (forall n, Proper (Z.eq ==> Z.eq) (Z.mul n)).
 unfold Z.mul, Z.eq. intros (n1,n2) (p1,p2) (q1,q2) H; simpl in *.
 rewrite add_shuffle1, (add_comm (n1*p1)%N).
@@ -153,7 +153,7 @@ Hypothesis A_wd : Proper (Z.eq==>iff) A.
 
 Theorem bi_induction :
 A 0 -> (forall n, A n <-> A (Z.succ n)) -> forall n, A n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.bi_induction".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.bi_induction". Undo.  
 Open Scope NScope.
 intros A0 AS n; unfold Z.zero, Z.succ, Z.eq in *.
 destruct n as [n m].
@@ -177,62 +177,62 @@ End Induction.
 
 
 Theorem pred_succ : forall n, Z.pred (Z.succ n) == n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.pred_succ".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.pred_succ". Undo.  
 unfold Z.pred, Z.succ, Z.eq; intro n; simpl; now nzsimpl.
 Qed.
 
 Theorem succ_pred : forall n, Z.succ (Z.pred n) == n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.succ_pred".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.succ_pred". Undo.  
 intro n; unfold Z.succ, Z.pred, Z.eq; simpl; now nzsimpl.
 Qed.
 
 Theorem one_succ : 1 == Z.succ 0.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.one_succ".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.one_succ". Undo.  
 unfold Z.eq; simpl. now nzsimpl'.
 Qed.
 
 Theorem two_succ : 2 == Z.succ 1.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.two_succ".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.two_succ". Undo.  
 unfold Z.eq; simpl. now nzsimpl'.
 Qed.
 
 Theorem opp_0 : - 0 == 0.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.opp_0".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.opp_0". Undo.  
 unfold Z.opp, Z.eq; simpl. now nzsimpl.
 Qed.
 
 Theorem opp_succ : forall n, - (Z.succ n) == Z.pred (- n).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.opp_succ".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.opp_succ". Undo.  
 reflexivity.
 Qed.
 
 Theorem add_0_l : forall n, 0 + n == n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.add_0_l".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.add_0_l". Undo.  
 intro n; unfold Z.add, Z.eq; simpl. now nzsimpl.
 Qed.
 
 Theorem add_succ_l : forall n m, (Z.succ n) + m == Z.succ (n + m).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.add_succ_l".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.add_succ_l". Undo.  
 intros n m; unfold Z.add, Z.eq; simpl. now nzsimpl.
 Qed.
 
 Theorem sub_0_r : forall n, n - 0 == n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_0_r".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_0_r". Undo.  
 intro n; unfold Z.sub, Z.eq; simpl. now nzsimpl.
 Qed.
 
 Theorem sub_succ_r : forall n m, n - (Z.succ m) == Z.pred (n - m).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_succ_r".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.sub_succ_r". Undo.  
 intros n m; unfold Z.sub, Z.eq; simpl. symmetry; now rewrite add_succ_r.
 Qed.
 
 Theorem mul_0_l : forall n, 0 * n == 0.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_0_l".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_0_l". Undo.  
 intros (n1,n2); unfold Z.mul, Z.eq; simpl; now nzsimpl.
 Qed.
 
 Theorem mul_succ_l : forall n m, (Z.succ n) * m == n * m + m.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_succ_l".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.mul_succ_l". Undo.  
 intros (n1,n2) (m1,m2); unfold Z.mul, Z.succ, Z.eq; simpl; nzsimpl.
 rewrite <- (add_assoc _ m1), (add_comm m1), (add_assoc _ _ m1).
 now rewrite <- (add_assoc _ m2), (add_comm m2), (add_assoc _ (n2*m1)%N m2).
@@ -241,55 +241,55 @@ Qed.
 
 
 Lemma lt_eq_cases : forall n m, n<=m <-> n<m \/ n==m.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_eq_cases".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_eq_cases". Undo.  
 intros; apply N.lt_eq_cases.
 Qed.
 
 Theorem lt_irrefl : forall n, ~ (n < n).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_irrefl".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_irrefl". Undo.  
 intros; apply N.lt_irrefl.
 Qed.
 
 Theorem lt_succ_r : forall n m, n < (Z.succ m) <-> n <= m.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_succ_r".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_succ_r". Undo.  
 intros n m; unfold Z.lt, Z.le, Z.eq; simpl; nzsimpl. apply lt_succ_r.
 Qed.
 
 Theorem min_l : forall n m, n <= m -> Z.min n m == n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.min_l".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.min_l". Undo.  
 unfold Z.min, Z.le, Z.eq; simpl; intros (n1,n2) (m1,m2) H; simpl in *.
 rewrite min_l by assumption.
 now rewrite <- add_assoc, (add_comm m2).
 Qed.
 
 Theorem min_r : forall n m, m <= n -> Z.min n m == m.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.min_r".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.min_r". Undo.  
 unfold Z.min, Z.le, Z.eq; simpl; intros (n1,n2) (m1,m2) H; simpl in *.
 rewrite min_r by assumption.
 now rewrite add_assoc.
 Qed.
 
 Theorem max_l : forall n m, m <= n -> Z.max n m == n.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.max_l".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.max_l". Undo.  
 unfold Z.max, Z.le, Z.eq; simpl; intros (n1,n2) (m1,m2) H; simpl in *.
 rewrite max_l by assumption.
 now rewrite <- add_assoc, (add_comm m2).
 Qed.
 
 Theorem max_r : forall n m, n <= m -> Z.max n m == m.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.max_r".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.max_r". Undo.  
 unfold Z.max, Z.le, Z.eq; simpl; intros n m H.
 rewrite max_r by assumption.
 now rewrite add_assoc.
 Qed.
 
 Theorem lt_nge : forall n m, n < m <-> ~(m<=n).
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_nge".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_nge". Undo.  
 intros. apply lt_nge.
 Qed.
 
 Instance lt_wd : Proper (Z.eq ==> Z.eq ==> iff) Z.lt.
-Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_wd".  
+Proof. try hammer_hook "ZNatPairs" "ZNatPairs.ZPairsAxiomsMod.lt_wd". Undo.  
 assert (forall n, Proper (Z.eq==>iff) (Z.lt n)).
 intros (n1,n2). apply proper_sym_impl_iff; auto with *.
 unfold Z.lt, Z.eq; intros (r1,r2) (s1,s2) Eq H; simpl in *.

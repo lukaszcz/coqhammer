@@ -23,7 +23,7 @@ forall (A : Type) (P : A->Prop), inhabited A ->
 Lemma constructive_indefinite_description :
 forall (A : Type) (P : A->Prop),
 (exists x, P x) -> { x : A | P x }.
-Proof. try hammer_hook "Epsilon" "Epsilon.constructive_indefinite_description".  
+Proof. try hammer_hook "Epsilon" "Epsilon.constructive_indefinite_description". Undo.  
 apply epsilon_imp_constructive_indefinite_description.
 exact epsilon_statement.
 Qed.
@@ -31,7 +31,7 @@ Qed.
 Lemma small_drinkers'_paradox :
 forall (A:Type) (P:A -> Prop), inhabited A ->
 exists x, (exists x, P x) -> P x.
-Proof. try hammer_hook "Epsilon" "Epsilon.small_drinkers'_paradox".  
+Proof. try hammer_hook "Epsilon" "Epsilon.small_drinkers'_paradox". Undo.  
 apply epsilon_imp_small_drinker.
 exact epsilon_statement.
 Qed.
@@ -39,14 +39,14 @@ Qed.
 Theorem iota_statement :
 forall (A : Type) (P : A->Prop), inhabited A ->
 { x : A | (exists! x : A, P x) -> P x }.
-Proof. try hammer_hook "Epsilon" "Epsilon.iota_statement".  
+Proof. try hammer_hook "Epsilon" "Epsilon.iota_statement". Undo.  
 intros; destruct epsilon_statement with (P:=P); firstorder.
 Qed.
 
 Lemma constructive_definite_description :
 forall (A : Type) (P : A->Prop),
 (exists! x, P x) -> { x : A | P x }.
-Proof. try hammer_hook "Epsilon" "Epsilon.constructive_definite_description".  
+Proof. try hammer_hook "Epsilon" "Epsilon.constructive_definite_description". Undo.  
 apply iota_imp_constructive_definite_description.
 exact iota_statement.
 Qed.

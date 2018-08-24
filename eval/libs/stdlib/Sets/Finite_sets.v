@@ -62,7 +62,7 @@ match p with
 exists A : _,
 (exists x : _, X = Add U A x /\ ~ In U A x /\ cardinal U A n)
 end.
-Proof. try hammer_hook "Finite_sets" "Finite_sets.cardinal_invert".  
+Proof. try hammer_hook "Finite_sets" "Finite_sets.cardinal_invert". Undo.  
 induction 1; simpl; auto.
 exists A; exists x; auto.
 Qed.
@@ -74,7 +74,7 @@ match p with
 | O => X = Empty_set U
 | S n => Inhabited U X
 end.
-Proof. try hammer_hook "Finite_sets" "Finite_sets.cardinal_elim".  
+Proof. try hammer_hook "Finite_sets" "Finite_sets.cardinal_elim". Undo.  
 intros X p C; elim C; simpl; trivial with sets.
 Qed.
 

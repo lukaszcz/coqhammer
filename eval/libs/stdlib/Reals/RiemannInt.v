@@ -43,14 +43,14 @@ forall (un:nat -> posreal) (f:R -> R) (a b:R) (pr:Riemann_integrable f a b)
 Rmin a b <= t <= Rmax a b ->
 Rabs (f t - phi_sequence un pr N t) <= psi t) /\
 Rabs (RiemannInt_SF psi) < un N }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.phi_sequence_prop".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.phi_sequence_prop". Undo.  
 intros; apply (projT2 (pr (un N))).
 Qed.
 
 Lemma RiemannInt_P1 :
 forall (f:R -> R) (a b:R),
 Riemann_integrable f a b -> Riemann_integrable f b a.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P1".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P1". Undo.  
 unfold Riemann_integrable; intros; elim (X eps); clear X; intros.
 elim p; clear p; intros x0 p; exists (mkStepFun (StepFun_P6 (pre x)));
 exists (mkStepFun (StepFun_P6 (pre x0)));
@@ -88,7 +88,7 @@ a <= b ->
 (forall t:R, Rmin a b <= t <= Rmax a b -> Rabs (f t - vn n t) <= wn n t) /\
 Rabs (RiemannInt_SF (wn n)) < un n) ->
 { l:R | Un_cv (fun N:nat => RiemannInt_SF (vn N)) l }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P2".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P2". Undo.  
 intros; apply R_complete; unfold Un_cv in H; unfold Cauchy_crit;
 intros; assert (H3 : 0 < eps / 2).
 unfold Rdiv; apply Rmult_lt_0_compat;
@@ -139,7 +139,7 @@ Un_cv un 0 ->
 (forall t:R, Rmin a b <= t <= Rmax a b -> Rabs (f t - vn n t) <= wn n t) /\
 Rabs (RiemannInt_SF (wn n)) < un n) ->
 { l:R | Un_cv (fun N:nat => RiemannInt_SF (vn N)) l }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P3".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P3". Undo.  
 intros; destruct (Rle_dec a b) as [Hle|Hnle].
 apply RiemannInt_P2 with f un wn; assumption.
 assert (H1 : b <= a); auto with real.
@@ -200,7 +200,7 @@ forall (f:R -> R) (a b:R) (pr:Riemann_integrable f a b)
 (un:nat -> posreal),
 Un_cv un 0 ->
 { l:R | Un_cv (fun N:nat => RiemannInt_SF (phi_sequence un pr N)) l }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_exists".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_exists". Undo.  
 intros f; intros;
 apply RiemannInt_P3 with
 f un (fun n:nat => proj1_sig (phi_sequence_prop un pr n));
@@ -214,7 +214,7 @@ Un_cv un 0 ->
 Un_cv vn 0 ->
 Un_cv (fun N:nat => RiemannInt_SF (phi_sequence un pr1 N)) l ->
 Un_cv (fun N:nat => RiemannInt_SF (phi_sequence vn pr2 N)) l.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P4".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P4". Undo.  
 unfold Un_cv; unfold R_dist; intros f; intros;
 assert (H3 : 0 < eps / 3).
 unfold Rdiv; apply Rmult_lt_0_compat;
@@ -360,7 +360,7 @@ rewrite <- Rinv_l_sym; [ ring | discrR ]
 Qed.
 
 Lemma RinvN_pos : forall n:nat, 0 < / (INR n + 1).
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RinvN_pos".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RinvN_pos". Undo.  
 intro; apply Rinv_0_lt_compat; apply Rplus_le_lt_0_compat;
 [ apply pos_INR | apply Rlt_0_1 ].
 Qed.
@@ -368,7 +368,7 @@ Qed.
 Definition RinvN (N:nat) : posreal := mkposreal _ (RinvN_pos N).
 
 Lemma RinvN_cv : Un_cv RinvN 0.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RinvN_cv".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RinvN_cv". Undo.  
 unfold Un_cv; intros; assert (H0 := archimed (/ eps)); elim H0;
 clear H0; intros; assert (H2 : (0 <= up (/ eps))%Z).
 apply le_IZR; left; apply Rlt_trans with (/ eps);
@@ -412,7 +412,7 @@ let (a,_) := RiemannInt_exists pr RinvN RinvN_cv in a.
 Lemma RiemannInt_P5 :
 forall (f:R -> R) (a b:R) (pr1 pr2:Riemann_integrable f a b),
 RiemannInt pr1 = RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P5".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P5". Undo.  
 intros; unfold RiemannInt;
 case (RiemannInt_exists pr1 RinvN RinvN_cv) as (x,HUn);
 case (RiemannInt_exists pr2 RinvN RinvN_cv) as (x0,HUn0);
@@ -428,7 +428,7 @@ Qed.
 Lemma maxN :
 forall (a b:R) (del:posreal),
 a < b -> { n:nat | a + INR n * del < b /\ b <= a + INR (S n) * del }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.maxN".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.maxN". Undo.  
 intros; set (I := fun n:nat => a + INR n * del < b);
 assert (H0 :  exists n : nat, I n).
 exists 0%nat; unfold I; rewrite Rmult_0_l; rewrite Rplus_0_r;
@@ -485,7 +485,7 @@ delta <= b - a /\
 (forall x y:R,
 a <= x <= b ->
 a <= y <= b -> Rabs (x - y) < delta -> Rabs (f x - f y) < eps) }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.Heine_cor1".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.Heine_cor1". Undo.  
 intro f; intros;
 set
 (E :=
@@ -544,7 +544,7 @@ forall eps:posreal,
 forall x y:R,
 a <= x <= b ->
 a <= y <= b -> Rabs (x - y) < delta -> Rabs (f x - f y) < eps }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.Heine_cor2".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.Heine_cor2". Undo.  
 intro f; intros; destruct (total_order_T a b) as [[Hlt|Heq]|Hgt].
 assert (H0 := Heine_cor1 Hlt H eps); elim H0; intros x p; exists x;
 elim p; intros; apply H2; assumption.
@@ -559,14 +559,14 @@ Qed.
 
 Lemma SubEqui_P1 :
 forall (a b:R) (del:posreal) (h:a < b), pos_Rl (SubEqui del h) 0 = a.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P1".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P1". Undo.  
 intros; unfold SubEqui; case (maxN del h); intros; reflexivity.
 Qed.
 
 Lemma SubEqui_P2 :
 forall (a b:R) (del:posreal) (h:a < b),
 pos_Rl (SubEqui del h) (pred (Rlength (SubEqui del h))) = b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P2".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P2". Undo.  
 intros; unfold SubEqui; destruct (maxN del h)as (x,_).
 cut
 (forall (x:nat) (a:R) (del:posreal),
@@ -584,7 +584,7 @@ Qed.
 
 Lemma SubEqui_P3 :
 forall (N:nat) (a b:R) (del:posreal), Rlength (SubEquiN N a b del) = S N.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P3".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P3". Undo.  
 simple induction N; intros;
 [ reflexivity | simpl; rewrite H; reflexivity ].
 Qed.
@@ -592,7 +592,7 @@ Qed.
 Lemma SubEqui_P4 :
 forall (N:nat) (a b:R) (del:posreal) (i:nat),
 (i < S N)%nat -> pos_Rl (SubEquiN (S N) a b del) i = a + INR i * del.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P4".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P4". Undo.  
 simple induction N;
 [ intros; inversion H; [ simpl; ring | elim (le_Sn_O _ H1) ]
 | intros; induction  i as [| i Hreci];
@@ -605,20 +605,20 @@ Qed.
 Lemma SubEqui_P5 :
 forall (a b:R) (del:posreal) (h:a < b),
 Rlength (SubEqui del h) = S (S (max_N del h)).
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P5".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P5". Undo.  
 intros; unfold SubEqui; apply SubEqui_P3.
 Qed.
 
 Lemma SubEqui_P6 :
 forall (a b:R) (del:posreal) (h:a < b) (i:nat),
 (i < S (max_N del h))%nat -> pos_Rl (SubEqui del h) i = a + INR i * del.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P6".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P6". Undo.  
 intros; unfold SubEqui; apply SubEqui_P4; assumption.
 Qed.
 
 Lemma SubEqui_P7 :
 forall (a b:R) (del:posreal) (h:a < b), ordered_Rlist (SubEqui del h).
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P7".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P7". Undo.  
 intros; unfold ordered_Rlist; intros; rewrite SubEqui_P5 in H;
 simpl in H; inversion H.
 rewrite (SubEqui_P6 del h (i:=(max_N del h))).
@@ -639,7 +639,7 @@ Qed.
 Lemma SubEqui_P8 :
 forall (a b:R) (del:posreal) (h:a < b) (i:nat),
 (i < Rlength (SubEqui del h))%nat -> a <= pos_Rl (SubEqui del h) i <= b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P8".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P8". Undo.  
 intros; split.
 pattern a at 1; rewrite <- (SubEqui_P1 del h); apply RList_P5.
 apply SubEqui_P7.
@@ -661,7 +661,7 @@ constant_D_eq g
 (co_interval (pos_Rl (SubEqui del h) i)
 (pos_Rl (SubEqui del h) (S i)))
 (f (pos_Rl (SubEqui del h) i))) }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P9".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.SubEqui_P9". Undo.  
 intros; apply StepFun_P38;
 [ apply SubEqui_P7 | apply SubEqui_P1 | apply SubEqui_P2 ].
 Qed.
@@ -670,7 +670,7 @@ Lemma RiemannInt_P6 :
 forall (f:R -> R) (a b:R),
 a < b ->
 (forall x:R, a <= x <= b -> continuity_pt f x) -> Riemann_integrable f a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P6".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P6". Undo.  
 intros; unfold Riemann_integrable; intro;
 assert (H1 : 0 < eps / (2 * (b - a))).
 unfold Rdiv; apply Rmult_lt_0_compat;
@@ -798,7 +798,7 @@ apply le_lt_n_Sm; assumption.
 Qed.
 
 Lemma RiemannInt_P7 : forall (f:R -> R) (a:R), Riemann_integrable f a a.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P7".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P7". Undo.  
 unfold Riemann_integrable; intro f; intros;
 split with (mkStepFun (StepFun_P4 a a (f a)));
 split with (mkStepFun (StepFun_P4 a a 0)); split.
@@ -814,7 +814,7 @@ Lemma continuity_implies_RiemannInt :
 forall (f:R -> R) (a b:R),
 a <= b ->
 (forall x:R, a <= x <= b -> continuity_pt f x) -> Riemann_integrable f a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.continuity_implies_RiemannInt".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.continuity_implies_RiemannInt". Undo.  
 intros; destruct (total_order_T a b) as [[Hlt| -> ]|Hgt];
 [ apply RiemannInt_P6; assumption | apply RiemannInt_P7
 | elim (Rlt_irrefl _ (Rle_lt_trans _ _ _ H Hgt)) ].
@@ -823,7 +823,7 @@ Qed.
 Lemma RiemannInt_P8 :
 forall (f:R -> R) (a b:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable f b a), RiemannInt pr1 = - RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P8".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P8". Undo.  
 intro f; intros; eapply UL_sequence.
 unfold RiemannInt; destruct (RiemannInt_exists pr1 RinvN RinvN_cv) as (?,HUn);
 apply HUn.
@@ -995,7 +995,7 @@ Qed.
 
 Lemma RiemannInt_P9 :
 forall (f:R -> R) (a:R) (pr:Riemann_integrable f a a), RiemannInt pr = 0.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P9".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P9". Undo.  
 intros; assert (H := RiemannInt_P8 pr pr); apply Rmult_eq_reg_l with 2;
 [ rewrite Rmult_0_r; rewrite double; pattern (RiemannInt pr) at 2;
 rewrite H; apply Rplus_opp_r
@@ -1008,7 +1008,7 @@ forall (f g:R -> R) (a b l:R),
 Riemann_integrable f a b ->
 Riemann_integrable g a b ->
 Riemann_integrable (fun x:R => f x + l * g x) a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P10".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P10". Undo.  
 unfold Riemann_integrable; intros f g; intros; destruct (Req_EM_T l 0) as [Heq|Hneq].
 elim (X eps); intros x p; split with x; elim p; intros x0 p0; split with x0; elim p0;
 intros; split; try assumption; rewrite Heq; intros;
@@ -1064,7 +1064,7 @@ Rmin a b <= t <= Rmax a b -> Rabs (f t - phi2 n t) <= psi2 n t) /\
 Rabs (RiemannInt_SF (psi2 n)) < un n) ->
 Un_cv (fun N:nat => RiemannInt_SF (phi1 N)) l ->
 Un_cv (fun N:nat => RiemannInt_SF (phi2 N)) l.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P11".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P11". Undo.  
 unfold Un_cv; intro f; intros; intros.
 case (Rle_dec a b); intro Hyp.
 assert (H4 : 0 < eps / 3).
@@ -1234,7 +1234,7 @@ forall (f g:R -> R) (a b l:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable g a b)
 (pr3:Riemann_integrable (fun x:R => f x + l * g x) a b),
 a <= b -> RiemannInt pr3 = RiemannInt pr1 + l * RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P12".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P12". Undo.  
 intro f; intros; case (Req_dec l 0); intro.
 pattern l at 2; rewrite H0; rewrite Rmult_0_l; rewrite Rplus_0_r;
 unfold RiemannInt; destruct (RiemannInt_exists pr3 RinvN RinvN_cv) as (?,HUn_cv);
@@ -1473,7 +1473,7 @@ forall (f g:R -> R) (a b l:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable g a b)
 (pr3:Riemann_integrable (fun x:R => f x + l * g x) a b),
 RiemannInt pr3 = RiemannInt pr1 + l * RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P13".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P13". Undo.  
 intros; destruct (Rle_dec a b) as [Hle|Hnle];
 [ apply RiemannInt_P12; assumption
 | assert (H : b <= a);
@@ -1490,7 +1490,7 @@ rewrite
 Qed.
 
 Lemma RiemannInt_P14 : forall a b c:R, Riemann_integrable (fct_cte c) a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P14".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P14". Undo.  
 unfold Riemann_integrable; intros;
 split with (mkStepFun (StepFun_P4 a b c));
 split with (mkStepFun (StepFun_P4 a b 0)); split;
@@ -1504,7 +1504,7 @@ Qed.
 Lemma RiemannInt_P15 :
 forall (a b c:R) (pr:Riemann_integrable (fct_cte c) a b),
 RiemannInt pr = c * (b - a).
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P15".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P15". Undo.  
 intros; unfold RiemannInt; destruct (RiemannInt_exists pr RinvN RinvN_cv) as (?,HUn_cv);
 intros; eapply UL_sequence.
 apply HUn_cv.
@@ -1541,7 +1541,7 @@ Qed.
 Lemma RiemannInt_P16 :
 forall (f:R -> R) (a b:R),
 Riemann_integrable f a b -> Riemann_integrable (fun x:R => Rabs (f x)) a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P16".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P16". Undo.  
 unfold Riemann_integrable; intro f; intros; elim (X eps); clear X;
 intros phi [psi [H H0]]; split with (mkStepFun (StepFun_P32 phi));
 split with psi; split; try assumption; intros; simpl;
@@ -1552,7 +1552,7 @@ Qed.
 Lemma Rle_cv_lim :
 forall (Un Vn:nat -> R) (l1 l2:R),
 (forall n:nat, Un n <= Vn n) -> Un_cv Un l1 -> Un_cv Vn l2 -> l1 <= l2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.Rle_cv_lim".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.Rle_cv_lim". Undo.  
 intros; destruct (Rle_dec l1 l2) as [Hle|Hnle].
 assumption.
 assert (H2 : l2 < l1).
@@ -1592,7 +1592,7 @@ Lemma RiemannInt_P17 :
 forall (f:R -> R) (a b:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable (fun x:R => Rabs (f x)) a b),
 a <= b -> Rabs (RiemannInt pr1) <= RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P17".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P17". Undo.  
 intro f; intros; unfold RiemannInt;
 case (RiemannInt_exists pr1 RinvN RinvN_cv) as (x0,HUn_cv0);
 case (RiemannInt_exists pr2 RinvN RinvN_cv) as (x,HUn_cv);
@@ -1649,7 +1649,7 @@ forall (f g:R -> R) (a b:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable g a b),
 a <= b ->
 (forall x:R, a < x < b -> f x = g x) -> RiemannInt pr1 = RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P18".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P18". Undo.  
 intro f; intros; unfold RiemannInt;
 case (RiemannInt_exists pr1 RinvN RinvN_cv) as (x0,HUn_cv0);
 case (RiemannInt_exists pr2 RinvN RinvN_cv) as (x,HUn_cv);
@@ -1775,7 +1775,7 @@ forall (f g:R -> R) (a b:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable g a b),
 a <= b ->
 (forall x:R, a < x < b -> f x <= g x) -> RiemannInt pr1 <= RiemannInt pr2.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P19".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P19". Undo.  
 intro f; intros; apply Rplus_le_reg_l with (- RiemannInt pr1);
 rewrite Rplus_opp_l; rewrite Rplus_comm;
 apply Rle_trans with (Rabs (RiemannInt (RiemannInt_P10 (-1) pr2 pr1))).
@@ -1801,7 +1801,7 @@ forall (f:R -> R) (a b:R),
 a <= b ->
 (forall x:R, a <= x <= b -> continuity_pt f x) ->
 forall x:R, a <= x -> x <= b -> Riemann_integrable f a x.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.FTC_P1".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.FTC_P1". Undo.  
 intros; apply continuity_implies_RiemannInt;
 [ assumption
 | intros; apply H0; elim H3; intros; split;
@@ -1825,7 +1825,7 @@ forall (f:R -> R) (a b:R) (h:a <= b)
 (pr:forall x:R, a <= x -> x <= b -> Riemann_integrable f a x)
 (pr0:Riemann_integrable f a b),
 RiemannInt pr0 = primitive h pr b - primitive h pr a.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P20".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P20". Undo.  
 intros; replace (primitive h pr a) with 0.
 replace (RiemannInt pr0) with (primitive h pr b).
 ring.
@@ -1848,7 +1848,7 @@ a <= b ->
 b <= c ->
 Riemann_integrable f a b ->
 Riemann_integrable f b c -> Riemann_integrable f a c.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P21".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P21". Undo.  
 unfold Riemann_integrable; intros f a b c Hyp1 Hyp2 X X0 eps.
 assert (H : 0 < eps / 2).
 unfold Rdiv; apply Rmult_lt_0_compat;
@@ -2051,7 +2051,7 @@ Qed.
 Lemma RiemannInt_P22 :
 forall (f:R -> R) (a b c:R),
 Riemann_integrable f a b -> a <= c <= b -> Riemann_integrable f a c.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P22".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P22". Undo.  
 unfold Riemann_integrable; intros; elim (X eps); clear X;
 intros phi [psi H0]; elim H; elim H0; clear H H0;
 intros; assert (H3 : IsStepFun phi a c).
@@ -2122,7 +2122,7 @@ Qed.
 Lemma RiemannInt_P23 :
 forall (f:R -> R) (a b c:R),
 Riemann_integrable f a b -> a <= c <= b -> Riemann_integrable f c b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P23".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P23". Undo.  
 unfold Riemann_integrable; intros; elim (X eps); clear X;
 intros phi [psi H0]; elim H; elim H0; clear H H0;
 intros; assert (H3 : IsStepFun phi c b).
@@ -2197,7 +2197,7 @@ Lemma RiemannInt_P24 :
 forall (f:R -> R) (a b c:R),
 Riemann_integrable f a b ->
 Riemann_integrable f b c -> Riemann_integrable f a c.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P24".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P24". Undo.  
 intros; case (Rle_dec a b); case (Rle_dec b c); intros.
 apply RiemannInt_P21 with b; assumption.
 case (Rle_dec a c); intro.
@@ -2220,7 +2220,7 @@ Lemma RiemannInt_P25 :
 forall (f:R -> R) (a b c:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable f b c) (pr3:Riemann_integrable f a c),
 a <= b -> b <= c -> RiemannInt pr1 + RiemannInt pr2 = RiemannInt pr3.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P25".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P25". Undo.  
 intros f a b c pr1 pr2 pr3 Hyp1 Hyp2; unfold RiemannInt;
 case (RiemannInt_exists pr1 RinvN RinvN_cv) as (x1,HUn_cv1);
 case (RiemannInt_exists pr2 RinvN RinvN_cv) as (x0,HUn_cv0);
@@ -2484,7 +2484,7 @@ Lemma RiemannInt_P26 :
 forall (f:R -> R) (a b c:R) (pr1:Riemann_integrable f a b)
 (pr2:Riemann_integrable f b c) (pr3:Riemann_integrable f a c),
 RiemannInt pr1 + RiemannInt pr2 = RiemannInt pr3.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P26".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P26". Undo.  
 intros; destruct (Rle_dec a b) as [Hle|Hnle]; destruct (Rle_dec b c) as [Hle'|Hnle'].
 apply RiemannInt_P25; assumption.
 destruct (Rle_dec a c) as [Hle''|Hnle''].
@@ -2519,7 +2519,7 @@ Lemma RiemannInt_P27 :
 forall (f:R -> R) (a b x:R) (h:a <= b)
 (C0:forall x:R, a <= x <= b -> continuity_pt f x),
 a < x < b -> derivable_pt_lim (primitive h (FTC_P1 h C0)) x (f x).
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P27".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P27". Undo.  
 intro f; intros; elim H; clear H; intros; assert (H1 : continuity_pt f x).
 apply C0; split; left; assumption.
 unfold derivable_pt_lim; intros; assert (Hyp : 0 < eps / 2).
@@ -2733,7 +2733,7 @@ Lemma RiemannInt_P28 :
 forall (f:R -> R) (a b x:R) (h:a <= b)
 (C0:forall x:R, a <= x <= b -> continuity_pt f x),
 a <= x <= b -> derivable_pt_lim (primitive h (FTC_P1 h C0)) x (f x).
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P28".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P28". Undo.  
 intro f; intros; elim h; intro.
 elim H; clear H; intros; elim H; intro.
 elim H1; intro.
@@ -3152,7 +3152,7 @@ Lemma RiemannInt_P29 :
 forall (f:R -> R) a b (h:a <= b)
 (C0:forall x:R, a <= x <= b -> continuity_pt f x),
 antiderivative f (primitive h (FTC_P1 h C0)) a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P29".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P29". Undo.  
 intro f; intros; unfold antiderivative; split; try assumption; intros;
 assert (H0 := RiemannInt_P28 h C0 H);
 assert (H1 : derivable_pt (primitive h (FTC_P1 h C0)) x);
@@ -3165,7 +3165,7 @@ forall (f:R -> R) (a b:R),
 a <= b ->
 (forall x:R, a <= x <= b -> continuity_pt f x) ->
 { g:R -> R | antiderivative f g a b }.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P30".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P30". Undo.  
 intros; split with (primitive H (FTC_P1 H H0)); apply RiemannInt_P29.
 Qed.
 
@@ -3175,14 +3175,14 @@ Record C1_fun : Type := mkC1
 Lemma RiemannInt_P31 :
 forall (f:C1_fun) (a b:R),
 a <= b -> antiderivative (derive f (diff0 f)) f a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P31".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P31". Undo.  
 intro f; intros; unfold antiderivative; split; try assumption; intros;
 split with (diff0 f x); reflexivity.
 Qed.
 
 Lemma RiemannInt_P32 :
 forall (f:C1_fun) (a b:R), Riemann_integrable (derive f (diff0 f)) a b.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P32".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P32". Undo.  
 intro f; intros; destruct (Rle_dec a b) as [Hle|Hnle];
 [ apply continuity_implies_RiemannInt; try assumption; intros;
 apply (cont1 f)
@@ -3195,7 +3195,7 @@ Qed.
 Lemma RiemannInt_P33 :
 forall (f:C1_fun) (a b:R) (pr:Riemann_integrable (derive f (diff0 f)) a b),
 a <= b -> RiemannInt pr = f b - f a.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P33".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.RiemannInt_P33". Undo.  
 intro f; intros;
 assert
 (H0 : forall x:R, a <= x <= b -> continuity_pt (derive f (diff0 f)) x).
@@ -3212,7 +3212,7 @@ Qed.
 Lemma FTC_Riemann :
 forall (f:C1_fun) (a b:R) (pr:Riemann_integrable (derive f (diff0 f)) a b),
 RiemannInt pr = f b - f a.
-Proof. try hammer_hook "RiemannInt" "RiemannInt.FTC_Riemann".  
+Proof. try hammer_hook "RiemannInt" "RiemannInt.FTC_Riemann". Undo.  
 intro f; intros; destruct (Rle_dec a b) as [Hle|Hnle];
 [ apply RiemannInt_P33; assumption
 | assert (H : b <= a);

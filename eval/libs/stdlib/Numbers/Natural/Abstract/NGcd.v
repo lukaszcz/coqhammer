@@ -27,14 +27,14 @@ Definition divide_antisym n m : (n | m) -> (m | n) -> n == m
 := divide_antisym_nonneg n m (le_0_l n) (le_0_l m).
 
 Lemma divide_add_cancel_r : forall n m p, (n | m) -> (n | m + p) -> (n | p).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.divide_add_cancel_r".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.divide_add_cancel_r". Undo.  
 intros n m p (q,Hq) (r,Hr).
 exists (r-q). rewrite mul_sub_distr_r, <- Hq, <- Hr.
 now rewrite add_comm, add_sub.
 Qed.
 
 Lemma divide_sub_r : forall n m p, (n | m) -> (n | p) -> (n | m - p).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.divide_sub_r".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.divide_sub_r". Undo.  
 intros n m p H H'.
 destruct (le_ge_cases m p) as [LE|LE].
 apply sub_0_le in LE. rewrite LE. apply divide_0_r.
@@ -52,7 +52,7 @@ Definition gcd_unique_alt' n m p := gcd_unique_alt n m p (le_0_l p).
 Definition divide_gcd_iff' n m := divide_gcd_iff n m (le_0_l n).
 
 Lemma gcd_add_mult_diag_r : forall n m p, gcd n (m+p*n) == gcd n m.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_add_mult_diag_r".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_add_mult_diag_r". Undo.  
 intros. apply gcd_unique_alt'.
 intros. rewrite gcd_divide_iff. split; intros (U,V); split; trivial.
 apply divide_add_r; trivial. now apply divide_mul_r.
@@ -61,12 +61,12 @@ now apply divide_mul_r. now rewrite add_comm.
 Qed.
 
 Lemma gcd_add_diag_r : forall n m, gcd n (m+n) == gcd n m.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_add_diag_r".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_add_diag_r". Undo.  
 intros n m. rewrite <- (mul_1_l n) at 2. apply gcd_add_mult_diag_r.
 Qed.
 
 Lemma gcd_sub_diag_r : forall n m, n<=m -> gcd n (m-n) == gcd n m.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_sub_diag_r".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_sub_diag_r". Undo.  
 intros n m H. symmetry.
 rewrite <- (sub_add n m H) at 1. apply gcd_add_diag_r.
 Qed.
@@ -76,13 +76,13 @@ Qed.
 Definition Bezout n m p := exists a b, a*n == p + b*m.
 
 Instance Bezout_wd : Proper (eq==>eq==>eq==>iff) Bezout.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.Bezout_wd".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.Bezout_wd". Undo.  
 unfold Bezout. intros x x' Hx y y' Hy z z' Hz.
 setoid_rewrite Hx. setoid_rewrite Hy. now setoid_rewrite Hz.
 Qed.
 
 Lemma bezout_1_gcd : forall n m, Bezout n m 1 -> gcd n m == 1.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.bezout_1_gcd".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.bezout_1_gcd". Undo.  
 intros n m (q & r & H).
 apply gcd_unique; trivial using divide_1_l, le_0_1.
 intros p Hn Hm.
@@ -95,7 +95,7 @@ Qed.
 
 Lemma gcd_bezout_pos_pos : forall n, 0<n -> forall m, 0<m ->
 Bezout n m (gcd n m) /\ Bezout m n (gcd n m).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_bezout_pos_pos".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_bezout_pos_pos". Undo.  
 intros n Hn. rewrite <- le_succ_l, <- one_succ in Hn.
 pattern n. apply strong_right_induction with (z:=1); trivial.
 unfold Bezout. solve_proper.
@@ -131,7 +131,7 @@ now rewrite <- le_succ_l, <- one_succ.
 Qed.
 
 Lemma gcd_bezout_pos : forall n m, 0<n -> Bezout n m (gcd n m).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_bezout_pos".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_bezout_pos". Undo.  
 intros n m Hn.
 destruct (eq_0_gt_0_cases m) as [EQ|LT].
 rewrite EQ, gcd_0_r. exists 1. exists 0. now nzsimpl.
@@ -142,7 +142,7 @@ Qed.
 
 Lemma gcd_bezout : forall n m,
 Bezout n m (gcd n m) \/ Bezout m n (gcd n m).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_bezout".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_bezout". Undo.  
 intros n m.
 destruct (eq_0_gt_0_cases n) as [EQ|LT].
 right. rewrite EQ, gcd_0_l. exists 1. exists 0. now nzsimpl.
@@ -151,7 +151,7 @@ Qed.
 
 Lemma gcd_mul_mono_l :
 forall n m p, gcd (p * n) (p * m) == p * gcd n m.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_mul_mono_l".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_mul_mono_l". Undo.  
 intros n m p.
 apply gcd_unique'.
 apply mul_divide_mono_l, gcd_divide_l.
@@ -169,12 +169,12 @@ Qed.
 
 Lemma gcd_mul_mono_r :
 forall n m p, gcd (n*p) (m*p) == gcd n m * p.
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_mul_mono_r".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gcd_mul_mono_r". Undo.  
 intros. rewrite !(mul_comm _ p). apply gcd_mul_mono_l.
 Qed.
 
 Lemma gauss : forall n m p, (n | m * p) -> gcd n m == 1 -> (n | p).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gauss".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.gauss". Undo.  
 intros n m p H G.
 destruct (eq_0_gt_0_cases n) as [EQ|LT].
 rewrite EQ in *. rewrite gcd_0_l in G. now rewrite <- (mul_1_l p), <- G.
@@ -189,7 +189,7 @@ Qed.
 
 Lemma divide_mul_split : forall n m p, n ~= 0 -> (n | m * p) ->
 exists q r, n == q*r /\ (q | m) /\ (r | p).
-Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.divide_mul_split".  
+Proof. try hammer_hook "NGcd" "NGcd.NGcdProp.divide_mul_split". Undo.  
 intros n m p Hn H.
 assert (G := gcd_nonneg n m). le_elim G.
 destruct (gcd_divide_l n m) as (q,Hq).

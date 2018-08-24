@@ -155,28 +155,28 @@ Definition sigT2_of_sig2 (A : Type) (P Q : A -> Prop) (X : sig2 P Q) : sigT2 P Q
 
 Definition sigT_eta {A P} (p : { a : A & P a })
 : p = existT _ (projT1 p) (projT2 p).
-Proof. try hammer_hook "Specif" "Specif.sigT_eta".   destruct p; reflexivity. Defined.
+Proof. try hammer_hook "Specif" "Specif.sigT_eta". Undo.   destruct p; reflexivity. Defined.
 
 Definition sig_eta {A P} (p : { a : A | P a })
 : p = exist _ (proj1_sig p) (proj2_sig p).
-Proof. try hammer_hook "Specif" "Specif.sig_eta".   destruct p; reflexivity. Defined.
+Proof. try hammer_hook "Specif" "Specif.sig_eta". Undo.   destruct p; reflexivity. Defined.
 
 Definition sigT2_eta {A P Q} (p : { a : A & P a & Q a })
 : p = existT2 _ _ (projT1 (sigT_of_sigT2 p)) (projT2 (sigT_of_sigT2 p)) (projT3 p).
-Proof. try hammer_hook "Specif" "Specif.sigT2_eta".   destruct p; reflexivity. Defined.
+Proof. try hammer_hook "Specif" "Specif.sigT2_eta". Undo.   destruct p; reflexivity. Defined.
 
 Definition sig2_eta {A P Q} (p : { a : A | P a & Q a })
 : p = exist2 _ _ (proj1_sig (sig_of_sig2 p)) (proj2_sig (sig_of_sig2 p)) (proj3_sig p).
-Proof. try hammer_hook "Specif" "Specif.sig2_eta".   destruct p; reflexivity. Defined.
+Proof. try hammer_hook "Specif" "Specif.sig2_eta". Undo.   destruct p; reflexivity. Defined.
 
 
 Lemma exists_to_inhabited_sig {A P} : (exists x : A, P x) -> inhabited {x : A | P x}.
-Proof. try hammer_hook "Specif" "Specif.exists_to_inhabited_sig".  
+Proof. try hammer_hook "Specif" "Specif.exists_to_inhabited_sig". Undo.  
 intros [x y]. exact (inhabits (exist _ x y)).
 Qed.
 
 Lemma inhabited_sig_to_exists {A P} : inhabited {x : A | P x} -> exists x : A, P x.
-Proof. try hammer_hook "Specif" "Specif.inhabited_sig_to_exists".  
+Proof. try hammer_hook "Specif" "Specif.inhabited_sig_to_exists". Undo.  
 intros [[x y]];exists x;exact y.
 Qed.
 
@@ -206,7 +206,7 @@ Definition projT2_eq {A} {P : A -> Type} {u v : { a : A & P a }} (p : u = v)
 Definition eq_existT_uncurried {A : Type} {P : A -> Type} {u1 v1 : A} {u2 : P u1} {v2 : P v1}
 (pq : { p : u1 = v1 & rew p in u2 = v2 })
 : existT _ u1 u2 = existT _ v1 v2.
-Proof. try hammer_hook "Specif" "Specif.eq_existT_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_existT_uncurried". Undo.  
 destruct pq as [p q].
 destruct q; simpl in *.
 destruct p; reflexivity.
@@ -216,7 +216,7 @@ Defined.
 Definition eq_sigT_uncurried {A : Type} {P : A -> Type} (u v : { a : A & P a })
 (pq : { p : projT1 u = projT1 v & rew p in projT2 u = projT2 v })
 : u = v.
-Proof. try hammer_hook "Specif" "Specif.eq_sigT_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_sigT_uncurried". Undo.  
 destruct u as [u1 u2], v as [v1 v2]; simpl in *.
 apply eq_existT_uncurried; exact pq.
 Defined.
@@ -239,7 +239,7 @@ Definition eq_sigT_hprop {A P} (P_hprop : forall (x : A) (p q : P x), p = q)
 Definition eq_sigT_uncurried_iff {A P}
 (u v : { a : A & P a })
 : u = v <-> { p : projT1 u = projT1 v & rew p in projT2 u = projT2 v }.
-Proof. try hammer_hook "Specif" "Specif.eq_sigT_uncurried_iff".  
+Proof. try hammer_hook "Specif" "Specif.eq_sigT_uncurried_iff". Undo.  
 split; [ intro; subst; exists eq_refl; reflexivity | apply eq_sigT_uncurried ].
 Defined.
 
@@ -247,7 +247,7 @@ Defined.
 Definition eq_sigT_rect {A P} {u v : { a : A & P a }} (Q : u = v -> Type)
 (f : forall p q, Q (eq_sigT u v p q))
 : forall p, Q p.
-Proof. try hammer_hook "Specif" "Specif.eq_sigT_rect".   intro p; specialize (f (projT1_eq p) (projT2_eq p)); destruct u, p; exact f. Defined.
+Proof. try hammer_hook "Specif" "Specif.eq_sigT_rect". Undo.   intro p; specialize (f (projT1_eq p) (projT2_eq p)); destruct u, p; exact f. Defined.
 Definition eq_sigT_rec {A P u v} (Q : u = v :> { a : A & P a } -> Set) := eq_sigT_rect Q.
 Definition eq_sigT_ind {A P u v} (Q : u = v :> { a : A & P a } -> Prop) := eq_sigT_rec Q.
 
@@ -270,7 +270,7 @@ Lemma rew_sigT {A x} {P : A -> Type} (Q : forall a, P a -> Prop) (u : { p : P x 
 (Q y)
 (rew H in projT1 u)
 (rew dependent H in (projT2 u)).
-Proof. try hammer_hook "Specif" "Specif.rew_sigT".  
+Proof. try hammer_hook "Specif" "Specif.rew_sigT". Undo.  
 destruct H, u; reflexivity.
 Defined.
 End sigT.
@@ -292,7 +292,7 @@ Definition proj2_sig_eq {A} {P : A -> Prop} {u v : { a : A | P a }} (p : u = v)
 Definition eq_exist_uncurried {A : Type} {P : A -> Prop} {u1 v1 : A} {u2 : P u1} {v2 : P v1}
 (pq : { p : u1 = v1 | rew p in u2 = v2 })
 : exist _ u1 u2 = exist _ v1 v2.
-Proof. try hammer_hook "Specif" "Specif.eq_exist_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_exist_uncurried". Undo.  
 destruct pq as [p q].
 destruct q; simpl in *.
 destruct p; reflexivity.
@@ -302,7 +302,7 @@ Defined.
 Definition eq_sig_uncurried {A : Type} {P : A -> Prop} (u v : { a : A | P a })
 (pq : { p : proj1_sig u = proj1_sig v | rew p in proj2_sig u = proj2_sig v })
 : u = v.
-Proof. try hammer_hook "Specif" "Specif.eq_sig_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_sig_uncurried". Undo.  
 destruct u as [u1 u2], v as [v1 v2]; simpl in *.
 apply eq_exist_uncurried; exact pq.
 Defined.
@@ -317,7 +317,7 @@ Definition eq_sig {A : Type} {P : A -> Prop} (u v : { a : A | P a })
 Definition eq_sig_rect {A P} {u v : { a : A | P a }} (Q : u = v -> Type)
 (f : forall p q, Q (eq_sig u v p q))
 : forall p, Q p.
-Proof. try hammer_hook "Specif" "Specif.eq_sig_rect".   intro p; specialize (f (proj1_sig_eq p) (proj2_sig_eq p)); destruct u, p; exact f. Defined.
+Proof. try hammer_hook "Specif" "Specif.eq_sig_rect". Undo.   intro p; specialize (f (proj1_sig_eq p) (proj2_sig_eq p)); destruct u, p; exact f. Defined.
 Definition eq_sig_rec {A P u v} (Q : u = v :> { a : A | P a } -> Set) := eq_sig_rect Q.
 Definition eq_sig_ind {A P u v} (Q : u = v :> { a : A | P a } -> Prop) := eq_sig_rec Q.
 
@@ -333,7 +333,7 @@ Definition eq_sig_hprop {A} {P : A -> Prop} (P_hprop : forall (x : A) (p q : P x
 Definition eq_sig_uncurried_iff {A} {P : A -> Prop}
 (u v : { a : A | P a })
 : u = v <-> { p : proj1_sig u = proj1_sig v | rew p in proj2_sig u = proj2_sig v }.
-Proof. try hammer_hook "Specif" "Specif.eq_sig_uncurried_iff".  
+Proof. try hammer_hook "Specif" "Specif.eq_sig_uncurried_iff". Undo.  
 split; [ intro; subst; exists eq_refl; reflexivity | apply eq_sig_uncurried ].
 Defined.
 
@@ -349,7 +349,7 @@ Lemma rew_sig {A x} {P : A -> Type} (Q : forall a, P a -> Prop) (u : { p : P x |
 (Q y)
 (rew H in proj1_sig u)
 (rew dependent H in proj2_sig u).
-Proof. try hammer_hook "Specif" "Specif.rew_sig".  
+Proof. try hammer_hook "Specif" "Specif.rew_sig". Undo.  
 destruct H, u; reflexivity.
 Defined.
 End sig.
@@ -383,7 +383,7 @@ Definition eq_existT2_uncurried {A : Type} {P Q : A -> Type}
 (pqr : { p : u1 = v1
 & rew p in u2 = v2 & rew p in u3 = v3 })
 : existT2 _ _ u1 u2 u3 = existT2 _ _ v1 v2 v3.
-Proof. try hammer_hook "Specif" "Specif.eq_existT2_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_existT2_uncurried". Undo.  
 destruct pqr as [p q r].
 destruct r, q, p; simpl.
 reflexivity.
@@ -394,7 +394,7 @@ Definition eq_sigT2_uncurried {A : Type} {P Q : A -> Type} (u v : { a : A & P a 
 (pqr : { p : projT1 u = projT1 v
 & rew p in projT2 u = projT2 v & rew p in projT3 u = projT3 v })
 : u = v.
-Proof. try hammer_hook "Specif" "Specif.eq_sigT2_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_sigT2_uncurried". Undo.  
 destruct u as [u1 u2 u3], v as [v1 v2 v3]; simpl in *.
 apply eq_existT2_uncurried; exact pqr.
 Defined.
@@ -421,7 +421,7 @@ Definition eq_sigT2_uncurried_iff {A P Q}
 : u = v
 <-> { p : projT1 u = projT1 v
 & rew p in projT2 u = projT2 v & rew p in projT3 u = projT3 v }.
-Proof. try hammer_hook "Specif" "Specif.eq_sigT2_uncurried_iff".  
+Proof. try hammer_hook "Specif" "Specif.eq_sigT2_uncurried_iff". Undo.  
 split; [ intro; subst; exists eq_refl; reflexivity | apply eq_sigT2_uncurried ].
 Defined.
 
@@ -429,7 +429,7 @@ Defined.
 Definition eq_sigT2_rect {A P Q} {u v : { a : A & P a & Q a }} (R : u = v -> Type)
 (f : forall p q r, R (eq_sigT2 u v p q r))
 : forall p, R p.
-Proof. try hammer_hook "Specif" "Specif.eq_sigT2_rect".  
+Proof. try hammer_hook "Specif" "Specif.eq_sigT2_rect". Undo.  
 intro p.
 specialize (f (projT1_of_sigT2_eq p) (projT2_of_sigT2_eq p) (projT3_eq p)).
 destruct u, p; exact f.
@@ -460,7 +460,7 @@ Lemma rew_sigT2 {A x} {P : A -> Type} (Q R : forall a, P a -> Prop)
 (rew H in projT1 u)
 (rew dependent H in projT2 u)
 (rew dependent H in projT3 u).
-Proof. try hammer_hook "Specif" "Specif.rew_sigT2".  
+Proof. try hammer_hook "Specif" "Specif.rew_sigT2". Undo.  
 destruct H, u; reflexivity.
 Defined.
 End sigT2.
@@ -494,7 +494,7 @@ Definition eq_exist2_uncurried {A} {P Q : A -> Prop}
 (pqr : { p : u1 = v1
 | rew p in u2 = v2 & rew p in u3 = v3 })
 : exist2 _ _ u1 u2 u3 = exist2 _ _ v1 v2 v3.
-Proof. try hammer_hook "Specif" "Specif.eq_exist2_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_exist2_uncurried". Undo.  
 destruct pqr as [p q r].
 destruct r, q, p; simpl.
 reflexivity.
@@ -505,7 +505,7 @@ Definition eq_sig2_uncurried {A} {P Q : A -> Prop} (u v : { a : A | P a & Q a })
 (pqr : { p : proj1_sig u = proj1_sig v
 | rew p in proj2_sig u = proj2_sig v & rew p in proj3_sig u = proj3_sig v })
 : u = v.
-Proof. try hammer_hook "Specif" "Specif.eq_sig2_uncurried".  
+Proof. try hammer_hook "Specif" "Specif.eq_sig2_uncurried". Undo.  
 destruct u as [u1 u2 u3], v as [v1 v2 v3]; simpl in *.
 apply eq_exist2_uncurried; exact pqr.
 Defined.
@@ -532,7 +532,7 @@ Definition eq_sig2_uncurried_iff {A P Q}
 : u = v
 <-> { p : proj1_sig u = proj1_sig v
 | rew p in proj2_sig u = proj2_sig v & rew p in proj3_sig u = proj3_sig v }.
-Proof. try hammer_hook "Specif" "Specif.eq_sig2_uncurried_iff".  
+Proof. try hammer_hook "Specif" "Specif.eq_sig2_uncurried_iff". Undo.  
 split; [ intro; subst; exists eq_refl; reflexivity | apply eq_sig2_uncurried ].
 Defined.
 
@@ -540,7 +540,7 @@ Defined.
 Definition eq_sig2_rect {A P Q} {u v : { a : A | P a & Q a }} (R : u = v -> Type)
 (f : forall p q r, R (eq_sig2 u v p q r))
 : forall p, R p.
-Proof. try hammer_hook "Specif" "Specif.eq_sig2_rect".  
+Proof. try hammer_hook "Specif" "Specif.eq_sig2_rect". Undo.  
 intro p.
 specialize (f (proj1_sig_of_sig2_eq p) (proj2_sig_of_sig2_eq p) (proj3_sig_eq p)).
 destruct u, p; exact f.
@@ -571,7 +571,7 @@ Lemma rew_sig2 {A x} {P : A -> Type} (Q R : forall a, P a -> Prop)
 (rew H in proj1_sig u)
 (rew dependent H in proj2_sig u)
 (rew dependent H in proj3_sig u).
-Proof. try hammer_hook "Specif" "Specif.rew_sig2".  
+Proof. try hammer_hook "Specif" "Specif.rew_sig2". Undo.  
 destruct H, u; reflexivity.
 Defined.
 End sig2.
@@ -614,7 +614,7 @@ Variables R1 R2 : S -> Prop.
 
 Lemma Choice :
 (forall x:S, {y:S' | R x y}) -> {f:S -> S' | forall z:S, R z (f z)}.
-Proof. try hammer_hook "Specif" "Specif.Choice".  
+Proof. try hammer_hook "Specif" "Specif.Choice". Undo.  
 intro H.
 exists (fun z => proj1_sig (H z)).
 intro z; destruct (H z); assumption.
@@ -622,7 +622,7 @@ Defined.
 
 Lemma Choice2 :
 (forall x:S, {y:S' & R' x y}) -> {f:S -> S' & forall z:S, R' z (f z)}.
-Proof. try hammer_hook "Specif" "Specif.Choice2".  
+Proof. try hammer_hook "Specif" "Specif.Choice2". Undo.  
 intro H.
 exists (fun z => projT1 (H z)).
 intro z; destruct (H z); assumption.
@@ -631,7 +631,7 @@ Defined.
 Lemma bool_choice :
 (forall x:S, {R1 x} + {R2 x}) ->
 {f:S -> bool | forall x:S, f x = true /\ R1 x \/ f x = false /\ R2 x}.
-Proof. try hammer_hook "Specif" "Specif.bool_choice".  
+Proof. try hammer_hook "Specif" "Specif.bool_choice". Undo.  
 intro H.
 exists (fun z:S => if H z then true else false).
 intro z; destruct (H z); auto.
@@ -647,7 +647,7 @@ Variable R : X -> X -> Prop.
 Lemma dependent_choice :
 (forall x:X, {y | R x y}) ->
 forall x0, {f : nat -> X | f O = x0 /\ forall n, R (f n) (f (S n))}.
-Proof. try hammer_hook "Specif" "Specif.dependent_choice".  
+Proof. try hammer_hook "Specif" "Specif.dependent_choice". Undo.  
 intros H x0.
 set (f:=fix f n := match n with O => x0 | S n' => proj1_sig (H (f n')) end).
 exists f.
@@ -673,7 +673,7 @@ Definition except := False_rec.
 Arguments except [P] _.
 
 Theorem absurd_set : forall (A:Prop) (C:Set), A -> ~ A -> C.
-Proof. try hammer_hook "Specif" "Specif.absurd_set".  
+Proof. try hammer_hook "Specif" "Specif.absurd_set". Undo.  
 intros A C h1 h2.
 apply False_rec.
 apply (h2 h1).
