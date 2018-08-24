@@ -408,8 +408,7 @@ let run_tactics deps defs args msg_invoke msg_success msg_fail msg_total_fail =
 let do_predict hyps defs goal =
   if !Opt.gs_mode > 0 then
     let greedy_sequence =
-      [
-	   (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
+      [(!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
        (!Opt.z3_enabled, Opt.z3_enabled, "knn", 128);
        (!Opt.eprover_enabled, Opt.eprover_enabled, "knn", 1024);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
@@ -427,10 +426,7 @@ let do_predict hyps defs goal =
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 16);
        (!Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
-       (!Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
-       (!Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128)
-       ]
+       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64)]
     in
     let fname = Features.extract hyps defs goal in
     let jobs =

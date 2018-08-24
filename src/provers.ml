@@ -28,7 +28,7 @@ let invoke_prover prover_name cmd outfile =
     begin
       Msg.error ("Error running " ^ prover_name ^ ".");
       if !Opt.debug_mode then
-        Msg.info ("Return code: " ^ string_of_int ret);
+	Msg.info ("Return code: " ^ string_of_int ret);
       false
     end
   else
@@ -131,53 +131,48 @@ let extract_vampire_data outfile =
     raise (HammerError "Failed to extract Vampire data")
 
 let call_cvc4 infile outfile =
-	let tmt = string_of_int !Opt.atp_timelimit in
-	let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
-	let cmd = 
-      "htimeout " ^ tmt2 ^ " cvc4 --tlimit " ^ tmt ^ " --dump-unsat-cores-full " ^ infile ^ " > " ^ outfile 
-	in
-	invoke_prover "cvc4" cmd outfile
+  let tmt = string_of_int !Opt.atp_timelimit in
+  let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
+  let cmd =
+    "htimeout " ^ tmt2 ^ " cvc4 --tlimit " ^ tmt ^ " --dump-unsat-cores-full " ^ infile ^ " > " ^ outfile
+  in
+  invoke_prover "cvc4" cmd outfile
 
 let extract_cvc4_data outfile =
-	try
-	  let ic = open_in outfile in
-	  let rec pom acc =
-		try
-		  let ln = input_line ic in
-		  if (String.get ln 0 = '%') then
-			 pom acc
-		  else
-			let i = String.index ln '\''  in
-			let j = String.rindex ln '\'' in
-			let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
-			if name <> "HAMMER_GOAL" then
-			  pom (name :: acc)
-			else
-			  pom acc
-		with
-		| End_of_file ->
-	acc
-		| Not_found | Invalid_argument(_) ->
-	pom acc
-	  in
-	  let names = pom []
-	  in
-	  close_in ic;
-	  (get_deps names, get_defs names);
-	with _ ->
-		  raise (HammerError "Failed to extract CVC4 data")
+  try
+    let ic = open_in outfile in
+    let rec pom acc =
+      try
+	let ln = input_line ic in
+	if (String.get ln 0 = '%') then
+	  pom acc
+	else
+	  let i = String.index ln '\''  in
+	  let j = String.rindex ln '\'' in
+	  let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+	  if name <> "HAMMER_GOAL" then
+	    pom (name :: acc)
+	  else
+	    pom acc
+      with
+      | End_of_file ->
+	 acc
+      | Not_found | Invalid_argument(_) ->
+	 pom acc
+    in
+    let names = pom []
+    in
+    close_in ic;
+    (get_deps names, get_defs names);
+  with _ ->
+    raise (HammerError "Failed to extract CVC4 data")
 
 (******************************************************************************)
 
-let provers = 
-            [  
-                (Opt.vampire_enabled, "Vampire", call_vampire, extract_vampire_data);
-	            (Opt.z3_enabled, "Z3", call_z3, extract_z3_data);
-	            (Opt.eprover_enabled, "EProver", call_eprover, extract_eprover_data);
-                (Opt.cvc4_enabled, "CVC4", call_cvc4, extract_cvc4_data)
-            ]
-
-(* TODO : add something here *)
+let provers = [(Opt.vampire_enabled, "Vampire", call_vampire, extract_vampire_data);
+	       (Opt.z3_enabled, "Z3", call_z3, extract_z3_data);
+	       (Opt.eprover_enabled, "EProver", call_eprover, extract_eprover_data);
+	       (Opt.cvc4_enabled, "CVC4", call_cvc4, extract_cvc4_data)]
 
 let call_prover (enabled, pname, call, extract) fname ofname cont =
   let clean () =
@@ -276,7 +271,6 @@ let predict deps1 hyps deps goal =
   in
   let call = if !Opt.parallel_mode then call_provers_par else call_provers
   in
-  at_exit clean;
   try
     let (pname, (deps, defs)) = call fname ofname in
     Msg.info (pname ^ " succeeded\n - dependencies: " ^ prn_lst deps ^
