@@ -126,6 +126,18 @@ let _ =
   in
   declare_bool_option gdopt
 
+let cvc4_enabled = ref true
+
+let _ =
+  let gdopt=
+    { optdepr=false;
+      optname="Hammer CVC4";
+      optkey=["Hammer";"CVC4"];
+      optread=(fun () -> !cvc4_enabled);
+      optwrite=(fun b -> cvc4_enabled := b)}
+  in
+  declare_bool_option gdopt
+
 let predict_path = ref "predict"
 
 let _ =
@@ -168,7 +180,7 @@ let _ =
   in
   declare_bool_option gdopt
 
-let debug_mode = ref false
+let debug_mode = ref true
 
 let _ =
   let gdopt=
