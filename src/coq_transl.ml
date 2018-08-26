@@ -720,6 +720,7 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
   in
   match inv with
   | Const("$False") -> ()
+  | Const("Coq.Init.Datatypes.false") -> ()
   | _ ->
     let tm =
       if !opt_closure_guards then
@@ -747,7 +748,7 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
         in
         mk_fol_forall [] vars (mk_guards [] vars1 inv)
     in
-    add_axiom (mk_axiom axname tm)
+    add_axiom (mk_axiom (axname) tm)
 
 (***************************************************************************************)
 (* Lambda-lifting, fix-lifting and case-lifting *)
@@ -765,12 +766,12 @@ and lambda_lifting axname name fvars lvars1 tm =
   in
   match body2 with
   | Fix(_) ->
-    fix_lifting axname name fvars lvars body2
-  | Case(_) ->    
-       case_lifting axname name fvars lvars body2
+      fix_lifting axname name fvars lvars body2
+  | Case(_) -> 
+	  case_lifting axname name fvars lvars body2
   | _ ->
     let ax =
-      mk_axiom axname
+      mk_axiom (axname)
         (close fvars
            begin fun ctx ->
              let mk_eqv =
@@ -778,10 +779,12 @@ and lambda_lifting axname name fvars lvars1 tm =
 			     begin
                    mk_equiv
 				 end
+				 
 			   else if check_bool (List.rev_append lvars ctx) body2 then
 			     begin
 			       mk_eqb
 				 end
+				
 			   else
 			     begin
                    mk_eq
@@ -824,7 +827,7 @@ and fix_lifting axname dname fvars lvars tm =
           in
           try
             defhash_add (mk_def name2 (Const(name2)) ty2
-                           (if check_prop [] ty2 then SortProp else SortType))
+                           (if check_prop [] ty2 then SortProp (* else if check_bool [] ty then SortSet *) else SortType))
           with _ -> ())
         names2 types;
       List.nth
@@ -877,7 +880,8 @@ and case_lifting axname0 name0 fvars lvars tm =
           try defhash_find indname with _ -> raise Not_found
         in
         assert (pnum = params_num);
-		if ( (fst (check_type_target_is_bool return_type) = SortProp) || indty = SortProp) then
+		if ( check_type_target_is_prop indty (* (fst (check_type_target_is_bool return_type) = SortProp) || indty = SortProp
+		      (** condition change seems to make no difference *) *) ) then
 		   generic_match ()
         else
 		begin
@@ -935,11 +939,13 @@ and case_lifting axname0 name0 fvars lvars tm =
               | _ ->
                 let eqv =
                   if check_prop ctx cr then
-                    mk_equiv case_repl2 cr
-				  else if check_bool ctx cr then
-				    mk_eqb case_repl2 cr
+				    begin
+					  mk_equiv case_repl2 cr
+					end
                   else
-                    mk_eq case_repl2 cr
+				    begin
+                      mk_eq case_repl2 cr
+					end
                 in
                 mk_and eqt eqv
             end
@@ -977,34 +983,31 @@ and convert ctx tm =
                      (prop_to_formula ((name, ty) :: ctx) body)))
   | Equal(x, y) ->
       Equal(convert_term ctx x, convert_term ctx y)
-  | App(App(Const(c), x), y) when is_bin_logop c ->
-      let x2 = prop_to_formula ctx x
-      and y2 = prop_to_formula ctx y
-      in
-      assert (x2 <> Const("$Proof"));
-      assert (y2 <> Const("$Proof"));
-      App(App(Const(c), x2), y2)
+  | App(App(Const(c), x), y) when is_logop c ->
+		  let x2 = prop_to_formula ctx x
+		  and y2 = prop_to_formula ctx y
+		  in
+		  assert (x2 <> Const("$Proof"));
+		  assert (y2 <> Const("$Proof"));
+		  App(App(Const(c), x2), y2)
+	   (*end*)
   | App(Const("~"), x) ->
       let x2 = prop_to_formula ctx x
       in
       assert (x2 <> Const("$Proof"));
       App(Const("~"), x2)
-  | App(App(Const("$HasType"), x), y) ->
-  
-      type_to_guard ctx y (convert ctx x)
-  | App(Const (c), x) when c = "Coq.Init.Datatypes.is_true" -> convert_bool ctx x
+  | App(App(Const("$HasType"), x), y) -> type_to_guard ctx y (convert ctx x)
+  | App(Const (c), x) when c = "Coq.Init.Datatypes.is_true" -> 
+	 convert_bool ctx x
   | App(x, y) ->
 	  let x2 = convert ctx x
       in
-      if x2 = Const("$Proof") then
-        Const("$Proof")
+      if x2 = Const("$Proof") then Const("$Proof")
       else
         let y2 = convert_term ctx y
         in
-        if y2 = Const("$Proof") then
-          x2
-        else
-          App(x2, y2)
+        if y2 = Const("$Proof") then x2
+        else App(x2, y2)
   | Lam(_) ->
       remove_lambda ctx tm
   | Case(_) ->
@@ -1022,6 +1025,8 @@ and convert ctx tm =
 	    begin
           prop_to_formula ctx tm
 		end
+		else if check_bool ctx tm then
+		  bool_to_formula ctx tm
       else
 	    begin
           remove_type ctx tm
@@ -1037,22 +1042,33 @@ and convert ctx tm =
         Const("$Proof")
       else
         Var(name)
-  | Const(_) ->
-      tm
+  | Const(_) -> tm
   | IndType(_) ->
       failwith "convert"
 	  
 and convert_bool ctx tm =
   match tm with
-    | Const c -> Const c
+    | Const c -> (Const c)
 	| Var x -> Var x
 	| App (Const (c), x) when c = "Coq.Init.Datatypes.negb" -> Coqterms.mk_not (convert_bool ctx x)
+
     | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.orb" -> Coqterms.mk_or (convert_bool ctx x) (convert_bool ctx y)
     | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.andb" -> Coqterms.mk_and (convert_bool ctx x) (convert_bool ctx y)
-    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.implb" -> Coqterms.mk_impl (convert_bool ctx x) (convert_bool ctx y)
-    | App (App (Const (c), x), y) when c = "Coq.Bool.Bool.eqb" || c = "mathcomp.ssreflect.eqtype.eqb" -> Coqterms.mk_equiv (convert_bool ctx x) (convert_bool ctx y)
-    | App (App (Const (c), x), y) when c = "Coq.Init.Nat.eqb" -> Coqterms.mk_equiv (convert_bool ctx x) (convert_bool ctx y)
-	| _ -> tm
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.implb" -> 
+
+	   Coqterms.mk_impl (convert_bool ctx x) (convert_bool ctx y) 
+    | App (App (Const (c), x), y) when c = "Coq.Bool.Bool.eqb" -> Coqterms.mk_equiv
+	(convert_bool ctx x) (convert_bool ctx y)
+
+    | App (App (Const (c), x), y) when  c = "Coq.ZArith.BinIntDef.Z.eqb" || c = "Coq.Init.Nat.eqb" || 
+	                   c = "mathcomp.ssreflect.eqtype.eqb" || c = "mathcomp.ssreflect.ssrnat.eqn" || c = "mathcomp.ssreflect.ssrnat.leq" ->
+	    (* Msg.info ("there I am"); *) Coqterms.mk_eqb (convert_bool ctx x) (convert_bool ctx y)
+	| App (App (App (Const (c), Const (d)), x), y) when c = "mathcomp.ssreflect.eqtype.eq_op" ->
+	   Coqterms.mk_eq (convert_bool ctx x) (convert_bool ctx y)
+	| App (App (App (Const (c), Const (d)), x), y) when c = "mathcomp.ssreflect.eqtype.Equality.sort" ->
+	   Coqterms.mk_equiv (convert_bool ctx x) (convert_bool ctx y)	   
+
+	| _ -> bool_to_formula ctx tm
 
 and convert_term ctx tm =
   debug 3 (fun () -> print_header "convert_term" tm ctx);
@@ -1062,7 +1078,7 @@ and convert_term ctx tm =
     | App(App(Const(c), _), _) when is_bin_logop c -> true
     | App(Const("~"), _) -> true
     | App(_) -> false
-    | _ -> (check_prop ctx tm)
+    | _ -> (check_bool ctx tm) || (check_prop ctx tm)
   in
   if should_lift then
     let name = "$_prop_" ^ unique_id ()
@@ -1071,9 +1087,21 @@ and convert_term ctx tm =
     in
     let tm2 = convert ctx (mk_long_app (Const(name)) (mk_vars fvars))
     in
-    add_axiom (mk_axiom name
+    add_axiom (mk_axiom (name)
                  (close fvars (fun ctx -> mk_equiv tm2 (convert ctx tm))));
     tm2
+	(*
+  else if should_lift && (snd (check_type_target_is_bool tm)) then
+    let name = "$_bbool_" ^ unique_id ()
+    in
+    let fvars = get_fvars ctx tm
+    in
+    let tm2 = convert ctx (mk_long_app (Const(name)) (mk_vars fvars))
+    in
+    add_axiom (mk_axiom name
+                 (close fvars (fun ctx -> mk_eqb tm2 (convert ctx tm))));
+    tm2
+	*)
   else
     convert ctx tm
 
@@ -1083,14 +1111,45 @@ and prop_to_formula ctx tm =
   | Prod(vname, ty1, ty2) ->
     if check_prop ctx ty1 then
       mk_impl (prop_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
+	  
+    else if check_bool ctx ty1 then
+      mk_impl (bool_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
     else
       mk_forall vname type_any
         (mk_impl
            (type_to_guard ctx ty1 (Var(vname)))
            (prop_to_formula ((vname, ty1) :: ctx) ty2))
+  | Equal (x, y) -> 
+       if x = Const ("Coq.Init.Datatypes.false")  then  convert_bool ctx (App (Const ("Coq.Init.Datatypes.negb"), y))
+	   else if x = Const ("Coq.Init.Datatypes.true") then convert_bool ctx y
+	   else if y = Const ("Coq.Init.Datatypes.false") then convert_bool ctx (App (Const ("Coq.Init.Datatypes.negb"), x))
+	   else if y = Const ("Coq.Init.Datatypes.true") then convert_bool ctx x
+	   else Equal ((convert ctx x), (convert ctx y))
+		
   | _ ->
     convert ctx tm
 	
+and bool_to_formula ctx tm =
+  debug 3 (fun () -> print_header "bool_to_formula" tm ctx);
+  match tm with
+    | Prod(vname, ty1, ty2) ->
+      if ty1 = Const ("Coq.Init.Datatypes.Bool") then
+	    begin
+          mk_impl (bool_to_formula ctx ty1) (bool_to_formula ctx (subst_proof vname ty1 ty2))
+	    end
+      else if check_prop ctx ty1 then
+	    begin
+         mk_impl (prop_to_formula ctx ty1) (bool_to_formula ctx (subst_proof vname ty1 ty2))
+	    end
+	  else
+	    begin
+          mk_forall vname type_any
+            (mk_impl
+               (type_to_guard ctx ty1 (Var(vname)))
+               (bool_to_formula ((vname, ty1) :: ctx) ty2))
+	     end
+    | _ ->  convert ctx tm
+  
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
   debug 3 (fun () -> print_header_nonl "type_to_guard" ty ctx; print_coqterm x; print_newline ());
@@ -1098,13 +1157,22 @@ and type_to_guard ctx ty x =
   | Prod(vname, ty1, ty2) ->
     if check_prop ctx ty1 then
       mk_impl (prop_to_formula ctx ty1) (type_to_guard ctx (subst_proof vname ty1 ty2) x)
+	  
+    else if check_bool ctx ty1 then
+      mk_impl (bool_to_formula ctx ty1) (type_to_guard ctx (subst_proof vname ty1 ty2) x)
+	  
     else
       mk_forall vname type_any
         (mk_impl
            (type_to_guard ctx ty1 (Var(vname)))
            (type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname))))))
   | _ ->
-    mk_hastype x (convert ctx ty)
+  (*
+    if check_bool ctx tm then
+      bool_to_formula ctx tm
+	else
+  *)
+      mk_hastype x (convert ctx ty)
 
 and mk_fol_forall ctx vars tm =
   let rec hlp ctx vars tm =
@@ -1234,7 +1302,7 @@ and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
   let vname = "var_" ^ unique_id ()
   in
-  add_axiom (mk_axiom axname
+  add_axiom (mk_axiom (axname)
                (close fvars
                   (fun ctx ->
                     (mk_forall vname type_any
@@ -1246,7 +1314,7 @@ and add_def_eq_type_axiom axname name fvars ty =
 
 and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
-  if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
+  if not (is_logop name) && name <> "$True" && name <> "$False" && name <> "Coq.Init.Datatypes.false" && ty <> type_any then
     begin
       if opt_omit_prop_typing_axioms && check_type_target_is_prop ty then
         ()
@@ -1286,10 +1354,19 @@ and add_typing_axiom name ty =
                  (mk_long_app (Const(name)) ys))
           in
           add_axiom (mk_axiom ("$_tydef_" ^ name2) (fix_ax ax));
+		  (** see here for the boolean inconsistency *)
           add_axiom (mk_axiom ("$_typeof_" ^ name) (type_to_guard [] ty (Const(name2))))
         end
+		
+	  else if (snd (check_type_target_is_bool ty)) then
+	    begin
+          add_axiom (mk_axiom ("$_typeofbool_" ^ name) (bool_to_formula [] ty))
+		end
+		
       else
-        add_axiom (mk_axiom ("$_typeof_" ^ name) (type_to_guard [] ty (Const(name))))
+	    begin
+          add_axiom (mk_axiom ("$_typeof_" ^ name) (type_to_guard [] ty (Const(name))))
+		end
     end
 
 and add_def_eq_axiom (name, value, ty, srt) =
@@ -1307,12 +1384,12 @@ and add_def_eq_axiom (name, value, ty, srt) =
       begin
         match ty with
         | SortProp ->
-            add_axiom (mk_axiom axname (mk_equiv (Const(name)) (prop_to_formula [] value)))
+            add_axiom (mk_axiom (axname) (mk_equiv (Const(name)) (prop_to_formula [] value)))
         | SortType | SortSet ->
             add_def_eq_type_axiom axname name [] value
-		| Const (c) when c = "Coq.Init.Datatypes.bool" -> 
-			add_axiom (mk_axiom axname (mk_eqb (Const(name)) (convert [] value)))
-        | _ -> add_axiom (mk_axiom axname (mk_eq (Const(name)) (convert [] value)))
+		| Const "Coq.Init.Datatypes.bool" -> 
+			add_axiom (mk_axiom (axname) (mk_eqb (Const(name)) (bool_to_formula [] value)))
+        | _ -> add_axiom (mk_axiom (axname) (mk_eq (Const(name)) (convert [] value)))
       end
 	end
 
@@ -1464,13 +1541,13 @@ and add_def_axioms ((name, value, ty, srt) as def) =
   | IndType(_, constrs, _) ->
     if srt = SortProp then
 	  begin
-        add_axiom (mk_axiom name (prop_to_formula [] ty))
+        add_axiom (mk_axiom (name) (prop_to_formula [] ty))
       end
     else
       begin
         if check_type_target_is_prop ty then
           begin
-            if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
+            if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" && name <> "Coq.Init.Datatypes.false" then
               add_inversion_axioms true name constrs;
             if not opt_omit_toplevel_prop_typing_axioms then
               add_typing_axiom name ty
@@ -1485,17 +1562,18 @@ and add_def_axioms ((name, value, ty, srt) as def) =
           end;
       end
   | _ ->
-	if snd (check_type_target_is_bool ty) then
+	if  (* (snd (check_type_target_is_bool ty)) *)  ty = (Const ("Coq.Init.Datatypes.bool"))
+	  then
 	  begin
-	    add_axiom (mk_axiom name (convert [] ty));
-	 	add_def_eq_axiom def
+		if (name <> "Coq.Init.Datatypes.false") then
+	       add_axiom (mk_axiom (name) (bool_to_formula [] value));
 	  end
-    else if ( (* check_type_target_is_prop ty || *)  srt = SortProp) then
+    else if ((*check_type_target_is_prop ty || (** more likely to yield in failures *)*)  srt = SortProp) then
 	  begin
         add_axiom (mk_axiom name (prop_to_formula [] ty))		
 	  end
     else
-      begin
+      begin 
         add_typing_axiom name ty;
         add_def_eq_axiom def
       end
@@ -1555,14 +1633,14 @@ let cleanup () =
 let write_problem fname name deps =
   let axioms = get_axioms (name :: deps)
   in
-  let oc = open_out fname
+  let oc = open_out fname 
   in
   try
     Tptp_out.write_fol_problem
       (output_string oc)
       (List.remove_assoc name axioms)
       (name, List.assoc name axioms);
-    close_out oc
+    close_out oc;
   with e ->
     close_out oc;
     raise e

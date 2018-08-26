@@ -148,7 +148,7 @@ let _ =
       optread=(fun () -> !predict_method);
       optwrite=
         begin fun s ->
-          if s = "knn" || s = "nbayes" || s = "rforest" then
+          if s = "knn" || s = "nbayes" || s = "rforest" || s = "nbayesb" then
             predict_method := s
           else
             Msg.error "Invalid method. Available predict methods: knn, nbayes."

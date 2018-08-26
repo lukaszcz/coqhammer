@@ -357,8 +357,8 @@ let get_tac_args deps defs =
   let map_to_constr = List.map to_constr in
   let (vars, deps, defs) = (map_to_constr vars, map_to_constr deps, map_to_constr defs) in
   let (tvars, tdeps, tdefs) = (mk_lst vars, mk_lst deps, mk_lst defs) in
-  let args = [to_ltac_val tvars; to_ltac_val tdeps; to_ltac_val tdefs] in
-  (vars, deps, defs, args)
+  let args = [to_ltac_val tdeps; to_ltac_val tdefs] in
+  (deps, defs, args)
 
 let check_goal_prop gl =
   let (evmap, env) = get_current_context () in
@@ -369,24 +369,20 @@ let check_goal_prop gl =
 
 (***************************************************************************************)
 
-let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fail =
+let run_tactics deps defs args msg_invoke msg_success msg_fail msg_total_fail =
   let tactics =
-    [("Reconstr.htrivial", "Reconstr.shtrivial", 2 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.hobvious", "Reconstr.shobvious", 2 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.heasy", "Reconstr.sheasy", 3 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.hsimple", "Reconstr.shsimple", 3 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.hcrush", "Reconstr.shcrush", !Opt.reconstr_timelimit);
-     ("Reconstr.hyelles 4", "Reconstr.shyelles4", !Opt.reconstr_timelimit);
-     ("Reconstr.hrauto 2", "Reconstr.shrauto2", !Opt.reconstr_timelimit);
-     ("Reconstr.hblast", "Reconstr.shblast", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hexhaustive 0", "Reconstr.shexhaustive0", !Opt.reconstr_timelimit);
-     ("Reconstr.hreconstr 4", "Reconstr.shreconstr4", !Opt.reconstr_timelimit);
-     ("Reconstr.hscrush", "Reconstr.shscrush", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hrauto 4", "Reconstr.shrauto4", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.hyelles 6", "Reconstr.shyelles6", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hyreconstr", "Reconstr.shyreconstr", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.hexhaustive 1", "Reconstr.shexhaustive1", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.hreconstr 6", "Reconstr.shreconstr6", 3 * !Opt.reconstr_timelimit / 2)] in
+    [("Reconstr.reasy", "Reconstr.reasy", 3 * !Opt.reconstr_timelimit / 5);
+     ("Reconstr.rsimple", "Reconstr.rsimple", 3 * !Opt.reconstr_timelimit / 5);
+     ("Reconstr.rcrush", "Reconstr.rcrush", !Opt.reconstr_timelimit);
+     ("Reconstr.rblast", "Reconstr.rblast", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.rscrush", "Reconstr.rscrush", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.ryelles4", "Reconstr.ryelles4", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.rexhaustive1", "Reconstr.rexhaustive1", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.rreconstr4", "Reconstr.rreconstr4", 3 * !Opt.reconstr_timelimit / 2);
+     ("Reconstr.rrauto4", "Reconstr.rrauto4", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.ryreconstr", "Reconstr.ryreconstr", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.ryelles6", "Reconstr.ryelles6", 2 * !Opt.reconstr_timelimit);
+     ("Reconstr.rreconstr6", "Reconstr.rreconstr6", 2 * !Opt.reconstr_timelimit)] in
   let rec reconstr lst =
     match lst with
     | [] ->
@@ -396,11 +392,11 @@ let run_tactics vars deps defs args msg_invoke msg_success msg_fail msg_total_fa
        end
     | (tac, cmd, timeout) :: t ->
        begin
-         msg_invoke tac vars deps defs;
+         msg_invoke tac deps defs;
          Proofview.tclOR
            (Proofview.tclBIND
               (ltac_timeout timeout cmd args)
-              (fun _ -> msg_success tac vars deps defs; ltac_apply "idtac" []))
+              (fun _ -> msg_success tac deps defs; ltac_apply "idtac" []))
            begin fun _ ->
              msg_fail tac timeout;
              reconstr t
@@ -523,9 +519,9 @@ let try_goal_tactic f =
 let hammer_tac () =
   Proofview.Goal.nf_enter
     begin fun gl ->
-        Proofview.tclOR
-          (try_scrush ())
-          begin fun _ ->
+(*        Proofview.tclOR
+          (try_scrush ()) *)
+         (* begin fun _ -> *)
             try_tactic begin fun () ->
               let goal = get_goal gl in
               let hyps = get_hyps gl in
@@ -533,16 +529,15 @@ let hammer_tac () =
               if !Opt.debug_mode then
                 Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
               let (deps, defs) = do_predict hyps defs goal in
-              let (vars, deps, defs, args) = get_tac_args deps defs in
-              run_tactics vars deps defs args
-                begin fun tac _ _ _ ->
+              let (deps, defs, args) = get_tac_args deps defs in
+              run_tactics deps defs args
+                begin fun tac _ _ ->
                   Msg.info ("Trying tactic " ^ tac ^ "...")
                 end
-                begin fun tac vars deps defs ->
+                begin fun tac deps defs ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ " " ^ mk_lst_str vars ^ "\n\t\t" ^ mk_lst_str deps ^
-                               "\n\t\t" ^ mk_lst_str defs ^ ".")
+                               tac ^ " " ^ mk_lst_str deps ^ " " ^ mk_lst_str defs ^ ".")
                 end
                 begin fun tac timeout ->
                   if !Opt.debug_mode then
@@ -553,7 +548,7 @@ let hammer_tac () =
                   Msg.error ("Hammer failed to solve the goal.")
                 end
             end
-          end
+          (*end*)
     end
 
 TACTIC EXTEND Hammer_tac
@@ -568,7 +563,7 @@ let predict_tac n pred_method =
       let defs = get_defs () in
       if !Opt.debug_mode then
         Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
-      if pred_method <> "knn" && pred_method <> "nbayes" then
+      if pred_method <> "knn" && pred_method <> "nbayes" && pred_method <> "nbayesb" then
         Msg.error "Invalid prediction method"
       else if n <= 0 then
         Msg.error "The number of predictions must be positive"
@@ -716,121 +711,124 @@ VERNAC COMMAND EXTEND Hammer_plugin_version CLASSIFIED AS QUERY
 END
 
 let hammer_hook_tac prefix name =
-  Proofview.Goal.nf_enter begin fun gl ->
+  try_goal_tactic begin fun gl ->
     Msg.info ("Processing theorem " ^ name ^ "...");
-    if check_goal_prop gl then
-      begin
-        let fopt = open_in "coqhammer.opt" in
-        let str = input_line fopt in
-        close_in fopt;
-        if str = "check" then
-          ltac_apply "idtac" []
-        else if str = "gen-atp" then
-          begin
-            List.iter
-              begin fun (met, n) ->
-                let str = met ^ "-" ^ string_of_int n in
-                Msg.info ("Parameters: " ^ str);
-                Opt.predictions_num := n;
-                Opt.predict_method := met;
-                Opt.search_blacklist := false;
-                Opt.filter_program := true;
-                Opt.filter_classes := true;
-                Opt.filter_hurkens := true;
-                let dir = "atp/problems/" ^ str in
-                ignore (Sys.command ("mkdir -p " ^ dir));
-                let goal = get_goal gl in
-                let hyps = get_hyps gl in
-                let defs = get_defs () in
-                let defs1 = Features.predict hyps defs goal in
-                Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
-              end
-              [("knn", 16); ("knn", 32); ("knn", 64); ("knn", 128); ("knn", 256);
-               ("knn", 512); ("knn", 1024);
-               ("nbayes", 16); ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256);
-               ("nbayes", 512); ("nbayes", 1024)];
-            Msg.info ("Done processing " ^ name ^ ".\n");
+    try
+      if check_goal_prop gl then
+        begin
+          (* let fopt = open_in "coqhammer.opt" in *)
+          let str = "gen-atp" (*input_line fopt*) in
+          (* close_in fopt; *)
+          if str = "check" then
             ltac_apply "idtac" []
-          end
-        else
-          begin
-            let idx = String.index str '-' in
-            let prover = String.sub str 0 idx in
-            let extract =
-              if prover = "eprover" then
-                Provers.extract_eprover_data
-              else if prover = "vampire" then
-                Provers.extract_vampire_data
-              else if prover = "z3" then
-                Provers.extract_z3_data
-              else
-                failwith "unknown prover"
-            in
-            let dir = "atp/o/" ^ str
-            and odir = "out/" ^ str
-            in
-            let fname = dir ^ "/" ^ name ^ ".p"
-            and ofname =  odir ^ "/" ^ name ^ ".out"
-            and tfname =  odir ^ "/" ^ name ^ ".try"
-            in
-            ignore (Sys.command ("mkdir -p " ^ odir));
-            if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
-              not (Sys.file_exists ofname)
-            then
-              try
-                Msg.info ("Reconstructing theorem " ^ name ^ "...");
-                let tries_num =
-                  try
-                    let tfile = open_in tfname in
-                    let r = int_of_string (input_line tfile) in
-                    close_in tfile;
-                    r
-                  with _ ->
-                    0
-                in
-                if tries_num < 2 then
-                  begin
-                    ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
-                                            " > \"" ^ tfname ^ "\""));
-                    let (deps, defs) = extract fname in
-                    let (vars, deps, defs, args) = get_tac_args deps defs in
-                    run_tactics vars deps defs args
-                      (fun _ _ _ _ -> ())
-                      begin fun tac vars deps defs ->
-                        let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
-                        ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                        Msg.info msg
-                      end
-                      (fun _ _ -> ())
-                      begin fun () ->
-                        let msg = "Failure " ^ name ^ " " ^ str in
-                        ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                        Msg.info msg
-                      end
-                  end
+          else if str = "gen-atp" then
+            begin
+              List.iter
+                begin fun (met, n) ->
+                  let str = met ^ "-" ^ string_of_int n in
+                  Msg.info ("Parameters: " ^ str);
+                  Opt.predictions_num := n;
+                  Opt.predict_method := met;
+                  Opt.search_blacklist := false;
+                  Opt.filter_program := true;
+                  Opt.filter_classes := true;
+                  Opt.filter_hurkens := true;
+                  let dir = "/home/burak/Desktop/tmp/problems" ^ str in
+                  ignore (Sys.command ("mkdir -p " ^ dir));
+                  let goal = get_goal gl in
+                  let hyps = get_hyps gl in
+                  let defs = get_defs () in
+                  let defs1 = Features.predict hyps defs goal in
+                  Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
+                end
+                [("knn", 32); ("knn", 64); ("knn", 128); ("knn", 256); ("knn", 512); ("knn", 1024);
+                 ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 512);
+                 ("nbayes", 1024)];
+              Msg.info ("Done processing " ^ name ^ ".\n");
+              ltac_apply "idtac" []
+            end
+          else
+            begin
+              let idx = String.index str '-' in
+              let prover = String.sub str 0 idx in
+              let extract =
+                if prover = "eprover" then
+                  Provers.extract_eprover_data
+                else if prover = "vampire" then
+                  Provers.extract_vampire_data
+                else if prover = "z3" then
+                  Provers.extract_z3_data
                 else
-                  begin
-                    let msg = "Failure " ^ name ^ " " ^ str ^ ": gave up after " ^
-                      string_of_int tries_num ^ " tries"
-                    in
-                    ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                    Msg.info msg;
-                    ltac_apply "idtac" []
-                  end
-              with (HammerError s) ->
-                Msg.info s;
-                ltac_apply "idtac" []
-            else
-              begin
-                ltac_apply "idtac" []
-              end
-          end
-      end
-    else
-      begin
-        Msg.info "Goal not a proposition.\n";
-        ltac_apply "idtac" []
-      end
+                  failwith "unknown prover"
+              in
+              let dir = "atp/o/" ^ str
+              and odir = "out/" ^ str
+              in
+              let fname = dir ^ "/" ^ name ^ ".p"
+              and ofname =  odir ^ "/" ^ name ^ ".out"
+              and tfname =  odir ^ "/" ^ name ^ ".try"
+              in
+              ignore (Sys.command ("mkdir -p " ^ odir));
+              if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
+                not (Sys.file_exists ofname)
+              then
+                try
+                  Msg.info ("Reconstructing theorem " ^ name ^ "...");
+                  let tries_num =
+                    try
+                      let tfile = open_in tfname in
+                      let r = int_of_string (input_line tfile) in
+                      close_in tfile;
+                      r
+                    with _ ->
+                      0
+                  in
+                  if tries_num < 2 then
+                    begin
+                      ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
+                                              " > \"" ^ tfname ^ "\""));
+                      let (deps, defs) = extract fname in
+                      let (deps, defs, args) = get_tac_args deps defs in
+                      run_tactics deps defs args
+                        (fun _ _ _ -> ())
+                        begin fun tac deps defs ->
+                          let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
+                          ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                          Msg.info msg
+                        end
+                        (fun _ _ -> ())
+                        begin fun () ->
+                          let msg = "Failure " ^ name ^ " " ^ str in
+                          ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                          Msg.info msg
+                        end
+                    end
+                  else
+                    begin
+                      let msg = "Failure " ^ name ^ " " ^ str ^ ": gave up after " ^
+                        string_of_int tries_num ^ " tries"
+                      in
+                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                      Msg.info msg;
+                      ltac_apply "idtac" []
+                    end
+                with (HammerError s) ->
+                  Msg.info s;
+                  ltac_apply "idtac" []
+              else
+                begin
+                  ltac_apply "idtac" []
+                end
+            end
+        end
+      else
+        begin
+          Msg.info "Goal not a proposition.\n";
+          ltac_apply "idtac" []
+        end
+    with Sys_error s ->
+      Msg.notice ("Warning: " ^ s);
+      ltac_apply "idtac" []
   end
 
 TACTIC EXTEND Hammer_hook_tac

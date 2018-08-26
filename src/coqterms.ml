@@ -42,6 +42,8 @@ type coqdef = (* coq global definition *)
 let mk_fun_ty ty1 ty2 = Prod("$Anonymous", ty1, ty2)
 let quant_type = Prod("T", SortType, mk_fun_ty (mk_fun_ty (Var("1")) SortProp) SortProp)
 let eq_type = Prod("T", SortType, mk_fun_ty (Var("1")) (mk_fun_ty (Var("2")) SortProp))
+let bool_type = Const "Coq.Init.Datatypes.bool"
+
 
 let logop_defs = [
   ("&", Const("&"), mk_fun_ty SortProp (mk_fun_ty SortProp SortProp), SortType);
@@ -52,6 +54,7 @@ let logop_defs = [
   ("?", Const("?"), quant_type, SortType);
   ("!", Const("!"), quant_type, SortType);
   ("=", Const("="), eq_type, SortType);
+  ("?=", Const("?="), bool_type, SortSet); 
   ("$True", Const("$True"), SortProp, SortType);
   ("$False", Const("$False"), SortProp, SortType);
   ("$Any", Const("$Any"), SortType, SortType);
@@ -109,7 +112,7 @@ let mk_eqb = mk_binop "?="
 let mk_eq x y = Equal(x, y)
 
 let is_bin_logop c = (c = "&" || c = "|" || c = "=>" || c = "<=>")
-let is_logop c = is_bin_logop c || c = "~" || c = "?" || c = "!" || c = "="
+let is_logop c = is_bin_logop c || c = "~" || c = "?" || c = "!" || c = "=" || c = "?="	
 
 let strip_suffix name = try String.sub name 0 (String.rindex name '$') with Not_found -> name
 

@@ -22,5 +22,6 @@ src/provers.mli
 src/provers.ml
 src/hammer.ml4
 src/hammer_plugin.mllib
+theories/Bool2Prop.v
 theories/Reconstr.v
 theories/Hammer.v

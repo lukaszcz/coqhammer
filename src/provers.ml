@@ -222,6 +222,7 @@ let predict deps1 hyps deps goal =
   let fname = Filename.temp_file "coqhammer" ".p" in
   write_atp_file fname deps1 hyps deps goal;
   let ofname = fname ^ ".out" in
+  
   let clean () =
     if not !Opt.debug_mode then
       begin
@@ -230,15 +231,17 @@ let predict deps1 hyps deps goal =
 	if Sys.file_exists ofname then
 	  Sys.remove ofname
       end
-  in
+      
+  in 
+  
   let call = if !Opt.parallel_mode then call_provers_par else call_provers
   in
-  at_exit clean;
+  at_exit clean; 
   try
     let (pname, (deps, defs)) = call fname ofname in
     Msg.info (pname ^ " succeeded\n - dependencies: " ^ prn_lst deps ^
 		"\n - definitions: " ^ prn_lst defs);
-    clean ();
+     clean ();
     (deps, defs)
   with e ->
     clean ();
