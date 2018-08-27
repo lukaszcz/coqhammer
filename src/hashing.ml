@@ -10,7 +10,7 @@ type namesubst = (string * string) list
 let var i =
   "v_CANONICAL_" ^ (string_of_int i)
 
-(* creates a list of m fresh vars starting at n *)
+(* creates a list of m canonical vars starting at n *)
 let vars n m =
   List.map var (range n (n+m))
 
@@ -31,9 +31,9 @@ let rec can_aux n t =
     | Case(indt,t1,t2,m,cs) -> Case(indt, f t1, f t2, m, List.map (fun (p,u) -> (p, f u)) cs)
     | Cast(t1,t2)           -> Cast(f t1, f t2)
     | Fix(t,i,xs,ts1,ts2)   -> let m = List.length xs in
-			       let newvars = vars n m in
-			       let newbodies = List.map (fun b -> can_aux (n+m) (subs (zip (vars n m) xs) b)) ts2
-			       in Fix(t, i, newvars, List.map f ts1, newbodies)
+                               let newvars = vars n m in
+                               let newbodies = List.map (fun b -> can_aux (n+m) (subs (zip (vars n m) xs) b)) ts2
+                               in Fix(t, i, newvars, List.map f ts1, newbodies)
     | Let(t1,(x,t2,t3))     -> let v = var n in Let(f t1, (v,f t2, can_aux (n+1) (sub v x t2)))
     | Prod(x,t1,t2)         -> let v = var n in Prod(v, f t1, can_aux (n+1) (sub v x t2))
     | IndType(indt,xs,n)    -> IndType(indt,xs,n)
@@ -49,7 +49,7 @@ let canonical ctx tm =
     | []            -> (acc, can_aux n tm, subacc)
     | (x,tp) :: rest ->
        can_ctx_aux ((var n, tp) :: acc) ((var n, x) :: subacc) (n+1)
-	 (List.map (fun (y, t1) -> (y, sub (var n) x t1)) rest) (sub (var n) x tm)
+         (List.map (fun (y, t1) -> (y, sub (var n) x t1)) rest) (sub (var n) x tm)
   in can_ctx_aux [] [] 0 (List.rev ctx) tm
 
 let alphahash ctx t =

@@ -28,7 +28,7 @@ let invoke_prover prover_name cmd outfile =
     begin
       Msg.error ("Error running " ^ prover_name ^ ".");
       if !Opt.debug_mode then
-	Msg.info ("Return code: " ^ string_of_int ret);
+        Msg.info ("Return code: " ^ string_of_int ret);
       false
     end
   else
@@ -48,21 +48,21 @@ let extract_eprover_data outfile =
     in
     let rec pom acc =
       try
-	let ln = input_line ic in
-	if String.get ln 0 = '#' then
-	  pom acc
-	else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
-	  let i = String.rindex ln ',' + 2 in
-	  let j = String.rindex ln '\'' in
-	  let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
-	  pom (name :: acc)
-	else
-	  pom acc
+        let ln = input_line ic in
+        if String.get ln 0 = '#' then
+          pom acc
+        else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
+          let i = String.rindex ln ',' + 2 in
+          let j = String.rindex ln '\'' in
+          let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+          pom (name :: acc)
+        else
+          pom acc
       with
       | End_of_file ->
-	acc
+         acc
       | Not_found | Invalid_argument(_) ->
-	pom acc
+         pom acc
     in
     let names = pom []
     in
@@ -106,22 +106,22 @@ let extract_vampire_data outfile =
     in
     let rec pom acc =
       try
-	let ln = input_line ic in
-	if String.get ln 0 = '%' then
-	  pom acc
-	else
-	  let i = String.rindex ln ',' + 1 in
-	  let j = String.rindex ln '\'' in
-	  let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
-	  if name <> "HAMMER_GOAL" then
-	    pom (name :: acc)
-	  else
-	    pom acc
+        let ln = input_line ic in
+        if String.get ln 0 = '%' then
+          pom acc
+        else
+          let i = String.rindex ln ',' + 1 in
+          let j = String.rindex ln '\'' in
+          let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+          if name <> "HAMMER_GOAL" then
+            pom (name :: acc)
+          else
+            pom acc
       with
       | End_of_file ->
-	acc
+         acc
       | Not_found | Invalid_argument(_) ->
-	pom acc
+         pom acc
     in
     let names = pom []
     in
@@ -143,22 +143,22 @@ let extract_cvc4_data outfile =
     let ic = open_in outfile in
     let rec pom acc =
       try
-	let ln = input_line ic in
-	if (String.get ln 0 = '%') then
-	  pom acc
-	else
-	  let i = String.index ln '\''  in
-	  let j = String.rindex ln '\'' in
-	  let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
-	  if name <> "HAMMER_GOAL" then
-	    pom (name :: acc)
-	  else
-	    pom acc
+        let ln = input_line ic in
+        if (String.get ln 0 = '%') then
+          pom acc
+        else
+          let i = String.index ln '\''  in
+          let j = String.rindex ln '\'' in
+          let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+          if name <> "HAMMER_GOAL" then
+            pom (name :: acc)
+          else
+            pom acc
       with
       | End_of_file ->
-	 acc
+         acc
       | Not_found | Invalid_argument(_) ->
-	 pom acc
+         pom acc
     in
     let names = pom []
     in
@@ -170,9 +170,9 @@ let extract_cvc4_data outfile =
 (******************************************************************************)
 
 let provers = [(Opt.vampire_enabled, "Vampire", call_vampire, extract_vampire_data);
-	       (Opt.z3_enabled, "Z3", call_z3, extract_z3_data);
-	       (Opt.eprover_enabled, "EProver", call_eprover, extract_eprover_data);
-	       (Opt.cvc4_enabled, "CVC4", call_cvc4, extract_cvc4_data)]
+               (Opt.z3_enabled, "Z3", call_z3, extract_z3_data);
+               (Opt.eprover_enabled, "EProver", call_eprover, extract_eprover_data);
+               (Opt.cvc4_enabled, "CVC4", call_cvc4, extract_cvc4_data)]
 
 let call_prover (enabled, pname, call, extract) fname ofname cont =
   let clean () =
@@ -182,28 +182,28 @@ let call_prover (enabled, pname, call, extract) fname ofname cont =
   if !enabled then
     try
       begin
-	if !Opt.debug_mode || !Opt.gs_mode = 0 then
-	  Msg.info ("Running " ^ pname ^ "...");
-	if call fname ofname then
-	  begin
-	    let (deps, defs) = extract ofname in
-	    clean ();
-	    let n = List.length deps in
-	    if n <= !Opt.max_atp_predictions then
-	      (pname, (deps, defs))
-	    else
-	      begin
-		Msg.info (pname ^ " returned too many predictions (" ^ string_of_int n ^ ")");
-		cont ()
-	      end
-	  end
-	else
-	  begin
-	    if !Opt.debug_mode || !Opt.gs_mode = 0 then
-	      Msg.info (pname ^ " failed");
-	    clean ();
-	    cont ()
-	  end
+        if !Opt.debug_mode || !Opt.gs_mode = 0 then
+          Msg.info ("Running " ^ pname ^ "...");
+        if call fname ofname then
+          begin
+            let (deps, defs) = extract ofname in
+            clean ();
+            let n = List.length deps in
+            if n <= !Opt.max_atp_predictions then
+              (pname, (deps, defs))
+            else
+              begin
+                Msg.info (pname ^ " returned too many predictions (" ^ string_of_int n ^ ")");
+                cont ()
+              end
+          end
+        else
+          begin
+            if !Opt.debug_mode || !Opt.gs_mode = 0 then
+              Msg.info (pname ^ " failed");
+            clean ();
+            cont ()
+          end
       end
     with e ->
       clean ();
@@ -223,7 +223,7 @@ let call_provers_par fname ofname =
   let jobs =
     List.map
       begin fun ((_, pname, _, _) as h) _ ->
-	call_prover h fname (ofname ^ "." ^ pname) (fun () -> exit 1)
+        call_prover h fname (ofname ^ "." ^ pname) (fun () -> exit 1)
       end
       provers
   in
@@ -255,7 +255,7 @@ let predict deps1 hyps deps goal =
     | [] -> ""
     | h :: t ->
       List.fold_right (fun x a -> (Hhlib.drop_prefix x "Top.") ^ ", " ^ a) t
-	(Hhlib.drop_prefix h "Top.")
+        (Hhlib.drop_prefix h "Top.")
   in
   let fname = Filename.temp_file "coqhammer" ".p" in
   write_atp_file fname deps1 hyps deps goal;
@@ -263,10 +263,10 @@ let predict deps1 hyps deps goal =
   let clean () =
     if not !Opt.debug_mode then
       begin
-	if Sys.file_exists fname then
-	  Sys.remove fname;
-	if Sys.file_exists ofname then
-	  Sys.remove ofname
+        if Sys.file_exists fname then
+          Sys.remove fname;
+        if Sys.file_exists ofname then
+          Sys.remove ofname
       end
   in
   let call = if !Opt.parallel_mode then call_provers_par else call_provers
@@ -274,7 +274,7 @@ let predict deps1 hyps deps goal =
   try
     let (pname, (deps, defs)) = call fname ofname in
     Msg.info (pname ^ " succeeded\n - dependencies: " ^ prn_lst deps ^
-		"\n - definitions: " ^ prn_lst defs);
+                "\n - definitions: " ^ prn_lst defs);
     clean ();
     (deps, defs)
   with e ->

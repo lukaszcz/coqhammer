@@ -14,6 +14,6 @@ The outputs are written to `o/$prover_name/...`
 
 To run, use `make -j 47 -k` (where 47 is the number of CPUs). The parameter `-k`
 resumes evaluation in case of errors. The timeout can be set in the Makefile.
-Optionally only particular provers may be specified, e.g. `make e-18`.
+Optionally only particular provers may be specified, e.g. `make eprover`.
 
 Warning: Rerun `make` to ensure that all problems were treated.

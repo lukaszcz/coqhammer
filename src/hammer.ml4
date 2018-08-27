@@ -742,9 +742,8 @@ let hammer_hook_tac prefix name =
                   let defs1 = Features.predict hyps defs goal in
                   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
                 end
-                [("knn", 32); ("knn", 64); ("knn", 128); ("knn", 256); ("knn", 512); ("knn", 1024);
-                 ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 512);
-                 ("nbayes", 1024)];
+                [("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
+                 ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)];
               Msg.info ("Done processing " ^ name ^ ".\n");
               ltac_apply "idtac" []
             end
@@ -759,6 +758,8 @@ let hammer_hook_tac prefix name =
                   Provers.extract_vampire_data
                 else if prover = "z3" then
                   Provers.extract_z3_data
+                else if prover = "cvc4" then
+                  Provers.extract_cvc4_data
                 else
                   failwith "unknown prover"
               in
