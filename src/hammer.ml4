@@ -785,7 +785,7 @@ let hammer_hook_tac prefix name =
                     with _ ->
                       0
                   in
-                  if tries_num < 2 then
+                  if tries_num < 3 then
                     begin
                       ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
                                               " > \"" ^ tfname ^ "\""));
@@ -807,7 +807,7 @@ let hammer_hook_tac prefix name =
                     end
                   else
                     begin
-                      let msg = "Failure " ^ name ^ " " ^ str ^ ": gave up after " ^
+                      let msg = "Failure (due to Coq timeout bug) " ^ name ^ " " ^ str ^ ": gave up after " ^
                         string_of_int tries_num ^ " tries"
                       in
                       ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
