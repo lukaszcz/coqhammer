@@ -10,7 +10,8 @@ Installation
 ------------
 
 To build and install CoqHammer, run `make` followed by `make
-install`.
+install`. Then optionally run `make tests` to check if everything
+works.
 
 To use CoqHammer you will also need some automated provers
 installed. More information about provers is provided below.
