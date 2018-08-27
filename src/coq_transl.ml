@@ -62,33 +62,33 @@ let adjust_varnames =
     begin fun n ctx tm ->
       match tm with
       | Var(x) ->
-	let i = int_of_string x - 1
-	in
-	let nthctx = List.nth ctx i
-	in
-	let vname = fst nthctx
-	in
-	Var(string_of_int (n - 1 - i) ^ "_" ^ vname)
+        let i = int_of_string x - 1
+        in
+        let nthctx = List.nth ctx i
+        in
+        let vname = fst nthctx
+        in
+        Var(string_of_int (n - 1 - i) ^ "_" ^ vname)
       | Lam a ->
-	  Lam (rename_abs n a)
+          Lam (rename_abs n a)
       | Prod a ->
-	  Prod (rename_abs n a)
+          Prod (rename_abs n a)
       | Quant(op, a) ->
-	  Quant(op, rename_abs n a)
+          Quant(op, rename_abs n a)
       | Let(value, a) ->
-	  Let(value, rename_abs n a)
+          Let(value, rename_abs n a)
       | Fix(cft, m, names, types, bodies) ->
-	  let names2 =
-	    List.rev
-	      (fst
-		 (List.fold_left
-		    (fun (acc, k) name -> ((string_of_int k ^ "_" ^ name) :: acc, k + 1))
-		    ([], n)
-		    names))
-	  in
-	  Fix(cft, m, names2, types, bodies)
+          let names2 =
+            List.rev
+              (fst
+                 (List.fold_left
+                    (fun (acc, k) name -> ((string_of_int k ^ "_" ^ name) :: acc, k + 1))
+                    ([], n)
+                    names))
+          in
+          Fix(cft, m, names2, types, bodies)
       | _ ->
-	  tm
+          tm
     end
 
 (***************************************************************************************)
@@ -99,11 +99,11 @@ let adjust_logops =
     begin fun ctx tm ->
       match tm with
       | App(Const(op), Lam a) when op = "!" || op = "?" ->
-	Quant(op, a)
+        Quant(op, a)
       | App(App(App(Const("="), ty), x), y) ->
-	Equal(x, y)
+        Equal(x, y)
       | _ ->
-	tm
+        tm
     end
 
 (***************************************************************************************)
@@ -124,10 +124,10 @@ let reinit (lst : hhdef list) =
     | h :: t ->
       let name = get_hhdef_name h in
       if not (defhash_mem name) then
-	defhash_add_lazy name (lazy (conv h t));
+        defhash_add_lazy name (lazy (conv h t));
       add_defs t
     | [] ->
-	()
+        ()
   in
   log 1 "Reinitializing...";
   (try add_logop_defs () with _ -> ());
@@ -168,9 +168,9 @@ let eval (tm : coqterm) : coqvalue =
     debug 5 (fun () -> print_newline (); print_endline "eval"; print_coqterm tm; print_newline ());
     let delay_subst env tm =
       if env = [] then
-	lazy tm
+        lazy tm
       else
-	lazy (dsubst (List.map (fun (n, v) -> (n, lazy (reify (Lazy.force v)))) env) tm)
+        lazy (dsubst (List.map (fun (n, v) -> (n, lazy (reify (Lazy.force v)))) env) tm)
     and delay_eval env tm =
       lazy (eval env tm)
     in
@@ -180,31 +180,31 @@ let eval (tm : coqterm) : coqvalue =
     match tm with
     | Var(x) ->
       begin
-	try
-	  Lazy.force (List.assoc x env)
-	with Not_found ->
-	  N (VAR(x))
+        try
+          Lazy.force (List.assoc x env)
+        with Not_found ->
+          N (VAR(x))
       end
     | Const(c) ->
       begin
-	let tm2 = try coqdef_value (defhash_find c) with _ -> tm
-	in
-	if tm2 = tm then
-	  N (CONST c)
-	else
-	  match tm2 with
-	  | IndType(_) ->
-	      N (CONST c)
-	  | _ ->
-	      eval [] tm2
+        let tm2 = try coqdef_value (defhash_find c) with _ -> tm
+        in
+        if tm2 = tm then
+          N (CONST c)
+        else
+          match tm2 with
+          | IndType(_) ->
+              N (CONST c)
+          | _ ->
+              eval [] tm2
       end
     | App(x, y) ->
       let rec apply x y =
-	match x with
-	| LAM(_, (_, _, f)) -> f y
-	| FIX(_, v) -> apply (Lazy.force v) y
-	| N x2 -> N (APP(x2, y))
-	| _ -> failwith "apply"
+        match x with
+        | LAM(_, (_, _, f)) -> f y
+        | FIX(_, v) -> apply (Lazy.force v) y
+        | N x2 -> N (APP(x2, y))
+        | _ -> failwith "apply"
       in
       apply (eval env x) (delay_eval env y)
     | Cast(x, y) ->
@@ -217,76 +217,76 @@ let eval (tm : coqterm) : coqvalue =
       eval ((vname, delay_eval env value) :: env) body
     | Case(indname, matched_term, return_type, params_num, branches) ->
       let rec eval_valapp v args =
-	match args with
-	| h :: t ->
-	  begin
-	    match v with
-	    | LAM(_, (_, _, f)) -> eval_valapp (f h) t
-	    | N n -> eval_valapp (N (APP(n, h))) t
-	    | _ -> failwith "eval_app"
-	  end
-	| [] -> v
+        match args with
+        | h :: t ->
+          begin
+            match v with
+            | LAM(_, (_, _, f)) -> eval_valapp (f h) t
+            | N n -> eval_valapp (N (APP(n, h))) t
+            | _ -> failwith "eval_app"
+          end
+        | [] -> v
       and flatten_valapp v =
-	let rec hlp n acc =
-	  match n with
-	  | (APP(x, y)) ->
-	    hlp x (y :: acc)
-	  | _ ->
-	    (N n, acc)
-	in
-	match v with
-	| N n -> hlp n []
-	| _ -> (v, [])
+        let rec hlp n acc =
+          match n with
+          | (APP(x, y)) ->
+            hlp x (y :: acc)
+          | _ ->
+            (N n, acc)
+        in
+        match v with
+        | N n -> hlp n []
+        | _ -> (v, [])
       in
       begin
-	let mt2 = eval env matched_term
-	in
-	try
-	  begin
-	    let (v, args) = flatten_valapp mt2
-	    and (_, IndType(_, constrs, _), indtype, indsort) =
-	      try defhash_find indname with _ -> raise Not_found
-	    in
-	    match v with
-	    | (N (CONST c)) when List.mem c constrs ->
-	      let i = Hhlib.index c constrs
-	      in
-	      let (n, b) = List.nth branches i
-	      in
-	      if List.length args > n + params_num then
-		begin
-		  print_coqterm tm;
-		  print_list print_string constrs;
-		  print_int i; print_newline ();
-		  print_int n; print_newline ();
-		  print_int params_num; print_newline ();
-		  failwith ("eval: bad number of constructor arguments: " ^ c)
-		end
-	      else
-		eval_valapp (eval env b) (Hhlib.drop params_num args)
-	    | _ ->
-	      N (TERM (delay_subst env
-			 (Case(indname, reify mt2, return_type, params_num, branches))))
-	  end
-	with Not_found ->
-	  N (TERM (delay_subst env
-		     (Case(indname, reify mt2, return_type, params_num, branches))))
+        let mt2 = eval env matched_term
+        in
+        try
+          begin
+            let (v, args) = flatten_valapp mt2
+            and (_, IndType(_, constrs, _), indtype, indsort) =
+              try defhash_find indname with _ -> raise Not_found
+            in
+            match v with
+            | (N (CONST c)) when List.mem c constrs ->
+              let i = Hhlib.index c constrs
+              in
+              let (n, b) = List.nth branches i
+              in
+              if List.length args > n + params_num then
+                begin
+                  print_coqterm tm;
+                  print_list print_string constrs;
+                  print_int i; print_newline ();
+                  print_int n; print_newline ();
+                  print_int params_num; print_newline ();
+                  failwith ("eval: bad number of constructor arguments: " ^ c)
+                end
+              else
+                eval_valapp (eval env b) (Hhlib.drop params_num args)
+            | _ ->
+              N (TERM (delay_subst env
+                         (Case(indname, reify mt2, return_type, params_num, branches))))
+          end
+        with Not_found ->
+          N (TERM (delay_subst env
+                     (Case(indname, reify mt2, return_type, params_num, branches))))
       end
     | Fix(cft, k, names, types, bodies) ->
       let rec mkenv m lst acc =
-	match lst with
-	| h :: t ->
-	    let fx = Fix(cft, m, names, types, bodies)
-	    in
-	    let v =
-	      if cft = CoqFix then
-		lazy (FIX(delay_subst env fx, delay_eval env fx))
-	      else
-		lazy (N (TERM (delay_subst env fx)))
-	    in
-	    mkenv (m + 1) t ((h, v) :: acc)
-	| [] ->
-	    acc
+        match lst with
+        | h :: t ->
+            let fx = Fix(cft, m, names, types, bodies)
+            in
+            let v =
+              if cft = CoqFix then
+                lazy (FIX(delay_subst env fx, delay_eval env fx))
+              else
+                lazy (N (TERM (delay_subst env fx)))
+            in
+            mkenv (m + 1) t ((h, v) :: acc)
+        | [] ->
+            acc
       in
       FIX(delay_subst env tm, lazy (eval (mkenv 0 names env) (List.nth bodies k)))
     | _ ->
@@ -302,22 +302,22 @@ let rec check_prop args ctx tm =
     let rec hlp args v =
       match v with
       | PROD(_, (_, _, f)) ->
-	  begin
-	    match args with
-	    | h :: args2 ->
-		hlp args2 (f (lazy (eval h)))
-	    | _ ->
-		false
-	  end
+          begin
+            match args with
+            | h :: args2 ->
+                hlp args2 (f (lazy (eval h)))
+            | _ ->
+                false
+          end
       | FIX(_, v2) ->
-	  hlp args (Lazy.force v2)
+          hlp args (Lazy.force v2)
       | N (TERM tm) ->
-	  if args = [] then
-	    Lazy.force tm = SortProp
-	  else
-	    false
+          if args = [] then
+            Lazy.force tm = SortProp
+          else
+            false
       | _ ->
-	  false
+          false
     in
     hlp args (eval ty)
   in
@@ -325,39 +325,39 @@ let rec check_prop args ctx tm =
   match tm with
   | Var(x) ->
       begin
-	try
-	  is_prop_tgt args (List.assoc x ctx)
-	with Not_found ->
-	  print_list (fun (name, _) -> print_string name) (List.rev ctx);
-	  failwith ("check_prop: var not found: " ^ x)
+        try
+          is_prop_tgt args (List.assoc x ctx)
+        with Not_found ->
+          print_list (fun (name, _) -> print_string name) (List.rev ctx);
+          failwith ("check_prop: var not found: " ^ x)
       end
   | Const(c) ->
       begin
-	try
-	  is_prop_tgt args (coqdef_type (defhash_find c))
-	with _ ->
-	  false
+        try
+          is_prop_tgt args (coqdef_type (defhash_find c))
+        with _ ->
+          false
       end
   | App(x, y) ->
       check_prop (y :: args) ctx x
   | Lam(vname, ty, body) ->
       begin (* NOTE: the lambda case is incomplete, but this should be enough in practice *)
-	match args with
-	| _ :: args2 ->
-	    check_prop args2 ((vname, ty) :: ctx) body
-	| _ ->
-	    false
+        match args with
+        | _ :: args2 ->
+            check_prop args2 ((vname, ty) :: ctx) body
+        | _ ->
+            false
       end
   | Prod(vname, ty1, ty2) ->
       if args = [] then
-	check_prop [] ((vname, ty1) :: ctx) ty2
+        check_prop [] ((vname, ty1) :: ctx) ty2
       else
-	false
+        false
   | Cast(v, ty2) ->
       is_prop_tgt args ty2
   | Case(indname, matched_term, return_type, params_num, branches) ->
       (* NOTE: this is incorrect if `params_num' is smaller than the
-	 number of arguments of the inductive type `indname' *)
+         number of arguments of the inductive type `indname' *)
       is_prop_tgt args (App(return_type, matched_term))
   | Fix(_, k, names, types, bodies) ->
       is_prop_tgt args (List.nth types k)
@@ -425,7 +425,7 @@ let destruct_type_eval ty =
       let name2 = refresh_varname name
       in
       hlp (f (lazy (N (VAR name2))))
-	((name2, refresh_bvars (Lazy.force ty)) :: acc)
+        ((name2, refresh_bvars (Lazy.force ty)) :: acc)
     | FIX(_, v2) -> hlp (Lazy.force v2) acc
     | _ -> (v, List.rev acc)
   in
@@ -438,7 +438,7 @@ let destruct_type_noeval ty =
       let name2 = refresh_varname name
       in
       hlp (substvar name (Var(name2)) body)
-	((name2, refresh_bvars ty) :: acc)
+        ((name2, refresh_bvars ty) :: acc)
     | _ -> (t, List.rev acc)
   in
   hlp ty []
@@ -478,8 +478,8 @@ let coq_axioms = [
   ("_HAMMER_COQ_SET_SUB_TYPE",
    mk_forall "X" type_any
      (mk_impl
-	(mk_hastype (Var("X")) (Const("Set")))
-	(mk_hastype (Var("X")) (Const("Type")))))
+        (mk_hastype (Var("X")) (Const("Set")))
+        (mk_hastype (Var("X")) (Const("Type")))))
 ]
 
 let axioms_stack = ref []
@@ -498,17 +498,17 @@ let mk_inversion_conjs params_num args targs cacc =
     match args, targs with
     | ((name, ty) :: args2), (y :: targs2) ->
       let cacc2 =
-	if check_prop ctx ty then
-	  cacc
-	else
-	  (mk_eq (Var(name)) y) :: cacc
+        if check_prop ctx ty then
+          cacc
+        else
+          (mk_eq (Var(name)) y) :: cacc
       in
       mk_conjs ((name, ty) :: ctx) args2 targs2 cacc2
     | [], [] ->
       if cacc = [] then
-	Const("$True")
+        Const("$True")
       else
-	join_right mk_and cacc
+        join_right mk_and cacc
     | _ ->
       failwith "mk_inversion_conjs"
   in
@@ -539,14 +539,14 @@ let mk_inversion params indname constrs matched_term f =
       let cargs1 = Hhlib.take params_num cargs
       in
       let cargs2 =
-	List.map
-	  (fun (name, ty) -> (name, subst_params cargs1 params ty))
-	  (Hhlib.drop params_num cargs)
+        List.map
+          (fun (name, ty) -> (name, subst_params cargs1 params ty))
+          (Hhlib.drop params_num cargs)
       in
       let targs2 =
-	List.map
-	  (fun tm -> subst_params cargs1 params tm)
-	  (Hhlib.drop params_num targs)
+        List.map
+          (fun tm -> subst_params cargs1 params tm)
+          (Hhlib.drop params_num targs)
       in
       let eqt = mk_eq matched_term (mk_long_app (Const(cname)) (params @ mk_vars cargs2))
       in
@@ -574,18 +574,18 @@ let mk_prop_inversion params indname args constrs =
       let cargs1 = Hhlib.take params_num cargs
       in
       let cargs2 =
-	List.map
-	  (fun (name, ty) -> (name, subst_params cargs1 params ty))
-	  (Hhlib.drop params_num cargs)
+        List.map
+          (fun (name, ty) -> (name, subst_params cargs1 params ty))
+          (Hhlib.drop params_num cargs)
       in
       let targs2 =
-	List.map
-	  (fun tm -> subst_params cargs1 params tm)
-	  (Hhlib.drop params_num targs)
+        List.map
+          (fun tm -> subst_params cargs1 params tm)
+          (Hhlib.drop params_num targs)
       in
       let disj =
-	mk_long_exists cargs2
-	  (mk_inversion_conjs params_num args targs2 [])
+        mk_long_exists cargs2
+          (mk_inversion_conjs params_num args targs2 [])
       in
       mk_disjs constrs2 (disj :: acc)
     | [] -> List.rev acc
@@ -593,9 +593,9 @@ let mk_prop_inversion params indname args constrs =
   if args = [] then
     begin
       if constrs = [] then
-	Const("$False")
+        Const("$False")
       else
-	Const("$True")
+        Const("$True")
     end
   else
     let disjs = mk_disjs constrs []
@@ -616,29 +616,29 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
   | _ ->
     let tm =
       if !opt_closure_guards then
-	close (fvars @ lvars)
-	  (fun ctx -> prop_to_formula ctx inv)
+        close (fvars @ lvars)
+          (fun ctx -> prop_to_formula ctx inv)
       else if opt_lambda_guards then
-	let ctx = List.rev fvars
-	in
-	let mtfvars = get_fvars ctx matched_term
-	in
-	let fvars0 =
-	  List.filter (fun (name, _) -> not (List.mem_assoc name mtfvars)) fvars
-	and fvars1 = mtfvars
-	in
-	(close fvars0
-	   (fun ctx1 ->
-	     mk_guarded_forall ctx1 fvars1
-	       (fun _ -> prop_to_formula ctx (mk_long_forall lvars inv))))
+        let ctx = List.rev fvars
+        in
+        let mtfvars = get_fvars ctx matched_term
+        in
+        let fvars0 =
+          List.filter (fun (name, _) -> not (List.mem_assoc name mtfvars)) fvars
+        and fvars1 = mtfvars
+        in
+        (close fvars0
+           (fun ctx1 ->
+             mk_guarded_forall ctx1 fvars1
+               (fun _ -> prop_to_formula ctx (mk_long_forall lvars inv))))
       else
-	let vars = fvars @ lvars
-	in
-	let ctx = List.rev vars
-	in
-	let vars1 = get_fvars ctx matched_term
-	in
-	mk_fol_forall [] vars (mk_guards [] vars1 inv)
+        let vars = fvars @ lvars
+        in
+        let ctx = List.rev vars
+        in
+        let vars1 = get_fvars ctx matched_term
+        in
+        mk_fol_forall [] vars (mk_guards [] vars1 inv)
     in
     add_axiom (mk_axiom axname tm)
 
@@ -664,21 +664,21 @@ and lambda_lifting axname name fvars lvars1 tm =
   | _ ->
     let ax =
       mk_axiom axname
-	(close fvars
-	   begin fun ctx ->
-	     let mk_eqv =
-	       if check_prop (List.rev_append lvars ctx) body2 then
-		 mk_equiv
-	       else
-		 mk_eq
-	     in
-	     let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
-	     in
-	     if !opt_closure_guards || opt_lambda_guards then
-	       prop_to_formula ctx (mk_long_forall lvars eqv)
-	     else
-	       mk_fol_forall ctx lvars eqv
-	   end)
+        (close fvars
+           begin fun ctx ->
+             let mk_eqv =
+               if check_prop (List.rev_append lvars ctx) body2 then
+                 mk_equiv
+               else
+                 mk_eq
+             in
+             let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
+             in
+             if !opt_closure_guards || opt_lambda_guards then
+               prop_to_formula ctx (mk_long_forall lvars eqv)
+             else
+               mk_fol_forall ctx lvars eqv
+           end)
     in
     add_axiom ax;
     convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
@@ -692,33 +692,33 @@ and fix_lifting axname dname fvars lvars tm =
       let names1 = List.map ((^) fix_pref) names
       in
       let names2 =
-	if axname = "" then names1 else Hhlib.take k names1 @ [ dname ] @ Hhlib.drop (k + 1) names1
+        if axname = "" then names1 else Hhlib.take k names1 @ [ dname ] @ Hhlib.drop (k + 1) names1
       and axnames =
-	if axname = "" then names1 else Hhlib.take k names1 @ [ axname ] @ Hhlib.drop (k + 1) names1
+        if axname = "" then names1 else Hhlib.take k names1 @ [ axname ] @ Hhlib.drop (k + 1) names1
       in
       let vars = mk_vars (fvars @ lvars)
       in
       let env = List.map2 (fun name name2 -> (name, mk_long_app (Const(name2)) vars)) names names2
       in
       let prep body =
-	List.fold_left (fun tm (name, value) -> simple_subst name value tm) body env
+        List.fold_left (fun tm (name, value) -> simple_subst name value tm) body env
       in
       List.iter2
-	(fun name2 ty ->
-	  let ty2 = mk_long_prod fvars (mk_long_prod lvars ty)
-	  in
-	  try
-	    defhash_add (mk_def name2 (Const(name2)) ty2
-			   (if check_prop [] ty2 then SortProp else SortType))
-	  with _ -> ())
-	names2 types;
+        (fun name2 ty ->
+          let ty2 = mk_long_prod fvars (mk_long_prod lvars ty)
+          in
+          try
+            defhash_add (mk_def name2 (Const(name2)) ty2
+                           (if check_prop [] ty2 then SortProp else SortType))
+          with _ -> ())
+        names2 types;
       List.nth
-	(List.map2
-	   (fun (axname2, name2) body ->
-	     lambda_lifting axname2 name2 fvars lvars (prep body))
-	   (List.combine axnames names2)
-	   bodies)
-	k
+        (List.map2
+           (fun (axname2, name2) body ->
+             lambda_lifting axname2 name2 fvars lvars (prep body))
+           (List.combine axnames names2)
+           bodies)
+        k
   | _ ->
       failwith "fix_lifting"
 
@@ -730,13 +730,13 @@ and case_lifting axname0 name0 fvars lvars tm =
     let rec pom n tm =
       match tm with
       | Lam(_, ty, body) ->
-	if n = 0 then
-	  let (_, tyargs) = flatten_app ty
-	  in
-	  assert (List.length tyargs >= params_num);
-	  Hhlib.take params_num tyargs
-	else
-	  pom (n - 1) body
+        if n = 0 then
+          let (_, tyargs) = flatten_app ty
+          in
+          assert (List.length tyargs >= params_num);
+          Hhlib.take params_num tyargs
+        else
+          pom (n - 1) body
       | _ -> failwith "get_params"
     in
     let n = List.length args
@@ -756,82 +756,82 @@ and case_lifting axname0 name0 fvars lvars tm =
     begin
       match tm with
       | Cast(Const("$Proof"), _) | Const("$Proof") ->
-	generic_match ()
+        generic_match ()
       | Case(indname, matched_term, return_type, params_num, branches) ->
-	let (_, IndType(_, constrs, pnum), indty, _) =
-	  try defhash_find indname with _ -> raise Not_found
-	in
-	assert (pnum = params_num);
-	if check_type_target_is_prop indty then
-	  generic_match ()
-	else
-	  let fname = if name0 = "" then "$_case_" ^ indname ^ "_" ^ unique_id () else name0
-	  in
-	  let axname = if name0 = "" then fname else axname0
-	  in
-	  let case_replacement =
-	    convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
-	  in
-	  let case_repl2 = mk_long_app case_replacement (mk_vars lvars)
-	  in
-	  let params = get_params indty return_type params_num
-	  in
-	  let rec hlp constrs branches params params_num vars tm =
-	    let rec get_branch cname cstrs brs =
-	      match cstrs, brs with
-	      | c :: cstrs2, b :: brs2 ->
-		if c = cname then
-		  b
-		else
-		  get_branch cname cstrs2 brs2
-	      | _ -> failwith "case_lifting: get_branch"
-	    in
-	    begin fun cname _ args eqt ->
-	      let (n, branch) = get_branch cname constrs branches
-	      in
-	      assert (List.length args <= n);
-	    (* We may have List.length args < n if there are some lets
-	       in the type and they get evaluated away. We do not
-	       properly deal with this (rare) situation: the generated
-	       formula will in this case not be correct (the branch
-	       (`cr' below) will miss arguments). *)
-	      let ctx = List.rev (vars @ args)
-	      in
-	      let ys = mk_vars args
-	      in
-	      let cr = simpl (mk_long_app branch ys)
-	      in
-	      match cr with
-	      | Case(indname2, mt2, return_type2, pnum2, branches2) ->
-		let (_, IndType(_, constrs2, pn), indty2, _) =
-		  try defhash_find indname2 with _ -> raise Not_found
-		in
-		assert (pn = pnum2);
-		if check_type_target_is_prop indty2 then
-		  eqt
-		else
-		  let params2 = get_params indty2 return_type2 pnum2
-		  in
-		  mk_guards []
-		    (get_fvars ctx mt2)
-		    (mk_and eqt (mk_inversion params2 indname constrs2 mt2
-				   (hlp constrs2 branches2 params2 pnum2 (vars @ args) cr)))
-	      | _ ->
-		let eqv =
-		  if check_prop ctx cr then
-		    mk_equiv case_repl2 cr
-		  else
-		    mk_eq case_repl2 cr
-		in
-		mk_and eqt eqv
-	    end
-	  in
-	  add_inversion_axioms0
-	    (mk_inversion params) indname axname fvars lvars constrs matched_term
-	    (hlp constrs branches params params_num (fvars @ lvars) tm);
-	  case_replacement
+        let (_, IndType(_, constrs, pnum), indty, _) =
+          try defhash_find indname with _ -> raise Not_found
+        in
+        assert (pnum = params_num);
+        if check_type_target_is_prop indty then
+          generic_match ()
+        else
+          let fname = if name0 = "" then "$_case_" ^ indname ^ "_" ^ unique_id () else name0
+          in
+          let axname = if name0 = "" then fname else axname0
+          in
+          let case_replacement =
+            convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+          in
+          let case_repl2 = mk_long_app case_replacement (mk_vars lvars)
+          in
+          let params = get_params indty return_type params_num
+          in
+          let rec hlp constrs branches params params_num vars tm =
+            let rec get_branch cname cstrs brs =
+              match cstrs, brs with
+              | c :: cstrs2, b :: brs2 ->
+                if c = cname then
+                  b
+                else
+                  get_branch cname cstrs2 brs2
+              | _ -> failwith "case_lifting: get_branch"
+            in
+            begin fun cname _ args eqt ->
+              let (n, branch) = get_branch cname constrs branches
+              in
+              assert (List.length args <= n);
+            (* We may have List.length args < n if there are some lets
+               in the type and they get evaluated away. We do not
+               properly deal with this (rare) situation: the generated
+               formula will in this case not be correct (the branch
+               (`cr' below) will miss arguments). *)
+              let ctx = List.rev (vars @ args)
+              in
+              let ys = mk_vars args
+              in
+              let cr = simpl (mk_long_app branch ys)
+              in
+              match cr with
+              | Case(indname2, mt2, return_type2, pnum2, branches2) ->
+                let (_, IndType(_, constrs2, pn), indty2, _) =
+                  try defhash_find indname2 with _ -> raise Not_found
+                in
+                assert (pn = pnum2);
+                if check_type_target_is_prop indty2 then
+                  eqt
+                else
+                  let params2 = get_params indty2 return_type2 pnum2
+                  in
+                  mk_guards []
+                    (get_fvars ctx mt2)
+                    (mk_and eqt (mk_inversion params2 indname constrs2 mt2
+                                   (hlp constrs2 branches2 params2 pnum2 (vars @ args) cr)))
+              | _ ->
+                let eqv =
+                  if check_prop ctx cr then
+                    mk_equiv case_repl2 cr
+                  else
+                    mk_eq case_repl2 cr
+                in
+                mk_and eqt eqv
+            end
+          in
+          add_inversion_axioms0
+            (mk_inversion params) indname axname fvars lvars constrs matched_term
+            (hlp constrs branches params params_num (fvars @ lvars) tm);
+          case_replacement
       | _ ->
-	failwith "case_lifting"
+        failwith "case_lifting"
     end
   with Not_found ->
     log 2 ("case exception: " ^ name0);
@@ -850,12 +850,12 @@ and convert ctx tm =
       let mk = if op = "!" then mk_impl else mk_and
       in
       if check_prop ctx ty then
-	mk (prop_to_formula ctx ty)
-	  (prop_to_formula ctx (subst_proof name ty body))
+        mk (prop_to_formula ctx ty)
+          (prop_to_formula ctx (subst_proof name ty body))
       else
-	Quant(op, (name, type_any,
-		   mk (mk_guard ctx ty (Var(name)))
-		     (prop_to_formula ((name, ty) :: ctx) body)))
+        Quant(op, (name, type_any,
+                   mk (mk_guard ctx ty (Var(name)))
+                     (prop_to_formula ((name, ty) :: ctx) body)))
   | Equal(x, y) ->
       Equal(convert_term ctx x, convert_term ctx y)
   | App(App(Const(c), x), y) when is_bin_logop c ->
@@ -876,14 +876,14 @@ and convert ctx tm =
       let x2 = convert ctx x
       in
       if x2 = Const("$Proof") then
-	Const("$Proof")
+        Const("$Proof")
       else
-	let y2 = convert_term ctx y
-	in
-	if y2 = Const("$Proof") then
-	  x2
-	else
-	  App(x2, y2)
+        let y2 = convert_term ctx y
+        in
+        if y2 = Const("$Proof") then
+          x2
+        else
+          App(x2, y2)
   | Lam(_) ->
       remove_lambda ctx tm
   | Case(_) ->
@@ -898,9 +898,9 @@ and convert ctx tm =
       remove_let ctx tm
   | Prod(_) ->
       if check_prop ctx tm then
-	prop_to_formula ctx tm
+        prop_to_formula ctx tm
       else
-	remove_type ctx tm
+        remove_type ctx tm
   | SortProp ->
       Const("Prop")
   | SortSet ->
@@ -909,9 +909,9 @@ and convert ctx tm =
       Const("Type")
   | Var(name) ->
       if check_proof_var ctx name then
-	Const("$Proof")
+        Const("$Proof")
       else
-	Var(name)
+        Var(name)
   | Const(_) ->
       tm
   | IndType(_) ->
@@ -935,7 +935,7 @@ and convert_term ctx tm =
     let tm2 = convert ctx (mk_long_app (Const(name)) (mk_vars fvars))
     in
     add_axiom (mk_axiom name
-		 (close fvars (fun ctx -> mk_equiv tm2 (convert ctx tm))));
+                 (close fvars (fun ctx -> mk_equiv tm2 (convert ctx tm))));
     tm2
   else
     convert ctx tm
@@ -948,9 +948,9 @@ and prop_to_formula ctx tm =
       mk_impl (prop_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
     else
       mk_forall vname type_any
-	(mk_impl
-	   (mk_guard ctx ty1 (Var(vname)))
-	   (prop_to_formula ((vname, ty1) :: ctx) ty2))
+        (mk_impl
+           (mk_guard ctx ty1 (Var(vname)))
+           (prop_to_formula ((vname, ty1) :: ctx) ty2))
   | _ ->
     convert ctx tm
 
@@ -963,7 +963,7 @@ and mk_guard ctx ty x =
        mk_hastype x (remove_type ctx ty)
      else
        (* refresh_bvars is necessary here to correctly translate
-	  e.g. Prod(x, Prod(x, ty1, ty2), ty3) *)
+          e.g. Prod(x, Prod(x, ty1, ty2), ty3) *)
        type_to_guard ctx (refresh_bvars ty) x
   | _ ->
      mk_hastype x (convert ctx ty)
@@ -977,9 +977,9 @@ and type_to_guard ctx ty x =
       mk_impl (prop_to_formula ctx ty1) (type_to_guard ctx (subst_proof vname ty1 ty2) x)
     else
       mk_forall vname type_any
-	(mk_impl
-	   (mk_guard ctx ty1 (Var(vname)))
-	   (type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname))))))
+        (mk_impl
+           (mk_guard ctx ty1 (Var(vname)))
+           (type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname))))))
   | _ ->
     mk_hastype x (convert ctx ty)
 
@@ -988,10 +988,10 @@ and mk_fol_forall ctx vars tm =
     match vars with
     | (name, ty) :: vars2 ->
       if check_prop ctx ty then
-	hlp ((name, ty) :: ctx) vars2 (subst_proof name ty tm)
+        hlp ((name, ty) :: ctx) vars2 (subst_proof name ty tm)
       else
-	mk_forall name type_any
-	  (hlp ((name, ty) :: ctx) vars2 tm)
+        mk_forall name type_any
+          (hlp ((name, ty) :: ctx) vars2 tm)
     | [] ->
       prop_to_formula ctx tm
   in
@@ -1002,10 +1002,10 @@ and mk_guarded_forall ctx vars cont =
     match vars with
     | (name, ty) :: vars2 ->
       mk_forall name type_any
-	(mk_impl (mk_guard ctx ty (Var(name)))
-	   (hlp ((name, ty) :: ctx) vars2))
+        (mk_impl (mk_guard ctx ty (Var(name)))
+           (hlp ((name, ty) :: ctx) vars2))
     | [] ->
-	cont ctx
+        cont ctx
   in
   hlp ctx vars
 
@@ -1014,10 +1014,10 @@ and mk_guards ctx vars tm =
   | (name, ty) :: vars2 ->
     if check_prop ctx ty then
       (mk_impl ty
-	 (mk_guards ((name, ty) :: ctx) vars2 (subst_proof name ty tm)))
+         (mk_guards ((name, ty) :: ctx) vars2 (subst_proof name ty tm)))
     else
       (mk_impl (App(App(Const("$HasType"), Var(name)), ty))
-	 (mk_guards ((name, ty) :: ctx) vars2 tm))
+         (mk_guards ((name, ty) :: ctx) vars2 tm))
   | [] ->
     tm
 
@@ -1028,10 +1028,10 @@ and close vars cont =
     let rec hlp ctx vars =
       match vars with
       | (name, ty) :: vars2 ->
-	mk_forall name type_any
-	  (hlp ((name, ty) :: ctx) vars2)
+        mk_forall name type_any
+          (hlp ((name, ty) :: ctx) vars2)
       | [] ->
-	cont ctx
+        cont ctx
     in
     hlp [] vars
 
@@ -1067,14 +1067,14 @@ and remove_cast ctx tm =
       let srt = if check_prop [] ty2 then SortProp else SortType
       in
       if srt <> SortProp then
-	begin
-	  let def = mk_def fname (mk_long_lam fvars trm) ty2 srt
-	  in
-	  add_def_eq_axiom def;
-	  tm2
-	end
+        begin
+          let def = mk_def fname (mk_long_lam fvars trm) ty2 srt
+          in
+          add_def_eq_axiom def;
+          tm2
+        end
       else
-	Const("$Proof")
+        Const("$Proof")
   | _ ->
       failwith "remove_cast"
 
@@ -1101,9 +1101,9 @@ and remove_let ctx tm =
       in
       defhash_add def;
       if srt <> SortProp then
-	begin
-	  add_def_eq_axiom def
-	end;
+        begin
+          add_def_eq_axiom def
+        end;
       convert ctx (simple_subst name val2 body)
   | _ ->
       failwith "remove_let"
@@ -1124,61 +1124,61 @@ and add_def_eq_type_axiom axname name fvars ty =
   let vname = "var_" ^ unique_id ()
   in
   add_axiom (mk_axiom axname
-	       (close fvars
-		  (fun ctx ->
-		    (mk_forall vname type_any
-		       (mk_equiv
-			  (mk_hastype
-			     (Var(vname))
-			     (convert ctx (mk_long_app (Const(name)) (mk_vars fvars))))
-			  (type_to_guard ctx ty (Var(vname))))))))
+               (close fvars
+                  (fun ctx ->
+                    (mk_forall vname type_any
+                       (mk_equiv
+                          (mk_hastype
+                             (Var(vname))
+                             (convert ctx (mk_long_app (Const(name)) (mk_vars fvars))))
+                          (type_to_guard ctx ty (Var(vname))))))))
 
 and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
       if opt_omit_prop_typing_axioms && check_type_target_is_prop ty then
-	()
+        ()
       else if opt_type_optimization &&
-	  (check_type_target_is_type ty || check_type_target_is_prop ty) then
-	begin
-	  let fix_ax ax =
-	    let xvar = refresh_varname "X"
-	    in
-	    let rec hlp tm =
-	      match tm with
-	      | Quant("!", (vname, _, body)) ->
-		Quant("!", (vname, type_any, hlp body))
-	      | App(App(Const("=>"), x), y) ->
-		App(App(Const("=>"), x), hlp y)
-	      | Equal(x, y) ->
-		if opt_hastype then
-		  mk_equiv
-		    (App(App(Const "$HasType", x), Var(xvar)))
-		    (App(App(Const "$HasType", y), Var(xvar)))
-		else
-		  mk_equiv (App(x, Var(xvar))) (App(y, Var(xvar)))
-	      | _ -> failwith "add_typing_axiom: fix_ax"
-	    in
-	    mk_forall xvar type_any (hlp ax)
-	  in
-	  let name2 = "$_type_" ^ name ^ "_" ^ unique_id ()
-	  and args = get_type_args ty
-	  in
-	  (* TODO: fix proof arguments in ax *)
-	  let ys = mk_vars args
-	  in
-	  let ax =
-	    mk_long_forall args
-	      (mk_eq
-		 (mk_long_app (Const(name2)) ys)
-		 (mk_long_app (Const(name)) ys))
-	  in
-	  add_axiom (mk_axiom ("$_tydef_" ^ name2) (fix_ax ax));
-	  add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name2))))
-	end
+          (check_type_target_is_type ty || check_type_target_is_prop ty) then
+        begin
+          let fix_ax ax =
+            let xvar = refresh_varname "X"
+            in
+            let rec hlp tm =
+              match tm with
+              | Quant("!", (vname, _, body)) ->
+                Quant("!", (vname, type_any, hlp body))
+              | App(App(Const("=>"), x), y) ->
+                App(App(Const("=>"), x), hlp y)
+              | Equal(x, y) ->
+                if opt_hastype then
+                  mk_equiv
+                    (App(App(Const "$HasType", x), Var(xvar)))
+                    (App(App(Const "$HasType", y), Var(xvar)))
+                else
+                  mk_equiv (App(x, Var(xvar))) (App(y, Var(xvar)))
+              | _ -> failwith "add_typing_axiom: fix_ax"
+            in
+            mk_forall xvar type_any (hlp ax)
+          in
+          let name2 = "$_type_" ^ name ^ "_" ^ unique_id ()
+          and args = get_type_args ty
+          in
+          (* TODO: fix proof arguments in ax *)
+          let ys = mk_vars args
+          in
+          let ax =
+            mk_long_forall args
+              (mk_eq
+                 (mk_long_app (Const(name2)) ys)
+                 (mk_long_app (Const(name)) ys))
+          in
+          add_axiom (mk_axiom ("$_tydef_" ^ name2) (fix_ax ax));
+          add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name2))))
+        end
       else
-	add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name))))
+        add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name))))
     end
 
 and add_def_eq_axiom (name, value, ty, srt) =
@@ -1194,13 +1194,13 @@ and add_def_eq_axiom (name, value, ty, srt) =
       ()
   | _ ->
       begin
-	match ty with
-	| SortProp ->
-	    add_axiom (mk_axiom axname (mk_equiv (Const(name)) (prop_to_formula [] value)))
-	| SortType | SortSet ->
-	    add_def_eq_type_axiom axname name [] value
-	| _ ->
-	    add_axiom (mk_axiom axname (mk_eq (Const(name)) (convert [] value)))
+        match ty with
+        | SortProp ->
+            add_axiom (mk_axiom axname (mk_equiv (Const(name)) (prop_to_formula [] value)))
+        | SortType | SortSet ->
+            add_def_eq_type_axiom axname name [] value
+        | _ ->
+            add_axiom (mk_axiom axname (mk_eq (Const(name)) (convert [] value)))
       end
 
 and add_injection_axioms constr =
@@ -1217,15 +1217,15 @@ and add_injection_axioms constr =
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
       mk_forall lname1 lty1
-	(mk_forall lname2 lty2
-	   (hlp lvalue1 lvalue2
-	      (Var(lname1) :: args1) (Var(lname2) :: args2)
-	      ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
+        (mk_forall lname2 lty2
+           (hlp lvalue1 lvalue2
+              (Var(lname1) :: args1) (Var(lname2) :: args2)
+              ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
     | _ ->
       mk_impl
-	(mk_eq (mk_long_app (Const(constr)) (List.rev args1))
-	   (mk_long_app (Const(constr)) (List.rev args2)))
-	(join_left mk_and conjs)
+        (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
+           (mk_long_app (Const(constr)) (List.rev args2)))
+        (join_left mk_and conjs)
   in
   let rec hlp2 ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
@@ -1237,24 +1237,24 @@ and add_injection_axioms constr =
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
       mk_forall lname1 type_any
-	(mk_forall lname2 type_any
-	   (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
-	      (Var(lname1) :: args1) (Var(lname2) :: args2)
-	      ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
+        (mk_forall lname2 type_any
+           (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
+              (Var(lname1) :: args1) (Var(lname2) :: args2)
+              ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
     | _ ->
       prop_to_formula ctx
-	(mk_impl
-	   (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
-	      (mk_long_app (Const(constr)) (List.rev args2)))
-	   (join_left mk_and conjs))
+        (mk_impl
+           (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
+              (mk_long_app (Const(constr)) (List.rev args2)))
+           (join_left mk_and conjs))
   in
   match ty with
   | Prod(_) ->
      let ax =
        if !opt_closure_guards || opt_injectivity_guards then
-	 prop_to_formula [] (hlp ty ty [] [] [])
+         prop_to_formula [] (hlp ty ty [] [] [])
        else
-	 hlp2 [] ty ty [] [] []
+         hlp2 [] ty ty [] [] []
      in
      add_axiom (mk_axiom ("$_inj_" ^ constr) ax)
   | _ ->
@@ -1281,9 +1281,9 @@ and add_discrim_axioms constr1 constr2 =
       mk_forall lname2 lty2 (hlp ty1 lvalue2 args1 (Var(lname2) :: args2))
     | _ ->
       mk_not
-	(mk_eq
-	   (mk_long_app (Const(constr1)) (List.rev args1))
-	   (mk_long_app (Const(constr2)) (List.rev args2)))
+        (mk_eq
+           (mk_long_app (Const(constr1)) (List.rev args1))
+           (mk_long_app (Const(constr2)) (List.rev args2)))
   in
   let rec hlp2 ctx ty1 ty2 args1 args2 =
     match ty1, ty2 with
@@ -1293,20 +1293,20 @@ and add_discrim_axioms constr1 constr2 =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       in
       mk_forall lname1 type_any (hlp2 ((lname1, lty1) :: ctx) lvalue1 ty2
-				   (Var(lname1) :: args1) args2)
+                                   (Var(lname1) :: args1) args2)
     | _, Prod(name2, lty2, value2) ->
       let lname2 = refresh_varname name2
       in
       let lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
       mk_forall lname2 type_any (hlp2 ((lname2, lty2) :: ctx) ty1 lvalue2
-				   args1 (Var(lname2) :: args2))
+                                   args1 (Var(lname2) :: args2))
     | _ ->
       prop_to_formula ctx
-	(mk_not
-	   (mk_eq
-	      (mk_long_app (Const(constr1)) (List.rev args1))
-	      (mk_long_app (Const(constr2)) (List.rev args2))))
+        (mk_not
+           (mk_eq
+              (mk_long_app (Const(constr1)) (List.rev args1))
+              (mk_long_app (Const(constr2)) (List.rev args2))))
   in
   let ax =
     if !opt_closure_guards || opt_discrimination_guards then
@@ -1339,10 +1339,10 @@ and add_inversion_axioms is_prop indname constrs =
       indname ("$_inversion_" ^ indname)
       [] lvars constrs (Var(vname))
       begin fun _ targs2 _ eqt ->
-	if opt_precise_inversion then
-	  mk_inversion_conjs params_num args targs2 [eqt]
-	else
-	  eqt
+        if opt_precise_inversion then
+          mk_inversion_conjs params_num args targs2 [eqt]
+        else
+          eqt
       end
 
 and add_def_axioms ((name, value, ty, srt) as def) =
@@ -1353,29 +1353,29 @@ and add_def_axioms ((name, value, ty, srt) as def) =
       add_axiom (mk_axiom name (prop_to_formula [] ty))
     else
       begin
-	if check_type_target_is_prop ty then
-	  begin
-	    if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
-	      add_inversion_axioms true name constrs;
-	    if not opt_omit_toplevel_prop_typing_axioms then
-	      add_typing_axiom name ty
-	  end
-	else
-	  begin
-	    List.iter add_injection_axioms constrs;
-	    iter_pairs add_discrim_axioms constrs;
-	    add_typing_axiom name ty;
-	    if opt_inversion_axioms then
-	      add_inversion_axioms false name constrs
-	  end;
+        if check_type_target_is_prop ty then
+          begin
+            if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
+              add_inversion_axioms true name constrs;
+            if not opt_omit_toplevel_prop_typing_axioms then
+              add_typing_axiom name ty
+          end
+        else
+          begin
+            List.iter add_injection_axioms constrs;
+            iter_pairs add_discrim_axioms constrs;
+            add_typing_axiom name ty;
+            if opt_inversion_axioms then
+              add_inversion_axioms false name constrs
+          end;
       end
   | _ ->
     if srt = SortProp then
       add_axiom (mk_axiom name (prop_to_formula [] ty))
     else
       begin
-	add_typing_axiom name ty;
-	add_def_eq_axiom def
+        add_typing_axiom name ty;
+        add_def_eq_axiom def
       end
 
 (***************************************************************************************)
@@ -1413,7 +1413,7 @@ let retranslate lst =
   List.iter
     begin fun name ->
       if not (axhash_mem name) then
-	axhash_add name (translate name)
+        axhash_add name (translate name)
     end
     lst
 

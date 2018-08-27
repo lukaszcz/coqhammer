@@ -81,7 +81,7 @@ let unique_id =
     begin
       incr id;
       if !id = 0 then
-	failwith "unique_id";
+        failwith "unique_id";
       string_of_int !id
     end
 
@@ -162,13 +162,13 @@ let map_fold_coqterm0 f acc tm =
   let rec do_map_fold n ctx acc tm =
     let map_fold_lst f n ctx lst acc2 =
       List.fold_right
-	begin fun x (lst, acc) ->
-	  let (x2, acc2) = f n ctx acc x
-	  in
-	  (x2 :: lst, acc2)
-	end
-	lst
-	([], acc2)
+        begin fun x (lst, acc) ->
+          let (x2, acc2) = f n ctx acc x
+          in
+          (x2 :: lst, acc2)
+        end
+        lst
+        ([], acc2)
     in
     match tm with
     | Var(_) ->
@@ -197,13 +197,13 @@ let map_fold_coqterm0 f acc tm =
       let (ty2, acc3) = do_map_fold n ctx acc2 ty
       in
       let (lst2, acc4) =
-	map_fold_lst
-	  begin fun n ctx acc (nargs, x) ->
-	    let (x2, acc2) = do_map_fold n ctx acc x
-	    in
-	    ((nargs, x2), acc2)
-	  end
-	  n ctx lst acc3
+        map_fold_lst
+          begin fun n ctx acc (nargs, x) ->
+            let (x2, acc2) = do_map_fold n ctx acc x
+            in
+            ((nargs, x2), acc2)
+          end
+          n ctx lst acc3
       in
       let tm2 = Case(indname, x2, ty2, npar, lst2)
       in
@@ -223,14 +223,14 @@ let map_fold_coqterm0 f acc tm =
       let ctx2 = Hhlib.rev_combine names types2 ctx
       in
       let rec mk_bodies2 bodies acc =
-	match bodies with
-	| b :: b2 ->
-	  let (bb, acc2) = mk_bodies2 b2 acc
-	  in
-	  let (x, acc3) = do_map_fold (n + m) ctx2 acc2 b
-	  in
-	  (x :: bb, acc3)
-	| [] -> ([], acc)
+        match bodies with
+        | b :: b2 ->
+          let (bb, acc2) = mk_bodies2 b2 acc
+          in
+          let (x, acc3) = do_map_fold (n + m) ctx2 acc2 b
+          in
+          (x :: bb, acc3)
+        | [] -> ([], acc)
       in
       let (bodies2, acc3) = mk_bodies2 bodies acc2
       in
@@ -290,18 +290,18 @@ let get_const_names tm =
   let lst =
     fold_coqterm
       begin fun _ acc tm ->
-	match tm with
-	| Const(c) ->
-	  c :: acc
-	| IndType(name, constrs, params_num) ->
-	  let lst = name :: constrs @ acc
-	  in
-	  if opt_induction_principles then
-	    (name ^ "_ind") :: lst
-	  else
-	    lst
-	| _ ->
-	  acc
+        match tm with
+        | Const(c) ->
+          c :: acc
+        | IndType(name, constrs, params_num) ->
+          let lst = name :: constrs @ acc
+          in
+          if opt_induction_principles then
+            (name ^ "_ind") :: lst
+          else
+            lst
+        | _ ->
+          acc
       end
       []
       tm
@@ -312,10 +312,10 @@ let var_occurs vname tm =
   try
     fold_coqterm
       begin fun ctx acc tm ->
-	match tm with
-	| Var(v) when v = vname && not (List.mem_assoc v ctx) ->
-	    raise Exit
-	| _ -> acc
+        match tm with
+        | Var(v) when v = vname && not (List.mem_assoc v ctx) ->
+            raise Exit
+        | _ -> acc
       end
       false
       tm
@@ -326,14 +326,14 @@ let get_fvars ctx tm =
   let rec hlp vars tm acc =
     match vars with
     | ((name, ty) as v) :: t ->
-	let tm2 = Lam(name, ty, tm)
-	in
-	if var_occurs name tm then
-	  hlp t tm2 (v :: acc)
-	else
-	  hlp t tm2 acc
+        let tm2 = Lam(name, ty, tm)
+        in
+        if var_occurs name tm then
+          hlp t tm2 (v :: acc)
+        else
+          hlp t tm2 acc
     | [] ->
-	acc
+        acc
   in
   hlp ctx tm []
 
@@ -361,16 +361,16 @@ let dsubst lst tm =
   let rename_fix_names names n acc =
     let (names2, acc2, _) =
       List.fold_left
-	begin fun (names2, acc, k) name ->
-	  try
-	    let name2 = List.assoc k acc
-	    in
-	    (name2 :: names2, List.remove_assoc k acc, k + 1)
-	  with _ ->
-	    (name :: names2, acc, k + 1)
-	end
-	([], acc, n)
-	names
+        begin fun (names2, acc, k) name ->
+          try
+            let name2 = List.assoc k acc
+            in
+            (name2 :: names2, List.remove_assoc k acc, k + 1)
+          with _ ->
+            (name :: names2, acc, k + 1)
+        end
+        ([], acc, n)
+        names
     in
     (List.rev names2, acc2)
   in
@@ -379,50 +379,50 @@ let dsubst lst tm =
   else
     fst
       (map_fold_coqterm0
-	 begin fun n ctx acc tm ->
-	   match tm with
-	   | Var(x) ->
-	       begin
-		 try
-		   let i = Hhlib.assoc_index x ctx
-		   in
-		   begin
-		     let (name, acc2) = getname x (n - i - 1) acc
-		     in
-		     (Var(name), acc2)
-		   end
-		 with _ ->
-		   begin
-		     match Hhlib.massoc x lst with
-		     | Some v -> (Lazy.force v, acc)
-		     | None -> (tm, acc)
-		   end
-	       end
-	   | Lam abs ->
-	       let (abs2, acc2) = rename_abs n abs acc
-	       in
-	       (Lam abs2, acc2)
-	   | Prod abs ->
-	       let (abs2, acc2) = rename_abs n abs acc
-	       in
-	       (Prod abs2, acc2)
-	   | Quant(op, abs) ->
-	       let (abs2, acc2) = rename_abs n abs acc
-	       in
-	       (Quant(op, abs2), acc2)
-	   | Let(value, abs) ->
-	       let (abs2, acc2) = rename_abs n abs acc
-	       in
-	       (Let(value, abs2), acc2)
-	   | Fix(cft, k, names, types, bodies) ->
-	       let (names2, acc2) = rename_fix_names names n acc
-	       in
-	       (Fix(cft, k, names2, types, bodies), acc2)
-	   | _ ->
-	       (tm, acc)
-	 end
-	 []
-	 tm)
+         begin fun n ctx acc tm ->
+           match tm with
+           | Var(x) ->
+               begin
+                 try
+                   let i = Hhlib.assoc_index x ctx
+                   in
+                   begin
+                     let (name, acc2) = getname x (n - i - 1) acc
+                     in
+                     (Var(name), acc2)
+                   end
+                 with _ ->
+                   begin
+                     match Hhlib.massoc x lst with
+                     | Some v -> (Lazy.force v, acc)
+                     | None -> (tm, acc)
+                   end
+               end
+           | Lam abs ->
+               let (abs2, acc2) = rename_abs n abs acc
+               in
+               (Lam abs2, acc2)
+           | Prod abs ->
+               let (abs2, acc2) = rename_abs n abs acc
+               in
+               (Prod abs2, acc2)
+           | Quant(op, abs) ->
+               let (abs2, acc2) = rename_abs n abs acc
+               in
+               (Quant(op, abs2), acc2)
+           | Let(value, abs) ->
+               let (abs2, acc2) = rename_abs n abs acc
+               in
+               (Let(value, abs2), acc2)
+           | Fix(cft, k, names, types, bodies) ->
+               let (names2, acc2) = rename_fix_names names n acc
+               in
+               (Fix(cft, k, names2, types, bodies), acc2)
+           | _ ->
+               (tm, acc)
+         end
+         []
+         tm)
 
 let substvar vname tm = dsubst [(vname, lazy tm)]
 
@@ -502,10 +502,10 @@ let write_coqterm out tm =
       out (string_of_int res);
       out " ";
       oiter
-	out
-	(fun ((n, ty), tm) -> out "("; out n; out " : "; write ty; out " := "; write tm; out ")")
-	"; "
-	(List.combine (List.combine names types) bodies);
+        out
+        (fun ((n, ty), tm) -> out "("; out n; out " : "; write ty; out " := "; write tm; out ")")
+        "; "
+        (List.combine (List.combine names types) bodies);
       out ")"
     | Let(value, (name, ty, body)) ->
       out "let ";
