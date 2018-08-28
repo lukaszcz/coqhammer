@@ -1,4 +1,4 @@
-CoqHammer (github-master) for Coq 8.8.1
+CoqHammer (github-partac) for Coq 8.8.1
 
 Requirements
 ------------

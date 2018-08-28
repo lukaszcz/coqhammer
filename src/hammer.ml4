@@ -1,6 +1,6 @@
 DECLARE PLUGIN "hammer_plugin"
 
-let hammer_version_string = "CoqHammer (github-master) for Coq 8.8.1"
+let hammer_version_string = "CoqHammer (github-partac) for Coq 8.8.1"
 
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
@@ -17,8 +17,10 @@ open Libnames
 open Globnames
 open Nametab
 open Misctypes
-open Stdarg
+
 open Ltac_plugin
+open Stdarg
+open Tacarg
 
 let (++) f g x = f(g(x))
 
@@ -835,4 +837,27 @@ let hammer_hook_tac prefix name =
 
 TACTIC EXTEND Hammer_hook_tac
 | [ "hammer_hook" string(prefix) string(name) ] -> [ hammer_hook_tac prefix name ]
+END
+
+open Genarg
+
+let pr_taclist _ _ _ lst = Pp.pr_comma () (* TODO: I haven't figured out how to print a tactic *)
+
+ARGUMENT EXTEND taclist TYPED AS tactic_list PRINTED BY pr_taclist
+| [ tactic3(tac) "|" taclist(l) ] -> [ tac :: l ]
+| [ tactic3(tac) ] -> [ [ tac ] ]
+END
+
+let partac_tac lst =
+  let (k, tac) = Partac.partac_tac (List.map (Tacinterp.tactic_of_value (Tacinterp.default_ist ())) lst)
+  in
+  if k >= 0 then
+    Msg.info ("Tactic number " ^ string_of_int k ^ " succeeded.")
+  else
+    Msg.info "All tactics failed";
+  tac
+
+TACTIC EXTEND Hammer_partac_tac
+| [ "partac" "[" taclist(lst) "]" ] ->
+   [ partac_tac lst ]
 END
