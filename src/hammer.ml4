@@ -861,3 +861,11 @@ TACTIC EXTEND Hammer_partac_tac
 | [ "partac" "[" taclist(lst) "]" ] ->
    [ partac_tac lst ]
 END
+
+let ptimeout_tac n tac =
+  Timeout.ptimeout n tac (fun b -> if b then tac else Proofview.tclZERO Proofview.Timeout)
+
+TACTIC EXTEND Hammer_ptimeout_tac
+| [ "ptimeout" integer(n) tactic3(tac) ] ->
+   [ ptimeout_tac n (Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac) ]
+END
