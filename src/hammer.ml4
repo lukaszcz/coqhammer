@@ -785,7 +785,7 @@ let hammer_hook_tac prefix name =
                     with _ ->
                       0
                   in
-                  if tries_num < 3 then
+                  if tries_num < 2 then
                     begin
                       ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
                                               " > \"" ^ tfname ^ "\""));

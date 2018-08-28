@@ -14,7 +14,7 @@ do
     mv o/z3 o/z3-$p
     mv o/cvc4 o/cvc4-$p
     if [ -n "$2" ]; then
-        echo "" | mail -s "$p finished" "$2"
+        echo "" | mail -s "provers $p finished" "$2"
     fi
 done
 if [ -n "$2" ]; then

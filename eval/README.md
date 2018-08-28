@@ -4,14 +4,15 @@ How to evaluate a new Coq library?
 Let `N` be the number of parallel jobs to execute. Unless otherwise
 stated, execute all commands in the `eval/` directory.
 
-Steps 1-5 may be skipped if the library to evaluate is one of the
-libraries already prepared in the `libs/` directory. Then just do:
+If the library to evaluate is one of the libraries already prepared in
+the `libs/` directory, then just do:
 
 ```bash
 ln -s libs/library problems
+./run-eval.sh N [your.mail@mail.com]
 ```
 
-Otherwise follow all steps.
+Otherwise follow all steps below.
 
 1. Place the library sources in the `problems/` directory (possibly
    with subdirectories). The sources should contain the `*.v` files.
@@ -50,10 +51,17 @@ Otherwise follow all steps.
    adding new ATPs also the `hammer_hook` code in
    [`src/hammer.ml4`](../src/hammer.ml4) should be edited.
 
-8. `./run-reconstr.sh N`
+8. `./run-reconstr.sh N [your.mail@mail.com]`
 
 After executing these steps, the reconstruction results are in the
 `out/` directory. The ATP results are in the `atp/o/` directory.
+
+9. `./gen-stats.sh`
+
+   This computes the statistics (including the greedy sequence), using
+   the `stat` program (see below).
+
+Steps 6-9 may be run using the script `./run-eval.sh N [your.mail@mail.com]`.
 
 How to perform evaluation on standard test files?
 -------------------------------------------------
