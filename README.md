@@ -1,9 +1,9 @@
-CoqHammer (github-master) for Coq 8.8.1
+CoqHammer (github-master) for Coq 8.8
 
 Requirements
 ------------
 
-- [Coq 8.8.1](https://coq.inria.fr/download)
+- [Coq 8.8](https://coq.inria.fr/download)
 - automated provers ([Eprover](http://www.eprover.org), [Vampire](https://vprover.github.io/download.html), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
