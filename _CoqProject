@@ -22,6 +22,7 @@ src/features.mli
 src/features.ml
 src/provers.mli
 src/provers.ml
+src/partac.ml
 src/hammer.ml4
 src/hammer_plugin.mllib
 theories/Reconstr.v

@@ -62,3 +62,40 @@ let my_timeout n f x e =
 let tclTIMEOUT n t =
   Control.set_timeout { Control.timeout = my_timeout }; (* comment this line out for Coq 8.8.0 *)
   Proofview.tclTIMEOUT n t
+
+(* ptimeout implements timeout using fork; calls `cont true' if `tac'
+   succeeded, `cont false' otherwise (if `tac' failed or there was a
+   timeout *)
+let ptimeout_cont n tac (cont : bool -> unit Proofview.tactic) =
+  let pid = Unix.fork () in
+  if pid = 0 then
+    begin (* the worker *)
+      Proofview.tclOR
+        (Proofview.tclBIND tac (fun _ -> exit 0))
+        (fun _ -> exit 1)
+    end
+  else
+    begin
+      let pid2 = Unix.fork () in
+      if pid2 = 0 then
+        begin (* the watchdog *)
+          Unix.sleep n;
+          Unix.kill pid Sys.sigterm;
+          exit 0
+        end;
+      let cont b =
+        ignore (try Unix.kill pid2 Sys.sigterm with _ -> ());
+        cont b
+      in
+      try
+        let (_, status) = Unix.waitpid [] pid
+        in
+        match status with
+        | Unix.WEXITED 0 -> cont true
+        | _ -> cont false
+      with
+      | _ -> cont false
+    end
+
+let ptimeout n tac =
+  ptimeout_cont n tac (fun b -> if b then tac else Proofview.tclZERO Proofview.Timeout)
