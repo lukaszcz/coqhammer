@@ -30,6 +30,7 @@ let run_parallel (progress_fn : 'a -> unit) (sec_fn : unit -> unit)
     List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) !subprocesses;
     Unix.close piper;
     List.iter (fun i -> try ignore (Unix.waitpid [] i) with _ -> ()) !subprocesses;
+    List.iter (fun i -> try Unix.kill i Sys.sigkill with _ -> ()) !subprocesses;
   in
   try
     Unix.close pipew;

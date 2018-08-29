@@ -157,8 +157,7 @@ Set/Unset Hammer Parallel.
 Set Hammer ATPLimit n.
 (* ATP time limit in seconds, default: 15s *)
 Set Hammer ReconstrLimit n.
-(* base time limit for proof reconstruction (time limit for each
-   tactic depends on it), default: 5s *)
+(* time limit for proof reconstruction, default: 10s *)
 Set Hammer CrushLimit n.
 (* before invoking external ATPs the hammer first tries to solve the
    goal using a crush-like tactic with a time limit of n seconds; default: 1s *)

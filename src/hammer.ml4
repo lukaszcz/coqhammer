@@ -53,6 +53,7 @@ let mk_comb (x, y) = mk_app x y
 
 let tuple (l : Hh_term.hhterm list) =
   match l with
+  | [] -> failwith "tuple: empty list"
   | [h] -> h
   | h :: t ->
     List.fold_left mk_app h t
@@ -292,11 +293,7 @@ let get_tacexpr tac args =
 let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
   Tacinterp.eval_tactic (get_tacexpr tac args)
 
-let ltac_lcall tac args =
-  Tacexpr.TacArg(None,
-                 Tacexpr.TacCall(None, (ArgVar CAst.(make @@ Id.of_string tac),args)))
-
-let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
+let ltac_eval tac (args: Tacinterp.Value.t list) =
   let fold arg (i, vars, lfun) =
     let id = Id.of_string ("x" ^ string_of_int i) in
     let x = Tacexpr.Reference (ArgVar CAst.(make @@ id)) in
@@ -304,7 +301,10 @@ let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
   in
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
   let ist = { (Tacinterp.default_ist ()) with Tacinterp.lfun = lfun; } in
-  Timeout.tclTIMEOUT tm (Tacinterp.eval_tactic_ist ist (get_tacexpr tac args))
+  Tacinterp.eval_tactic_ist ist (get_tacexpr tac args)
+
+let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
+  Timeout.ptimeout tm (ltac_eval tac args)
 
 let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
 
@@ -371,41 +371,38 @@ let check_goal_prop gl =
 
 (***************************************************************************************)
 
-let run_tactics deps defs args msg_invoke msg_success msg_fail msg_total_fail =
-  let tactics =
-    [("Reconstr.reasy", "Reconstr.reasy", 3 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.rsimple", "Reconstr.rsimple", 3 * !Opt.reconstr_timelimit / 5);
-     ("Reconstr.rcrush", "Reconstr.rcrush", !Opt.reconstr_timelimit);
-     ("Reconstr.rblast", "Reconstr.rblast", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.rscrush", "Reconstr.rscrush", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.ryelles4", "Reconstr.ryelles4", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.rexhaustive1", "Reconstr.rexhaustive1", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.rreconstr4", "Reconstr.rreconstr4", 3 * !Opt.reconstr_timelimit / 2);
-     ("Reconstr.rrauto4", "Reconstr.rrauto4", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.ryreconstr", "Reconstr.ryreconstr", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.ryelles6", "Reconstr.ryelles6", 2 * !Opt.reconstr_timelimit);
-     ("Reconstr.rreconstr6", "Reconstr.rreconstr6", 2 * !Opt.reconstr_timelimit)] in
-  let rec reconstr lst =
-    match lst with
-    | [] ->
-       begin
-         msg_total_fail ();
-         ltac_apply "idtac" []
-       end
-    | (tac, cmd, timeout) :: t ->
-       begin
-         msg_invoke tac deps defs;
-         Proofview.tclOR
-           (Proofview.tclBIND
-              (ltac_timeout timeout cmd args)
-              (fun _ -> msg_success tac deps defs; ltac_apply "idtac" []))
-           begin fun _ ->
-             msg_fail tac timeout;
-             reconstr t
-           end
-       end
+let run_tactics deps defs args msg_success msg_fail =
+  let tactics1 =
+    [ "Reconstr.reasy"; "Reconstr.rsimple"; "Reconstr.rcrush" ]
+  and tactics2 =
+    ["Reconstr.ryelles4"; "Reconstr.rblast"; "Reconstr.ryreconstr"; "Reconstr.rreconstr4";
+     "Reconstr.ryelles6"; "Reconstr.rexhaustive1"; "Reconstr.rscrush"]
   in
-  reconstr tactics
+  let tacs1 = List.map (fun tac -> ltac_eval tac args) tactics1
+  and tacs2 = List.map (fun tac -> ltac_eval tac args) tactics2
+  in
+  Partac.partac (3 * !Opt.reconstr_timelimit / 10) tacs1
+    begin fun k tac ->
+      if k >= 0 then
+        begin
+          msg_success (List.nth tactics1 k) deps defs;
+          tac
+        end
+      else
+        Partac.partac !Opt.reconstr_timelimit tacs2
+          begin fun k tac ->
+            if k >= 0 then
+              begin
+                msg_success (List.nth tactics2 k) deps defs;
+                tac
+              end
+            else
+              begin
+                msg_fail ();
+                ltac_apply "idtac" []
+              end
+          end
+    end
 
 let do_predict hyps defs goal =
   if !Opt.gs_mode > 0 then
@@ -533,22 +530,15 @@ let hammer_tac () =
                 Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
               let (deps, defs) = do_predict hyps defs goal in
               let (deps, defs, args) = get_tac_args deps defs in
+              Msg.info ("Reconstructing the proof...");
               run_tactics deps defs args
-                begin fun tac _ _ ->
-                  Msg.info ("Trying tactic " ^ tac ^ "...")
-                end
                 begin fun tac deps defs ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
                                tac ^ " " ^ mk_lst_str deps ^ " " ^ mk_lst_str defs ^ ".")
                 end
-                begin fun tac timeout ->
-                  if !Opt.debug_mode then
-                    Msg.info ("Tactic " ^ tac ^ " failed to solve the goal in " ^
-                                 string_of_int timeout ^ "s.")
-                end
                 begin fun () ->
-                  Msg.error ("Hammer failed to solve the goal.")
+                  Msg.error ("Reconstruction failed. Hammer failed to solve the goal.")
                 end
             end
           end
@@ -794,13 +784,11 @@ let hammer_hook_tac prefix name =
                       let (deps, defs) = extract fname in
                       let (deps, defs, args) = get_tac_args deps defs in
                       run_tactics deps defs args
-                        (fun _ _ _ -> ())
                         begin fun tac deps defs ->
                           let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                           ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                           Msg.info msg
                         end
-                        (fun _ _ -> ())
                         begin fun () ->
                           let msg = "Failure " ^ name ^ " " ^ str in
                           ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
@@ -868,10 +856,7 @@ TACTIC EXTEND Hammer_partac1_tac
    [ partac_tac n lst ]
 END
 
-let ptimeout_tac n tac =
-  Timeout.ptimeout n tac (fun b -> if b then tac else Proofview.tclZERO Proofview.Timeout)
-
 TACTIC EXTEND Hammer_ptimeout_tac
 | [ "ptimeout" integer(n) tactic3(tac) ] ->
-   [ ptimeout_tac n (Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac) ]
+   [ Timeout.ptimeout n (Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac) ]
 END

@@ -66,7 +66,7 @@ let tclTIMEOUT n t =
 (* ptimeout implements timeout using fork; calls `cont true' if `tac'
    succeeded, `cont false' otherwise (if `tac' failed or there was a
    timeout *)
-let ptimeout n tac (cont : bool -> unit Proofview.tactic) =
+let ptimeout_cont n tac (cont : bool -> unit Proofview.tactic) =
   let pid = Unix.fork () in
   if pid = 0 then
     begin (* the worker *)
@@ -96,3 +96,6 @@ let ptimeout n tac (cont : bool -> unit Proofview.tactic) =
       with
       | _ -> cont false
     end
+
+let ptimeout n tac =
+  ptimeout_cont n tac (fun b -> if b then tac else Proofview.tclZERO Proofview.Timeout)
