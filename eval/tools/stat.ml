@@ -1,7 +1,7 @@
 open Utils;;
 let reconstr_mode = ref false
 let comma_rxp = Str.regexp ",";;
-let pom l s nos fg g2 = (Str.split comma_rxp l, Str.split comma_rxp s, List.sort compare (List.map int_of_string (Str.split comma_rxp nos)), Str.split comma_rxp fg,  bool_of_string g2) in
+let pom l s nos fg g2 = (Str.split comma_rxp l, Str.split comma_rxp s, List.sort compare (List.map int_of_string (Str.split comma_rxp nos)), Str.split comma_rxp fg,  bool_of_string g2);;
 let (collabels, sortmode, merge_nos, fixgreed, greed2) = match Array.to_list Sys.argv with
   |  [_; "-r"; l; s; nos; fg; g2] -> reconstr_mode := true; pom l s nos fg g2
   |  [_; l; s; nos; fg; g2] -> pom l s nos fg g2
