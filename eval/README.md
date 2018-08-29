@@ -78,16 +78,18 @@ directory. Then do the steps 7 and 8 from above.
 Tools
 -----
 
-* `stat`: compute ATP statistics. Run in the `eval/` or `eval/atp/` directory. Reads the
-  `out/*/*.out` or `o/*/*.p` files.
+* `stat`: compute ATP statistics. Run in the `atp/` directory (or
+    `eval/` with the `-r` option). Reads the `o/*/*.p` files
+    (`out/*/*.out` with the `-r` option).
 
   Example: `tools/stat , y,p , , false`
 
-`stat` takes 5 space-separated arguments: 4 lists (comma-separated
-values; empty list is represented by a single comma) and a boolean
+`stat` takes 5 (optionally 6) space-separated arguments: the `-r`
+option (optional), 4 lists (comma-separated values; empty list is
+represented by a single comma) and a boolean
 
 ```
-stat [labels] [sorting specification] [which fields to merge]
+stat -r [labels] [sorting specification] [which fields to merge]
      [greedy sequence fixed start]
      (should different versions of the greedy sequence be computed?)
 ```

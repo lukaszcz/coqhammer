@@ -1,10 +1,11 @@
 open Utils;;
+let reconstr_mode = ref false
 let comma_rxp = Str.regexp ",";;
+let pom l s nos fg g2 = (Str.split comma_rxp l, Str.split comma_rxp s, List.sort compare (List.map int_of_string (Str.split comma_rxp nos)), Str.split comma_rxp fg,  bool_of_string g2) in
 let (collabels, sortmode, merge_nos, fixgreed, greed2) = match Array.to_list Sys.argv with
-  [_; l; s; nos; fg; g2] -> (Str.split comma_rxp l, Str.split comma_rxp s, List.sort compare (List.map int_of_string (Str.split comma_rxp nos)), Str.split comma_rxp fg,  bool_of_string g2)
-| _ -> failwith "Usage: stath (labels) (sorting) (merging) (fixgreed) greed2\nwhere [sorting] can be none, sort, greed and [megring] are nos to merge from back";;
-(* let merge_nos = [];; *)
-(* let fixgreed = Str.split comma_rxp "comb-min_2k_20_20-a13-s0-0128-epar3,lsi-3200ti_8_80-a13-s0-0128-vam30,comb-qua_2k_k200_33_33-a13-s0e-0512-epar3,knn-is_40-a13-s0e-0096-z3_40,nb-idf010-a13-s0e-0128-epar3,knn-is_80-m13-sde-1024-vam30,geo-r_99-a13-s0e-0064-vam30,comb-geo_2k_50_50-a13-s0-0064-epar3,comb-geo_2k_60_20-a13-s0-1024-vam30,comb-har_2k_k200_33_33-a13-s0e-0256-epar3,geo-r_90-a13-s0e-0256-vam30,lsi-3200ti_8_80-a13-s0-0128-epar3,knn-is_200-a13-sde-1024-vam30";;*)
+  |  [_; "-r"; l; s; nos; fg; g2] -> reconstr_mode := true; pom l s nos fg g2
+  |  [_; l; s; nos; fg; g2] -> pom l s nos fg g2
+  | _ -> failwith "Usage: stath (labels) (sorting) (merging) (fixgreed) greed2\nwhere [sorting] can be none, sort, greed and [megring] are nos to merge from back";;
 
 let proto_rxp = Str.regexp "protokoll";;
 let dirents d =
@@ -16,11 +17,6 @@ let dirents d =
   let ret = fs [] in
   Unix.closedir dirh; ret
 ;;
-
-(*let dirents2 d0 =
-  List.concat (List.map (fun d -> List.map (fun x -> d ^ "/" ^ x) (dirents (d0 ^ "/" ^ d))) (dirents d0));;*)
-
-let reconstr_mode = ref false
 
 let rec rdirents prefix acc d =
   try
@@ -35,15 +31,12 @@ let rec rdirents prefix acc d =
 ;;
 
 let rdirents () =
-  try
+  if !reconstr_mode then
+    let l = rdirents "" [] "atp/i/f" in
+    List.map (fun s -> String.sub s 8 (String.length s - 8)) l
+  else
     let l = rdirents "" [] "i/f" in
     List.map (fun s -> String.sub s 4 (String.length s - 4)) l
-  with _ ->
-    begin
-      reconstr_mode := true;
-      let l = rdirents "" [] "atp/i/f" in
-      List.map (fun s -> String.sub s 8 (String.length s - 8)) l
-    end
 ;;
 
 
@@ -332,11 +325,6 @@ let print_table oc l =
 ;;
 
 print_table oc [
-(*  ("Str", ("", name_comp 5), "any");
-  ("Args", ("", name_comp 4), "");
-  ("Deps", ("", name_comp 3), "");
-  ("Syms", ("", name_comp 2), "");
-  ("Prems", ("", name_comp 1), "");*)
   ("Str", ("", name_comp 2), "any");
   ("Predict", ("", name_comp 1), "any");
   ("PrArg", ("", name_comp 0), "");
@@ -414,7 +402,6 @@ try for i = 0 to Array.length greedy - 1 do
   let g3 = if i < Array.length greedym1p2 && greedym1p2.(i) >= 0 then string_of_int greedym1p2.(i) else "" in
   let gm = if i < Array.length greedy2m && greedy2m.(i) >= 0 then string_of_int greedy2m.(i) else "" in
   Printf.fprintf oc "<tr><td>%s</td><td class='yes'>%s</td><td>%i</td><td>%s</td><td>%s</td><td>%s</td><td>%s</td><td style='font-size: 50%%'>%s</td></tr>\n" atps.(a) (proc m fsno) m g2 g2a g3 gm alts;
-(*  Printf.fprintf ocv "%s & %s & %i \\\\\\hline\n" ((atps.(a))) (proc m fsno) m;*)
   if m = !anyyes then raise Exit else ()
 done with Exit -> ();;
 os oc "</table>\n";;
