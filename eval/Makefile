@@ -23,7 +23,7 @@ logs/atp/%.log: problems/%.v
 reconstr: $(patsubst problems/%.v,logs/reconstr/%.log,$(FFILES))
 logs/reconstr/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	./coqc.sh "$<" "$@"
+	coqc -Q tests "" "$<" > "$@" 2>&1
 
 tests:
 	cd tests && $(MAKE)

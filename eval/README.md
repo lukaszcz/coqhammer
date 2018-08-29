@@ -78,8 +78,8 @@ directory. Then do the steps 7 and 8 from above.
 Tools
 -----
 
-* `stat`: compute ATP statistics. Run in the atp/ directory. Reads the
-  `o/*/*.p` files.
+* `stat`: compute ATP statistics. Run in the `eval/` or `eval/atp/` directory. Reads the
+  `out/*/*.out` or `o/*/*.p` files.
 
   Example: `tools/stat , y,p , , false`
 

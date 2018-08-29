@@ -20,6 +20,8 @@ let dirents d =
 (*let dirents2 d0 =
   List.concat (List.map (fun d -> List.map (fun x -> d ^ "/" ^ x) (dirents (d0 ^ "/" ^ d))) (dirents d0));;*)
 
+let reconstr_mode = ref false
+
 let rec rdirents prefix acc d =
   try
     let dirh = Unix.opendir (prefix ^ d) in
@@ -33,13 +35,20 @@ let rec rdirents prefix acc d =
 ;;
 
 let rdirents () =
-  let l = rdirents "" [] "i/f" in
-  List.map (fun s -> String.sub s 4 (String.length s - 4)) l
+  try
+    let l = rdirents "" [] "i/f" in
+    List.map (fun s -> String.sub s 4 (String.length s - 4)) l
+  with _ ->
+    begin
+      reconstr_mode := true;
+      let l = rdirents "" [] "atp/i/f" in
+      List.map (fun s -> String.sub s 8 (String.length s - 8)) l
+    end
 ;;
 
 
 let dash_rxp = Str.regexp "-";;
-let unmerged_atps = Array.of_list (dirents "o");;
+let unmerged_atps = Array.of_list (dirents (if !reconstr_mode then "out" else "o"));;
 let rec replace_nos str_lst = function
     [] -> str_lst
   | no :: nos ->
@@ -76,9 +85,9 @@ let fsno = Array.length fs;;
 
 Printf.eprintf "e%!";;
 
-let reg1 = Str.regexp ".*\\(SZS status Theorem\\|SZS status Unsatisfiable\\| : Valid (\\|SPASS beiseite: Proof found.\\|^THEOREM PROVED$\\)";;
+let reg1 = Str.regexp ".*\\(SZS status Theorem\\|SZS status Unsatisfiable\\| : Valid (\\|SPASS beiseite: Proof found.\\|^Success \\|^THEOREM PROVED$\\)";;
 let reg2 = Str.regexp ".*\\(SZS status CounterSatisfiable\\|Non-Theorem\\)";;
-let reg3 = Str.regexp ".*\\(SZS status Timeout\\|SZS status Unknown\\| : Unknown (\\|SZS status ResourceOut\\|^SPASS beiseite: Ran out of time. SPASS was killed.$\\)";;
+let reg3 = Str.regexp ".*\\(SZS status Timeout\\|SZS status Unknown\\| : Unknown (\\|SZS status ResourceOut\\|^Failure \\|^SPASS beiseite: Ran out of time. SPASS was killed.$\\)";;
 let reg4 = Str.regexp ".*\\( [eE]rror\\| HighFailure\\|ExitFailure\\|PARSE ERROR\\)";;
 let evalf fname =
   try let inc = open_in fname in
@@ -103,8 +112,16 @@ for uatpno = 0 to Array.length unmerged_atps - 1 do
   for f = 0 to fsno - 1 do
     let oret = fv.(f) in
     if oret = 5 then () else
-    let nret = evalf ("o/" ^ uatpn ^ "/" ^ fs.(f)) in
-    if nret > oret then fv.(f) <- nret
+      begin
+        let name = (if !reconstr_mode then "out/" else "o/") ^ uatpn ^ "/" ^ fs.(f) in
+        let name =
+          if !reconstr_mode then
+            Filename.chop_extension name ^ ".out"
+          else name
+        in
+        let nret = evalf name in
+        if nret > oret then fv.(f) <- nret
+      end
   done
 done;;
 
@@ -386,7 +403,7 @@ end
 let greedy2m = Array.of_list (List.rev !greed);;
 
 Printf.fprintf oc "<h3>Greedy sequence</h3><table><tr><td>Prover</td><td>Sum%%</td><td>Sum</td><td>G+2</td><td>G1+2</td><td>G-1+2</td><td>G+2M</td><td>Alt</td></tr>\n";;
-try for i = 0 to atpno - 1 do
+try for i = 0 to Array.length greedy - 1 do
   let ((a, alt), m) = greedy.(i) in
   let alt5s = String.concat " = " (List.map (Array.get atps) (cut_list [] 3 alt)) in
   let alts =
