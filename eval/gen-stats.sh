@@ -6,7 +6,7 @@ cd ..
 cd atp
 ../tools/stat , y,p , , false
 cd ..
-tools/stat , y,p , , false
+tools/stat -r , y,p , , false
 
 echo "<table>" >> statistics.html
 echo "<tr><th>reasy</th><th>rsimple</th><th>rcrush</th></tr>" >> statistics.html
