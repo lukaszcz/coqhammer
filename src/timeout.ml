@@ -84,7 +84,7 @@ let ptimeout n tac (cont : bool -> unit Proofview.tactic) =
           exit 0
         end;
       let cont b =
-        Unix.kill pid2 Sys.sigterm;
+        ignore (try Unix.kill pid2 Sys.sigterm with _ -> ());
         cont b
       in
       try

@@ -848,18 +848,24 @@ ARGUMENT EXTEND taclist TYPED AS tactic_list PRINTED BY pr_taclist
 | [ tactic3(tac) ] -> [ [ tac ] ]
 END
 
-let partac_tac lst =
-  let (k, tac) = Partac.partac_tac (List.map (Tacinterp.tactic_of_value (Tacinterp.default_ist ())) lst)
-  in
-  if k >= 0 then
-    Msg.info ("Tactic number " ^ string_of_int k ^ " succeeded.")
-  else
-    Msg.info "All tactics failed";
-  tac
+let partac_tac n lst =
+  Partac.partac n (List.map (Tacinterp.tactic_of_value (Tacinterp.default_ist ())) lst)
+    begin fun k tac ->
+      if k >= 0 then
+        Msg.info ("Tactic number " ^ string_of_int (k+1) ^ " succeeded (counting from 1).")
+      else
+        Msg.info "All tactics failed";
+      tac
+    end
 
 TACTIC EXTEND Hammer_partac_tac
 | [ "partac" "[" taclist(lst) "]" ] ->
-   [ partac_tac lst ]
+   [ partac_tac max_int lst ]
+END
+
+TACTIC EXTEND Hammer_partac1_tac
+| [ "partac" integer(n) "[" taclist(lst) "]" ] ->
+   [ partac_tac n lst ]
 END
 
 let ptimeout_tac n tac =
