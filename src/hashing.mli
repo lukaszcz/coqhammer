@@ -5,8 +5,6 @@ type namesubst = (string (* new name *) * string (* old name *)) list
 (* takes a context and term and returns them in canonical form, along
    with a list of free variable substitutions made. *)
 val canonical : coqcontext -> coqterm -> coqcontext * coqterm * namesubst
-(* hashing function for term in context which respects alpha-equivalence *)
-val alphahash : coqcontext -> coqterm -> int
 
 (* a hash table for coqterms which hashes up to alpha-equivalence *)
 type coqterms_hash = (coqcontext * coqterm, coqterm) Hashtbl.t

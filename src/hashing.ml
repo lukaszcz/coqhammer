@@ -52,11 +52,6 @@ let canonical ctx tm =
          (List.map (fun (y, t1) -> (y, sub (var n) x t1)) rest) (sub (var n) x tm)
   in can_ctx_aux [] [] 0 (List.rev ctx) tm
 
-let alphahash ctx t =
-  let (ctx', t', _) = canonical (get_fvars ctx t) t
-  in
-  Hashtbl.hash (ctx', t')
-
 type coqterms_hash = (coqcontext * coqterm , coqterm) Hashtbl.t
 
 let create () = Hashtbl.create 128

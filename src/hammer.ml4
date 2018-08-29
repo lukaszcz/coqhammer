@@ -704,6 +704,11 @@ VERNAC COMMAND EXTEND Hammer_plugin_version CLASSIFIED AS QUERY
 END
 
 let hammer_hook_tac prefix name =
+  let premises = [("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
+                  ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
+  and provers = [("vampire", Provers.extract_vampire_data); ("eprover", Provers.extract_eprover_data);
+                 ("z3", Provers.extract_z3_data); ("cvc4", Provers.extract_cvc4_data)]
+  in
   try_goal_tactic begin fun gl ->
     Msg.info ("Processing theorem " ^ name ^ "...");
     try
@@ -734,84 +739,56 @@ let hammer_hook_tac prefix name =
                   let defs1 = Features.predict hyps defs goal in
                   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
                 end
-                [("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
-                 ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)];
+                premises;
               Msg.info ("Done processing " ^ name ^ ".\n");
               ltac_apply "idtac" []
             end
-          else
+          else if str = "reconstr" then
             begin
-              let idx = String.index str '-' in
-              let prover = String.sub str 0 idx in
-              let extract =
-                if prover = "eprover" then
-                  Provers.extract_eprover_data
-                else if prover = "vampire" then
-                  Provers.extract_vampire_data
-                else if prover = "z3" then
-                  Provers.extract_z3_data
-                else if prover = "cvc4" then
-                  Provers.extract_cvc4_data
-                else
-                  failwith "unknown prover"
-              in
-              let dir = "atp/o/" ^ str
-              and odir = "out/" ^ str
-              in
-              let fname = dir ^ "/" ^ name ^ ".p"
-              and ofname =  odir ^ "/" ^ name ^ ".out"
-              and tfname =  odir ^ "/" ^ name ^ ".try"
-              in
-              ignore (Sys.command ("mkdir -p " ^ odir));
-              if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
-                not (Sys.file_exists ofname)
-              then
-                try
-                  Msg.info ("Reconstructing theorem " ^ name ^ "...");
-                  let tries_num =
-                    try
-                      let tfile = open_in tfname in
-                      let r = int_of_string (input_line tfile) in
-                      close_in tfile;
-                      r
-                    with _ ->
-                      0
-                  in
-                  if tries_num < 2 then
-                    begin
-                      ignore (Sys.command ("echo " ^ string_of_int (tries_num + 1) ^
-                                              " > \"" ^ tfname ^ "\""));
-                      let (deps, defs) = extract fname in
-                      let (deps, defs, args) = get_tac_args deps defs in
-                      run_tactics deps defs args
-                        begin fun tac deps defs ->
-                          let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
-                          ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                          Msg.info msg
-                        end
-                        begin fun () ->
-                          let msg = "Failure " ^ name ^ " " ^ str in
-                          ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                          Msg.info msg
-                        end
-                    end
-                  else
-                    begin
-                      let msg = "Failure (due to Coq timeout bug) " ^ name ^ " " ^ str ^ ": gave up after " ^
-                        string_of_int tries_num ^ " tries"
+              List.iter
+                begin fun (prover, extract) ->
+                  List.iter
+                    begin fun (prem_sel, prem_num) ->
+                      let str = prover ^ "-" ^ prem_sel  ^ "-" ^ string_of_int prem_num
                       in
-                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                      Msg.info msg;
-                      ltac_apply "idtac" []
+                      let dir = "atp/o/" ^ str
+                      and odir = "out/" ^ str
+                      in
+                      let fname = dir ^ "/" ^ name ^ ".p"
+                      and ofname =  odir ^ "/" ^ name ^ ".out"
+                      in
+                      ignore (Sys.command ("mkdir -p " ^ odir));
+                      if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
+                        not (Sys.file_exists ofname)
+                      then
+                        try
+                          Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
+                          let (deps, defs) = extract fname in
+                          let (deps, defs, args) = get_tac_args deps defs in
+                          ignore begin
+                            run_tactics deps defs args
+                              begin fun tac deps defs ->
+                                let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
+                                ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                                Msg.info msg
+                              end
+                              begin fun () ->
+                                let msg = "Failure " ^ name ^ " " ^ str in
+                                ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                                Msg.info msg
+                              end;
+                            ()
+                          end
+                        with (HammerError s) ->
+                          Msg.info s
                     end
-                with (HammerError s) ->
-                  Msg.info s;
-                  ltac_apply "idtac" []
-              else
-                begin
-                  ltac_apply "idtac" []
+                    premises
                 end
+                provers;
+              ltac_apply "idtac" []
             end
+          else
+            failwith ("Unknown option in coqhammer.opt: " ^ str)
         end
       else
         begin
@@ -829,7 +806,7 @@ END
 
 open Genarg
 
-let pr_taclist _ _ _ lst = Pp.pr_comma () (* TODO: I haven't figured out how to print a tactic *)
+let pr_taclist _ _ _ lst = Pp.pr_comma () (* TODO: LC: I haven't figured out how to print a tactic *)
 
 ARGUMENT EXTEND taclist TYPED AS tactic_list PRINTED BY pr_taclist
 | [ tactic3(tac) "|" taclist(l) ] -> [ tac :: l ]
