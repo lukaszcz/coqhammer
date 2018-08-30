@@ -41,19 +41,19 @@ Notation Zpos_min := Pos2Z.inj_min (compat "8.3").
 
 Lemma Zmin_spec x y :
 x <= y /\ Z.min x y = x  \/  x > y /\ Z.min x y = y.
-Proof. try hammer_hook "Zmin" "Zmin.Zmin_spec". Undo.  
+Proof. hammer_hook "Zmin" "Zmin.Zmin_spec".  
 Z.swap_greater. rewrite Z.min_comm. destruct (Z.min_spec y x); auto.
 Qed.
 
 Lemma Zmin_irreducible n m : Z.min n m = n \/ Z.min n m = m.
-Proof. try hammer_hook "Zmin" "Zmin.Zmin_irreducible". Undo.   destruct (Z.min_dec n m); auto. Qed.
+Proof. hammer_hook "Zmin" "Zmin.Zmin_irreducible".   destruct (Z.min_dec n m); auto. Qed.
 
 Notation Zmin_or := Zmin_irreducible (compat "8.3").
 
 Lemma Zmin_le_prime_inf n m p : Z.min n m <= p -> {n <= p} + {m <= p}.
-Proof. try hammer_hook "Zmin" "Zmin.Zmin_le_prime_inf". Undo.   apply Z.min_case; auto. Qed.
+Proof. hammer_hook "Zmin" "Zmin.Zmin_le_prime_inf".   apply Z.min_case; auto. Qed.
 
 Lemma Zpos_min_1 p : Z.min 1 (Zpos p) = 1.
-Proof. try hammer_hook "Zmin" "Zmin.Zpos_min_1". Undo.  
+Proof. hammer_hook "Zmin" "Zmin.Zpos_min_1".  
 now destruct p.
 Qed.

@@ -33,7 +33,7 @@ match a with
 end.
 
 Lemma Nplength_infty : forall a:N, Nplength a = infty -> a = N0.
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_infty". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_infty".  
 simple induction a; trivial.
 unfold Nplength; intros; discriminate H.
 Qed.
@@ -41,7 +41,7 @@ Qed.
 Lemma Nplength_zeros :
 forall (a:N) (n:nat),
 Nplength a = ni n -> forall k:nat, k < n -> N.testbit_nat a k = false.
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_zeros". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_zeros".  
 simple induction a; trivial.
 simple induction p. simple induction n. intros. inversion H1.
 simple induction k. simpl in H1. discriminate H1.
@@ -55,7 +55,7 @@ Qed.
 
 Lemma Nplength_one :
 forall (a:N) (n:nat), Nplength a = ni n -> N.testbit_nat a n = true.
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_one". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_one".  
 simple induction a. intros. inversion H.
 simple induction p. intros. simpl in H0. inversion H0. reflexivity.
 intros. simpl in H0. inversion H0. simpl. unfold N.testbit_nat in H. apply H. reflexivity.
@@ -66,7 +66,7 @@ Lemma Nplength_first_one :
 forall (a:N) (n:nat),
 (forall k:nat, k < n -> N.testbit_nat a k = false) ->
 N.testbit_nat a n = true -> Nplength a = ni n.
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_first_one". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_first_one".  
 simple induction a. intros. simpl in H0. discriminate H0.
 simple induction p. intros. generalize H0. case n. intros. reflexivity.
 intros. absurd (N.testbit_nat (Npos (xI p0)) 0 = false). trivial with bool.
@@ -90,7 +90,7 @@ end
 end.
 
 Lemma ni_min_idemp : forall d:natinf, ni_min d d = d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_idemp". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_idemp".  
 simple induction d; trivial.
 unfold ni_min.
 simple induction n; trivial.
@@ -103,7 +103,7 @@ reflexivity.
 Qed.
 
 Lemma ni_min_comm : forall d d':natinf, ni_min d d' = ni_min d' d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_comm". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_comm".  
 simple induction d. simple induction d'; trivial.
 simple induction d'; trivial. elim n. simple induction n0; trivial.
 intros. elim n1; trivial. intros. unfold ni_min in H.
@@ -114,7 +114,7 @@ Qed.
 
 Lemma ni_min_assoc :
 forall d d' d'':natinf, ni_min (ni_min d d') d'' = ni_min d (ni_min d' d'').
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_assoc". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_assoc".  
 simple induction d; trivial. simple induction d'; trivial.
 simple induction d''; trivial.
 unfold ni_min. intro.
@@ -125,56 +125,56 @@ intros. simpl. auto.
 Qed.
 
 Lemma ni_min_O_l : forall d:natinf, ni_min (ni 0) d = ni 0.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_O_l". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_O_l".  
 simple induction d; trivial.
 Qed.
 
 Lemma ni_min_O_r : forall d:natinf, ni_min d (ni 0) = ni 0.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_O_r". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_O_r".  
 intros. rewrite ni_min_comm. apply ni_min_O_l.
 Qed.
 
 Lemma ni_min_inf_l : forall d:natinf, ni_min infty d = d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_inf_l". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_inf_l".  
 trivial.
 Qed.
 
 Lemma ni_min_inf_r : forall d:natinf, ni_min d infty = d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_inf_r". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_inf_r".  
 simple induction d; trivial.
 Qed.
 
 Definition ni_le (d d':natinf) := ni_min d d' = d.
 
 Lemma ni_le_refl : forall d:natinf, ni_le d d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_refl". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_refl".  
 exact ni_min_idemp.
 Qed.
 
 Lemma ni_le_antisym : forall d d':natinf, ni_le d d' -> ni_le d' d -> d = d'.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_antisym". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_antisym".  
 unfold ni_le. intros d d'. rewrite ni_min_comm. intro H. rewrite H. trivial.
 Qed.
 
 Lemma ni_le_trans :
 forall d d' d'':natinf, ni_le d d' -> ni_le d' d'' -> ni_le d d''.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_trans". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_trans".  
 unfold ni_le. intros. rewrite <- H. rewrite ni_min_assoc. rewrite H0. reflexivity.
 Qed.
 
 Lemma ni_le_min_1 : forall d d':natinf, ni_le (ni_min d d') d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_min_1". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_min_1".  
 unfold ni_le. intros. rewrite (ni_min_comm d d'). rewrite ni_min_assoc.
 rewrite ni_min_idemp. reflexivity.
 Qed.
 
 Lemma ni_le_min_2 : forall d d':natinf, ni_le (ni_min d d') d'.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_min_2". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_min_2".  
 unfold ni_le. intros. rewrite ni_min_assoc. rewrite ni_min_idemp. reflexivity.
 Qed.
 
 Lemma ni_min_case : forall d d':natinf, ni_min d d' = d \/ ni_min d d' = d'.
-Proof. try hammer_hook "Ndist" "Ndist.ni_min_case". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_min_case".  
 destruct d. right. exact (ni_min_inf_l d').
 destruct d'. left. exact (ni_min_inf_r (ni n)).
 unfold ni_min.
@@ -185,7 +185,7 @@ destruct (Nat.min_dec n n0); [left|right]; assumption.
 Qed.
 
 Lemma ni_le_total : forall d d':natinf, ni_le d d' \/ ni_le d' d.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_total". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_total".  
 unfold ni_le. intros. rewrite (ni_min_comm d' d). apply ni_min_case.
 Qed.
 
@@ -195,7 +195,7 @@ ni_le dm d ->
 ni_le dm d' ->
 (forall d'':natinf, ni_le d'' d -> ni_le d'' d' -> ni_le d'' dm) ->
 ni_min d d' = dm.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_min_induc". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_min_induc".  
 intros. case (ni_min_case d d'). intro. rewrite H2.
 apply ni_le_antisym. apply H1. apply ni_le_refl.
 exact H2.
@@ -206,19 +206,19 @@ exact H0.
 Qed.
 
 Lemma le_ni_le : forall m n:nat, m <= n -> ni_le (ni m) (ni n).
-Proof. try hammer_hook "Ndist" "Ndist.le_ni_le". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.le_ni_le".  
 intros * H. unfold ni_le, ni_min. rewrite (Peano.min_l m n H). reflexivity.
 Qed.
 
 Lemma ni_le_le : forall m n:nat, ni_le (ni m) (ni n) -> m <= n.
-Proof. try hammer_hook "Ndist" "Ndist.ni_le_le". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.ni_le_le".  
 unfold ni_le. unfold ni_min. intros. inversion H. apply le_min_r.
 Qed.
 
 Lemma Nplength_lb :
 forall (a:N) (n:nat),
 (forall k:nat, k < n -> N.testbit_nat a k = false) -> ni_le (ni n) (Nplength a).
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_lb". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_lb".  
 simple induction a. intros. exact (ni_min_inf_r (ni n)).
 intros. unfold Nplength. apply le_ni_le. case (le_or_lt n (Pplength p)). trivial.
 intro. absurd (N.testbit_nat (Npos p) (Pplength p) = false).
@@ -231,7 +231,7 @@ Qed.
 
 Lemma Nplength_ub :
 forall (a:N) (n:nat), N.testbit_nat a n = true -> ni_le (Nplength a) (ni n).
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_ub". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_ub".  
 simple induction a. intros. discriminate H.
 intros. unfold Nplength. apply le_ni_le. case (le_or_lt (Pplength p) n). trivial.
 intro. absurd (N.testbit_nat (Npos p) n = true).
@@ -250,19 +250,19 @@ Definition Npdist (a a':N) := Nplength (N.lxor a a').
 
 
 Lemma Npdist_eq_1 : forall a:N, Npdist a a = infty.
-Proof. try hammer_hook "Ndist" "Ndist.Npdist_eq_1". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Npdist_eq_1".  
 intros. unfold Npdist. rewrite N.lxor_nilpotent. reflexivity.
 Qed.
 
 Lemma Npdist_eq_2 : forall a a':N, Npdist a a' = infty -> a = a'.
-Proof. try hammer_hook "Ndist" "Ndist.Npdist_eq_2". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Npdist_eq_2".  
 intros. apply N.lxor_eq. apply Nplength_infty. exact H.
 Qed.
 
 
 
 Lemma Npdist_comm : forall a a':N, Npdist a a' = Npdist a' a.
-Proof. try hammer_hook "Ndist" "Ndist.Npdist_comm". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Npdist_comm".  
 unfold Npdist. intros. rewrite N.lxor_comm. reflexivity.
 Qed.
 
@@ -272,7 +272,7 @@ Lemma Nplength_ultra_1 :
 forall a a':N,
 ni_le (Nplength a) (Nplength a') ->
 ni_le (Nplength a) (Nplength (N.lxor a a')).
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_ultra_1". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_ultra_1".  
 simple induction a. intros. unfold ni_le in H. unfold Nplength at 1 3 in H.
 rewrite (ni_min_inf_l (Nplength a')) in H.
 rewrite (Nplength_infty a' H). simpl. apply ni_le_refl.
@@ -294,7 +294,7 @@ Qed.
 Lemma Nplength_ultra :
 forall a a':N,
 ni_le (ni_min (Nplength a) (Nplength a')) (Nplength (N.lxor a a')).
-Proof. try hammer_hook "Ndist" "Ndist.Nplength_ultra". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Nplength_ultra".  
 intros. destruct (ni_le_total (Nplength a) (Nplength a')).
 enough (ni_min (Nplength a) (Nplength a') = Nplength a) as -> by (apply Nplength_ultra_1; exact H).
 exact H.
@@ -305,7 +305,7 @@ Qed.
 Lemma Npdist_ultra :
 forall a a' a'':N,
 ni_le (ni_min (Npdist a a'') (Npdist a'' a')) (Npdist a a').
-Proof. try hammer_hook "Ndist" "Ndist.Npdist_ultra". Undo.  
+Proof. hammer_hook "Ndist" "Ndist.Npdist_ultra".  
 intros. unfold Npdist. cut (N.lxor (N.lxor a a'') (N.lxor a'' a') = N.lxor a a').
 intro. rewrite <- H. apply Nplength_ultra.
 rewrite N.lxor_assoc. rewrite <- (N.lxor_assoc a'' a'' a'). rewrite N.lxor_nilpotent.

@@ -238,7 +238,7 @@ Hint Unfold Ok.
 Instance Sort_Ok s `(Hs : Sort s) : Ok s := { ok := Hs }.
 
 Lemma inf_iff : forall x l, Inf x l <-> inf x l = true.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.inf_iff". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.inf_iff".  
 intros x l; split; intro H.
 
 destruct H; simpl in *.
@@ -254,7 +254,7 @@ constructor; assumption.
 Qed.
 
 Lemma isok_iff : forall l, sort X.lt l <-> Ok l.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.isok_iff". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.isok_iff".  
 intro l; split; intro H.
 
 elim H.
@@ -292,7 +292,7 @@ cut (X.lt x y); [ intro | apply Sort_Inf_In with l; auto]
 end.
 
 Global Instance isok_Ok s `(isok s = true) : Ok s | 10.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.isok_Ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.isok_Ok".  
 intros. assumption.
 Qed.
 
@@ -304,7 +304,7 @@ Definition Exists (P : elt -> Prop) (s : t) := exists x, In x s /\ P x.
 
 Lemma mem_spec :
 forall (s : t) (x : elt) (Hs : Ok s), mem x s = true <-> In x s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.mem_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.mem_spec".  
 induction s; intros x Hs; inv; simpl.
 intuition. discriminate. inv.
 elim_compare x a; rewrite InA_cons; intuition; try order.
@@ -316,7 +316,7 @@ Qed.
 
 Lemma add_inf :
 forall (s : t) (x a : elt), Inf a s -> X.lt a x -> Inf a (add x s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.add_inf". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.add_inf".  
 simple induction s; simpl.
 intuition.
 intros; elim_compare x a; inv; intuition.
@@ -324,7 +324,7 @@ Qed.
 Hint Resolve add_inf.
 
 Global Instance add_ok s x : forall `(Ok s), Ok (add x s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.add_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.add_ok".  
 repeat rewrite <- isok_iff; revert s x.
 simple induction s; simpl.
 intuition.
@@ -334,7 +334,7 @@ Qed.
 Lemma add_spec :
 forall (s : t) (x y : elt) (Hs : Ok s),
 In y (add x s) <-> X.eq y x \/ In y s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.add_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.add_spec".  
 induction s; simpl; intros.
 intuition. inv; auto.
 elim_compare x a; inv; rewrite !InA_cons, ?IHs; intuition.
@@ -342,7 +342,7 @@ Qed.
 
 Lemma remove_inf :
 forall (s : t) (x a : elt) (Hs : Ok s), Inf a s -> Inf a (remove x s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.remove_inf". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.remove_inf".  
 induction s; simpl.
 intuition.
 intros; elim_compare x a; inv; auto.
@@ -351,7 +351,7 @@ Qed.
 Hint Resolve remove_inf.
 
 Global Instance remove_ok s x : forall `(Ok s), Ok (remove x s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.remove_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.remove_ok".  
 repeat rewrite <- isok_iff; revert s x.
 induction s; simpl.
 intuition.
@@ -361,7 +361,7 @@ Qed.
 Lemma remove_spec :
 forall (s : t) (x y : elt) (Hs : Ok s),
 In y (remove x s) <-> In y s /\ ~X.eq y x.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.remove_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.remove_spec".  
 induction s; simpl; intros.
 intuition; inv; auto.
 elim_compare x a; inv; rewrite !InA_cons, ?IHs; intuition;
@@ -369,12 +369,12 @@ try sort_inf_in; try order.
 Qed.
 
 Global Instance singleton_ok x : Ok (singleton x).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.singleton_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.singleton_ok".  
 unfold singleton; simpl; auto.
 Qed.
 
 Lemma singleton_spec : forall x y : elt, In y (singleton x) <-> X.eq y x.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.singleton_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.singleton_spec".  
 unfold singleton; simpl; split; intros; inv; auto.
 Qed.
 
@@ -388,13 +388,13 @@ simple induction s;
 Lemma union_inf :
 forall (s s' : t) (a : elt) (Hs : Ok s) (Hs' : Ok s'),
 Inf a s -> Inf a s' -> Inf a (union s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.union_inf". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.union_inf".  
 induction2.
 Qed.
 Hint Resolve union_inf.
 
 Global Instance union_ok s s' : forall `(Ok s, Ok s'), Ok (union s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.union_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.union_ok".  
 repeat rewrite <- isok_iff; revert s s'.
 induction2; constructors; try apply @ok; auto.
 apply Inf_eq with x'; auto; apply union_inf; auto; apply Inf_eq with x; auto; order.
@@ -404,14 +404,14 @@ Qed.
 Lemma union_spec :
 forall (s s' : t) (x : elt) (Hs : Ok s) (Hs' : Ok s'),
 In x (union s s') <-> In x s \/ In x s'.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.union_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.union_spec".  
 induction2; try rewrite ?InA_cons, ?Hrec, ?Hrec'; intuition; inv; auto.
 Qed.
 
 Lemma inter_inf :
 forall (s s' : t) (a : elt) (Hs : Ok s) (Hs' : Ok s'),
 Inf a s -> Inf a s' -> Inf a (inter s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.inter_inf". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.inter_inf".  
 induction2.
 apply Inf_lt with x; auto.
 apply Hrec'; auto.
@@ -420,7 +420,7 @@ Qed.
 Hint Resolve inter_inf.
 
 Global Instance inter_ok s s' : forall `(Ok s, Ok s'), Ok (inter s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.inter_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.inter_ok".  
 repeat rewrite <- isok_iff; revert s s'.
 induction2.
 constructors; auto.
@@ -430,7 +430,7 @@ Qed.
 Lemma inter_spec :
 forall (s s' : t) (x : elt) (Hs : Ok s) (Hs' : Ok s'),
 In x (inter s s') <-> In x s /\ In x s'.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.inter_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.inter_spec".  
 induction2; try rewrite ?InA_cons, ?Hrec, ?Hrec'; intuition; inv; auto;
 try sort_inf_in; try order.
 Qed.
@@ -438,7 +438,7 @@ Qed.
 Lemma diff_inf :
 forall (s s' : t) (Hs : Ok s) (Hs' : Ok s') (a : elt),
 Inf a s -> Inf a s' -> Inf a (diff s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.diff_inf". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.diff_inf".  
 intros s s'; repeat rewrite <- isok_iff; revert s s'.
 induction2.
 apply Hrec; trivial.
@@ -450,7 +450,7 @@ Qed.
 Hint Resolve diff_inf.
 
 Global Instance diff_ok s s' : forall `(Ok s, Ok s'), Ok (diff s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.diff_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.diff_ok".  
 repeat rewrite <- isok_iff; revert s s'.
 induction2.
 Qed.
@@ -458,7 +458,7 @@ Qed.
 Lemma diff_spec :
 forall (s s' : t) (x : elt) (Hs : Ok s) (Hs' : Ok s'),
 In x (diff s s') <-> In x s /\ ~In x s'.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.diff_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.diff_spec".  
 induction2; try rewrite ?InA_cons, ?Hrec, ?Hrec'; intuition; inv; auto;
 try sort_inf_in; try order.
 right; intuition; inv; auto.
@@ -467,7 +467,7 @@ Qed.
 Lemma equal_spec :
 forall (s s' : t) (Hs : Ok s) (Hs' : Ok s'),
 equal s s' = true <-> Equal s s'.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.equal_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.equal_spec".  
 induction s as [ | x s IH]; intros [ | x' s'] Hs Hs'; simpl.
 intuition reflexivity.
 split; intros H. discriminate. assert (In x' nil) by (rewrite H; auto). inv.
@@ -492,7 +492,7 @@ Qed.
 Lemma subset_spec :
 forall (s s' : t) (Hs : Ok s) (Hs' : Ok s'),
 subset s s' = true <-> Subset s s'.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.subset_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.subset_spec".  
 intros s s'; revert s.
 induction s' as [ | x' s' IH]; intros [ | x s] Hs Hs'; simpl; auto.
 split; try red; intros; auto.
@@ -516,57 +516,57 @@ rewrite !InA_cons in S. rewrite !InA_cons. intuition; try sort_inf_in; order.
 Qed.
 
 Global Instance empty_ok : Ok empty.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.empty_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.empty_ok".  
 constructors.
 Qed.
 
 Lemma empty_spec : Empty empty.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.empty_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.empty_spec".  
 unfold Empty, empty; intuition; inv.
 Qed.
 
 Lemma is_empty_spec : forall s : t, is_empty s = true <-> Empty s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.is_empty_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.is_empty_spec".  
 intros [ | x s]; simpl.
 split; auto. intros _ x H. inv.
 split. discriminate. intros H. elim (H x); auto.
 Qed.
 
 Lemma elements_spec1 : forall (s : t) (x : elt), In x (elements s) <-> In x s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.elements_spec1". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.elements_spec1".  
 intuition.
 Qed.
 
 Lemma elements_spec2 : forall (s : t) (Hs : Ok s), sort X.lt (elements s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.elements_spec2". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.elements_spec2".  
 intro s; repeat rewrite <- isok_iff; auto.
 Qed.
 
 Lemma elements_spec2w : forall (s : t) (Hs : Ok s), NoDupA X.eq (elements s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.elements_spec2w". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.elements_spec2w".  
 intro s; repeat rewrite <- isok_iff; auto.
 Qed.
 
 Lemma min_elt_spec1 : forall (s : t) (x : elt), min_elt s = Some x -> In x s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.min_elt_spec1". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.min_elt_spec1".  
 destruct s; simpl; inversion 1; auto.
 Qed.
 
 Lemma min_elt_spec2 :
 forall (s : t) (x y : elt) (Hs : Ok s),
 min_elt s = Some x -> In y s -> ~ X.lt y x.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.min_elt_spec2". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.min_elt_spec2".  
 induction s as [ | x s IH]; simpl; inversion 2; subst.
 intros; inv; try sort_inf_in; order.
 Qed.
 
 Lemma min_elt_spec3 : forall s : t, min_elt s = None -> Empty s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.min_elt_spec3". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.min_elt_spec3".  
 destruct s; simpl; red; intuition. inv. discriminate.
 Qed.
 
 Lemma max_elt_spec1 : forall (s : t) (x : elt), max_elt s = Some x -> In x s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.max_elt_spec1". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.max_elt_spec1".  
 induction s as [ | x s IH]. inversion 1.
 destruct s as [ | y s]. simpl. inversion 1; subst; auto.
 right; apply IH; auto.
@@ -575,7 +575,7 @@ Qed.
 Lemma max_elt_spec2 :
 forall (s : t) (x y : elt) (Hs : Ok s),
 max_elt s = Some x -> In y s -> ~ X.lt x y.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.max_elt_spec2". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.max_elt_spec2".  
 induction s as [ | a s IH]. inversion 2.
 destruct s as [ | b s]. inversion 2; subst. intros; inv; order.
 intros. inv; auto.
@@ -585,7 +585,7 @@ order.
 Qed.
 
 Lemma max_elt_spec3 : forall s : t, max_elt s = None -> Empty s.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.max_elt_spec3". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.max_elt_spec3".  
 induction s as [ | a s IH]. red; intuition; inv.
 destruct s as [ | b s]. inversion 1.
 intros; elim IH with b; auto.
@@ -599,7 +599,7 @@ forall s : t, choose s = None -> Empty s := min_elt_spec3.
 
 Lemma choose_spec3: forall s s' x x', Ok s -> Ok s' ->
 choose s = Some x -> choose s' = Some x' -> Equal s s' -> X.eq x x'.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.choose_spec3". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.choose_spec3".  
 unfold choose; intros s s' x x' Hs Hs' Hx Hx' H.
 assert (~X.lt x x').
 apply min_elt_spec2 with s'; auto.
@@ -613,21 +613,21 @@ Qed.
 Lemma fold_spec :
 forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
 fold f s i = fold_left (flip f) (elements s) i.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.fold_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.fold_spec".  
 reflexivity.
 Qed.
 
 Lemma cardinal_spec :
 forall (s : t) (Hs : Ok s),
 cardinal s = length (elements s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.cardinal_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.cardinal_spec".  
 auto.
 Qed.
 
 Lemma filter_inf :
 forall (s : t) (x : elt) (f : elt -> bool) (Hs : Ok s),
 Inf x s -> Inf x (filter f s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.filter_inf". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.filter_inf".  
 simple induction s; simpl.
 intuition.
 intros x l Hrec a f Hs Ha; inv.
@@ -637,7 +637,7 @@ apply Inf_lt with x; auto.
 Qed.
 
 Global Instance filter_ok s f : forall `(Ok s), Ok (filter f s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.filter_ok". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.filter_ok".  
 repeat rewrite <- isok_iff; revert s f.
 simple induction s; simpl.
 auto.
@@ -651,7 +651,7 @@ Lemma filter_spec :
 forall (s : t) (x : elt) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 (In x (filter f s) <-> In x s /\ f x = true).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.filter_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.filter_spec".  
 induction s; simpl; intros.
 split; intuition; inv.
 destruct (f a) eqn:F; rewrite !InA_cons, ?IHs; intuition.
@@ -663,7 +663,7 @@ Lemma for_all_spec :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 (for_all f s = true <-> For_all (fun x => f x = true) s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.for_all_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.for_all_spec".  
 unfold For_all; induction s; simpl; intros.
 split; intros; auto. inv.
 destruct (f a) eqn:F.
@@ -677,7 +677,7 @@ Lemma exists_spec :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 (exists_ f s = true <-> Exists (fun x => f x = true) s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.exists_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.exists_spec".  
 unfold Exists; induction s; simpl; intros.
 firstorder. discriminate. inv.
 destruct (f a) eqn:F.
@@ -692,7 +692,7 @@ Qed.
 Lemma partition_inf1 :
 forall (s : t) (f : elt -> bool) (x : elt) (Hs : Ok s),
 Inf x s -> Inf x (fst (partition f s)).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.partition_inf1". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.partition_inf1".  
 intros s f x; repeat rewrite <- isok_iff; revert s f x.
 simple induction s; simpl.
 intuition.
@@ -706,7 +706,7 @@ Qed.
 Lemma partition_inf2 :
 forall (s : t) (f : elt -> bool) (x : elt) (Hs : Ok s),
 Inf x s -> Inf x (snd (partition f s)).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.partition_inf2". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.partition_inf2".  
 intros s f x; repeat rewrite <- isok_iff; revert s f x.
 simple induction s; simpl.
 intuition.
@@ -718,7 +718,7 @@ auto.
 Qed.
 
 Global Instance partition_ok1 s f : forall `(Ok s), Ok (fst (partition f s)).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.partition_ok1". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.partition_ok1".  
 repeat rewrite <- isok_iff; revert s f.
 simple induction s; simpl.
 auto.
@@ -728,7 +728,7 @@ case (f x); case (partition f l); simpl; auto.
 Qed.
 
 Global Instance partition_ok2 s f : forall `(Ok s), Ok (snd (partition f s)).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.partition_ok2". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.partition_ok2".  
 repeat rewrite <- isok_iff; revert s f.
 simple induction s; simpl.
 auto.
@@ -740,7 +740,7 @@ Qed.
 Lemma partition_spec1 :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f -> Equal (fst (partition f s)) (filter f s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.partition_spec1". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.partition_spec1".  
 simple induction s; simpl; auto; unfold Equal.
 split; auto.
 intros x l Hrec f Hf.
@@ -756,7 +756,7 @@ Lemma partition_spec2 :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 Equal (snd (partition f s)) (filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.partition_spec2". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.partition_spec2".  
 simple induction s; simpl; auto; unfold Equal.
 split; auto.
 intros x l Hrec f Hf.
@@ -772,7 +772,7 @@ End ForNotations.
 
 Definition In := InA X.eq.
 Instance In_compat : Proper (X.eq==>eq==> iff) In.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.In_compat". Undo.   repeat red; intros; rewrite H, H0; auto. Qed.
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.In_compat".   repeat red; intros; rewrite H, H0; auto. Qed.
 
 Module L := MakeListOrdering X.
 Definition eq := L.eq.
@@ -781,7 +781,7 @@ Definition lt l1 l2 :=
 exists l1' l2', Ok l1' /\ Ok l2' /\ eq l1 l1' /\ eq l2 l2' /\ L.lt l1' l2'.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.lt_strorder". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.lt_strorder".  
 split.
 intros s (s1 & s2 & B1 & B2 & E1 & E2 & L).
 repeat rewrite <- isok_iff in *.
@@ -803,7 +803,7 @@ rewrite H; auto.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.lt_compat". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.lt_compat".  
 intros s1 s2 E12 s3 s4 E34. split.
 intros (s1' & s3' & B1 & B3 & E1 & E3 & LT).
 exists s1', s3'; do 2 (split; trivial).
@@ -816,14 +816,14 @@ split; auto. transitivity s4; auto.
 Qed.
 
 Lemma compare_spec_aux : forall s s', CompSpec eq L.lt s s' (compare s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.compare_spec_aux". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.compare_spec_aux".  
 induction s as [|x s IH]; intros [|x' s']; simpl; intuition.
 elim_compare x x'; auto.
 Qed.
 
 Lemma compare_spec : forall s s', Ok s -> Ok s' ->
 CompSpec eq lt s s' (compare s s').
-Proof. try hammer_hook "MSetList" "MSetList.MakeRaw.compare_spec". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeRaw.compare_spec".  
 intros s s' Hs Hs'.
 destruct (compare_spec_aux s s'); constructor; auto.
 exists s, s'; repeat split; auto using @ok.
@@ -860,7 +860,7 @@ Module Raw := MakeRaw X.
 Include Raw2SetsOn X Raw.
 
 Lemma eq_leibniz_list : forall xs ys, eqlistA X.eq xs ys -> xs = ys.
-Proof. try hammer_hook "MSetList" "MSetList.MakeWithLeibniz.eq_leibniz_list". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.MakeWithLeibniz.eq_leibniz_list".  
 induction xs as [|x xs]; intros [|y ys] H; inversion H; [ | ].
 reflexivity.
 f_equal.
@@ -869,7 +869,7 @@ apply IHxs; subst; assumption.
 Qed.
 
 Lemma eq_leibniz : forall s s', eq s s' -> s = s'.
-Proof. try hammer_hook "MSetList" "MSetList.OrderedTypeWithLeibniz.eq_leibniz". Undo.  
+Proof. hammer_hook "MSetList" "MSetList.OrderedTypeWithLeibniz.eq_leibniz".  
 intros [xs Hxs] [ys Hys] Heq.
 change (equivlistA X.eq xs ys) in Heq.
 assert (H : eqlistA X.eq xs ys).

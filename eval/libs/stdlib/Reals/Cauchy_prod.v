@@ -18,7 +18,7 @@ Local Open Scope R_scope.
 Lemma sum_N_predN :
 forall (An:nat -> R) (N:nat),
 (0 < N)%nat -> sum_f_R0 An N = sum_f_R0 An (pred N) + An N.
-Proof. try hammer_hook "Cauchy_prod" "Cauchy_prod.sum_N_predN". Undo.  
+Proof. hammer_hook "Cauchy_prod" "Cauchy_prod.sum_N_predN".  
 intros.
 replace N with (S (pred N)).
 rewrite tech5.
@@ -30,7 +30,7 @@ Qed.
 Lemma sum_plus :
 forall (An Bn:nat -> R) (N:nat),
 sum_f_R0 (fun l:nat => An l + Bn l) N = sum_f_R0 An N + sum_f_R0 Bn N.
-Proof. try hammer_hook "Cauchy_prod" "Cauchy_prod.sum_plus". Undo.  
+Proof. hammer_hook "Cauchy_prod" "Cauchy_prod.sum_plus".  
 intros.
 induction  N as [| N HrecN].
 reflexivity.
@@ -48,7 +48,7 @@ sum_f_R0
 (fun k:nat =>
 sum_f_R0 (fun l:nat => An (S (l + k)) * Bn (N - l)%nat)
 (pred (N - k))) (pred N).
-Proof. try hammer_hook "Cauchy_prod" "Cauchy_prod.cauchy_finite". Undo.  
+Proof. hammer_hook "Cauchy_prod" "Cauchy_prod.cauchy_finite".  
 intros; induction  N as [| N HrecN].
 elim (lt_irrefl _ H).
 cut (N = 0%nat \/ (0 < N)%nat).

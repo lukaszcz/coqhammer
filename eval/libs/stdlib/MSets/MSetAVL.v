@@ -288,12 +288,12 @@ Local Open Scope pair_scope.
 
 
 Lemma singleton_spec : forall x y, InT y (singleton x) <-> X.eq y x.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.singleton_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.singleton_spec".  
 unfold singleton; intuition_in.
 Qed.
 
 Instance singleton_ok x : Ok (singleton x).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.singleton_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.singleton_ok".  
 unfold singleton; auto.
 Qed.
 
@@ -301,26 +301,26 @@ Qed.
 
 Lemma create_spec :
 forall l x r y,  InT y (create l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.create_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.create_spec".  
 unfold create; split; [ inversion_clear 1 | ]; intuition.
 Qed.
 
 Instance create_ok l x r `(Ok l, Ok r, lt_tree x l, gt_tree x r) :
 Ok (create l x r).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.create_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.create_ok".  
 unfold create; auto.
 Qed.
 
 Lemma bal_spec : forall l x r y,
 InT y (bal l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.bal_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.bal_spec".  
 intros l x r; functional induction bal l x r; intros; try clear e0;
 rewrite !create_spec; intuition_in.
 Qed.
 
 Instance bal_ok l x r `(Ok l, Ok r, lt_tree x l, gt_tree x r) :
 Ok (bal l x r).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.bal_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.bal_ok".  
 functional induction bal l x r; intros;
 inv; repeat apply create_ok; auto; unfold create;
 (apply lt_tree_node || apply gt_tree_node); auto;
@@ -332,17 +332,17 @@ Qed.
 
 Lemma add_spec' : forall s x y,
 InT y (add x s) <-> X.eq y x \/ InT y s.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.add_spec'". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.add_spec'".  
 induct s x; try rewrite ?bal_spec, ?IHl, ?IHr; intuition_in.
 setoid_replace y with x'; eauto.
 Qed.
 
 Lemma add_spec : forall s x y `{Ok s},
 InT y (add x s) <-> X.eq y x \/ InT y s.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.add_spec". Undo.   intros; apply add_spec'. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.add_spec".   intros; apply add_spec'. Qed.
 
 Instance add_ok s x `(Ok s) : Ok (add x s).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.add_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.add_ok".  
 induct s x; auto; apply bal_ok; auto;
 intros y; rewrite add_spec'; intuition; order.
 Qed.
@@ -372,7 +372,7 @@ end
 
 Lemma join_spec : forall l x r y,
 InT y (join l x r) <-> X.eq y x \/ InT y l \/ InT y r.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.join_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.join_spec".  
 join_tac.
 simpl.
 rewrite add_spec'; intuition_in.
@@ -384,7 +384,7 @@ Qed.
 
 Instance join_ok : forall l x r `(Ok l, Ok r, lt_tree x l, gt_tree x r),
 Ok (join l x r).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.join_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.join_ok".  
 join_tac; auto with *; inv; apply bal_ok; auto;
 clear Hrl Hlr; intro; intros; rewrite join_spec in *.
 intuition; [ setoid_replace y with x | ]; eauto.
@@ -397,7 +397,7 @@ Qed.
 Lemma remove_min_spec : forall l x r y h,
 InT y (Node h l x r) <->
 X.eq y (remove_min l x r)#2 \/ InT y (remove_min l x r)#1.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_min_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_min_spec".  
 intros l x r; functional induction (remove_min l x r); simpl in *; intros.
 intuition_in.
 rewrite bal_spec, In_node_iff, IHp, e0; simpl; intuition.
@@ -405,7 +405,7 @@ Qed.
 
 Instance remove_min_ok l x r : forall h `(Ok (Node h l x r)),
 Ok (remove_min l x r)#1.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_min_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_min_ok".  
 functional induction (remove_min l x r); simpl; intros.
 inv; auto.
 assert (O : Ok (Node _x ll lx lr)) by (inv; auto).
@@ -420,7 +420,7 @@ Qed.
 
 Lemma remove_min_gt_tree : forall l x r h `{Ok (Node h l x r)},
 gt_tree (remove_min l x r)#2 (remove_min l x r)#1.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_min_gt_tree". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_min_gt_tree".  
 intros l x r; functional induction (remove_min l x r); simpl; intros.
 inv; auto.
 assert (O : Ok (Node _x ll lx lr)) by (inv; auto).
@@ -437,7 +437,7 @@ Local Hint Resolve remove_min_gt_tree.
 
 Lemma merge_spec : forall s1 s2 y,
 InT y (merge s1 s2) <-> InT y s1 \/ InT y s2.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.merge_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.merge_spec".  
 intros s1 s2; functional induction (merge s1 s2); intros;
 try factornode s1.
 intuition_in.
@@ -448,7 +448,7 @@ Qed.
 Instance merge_ok s1 s2 : forall `(Ok s1, Ok s2)
 `(forall y1 y2 : elt, InT y1 s1 -> InT y2 s2 -> X.lt y1 y2),
 Ok (merge s1 s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.merge_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.merge_ok".  
 functional induction (merge s1 s2); intros; auto;
 try factornode s1.
 apply bal_ok; auto.
@@ -465,7 +465,7 @@ Qed.
 
 Lemma remove_spec : forall s x y `{Ok s},
 (InT y (remove x s) <-> InT y s /\ ~ X.eq y x).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_spec".  
 induct s x.
 intuition_in.
 rewrite merge_spec; intuition; [order|order|intuition_in].
@@ -475,7 +475,7 @@ rewrite bal_spec, IHr; clear IHl IHr; intuition; [order|order|intuition_in].
 Qed.
 
 Instance remove_ok s x `(Ok s) : Ok (remove x s).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.remove_ok".  
 induct s x.
 auto.
 
@@ -493,7 +493,7 @@ Qed.
 
 Lemma concat_spec : forall s1 s2 y,
 InT y (concat s1 s2) <-> InT y s1 \/ InT y s2.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.concat_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.concat_spec".  
 intros s1 s2; functional induction (concat s1 s2); intros;
 try factornode s1.
 intuition_in.
@@ -504,7 +504,7 @@ Qed.
 Instance concat_ok s1 s2 : forall `(Ok s1, Ok s2)
 `(forall y1 y2 : elt, InT y1 s1 -> InT y2 s2 -> X.lt y1 y2),
 Ok (concat s1 s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.concat_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.concat_ok".  
 functional induction (concat s1 s2); intros; auto;
 try factornode s1.
 apply join_ok; auto.
@@ -521,7 +521,7 @@ Qed.
 
 Lemma split_spec1 : forall s x y `{Ok s},
 (InT y (split x s)#l <-> InT y s /\ X.lt y x).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_spec1". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_spec1".  
 induct s x.
 intuition_in.
 intuition_in; order.
@@ -533,7 +533,7 @@ Qed.
 
 Lemma split_spec2 : forall s x y `{Ok s},
 (InT y (split x s)#r <-> InT y s /\ X.lt x y).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_spec2". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_spec2".  
 induct s x.
 intuition_in.
 intuition_in; order.
@@ -545,7 +545,7 @@ Qed.
 
 Lemma split_spec3 : forall s x `{Ok s},
 ((split x s)#b = true <-> InT x s).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_spec3". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_spec3".  
 induct s x.
 intuition_in; try discriminate.
 intuition.
@@ -556,7 +556,7 @@ destruct (split x r); simpl in *. rewrite IHr; intuition_in; order.
 Qed.
 
 Lemma split_ok : forall s x `{Ok s}, Ok (split x s)#l /\ Ok (split x s)#r.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_ok".  
 induct s x; simpl; auto.
 specialize (IHl x).
 generalize (fun y => @split_spec2 l x y _).
@@ -569,10 +569,10 @@ intros y; rewrite H; intuition.
 Qed.
 
 Instance split_ok1 s x `(Ok s) : Ok (split x s)#l.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_ok1". Undo.   intros; destruct (@split_ok s x); auto. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_ok1".   intros; destruct (@split_ok s x); auto. Qed.
 
 Instance split_ok2 s x `(Ok s) : Ok (split x s)#r.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_ok2". Undo.   intros; destruct (@split_ok s x); auto. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.split_ok2".   intros; destruct (@split_ok s x); auto. Qed.
 
 
 
@@ -587,7 +587,7 @@ end.
 
 Lemma inter_spec_ok : forall s1 s2 `{Ok s1, Ok s2},
 Ok (inter s1 s2) /\ (forall y, InT y (inter s1 s2) <-> InT y s1 /\ InT y s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.inter_spec_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.inter_spec_ok".  
 intros s1 s2; functional induction inter s1 s2; intros B1 B2;
 [intuition_in|intuition_in | | ]; factornode s2;
 destruct_split; inv;
@@ -611,17 +611,17 @@ Qed.
 
 Lemma inter_spec : forall s1 s2 y `{Ok s1, Ok s2},
 (InT y (inter s1 s2) <-> InT y s1 /\ InT y s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.inter_spec". Undo.   intros; destruct (@inter_spec_ok s1 s2); auto. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.inter_spec".   intros; destruct (@inter_spec_ok s1 s2); auto. Qed.
 
 Instance inter_ok s1 s2 `(Ok s1, Ok s2) : Ok (inter s1 s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.inter_ok". Undo.   intros; destruct (@inter_spec_ok s1 s2); auto. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.inter_ok".   intros; destruct (@inter_spec_ok s1 s2); auto. Qed.
 
 
 
 
 Lemma diff_spec_ok : forall s1 s2 `{Ok s1, Ok s2},
 Ok (diff s1 s2) /\ (forall y, InT y (diff s1 s2) <-> InT y s1 /\ ~InT y s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.diff_spec_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.diff_spec_ok".  
 intros s1 s2; functional induction diff s1 s2; intros B1 B2;
 [intuition_in|intuition_in | | ]; factornode s2;
 destruct_split; inv;
@@ -646,17 +646,17 @@ Qed.
 
 Lemma diff_spec : forall s1 s2 y `{Ok s1, Ok s2},
 (InT y (diff s1 s2) <-> InT y s1 /\ ~InT y s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.diff_spec". Undo.   intros; destruct (@diff_spec_ok s1 s2); auto. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.diff_spec".   intros; destruct (@diff_spec_ok s1 s2); auto. Qed.
 
 Instance diff_ok s1 s2 `(Ok s1, Ok s2) : Ok (diff s1 s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.diff_ok". Undo.   intros; destruct (@diff_spec_ok s1 s2); auto. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.diff_ok".   intros; destruct (@diff_spec_ok s1 s2); auto. Qed.
 
 
 
 
 Lemma union_spec : forall s1 s2 y `{Ok s1, Ok s2},
 (InT y (union s1 s2) <-> InT y s1 \/ InT y s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.union_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.union_spec".  
 intros s1 s2; functional induction union s1 s2; intros y B1 B2.
 intuition_in.
 intuition_in.
@@ -666,7 +666,7 @@ destruct (X.compare_spec y x1); intuition_in.
 Qed.
 
 Instance union_ok s1 s2 : forall `(Ok s1, Ok s2), Ok (union s1 s2).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.union_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.union_ok".  
 functional induction union s1 s2; intros B1 B2; auto.
 factornode s2; destruct_split; inv.
 apply join_ok; auto with *.
@@ -679,7 +679,7 @@ Qed.
 Lemma filter_spec : forall s x f,
 Proper (X.eq==>Logic.eq) f ->
 (InT x (filter f s) <-> InT x s /\ f x = true).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.filter_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.filter_spec".  
 induction s as [ |h l Hl x0 r Hr]; intros x f Hf; simpl.
 - intuition_in.
 - case_eq (f x0); intros Hx0.
@@ -691,7 +691,7 @@ Qed.
 
 Lemma filter_weak_spec : forall s x f,
 InT x (filter f s) -> InT x s.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.filter_weak_spec". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.filter_weak_spec".  
 induction s as [ |h l Hl x0 r Hr]; intros x f; simpl.
 - trivial.
 - destruct (f x0).
@@ -700,7 +700,7 @@ induction s as [ |h l Hl x0 r Hr]; intros x f; simpl.
 Qed.
 
 Instance filter_ok s f `(H : Ok s) : Ok (filter f s).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.filter_ok". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.filter_ok".  
 induction H as [ | h x l r Hl Hfl Hr Hfr Hlt Hgt ].
 - constructor.
 - simpl.
@@ -713,7 +713,7 @@ Qed.
 
 
 Lemma partition_spec1' s f : (partition f s)#1 = filter f s.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec1'". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec1'".  
 induction s as [ | h l Hl x r Hr ]; simpl.
 - trivial.
 - rewrite <- Hl, <- Hr.
@@ -722,7 +722,7 @@ Qed.
 
 Lemma partition_spec2' s f :
 (partition f s)#2 = filter (fun x => negb (f x)) s.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec2'". Undo.  
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec2'".  
 induction s as [ | h l Hl x r Hr ]; simpl.
 - trivial.
 - rewrite <- Hl, <- Hr.
@@ -732,18 +732,18 @@ Qed.
 Lemma partition_spec1 s f :
 Proper (X.eq==>Logic.eq) f ->
 Equal (partition f s)#1 (filter f s).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec1". Undo.   now rewrite partition_spec1'. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec1".   now rewrite partition_spec1'. Qed.
 
 Lemma partition_spec2 s f :
 Proper (X.eq==>Logic.eq) f ->
 Equal (partition f s)#2 (filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec2". Undo.   now rewrite partition_spec2'. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_spec2".   now rewrite partition_spec2'. Qed.
 
 Instance partition_ok1 s f `(Ok s) : Ok (partition f s)#1.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_ok1". Undo.   rewrite partition_spec1'; now apply filter_ok. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_ok1".   rewrite partition_spec1'; now apply filter_ok. Qed.
 
 Instance partition_ok2 s f `(Ok s) : Ok (partition f s)#2.
-Proof. try hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_ok2". Undo.   rewrite partition_spec2'; now apply filter_ok. Qed.
+Proof. hammer_hook "MSetAVL" "MSetAVL.MakeRaw.partition_ok2".   rewrite partition_spec2'; now apply filter_ok. Qed.
 
 End MakeRaw.
 

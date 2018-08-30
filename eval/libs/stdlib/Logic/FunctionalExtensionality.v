@@ -14,7 +14,7 @@ From Hammer Require Import Hammer.
 
 Lemma equal_f : forall {A B : Type} {f g : A -> B},
 f = g -> forall x, f x = g x.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.equal_f". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.equal_f".  
 intros.
 rewrite H.
 auto.
@@ -22,7 +22,7 @@ Qed.
 
 Lemma equal_f_dep : forall {A B} {f g : forall (x : A), B x},
 f = g -> forall x, f x = g x.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.equal_f_dep". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.equal_f_dep".  
 intros A B f g <- H; reflexivity.
 Qed.
 
@@ -34,26 +34,26 @@ forall (f g : forall x : A, B x),
 
 Lemma functional_extensionality {A B} (f g : A -> B) :
 (forall x, f x = g x) -> f = g.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.functional_extensionality". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.functional_extensionality".  
 intros ; eauto using @functional_extensionality_dep.
 Qed.
 
 
 Lemma forall_extensionality {A} {B C : A -> Type} (H : forall x : A, B x = C x)
 : (forall x, B x) = (forall x, C x).
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_extensionality". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_extensionality".  
 apply functional_extensionality in H. destruct H. reflexivity.
 Defined.
 
 Lemma forall_extensionalityP {A} {B C : A -> Prop} (H : forall x : A, B x = C x)
 : (forall x, B x) = (forall x, C x).
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_extensionalityP". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_extensionalityP".  
 apply functional_extensionality in H. destruct H. reflexivity.
 Defined.
 
 Lemma forall_extensionalityS {A} {B C : A -> Set} (H : forall x : A, B x = C x)
 : (forall x, B x) = (forall x, C x).
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_extensionalityS". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_extensionalityS".  
 apply functional_extensionality in H. destruct H. reflexivity.
 Defined.
 
@@ -68,7 +68,7 @@ Definition functional_extensionality_dep_good
 
 Lemma functional_extensionality_dep_good_refl {A B} f
 : @functional_extensionality_dep_good A B f f (fun _ => eq_refl) = eq_refl.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.functional_extensionality_dep_good_refl". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.functional_extensionality_dep_good_refl".  
 unfold functional_extensionality_dep_good; edestruct functional_extensionality_dep; reflexivity.
 Defined.
 
@@ -80,7 +80,7 @@ Lemma forall_sig_eq_rect
 (k : P (exist (fun g => forall a, f a = g a) f (fun a => eq_refl)))
 g
 : P g.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_sig_eq_rect". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_sig_eq_rect".  
 destruct g as [g1 g2].
 set (g' := fun x => (exist _ (g1 x) (g2 x))).
 change g2 with (fun x => proj2_sig (g' x)).
@@ -107,7 +107,7 @@ g H
 
 Definition forall_eq_rect_comp {A B} f P k
 : @forall_eq_rect A B f P k f (fun _ => eq_refl) = k.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_eq_rect_comp". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.forall_eq_rect_comp".  
 unfold forall_eq_rect, forall_sig_eq_rect; simpl.
 rewrite functional_extensionality_dep_good_refl; reflexivity.
 Qed.
@@ -115,7 +115,7 @@ Qed.
 Definition f_equal__functional_extensionality_dep_good
 {A B f g} H a
 : f_equal (fun h => h a) (@functional_extensionality_dep_good A B f g H) = H a.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.f_equal__functional_extensionality_dep_good". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.f_equal__functional_extensionality_dep_good".  
 apply forall_eq_rect with (H := H); clear H g.
 change (eq_refl (f a)) with (f_equal (fun h => h a) (eq_refl f)).
 apply f_equal, functional_extensionality_dep_good_refl.
@@ -124,7 +124,7 @@ Defined.
 Definition f_equal__functional_extensionality_dep_good__fun
 {A B f g} H
 : (fun a => f_equal (fun h => h a) (@functional_extensionality_dep_good A B f g H)) = H.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.f_equal__functional_extensionality_dep_good__fun". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.f_equal__functional_extensionality_dep_good__fun".  
 apply functional_extensionality_dep_good; intro a; apply f_equal__functional_extensionality_dep_good.
 Defined.
 
@@ -224,13 +224,13 @@ destruct Heq; rename H_out into H.
 
 Lemma eta_expansion_dep {A} {B : A -> Type} (f : forall x : A, B x) :
 f = fun x => f x.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.eta_expansion_dep". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.eta_expansion_dep".  
 intros.
 extensionality x.
 reflexivity.
 Qed.
 
 Lemma eta_expansion {A B} (f : A -> B) : f = fun x => f x.
-Proof. try hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.eta_expansion". Undo.  
+Proof. hammer_hook "FunctionalExtensionality" "FunctionalExtensionality.eta_expansion".  
 apply (eta_expansion_dep f).
 Qed.

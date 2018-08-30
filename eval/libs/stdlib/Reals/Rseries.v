@@ -55,20 +55,20 @@ Definition Un_growing : Prop := forall n:nat, Un n <= Un (S n).
 
 
 Lemma EUn_noempty :  exists r : R, EUn r.
-Proof. try hammer_hook "Rseries" "Rseries.EUn_noempty". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.EUn_noempty".  
 unfold EUn; split with (Un 0); split with 0%nat; trivial.
 Qed.
 
 
 Lemma Un_in_EUn : forall n:nat, EUn (Un n).
-Proof. try hammer_hook "Rseries" "Rseries.Un_in_EUn". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.Un_in_EUn".  
 intro; unfold EUn; split with n; trivial.
 Qed.
 
 
 Lemma Un_bound_imp :
 forall x:R, (forall n:nat, Un n <= x) -> is_upper_bound EUn x.
-Proof. try hammer_hook "Rseries" "Rseries.Un_bound_imp". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.Un_bound_imp".  
 intros; unfold is_upper_bound; intros; unfold EUn in H0; elim H0;
 clear H0; intros; generalize (H x1); intro; rewrite <- H0 in H1;
 trivial.
@@ -77,7 +77,7 @@ Qed.
 
 Lemma growing_prop :
 forall n m:nat, Un_growing -> (n >= m)%nat -> Un n >= Un m.
-Proof. try hammer_hook "Rseries" "Rseries.growing_prop". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.growing_prop".  
 double induction n m; intros.
 unfold Rge; right; trivial.
 exfalso; unfold ge in H1; generalize (le_Sn_O n0); intro; auto.
@@ -101,7 +101,7 @@ Qed.
 
 
 Lemma Un_cv_crit_lub : Un_growing -> forall l, is_lub EUn l -> Un_cv l.
-Proof. try hammer_hook "Rseries" "Rseries.Un_cv_crit_lub". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.Un_cv_crit_lub".  
 intros Hug l H eps Heps.
 
 cut (exists N, Un N > l - eps).
@@ -261,7 +261,7 @@ Qed.
 
 
 Lemma Un_cv_crit : Un_growing -> bound EUn ->  exists l : R, Un_cv l.
-Proof. try hammer_hook "Rseries" "Rseries.Un_cv_crit". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.Un_cv_crit".  
 intros Hug Heub.
 exists (proj1_sig (completeness EUn Heub EUn_noempty)).
 destruct (completeness EUn Heub EUn_noempty) as (l, H).
@@ -271,7 +271,7 @@ Qed.
 
 Lemma finite_greater :
 forall N:nat,  exists M : R, (forall n:nat, (n <= N)%nat -> Un n <= M).
-Proof. try hammer_hook "Rseries" "Rseries.finite_greater". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.finite_greater".  
 intro; induction  N as [| N HrecN].
 split with (Un 0); intros; rewrite (le_n_O_eq n H);
 apply (Req_le (Un n) (Un n) (eq_refl (Un n))).
@@ -286,7 +286,7 @@ Qed.
 
 
 Lemma cauchy_bound : Cauchy_crit -> bound EUn.
-Proof. try hammer_hook "Rseries" "Rseries.cauchy_bound". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.cauchy_bound".  
 unfold Cauchy_crit, bound; intros; unfold is_upper_bound;
 unfold Rgt in H; elim (H 1 Rlt_0_1); clear H; intros;
 generalize (H x); intro; generalize (le_dec x); intro;
@@ -325,7 +325,7 @@ End Isequence.
 
 Lemma GP_infinite :
 forall x:R, Rabs x < 1 -> Pser (fun n:nat => 1) x (/ (1 - x)).
-Proof. try hammer_hook "Rseries" "Rseries.GP_infinite". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.GP_infinite".  
 intros; unfold Pser; unfold infinite_sum; intros;
 elim (Req_dec x 0).
 intros; exists 0%nat; intros; rewrite H1; rewrite Rminus_0_r; rewrite Rinv_1;
@@ -426,6 +426,6 @@ Qed.
 
 Lemma Un_growing_shift :
 forall k un, Un_growing un -> Un_growing (fun n => un (n + k)%nat).
-Proof. try hammer_hook "Rseries" "Rseries.Un_growing_shift". Undo.  
+Proof. hammer_hook "Rseries" "Rseries.Un_growing_shift".  
 intros k un P n; apply P.
 Qed.

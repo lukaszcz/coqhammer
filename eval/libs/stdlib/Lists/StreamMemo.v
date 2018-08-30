@@ -31,7 +31,7 @@ match n with
 end.
 
 Theorem memo_get_correct: forall n, memo_get n memo_list = f n.
-Proof. try hammer_hook "StreamMemo" "StreamMemo.memo_get_correct". Undo.  
+Proof. hammer_hook "StreamMemo" "StreamMemo.memo_get_correct".  
 assert (F1: forall n m, memo_get n (memo_make m) = f (n + m)).
 { induction n as [| n Hrec]; try (intros m; reflexivity).
 intros m; simpl; rewrite Hrec.
@@ -54,7 +54,7 @@ Definition imemo_list := let f0 := f 0 in
 Cons f0 (imemo_make f0).
 
 Theorem imemo_get_correct: forall n, memo_get n imemo_list = f n.
-Proof. try hammer_hook "StreamMemo" "StreamMemo.imemo_get_correct". Undo.  
+Proof. hammer_hook "StreamMemo" "StreamMemo.imemo_get_correct".  
 assert (F1: forall n m, memo_get n (imemo_make (f m)) = f (S (n + m))).
 { induction n as [| n Hrec]; try (intros m; exact (eq_sym (Hg_correct m))).
 simpl; intros m; rewrite <- Hg_correct, Hrec, <- plus_n_Sm; auto. }
@@ -106,7 +106,7 @@ Definition dmemo_list := memo_list _ mf.
 Definition dmemo_get n l := memo_get_val n (memo_get _ n l).
 
 Theorem dmemo_get_correct: forall n, dmemo_get n dmemo_list = f n.
-Proof. try hammer_hook "StreamMemo" "StreamMemo.dmemo_get_correct". Undo.  
+Proof. hammer_hook "StreamMemo" "StreamMemo.dmemo_get_correct".  
 intros n; unfold dmemo_get, dmemo_list.
 rewrite (memo_get_correct memo_val mf n); simpl.
 case (is_eq n n); simpl; auto; intros e.
@@ -135,7 +135,7 @@ memo_mval n1 v1 => memo_mval (S n1) (g n1 v1) end.
 Definition dimemo_list := imemo_list _ mf mg.
 
 Theorem dimemo_get_correct: forall n, dmemo_get n dimemo_list = f n.
-Proof. try hammer_hook "StreamMemo" "StreamMemo.dimemo_get_correct". Undo.  
+Proof. hammer_hook "StreamMemo" "StreamMemo.dimemo_get_correct".  
 intros n; unfold dmemo_get, dimemo_list.
 rewrite (imemo_get_correct memo_val mf mg); simpl.
 case (is_eq n n); simpl; auto; intros e.

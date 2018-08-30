@@ -28,7 +28,7 @@ end.
 Lemma AC_IF :
 forall (P B:Prop) (e1 e2:P) (Q:P -> Prop),
 (B -> Q e1) -> (~ B -> Q e2) -> Q (IFProp B e1 e2).
-Proof. try hammer_hook "Berardi" "Berardi.AC_IF". Undo.  
+Proof. hammer_hook "Berardi" "Berardi.AC_IF".  
 intros P B e1 e2 Q p1 p2.
 unfold IFProp.
 case (EM B); assumption.
@@ -57,14 +57,14 @@ Record retract_cond : Prop :=
 
 
 Lemma AC : forall r:retract_cond, retract -> forall a:A, r.(j2) (r.(i2) a) = a.
-Proof. try hammer_hook "Berardi" "Berardi.AC". Undo.   intros r. exact r.(inv2). Qed.
+Proof. hammer_hook "Berardi" "Berardi.AC".   intros r. exact r.(inv2). Qed.
 
 End Retracts.
 
 
 
 Lemma L1 : forall A B:Prop, retract_cond (pow A) (pow B).
-Proof. try hammer_hook "Berardi" "Berardi.L1". Undo.  
+Proof. hammer_hook "Berardi" "Berardi.L1".  
 intros A B.
 destruct (EM (retract (pow A) (pow B))) as [(f0,g0,e) | hf].
 exists f0 g0; trivial.
@@ -84,7 +84,7 @@ fun X => let lX := j2 (L1 X U) in let rU := i2 (L1 U U) in lX (rU h).
 
 
 Lemma retract_pow_U_U : retract (pow U) U.
-Proof. try hammer_hook "Berardi" "Berardi.retract_pow_U_U". Undo.  
+Proof. hammer_hook "Berardi" "Berardi.retract_pow_U_U".  
 exists g f.
 intro a.
 unfold f, g; simpl.
@@ -103,7 +103,7 @@ Definition R : U := g (fun u:U => Not_b (u U u)).
 
 
 Lemma not_has_fixpoint : R R = Not_b (R R).
-Proof. try hammer_hook "Berardi" "Berardi.not_has_fixpoint". Undo.  
+Proof. hammer_hook "Berardi" "Berardi.not_has_fixpoint".  
 unfold R at 1.
 unfold g.
 rewrite AC.
@@ -114,7 +114,7 @@ Qed.
 
 
 Theorem classical_proof_irrelevence : T = F.
-Proof. try hammer_hook "Berardi" "Berardi.classical_proof_irrelevence". Undo.  
+Proof. hammer_hook "Berardi" "Berardi.classical_proof_irrelevence".  
 generalize not_has_fixpoint.
 unfold Not_b.
 apply AC_IF.

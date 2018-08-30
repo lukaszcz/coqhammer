@@ -46,7 +46,7 @@ Im_intro : forall x:U, In _ X x -> forall y:V, y = f x -> In _ (Im X f) y.
 
 Lemma Im_def :
 forall (X:Ensemble U) (f:U -> V) (x:U), In _ X x -> In _ (Im X f) (f x).
-Proof. try hammer_hook "Image" "Image.Im_def". Undo.  
+Proof. hammer_hook "Image" "Image.Im_def".  
 intros X f x H'; try assumption.
 apply Im_intro with (x := x); auto with sets.
 Qed.
@@ -54,7 +54,7 @@ Qed.
 Lemma Im_add :
 forall (X:Ensemble U) (x:U) (f:U -> V),
 Im (Add _ X x) f = Add _ (Im X f) (f x).
-Proof. try hammer_hook "Image" "Image.Im_add". Undo.  
+Proof. hammer_hook "Image" "Image.Im_add".  
 intros X x f.
 apply Extensionality_Ensembles.
 split; red; intros x0 H'.
@@ -70,7 +70,7 @@ trivial.
 Qed.
 
 Lemma image_empty : forall f:U -> V, Im (Empty_set U) f = Empty_set V.
-Proof. try hammer_hook "Image" "Image.image_empty". Undo.  
+Proof. hammer_hook "Image" "Image.image_empty".  
 intro f; try assumption.
 apply Extensionality_Ensembles.
 split; auto with sets.
@@ -81,7 +81,7 @@ Qed.
 
 Lemma finite_image :
 forall (X:Ensemble U) (f:U -> V), Finite _ X -> Finite _ (Im X f).
-Proof. try hammer_hook "Image" "Image.finite_image". Undo.  
+Proof. hammer_hook "Image" "Image.finite_image".  
 intros X f H'; elim H'.
 rewrite (image_empty f); auto with sets.
 intros A H'0 H'1 x H'2; clear H' X.
@@ -92,7 +92,7 @@ Qed.
 Lemma Im_inv :
 forall (X:Ensemble U) (f:U -> V) (y:V),
 In _ (Im X f) y ->  exists x : U, In _ X x /\ f x = y.
-Proof. try hammer_hook "Image" "Image.Im_inv". Undo.  
+Proof. hammer_hook "Image" "Image.Im_inv".  
 intros X f y H'; elim H'.
 intros x H'0 y0 H'1; rewrite H'1.
 exists x; auto with sets.
@@ -103,7 +103,7 @@ Definition injective (f:U -> V) := forall x y:U, f x = f y -> x = y.
 Lemma not_injective_elim :
 forall f:U -> V,
 ~ injective f ->  exists x : _, (exists y : _, f x = f y /\ x <> y).
-Proof. try hammer_hook "Image" "Image.not_injective_elim". Undo.  
+Proof. hammer_hook "Image" "Image.not_injective_elim".  
 unfold injective; intros f H.
 cut (exists x : _, ~ (forall y:U, f x = f y -> x = y)).
 2: apply not_all_ex_not with (P := fun x:U => forall y:U, f x = f y -> x = y);
@@ -119,7 +119,7 @@ Qed.
 Lemma cardinal_Im_intro :
 forall (A:Ensemble U) (f:U -> V) (n:nat),
 cardinal _ A n ->  exists p : nat, cardinal _ (Im A f) p.
-Proof. try hammer_hook "Image" "Image.cardinal_Im_intro". Undo.  
+Proof. hammer_hook "Image" "Image.cardinal_Im_intro".  
 intros.
 apply finite_cardinal; apply finite_image.
 apply cardinal_finite with n; trivial with sets.
@@ -128,7 +128,7 @@ Qed.
 Lemma In_Image_elim :
 forall (A:Ensemble U) (f:U -> V),
 injective f -> forall x:U, In _ (Im A f) (f x) -> In _ A x.
-Proof. try hammer_hook "Image" "Image.In_Image_elim". Undo.  
+Proof. hammer_hook "Image" "Image.In_Image_elim".  
 intros.
 elim Im_inv with A f (f x); trivial with sets.
 intros z C; elim C; intros InAz E.
@@ -139,7 +139,7 @@ Lemma injective_preserves_cardinal :
 forall (A:Ensemble U) (f:U -> V) (n:nat),
 injective f ->
 cardinal _ A n -> forall n':nat, cardinal _ (Im A f) n' -> n' = n.
-Proof. try hammer_hook "Image" "Image.injective_preserves_cardinal". Undo.  
+Proof. hammer_hook "Image" "Image.injective_preserves_cardinal".  
 induction 2 as [| A n H'0 H'1 x H'2]; auto with sets.
 rewrite (image_empty f).
 intros n' CE.
@@ -162,7 +162,7 @@ Qed.
 Lemma cardinal_decreases :
 forall (A:Ensemble U) (f:U -> V) (n:nat),
 cardinal U A n -> forall n':nat, cardinal V (Im A f) n' -> n' <= n.
-Proof. try hammer_hook "Image" "Image.cardinal_decreases". Undo.  
+Proof. hammer_hook "Image" "Image.cardinal_decreases".  
 induction 1 as [| A n H'0 H'1 x H'2]; auto with sets.
 rewrite (image_empty f); intros.
 cut (n' = 0).
@@ -181,7 +181,7 @@ Theorem Pigeonhole :
 forall (A:Ensemble U) (f:U -> V) (n:nat),
 cardinal U A n ->
 forall n':nat, cardinal V (Im A f) n' -> n' < n -> ~ injective f.
-Proof. try hammer_hook "Image" "Image.Pigeonhole". Undo.  
+Proof. hammer_hook "Image" "Image.Pigeonhole".  
 unfold not; intros A f n CAn n' CIfn' ltn'n I.
 cut (n' = n).
 intro E; generalize ltn'n; rewrite E; exact (lt_irrefl n).
@@ -195,7 +195,7 @@ cardinal _ A n ->
 forall n':nat,
 cardinal _ (Im A f) n' ->
 n' < n ->  exists x : _, (exists y : _, f x = f y /\ x <> y).
-Proof. try hammer_hook "Image" "Image.Pigeonhole_principle". Undo.  
+Proof. hammer_hook "Image" "Image.Pigeonhole_principle".  
 intros; apply not_injective_elim.
 apply Pigeonhole with A n n'; trivial with sets.
 Qed.

@@ -45,7 +45,7 @@ Local Notation "a ²" := (a*a) (at level 5, no associativity, format "a ²").
 
 Lemma sqrt_spec_nonneg : forall b,
 b² < (S b)² -> 0 <= b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_spec_nonneg". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_spec_nonneg".  
 intros b LT.
 destruct (le_gt_cases 0 b) as [Hb|Hb]; trivial. exfalso.
 assert ((S b)² < b²).
@@ -57,7 +57,7 @@ order.
 Qed.
 
 Lemma sqrt_nonneg : forall a, 0<=√a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_nonneg". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_nonneg".  
 intros. destruct (lt_ge_cases a 0) as [Ha|Ha].
 now rewrite (sqrt_neg _ Ha).
 apply sqrt_spec_nonneg. destruct (sqrt_spec a Ha). order.
@@ -66,7 +66,7 @@ Qed.
 
 
 Lemma sqrt_unique : forall a b, b² <= a < (S b)² -> √a == b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_unique". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_unique".  
 intros a b (LEb,LTb).
 assert (Ha : 0<=a) by (transitivity (b²); trivial using square_nonneg).
 assert (Hb : 0<=b) by (apply sqrt_spec_nonneg; order).
@@ -84,7 +84,7 @@ Qed.
 
 
 Instance sqrt_wd : Proper (eq==>eq) sqrt.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_wd". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_wd".  
 intros x x' Hx.
 destruct (lt_ge_cases x 0) as [H|H].
 rewrite 2 sqrt_neg; trivial. reflexivity.
@@ -96,7 +96,7 @@ Qed.
 
 Lemma sqrt_spec_alt : forall a, 0<=a -> exists r,
 a == (√a)² + r /\ 0 <= r <= 2*√a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_spec_alt". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_spec_alt".  
 intros a Ha.
 destruct (sqrt_spec _ Ha) as (LE,LT).
 destruct (le_exists_sub _ _ LE) as (r & Hr & Hr').
@@ -110,7 +110,7 @@ Qed.
 
 Lemma sqrt_unique' : forall a b c, 0<=c<=2*b ->
 a == b² + c -> √a == b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_unique'". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_unique'".  
 intros a b c (Hc,H) EQ.
 apply sqrt_unique.
 rewrite EQ.
@@ -124,7 +124,7 @@ Qed.
 
 
 Lemma sqrt_square : forall a, 0<=a -> √(a²) == a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_square".  
 intros a Ha.
 apply sqrt_unique' with 0.
 split. order. apply mul_nonneg_nonneg; order'. now nzsimpl.
@@ -133,7 +133,7 @@ Qed.
 
 
 Lemma sqrt_pred_square : forall a, 0<a -> √(P a²) == P a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_pred_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_pred_square".  
 intros a Ha.
 apply sqrt_unique.
 assert (EQ := lt_succ_pred 0 a Ha).
@@ -151,7 +151,7 @@ Qed.
 
 
 Lemma sqrt_le_mono : forall a b, a <= b -> √a <= √b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_le_mono". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_le_mono".  
 intros a b Hab.
 destruct (lt_ge_cases a 0) as [Ha|Ha].
 rewrite (sqrt_neg _ Ha). apply sqrt_nonneg.
@@ -166,7 +166,7 @@ Qed.
 
 
 Lemma sqrt_lt_cancel : forall a b, √a < √b -> a < b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_lt_cancel". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_lt_cancel".  
 intros a b H.
 destruct (lt_ge_cases b 0) as [Hb|Hb].
 rewrite (sqrt_neg b Hb) in H; generalize (sqrt_nonneg a); order.
@@ -184,7 +184,7 @@ Qed.
 
 
 Lemma sqrt_le_square : forall a b, 0<=a -> 0<=b -> (b²<=a <-> b <= √a).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_le_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_le_square".  
 intros a b Ha Hb. split; intros H.
 rewrite <- (sqrt_square b); trivial.
 now apply sqrt_le_mono.
@@ -196,7 +196,7 @@ Qed.
 
 
 Lemma sqrt_lt_square : forall a b, 0<=a -> 0<=b -> (a<b² <-> √a < b).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_lt_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_lt_square".  
 intros a b Ha Hb. split; intros H.
 destruct (sqrt_spec a Ha) as (LE,_).
 apply square_lt_simpl_nonneg; try order.
@@ -207,36 +207,36 @@ Qed.
 
 
 Lemma sqrt_0 : √0 == 0.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_0". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_0".  
 rewrite <- (mul_0_l 0) at 1. now apply sqrt_square.
 Qed.
 
 Lemma sqrt_1 : √1 == 1.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_1". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_1".  
 rewrite <- (mul_1_l 1) at 1. apply sqrt_square. order'.
 Qed.
 
 Lemma sqrt_2 : √2 == 1.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_2". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_2".  
 apply sqrt_unique' with 1. nzsimpl; split; order'. now nzsimpl'.
 Qed.
 
 Lemma sqrt_pos : forall a, 0 < √a <-> 0 < a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_pos". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_pos".  
 intros a. split; intros Ha. apply sqrt_lt_cancel. now rewrite sqrt_0.
 rewrite <- le_succ_l, <- one_succ, <- sqrt_1. apply sqrt_le_mono.
 now rewrite one_succ, le_succ_l.
 Qed.
 
 Lemma sqrt_lt_lin : forall a, 1<a -> √a<a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_lt_lin". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_lt_lin".  
 intros a Ha. rewrite <- sqrt_lt_square; try order'.
 rewrite <- (mul_1_r a) at 1.
 rewrite <- mul_lt_mono_pos_l; order'.
 Qed.
 
 Lemma sqrt_le_lin : forall a, 0<=a -> √a<=a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_le_lin". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_le_lin".  
 intros a Ha.
 destruct (le_gt_cases a 0) as [H|H].
 setoid_replace a with 0 by order. now rewrite sqrt_0.
@@ -251,7 +251,7 @@ Qed.
 
 
 Lemma sqrt_mul_below : forall a b, √a * √b <= √(a*b).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_mul_below". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_mul_below".  
 intros a b.
 destruct (lt_ge_cases a 0) as [Ha|Ha].
 rewrite (sqrt_neg a Ha). nzsimpl. apply sqrt_nonneg.
@@ -267,7 +267,7 @@ now apply sqrt_spec.
 Qed.
 
 Lemma sqrt_mul_above : forall a b, 0<=a -> 0<=b -> √(a*b) < S (√a) * S (√b).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_mul_above". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_mul_above".  
 intros a b Ha Hb.
 apply sqrt_lt_square.
 now apply mul_nonneg_nonneg.
@@ -283,7 +283,7 @@ Qed.
 
 
 Lemma sqrt_succ_le : forall a, 0<=a -> √(S a) <= S (√a).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_succ_le". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_succ_le".  
 intros a Ha.
 apply lt_succ_r.
 apply sqrt_lt_square.
@@ -297,7 +297,7 @@ apply add_square_le. order'. apply le_le_succ_r, sqrt_nonneg.
 Qed.
 
 Lemma sqrt_succ_or : forall a, 0<=a -> √(S a) == S (√a) \/ √(S a) == √a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_succ_or". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_succ_or".  
 intros a Ha.
 destruct (le_gt_cases (√(S a)) (√a)) as [H|H].
 right. generalize (sqrt_le_mono _ _ (le_succ_diag_r a)); order.
@@ -306,7 +306,7 @@ Qed.
 
 Lemma sqrt_eq_succ_iff_square : forall a, 0<=a ->
 (√(S a) == S (√a) <-> exists b, 0<b /\ S a == b²).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_eq_succ_iff_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_eq_succ_iff_square".  
 intros a Ha. split.
 intros EQ. exists (S (√a)).
 split. apply lt_succ_r, sqrt_nonneg.
@@ -325,7 +325,7 @@ Qed.
 
 
 Lemma sqrt_add_le : forall a b, √(a+b) <= √a + √b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_add_le". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.sqrt_add_le".  
 assert (AUX : forall a b, a<0 -> √(a+b) <= √a + √b).
 intros a b Ha. rewrite (sqrt_neg a Ha). nzsimpl.
 apply sqrt_le_mono.
@@ -359,7 +359,7 @@ Qed.
 
 
 Lemma add_sqrt_le : forall a b, 0<=a -> 0<=b -> √a + √b <= √(2*(a+b)).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.add_sqrt_le". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtProp.add_sqrt_le".  
 intros a b Ha Hb.
 assert (Ha':=sqrt_nonneg a).
 assert (Hb':=sqrt_nonneg b).
@@ -395,17 +395,17 @@ end.
 Local Notation "√° a" := (sqrt_up a) (at level 6, no associativity).
 
 Lemma sqrt_up_eqn0 : forall a, a<=0 -> √°a == 0.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_eqn0". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_eqn0".  
 intros a Ha. unfold sqrt_up. case compare_spec; try order.
 Qed.
 
 Lemma sqrt_up_eqn : forall a, 0<a -> √°a == S √(P a).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_eqn". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_eqn".  
 intros a Ha. unfold sqrt_up. case compare_spec; try order.
 Qed.
 
 Lemma sqrt_up_spec : forall a, 0<a -> (P √°a)² < a <= (√°a)².
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_spec". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_spec".  
 intros a Ha.
 rewrite sqrt_up_eqn, pred_succ; trivial.
 assert (Ha' := lt_succ_pred 0 a Ha).
@@ -418,7 +418,7 @@ Qed.
 
 
 Lemma sqrt_up_nonneg : forall a, 0<=√°a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_nonneg". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_nonneg".  
 intros. destruct (le_gt_cases a 0) as [Ha|Ha].
 now rewrite sqrt_up_eqn0.
 rewrite sqrt_up_eqn; trivial. apply le_le_succ_r, sqrt_nonneg.
@@ -427,7 +427,7 @@ Qed.
 
 
 Instance sqrt_up_wd : Proper (eq==>eq) sqrt_up.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_wd". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_wd".  
 assert (Proper (eq==>eq==>Logic.eq) compare).
 intros x x' Hx y y' Hy. do 2 case compare_spec; trivial; order.
 intros x x' Hx; unfold sqrt_up; rewrite Hx; case compare; now rewrite ?Hx.
@@ -436,7 +436,7 @@ Qed.
 
 
 Lemma sqrt_up_unique : forall a b, 0<b -> (P b)² < a <= b² -> √°a == b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_unique". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_unique".  
 intros a b Hb (LEb,LTb).
 assert (Ha : 0<a)
 by (apply le_lt_trans with (P b)²; trivial using square_nonneg).
@@ -450,7 +450,7 @@ Qed.
 
 
 Lemma sqrt_up_square : forall a, 0<=a -> √°(a²) == a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_square".  
 intros a Ha.
 le_elim Ha.
 rewrite sqrt_up_eqn by (now apply mul_pos_pos).
@@ -461,7 +461,7 @@ Qed.
 
 
 Lemma sqrt_up_succ_square : forall a, 0<=a -> √°(S a²) == S a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_succ_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_succ_square".  
 intros a Ha.
 rewrite sqrt_up_eqn by (now apply lt_succ_r, mul_nonneg_nonneg).
 now rewrite pred_succ, sqrt_square.
@@ -470,17 +470,17 @@ Qed.
 
 
 Lemma sqrt_up_0 : √°0 == 0.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_0". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_0".  
 rewrite <- (mul_0_l 0) at 1. now apply sqrt_up_square.
 Qed.
 
 Lemma sqrt_up_1 : √°1 == 1.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_1". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_1".  
 rewrite <- (mul_1_l 1) at 1. apply sqrt_up_square. order'.
 Qed.
 
 Lemma sqrt_up_2 : √°2 == 2.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_2". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_2".  
 rewrite sqrt_up_eqn by order'.
 now rewrite two_succ, pred_succ, sqrt_1.
 Qed.
@@ -488,7 +488,7 @@ Qed.
 
 
 Lemma le_sqrt_sqrt_up : forall a, √a <= √°a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.le_sqrt_sqrt_up". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.le_sqrt_sqrt_up".  
 intros a. unfold sqrt_up. case compare_spec; intros H.
 rewrite <- H, sqrt_0. order.
 rewrite <- (lt_succ_pred 0 a H) at 1. apply sqrt_succ_le.
@@ -497,7 +497,7 @@ now rewrite sqrt_neg.
 Qed.
 
 Lemma le_sqrt_up_succ_sqrt : forall a, √°a <= S (√a).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.le_sqrt_up_succ_sqrt". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.le_sqrt_up_succ_sqrt".  
 intros a. unfold sqrt_up.
 case compare_spec; intros H; try apply le_le_succ_r, sqrt_nonneg.
 rewrite <- succ_le_mono. apply sqrt_le_mono.
@@ -505,7 +505,7 @@ rewrite <- (lt_succ_pred 0 a H) at 2. apply le_succ_diag_r.
 Qed.
 
 Lemma sqrt_sqrt_up_spec : forall a, 0<=a -> (√a)² <= a <= (√°a)².
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_sqrt_up_spec". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_sqrt_up_spec".  
 intros a H. split.
 now apply sqrt_spec.
 le_elim H.
@@ -515,7 +515,7 @@ Qed.
 
 Lemma sqrt_sqrt_up_exact :
 forall a, 0<=a -> (√a == √°a <-> exists b, 0<=b /\ a == b²).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_sqrt_up_exact". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_sqrt_up_exact".  
 intros a Ha.
 split. intros. exists √a.
 split. apply sqrt_nonneg.
@@ -527,7 +527,7 @@ Qed.
 
 
 Lemma sqrt_up_le_mono : forall a b, a <= b -> √°a <= √°b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_le_mono". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_le_mono".  
 intros a b H.
 destruct (le_gt_cases a 0) as [Ha|Ha].
 rewrite (sqrt_up_eqn0 _ Ha). apply sqrt_up_nonneg.
@@ -538,7 +538,7 @@ Qed.
 
 
 Lemma sqrt_up_lt_cancel : forall a b, √°a < √°b -> a < b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_lt_cancel". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_lt_cancel".  
 intros a b H.
 destruct (le_gt_cases b 0) as [Hb|Hb].
 rewrite (sqrt_up_eqn0 _ Hb) in H; generalize (sqrt_up_nonneg a); order.
@@ -550,7 +550,7 @@ Qed.
 
 
 Lemma sqrt_up_lt_square : forall a b, 0<=a -> 0<=b -> (b² < a <-> b < √°a).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_lt_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_lt_square".  
 intros a b Ha Hb. split; intros H.
 destruct (sqrt_up_spec a) as (LE,LT).
 apply le_lt_trans with b²; trivial using square_nonneg.
@@ -561,7 +561,7 @@ Qed.
 
 
 Lemma sqrt_up_le_square : forall a b, 0<=a -> 0<=b -> (a <= b² <-> √°a <= b).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_le_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_le_square".  
 intros a b Ha Hb. split; intros H.
 rewrite <- (sqrt_up_square b Hb).
 now apply sqrt_up_le_mono.
@@ -570,14 +570,14 @@ transitivity (√°a)²; trivial. now apply sqrt_sqrt_up_spec.
 Qed.
 
 Lemma sqrt_up_pos : forall a, 0 < √°a <-> 0 < a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_pos". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_pos".  
 intros a. split; intros Ha. apply sqrt_up_lt_cancel. now rewrite sqrt_up_0.
 rewrite <- le_succ_l, <- one_succ, <- sqrt_up_1. apply sqrt_up_le_mono.
 now rewrite one_succ, le_succ_l.
 Qed.
 
 Lemma sqrt_up_lt_lin : forall a, 2<a -> √°a < a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_lt_lin". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_lt_lin".  
 intros a Ha.
 rewrite sqrt_up_eqn by order'.
 assert (Ha' := lt_succ_pred 2 a Ha).
@@ -586,7 +586,7 @@ apply sqrt_lt_lin. rewrite succ_lt_mono. now rewrite Ha', <- two_succ.
 Qed.
 
 Lemma sqrt_up_le_lin : forall a, 0<=a -> √°a<=a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_le_lin". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_le_lin".  
 intros a Ha.
 le_elim Ha.
 rewrite sqrt_up_eqn; trivial. apply le_succ_l.
@@ -601,7 +601,7 @@ Qed.
 
 
 Lemma sqrt_up_mul_above : forall a b, 0<=a -> 0<=b -> √°(a*b) <= √°a * √°b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_mul_above". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_mul_above".  
 intros a b Ha Hb.
 apply sqrt_up_le_square.
 now apply mul_nonneg_nonneg.
@@ -611,7 +611,7 @@ apply mul_le_mono_nonneg; trivial; now apply sqrt_sqrt_up_spec.
 Qed.
 
 Lemma sqrt_up_mul_below : forall a b, 0<a -> 0<b -> (P √°a)*(P √°b) < √°(a*b).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_mul_below". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_mul_below".  
 intros a b Ha Hb.
 apply sqrt_up_lt_square.
 apply mul_nonneg_nonneg; order.
@@ -628,7 +628,7 @@ Qed.
 
 
 Lemma sqrt_up_succ_le : forall a, 0<=a -> √°(S a) <= S (√°a).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_succ_le". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_succ_le".  
 intros a Ha.
 apply sqrt_up_le_square.
 now apply le_le_succ_r.
@@ -641,7 +641,7 @@ apply add_square_le. order'. apply sqrt_up_nonneg.
 Qed.
 
 Lemma sqrt_up_succ_or : forall a, 0<=a -> √°(S a) == S (√°a) \/ √°(S a) == √°a.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_succ_or". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_succ_or".  
 intros a Ha.
 destruct (le_gt_cases (√°(S a)) (√°a)) as [H|H].
 right. generalize (sqrt_up_le_mono _ _ (le_succ_diag_r a)); order.
@@ -650,7 +650,7 @@ Qed.
 
 Lemma sqrt_up_eq_succ_iff_square : forall a, 0<=a ->
 (√°(S a) == S (√°a) <-> exists b, 0<=b /\ a == b²).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_eq_succ_iff_square". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_eq_succ_iff_square".  
 intros a Ha. split.
 intros EQ.
 le_elim Ha.
@@ -667,7 +667,7 @@ Qed.
 
 
 Lemma sqrt_up_add_le : forall a b, √°(a+b) <= √°a + √°b.
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_add_le". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.sqrt_up_add_le".  
 assert (AUX : forall a b, a<=0 -> √°(a+b) <= √°a + √°b).
 intros a b Ha. rewrite (sqrt_up_eqn0 a Ha). nzsimpl.
 apply sqrt_up_le_mono.
@@ -689,7 +689,7 @@ Qed.
 
 
 Lemma add_sqrt_up_le : forall a b, 0<=a -> 0<=b -> √°a + √°b <= S √°(2*(a+b)).
-Proof. try hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.add_sqrt_up_le". Undo.  
+Proof. hammer_hook "NZSqrt" "NZSqrt.NZSqrtUpProp.add_sqrt_up_le".  
 intros a b Ha Hb.
 le_elim Ha.
 le_elim Hb.

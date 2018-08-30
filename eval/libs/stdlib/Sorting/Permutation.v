@@ -35,7 +35,7 @@ Local Hint Constructors Permutation.
 
 
 Theorem Permutation_nil : forall (l : list A), Permutation [] l -> l = [].
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_nil". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_nil".  
 intros l HF.
 remember (@nil A) as m in HF.
 induction HF; discriminate || auto.
@@ -43,7 +43,7 @@ Qed.
 
 Theorem Permutation_nil_cons : forall (l : list A) (x : A),
 ~ Permutation nil (x::l).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_nil_cons". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_nil_cons".  
 intros l x HF.
 apply Permutation_nil in HF; discriminate.
 Qed.
@@ -51,20 +51,20 @@ Qed.
 
 
 Theorem Permutation_refl : forall l : list A, Permutation l l.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_refl". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_refl".  
 induction l; constructor. exact IHl.
 Qed.
 
 Theorem Permutation_sym : forall l l' : list A,
 Permutation l l' -> Permutation l' l.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_sym". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_sym".  
 intros l l' Hperm; induction Hperm; auto.
 apply perm_trans with (l':=l'); assumption.
 Qed.
 
 Theorem Permutation_trans : forall l l' l'' : list A,
 Permutation l l' -> Permutation l' l'' -> Permutation l l''.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_trans". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_trans".  
 exact perm_trans.
 Qed.
 
@@ -86,7 +86,7 @@ Equivalence_Transitive := @Permutation_trans A }.
 
 Instance Permutation_cons A :
 Proper (Logic.eq ==> @Permutation A ==> @Permutation A) (@cons A) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_cons". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_cons".  
 repeat intro; subst; auto using perm_skip.
 Qed.
 
@@ -101,33 +101,33 @@ Implicit Types l m : list A.
 
 Theorem Permutation_in : forall (l l' : list A) (x : A),
 Permutation l l' -> In x l -> In x l'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_in". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_in".  
 intros l l' x Hperm; induction Hperm; simpl; tauto.
 Qed.
 
 Global Instance Permutation_in' :
 Proper (Logic.eq ==> @Permutation A ==> iff) (@In A) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_in'". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_in'".  
 repeat red; intros; subst; eauto using Permutation_in.
 Qed.
 
 Lemma Permutation_app_tail : forall (l l' tl : list A),
 Permutation l l' -> Permutation (l++tl) (l'++tl).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app_tail". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app_tail".  
 intros l l' tl Hperm; induction Hperm as [|x l l'|x y l|l l' l'']; simpl; auto.
 eapply Permutation_trans with (l':=l'++tl); trivial.
 Qed.
 
 Lemma Permutation_app_head : forall (l tl tl' : list A),
 Permutation tl tl' -> Permutation (l++tl) (l++tl').
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app_head". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app_head".  
 intros l tl tl' Hperm; induction l;
 [trivial | repeat rewrite <- app_comm_cons; constructor; assumption].
 Qed.
 
 Theorem Permutation_app : forall (l m l' m' : list A),
 Permutation l l' -> Permutation m m' -> Permutation (l++m) (l'++m').
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app".  
 intros l m l' m' Hpermll' Hpermmm';
 induction Hpermll' as [|x l l'|x y l|l l' l''];
 repeat rewrite <- app_comm_cons; auto.
@@ -139,25 +139,25 @@ Qed.
 
 Global Instance Permutation_app' :
 Proper (@Permutation A ==> @Permutation A ==> @Permutation A) (@app A) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app'". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app'".  
 repeat intro; now apply Permutation_app.
 Qed.
 
 Lemma Permutation_add_inside : forall a (l l' tl tl' : list A),
 Permutation l l' -> Permutation tl tl' ->
 Permutation (l ++ a :: tl) (l' ++ a :: tl').
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_add_inside". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_add_inside".  
 intros; apply Permutation_app; auto.
 Qed.
 
 Lemma Permutation_cons_append : forall (l : list A) x,
 Permutation (x :: l) (l ++ x :: nil).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_cons_append". Undo.   induction l; intros; auto. simpl. rewrite <- IHl; auto. Qed.
+Proof. hammer_hook "Permutation" "Permutation.Permutation_cons_append".   induction l; intros; auto. simpl. rewrite <- IHl; auto. Qed.
 Local Hint Resolve Permutation_cons_append.
 
 Theorem Permutation_app_comm : forall (l l' : list A),
 Permutation (l ++ l') (l' ++ l).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app_comm". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app_comm".  
 induction l as [|x l]; simpl; intro l'.
 rewrite app_nil_r; trivial. rewrite IHl.
 rewrite app_comm_cons, Permutation_cons_append.
@@ -167,7 +167,7 @@ Local Hint Resolve Permutation_app_comm.
 
 Theorem Permutation_cons_app : forall (l l1 l2:list A) a,
 Permutation l (l1 ++ l2) -> Permutation (a :: l) (l1 ++ a :: l2).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_cons_app". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_cons_app".  
 intros l l1 l2 a H. rewrite H.
 rewrite app_comm_cons, Permutation_cons_append.
 now rewrite <- app_assoc.
@@ -175,38 +175,38 @@ Qed.
 Local Hint Resolve Permutation_cons_app.
 
 Lemma Permutation_Add a l l' : Add a l l' -> Permutation (a::l) l'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_Add". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_Add".  
 induction 1; simpl; trivial.
 rewrite perm_swap. now apply perm_skip.
 Qed.
 
 Theorem Permutation_middle : forall (l1 l2:list A) a,
 Permutation (a :: l1 ++ l2) (l1 ++ a :: l2).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_middle". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_middle".  
 auto.
 Qed.
 Local Hint Resolve Permutation_middle.
 
 Theorem Permutation_rev : forall (l : list A), Permutation l (rev l).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_rev". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_rev".  
 induction l as [| x l]; simpl; trivial. now rewrite IHl at 1.
 Qed.
 
 Global Instance Permutation_rev' :
 Proper (@Permutation A ==> @Permutation A) (@rev A) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_rev'". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_rev'".  
 repeat intro; now rewrite <- 2 Permutation_rev.
 Qed.
 
 Theorem Permutation_length : forall (l l' : list A),
 Permutation l l' -> length l = length l'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_length". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_length".  
 intros l l' Hperm; induction Hperm; simpl; auto. now transitivity (length l').
 Qed.
 
 Global Instance Permutation_length' :
 Proper (@Permutation A ==> Logic.eq) (@length A) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_length'". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_length'".  
 exact Permutation_length.
 Qed.
 
@@ -217,7 +217,7 @@ P [] [] ->
 (forall x y l l', Permutation l l' -> P l l' -> P (y :: x :: l) (x :: y :: l')) ->
 (forall l l' l'', Permutation l l' -> P l l' -> Permutation l' l'' -> P l' l'' -> P l l'') ->
 forall l l', Permutation l l' -> P l l'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_ind_bis". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_ind_bis".  
 intros P Hnil Hskip Hswap Htrans.
 induction 1; auto.
 apply Htrans with (x::y::l); auto.
@@ -231,7 +231,7 @@ Qed.
 
 Theorem Permutation_nil_app_cons : forall (l l' : list A) (x : A),
 ~ Permutation nil (l++x::l').
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_nil_app_cons". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_nil_app_cons".  
 intros l l' x HF.
 apply Permutation_nil in HF. destruct l; discriminate.
 Qed.
@@ -248,7 +248,7 @@ try constructor; try rewrite perm_swap; try constructor; trivial;
 Theorem Permutation_Add_inv a l1 l2 :
 Permutation l1 l2 -> forall l1' l2', Add a l1' l1 -> Add a l2' l2 ->
 Permutation l1' l2'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_Add_inv". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_Add_inv".  
 revert l1 l2. refine (Permutation_ind_bis _ _ _ _ _).
 -
 inversion_clear 1.
@@ -267,25 +267,25 @@ Qed.
 
 Theorem Permutation_app_inv (l1 l2 l3 l4:list A) a :
 Permutation (l1++a::l2) (l3++a::l4) -> Permutation (l1++l2) (l3 ++ l4).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app_inv". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app_inv".  
 intros. eapply Permutation_Add_inv; eauto using Add_app.
 Qed.
 
 Theorem Permutation_cons_inv l l' a :
 Permutation (a::l) (a::l') -> Permutation l l'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_cons_inv". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_cons_inv".  
 intro. eapply Permutation_Add_inv; eauto using Add_head.
 Qed.
 
 Theorem Permutation_cons_app_inv l l1 l2 a :
 Permutation (a :: l) (l1 ++ a :: l2) -> Permutation l (l1 ++ l2).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_cons_app_inv". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_cons_app_inv".  
 intro. eapply Permutation_Add_inv; eauto using Add_head, Add_app.
 Qed.
 
 Theorem Permutation_app_inv_l : forall l l1 l2,
 Permutation (l ++ l1) (l ++ l2) -> Permutation l1 l2.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app_inv_l". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app_inv_l".  
 induction l; simpl; auto.
 intros.
 apply IHl.
@@ -294,12 +294,12 @@ Qed.
 
 Theorem Permutation_app_inv_r l l1 l2 :
 Permutation (l1 ++ l) (l2 ++ l) -> Permutation l1 l2.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_app_inv_r". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_app_inv_r".  
 rewrite 2 (Permutation_app_comm _ l). apply Permutation_app_inv_l.
 Qed.
 
 Lemma Permutation_length_1_inv: forall a l, Permutation [a] l -> l = [a].
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_length_1_inv". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_length_1_inv".  
 intros a l H; remember [a] as m in H.
 induction H; try (injection Heqm as -> ->);
 discriminate || auto.
@@ -307,14 +307,14 @@ apply Permutation_nil in H as ->; trivial.
 Qed.
 
 Lemma Permutation_length_1: forall a b, Permutation [a] [b] -> a = b.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_length_1". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_length_1".  
 intros a b H.
 apply Permutation_length_1_inv in H; injection H as ->; trivial.
 Qed.
 
 Lemma Permutation_length_2_inv :
 forall a1 a2 l, Permutation [a1;a2] l -> l = [a1;a2] \/ l = [a2;a1].
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_length_2_inv". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_length_2_inv".  
 intros a1 a2 l H; remember [a1;a2] as m in H.
 revert a1 a2 Heqm.
 induction H; intros; try (injection Heqm as ? ?; subst);
@@ -327,14 +327,14 @@ Qed.
 Lemma Permutation_length_2 :
 forall a1 a2 b1 b2, Permutation [a1;a2] [b1;b2] ->
 a1 = b1 /\ a2 = b2 \/ a1 = b2 /\ a2 = b1.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_length_2". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_length_2".  
 intros a1 b1 a2 b2 H.
 apply Permutation_length_2_inv in H as [H|H]; injection H as -> ->; auto.
 Qed.
 
 Lemma NoDup_Permutation l l' : NoDup l -> NoDup l' ->
 (forall x:A, In x l <-> In x l') -> Permutation l l'.
-Proof. try hammer_hook "Permutation" "Permutation.NoDup_Permutation". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.NoDup_Permutation".  
 intros N. revert l'. induction N as [|a l Hal Hl IH].
 - destruct l'; simpl; auto.
 intros Hl' H. exfalso. rewrite (H a); auto.
@@ -356,13 +356,13 @@ Qed.
 
 Lemma NoDup_Permutation_bis l l' : NoDup l -> NoDup l' ->
 length l' <= length l -> incl l l' -> Permutation l l'.
-Proof. try hammer_hook "Permutation" "Permutation.NoDup_Permutation_bis". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.NoDup_Permutation_bis".  
 intros. apply NoDup_Permutation; auto.
 split; auto. apply NoDup_length_incl; trivial.
 Qed.
 
 Lemma Permutation_NoDup l l' : Permutation l l' -> NoDup l -> NoDup l'.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_NoDup". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_NoDup".  
 induction 1; auto.
 * inversion_clear 1; constructor; eauto using Permutation_in.
 * inversion_clear 1 as [|? ? H1 H2]. inversion_clear H2; simpl in *.
@@ -371,7 +371,7 @@ Qed.
 
 Global Instance Permutation_NoDup' :
 Proper (@Permutation A ==> iff) (@NoDup A) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_NoDup'". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_NoDup'".  
 repeat red; eauto using Permutation_NoDup.
 Qed.
 
@@ -384,13 +384,13 @@ Variable f : A -> B.
 
 Lemma Permutation_map l l' :
 Permutation l l' -> Permutation (map f l) (map f l').
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_map". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_map".  
 induction 1; simpl; eauto.
 Qed.
 
 Global Instance Permutation_map' :
 Proper (@Permutation A ==> @Permutation B) (map f) | 10.
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_map'". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_map'".  
 exact Permutation_map.
 Qed.
 
@@ -400,7 +400,7 @@ Lemma nat_bijection_Permutation n f :
 bFun n f ->
 Injective f ->
 let l := seq 0 n in Permutation (map f l) l.
-Proof. try hammer_hook "Permutation" "Permutation.nat_bijection_Permutation". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.nat_bijection_Permutation".  
 intros Hf BD.
 apply NoDup_Permutation_bis; auto using Injective_map_NoDup, seq_NoDup.
 * now rewrite map_length.
@@ -420,7 +420,7 @@ Let adapt f n :=
 let m := f (S n) in if le_lt_dec m (f 0) then m else pred m.
 
 Let adapt_injective f : Injective f -> Injective (adapt f).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_alt.adapt_injective". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_alt.adapt_injective".  
 unfold adapt. intros Hf x y EQ.
 destruct le_lt_dec as [LE|LT]; destruct le_lt_dec as [LE'|LT'].
 - now apply eq_add_S, Hf.
@@ -440,7 +440,7 @@ Qed.
 
 Let adapt_ok a l1 l2 f : Injective f -> length l1 = f 0 ->
 forall n, nth_error (l1++a::l2) (f (S n)) = nth_error (l1++l2) (adapt f n).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_alt.adapt_ok". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_alt.adapt_ok".  
 unfold adapt. intros Hf E n.
 destruct le_lt_dec as [LE|LT].
 - apply Lt.le_lt_or_eq in LE.
@@ -458,7 +458,7 @@ Permutation l l' <->
 (length l = length l' /\
 exists f:nat->nat,
 Injective f /\ forall n, nth_error l' n = nth_error l (f n)).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_nth_error". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_nth_error".  
 split.
 { intros P.
 split; [now apply Permutation_length|].
@@ -502,7 +502,7 @@ exists f:nat->nat,
 Injective f /\
 bFun (length l) f /\
 (forall n, nth_error l' n = nth_error l (f n)).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_nth_error_bis". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_nth_error_bis".  
 rewrite Permutation_nth_error; split.
 - intros (E & f & Hf & Hf').
 exists f. do 2 (split; trivial).
@@ -532,7 +532,7 @@ exists f:nat->nat,
 bFun n f /\
 bInjective n f /\
 (forall x, x < n -> nth x l' d = nth (f x) l d)).
-Proof. try hammer_hook "Permutation" "Permutation.Permutation_nth". Undo.  
+Proof. hammer_hook "Permutation" "Permutation.Permutation_nth".  
 split.
 - intros H.
 assert (E := Permutation_length H).

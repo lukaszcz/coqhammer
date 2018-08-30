@@ -67,19 +67,19 @@ Context {A : Type} {B : Type} (R : relation B).
 
 Global Instance RelCompFun_Reflexive
 `(Measure A B f, Reflexive _ R) : Reflexive (R@@f).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Reflexive". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Reflexive".   firstorder. Qed.
 
 Global Instance RelCompFun_Symmetric
 `(Measure A B f, Symmetric _ R) : Symmetric (R@@f).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Symmetric". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Symmetric".   firstorder. Qed.
 
 Global Instance RelCompFun_Transitive
 `(Measure A B f, Transitive _ R) : Transitive (R@@f).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Transitive". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Transitive".   firstorder. Qed.
 
 Global Instance RelCompFun_Irreflexive
 `(Measure A B f, Irreflexive _ R) : Irreflexive (R@@f).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Irreflexive". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelCompFun_Irreflexive".   firstorder. Qed.
 
 Global Program Instance RelCompFun_Equivalence
 `(Measure A B f, Equivalence _ R) : Equivalence (R@@f).
@@ -94,55 +94,55 @@ Section RelProd_Instances.
 Context {A : Type} {B : Type} (RA : relation A) (RB : relation B).
 
 Global Instance RelProd_Reflexive `(Reflexive _ RA, Reflexive _ RB) : Reflexive (RA*RB).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelProd_Reflexive". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelProd_Reflexive".   firstorder. Qed.
 
 Global Instance RelProd_Symmetric `(Symmetric _ RA, Symmetric _ RB)
 : Symmetric (RA*RB).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelProd_Symmetric". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelProd_Symmetric".   firstorder. Qed.
 
 Global Instance RelProd_Transitive
 `(Transitive _ RA, Transitive _ RB) : Transitive (RA*RB).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelProd_Transitive". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelProd_Transitive".   firstorder. Qed.
 
 Global Program Instance RelProd_Equivalence
 `(Equivalence _ RA, Equivalence _ RB) : Equivalence (RA*RB).
 
 Lemma FstRel_ProdRel :
 relation_equivalence (RA @@1) (RA*(fun _ _ : B => True)).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.FstRel_ProdRel". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.FstRel_ProdRel".   firstorder. Qed.
 
 Lemma SndRel_ProdRel :
 relation_equivalence (RB @@2) ((fun _ _ : A =>True) * RB).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.SndRel_ProdRel". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.SndRel_ProdRel".   firstorder. Qed.
 
 Global Instance FstRel_sub :
 subrelation (RA*RB) (RA @@1).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.FstRel_sub". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.FstRel_sub".   firstorder. Qed.
 
 Global Instance SndRel_sub :
 subrelation (RA*RB) (RB @@2).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.SndRel_sub". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.SndRel_sub".   firstorder. Qed.
 
 Global Instance pair_compat :
 Proper (RA==>RB==> RA*RB) (@pair _ _).
-Proof. try hammer_hook "RelationPairs" "RelationPairs.pair_compat". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.pair_compat".   firstorder. Qed.
 
 Global Instance fst_compat :
 Proper (RA*RB ==> RA) Fst.
-Proof. try hammer_hook "RelationPairs" "RelationPairs.fst_compat". Undo.  
+Proof. hammer_hook "RelationPairs" "RelationPairs.fst_compat".  
 intros (x,y) (x',y') (Hx,Hy); compute in *; auto.
 Qed.
 
 Global Instance snd_compat :
 Proper (RA*RB ==> RB) Snd.
-Proof. try hammer_hook "RelationPairs" "RelationPairs.snd_compat". Undo.  
+Proof. hammer_hook "RelationPairs" "RelationPairs.snd_compat".  
 intros (x,y) (x',y') (Hx,Hy); compute in *; auto.
 Qed.
 
 Global Instance RelCompFun_compat (f:A->B)
 `(Proper _ (Ri==>Ri==>Ro) RB) :
 Proper (Ri@@f==>Ri@@f==>Ro) (RB@@f)%signature.
-Proof. try hammer_hook "RelationPairs" "RelationPairs.RelCompFun_compat". Undo.   unfold RelCompFun; firstorder. Qed.
+Proof. hammer_hook "RelationPairs" "RelationPairs.RelCompFun_compat".   unfold RelCompFun; firstorder. Qed.
 End RelProd_Instances.
 
 Hint Unfold RelProd RelCompFun.

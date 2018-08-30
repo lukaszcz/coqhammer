@@ -30,7 +30,7 @@ Ltac z_order := Z.order.
 
 Section TestOrder.
 Let test : forall x y, x<=y -> y<=x -> x=y.
-Proof. try hammer_hook "ZBinary" "ZBinary.TestOrder.test". Undo.  
+Proof. hammer_hook "ZBinary" "ZBinary.TestOrder.test".  
 z_order.
 Qed.
 End TestOrder.

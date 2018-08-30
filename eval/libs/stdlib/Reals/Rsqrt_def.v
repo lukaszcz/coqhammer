@@ -40,7 +40,7 @@ Definition dicho_up (x y:R) (P:R -> bool) (N:nat) : R := Dichotomy_ub x y P N.
 Lemma dicho_comp :
 forall (x y:R) (P:R -> bool) (n:nat),
 x <= y -> dicho_lb x y P n <= dicho_up x y P n.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_comp". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_comp".  
 intros.
 induction  n as [| n Hrecn].
 simpl; assumption.
@@ -67,7 +67,7 @@ Qed.
 
 Lemma dicho_lb_growing :
 forall (x y:R) (P:R -> bool), x <= y -> Un_growing (dicho_lb x y P).
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_growing". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_growing".  
 intros.
 unfold Un_growing.
 intro.
@@ -87,7 +87,7 @@ Qed.
 
 Lemma dicho_up_decreasing :
 forall (x y:R) (P:R -> bool), x <= y -> Un_decreasing (dicho_up x y P).
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_decreasing". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_decreasing".  
 intros.
 unfold Un_decreasing.
 intro.
@@ -111,7 +111,7 @@ Qed.
 
 Lemma dicho_lb_maj_y :
 forall (x y:R) (P:R -> bool), x <= y -> forall n:nat, dicho_lb x y P n <= y.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_maj_y". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_maj_y".  
 intros.
 induction  n as [| n Hrecn].
 simpl; assumption.
@@ -134,7 +134,7 @@ Qed.
 
 Lemma dicho_lb_maj :
 forall (x y:R) (P:R -> bool), x <= y -> has_ub (dicho_lb x y P).
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_maj". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_maj".  
 intros.
 cut (forall n:nat, dicho_lb x y P n <= y).
 intro.
@@ -150,7 +150,7 @@ Qed.
 
 Lemma dicho_up_min_x :
 forall (x y:R) (P:R -> bool), x <= y -> forall n:nat, x <= dicho_up x y P n.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_min_x". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_min_x".  
 intros.
 induction  n as [| n Hrecn].
 simpl; assumption.
@@ -173,7 +173,7 @@ Qed.
 
 Lemma dicho_up_min :
 forall (x y:R) (P:R -> bool), x <= y -> has_lb (dicho_up x y P).
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_min". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_min".  
 intros.
 cut (forall n:nat, x <= dicho_up x y P n).
 intro.
@@ -193,7 +193,7 @@ Qed.
 Lemma dicho_lb_cv :
 forall (x y:R) (P:R -> bool),
 x <= y -> { l:R | Un_cv (dicho_lb x y P) l }.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_cv". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_cv".  
 intros.
 apply growing_cv.
 apply dicho_lb_growing; assumption.
@@ -203,7 +203,7 @@ Qed.
 Lemma dicho_up_cv :
 forall (x y:R) (P:R -> bool),
 x <= y -> { l:R | Un_cv (dicho_up x y P) l }.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_cv". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_cv".  
 intros.
 apply decreasing_cv.
 apply dicho_up_decreasing; assumption.
@@ -213,7 +213,7 @@ Qed.
 Lemma dicho_lb_dicho_up :
 forall (x y:R) (P:R -> bool) (n:nat),
 x <= y -> dicho_up x y P n - dicho_lb x y P n = (y - x) / 2 ^ n.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_dicho_up". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_dicho_up".  
 intros.
 induction  n as [| n Hrecn].
 simpl.
@@ -250,7 +250,7 @@ Qed.
 Definition pow_2_n (n:nat) := 2 ^ n.
 
 Lemma pow_2_n_neq_R0 : forall n:nat, pow_2_n n <> 0.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.pow_2_n_neq_R0". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.pow_2_n_neq_R0".  
 intro.
 unfold pow_2_n.
 apply pow_nonzero.
@@ -258,7 +258,7 @@ discrR.
 Qed.
 
 Lemma pow_2_n_growing : Un_growing pow_2_n.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.pow_2_n_growing". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.pow_2_n_growing".  
 unfold Un_growing.
 intro.
 replace (S n) with (n + 1)%nat;
@@ -273,7 +273,7 @@ apply Rlt_0_1.
 Qed.
 
 Lemma pow_2_n_infty : cv_infty pow_2_n.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.pow_2_n_infty". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.pow_2_n_infty".  
 cut (forall N:nat, INR N <= 2 ^ N).
 intros.
 unfold cv_infty.
@@ -332,7 +332,7 @@ Lemma cv_dicho :
 forall (x y l1 l2:R) (P:R -> bool),
 x <= y ->
 Un_cv (dicho_lb x y P) l1 -> Un_cv (dicho_up x y P) l2 -> l1 = l2.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.cv_dicho". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.cv_dicho".  
 intros.
 assert (H2 := CV_minus _ _ _ _ H0 H1).
 cut (Un_cv (fun i:nat => dicho_lb x y P i - dicho_up x y P i) 0).
@@ -396,7 +396,7 @@ end.
 Lemma continuity_seq :
 forall (f:R -> R) (Un:nat -> R) (l:R),
 continuity_pt f l -> Un_cv Un l -> Un_cv (fun i:nat => f (Un i)) (f l).
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.continuity_seq". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.continuity_seq".  
 unfold continuity_pt, Un_cv; unfold continue_in.
 unfold limit1_in.
 unfold limit_in.
@@ -423,7 +423,7 @@ Qed.
 Lemma dicho_lb_car :
 forall (x y:R) (P:R -> bool) (n:nat),
 P x = false -> P (dicho_lb x y P n) = false.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_car". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_lb_car".  
 intros.
 induction n as [| n Hrecn].
 - assumption.
@@ -439,7 +439,7 @@ Qed.
 Lemma dicho_up_car :
 forall (x y:R) (P:R -> bool) (n:nat),
 P y = true -> P (dicho_up x y P n) = true.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_car". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.dicho_up_car".  
 intros.
 induction n as [| n Hrecn].
 - assumption.
@@ -465,7 +465,7 @@ Lemma IVT :
 forall (f:R -> R) (x y:R),
 continuity f ->
 x < y -> f x < 0 -> 0 < f y -> { z:R | x <= z <= y /\ f z = 0 }.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.IVT". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.IVT".  
 intros.
 assert (x <= y) by (left; assumption).
 destruct (dicho_lb_cv x y (fun z:R => cond_positivity (f z)) H3) as (x1,p0).
@@ -594,7 +594,7 @@ Lemma IVT_cor :
 forall (f:R -> R) (x y:R),
 continuity f ->
 x <= y -> f x * f y <= 0 -> { z:R | x <= z <= y /\ f z = 0 }.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.IVT_cor". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.IVT_cor".  
 intros.
 destruct (total_order_T 0 (f x)) as [[Hltx|Heqx]|Hgtx].
 destruct (total_order_T 0 (f y)) as [[Hlty|Heqy]|Hgty].
@@ -652,7 +652,7 @@ Qed.
 
 Lemma Rsqrt_exists :
 forall y:R, 0 <= y -> { z:R | 0 <= z /\ y = Rsqr z }.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.Rsqrt_exists". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.Rsqrt_exists".  
 intros.
 set (f := fun x:R => Rsqr x - y).
 cut (f 0 <= 0).
@@ -723,7 +723,7 @@ let (a,_) := Rsqrt_exists (nonneg y) (cond_nonneg y) in a.
 
 
 Lemma Rsqrt_positivity : forall x:nonnegreal, 0 <= Rsqrt x.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.Rsqrt_positivity". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.Rsqrt_positivity".  
 intro.
 destruct (Rsqrt_exists (nonneg x) (cond_nonneg x)) as (x0 & H1 & H2).
 cut (x0 = Rsqrt x).
@@ -739,7 +739,7 @@ Qed.
 
 
 Lemma Rsqrt_Rsqrt : forall x:nonnegreal, Rsqrt x * Rsqrt x = x.
-Proof. try hammer_hook "Rsqrt_def" "Rsqrt_def.Rsqrt_Rsqrt". Undo.  
+Proof. hammer_hook "Rsqrt_def" "Rsqrt_def.Rsqrt_Rsqrt".  
 intros.
 destruct (Rsqrt_exists (nonneg x) (cond_nonneg x)) as (x0 & H1 & H2).
 cut (x0 = Rsqrt x).

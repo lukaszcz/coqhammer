@@ -37,7 +37,7 @@ Definition Listing {A:Type} (l:list A) := NoDup l /\ Full l.
 Definition Finite' (A:Type) := exists (l:list A), Listing l.
 
 Lemma Finite_alt A (d:decidable_eq A) : Finite A <-> Finite' A.
-Proof. try hammer_hook "FinFun" "FinFun.Finite_alt". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Finite_alt".  
 split.
 - intros (l,F). destruct (uniquify d l) as (l' & N & I).
 exists l'. split; trivial.
@@ -49,14 +49,14 @@ Qed.
 
 Lemma Injective_map_NoDup A B (f:A->B) (l:list A) :
 Injective f -> NoDup l -> NoDup (map f l).
-Proof. try hammer_hook "FinFun" "FinFun.Injective_map_NoDup". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Injective_map_NoDup".  
 intros Ij. induction 1 as [|x l X N IH]; simpl; constructor; trivial.
 rewrite in_map_iff. intros (y & E & Y). apply Ij in E. now subst.
 Qed.
 
 Lemma Injective_list_carac A B (d:decidable_eq A)(f:A->B) :
 Injective f <-> (forall l, NoDup l -> NoDup (map f l)).
-Proof. try hammer_hook "FinFun" "FinFun.Injective_list_carac". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Injective_list_carac".  
 split.
 - intros. now apply Injective_map_NoDup.
 - intros H x y E.
@@ -69,7 +69,7 @@ Qed.
 
 Lemma Injective_carac A B (l:list A) : Listing l ->
 forall (f:A->B), Injective f <-> NoDup (map f l).
-Proof. try hammer_hook "FinFun" "FinFun.Injective_carac". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Injective_carac".  
 intros L f. split.
 - intros Ij. apply Injective_map_NoDup; trivial. apply L.
 - intros N x y E.
@@ -90,7 +90,7 @@ Qed.
 
 Lemma Surjective_list_carac A B (f:A->B):
 Surjective f <-> (forall lB, exists lA, incl lB (map f lA)).
-Proof. try hammer_hook "FinFun" "FinFun.Surjective_list_carac". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Surjective_list_carac".  
 split.
 - intros Su.
 induction lB as [|b lB IH].
@@ -108,7 +108,7 @@ Qed.
 
 Lemma Surjective_carac A B : Finite B -> decidable_eq B ->
 forall f:A->B, Surjective f <-> (exists lA, Listing (map f lA)).
-Proof. try hammer_hook "FinFun" "FinFun.Surjective_carac". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Surjective_carac".  
 intros (lB,FB) d. split.
 - rewrite Surjective_list_carac.
 intros Su. destruct (Su lB) as (lA,IC).
@@ -125,7 +125,7 @@ Qed.
 Lemma Endo_Injective_Surjective :
 forall A, Finite A -> decidable_eq A ->
 forall f:A->A, Injective f <-> Surjective f.
-Proof. try hammer_hook "FinFun" "FinFun.Endo_Injective_Surjective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Endo_Injective_Surjective".  
 intros A F d f. rewrite (Surjective_carac F d). split.
 - apply (Finite_alt d) in F. destruct F as (l,L).
 rewrite (Injective_carac L); intros.
@@ -158,7 +158,7 @@ Definition EqDec (A:Type) := forall x y:A, {x=y}+{x<>y}.
 
 Lemma Finite_Empty_or_not A :
 Finite A -> (A->False) \/ exists a:A,True.
-Proof. try hammer_hook "FinFun" "FinFun.Finite_Empty_or_not". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Finite_Empty_or_not".  
 intros (l,F).
 destruct l.
 - left; exact F.
@@ -169,7 +169,7 @@ Lemma Surjective_inverse :
 forall A B, Finite A -> EqDec B ->
 forall f:A->B, Surjective f ->
 exists g:B->A, forall x, f (g x) = x.
-Proof. try hammer_hook "FinFun" "FinFun.Surjective_inverse". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Surjective_inverse".  
 intros A B F d f Su.
 destruct (Finite_Empty_or_not F) as [noA | (a,_)].
 -
@@ -196,7 +196,7 @@ Qed.
 Lemma Injective_Surjective_Bijective :
 forall A B, Finite A -> EqDec B ->
 forall f:A->B, Injective f -> Surjective f -> Bijective f.
-Proof. try hammer_hook "FinFun" "FinFun.Injective_Surjective_Bijective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Injective_Surjective_Bijective".  
 intros A B F d f Ij Su.
 destruct (Surjective_inverse F d Su) as (g, E).
 exists g. split; trivial.
@@ -207,7 +207,7 @@ Qed.
 
 
 Lemma Fin_Finite n : Finite (Fin.t n).
-Proof. try hammer_hook "FinFun" "FinFun.Fin_Finite". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin_Finite".  
 induction n.
 - exists nil.
 red;inversion a.
@@ -258,12 +258,12 @@ destruct le_lt_dec as [H'|H'];
 |try rewrite (n2f_ext H' H) in *; try clear H'].
 
 Lemma extend_ok n f : bFun n (@extend n f).
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_ok". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_ok".  
 intros x h. unfold extend. break_dec h. apply f2n_ok.
 Qed.
 
 Lemma extend_f2n n f (x:Fin.t n) : extend f (f2n x) = f2n (f x).
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_f2n". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_f2n".  
 generalize (n2f_f2n x). unfold extend, f2n, f2n_ok.
 destruct (Fin.to_nat x) as (x',h); simpl.
 break_dec h.
@@ -271,21 +271,21 @@ now intros ->.
 Qed.
 
 Lemma extend_n2f n f x (h:x<n) : n2f (extend_ok f h) = f (n2f h).
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_n2f". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_n2f".  
 generalize (extend_ok f h). unfold extend in *. break_dec h. intros h'.
 rewrite <- n2f_f2n. now apply n2f_ext.
 Qed.
 
 Lemma restrict_f2n n f hf (x:Fin.t n) :
 f2n (@restrict n f hf x) = f (f2n x).
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_f2n". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_f2n".  
 unfold restrict, f2n. destruct (Fin.to_nat x) as (x',h); simpl.
 apply f2n_n2f.
 Qed.
 
 Lemma restrict_n2f n f hf x (h:x<n) :
 @restrict n f hf (n2f h) = n2f (hf _ h).
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_n2f". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_n2f".  
 unfold restrict. generalize (f2n_n2f h). unfold f2n.
 destruct (Fin.to_nat (n2f h)) as (x',h'); simpl. intros ->.
 now apply n2f_ext.
@@ -293,7 +293,7 @@ Qed.
 
 Lemma extend_surjective n f :
 bSurjective n (@extend n f) <-> Surjective f.
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_surjective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_surjective".  
 split.
 - intros hf y.
 destruct (hf _ (f2n_ok y)) as (x & h & Eq).
@@ -309,7 +309,7 @@ Qed.
 
 Lemma extend_injective n f :
 bInjective n (@extend n f) <-> Injective f.
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_injective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.extend_injective".  
 split.
 - intros hf x y Eq.
 apply f2n_inj. apply hf; try apply f2n_ok.
@@ -324,7 +324,7 @@ Qed.
 
 Lemma restrict_surjective n f h :
 Surjective (@restrict n f h) <-> bSurjective n f.
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_surjective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_surjective".  
 split.
 - intros hf y hy.
 destruct (hf (n2f hy)) as (x,Eq).
@@ -340,7 +340,7 @@ Qed.
 
 Lemma restrict_injective n f h :
 Injective (@restrict n f h) <-> bInjective n f.
-Proof. try hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_injective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.Fin2Restrict.restrict_injective".  
 split.
 - intros hf x y hx hy Eq.
 rewrite <- (f2n_n2f hx), <- (f2n_n2f hy). f_equal.
@@ -360,7 +360,7 @@ Import Fin2Restrict.
 
 Lemma bInjective_bSurjective n (f:nat->nat) :
 bFun n f -> (bInjective n f <-> bSurjective n f).
-Proof. try hammer_hook "FinFun" "FinFun.bInjective_bSurjective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.bInjective_bSurjective".  
 intros h.
 rewrite <- (restrict_injective h), <- (restrict_surjective h).
 apply Endo_Injective_Surjective.
@@ -371,7 +371,7 @@ Qed.
 Lemma bSurjective_bBijective n (f:nat->nat) :
 bFun n f -> bSurjective n f ->
 exists g, bFun n g /\ forall x, x < n -> g (f x) = x /\ f (g x) = x.
-Proof. try hammer_hook "FinFun" "FinFun.bSurjective_bBijective". Undo.  
+Proof. hammer_hook "FinFun" "FinFun.bSurjective_bBijective".  
 intro hf.
 rewrite <- (restrict_surjective hf). intros Su.
 assert (Ij : Injective (restrict hf)).

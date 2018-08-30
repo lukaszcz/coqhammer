@@ -35,7 +35,7 @@ Typeclasses Opaque complement.
 
 
 Lemma complement_inverse R : complement (flip R) = flip (complement R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.complement_inverse". Undo.   reflexivity. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.complement_inverse".   reflexivity. Qed.
 
 Class Irreflexive (R : relation A) :=
 irreflexivity : Reflexive (complement R).
@@ -65,7 +65,7 @@ StrictOrder_Transitive :> Transitive R }.
 
 
 Global Instance StrictOrder_Asymmetric `(StrictOrder R) : Asymmetric R.
-Proof. try hammer_hook "RelationClasses" "RelationClasses.StrictOrder_Asymmetric". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.StrictOrder_Asymmetric".   firstorder. Qed.
 
 
 
@@ -101,12 +101,12 @@ is_subrelation : forall {x y}, R x y -> R' x y.
 
 
 Lemma subrelation_symmetric R `(Symmetric R) : subrelation (flip R) R.
-Proof. try hammer_hook "RelationClasses" "RelationClasses.subrelation_symmetric". Undo.   hnf. intros. red in H0. apply symmetry. assumption. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.subrelation_symmetric".   hnf. intros. red in H0. apply symmetry. assumption. Qed.
 
 Section flip.
 
 Lemma flip_Reflexive `{Reflexive R} : Reflexive (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.flip_Reflexive". Undo.   tauto. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.flip_Reflexive".   tauto. Qed.
 
 Program Definition flip_Irreflexive `(Irreflexive R) : Irreflexive (flip R) :=
 irreflexivity (R:=R).
@@ -122,21 +122,21 @@ fun x y z H H' => transitivity (R:=R) H' H.
 
 Program Definition flip_Antisymmetric `(Antisymmetric eqA R) :
 Antisymmetric eqA (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.flip_Antisymmetric". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.flip_Antisymmetric".   firstorder. Qed.
 
 
 
 Lemma flip_PreOrder `(PreOrder R) : PreOrder (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.flip_PreOrder". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.flip_PreOrder".   firstorder. Qed.
 
 Lemma flip_StrictOrder `(StrictOrder R) : StrictOrder (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.flip_StrictOrder". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.flip_StrictOrder".   firstorder. Qed.
 
 Lemma flip_PER `(PER R) : PER (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.flip_PER". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.flip_PER".   firstorder. Qed.
 
 Lemma flip_Equivalence `(Equivalence R) : Equivalence (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.flip_Equivalence". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.flip_Equivalence".   firstorder. Qed.
 
 End flip.
 
@@ -144,10 +144,10 @@ Section complement.
 
 Definition complement_Irreflexive `(Reflexive R)
 : Irreflexive (complement R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.complement_Irreflexive". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.complement_Irreflexive".   firstorder. Qed.
 
 Definition complement_Symmetric `(Symmetric R) : Symmetric (complement R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.complement_Symmetric". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.complement_Symmetric".   firstorder. Qed.
 End complement.
 
 
@@ -416,10 +416,10 @@ Definition relation_disjunction (R : relation A) (R' : relation A) : relation A 
 
 Global Instance relation_equivalence_equivalence :
 Equivalence relation_equivalence.
-Proof. try hammer_hook "RelationClasses" "RelationClasses.relation_equivalence_equivalence". Undo.   exact (@predicate_equivalence_equivalence (A::A::Tnil)). Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.relation_equivalence_equivalence".   exact (@predicate_equivalence_equivalence (A::A::Tnil)). Qed.
 
 Global Instance relation_implication_preorder : PreOrder (@subrelation A).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.relation_implication_preorder". Undo.   exact (@predicate_implication_preorder (A::A::Tnil)). Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.relation_implication_preorder".   exact (@predicate_implication_preorder (A::A::Tnil)). Qed.
 
 
 
@@ -429,7 +429,7 @@ partial_order_equivalence : relation_equivalence eqA (relation_conjunction R (fl
 
 
 Global Instance partial_order_antisym `(PartialOrder eqA R) : ! Antisymmetric A eqA R.
-Proof with auto. try hammer_hook "RelationClasses" "RelationClasses.partial_order_antisym". Undo.  
+Proof with auto. hammer_hook "RelationClasses" "RelationClasses.partial_order_antisym".  
 reduce_goal.
 pose proof partial_order_equivalence as poe. do 3 red in poe.
 apply <- poe. firstorder.
@@ -437,7 +437,7 @@ Qed.
 
 
 Lemma PartialOrder_inverse `(PartialOrder eqA R) : PartialOrder eqA (flip R).
-Proof. try hammer_hook "RelationClasses" "RelationClasses.PartialOrder_inverse". Undo.   firstorder. Qed.
+Proof. hammer_hook "RelationClasses" "RelationClasses.PartialOrder_inverse".   firstorder. Qed.
 End Binary.
 
 Hint Extern 3 (PartialOrder (flip _)) => class_apply PartialOrder_inverse : typeclass_instances.
@@ -448,7 +448,7 @@ Program Instance subrelation_partial_order :
 ! PartialOrder (relation A) relation_equivalence subrelation.
 
 Next Obligation.
-Proof. try hammer_hook "RelationClasses" "RelationClasses.subrelation_partial_order". Undo.  
+Proof. hammer_hook "RelationClasses" "RelationClasses.subrelation_partial_order".  
 unfold relation_equivalence in *. compute; firstorder.
 Qed.
 

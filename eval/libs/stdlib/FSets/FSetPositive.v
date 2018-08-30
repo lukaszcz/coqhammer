@@ -304,41 +304,41 @@ Definition lt m m' := compare_fun m m' = Lt.
 
 
 Lemma In_1: forall s x y, E.eq x y -> In x s -> In y s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.In_1". Undo.   intros s x y ->. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.In_1".   intros s x y ->. trivial. Qed.
 
 
 
 Lemma eq_refl: forall s, eq s s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_refl". Undo.   unfold eq, Equal. reflexivity. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_refl".   unfold eq, Equal. reflexivity. Qed.
 
 Lemma eq_sym: forall s s', eq s s' -> eq s' s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_sym". Undo.   unfold eq, Equal. intros. symmetry. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_sym".   unfold eq, Equal. intros. symmetry. trivial. Qed.
 
 Lemma eq_trans: forall s s' s'', eq s s' -> eq s' s'' -> eq s s''.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_trans". Undo.   unfold eq, Equal. intros ? ? ? H ? ?. rewrite H. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_trans".   unfold eq, Equal. intros ? ? ? H ? ?. rewrite H. trivial. Qed.
 
 
 
 Lemma mem_1: forall s x, In x s -> mem x s = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_1". Undo.   unfold In. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_1".   unfold In. trivial. Qed.
 
 Lemma mem_2: forall s x, mem x s = true -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_2". Undo.   unfold In. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_2".   unfold In. trivial. Qed.
 
 
 
 Lemma mem_Leaf: forall x, mem x Leaf = false.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_Leaf". Undo.   destruct x; trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_Leaf".   destruct x; trivial. Qed.
 
 
 
 Lemma empty_1 : Empty empty.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.empty_1". Undo.   unfold Empty, In. intro. rewrite mem_Leaf. discriminate. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.empty_1".   unfold Empty, In. intro. rewrite mem_Leaf. discriminate. Qed.
 
 
 
 Lemma mem_node: forall x l o r, mem x (node l o r) = mem x (Node l o r).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_node". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.mem_node".  
 intros x l o r.
 case o; trivial.
 destruct l; trivial.
@@ -350,7 +350,7 @@ Local Opaque node.
 
 
 Lemma is_empty_spec: forall s, Empty s <-> is_empty s = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.is_empty_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.is_empty_spec".  
 unfold Empty, In.
 induction s as [|l IHl o r IHr]; simpl. now split.
 rewrite <- 2andb_lazy_alt, 2andb_true_iff, <- IHl, <- IHr. clear IHl IHr.
@@ -364,18 +364,18 @@ intros H [a|a|]; apply H || intro; discriminate.
 Qed.
 
 Lemma is_empty_1: forall s, Empty s -> is_empty s = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.is_empty_1". Undo.   intro. rewrite is_empty_spec. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.is_empty_1".   intro. rewrite is_empty_spec. trivial. Qed.
 
 Lemma is_empty_2: forall s, is_empty s = true -> Empty s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.is_empty_2". Undo.   intro. rewrite is_empty_spec. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.is_empty_2".   intro. rewrite is_empty_spec. trivial. Qed.
 
 
 
 Lemma subset_Leaf_s: forall s, Leaf [<=] s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_Leaf_s". Undo.   intros s i Hi. elim (empty_1 Hi). Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_Leaf_s".   intros s i Hi. elim (empty_1 Hi). Qed.
 
 Lemma subset_spec: forall s s', s [<=] s' <-> subset s s' = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_spec".  
 induction s as [|l IHl o r IHr]; intros [|l' o' r']; simpl.
 split; intros. reflexivity. apply subset_Leaf_s.
 
@@ -421,15 +421,15 @@ Qed.
 
 
 Lemma subset_1: forall s s', Subset s s' -> subset s s' = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_1". Undo.   intros s s'. apply -> subset_spec; trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_1".   intros s s'. apply -> subset_spec; trivial. Qed.
 
 Lemma subset_2: forall s s', subset s s' = true -> Subset s s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_2". Undo.   intros s s'. apply <- subset_spec; trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.subset_2".   intros s s'. apply <- subset_spec; trivial. Qed.
 
 
 
 Lemma equal_subset: forall s s', equal s s' = subset s s' && subset s' s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_subset". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_subset".  
 induction s as [|l IHl o r IHr]; intros [|l' o' r']; simpl; trivial.
 destruct o. reflexivity. rewrite andb_comm. reflexivity.
 rewrite <- 6andb_lazy_alt. rewrite eq_iff_eq_true.
@@ -441,19 +441,19 @@ destruct o; auto. destruct o'; trivial.
 Qed.
 
 Lemma equal_spec: forall s s', Equal s s' <-> equal s s' = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_spec".  
 intros. rewrite equal_subset. rewrite andb_true_iff.
 rewrite <- 2subset_spec. unfold Equal, Subset. firstorder.
 Qed.
 
 Lemma equal_1: forall s s', Equal s s' -> equal s s' = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_1". Undo.   intros s s'. apply -> equal_spec; trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_1".   intros s s'. apply -> equal_spec; trivial. Qed.
 
 Lemma equal_2: forall s s', equal s s' = true -> Equal s s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_2". Undo.   intros s s'. apply <- equal_spec; trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.equal_2".   intros s s'. apply <- equal_spec; trivial. Qed.
 
 Lemma eq_dec : forall s s', { eq s s' } + { ~ eq s s' }.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_dec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.eq_dec".  
 unfold eq.
 intros. case_eq (equal s s'); intro H.
 left. apply equal_2, H.
@@ -464,14 +464,14 @@ Defined.
 
 Lemma lex_Opp: forall u v u' v', u = CompOpp u' -> v = CompOpp v' ->
 lex u v = CompOpp (lex u' v').
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lex_Opp". Undo.   intros ? ? u' ? -> ->. case u'; reflexivity. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lex_Opp".   intros ? ? u' ? -> ->. case u'; reflexivity. Qed.
 
 Lemma compare_bool_inv: forall b b',
 compare_bool b b' = CompOpp (compare_bool b' b).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_bool_inv". Undo.   intros [|] [|]; reflexivity. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_bool_inv".   intros [|] [|]; reflexivity. Qed.
 
 Lemma compare_inv: forall s s', compare_fun s s' = CompOpp (compare_fun s' s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_inv". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_inv".  
 induction s as [|l IHl o r IHr]; destruct s' as [|l' o' r']; trivial.
 unfold compare_fun. case is_empty; reflexivity.
 unfold compare_fun. case is_empty; reflexivity.
@@ -480,14 +480,14 @@ case compare_bool; simpl; trivial; apply lex_Opp; auto.
 Qed.
 
 Lemma lex_Eq: forall u v, lex u v = Eq <-> u=Eq /\ v=Eq.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lex_Eq". Undo.   intros u v; destruct u; intuition discriminate. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lex_Eq".   intros u v; destruct u; intuition discriminate. Qed.
 
 Lemma compare_bool_Eq: forall b1 b2,
 compare_bool b1 b2 = Eq <-> eqb b1 b2 = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_bool_Eq". Undo.   intros [|] [|]; intuition discriminate. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_bool_Eq".   intros [|] [|]; intuition discriminate. Qed.
 
 Lemma compare_equal: forall s s', compare_fun s s' = Eq <-> equal s s' = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_equal". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_equal".  
 induction s as [|l IHl o r IHr]; destruct s' as [|l' o' r'].
 simpl. tauto.
 unfold compare_fun, equal. case is_empty; intuition discriminate.
@@ -499,18 +499,18 @@ Qed.
 
 
 Lemma compare_gt: forall s s', compare_fun s s' = Gt -> lt s' s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_gt". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_gt".  
 unfold lt. intros s s'. rewrite compare_inv.
 case compare_fun; trivial; intros; discriminate.
 Qed.
 
 Lemma compare_eq: forall s s', compare_fun s s' = Eq -> eq s s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_eq". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_eq".  
 unfold eq. intros s s'. rewrite compare_equal, equal_spec. trivial.
 Qed.
 
 Lemma compare : forall s s' : t, Compare lt eq s s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare".  
 intros. case_eq (compare_fun s s'); intro H.
 apply EQ. apply compare_eq, H.
 apply LT. assumption.
@@ -527,22 +527,22 @@ Inductive ct: comparison -> comparison -> comparison -> Prop :=
 | ct_lgx: forall x, ct Lt Gt x.
 
 Lemma ct_cxe: forall x, ct (CompOpp x) x Eq.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_cxe". Undo.   destruct x; constructor. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_cxe".   destruct x; constructor. Qed.
 
 Lemma ct_xce: forall x, ct x (CompOpp x) Eq.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_xce". Undo.   destruct x; constructor. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_xce".   destruct x; constructor. Qed.
 
 Lemma ct_lxl: forall x, ct Lt x Lt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_lxl". Undo.   destruct x; constructor. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_lxl".   destruct x; constructor. Qed.
 
 Lemma ct_gxg: forall x, ct Gt x Gt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_gxg". Undo.   destruct x; constructor. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_gxg".   destruct x; constructor. Qed.
 
 Lemma ct_xll: forall x, ct x Lt Lt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_xll". Undo.   destruct x; constructor. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_xll".   destruct x; constructor. Qed.
 
 Lemma ct_xgg: forall x, ct x Gt Gt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_xgg". Undo.   destruct x; constructor. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_xgg".   destruct x; constructor. Qed.
 
 Local Hint Constructors ct: ct.
 Local Hint Resolve ct_cxe ct_xce ct_lxl ct_xll ct_gxg ct_xgg: ct.
@@ -550,26 +550,26 @@ Ltac ct := trivial with ct.
 
 Lemma ct_lex: forall u v w u' v' w',
 ct u v w -> ct u' v' w' -> ct (lex u u') (lex v v') (lex w w').
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_lex". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_lex".  
 intros u v w u' v' w' H H'.
 inversion_clear H; inversion_clear H'; ct; destruct w; ct; destruct w'; ct.
 Qed.
 
 Lemma ct_compare_bool:
 forall a b c, ct (compare_bool a b) (compare_bool b c) (compare_bool a c).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_compare_bool". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_compare_bool".  
 intros [|] [|] [|]; constructor.
 Qed.
 
 Lemma compare_x_Leaf: forall s,
 compare_fun s Leaf = if is_empty s then Eq else Gt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_x_Leaf". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_x_Leaf".  
 intros. rewrite compare_inv. simpl. case (is_empty s); reflexivity.
 Qed.
 
 Lemma compare_empty_x: forall a, is_empty a = true ->
 forall b, compare_fun a b = if is_empty b then Eq else Lt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_empty_x". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_empty_x".  
 induction a as [|l IHl o r IHr]; trivial.
 destruct o. intro; discriminate.
 simpl is_empty. rewrite <- andb_lazy_alt, andb_true_iff.
@@ -582,14 +582,14 @@ Qed.
 
 Lemma compare_x_empty: forall a, is_empty a = true ->
 forall b, compare_fun b a = if is_empty b then Eq else Gt.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_x_empty". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.compare_x_empty".  
 setoid_rewrite <- compare_x_Leaf.
 intros. rewrite 2(compare_inv b), (compare_empty_x _ H). reflexivity.
 Qed.
 
 Lemma ct_compare_fun:
 forall a b c, ct (compare_fun a b) (compare_fun b c) (compare_fun a c).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_compare_fun". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.ct_compare_fun".  
 induction a as [|l IHl o r IHr]; intros s' s''.
 destruct s' as [|l' o' r']; destruct s'' as [|l'' o'' r'']; ct.
 rewrite compare_inv. ct.
@@ -622,13 +622,13 @@ Qed.
 End lt_spec.
 
 Lemma lt_trans: forall s s' s'', lt s s' -> lt s' s'' -> lt s s''.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lt_trans". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lt_trans".  
 unfold lt. intros a b c. assert (H := ct_compare_fun a b c).
 inversion_clear H; trivial; intros; discriminate.
 Qed.
 
 Lemma lt_not_eq: forall s s', lt s s' -> ~ eq s s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lt_not_eq". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lt_not_eq".  
 unfold lt, eq. intros s s' H H'.
 rewrite equal_spec, <- compare_equal in H'. congruence.
 Qed.
@@ -636,26 +636,26 @@ Qed.
 
 
 Lemma add_spec: forall x y s, In y (add x s) <-> x=y \/ In y s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_spec".  
 unfold In. induction x; intros [y|y|] [|l o r]; simpl mem;
 try (rewrite IHx; clear IHx); rewrite ?mem_Leaf; intuition congruence.
 Qed.
 
 Lemma add_1: forall s x y, x = y -> In y (add x s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_1". Undo.   intros. apply <- add_spec. left. assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_1".   intros. apply <- add_spec. left. assumption. Qed.
 
 Lemma add_2: forall s x y, In y s -> In y (add x s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_2". Undo.   intros. apply <- add_spec. right. assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_2".   intros. apply <- add_spec. right. assumption. Qed.
 
 Lemma add_3: forall s x y, x<>y -> In y (add x s) -> In y s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_3". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.add_3".  
 intros s x y H. rewrite add_spec. intros [->|?]; trivial. elim H; trivial.
 Qed.
 
 
 
 Lemma remove_spec: forall x y s, In y (remove x s) <-> x<>y /\ In y s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_spec".  
 unfold In.
 induction x; intros [y|y|] [|l o r]; simpl remove; rewrite ?mem_node;
 simpl mem; try (rewrite IHx; clear IHx); rewrite ?mem_Leaf;
@@ -663,31 +663,31 @@ intuition congruence.
 Qed.
 
 Lemma remove_1: forall s x y, x=y -> ~ In y (remove x s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_1". Undo.   intros. rewrite remove_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_1".   intros. rewrite remove_spec. tauto. Qed.
 
 Lemma remove_2: forall s x y, x<>y -> In y s -> In y (remove x s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_2". Undo.   intros. rewrite remove_spec. split; assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_2".   intros. rewrite remove_spec. split; assumption. Qed.
 
 Lemma remove_3: forall s x y, In y (remove x s) -> In y s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_3". Undo.   intros s x y. rewrite remove_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.remove_3".   intros s x y. rewrite remove_spec. tauto. Qed.
 
 
 
 Lemma singleton_1: forall x y, In y (singleton x) -> x=y.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.singleton_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.singleton_1".  
 unfold singleton. intros x y. rewrite add_spec.
 unfold In. rewrite mem_Leaf. intuition discriminate.
 Qed.
 
 Lemma singleton_2: forall x y, x = y -> In y (singleton x).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.singleton_2". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.singleton_2".  
 unfold singleton. intros. apply add_1. assumption.
 Qed.
 
 
 
 Lemma union_spec: forall x s s', In x (union s s') <-> In x s \/ In x s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_spec".  
 unfold In.
 induction x; destruct s; destruct s'; simpl union; simpl mem;
 try (rewrite IHx; clear IHx); try intuition congruence.
@@ -695,18 +695,18 @@ apply orb_true_iff.
 Qed.
 
 Lemma union_1: forall s s' x, In x (union s s') -> In x s \/ In x s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_1". Undo.   intros. apply -> union_spec. assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_1".   intros. apply -> union_spec. assumption. Qed.
 
 Lemma union_2: forall s s' x, In x s -> In x (union s s').
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_2". Undo.   intros. apply <- union_spec. left. assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_2".   intros. apply <- union_spec. left. assumption. Qed.
 
 Lemma union_3: forall s s' x, In x s' -> In x (union s s').
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_3". Undo.   intros. apply <- union_spec. right. assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.union_3".   intros. apply <- union_spec. right. assumption. Qed.
 
 
 
 Lemma inter_spec: forall x s s', In x (inter s s') <-> In x s /\ In x s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_spec".  
 unfold In.
 induction x; destruct s; destruct s'; simpl inter; rewrite ?mem_node;
 simpl mem; try (rewrite IHx; clear IHx); try intuition congruence.
@@ -714,18 +714,18 @@ apply andb_true_iff.
 Qed.
 
 Lemma inter_1: forall s s' x, In x (inter s s') -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_1". Undo.   intros s s' x. rewrite inter_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_1".   intros s s' x. rewrite inter_spec. tauto. Qed.
 
 Lemma inter_2: forall s s' x, In x (inter s s') -> In x s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_2". Undo.   intros s s' x. rewrite inter_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_2".   intros s s' x. rewrite inter_spec. tauto. Qed.
 
 Lemma inter_3: forall s s' x, In x s -> In x s' -> In x (inter s s').
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_3". Undo.   intros. rewrite inter_spec. split; assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.inter_3".   intros. rewrite inter_spec. split; assumption. Qed.
 
 
 
 Lemma diff_spec: forall x s s', In x (diff s s') <-> In x s /\ ~ In x s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_spec".  
 unfold In.
 induction x; destruct s; destruct s' as [|l' o' r']; simpl diff;
 rewrite ?mem_node; simpl mem;
@@ -734,19 +734,19 @@ rewrite andb_true_iff. destruct o'; intuition discriminate.
 Qed.
 
 Lemma diff_1: forall s s' x, In x (diff s s') -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_1". Undo.   intros s s' x. rewrite diff_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_1".   intros s s' x. rewrite diff_spec. tauto. Qed.
 
 Lemma diff_2: forall s s' x, In x (diff s s') -> ~ In x s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_2". Undo.   intros s s' x. rewrite diff_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_2".   intros s s' x. rewrite diff_spec. tauto. Qed.
 
 Lemma diff_3: forall s s' x, In x s -> ~ In x s' -> In x (diff s s').
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_3". Undo.   intros. rewrite diff_spec. split; assumption. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.diff_3".   intros. rewrite diff_spec. split; assumption. Qed.
 
 
 
 Lemma fold_1: forall s (A : Type) (i : A) (f : elt -> A -> A),
 fold f s i = fold_left (fun a e => f e a) (elements s) i.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.fold_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.fold_1".  
 unfold fold, elements. intros s A i f. revert s i.
 set (f' := fun a e => f e a).
 assert (H: forall s i j acc,
@@ -764,7 +764,7 @@ Qed.
 
 
 Lemma cardinal_1: forall s, cardinal s = length (elements s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.cardinal_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.cardinal_1".  
 unfold elements.
 assert (H: forall s j acc,
 (cardinal s + length acc)%nat = length (xelements s j acc)).
@@ -781,7 +781,7 @@ Qed.
 
 Lemma xfilter_spec: forall f s x i,
 In x (xfilter f s i) <-> In x s /\ f (i@x) = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xfilter_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xfilter_spec".  
 intro f. unfold In.
 induction s as [|l IHl o r IHr]; intros x i; simpl xfilter.
 rewrite mem_Leaf. intuition discriminate.
@@ -793,22 +793,22 @@ Qed.
 
 Lemma filter_1 : forall s x f, @compat_bool elt E.eq f ->
 In x (filter f s) -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.filter_1". Undo.   unfold filter. intros s x f _. rewrite xfilter_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.filter_1".   unfold filter. intros s x f _. rewrite xfilter_spec. tauto. Qed.
 
 Lemma filter_2 : forall s x f, @compat_bool elt E.eq f ->
 In x (filter f s) -> f x = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.filter_2". Undo.   unfold filter. intros s x f _. rewrite xfilter_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.filter_2".   unfold filter. intros s x f _. rewrite xfilter_spec. tauto. Qed.
 
 Lemma filter_3 : forall s x f, @compat_bool elt E.eq f -> In x s ->
 f x = true -> In x (filter f s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.filter_3". Undo.   unfold filter. intros s x f _. rewrite xfilter_spec. tauto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.filter_3".   unfold filter. intros s x f _. rewrite xfilter_spec. tauto. Qed.
 
 
 
 
 Lemma xforall_spec: forall f s i,
 xforall f s i = true <-> For_all (fun x => f (i@x) = true) s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xforall_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xforall_spec".  
 unfold For_all, In. intro f.
 induction s as [|l IHl o r IHr]; intros i; simpl. now split.
 rewrite <- 2andb_lazy_alt, <- orb_lazy_alt, 2 andb_true_iff.
@@ -826,18 +826,18 @@ Qed.
 
 Lemma for_all_1 : forall s f, @compat_bool elt E.eq f ->
 For_all (fun x => f x = true) s -> for_all f s = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.for_all_1". Undo.   intros s f _. unfold for_all. rewrite xforall_spec. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.for_all_1".   intros s f _. unfold for_all. rewrite xforall_spec. trivial. Qed.
 
 Lemma for_all_2 : forall s f, @compat_bool elt E.eq f ->
 for_all f s = true -> For_all (fun x => f x = true) s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.for_all_2". Undo.   intros s f _. unfold for_all. rewrite xforall_spec. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.for_all_2".   intros s f _. unfold for_all. rewrite xforall_spec. trivial. Qed.
 
 
 
 
 Lemma xexists_spec: forall f s i,
 xexists f s i = true <-> Exists (fun x => f (i@x) = true) s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xexists_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xexists_spec".  
 unfold Exists, In. intro f.
 induction s as [|l IHl o r IHr]; intros i; simpl.
 split; [ discriminate | now intros  [ _ [? _]]].
@@ -853,18 +853,18 @@ Qed.
 
 Lemma exists_1 : forall s f, @compat_bool elt E.eq f ->
 Exists (fun x => f x = true) s -> exists_ f s = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.exists_1". Undo.   intros s f _. unfold exists_. rewrite xexists_spec. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.exists_1".   intros s f _. unfold exists_. rewrite xexists_spec. trivial. Qed.
 
 Lemma exists_2 : forall s f, @compat_bool elt E.eq f ->
 exists_ f s = true -> Exists (fun x => f x = true) s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.exists_2". Undo.   intros s f _. unfold exists_. rewrite xexists_spec. trivial. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.exists_2".   intros s f _. unfold exists_. rewrite xexists_spec. trivial. Qed.
 
 
 
 
 Lemma partition_filter : forall s f,
 partition f s = (filter f s, filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.partition_filter". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.partition_filter".  
 unfold partition, filter. intros s f. generalize 1 as j.
 induction s as [|l IHl o r IHr]; intro j.
 reflexivity.
@@ -873,11 +873,11 @@ Qed.
 
 Lemma partition_1 : forall s f, @compat_bool elt E.eq f ->
 Equal (fst (partition f s)) (filter f s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.partition_1". Undo.   intros. rewrite partition_filter. apply eq_refl. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.partition_1".   intros. rewrite partition_filter. apply eq_refl. Qed.
 
 Lemma partition_2 : forall s f, @compat_bool elt E.eq f ->
 Equal (snd (partition f s)) (filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.partition_2". Undo.   intros. rewrite partition_filter. apply eq_refl. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.partition_2".   intros. rewrite partition_filter. apply eq_refl. Qed.
 
 
 
@@ -888,7 +888,7 @@ Lemma xelements_spec: forall s j acc y,
 InL y (xelements s j acc)
 <->
 InL y acc \/ exists x, y=(j@x) /\ mem x s = true.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xelements_spec". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.xelements_spec".  
 induction s as [|l IHl o r IHr]; simpl.
 intros. split; intro H.
 left. assumption.
@@ -920,13 +920,13 @@ discriminate.
 Qed.
 
 Lemma elements_1: forall s x, In x s -> InL x (elements s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_1".  
 unfold elements, In. intros.
 rewrite xelements_spec. right. exists x. auto.
 Qed.
 
 Lemma elements_2: forall s x, InL x (elements s) -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_2". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_2".  
 unfold elements, In. intros s x H.
 rewrite xelements_spec in H. destruct H as [H|[y [H H']]].
 inversion_clear H.
@@ -934,10 +934,10 @@ rewrite H. assumption.
 Qed.
 
 Lemma lt_rev_append: forall j x y, E.lt x y -> E.lt (j@x) (j@y).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lt_rev_append". Undo.   induction j; intros; simpl; auto. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.lt_rev_append".   induction j; intros; simpl; auto. Qed.
 
 Lemma elements_3: forall s, sort E.lt (elements s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_3". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_3".  
 unfold elements.
 assert (H: forall s j acc,
 sort E.lt acc ->
@@ -974,7 +974,7 @@ intros x y _ H'. inversion H'.
 Qed.
 
 Lemma elements_3w: forall s, NoDupA E.eq (elements s).
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_3w". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.elements_3w".  
 intro. apply SortA_NoDupA with E.lt.
 constructor.
 intro. apply E.eq_refl.
@@ -991,7 +991,7 @@ Qed.
 
 
 Lemma choose_1: forall s x, choose s = Some x -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_1".  
 induction s as [| l IHl o r IHr]; simpl.
 intros. discriminate.
 destruct o.
@@ -1006,7 +1006,7 @@ intros. discriminate.
 Qed.
 
 Lemma choose_2: forall s, choose s = None -> Empty s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_2". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_2".  
 unfold Empty, In. intros s H.
 induction s as [|l IHl o r IHr].
 intro. apply empty_1.
@@ -1023,13 +1023,13 @@ discriminate.
 Qed.
 
 Lemma choose_empty: forall s, is_empty s = true -> choose s = None.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_empty". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_empty".  
 intros s Hs. case_eq (choose s); trivial.
 intros p Hp. apply choose_1 in Hp. apply is_empty_2 in Hs. elim (Hs _ Hp).
 Qed.
 
 Lemma choose_3': forall s s', Equal s s' -> choose s = choose s'.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_3'". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_3'".  
 setoid_rewrite equal_spec.
 induction s as [|l IHl o r IHr].
 intros. symmetry. apply choose_empty. assumption.
@@ -1045,13 +1045,13 @@ Qed.
 
 Lemma choose_3: forall s s' x y,
 choose s = Some x -> choose s' = Some y -> Equal s s' -> E.eq x y.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_3". Undo.   intros s s' x y Hx Hy H. apply choose_3' in H. congruence. Qed.
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.choose_3".   intros s s' x y Hx Hy H. apply choose_3' in H. congruence. Qed.
 
 
 
 
 Lemma min_elt_1: forall s x, min_elt s = Some x -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.min_elt_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.min_elt_1".  
 unfold In.
 induction s as [| l IHl o r IHr]; simpl.
 intros. discriminate.
@@ -1065,7 +1065,7 @@ discriminate.
 Qed.
 
 Lemma min_elt_3: forall s, min_elt s = None -> Empty s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.min_elt_3". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.min_elt_3".  
 unfold Empty, In. intros s H.
 induction s as [|l IHl o r IHr].
 intro. apply empty_1.
@@ -1079,7 +1079,7 @@ destruct o; discriminate.
 Qed.
 
 Lemma min_elt_2: forall s x y, min_elt s = Some x -> In y s -> ~ E.lt y x.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.min_elt_2". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.min_elt_2".  
 unfold In.
 induction s as [|l IHl o r IHr]; intros x y H H'.
 discriminate.
@@ -1104,7 +1104,7 @@ Qed.
 
 
 Lemma max_elt_1: forall s x, max_elt s = Some x -> In x s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.max_elt_1". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.max_elt_1".  
 unfold In.
 induction s as [| l IHl o r IHr]; simpl.
 intros. discriminate.
@@ -1118,7 +1118,7 @@ discriminate.
 Qed.
 
 Lemma max_elt_3: forall s, max_elt s = None -> Empty s.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.max_elt_3". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.max_elt_3".  
 unfold Empty, In. intros s H.
 induction s as [|l IHl o r IHr].
 intro. apply empty_1.
@@ -1132,7 +1132,7 @@ destruct o; discriminate.
 Qed.
 
 Lemma max_elt_2: forall s x y, max_elt s = Some x -> In y s -> ~ E.lt x y.
-Proof. try hammer_hook "FSetPositive" "FSetPositive.PositiveSet.max_elt_2". Undo.  
+Proof. hammer_hook "FSetPositive" "FSetPositive.PositiveSet.max_elt_2".  
 unfold In.
 induction s as [|l IHl o r IHr]; intros x y H H'.
 discriminate.

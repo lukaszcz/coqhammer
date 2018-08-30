@@ -37,20 +37,20 @@ recursion (fun _ => a) (fun _ => f).
 
 Lemma strong_rec_alt : forall a f n,
 strong_rec a f n = strong_rec0 a f (S n) n.
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_alt". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_alt".  
 reflexivity.
 Qed.
 
 Instance strong_rec0_wd :
 Proper (Aeq ==> ((N.eq ==> Aeq) ==> N.eq ==> Aeq) ==> N.eq ==> N.eq ==> Aeq)
 strong_rec0.
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_wd". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_wd".  
 unfold strong_rec0; f_equiv'.
 Qed.
 
 Instance strong_rec_wd :
 Proper (Aeq ==> ((N.eq ==> Aeq) ==> N.eq ==> Aeq) ==> N.eq ==> Aeq) strong_rec.
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_wd". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_wd".  
 intros a a' Eaa' f f' Eff' n n' Enn'.
 rewrite !strong_rec_alt; f_equiv'.
 Qed.
@@ -62,13 +62,13 @@ Variable f_wd : Proper ((N.eq==>Aeq)==>N.eq==>Aeq) f.
 
 Lemma strong_rec0_0 : forall a m,
 (strong_rec0 a f 0 m) = a.
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_0". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_0".  
 intros. unfold strong_rec0. rewrite recursion_0; auto.
 Qed.
 
 Lemma strong_rec0_succ : forall a n m,
 Aeq (strong_rec0 a f (S n) m) (f (strong_rec0 a f n) m).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_succ". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_succ".  
 intros. unfold strong_rec0.
 f_equiv.
 rewrite recursion_succ; f_equiv'.
@@ -76,7 +76,7 @@ Qed.
 
 Lemma strong_rec_0 : forall a,
 Aeq (strong_rec a f 0) (f (fun _ => a) 0).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_0". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_0".  
 intros. rewrite strong_rec_alt, strong_rec0_succ; f_equiv'.
 rewrite strong_rec0_0. reflexivity.
 Qed.
@@ -89,7 +89,7 @@ forall (n : N.t) (h1 h2 : N.t -> A),
 
 Lemma strong_rec0_more_steps : forall a k n m, m < n ->
 Aeq (strong_rec0 a f n m) (strong_rec0 a f (n+k) m).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_more_steps". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_more_steps".  
 intros a k n. pattern n.
 apply induction; clear n.
 
@@ -109,7 +109,7 @@ Qed.
 
 Lemma strong_rec0_fixpoint : forall (a : A) (n : N.t),
 Aeq (strong_rec0 a f (S n) n) (f (fun n => strong_rec0 a f (S n) n) n).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_fixpoint". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec0_fixpoint".  
 intros.
 rewrite strong_rec0_succ.
 apply step_good.
@@ -126,7 +126,7 @@ Qed.
 
 Theorem strong_rec_fixpoint : forall (a : A) (n : N.t),
 Aeq (strong_rec a f n) (f (strong_rec a f) n).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_fixpoint". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_fixpoint".  
 intros.
 transitivity (f (fun n => strong_rec0 a f (S n) n) n).
 rewrite strong_rec_alt.
@@ -139,7 +139,7 @@ Qed.
 
 Theorem strong_rec_0_any : forall (a : A)(any : N.t->A),
 Aeq (strong_rec a f 0) (f any 0).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_0_any". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_0_any".  
 intros.
 rewrite strong_rec_fixpoint.
 apply step_good.
@@ -150,7 +150,7 @@ Qed.
 
 Lemma strong_rec_any_fst_arg : forall a a' n,
 Aeq (strong_rec a f n) (strong_rec a' f n).
-Proof. try hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_any_fst_arg". Undo.  
+Proof. hammer_hook "NStrongRec" "NStrongRec.NStrongRecProp.strong_rec_any_fst_arg".  
 intros a a' n.
 generalize (le_refl n).
 set (k:=n) at -2. clearbody k. revert k. pattern n.

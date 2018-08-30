@@ -23,56 +23,56 @@ Local Open Scope Z_scope.
 
 
 Lemma nat_N_Z n : Z.of_N (N.of_nat n) = Z.of_nat n.
-Proof. try hammer_hook "Znat" "Znat.nat_N_Z". Undo.  
+Proof. hammer_hook "Znat" "Znat.nat_N_Z".  
 now destruct n.
 Qed.
 
 Lemma N_nat_Z n : Z.of_nat (N.to_nat n) = Z.of_N n.
-Proof. try hammer_hook "Znat" "Znat.N_nat_Z". Undo.  
+Proof. hammer_hook "Znat" "Znat.N_nat_Z".  
 destruct n; trivial. simpl.
 destruct (Pos2Nat.is_succ p) as (m,H).
 rewrite H. simpl. f_equal. now apply SuccNat2Pos.inv.
 Qed.
 
 Lemma positive_nat_Z p : Z.of_nat (Pos.to_nat p) = Zpos p.
-Proof. try hammer_hook "Znat" "Znat.positive_nat_Z". Undo.  
+Proof. hammer_hook "Znat" "Znat.positive_nat_Z".  
 destruct (Pos2Nat.is_succ p) as (n,H).
 rewrite H. simpl. f_equal. now apply SuccNat2Pos.inv.
 Qed.
 
 Lemma positive_N_Z p : Z.of_N (Npos p) = Zpos p.
-Proof. try hammer_hook "Znat" "Znat.positive_N_Z". Undo.  
+Proof. hammer_hook "Znat" "Znat.positive_N_Z".  
 reflexivity.
 Qed.
 
 Lemma positive_N_nat p : N.to_nat (Npos p) = Pos.to_nat p.
-Proof. try hammer_hook "Znat" "Znat.positive_N_nat". Undo.  
+Proof. hammer_hook "Znat" "Znat.positive_N_nat".  
 reflexivity.
 Qed.
 
 Lemma positive_nat_N p : N.of_nat (Pos.to_nat p) = Npos p.
-Proof. try hammer_hook "Znat" "Znat.positive_nat_N". Undo.  
+Proof. hammer_hook "Znat" "Znat.positive_nat_N".  
 destruct (Pos2Nat.is_succ p) as (n,H).
 rewrite H. simpl. f_equal. now apply SuccNat2Pos.inv.
 Qed.
 
 Lemma Z_N_nat n : N.to_nat (Z.to_N n) = Z.to_nat n.
-Proof. try hammer_hook "Znat" "Znat.Z_N_nat". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z_N_nat".  
 now destruct n.
 Qed.
 
 Lemma Z_nat_N n : N.of_nat (Z.to_nat n) = Z.to_N n.
-Proof. try hammer_hook "Znat" "Znat.Z_nat_N". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z_nat_N".  
 destruct n; simpl; trivial. apply positive_nat_N.
 Qed.
 
 Lemma Zabs_N_nat n : N.to_nat (Z.abs_N n) = Z.abs_nat n.
-Proof. try hammer_hook "Znat" "Znat.Zabs_N_nat". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs_N_nat".  
 now destruct n.
 Qed.
 
 Lemma Zabs_nat_N n : N.of_nat (Z.abs_nat n) = Z.abs_N n.
-Proof. try hammer_hook "Znat" "Znat.Zabs_nat_N". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs_nat_N".  
 destruct n; simpl; trivial; apply positive_nat_N.
 Qed.
 
@@ -84,92 +84,92 @@ Module N2Z.
 
 
 Lemma id n : Z.to_N (Z.of_N n) = n.
-Proof. try hammer_hook "Znat" "Znat.N2Z.id". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.id".  
 now destruct n.
 Qed.
 
 
 
 Lemma inj n m : Z.of_N n = Z.of_N m -> n = m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj".  
 destruct n, m; simpl; congruence.
 Qed.
 
 Lemma inj_iff n m : Z.of_N n = Z.of_N m <-> n = m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_iff". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_iff".  
 split. apply inj. intros; now f_equal.
 Qed.
 
 
 
 Lemma is_nonneg n : 0 <= Z.of_N n.
-Proof. try hammer_hook "Znat" "Znat.N2Z.is_nonneg". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.is_nonneg".  
 now destruct n.
 Qed.
 
 
 
 Lemma inj_0 : Z.of_N 0 = 0.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_0". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_0".  
 reflexivity.
 Qed.
 
 Lemma inj_pos p : Z.of_N (Npos p) = Zpos p.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_pos". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_pos".  
 reflexivity.
 Qed.
 
 
 
 Lemma inj_compare n m : (Z.of_N n ?= Z.of_N m) = (n ?= m)%N.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_compare". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_compare".  
 now destruct n, m.
 Qed.
 
 Lemma inj_le n m : (n<=m)%N <-> Z.of_N n <= Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_le". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_le".  
 unfold Z.le. now rewrite inj_compare.
 Qed.
 
 Lemma inj_lt n m : (n<m)%N <-> Z.of_N n < Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_lt". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_lt".  
 unfold Z.lt. now rewrite inj_compare.
 Qed.
 
 Lemma inj_ge n m : (n>=m)%N <-> Z.of_N n >= Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_ge". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_ge".  
 unfold Z.ge. now rewrite inj_compare.
 Qed.
 
 Lemma inj_gt n m : (n>m)%N <-> Z.of_N n > Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_gt". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_gt".  
 unfold Z.gt. now rewrite inj_compare.
 Qed.
 
 Lemma inj_abs_N z : Z.of_N (Z.abs_N z) = Z.abs z.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_abs_N". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_abs_N".  
 now destruct z.
 Qed.
 
 Lemma inj_add n m : Z.of_N (n+m) = Z.of_N n + Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_add". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_add".  
 now destruct n, m.
 Qed.
 
 Lemma inj_mul n m : Z.of_N (n*m) = Z.of_N n * Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_mul". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_mul".  
 now destruct n, m.
 Qed.
 
 Lemma inj_sub_max n m : Z.of_N (n-m) = Z.max 0 (Z.of_N n - Z.of_N m).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_sub_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_sub_max".  
 destruct n as [|n], m as [|m]; simpl; trivial.
 rewrite Z.pos_sub_spec, Pos.compare_sub_mask. unfold Pos.sub.
 now destruct (Pos.sub_mask n m).
 Qed.
 
 Lemma inj_sub n m : (m<=n)%N -> Z.of_N (n-m) = Z.of_N n - Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_sub". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_sub".  
 intros H. rewrite inj_sub_max.
 unfold N.le in H.
 rewrite N.compare_antisym, <- inj_compare, Z.compare_sub in H.
@@ -177,34 +177,34 @@ destruct (Z.of_N n - Z.of_N m); trivial; now destruct H.
 Qed.
 
 Lemma inj_succ n : Z.of_N (N.succ n) = Z.succ (Z.of_N n).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_succ". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_succ".  
 destruct n. trivial. simpl. now rewrite Pos.add_1_r.
 Qed.
 
 Lemma inj_pred_max n : Z.of_N (N.pred n) = Z.max 0 (Z.pred (Z.of_N n)).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_pred_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_pred_max".  
 unfold Z.pred. now rewrite N.pred_sub, inj_sub_max.
 Qed.
 
 Lemma inj_pred n : (0<n)%N -> Z.of_N (N.pred n) = Z.pred (Z.of_N n).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_pred". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_pred".  
 intros H. unfold Z.pred. rewrite N.pred_sub, inj_sub; trivial.
 now apply N.le_succ_l in H.
 Qed.
 
 Lemma inj_min n m : Z.of_N (N.min n m) = Z.min (Z.of_N n) (Z.of_N m).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_min". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_min".  
 unfold Z.min, N.min. rewrite inj_compare. now case N.compare.
 Qed.
 
 Lemma inj_max n m : Z.of_N (N.max n m) = Z.max (Z.of_N n) (Z.of_N m).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_max".  
 unfold Z.max, N.max. rewrite inj_compare.
 case N.compare_spec; intros; subst; trivial.
 Qed.
 
 Lemma inj_div n m : Z.of_N (n/m) = Z.of_N n / Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_div". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_div".  
 destruct m as [|m]. now destruct n.
 apply Z.div_unique_pos with (Z.of_N (n mod (Npos m))).
 split. apply is_nonneg. apply inj_lt. now apply N.mod_lt.
@@ -212,7 +212,7 @@ rewrite <- inj_mul, <- inj_add. f_equal. now apply N.div_mod.
 Qed.
 
 Lemma inj_mod n m : (m<>0)%N -> Z.of_N (n mod m) = (Z.of_N n) mod (Z.of_N m).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_mod". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_mod".  
 intros Hm.
 apply Z.mod_unique_pos with (Z.of_N (n / m)).
 split. apply is_nonneg. apply inj_lt. now apply N.mod_lt.
@@ -220,37 +220,37 @@ rewrite <- inj_mul, <- inj_add. f_equal. now apply N.div_mod.
 Qed.
 
 Lemma inj_quot n m : Z.of_N (n/m) = Z.of_N n ÷ Z.of_N m.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_quot". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_quot".  
 destruct m.
 - now destruct n.
 - rewrite Z.quot_div_nonneg, inj_div; trivial. apply is_nonneg. easy.
 Qed.
 
 Lemma inj_rem n m : Z.of_N (n mod m) = Z.rem (Z.of_N n) (Z.of_N m).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_rem". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_rem".  
 destruct m.
 - now destruct n.
 - rewrite Z.rem_mod_nonneg, inj_mod; trivial. easy. apply is_nonneg. easy.
 Qed.
 
 Lemma inj_div2 n : Z.of_N (N.div2 n) = Z.div2 (Z.of_N n).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_div2". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_div2".  
 destruct n as [|p]; trivial. now destruct p.
 Qed.
 
 Lemma inj_quot2 n : Z.of_N (N.div2 n) = Z.quot2 (Z.of_N n).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_quot2". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_quot2".  
 destruct n as [|p]; trivial. now destruct p.
 Qed.
 
 Lemma inj_pow n m : Z.of_N (n^m) = (Z.of_N n)^(Z.of_N m).
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_pow". Undo.  
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_pow".  
 destruct n, m; trivial. now rewrite Z.pow_0_l. apply Pos2Z.inj_pow.
 Qed.
 
 Lemma inj_testbit a n :
 Z.testbit (Z.of_N a) (Z.of_N n) = N.testbit a n.
-Proof. try hammer_hook "Znat" "Znat.N2Z.inj_testbit". Undo.   apply Z.testbit_of_N. Qed.
+Proof. hammer_hook "Znat" "Znat.N2Z.inj_testbit".   apply Z.testbit_of_N. Qed.
 
 End N2Z.
 
@@ -259,58 +259,58 @@ Module Z2N.
 
 
 Lemma id n : 0<=n -> Z.of_N (Z.to_N n) = n.
-Proof. try hammer_hook "Znat" "Znat.Z2N.id". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.id".  
 destruct n; (now destruct 1) || trivial.
 Qed.
 
 
 
 Lemma inj n m : 0<=n -> 0<=m -> Z.to_N n = Z.to_N m -> n = m.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj".  
 intros. rewrite <- (id n), <- (id m) by trivial. now f_equal.
 Qed.
 
 Lemma inj_iff n m : 0<=n -> 0<=m -> (Z.to_N n = Z.to_N m <-> n = m).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_iff". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_iff".  
 intros. split. now apply inj. intros; now subst.
 Qed.
 
 
 
 Lemma inj_0 : Z.to_N 0 = 0%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_0". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_0".  
 reflexivity.
 Qed.
 
 Lemma inj_pos n : Z.to_N (Zpos n) = Npos n.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_pos". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_pos".  
 reflexivity.
 Qed.
 
 Lemma inj_neg n : Z.to_N (Zneg n) = 0%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_neg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_neg".  
 reflexivity.
 Qed.
 
 
 
 Lemma inj_add n m : 0<=n -> 0<=m -> Z.to_N (n+m) = (Z.to_N n + Z.to_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_add". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_add".  
 destruct n, m; trivial; (now destruct 1) || (now destruct 2).
 Qed.
 
 Lemma inj_mul n m : 0<=n -> 0<=m -> Z.to_N (n*m) = (Z.to_N n * Z.to_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_mul". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_mul".  
 destruct n, m; trivial; (now destruct 1) || (now destruct 2).
 Qed.
 
 Lemma inj_succ n : 0<=n -> Z.to_N (Z.succ n) = N.succ (Z.to_N n).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_succ". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_succ".  
 unfold Z.succ. intros. rewrite inj_add by easy. apply N.add_1_r.
 Qed.
 
 Lemma inj_sub n m : 0<=m -> Z.to_N (n - m) = (Z.to_N n - Z.to_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_sub". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_sub".  
 destruct n as [|n|n], m as [|m|m]; trivial; try (now destruct 1).
 intros _. simpl.
 rewrite Z.pos_sub_spec, Pos.compare_sub_mask. unfold Pos.sub.
@@ -318,41 +318,41 @@ now destruct (Pos.sub_mask n m).
 Qed.
 
 Lemma inj_pred n : Z.to_N (Z.pred n) = N.pred (Z.to_N n).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_pred". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_pred".  
 unfold Z.pred. rewrite <- N.sub_1_r. now apply (inj_sub n 1).
 Qed.
 
 Lemma inj_compare n m : 0<=n -> 0<=m ->
 (Z.to_N n ?= Z.to_N m)%N = (n ?= m).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_compare". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_compare".  
 intros Hn Hm. now rewrite <- N2Z.inj_compare, !id.
 Qed.
 
 Lemma inj_le n m : 0<=n -> 0<=m -> (n<=m <-> (Z.to_N n <= Z.to_N m)%N).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_le". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_le".  
 intros Hn Hm. unfold Z.le, N.le. now rewrite inj_compare.
 Qed.
 
 Lemma inj_lt n m : 0<=n -> 0<=m -> (n<m <-> (Z.to_N n < Z.to_N m)%N).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_lt". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_lt".  
 intros Hn Hm. unfold Z.lt, N.lt. now rewrite inj_compare.
 Qed.
 
 Lemma inj_min n m : Z.to_N (Z.min n m) = N.min (Z.to_N n) (Z.to_N m).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_min". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_min".  
 destruct n, m; simpl; trivial; unfold Z.min, N.min; simpl;
 now case Pos.compare.
 Qed.
 
 Lemma inj_max n m : Z.to_N (Z.max n m) = N.max (Z.to_N n) (Z.to_N m).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_max".  
 destruct n, m; simpl; trivial; unfold Z.max, N.max; simpl.
 case Pos.compare_spec; intros; subst; trivial.
 now case Pos.compare.
 Qed.
 
 Lemma inj_div n m : 0<=n -> 0<=m -> Z.to_N (n/m) = (Z.to_N n / Z.to_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_div". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_div".  
 destruct n, m; trivial; intros Hn Hm;
 (now destruct Hn) || (now destruct Hm) || clear.
 simpl. rewrite <- (N2Z.id (_ / _)). f_equal. now rewrite N2Z.inj_div.
@@ -360,14 +360,14 @@ Qed.
 
 Lemma inj_mod n m : 0<=n -> 0<m ->
 Z.to_N (n mod m) = ((Z.to_N n) mod (Z.to_N m))%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_mod". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_mod".  
 destruct n, m; trivial; intros Hn Hm;
 (now destruct Hn) || (now destruct Hm) || clear.
 simpl. rewrite <- (N2Z.id (_ mod _)). f_equal. now rewrite N2Z.inj_mod.
 Qed.
 
 Lemma inj_quot n m : 0<=n -> 0<=m -> Z.to_N (n÷m) = (Z.to_N n / Z.to_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_quot". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_quot".  
 destruct m.
 - now destruct n.
 - intros. now rewrite Z.quot_div_nonneg, inj_div.
@@ -376,7 +376,7 @@ Qed.
 
 Lemma inj_rem n m :0<=n -> 0<=m ->
 Z.to_N (Z.rem n m) = ((Z.to_N n) mod (Z.to_N m))%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_rem". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_rem".  
 destruct m.
 - now destruct n.
 - intros. now rewrite Z.rem_mod_nonneg, inj_mod.
@@ -384,17 +384,17 @@ destruct m.
 Qed.
 
 Lemma inj_div2 n : Z.to_N (Z.div2 n) = N.div2 (Z.to_N n).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_div2". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_div2".  
 destruct n as [|p|p]; trivial. now destruct p.
 Qed.
 
 Lemma inj_quot2 n : Z.to_N (Z.quot2 n) = N.div2 (Z.to_N n).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_quot2". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_quot2".  
 destruct n as [|p|p]; trivial; now destruct p.
 Qed.
 
 Lemma inj_pow n m : 0<=n -> 0<=m -> Z.to_N (n^m) = ((Z.to_N n)^(Z.to_N m))%N.
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_pow". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_pow".  
 destruct m.
 - trivial.
 - intros. now rewrite <- (N2Z.id (_ ^ _)), N2Z.inj_pow, id.
@@ -403,7 +403,7 @@ Qed.
 
 Lemma inj_testbit a n : 0<=n ->
 Z.testbit (Z.of_N a) n = N.testbit a (Z.to_N n).
-Proof. try hammer_hook "Znat" "Znat.Z2N.inj_testbit". Undo.   apply Z.testbit_of_N'. Qed.
+Proof. hammer_hook "Znat" "Znat.Z2N.inj_testbit".   apply Z.testbit_of_N'. Qed.
 
 End Z2N.
 
@@ -412,75 +412,75 @@ Module Zabs2N.
 
 
 Lemma abs_N_spec n : Z.abs_N n = Z.to_N (Z.abs n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.abs_N_spec". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.abs_N_spec".  
 now destruct n.
 Qed.
 
 Lemma abs_N_nonneg n : 0<=n -> Z.abs_N n = Z.to_N n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.abs_N_nonneg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.abs_N_nonneg".  
 destruct n; trivial; now destruct 1.
 Qed.
 
 Lemma id_abs n : Z.of_N (Z.abs_N n) = Z.abs n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.id_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.id_abs".  
 now destruct n.
 Qed.
 
 Lemma id n : Z.abs_N (Z.of_N n) = n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.id". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.id".  
 now destruct n.
 Qed.
 
 
 
 Lemma inj_0 : Z.abs_N 0 = 0%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_0". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_0".  
 reflexivity.
 Qed.
 
 Lemma inj_pos p : Z.abs_N (Zpos p) = Npos p.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_pos". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_pos".  
 reflexivity.
 Qed.
 
 Lemma inj_neg p : Z.abs_N (Zneg p) = Npos p.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_neg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_neg".  
 reflexivity.
 Qed.
 
 
 
 Lemma inj_opp n : Z.abs_N (-n) = Z.abs_N n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_opp". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_opp".  
 now destruct n.
 Qed.
 
 Lemma inj_succ n : 0<=n -> Z.abs_N (Z.succ n) = N.succ (Z.abs_N n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_succ". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_succ".  
 intros. rewrite !abs_N_nonneg; trivial. now apply Z2N.inj_succ.
 now apply Z.le_le_succ_r.
 Qed.
 
 Lemma inj_add n m : 0<=n -> 0<=m -> Z.abs_N (n+m) = (Z.abs_N n + Z.abs_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_add". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_add".  
 intros. rewrite !abs_N_nonneg; trivial. now apply Z2N.inj_add.
 now apply Z.add_nonneg_nonneg.
 Qed.
 
 Lemma inj_mul n m : Z.abs_N (n*m) = (Z.abs_N n * Z.abs_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_mul". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_mul".  
 now destruct n, m.
 Qed.
 
 Lemma inj_sub n m : 0<=m<=n -> Z.abs_N (n-m) = (Z.abs_N n - Z.abs_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_sub". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_sub".  
 intros (Hn,H). rewrite !abs_N_nonneg; trivial. now apply Z2N.inj_sub.
 Z.order.
 now apply Z.le_0_sub.
 Qed.
 
 Lemma inj_pred n : 0<n -> Z.abs_N (Z.pred n) = N.pred (Z.abs_N n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_pred". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_pred".  
 intros. rewrite !abs_N_nonneg. now apply Z2N.inj_pred.
 Z.order.
 apply Z.lt_succ_r. now rewrite Z.succ_pred.
@@ -488,36 +488,36 @@ Qed.
 
 Lemma inj_compare n m : 0<=n -> 0<=m ->
 (Z.abs_N n ?= Z.abs_N m)%N = (n ?= m).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_compare". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_compare".  
 intros. rewrite !abs_N_nonneg by trivial. now apply Z2N.inj_compare.
 Qed.
 
 Lemma inj_le n m : 0<=n -> 0<=m -> (n<=m <-> (Z.abs_N n <= Z.abs_N m)%N).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_le". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_le".  
 intros Hn Hm. unfold Z.le, N.le. now rewrite inj_compare.
 Qed.
 
 Lemma inj_lt n m : 0<=n -> 0<=m -> (n<m <-> (Z.abs_N n < Z.abs_N m)%N).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_lt". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_lt".  
 intros Hn Hm. unfold Z.lt, N.lt. now rewrite inj_compare.
 Qed.
 
 Lemma inj_min n m : 0<=n -> 0<=m ->
 Z.abs_N (Z.min n m) = N.min (Z.abs_N n) (Z.abs_N m).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_min". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_min".  
 intros. rewrite !abs_N_nonneg; trivial. now apply Z2N.inj_min.
 now apply Z.min_glb.
 Qed.
 
 Lemma inj_max n m : 0<=n -> 0<=m ->
 Z.abs_N (Z.max n m) = N.max (Z.abs_N n) (Z.abs_N m).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_max".  
 intros. rewrite !abs_N_nonneg; trivial. now apply Z2N.inj_max.
 transitivity n; trivial. apply Z.le_max_l.
 Qed.
 
 Lemma inj_quot n m : Z.abs_N (n÷m) = ((Z.abs_N n) / (Z.abs_N m))%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_quot". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_quot".  
 assert (forall p q, Z.abs_N (Zpos p ÷ Zpos q) = (Npos p / Npos q)%N).
 intros. rewrite abs_N_nonneg. now apply Z2N.inj_quot. now apply Z.quot_pos.
 destruct n, m; trivial; simpl.
@@ -528,7 +528,7 @@ destruct n, m; trivial; simpl.
 Qed.
 
 Lemma inj_rem n m : Z.abs_N (Z.rem n m) = ((Z.abs_N n) mod (Z.abs_N m))%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_rem". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_rem".  
 assert
 (forall p q, Z.abs_N (Z.rem (Zpos p) (Zpos q)) = ((Npos p) mod (Npos q))%N).
 intros. rewrite abs_N_nonneg. now apply Z2N.inj_rem. now apply Z.rem_nonneg.
@@ -540,7 +540,7 @@ destruct n, m; trivial; simpl.
 Qed.
 
 Lemma inj_pow n m : 0<=m -> Z.abs_N (n^m) = ((Z.abs_N n)^(Z.abs_N m))%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_pow". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_pow".  
 intros Hm. rewrite abs_N_spec, Z.abs_pow, Z2N.inj_pow, <- abs_N_spec; trivial.
 f_equal. symmetry; now apply abs_N_nonneg. apply Z.abs_nonneg.
 Qed.
@@ -548,19 +548,19 @@ Qed.
 
 
 Lemma inj_succ_abs n : Z.abs_N (Z.succ (Z.abs n)) = N.succ (Z.abs_N n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_succ_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_succ_abs".  
 destruct n; simpl; trivial; now rewrite Pos.add_1_r.
 Qed.
 
 Lemma inj_add_abs n m :
 Z.abs_N (Z.abs n + Z.abs m) = (Z.abs_N n + Z.abs_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_add_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_add_abs".  
 now destruct n, m.
 Qed.
 
 Lemma inj_mul_abs n m :
 Z.abs_N (Z.abs n * Z.abs m) = (Z.abs_N n * Z.abs_N m)%N.
-Proof. try hammer_hook "Znat" "Znat.Zabs2N.inj_mul_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2N.inj_mul_abs".  
 now destruct n, m.
 Qed.
 
@@ -574,114 +574,114 @@ Module Nat2Z.
 
 
 Lemma inj_0 : Z.of_nat 0 = 0.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_0". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_0".  
 reflexivity.
 Qed.
 
 Lemma inj_succ n : Z.of_nat (S n) = Z.succ (Z.of_nat n).
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_succ". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_succ".  
 destruct n. trivial. simpl. apply Pos2Z.inj_succ.
 Qed.
 
 
 
 Lemma is_nonneg n : 0 <= Z.of_nat n.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.is_nonneg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.is_nonneg".  
 now induction n.
 Qed.
 
 
 
 Lemma id n : Z.to_nat (Z.of_nat n) = n.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.id". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.id".  
 now rewrite <- nat_N_Z, <- Z_N_nat, N2Z.id, Nat2N.id.
 Qed.
 
 
 
 Lemma inj n m : Z.of_nat n = Z.of_nat m -> n = m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj".  
 intros H. now rewrite <- (id n), <- (id m), H.
 Qed.
 
 Lemma inj_iff n m : Z.of_nat n = Z.of_nat m <-> n = m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_iff". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_iff".  
 split. apply inj. intros; now f_equal.
 Qed.
 
 
 
 Lemma inj_compare n m : (Z.of_nat n ?= Z.of_nat m) = (n ?= m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_compare". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_compare".  
 now rewrite <-!nat_N_Z, N2Z.inj_compare, <- Nat2N.inj_compare.
 Qed.
 
 Lemma inj_le n m : (n<=m)%nat <-> Z.of_nat n <= Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_le". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_le".  
 unfold Z.le. now rewrite inj_compare, nat_compare_le.
 Qed.
 
 Lemma inj_lt n m : (n<m)%nat <-> Z.of_nat n < Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_lt". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_lt".  
 unfold Z.lt. now rewrite inj_compare, nat_compare_lt.
 Qed.
 
 Lemma inj_ge n m : (n>=m)%nat <-> Z.of_nat n >= Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_ge". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_ge".  
 unfold Z.ge. now rewrite inj_compare, nat_compare_ge.
 Qed.
 
 Lemma inj_gt n m : (n>m)%nat <-> Z.of_nat n > Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_gt". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_gt".  
 unfold Z.gt. now rewrite inj_compare, nat_compare_gt.
 Qed.
 
 Lemma inj_abs_nat z : Z.of_nat (Z.abs_nat z) = Z.abs z.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_abs_nat". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_abs_nat".  
 destruct z; simpl; trivial;
 destruct (Pos2Nat.is_succ p) as (n,H); rewrite H; simpl; f_equal;
 now apply SuccNat2Pos.inv.
 Qed.
 
 Lemma inj_add n m : Z.of_nat (n+m) = Z.of_nat n + Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_add". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_add".  
 now rewrite <- !nat_N_Z, Nat2N.inj_add, N2Z.inj_add.
 Qed.
 
 Lemma inj_mul n m : Z.of_nat (n*m) = Z.of_nat n * Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_mul". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_mul".  
 now rewrite <- !nat_N_Z, Nat2N.inj_mul, N2Z.inj_mul.
 Qed.
 
 Lemma inj_sub_max n m : Z.of_nat (n-m) = Z.max 0 (Z.of_nat n - Z.of_nat m).
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_sub_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_sub_max".  
 now rewrite <- !nat_N_Z, Nat2N.inj_sub, N2Z.inj_sub_max.
 Qed.
 
 Lemma inj_sub n m : (m<=n)%nat -> Z.of_nat (n-m) = Z.of_nat n - Z.of_nat m.
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_sub". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_sub".  
 rewrite nat_compare_le, Nat2N.inj_compare. intros.
 now rewrite <- !nat_N_Z, Nat2N.inj_sub, N2Z.inj_sub.
 Qed.
 
 Lemma inj_pred_max n : Z.of_nat (Nat.pred n) = Z.max 0 (Z.pred (Z.of_nat n)).
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_pred_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_pred_max".  
 now rewrite <- !nat_N_Z, Nat2N.inj_pred, N2Z.inj_pred_max.
 Qed.
 
 Lemma inj_pred n : (0<n)%nat -> Z.of_nat (Nat.pred n) = Z.pred (Z.of_nat n).
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_pred". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_pred".  
 rewrite nat_compare_lt, Nat2N.inj_compare. intros.
 now rewrite <- !nat_N_Z, Nat2N.inj_pred, N2Z.inj_pred.
 Qed.
 
 Lemma inj_min n m : Z.of_nat (Nat.min n m) = Z.min (Z.of_nat n) (Z.of_nat m).
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_min". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_min".  
 now rewrite <- !nat_N_Z, Nat2N.inj_min, N2Z.inj_min.
 Qed.
 
 Lemma inj_max n m : Z.of_nat (Nat.max n m) = Z.max (Z.of_nat n) (Z.of_nat m).
-Proof. try hammer_hook "Znat" "Znat.Nat2Z.inj_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Nat2Z.inj_max".  
 now rewrite <- !nat_N_Z, Nat2N.inj_max, N2Z.inj_max.
 Qed.
 
@@ -692,36 +692,36 @@ Module Z2Nat.
 
 
 Lemma id n : 0<=n -> Z.of_nat (Z.to_nat n) = n.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.id". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.id".  
 intros. now rewrite <- Z_N_nat, <- nat_N_Z, N2Nat.id, Z2N.id.
 Qed.
 
 
 
 Lemma inj n m : 0<=n -> 0<=m -> Z.to_nat n = Z.to_nat m -> n = m.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj".  
 intros. rewrite <- (id n), <- (id m) by trivial. now f_equal.
 Qed.
 
 Lemma inj_iff n m : 0<=n -> 0<=m -> (Z.to_nat n = Z.to_nat m <-> n = m).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_iff". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_iff".  
 intros. split. now apply inj. intros; now subst.
 Qed.
 
 
 
 Lemma inj_0 : Z.to_nat 0 = O.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_0". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_0".  
 reflexivity.
 Qed.
 
 Lemma inj_pos n : Z.to_nat (Zpos n) = Pos.to_nat n.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_pos". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_pos".  
 reflexivity.
 Qed.
 
 Lemma inj_neg n : Z.to_nat (Zneg n) = O.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_neg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_neg".  
 reflexivity.
 Qed.
 
@@ -729,54 +729,54 @@ Qed.
 
 Lemma inj_add n m : 0<=n -> 0<=m ->
 Z.to_nat (n+m) = (Z.to_nat n + Z.to_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_add". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_add".  
 intros. now rewrite <- !Z_N_nat, Z2N.inj_add, N2Nat.inj_add.
 Qed.
 
 Lemma inj_mul n m : 0<=n -> 0<=m ->
 Z.to_nat (n*m) = (Z.to_nat n * Z.to_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_mul". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_mul".  
 intros. now rewrite <- !Z_N_nat, Z2N.inj_mul, N2Nat.inj_mul.
 Qed.
 
 Lemma inj_succ n : 0<=n -> Z.to_nat (Z.succ n) = S (Z.to_nat n).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_succ". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_succ".  
 intros. now rewrite <- !Z_N_nat, Z2N.inj_succ, N2Nat.inj_succ.
 Qed.
 
 Lemma inj_sub n m : 0<=m -> Z.to_nat (n - m) = (Z.to_nat n - Z.to_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_sub". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_sub".  
 intros. now rewrite <- !Z_N_nat, Z2N.inj_sub, N2Nat.inj_sub.
 Qed.
 
 Lemma inj_pred n : Z.to_nat (Z.pred n) = Nat.pred (Z.to_nat n).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_pred". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_pred".  
 now rewrite <- !Z_N_nat, Z2N.inj_pred, N2Nat.inj_pred.
 Qed.
 
 Lemma inj_compare n m : 0<=n -> 0<=m ->
 (Z.to_nat n ?= Z.to_nat m)%nat = (n ?= m).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_compare". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_compare".  
 intros Hn Hm. now rewrite <- Nat2Z.inj_compare, !id.
 Qed.
 
 Lemma inj_le n m : 0<=n -> 0<=m -> (n<=m <-> (Z.to_nat n <= Z.to_nat m)%nat).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_le". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_le".  
 intros Hn Hm. unfold Z.le. now rewrite nat_compare_le, inj_compare.
 Qed.
 
 Lemma inj_lt n m : 0<=n -> 0<=m -> (n<m <-> (Z.to_nat n < Z.to_nat m)%nat).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_lt". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_lt".  
 intros Hn Hm. unfold Z.lt. now rewrite nat_compare_lt, inj_compare.
 Qed.
 
 Lemma inj_min n m : Z.to_nat (Z.min n m) = Nat.min (Z.to_nat n) (Z.to_nat m).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_min". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_min".  
 now rewrite <- !Z_N_nat, Z2N.inj_min, N2Nat.inj_min.
 Qed.
 
 Lemma inj_max n m : Z.to_nat (Z.max n m) = Nat.max (Z.to_nat n) (Z.to_nat m).
-Proof. try hammer_hook "Znat" "Znat.Z2Nat.inj_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Z2Nat.inj_max".  
 now rewrite <- !Z_N_nat, Z2N.inj_max, N2Nat.inj_max.
 Qed.
 
@@ -787,115 +787,115 @@ Module Zabs2Nat.
 
 
 Lemma abs_nat_spec n : Z.abs_nat n = Z.to_nat (Z.abs n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.abs_nat_spec". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.abs_nat_spec".  
 now destruct n.
 Qed.
 
 Lemma abs_nat_nonneg n : 0<=n -> Z.abs_nat n = Z.to_nat n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.abs_nat_nonneg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.abs_nat_nonneg".  
 destruct n; trivial; now destruct 1.
 Qed.
 
 Lemma id_abs n : Z.of_nat (Z.abs_nat n) = Z.abs n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.id_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.id_abs".  
 rewrite <-Zabs_N_nat, N_nat_Z. apply Zabs2N.id_abs.
 Qed.
 
 Lemma id n : Z.abs_nat (Z.of_nat n) = n.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.id". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.id".  
 now rewrite <-Zabs_N_nat, <-nat_N_Z, Zabs2N.id, Nat2N.id.
 Qed.
 
 
 
 Lemma inj_0 : Z.abs_nat 0 = 0%nat.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_0". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_0".  
 reflexivity.
 Qed.
 
 Lemma inj_pos p : Z.abs_nat (Zpos p) = Pos.to_nat p.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_pos". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_pos".  
 reflexivity.
 Qed.
 
 Lemma inj_neg p : Z.abs_nat (Zneg p) = Pos.to_nat p.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_neg". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_neg".  
 reflexivity.
 Qed.
 
 
 
 Lemma inj_succ n : 0<=n -> Z.abs_nat (Z.succ n) = S (Z.abs_nat n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_succ". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_succ".  
 intros. now rewrite <- !Zabs_N_nat, Zabs2N.inj_succ, N2Nat.inj_succ.
 Qed.
 
 Lemma inj_add n m : 0<=n -> 0<=m ->
 Z.abs_nat (n+m) = (Z.abs_nat n + Z.abs_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_add". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_add".  
 intros. now rewrite <- !Zabs_N_nat, Zabs2N.inj_add, N2Nat.inj_add.
 Qed.
 
 Lemma inj_mul n m : Z.abs_nat (n*m) = (Z.abs_nat n * Z.abs_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_mul". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_mul".  
 destruct n, m; simpl; trivial using Pos2Nat.inj_mul.
 Qed.
 
 Lemma inj_sub n m : 0<=m<=n ->
 Z.abs_nat (n-m) = (Z.abs_nat n - Z.abs_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_sub". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_sub".  
 intros. now rewrite <- !Zabs_N_nat, Zabs2N.inj_sub, N2Nat.inj_sub.
 Qed.
 
 Lemma inj_pred n : 0<n -> Z.abs_nat (Z.pred n) = Nat.pred (Z.abs_nat n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_pred". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_pred".  
 intros. now rewrite <- !Zabs_N_nat, Zabs2N.inj_pred, N2Nat.inj_pred.
 Qed.
 
 Lemma inj_compare n m : 0<=n -> 0<=m ->
 (Z.abs_nat n ?= Z.abs_nat m)%nat = (n ?= m).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_compare". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_compare".  
 intros. now rewrite <- !Zabs_N_nat, <- N2Nat.inj_compare, Zabs2N.inj_compare.
 Qed.
 
 Lemma inj_le n m : 0<=n -> 0<=m -> (n<=m <-> (Z.abs_nat n <= Z.abs_nat m)%nat).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_le". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_le".  
 intros Hn Hm. unfold Z.le. now rewrite nat_compare_le, inj_compare.
 Qed.
 
 Lemma inj_lt n m : 0<=n -> 0<=m -> (n<m <-> (Z.abs_nat n < Z.abs_nat m)%nat).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_lt". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_lt".  
 intros Hn Hm. unfold Z.lt. now rewrite nat_compare_lt, inj_compare.
 Qed.
 
 Lemma inj_min n m : 0<=n -> 0<=m ->
 Z.abs_nat (Z.min n m) = Nat.min (Z.abs_nat n) (Z.abs_nat m).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_min". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_min".  
 intros. now rewrite <- !Zabs_N_nat, Zabs2N.inj_min, N2Nat.inj_min.
 Qed.
 
 Lemma inj_max n m : 0<=n -> 0<=m ->
 Z.abs_nat (Z.max n m) = Nat.max (Z.abs_nat n) (Z.abs_nat m).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_max". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_max".  
 intros. now rewrite <- !Zabs_N_nat, Zabs2N.inj_max, N2Nat.inj_max.
 Qed.
 
 
 
 Lemma inj_succ_abs n : Z.abs_nat (Z.succ (Z.abs n)) = S (Z.abs_nat n).
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_succ_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_succ_abs".  
 now rewrite <- !Zabs_N_nat, Zabs2N.inj_succ_abs, N2Nat.inj_succ.
 Qed.
 
 Lemma inj_add_abs n m :
 Z.abs_nat (Z.abs n + Z.abs m) = (Z.abs_nat n + Z.abs_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_add_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_add_abs".  
 now rewrite <- !Zabs_N_nat, Zabs2N.inj_add_abs, N2Nat.inj_add.
 Qed.
 
 Lemma inj_mul_abs n m :
 Z.abs_nat (Z.abs n * Z.abs m) = (Z.abs_nat n * Z.abs_nat m)%nat.
-Proof. try hammer_hook "Znat" "Znat.Zabs2Nat.inj_mul_abs". Undo.  
+Proof. hammer_hook "Znat" "Znat.Zabs2Nat.inj_mul_abs".  
 now rewrite <- !Zabs_N_nat, Zabs2N.inj_mul_abs, N2Nat.inj_mul.
 Qed.
 
@@ -907,10 +907,10 @@ End Zabs2Nat.
 Definition neq (x y:nat) := x <> y.
 
 Lemma inj_neq n m : neq n m -> Zne (Z.of_nat n) (Z.of_nat m).
-Proof. try hammer_hook "Znat" "Znat.inj_neq". Undo.   intros H H'. now apply H, Nat2Z.inj. Qed.
+Proof. hammer_hook "Znat" "Znat.inj_neq".   intros H H'. now apply H, Nat2Z.inj. Qed.
 
 Lemma Zpos_P_of_succ_nat n : Zpos (Pos.of_succ_nat n) = Z.succ (Z.of_nat n).
-Proof. try hammer_hook "Znat" "Znat.Zpos_P_of_succ_nat". Undo.  exact ((Nat2Z.inj_succ n)). Qed.
+Proof. hammer_hook "Znat" "Znat.Zpos_P_of_succ_nat".  exact ((Nat2Z.inj_succ n)). Qed.
 
 
 
@@ -983,6 +983,6 @@ Notation Zabs_N_mult_abs := Zabs2N.inj_mul_abs (compat "8.3").
 Notation Zabs_N_mult := Zabs2N.inj_mul (compat "8.3").
 
 Theorem inj_minus2 : forall n m:nat, (m > n)%nat -> Z.of_nat (n - m) = 0.
-Proof. try hammer_hook "Znat" "Znat.inj_minus2". Undo.  
+Proof. hammer_hook "Znat" "Znat.inj_minus2".  
 intros. rewrite not_le_minus_0; auto with arith.
 Qed.

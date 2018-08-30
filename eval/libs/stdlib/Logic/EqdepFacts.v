@@ -34,11 +34,11 @@ eq_dep_intro : eq_dep p x p x.
 Hint Constructors eq_dep: core.
 
 Lemma eq_dep_refl : forall (p:U) (x:P p), eq_dep p x p x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_refl". Undo.  exact (eq_dep_intro). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_refl".  exact (eq_dep_intro). Qed.
 
 Lemma eq_dep_sym :
 forall (p q:U) (x:P p) (y:P q), eq_dep p x q y -> eq_dep q y p x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_sym". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_sym".  
 destruct 1; auto.
 Qed.
 Hint Immediate eq_dep_sym: core.
@@ -46,7 +46,7 @@ Hint Immediate eq_dep_sym: core.
 Lemma eq_dep_trans :
 forall (p q r:U) (x:P p) (y:P q) (z:P r),
 eq_dep p x q y -> eq_dep q y r z -> eq_dep p x r z.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_trans". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_trans".  
 destruct 1; auto.
 Qed.
 
@@ -59,7 +59,7 @@ eq_dep1_intro : forall h:q = p, x = rew h in y -> eq_dep1 p x q y.
 
 Lemma eq_dep1_dep :
 forall (p:U) (x:P p) (q:U) (y:P q), eq_dep1 p x q y -> eq_dep p x q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep1_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep1_dep".  
 destruct 1 as (eq_qp, H).
 destruct eq_qp using eq_indd.
 rewrite H.
@@ -68,7 +68,7 @@ Qed.
 
 Lemma eq_dep_dep1 :
 forall (p q:U) (x:P p) (y:P q), eq_dep p x q y -> eq_dep1 p x q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_dep1". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_dep1".  
 destruct 1.
 apply eq_dep1_intro with (eq_refl p).
 simpl; trivial.
@@ -84,7 +84,7 @@ Arguments eq_dep1 [U P] p x q y.
 Lemma eq_sigT_eq_dep :
 forall (U:Type) (P:U -> Type) (p q:U) (x:P p) (y:P q),
 existT P p x = existT P q y -> eq_dep p x q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_eq_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_eq_dep".  
 intros.
 dependent rewrite H.
 apply eq_dep_intro.
@@ -95,14 +95,14 @@ Notation eq_sigS_eq_dep := eq_sigT_eq_dep (compat "8.2").
 Lemma eq_dep_eq_sigT :
 forall (U:Type) (P:U -> Type) (p q:U) (x:P p) (y:P q),
 eq_dep p x q y -> existT P p x = existT P q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_sigT". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_sigT".  
 destruct 1; reflexivity.
 Qed.
 
 Lemma eq_sigT_iff_eq_dep :
 forall (U:Type) (P:U -> Type) (p q:U) (x:P p) (y:P q),
 existT P p x = existT P q y <-> eq_dep p x q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_iff_eq_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_iff_eq_dep".  
 split; auto using eq_sigT_eq_dep, eq_dep_eq_sigT.
 Qed.
 
@@ -111,7 +111,7 @@ Notation equiv_eqex_eqdep := eq_sigT_iff_eq_dep (only parsing).
 Lemma eq_sig_eq_dep :
 forall (U:Type) (P:U -> Prop) (p q:U) (x:P p) (y:P q),
 exist P p x = exist P q y -> eq_dep p x q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_eq_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_eq_dep".  
 intros.
 dependent rewrite H.
 apply eq_dep_intro.
@@ -120,14 +120,14 @@ Qed.
 Lemma eq_dep_eq_sig :
 forall (U:Type) (P:U -> Prop) (p q:U) (x:P p) (y:P q),
 eq_dep p x q y -> exist P p x = exist P q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_sig". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_sig".  
 destruct 1; reflexivity.
 Qed.
 
 Lemma eq_sig_iff_eq_dep :
 forall (U:Type) (P:U -> Prop) (p q:U) (x:P p) (y:P q),
 exist P p x = exist P q y <-> eq_dep p x q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_iff_eq_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_iff_eq_dep".  
 split; auto using eq_sig_eq_dep, eq_dep_eq_sig.
 Qed.
 
@@ -137,7 +137,7 @@ Set Implicit Arguments.
 
 Lemma eq_sigT_sig_eq : forall X P (x1 x2:X) H1 H2, existT P x1 H1 = existT P x2 H2 <->
 {H:x1=x2 | rew H in H1 = H2}.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_sig_eq". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_sig_eq".  
 intros; split; intro H.
 - change x2 with (projT1 (existT P x2 H2)).
 change H2 with (projT2 (existT P x2 H2)) at 5.
@@ -150,7 +150,7 @@ Defined.
 
 Lemma eq_sigT_fst :
 forall X P (x1 x2:X) H1 H2 (H:existT P x1 H1 = existT P x2 H2), x1 = x2.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_fst". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_fst".  
 intros.
 change x2 with (projT1 (existT P x2 H2)).
 destruct H.
@@ -159,7 +159,7 @@ Defined.
 
 Lemma eq_sigT_snd :
 forall X P (x1 x2:X) H1 H2 (H:existT P x1 H1 = existT P x2 H2), rew (eq_sigT_fst H) in H1 = H2.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_snd". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sigT_snd".  
 intros.
 unfold eq_sigT_fst.
 change x2 with (projT1 (existT P x2 H2)).
@@ -170,7 +170,7 @@ Defined.
 
 Lemma eq_sig_fst :
 forall X P (x1 x2:X) H1 H2 (H:exist P x1 H1 = exist P x2 H2), x1 = x2.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_fst". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_fst".  
 intros.
 change x2 with (proj1_sig (exist P x2 H2)).
 destruct H.
@@ -179,7 +179,7 @@ Defined.
 
 Lemma eq_sig_snd :
 forall X P (x1 x2:X) H1 H2 (H:exist P x1 H1 = exist P x2 H2), rew (eq_sig_fst H) in H1 = H2.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_snd". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_sig_snd".  
 intros.
 unfold eq_sig_fst, eq_ind.
 change x2 with (proj1_sig (exist P x2 H2)).
@@ -237,27 +237,27 @@ Definition Streicher_K_ := forall x P, Streicher_K_on_ x P.
 
 Lemma eq_rect_eq_on__eq_dep1_eq_on (p : U) (P : U -> Type) (y : P p) :
 Eq_rect_eq_on p P y -> forall (x : P p), eq_dep1 p x p y -> x = y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq_on__eq_dep1_eq_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq_on__eq_dep1_eq_on".  
 intro eq_rect_eq.
 simple destruct 1; intro.
 rewrite <- eq_rect_eq; auto.
 Qed.
 Lemma eq_rect_eq__eq_dep1_eq :
 Eq_rect_eq -> forall (P:U->Type) (p:U) (x y:P p), eq_dep1 p x p y -> x = y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq__eq_dep1_eq". Undo. 
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq__eq_dep1_eq". 
        exact ((fun eq_rect_eq P p y x => @eq_rect_eq_on__eq_dep1_eq_on p P x (eq_rect_eq p P x) y)).
 Qed.
 
 
 Lemma eq_rect_eq_on__eq_dep_eq_on (p : U) (P : U -> Type) (x : P p) :
 Eq_rect_eq_on p P x -> Eq_dep_eq_on P p x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq_on__eq_dep_eq_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq_on__eq_dep_eq_on".  
 intros eq_rect_eq; red; intros.
 symmetry; apply (eq_rect_eq_on__eq_dep1_eq_on _ _ _ eq_rect_eq).
 apply eq_dep_sym in H; apply eq_dep_dep1; trivial.
 Qed.
 Lemma eq_rect_eq__eq_dep_eq : Eq_rect_eq -> Eq_dep_eq.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq__eq_dep_eq". Undo. 
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_rect_eq__eq_dep_eq". 
        exact ((fun eq_rect_eq P p x y => @eq_rect_eq_on__eq_dep_eq_on p P x (eq_rect_eq p P x) y)).
 Qed.
 
@@ -267,7 +267,7 @@ Qed.
 
 Lemma eq_dep_eq_on__UIP_on (x y : U) (p1 : x = y) :
 Eq_dep_eq_on (fun y => x = y) x eq_refl -> UIP_on_ x y p1.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_on__UIP_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_on__UIP_on".  
 intro eq_dep_eq; red.
 elim p1 using eq_indd.
 intros; apply eq_dep_eq.
@@ -275,7 +275,7 @@ elim p2 using eq_indd.
 apply eq_dep_intro.
 Qed.
 Lemma eq_dep_eq__UIP : Eq_dep_eq -> UIP_.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq__UIP". Undo. 
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq__UIP". 
        exact ((fun eq_dep_eq x y p1 => @eq_dep_eq_on__UIP_on x y p1 (eq_dep_eq _ _ _))).
 Qed.
 
@@ -284,11 +284,11 @@ Qed.
 
 Lemma UIP_on__UIP_refl_on (x : U) :
 UIP_on_ x x eq_refl -> UIP_refl_on_ x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.UIP_on__UIP_refl_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.UIP_on__UIP_refl_on".  
 intro UIP; red; intros; symmetry; apply UIP.
 Qed.
 Lemma UIP__UIP_refl : UIP_ -> UIP_refl_.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.UIP__UIP_refl". Undo. 
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.UIP__UIP_refl". 
        exact ((fun UIP x p => @UIP_on__UIP_refl_on x (UIP x x eq_refl) p)).
 Qed.
 
@@ -297,11 +297,11 @@ Qed.
 
 Lemma UIP_refl_on__Streicher_K_on (x : U) (P : x = x -> Prop) :
 UIP_refl_on_ x -> Streicher_K_on_ x P.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.UIP_refl_on__Streicher_K_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.UIP_refl_on__Streicher_K_on".  
 intro UIP_refl; red; intros; rewrite UIP_refl; assumption.
 Qed.
 Lemma UIP_refl__Streicher_K : UIP_refl_ -> Streicher_K_.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.UIP_refl__Streicher_K". Undo. 
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.UIP_refl__Streicher_K". 
        exact ((fun UIP_refl x P => @UIP_refl_on__Streicher_K_on x P (UIP_refl x))).
 Qed.
 
@@ -310,13 +310,13 @@ Qed.
 Lemma Streicher_K_on__eq_rect_eq_on (p : U) (P : U -> Type) (x : P p) :
 Streicher_K_on_ p (fun h => x = rew -> [P] h in x)
 -> Eq_rect_eq_on p P x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.Streicher_K_on__eq_rect_eq_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.Streicher_K_on__eq_rect_eq_on".  
 intro Streicher_K; red; intros.
 apply Streicher_K.
 reflexivity.
 Qed.
 Lemma Streicher_K__eq_rect_eq : Streicher_K_ -> Eq_rect_eq.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.Streicher_K__eq_rect_eq". Undo. 
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.Streicher_K__eq_rect_eq". 
        exact ((fun Streicher_K p P x => @Streicher_K_on__eq_rect_eq_on p P x (Streicher_K p _))).
 Qed.
 
@@ -329,7 +329,7 @@ End Equivalences.
 
 Theorem UIP_shift_on (X : Type) (x : X) :
 UIP_refl_on_ X x -> forall y : x = x, UIP_refl_on_ (x = x) y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.UIP_shift_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.UIP_shift_on".  
 intros UIP_refl y.
 rewrite (UIP_refl y).
 intros z.
@@ -347,7 +347,7 @@ end (eq_trans (eq_trans (UIP (eq_refl x) (eq_refl x)) z)
 destruct z. destruct (UIP _ _). reflexivity.
 Qed.
 Theorem UIP_shift : forall U, UIP_refl_ U -> forall x:U, UIP_refl_ (x = x).
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.UIP_shift". Undo.  exact ((fun U UIP_refl x => @UIP_shift_on U x (UIP_refl x))). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.UIP_shift".  exact ((fun U UIP_refl x => @UIP_shift_on U x (UIP_refl x))). Qed.
 
 Section Corollaries.
 
@@ -362,14 +362,14 @@ Definition Inj_dep_pair := forall P p x, Inj_dep_pair_on P p x.
 
 Lemma eq_dep_eq_on__inj_pair2_on (P : U -> Type) (p : U) (x : P p) :
 Eq_dep_eq_on U P p x -> Inj_dep_pair_on P p x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_on__inj_pair2_on". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq_on__inj_pair2_on".  
 intro eq_dep_eq; red; intros.
 apply eq_dep_eq.
 apply eq_sigT_eq_dep.
 assumption.
 Qed.
 Lemma eq_dep_eq__inj_pair2 : Eq_dep_eq U -> Inj_dep_pair.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq__inj_pair2". Undo.  exact ((fun eq_dep_eq P p x => @eq_dep_eq_on__inj_pair2_on P p x (eq_dep_eq P p x))). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_eq__inj_pair2".  exact ((fun eq_dep_eq P p x => @eq_dep_eq_on__inj_pair2_on P p x (eq_dep_eq P p x))). Qed.
 
 
 End Corollaries.
@@ -400,33 +400,33 @@ Variable U:Type.
 
 Lemma eq_rect_eq :
 forall (p:U) (Q:U -> Type) (x:Q p) (h:p = p), x = eq_rect p Q x p h.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepElimination.eq_rect_eq". Undo.  exact (M.eq_rect_eq U). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepElimination.eq_rect_eq".  exact (M.eq_rect_eq U). Qed.
 
 Lemma eq_rec_eq :
 forall (p:U) (Q:U -> Set) (x:Q p) (h:p = p), x = eq_rec p Q x p h.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.eq_rec_eq". Undo.  exact ((fun p Q => M.eq_rect_eq U p Q)). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.eq_rec_eq".  exact ((fun p Q => M.eq_rect_eq U p Q)). Qed.
 
 
 
 Lemma eq_dep_eq : forall (P:U->Type) (p:U) (x y:P p), eq_dep p x p y -> x = y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.eq_dep_eq". Undo.  exact ((eq_rect_eq__eq_dep_eq U eq_rect_eq)). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.eq_dep_eq".  exact ((eq_rect_eq__eq_dep_eq U eq_rect_eq)). Qed.
 
 
 
 
 Lemma UIP : forall (x y:U) (p1 p2:x = y), p1 = p2.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.UIP". Undo.  exact ((eq_dep_eq__UIP U eq_dep_eq)). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.UIP".  exact ((eq_dep_eq__UIP U eq_dep_eq)). Qed.
 
 
 
 Lemma UIP_refl : forall (x:U) (p:x = x), p = eq_refl x.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.UIP_refl". Undo.  exact ((UIP__UIP_refl U UIP)). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.UIP_refl".  exact ((UIP__UIP_refl U UIP)). Qed.
 
 
 
 Lemma Streicher_K :
 forall (x:U) (P:x = x -> Prop), P (eq_refl x) -> forall p:x = x, P p.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.Streicher_K". Undo.  exact ((UIP_refl__Streicher_K U UIP_refl)). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.Streicher_K".  exact ((UIP_refl__Streicher_K U UIP_refl)). Qed.
 
 End Axioms.
 
@@ -435,7 +435,7 @@ End Axioms.
 Lemma inj_pair2 :
 forall (U:Type) (P:U -> Type) (p:U) (x y:P p),
 existT P p x = existT P p y -> x = y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.inj_pair2". Undo.  exact ((fun U => eq_dep_eq__inj_pair2 U (eq_dep_eq U))). Qed.
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.EqdepTheory.inj_pair2".  exact ((fun U => eq_dep_eq__inj_pair2 U (eq_dep_eq U))). Qed.
 
 Notation inj_pairT2 := inj_pair2.
 
@@ -446,20 +446,20 @@ End EqdepTheory.
 Lemma f_eq_dep :
 forall U (P:U->Type) R p q x y (f:forall p, P p -> R p),
 eq_dep p x q y -> eq_dep p (f p x) q (f q y).
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.f_eq_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.f_eq_dep".  
 intros * []. reflexivity.
 Qed.
 
 Lemma eq_dep_non_dep :
 forall U P p q x y, @eq_dep U (fun _ => P) p x q y -> x = y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_non_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.eq_dep_non_dep".  
 intros * []. reflexivity.
 Qed.
 
 Lemma f_eq_dep_non_dep :
 forall U (P:U->Type) R p q x y (f:forall p, P p -> R),
 eq_dep p x q y -> f p x = f q y.
-Proof. try hammer_hook "EqdepFacts" "EqdepFacts.f_eq_dep_non_dep". Undo.  
+Proof. hammer_hook "EqdepFacts" "EqdepFacts.f_eq_dep_non_dep".  
 intros * []. reflexivity.
 Qed.
 

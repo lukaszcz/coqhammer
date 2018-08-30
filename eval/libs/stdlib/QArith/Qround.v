@@ -11,7 +11,7 @@ From Hammer Require Import Hammer.
 Require Import QArith.
 
 Lemma Qopp_lt_compat: forall p q : Q, p < q -> - q < - p.
-Proof. try hammer_hook "Qround" "Qround.Qopp_lt_compat". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qopp_lt_compat".  
 intros (a1,a2) (b1,b2); unfold Qle, Qlt; simpl.
 rewrite !Z.mul_opp_l; omega.
 Qed.
@@ -26,14 +26,14 @@ Definition Qfloor (x:Q) := let (n,d) := x in Z.div n (Zpos d).
 Definition Qceiling (x:Q) := (-(Qfloor (-x)))%Z.
 
 Lemma Qfloor_Z : forall z:Z, Qfloor z = z.
-Proof. try hammer_hook "Qround" "Qround.Qfloor_Z". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qfloor_Z".  
 intros z.
 simpl.
 auto with *.
 Qed.
 
 Lemma Qceiling_Z : forall z:Z, Qceiling z = z.
-Proof. try hammer_hook "Qround" "Qround.Qceiling_Z". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qceiling_Z".  
 intros z.
 unfold Qceiling.
 simpl.
@@ -42,7 +42,7 @@ auto with *.
 Qed.
 
 Lemma Qfloor_le : forall x, Qfloor x <= x.
-Proof. try hammer_hook "Qround" "Qround.Qfloor_le". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qfloor_le".  
 intros [n d].
 simpl.
 unfold Qle.
@@ -56,7 +56,7 @@ Qed.
 Hint Resolve Qfloor_le : qarith.
 
 Lemma Qle_ceiling : forall x, x <= Qceiling x.
-Proof. try hammer_hook "Qround" "Qround.Qle_ceiling". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qle_ceiling".  
 intros x.
 apply Qle_trans with (- - x).
 rewrite Qopp_involutive.
@@ -68,12 +68,12 @@ Qed.
 Hint Resolve Qle_ceiling : qarith.
 
 Lemma Qle_floor_ceiling : forall x, Qfloor x <= Qceiling x.
-Proof. try hammer_hook "Qround" "Qround.Qle_floor_ceiling". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qle_floor_ceiling".  
 eauto with qarith.
 Qed.
 
 Lemma Qlt_floor : forall x, x < (Qfloor x+1)%Z.
-Proof. try hammer_hook "Qround" "Qround.Qlt_floor". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qlt_floor".  
 intros [n d].
 simpl.
 unfold Qlt.
@@ -90,7 +90,7 @@ Qed.
 Hint Resolve Qlt_floor : qarith.
 
 Lemma Qceiling_lt : forall x, (Qceiling x-1)%Z < x.
-Proof. try hammer_hook "Qround" "Qround.Qceiling_lt". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qceiling_lt".  
 intros x.
 unfold Qceiling.
 replace (- Qfloor (- x) - 1)%Z with (-(Qfloor (-x) + 1))%Z by ring.
@@ -103,7 +103,7 @@ Qed.
 Hint Resolve Qceiling_lt : qarith.
 
 Lemma Qfloor_resp_le : forall x y, x <= y -> (Qfloor x <= Qfloor y)%Z.
-Proof. try hammer_hook "Qround" "Qround.Qfloor_resp_le". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qfloor_resp_le".  
 intros [xn xd] [yn yd] Hxy.
 unfold Qle in *.
 simpl in *.
@@ -116,7 +116,7 @@ Qed.
 Hint Resolve Qfloor_resp_le : qarith.
 
 Lemma Qceiling_resp_le : forall x y, x <= y -> (Qceiling x <= Qceiling y)%Z.
-Proof. try hammer_hook "Qround" "Qround.Qceiling_resp_le". Undo.  
+Proof. hammer_hook "Qround" "Qround.Qceiling_resp_le".  
 intros x y Hxy.
 unfold Qceiling.
 cut (Qfloor (-y) <= Qfloor (-x))%Z; auto with *.
@@ -141,7 +141,7 @@ symmetry in H; auto with *.
 Qed.
 
 Lemma Zdiv_Qdiv (n m: Z): (n / m)%Z = Qfloor (n / m).
-Proof. try hammer_hook "Qround" "Qround.Zdiv_Qdiv". Undo.  
+Proof. hammer_hook "Qround" "Qround.Zdiv_Qdiv".  
 unfold Qfloor. intros. simpl.
 destruct m as [ | | p]; simpl.
 now rewrite Zdiv_0_r, Z.mul_0_r.

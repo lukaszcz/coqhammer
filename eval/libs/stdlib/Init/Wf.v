@@ -46,21 +46,21 @@ Hypothesis Rwf : well_founded.
 Theorem well_founded_induction_type :
 forall P:A -> Type,
 (forall x:A, (forall y:A, R y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf" "Wf.well_founded_induction_type". Undo.  
+Proof. hammer_hook "Wf" "Wf.well_founded_induction_type".  
 intros; apply Acc_rect; auto.
 Defined.
 
 Theorem well_founded_induction :
 forall P:A -> Set,
 (forall x:A, (forall y:A, R y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf" "Wf.well_founded_induction". Undo.  
+Proof. hammer_hook "Wf" "Wf.well_founded_induction".  
 exact (fun P:A -> Set => well_founded_induction_type P).
 Defined.
 
 Theorem well_founded_ind :
 forall P:A -> Prop,
 (forall x:A, (forall y:A, R y x -> P y) -> P x) -> forall a:A, P a.
-Proof. try hammer_hook "Wf" "Wf.well_founded_ind". Undo.  
+Proof. hammer_hook "Wf" "Wf.well_founded_ind".  
 exact (fun P:A -> Prop => well_founded_induction_type P).
 Defined.
 
@@ -79,7 +79,7 @@ Scheme Acc_inv_dep := Induction for Acc Sort Prop.
 Lemma Fix_F_eq :
 forall (x:A) (r:Acc x),
 F (fun (y:A) (p:R y x) => Fix_F (x:=y) (Acc_inv r p)) = Fix_F (x:=x) r.
-Proof. try hammer_hook "Wf" "Wf.Fix_F_eq". Undo.  
+Proof. hammer_hook "Wf" "Wf.Fix_F_eq".  
 destruct r using Acc_inv_dep; auto.
 Qed.
 
@@ -93,14 +93,14 @@ forall (x:A) (f g:forall y:A, R y x -> P y),
 (forall (y:A) (p:R y x), f y p = g y p) -> F f = F g.
 
 Lemma Fix_F_inv : forall (x:A) (r s:Acc x), Fix_F r = Fix_F s.
-Proof. try hammer_hook "Wf" "Wf.Fix_F_inv". Undo.  
+Proof. hammer_hook "Wf" "Wf.Fix_F_inv".  
 intro x; induction (Rwf x); intros.
 rewrite <- (Fix_F_eq r); rewrite <- (Fix_F_eq s); intros.
 apply F_ext; auto.
 Qed.
 
 Lemma Fix_eq : forall x:A, Fix x = F (fun (y:A) (p:R y x) => Fix y).
-Proof. try hammer_hook "Wf" "Wf.Fix_eq". Undo.  
+Proof. hammer_hook "Wf" "Wf.Fix_eq".  
 intro x; unfold Fix.
 rewrite <- Fix_F_eq.
 apply F_ext; intros.
@@ -140,7 +140,7 @@ Theorem well_founded_induction_type_2 :
 (forall (x:A) (x':B),
 (forall (y:A) (y':B), R (y, y') (x, x') -> P y y') -> P x x') ->
 forall (a:A) (b:B), P a b.
-Proof. try hammer_hook "Wf" "Wf.well_founded_induction_type_2". Undo.  
+Proof. hammer_hook "Wf" "Wf.well_founded_induction_type_2".  
 intros; apply Fix_F_2; auto.
 Defined.
 

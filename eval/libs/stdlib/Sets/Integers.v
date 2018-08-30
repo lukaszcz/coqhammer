@@ -50,27 +50,27 @@ Inductive Integers : Ensemble nat :=
 Integers_defn : forall x:nat, In nat Integers x.
 
 Lemma le_reflexive : Reflexive nat le.
-Proof. try hammer_hook "Integers" "Integers.le_reflexive". Undo.  
+Proof. hammer_hook "Integers" "Integers.le_reflexive".  
 red; auto with arith.
 Qed.
 
 Lemma le_antisym : Antisymmetric nat le.
-Proof. try hammer_hook "Integers" "Integers.le_antisym". Undo.  
+Proof. hammer_hook "Integers" "Integers.le_antisym".  
 red; intros x y H H'; rewrite (le_antisym x y); auto.
 Qed.
 
 Lemma le_trans : Transitive nat le.
-Proof. try hammer_hook "Integers" "Integers.le_trans". Undo.  
+Proof. hammer_hook "Integers" "Integers.le_trans".  
 red; intros; apply le_trans with y; auto.
 Qed.
 
 Lemma le_Order : Order nat le.
-Proof. try hammer_hook "Integers" "Integers.le_Order". Undo.  
+Proof. hammer_hook "Integers" "Integers.le_Order".  
 split; [exact le_reflexive | exact le_trans | exact le_antisym].
 Qed.
 
 Lemma triv_nat : forall n:nat, In nat Integers n.
-Proof. try hammer_hook "Integers" "Integers.triv_nat". Undo.  
+Proof. hammer_hook "Integers" "Integers.triv_nat".  
 exact Integers_defn.
 Qed.
 
@@ -83,7 +83,7 @@ exact le_Order.
 Defined.
 
 Lemma le_total_order : Totally_ordered nat nat_po Integers.
-Proof. try hammer_hook "Integers" "Integers.le_total_order". Undo.  
+Proof. hammer_hook "Integers" "Integers.le_total_order".  
 apply Totally_ordered_definition.
 simpl.
 intros H' x y H'0.
@@ -96,7 +96,7 @@ Qed.
 Lemma Finite_subset_has_lub :
 forall X:Ensemble nat,
 Finite nat X ->  exists m : nat, Upper_Bound nat nat_po X m.
-Proof. try hammer_hook "Integers" "Integers.Finite_subset_has_lub". Undo.  
+Proof. hammer_hook "Integers" "Integers.Finite_subset_has_lub".  
 intros X H'; elim H'.
 exists 0.
 apply Upper_Bound_definition.
@@ -136,7 +136,7 @@ Qed.
 
 Lemma Integers_has_no_ub :
 ~ (exists m : nat, Upper_Bound nat nat_po Integers m).
-Proof. try hammer_hook "Integers" "Integers.Integers_has_no_ub". Undo.  
+Proof. hammer_hook "Integers" "Integers.Integers_has_no_ub".  
 red; intro H'; elim H'.
 intros x H'0.
 elim H'0; intros H'1 H'2.
@@ -150,7 +150,7 @@ apply triv_nat.
 Qed.
 
 Lemma Integers_infinite : ~ Finite nat Integers.
-Proof. try hammer_hook "Integers" "Integers.Integers_infinite". Undo.  
+Proof. hammer_hook "Integers" "Integers.Integers_infinite".  
 generalize Integers_has_no_ub.
 intro H'; red; intro H'0; try exact H'0.
 apply H'.

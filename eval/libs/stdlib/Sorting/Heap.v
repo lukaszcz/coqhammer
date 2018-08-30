@@ -53,13 +53,13 @@ match t with
 end.
 
 Lemma leA_Tree_Leaf : forall a:A, leA_Tree a Tree_Leaf.
-Proof. try hammer_hook "Heap" "Heap.leA_Tree_Leaf". Undo.  
+Proof. hammer_hook "Heap" "Heap.leA_Tree_Leaf".  
 simpl; auto with datatypes.
 Qed.
 
 Lemma leA_Tree_Node :
 forall (a b:A) (G D:Tree), leA a b -> leA_Tree a (Tree_Node b G D).
-Proof. try hammer_hook "Heap" "Heap.leA_Tree_Node". Undo.  
+Proof. hammer_hook "Heap" "Heap.leA_Tree_Node".  
 simpl; auto with datatypes.
 Qed.
 
@@ -78,7 +78,7 @@ Lemma invert_heap :
 forall (a:A) (T1 T2:Tree),
 is_heap (Tree_Node a T1 T2) ->
 leA_Tree a T1 /\ leA_Tree a T2 /\ is_heap T1 /\ is_heap T2.
-Proof. try hammer_hook "Heap" "Heap.invert_heap". Undo.  
+Proof. hammer_hook "Heap" "Heap.invert_heap".  
 intros; inversion H; auto with datatypes.
 Qed.
 
@@ -91,7 +91,7 @@ leA_Tree a T1 ->
 leA_Tree a T2 ->
 is_heap T1 -> P T1 -> is_heap T2 -> P T2 -> P (Tree_Node a T1 T2)) ->
 forall T:Tree, is_heap T -> P T.
-Proof. try hammer_hook "Heap" "Heap.is_heap_rect". Undo.  
+Proof. hammer_hook "Heap" "Heap.is_heap_rect".  
 simple induction T; auto with datatypes.
 intros a G PG D PD PN.
 elim (invert_heap a G D); auto with datatypes.
@@ -108,7 +108,7 @@ leA_Tree a T1 ->
 leA_Tree a T2 ->
 is_heap T1 -> P T1 -> is_heap T2 -> P T2 -> P (Tree_Node a T1 T2)) ->
 forall T:Tree, is_heap T -> P T.
-Proof. try hammer_hook "Heap" "Heap.is_heap_rec". Undo.  
+Proof. hammer_hook "Heap" "Heap.is_heap_rec".  
 simple induction T; auto with datatypes.
 intros a G PG D PD PN.
 elim (invert_heap a G D); auto with datatypes.
@@ -118,7 +118,7 @@ Qed.
 
 Lemma low_trans :
 forall (T:Tree) (a b:A), leA a b -> leA_Tree b T -> leA_Tree a T.
-Proof. try hammer_hook "Heap" "Heap.low_trans". Undo.  
+Proof. hammer_hook "Heap" "Heap.low_trans".  
 simple induction T; auto with datatypes.
 intros; simpl; apply leA_trans with b; auto with datatypes.
 Qed.
@@ -144,7 +144,7 @@ Proof. intros x y H x' y' H'. now apply meq_congr. Qed.
 Lemma merge :
 forall l1:list A, Sorted leA l1 ->
 forall l2:list A, Sorted leA l2 -> merge_lem l1 l2.
-Proof. try hammer_hook "Heap" "Heap.merge". Undo.  
+Proof. hammer_hook "Heap" "Heap.merge".  
 fix 1; intros; destruct l1.
 apply merge_exist with l2; auto with datatypes.
 rename l1 into l.
@@ -206,7 +206,7 @@ insert_spec a T.
 
 
 Lemma insert : forall T:Tree, is_heap T -> forall a:A, insert_spec a T.
-Proof. try hammer_hook "Heap" "Heap.insert". Undo.  
+Proof. hammer_hook "Heap" "Heap.insert".  
 simple induction 1; intros.
 apply insert_exist with (Tree_Node a Tree_Leaf Tree_Leaf);
 auto using node_is_heap, nil_is_heap, leA_Tree_Leaf with datatypes.
@@ -236,7 +236,7 @@ is_heap T ->
 meq (list_contents _ eqA_dec l) (contents T) -> build_heap l.
 
 Lemma list_to_heap : forall l:list A, build_heap l.
-Proof. try hammer_hook "Heap" "Heap.list_to_heap". Undo.  
+Proof. hammer_hook "Heap" "Heap.list_to_heap".  
 simple induction l.
 apply (heap_exist nil Tree_Leaf); auto with datatypes.
 simpl; unfold meq; exact nil_is_heap.
@@ -261,7 +261,7 @@ Sorted leA l ->
 meq (contents T) (list_contents _ eqA_dec l) -> flat_spec T.
 
 Lemma heap_to_list : forall T:Tree, is_heap T -> flat_spec T.
-Proof. try hammer_hook "Heap" "Heap.heap_to_list". Undo.  
+Proof. hammer_hook "Heap" "Heap.heap_to_list".  
 intros T h; elim h; intros.
 apply flat_exist with (nil (A:=A)); auto with datatypes.
 elim X; intros l1 s1 i1 m1; elim X0; intros l2 s2 i2 m2.
@@ -284,7 +284,7 @@ Qed.
 Theorem treesort :
 forall l:list A,
 {m : list A | Sorted leA m & permutation _ eqA_dec l m}.
-Proof. try hammer_hook "Heap" "Heap.treesort". Undo.  
+Proof. hammer_hook "Heap" "Heap.treesort".  
 intro l; unfold permutation.
 elim (list_to_heap l).
 intros.

@@ -30,7 +30,7 @@ end%bool.
 
 Lemma eqb_nat_eq: forall m n (v1: t A m) (v2: t A n)
 (Hbeq: eqb v1 v2 = true), m = n.
-Proof. try hammer_hook "VectorEq" "VectorEq.eqb_nat_eq". Undo.  
+Proof. hammer_hook "VectorEq" "VectorEq.eqb_nat_eq".  
 intros m n v1; revert n.
 induction v1; destruct v2;
 [now constructor | discriminate | discriminate | simpl].
@@ -40,7 +40,7 @@ Qed.
 
 Lemma eqb_eq: forall n (v1: t A n) (v2: t A n),
 eqb v1 v2 = true <-> v1 = v2.
-Proof. try hammer_hook "VectorEq" "VectorEq.eqb_eq". Undo.  
+Proof. hammer_hook "VectorEq" "VectorEq.eqb_eq".  
 refine (@rect2 _ _ _ _ _); [now constructor | simpl].
 intros ? ? ? Hrec h1 h2; destruct Hrec; destruct (A_eqb_eq h1 h2); split.
 + intros Hbeq. apply andb_prop in Hbeq; destruct Hbeq.
@@ -50,7 +50,7 @@ split; now auto.
 Qed.
 
 Definition eq_dec n (v1 v2: t A n): {v1 = v2} + {v1 <> v2}.
-Proof. try hammer_hook "VectorEq" "VectorEq.eq_dec". Undo.  
+Proof. hammer_hook "VectorEq" "VectorEq.eq_dec".  
 case_eq (eqb v1 v2); intros.
 + left; now apply eqb_eq.
 + right. intros Heq. apply <- eqb_eq in Heq. congruence.
@@ -61,7 +61,7 @@ End BEQ.
 Section CAST.
 
 Definition cast: forall {A m} (v: t A m) {n}, m = n -> t A n.
-Proof. try hammer_hook "VectorEq" "VectorEq.cast". Undo.  
+Proof. hammer_hook "VectorEq" "VectorEq.cast".  
 refine (fix cast {A m} (v: t A m) {struct v} :=
 match v in t _ m' return forall n, m' = n -> t A n with
 |[] => fun n => match n with

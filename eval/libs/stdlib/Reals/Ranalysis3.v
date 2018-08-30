@@ -21,7 +21,7 @@ derivable_pt_lim f1 x l1 ->
 derivable_pt_lim f2 x l2 ->
 f2 x <> 0 ->
 derivable_pt_lim (f1 / f2) x ((l1 * f2 x - l2 * f1 x) / Rsqr (f2 x)).
-Proof. try hammer_hook "Ranalysis3" "Ranalysis3.derivable_pt_lim_div". Undo.  
+Proof. hammer_hook "Ranalysis3" "Ranalysis3.derivable_pt_lim_div".  
 intros f1 f2 x l1 l2 H H0 H1.
 cut (derivable_pt f2 x);
 [ intro X | unfold derivable_pt; exists l2; exact H0 ].
@@ -745,7 +745,7 @@ Lemma derivable_pt_div :
 forall (f1 f2:R -> R) (x:R),
 derivable_pt f1 x ->
 derivable_pt f2 x -> f2 x <> 0 -> derivable_pt (f1 / f2) x.
-Proof. try hammer_hook "Ranalysis3" "Ranalysis3.derivable_pt_div". Undo.  
+Proof. hammer_hook "Ranalysis3" "Ranalysis3.derivable_pt_div".  
 unfold derivable_pt.
 intros f1 f2 x X X0 H.
 elim X; intros.
@@ -758,7 +758,7 @@ Lemma derivable_div :
 forall f1 f2:R -> R,
 derivable f1 ->
 derivable f2 -> (forall x:R, f2 x <> 0) -> derivable (f1 / f2).
-Proof. try hammer_hook "Ranalysis3" "Ranalysis3.derivable_div". Undo.  
+Proof. hammer_hook "Ranalysis3" "Ranalysis3.derivable_div".  
 unfold derivable; intros f1 f2 X X0 H x.
 apply (derivable_pt_div _ _ _ (X x) (X0 x) (H x)).
 Qed.
@@ -768,7 +768,7 @@ forall (f1 f2:R -> R) (x:R) (pr1:derivable_pt f1 x)
 (pr2:derivable_pt f2 x) (na:f2 x <> 0),
 derive_pt (f1 / f2) x (derivable_pt_div _ _ _ pr1 pr2 na) =
 (derive_pt f1 x pr1 * f2 x - derive_pt f2 x pr2 * f1 x) / Rsqr (f2 x).
-Proof. try hammer_hook "Ranalysis3" "Ranalysis3.derive_pt_div". Undo.  
+Proof. hammer_hook "Ranalysis3" "Ranalysis3.derive_pt_div".  
 intros.
 assert (H := derivable_derive f1 x pr1).
 assert (H0 := derivable_derive f2 x pr2).

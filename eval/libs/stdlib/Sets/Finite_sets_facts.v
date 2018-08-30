@@ -41,7 +41,7 @@ Variable U : Type.
 
 Lemma finite_cardinal :
 forall X:Ensemble U, Finite U X ->  exists n : nat, cardinal U X n.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.finite_cardinal". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.finite_cardinal".  
 induction 1 as [| A _ [n H]].
 exists 0; auto with sets.
 exists (S n); auto with sets.
@@ -49,27 +49,27 @@ Qed.
 
 Lemma cardinal_finite :
 forall (X:Ensemble U) (n:nat), cardinal U X n -> Finite U X.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_finite". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_finite".  
 induction 1; auto with sets.
 Qed.
 
 Theorem Add_preserves_Finite :
 forall (X:Ensemble U) (x:U), Finite U X -> Finite U (Add U X x).
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.Add_preserves_Finite". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.Add_preserves_Finite".  
 intros X x H'.
 elim (classic (In U X x)); intro H'0; auto with sets.
 rewrite (Non_disjoint_union U X x); auto with sets.
 Qed.
 
 Theorem Singleton_is_finite : forall x:U, Finite U (Singleton U x).
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.Singleton_is_finite". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.Singleton_is_finite".  
 intro x; rewrite <- (Empty_set_zero U (Singleton U x)).
 change (Finite U (Add U (Empty_set U) x)); auto with sets.
 Qed.
 
 Theorem Union_preserves_Finite :
 forall X Y:Ensemble U, Finite U X -> Finite U Y -> Finite U (Union U X Y).
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.Union_preserves_Finite". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.Union_preserves_Finite".  
 intros X Y H; induction H as [|A Fin_A Hind x].
 rewrite (Empty_set_zero U Y). trivial.
 intros.
@@ -83,7 +83,7 @@ Qed.
 Lemma Finite_downward_closed :
 forall A:Ensemble U,
 Finite U A -> forall X:Ensemble U, Included U X A -> Finite U X.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.Finite_downward_closed". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.Finite_downward_closed".  
 intros A H'; elim H'; auto with sets.
 intros X H'0.
 rewrite (less_than_empty U X H'0); auto with sets.
@@ -95,19 +95,19 @@ Qed.
 Lemma Intersection_preserves_finite :
 forall A:Ensemble U,
 Finite U A -> forall X:Ensemble U, Finite U (Intersection U X A).
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.Intersection_preserves_finite". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.Intersection_preserves_finite".  
 intros A H' X; apply Finite_downward_closed with A; auto with sets.
 Qed.
 
 Lemma cardinalO_empty :
 forall X:Ensemble U, cardinal U X 0 -> X = Empty_set U.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinalO_empty". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinalO_empty".  
 intros X H; apply (cardinal_invert U X 0); trivial with sets.
 Qed.
 
 Lemma inh_card_gt_O :
 forall X:Ensemble U, Inhabited U X -> forall n:nat, cardinal U X n -> n > 0.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.inh_card_gt_O". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.inh_card_gt_O".  
 induction 1 as [x H'].
 intros n H'0.
 elim (gt_O_eq n); auto with sets.
@@ -121,7 +121,7 @@ Lemma card_soustr_1 :
 forall (X:Ensemble U) (n:nat),
 cardinal U X n ->
 forall x:U, In U X x -> cardinal U (Subtract U X x) (pred n).
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.card_soustr_1". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.card_soustr_1".  
 intros X n H'; elim H'.
 intros x H'0; elim H'0.
 clear H' n X.
@@ -162,7 +162,7 @@ Lemma cardinal_is_functional :
 forall (X:Ensemble U) (c1:nat),
 cardinal U X c1 ->
 forall (Y:Ensemble U) (c2:nat), cardinal U Y c2 -> X = Y -> c1 = c2.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_is_functional". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_is_functional".  
 intros X c1 H'; elim H'.
 intros Y c2 H'0; elim H'0; auto with sets.
 intros A n H'1 H'2 x H'3 H'5.
@@ -199,7 +199,7 @@ lapply (Add_inv U X0 x0 x); [ intuition | apply (H'0 x); apply Add_intro2 ].
 Qed.
 
 Lemma cardinal_Empty : forall m:nat, cardinal U (Empty_set U) m -> 0 = m.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_Empty". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_Empty".  
 intros m Cm; generalize (cardinal_invert U (Empty_set U) m Cm).
 elim m; auto with sets.
 intros; elim H0; intros; elim H1; intros; elim H2; intros.
@@ -209,14 +209,14 @@ Qed.
 Lemma cardinal_unicity :
 forall (X:Ensemble U) (n:nat),
 cardinal U X n -> forall m:nat, cardinal U X m -> n = m.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_unicity". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.cardinal_unicity".  
 intros; apply cardinal_is_functional with X X; auto with sets.
 Qed.
 
 Lemma card_Add_gen :
 forall (A:Ensemble U) (x:U) (n n':nat),
 cardinal U A n -> cardinal U (Add U A x) n' -> n' <= S n.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.card_Add_gen". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.card_Add_gen".  
 intros A x n n' H'.
 elim (classic (In U A x)).
 intro H'0.
@@ -235,7 +235,7 @@ forall (X:Ensemble U) (c1:nat),
 cardinal U X c1 ->
 forall (Y:Ensemble U) (c2:nat),
 cardinal U Y c2 -> Strict_Included U X Y -> c2 > c1.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.incl_st_card_lt". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.incl_st_card_lt".  
 intros X c1 H'; elim H'.
 intros Y c2 H'0; elim H'0; auto with sets arith.
 intro H'1.
@@ -270,7 +270,7 @@ Qed.
 Lemma incl_card_le :
 forall (X Y:Ensemble U) (n m:nat),
 cardinal U X n -> cardinal U Y m -> Included U X Y -> n <= m.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.incl_card_le". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.incl_card_le".  
 intros; elim Included_Strict_Included with U X Y; auto with sets arith; intro.
 cut (m > n); auto with sets arith.
 apply incl_st_card_lt with (X := X) (Y := Y); auto with sets arith.
@@ -286,7 +286,7 @@ forall P:Ensemble U -> Prop,
 Finite U X ->
 (forall Y:Ensemble U, Strict_Included U Y X -> P Y) -> P X) ->
 P (Empty_set U).
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.G_aux". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.G_aux".  
 intros P H'; try assumption.
 apply H'; auto with sets.
 clear H'; auto with sets.
@@ -303,7 +303,7 @@ forall P:Ensemble U -> Prop,
 Finite U X ->
 (forall Y:Ensemble U, Strict_Included U Y X -> P Y) -> P X) ->
 forall X:Ensemble U, Finite U X -> P X.
-Proof. try hammer_hook "Finite_sets_facts" "Finite_sets_facts.Generalized_induction_on_finite_sets". Undo.  
+Proof. hammer_hook "Finite_sets_facts" "Finite_sets_facts.Generalized_induction_on_finite_sets".  
 intros P H'0 X H'1.
 generalize P H'0; clear H'0 P.
 elim H'1.

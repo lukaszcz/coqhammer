@@ -49,14 +49,14 @@ Notation Zpos_minus := Pos2Z.inj_sub_max (compat "8.3").
 
 Lemma Zmax_spec x y :
 x >= y /\ Z.max x y = x  \/ x < y /\ Z.max x y = y.
-Proof. try hammer_hook "Zmax" "Zmax.Zmax_spec". Undo.  
+Proof. hammer_hook "Zmax" "Zmax.Zmax_spec".  
 Z.swap_greater. destruct (Z.max_spec x y); auto.
 Qed.
 
 Lemma Zmax_left n m : n>=m -> Z.max n m = n.
-Proof. try hammer_hook "Zmax" "Zmax.Zmax_left". Undo.   Z.swap_greater. apply Z.max_l. Qed.
+Proof. hammer_hook "Zmax" "Zmax.Zmax_left".   Z.swap_greater. apply Z.max_l. Qed.
 
 Lemma Zpos_max_1 p : Z.max 1 (Z.pos p) = Z.pos p.
-Proof. try hammer_hook "Zmax" "Zmax.Zpos_max_1". Undo.  
+Proof. hammer_hook "Zmax" "Zmax.Zpos_max_1".  
 now destruct p.
 Qed.

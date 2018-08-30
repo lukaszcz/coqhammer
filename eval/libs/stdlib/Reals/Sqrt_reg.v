@@ -17,7 +17,7 @@ Local Open Scope R_scope.
 
 Lemma sqrt_var_maj :
 forall h:R, Rabs h <= 1 -> Rabs (sqrt (1 + h) - 1) <= Rabs h.
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.sqrt_var_maj". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.sqrt_var_maj".  
 intros; cut (0 <= 1 + h).
 intro; apply Rle_trans with (Rabs (sqrt (Rsqr (1 + h)) - 1)).
 destruct (total_order_T h 0) as [[Hlt|Heq]|Hgt].
@@ -101,7 +101,7 @@ Qed.
 
 
 Lemma sqrt_continuity_pt_R1 : continuity_pt sqrt 1.
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.sqrt_continuity_pt_R1". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.sqrt_continuity_pt_R1".  
 unfold continuity_pt; unfold continue_in;
 unfold limit1_in; unfold limit_in;
 unfold dist; simpl; unfold R_dist;
@@ -125,7 +125,7 @@ Qed.
 
 
 Lemma sqrt_continuity_pt : forall x:R, 0 < x -> continuity_pt sqrt x.
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.sqrt_continuity_pt". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.sqrt_continuity_pt".  
 intros; generalize sqrt_continuity_pt_R1.
 unfold continuity_pt; unfold continue_in;
 unfold limit1_in; unfold limit_in;
@@ -231,7 +231,7 @@ Qed.
 
 Lemma derivable_pt_lim_sqrt :
 forall x:R, 0 < x -> derivable_pt_lim sqrt x (/ (2 * sqrt x)).
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.derivable_pt_lim_sqrt". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.derivable_pt_lim_sqrt".  
 intros; set (g := fun h:R => sqrt x + sqrt (x + h)).
 cut (continuity_pt g 0).
 intro; cut (g 0 <> 0).
@@ -307,7 +307,7 @@ Qed.
 
 
 Lemma derivable_pt_sqrt : forall x:R, 0 < x -> derivable_pt sqrt x.
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.derivable_pt_sqrt". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.derivable_pt_sqrt".  
 unfold derivable_pt; intros.
 exists (/ (2 * sqrt x)).
 apply derivable_pt_lim_sqrt; assumption.
@@ -317,7 +317,7 @@ Qed.
 Lemma derive_pt_sqrt :
 forall (x:R) (pr:0 < x),
 derive_pt sqrt x (derivable_pt_sqrt _ pr) = / (2 * sqrt x).
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.derive_pt_sqrt". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.derive_pt_sqrt".  
 intros.
 apply derive_pt_eq_0.
 apply derivable_pt_lim_sqrt; assumption.
@@ -326,7 +326,7 @@ Qed.
 
 
 Lemma continuity_pt_sqrt : forall x:R, 0 <= x -> continuity_pt sqrt x.
-Proof. try hammer_hook "Sqrt_reg" "Sqrt_reg.continuity_pt_sqrt". Undo.  
+Proof. hammer_hook "Sqrt_reg" "Sqrt_reg.continuity_pt_sqrt".  
 intros; case (Rtotal_order 0 x); intro.
 apply (sqrt_continuity_pt x H0).
 elim H0; intro.

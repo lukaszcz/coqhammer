@@ -17,16 +17,16 @@ Local Open Scope Z_scope.
 
 
 Lemma Zpower_pos_1_r x : Z.pow_pos x 1 = x.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_1_r". Undo.  exact ((Z.pow_1_r x)). Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_1_r".  exact ((Z.pow_1_r x)). Qed.
 
 Lemma Zpower_pos_1_l p : Z.pow_pos 1 p = 1.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_1_l". Undo.   now apply (Z.pow_1_l (Zpos p)). Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_1_l".   now apply (Z.pow_1_l (Zpos p)). Qed.
 
 Lemma Zpower_pos_0_l p : Z.pow_pos 0 p = 0.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_0_l". Undo.   now apply (Z.pow_0_l (Zpos p)). Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_0_l".   now apply (Z.pow_0_l (Zpos p)). Qed.
 
 Lemma Zpower_pos_pos x p : 0 < x -> 0 < Z.pow_pos x p.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_pos". Undo.   intros. now apply (Z.pow_pos_nonneg x (Zpos p)). Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_pos_pos".   intros. now apply (Z.pow_pos_nonneg x (Zpos p)). Qed.
 
 Notation Zpower_1_r := Z.pow_1_r (compat "8.3").
 Notation Zpower_1_l := Z.pow_1_l (compat "8.3").
@@ -42,27 +42,27 @@ Notation Zpower_le_monotone2 := Z.pow_le_mono_r (compat "8.3").
 
 Theorem Zpower_le_monotone a b c :
 0 < a -> 0 <= b <= c -> a^b <= a^c.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_le_monotone". Undo.   intros. now apply Z.pow_le_mono_r. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_le_monotone".   intros. now apply Z.pow_le_mono_r. Qed.
 
 Theorem Zpower_lt_monotone a b c :
 1 < a -> 0 <= b < c -> a^b < a^c.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_lt_monotone". Undo.   intros. apply Z.pow_lt_mono_r; auto with zarith. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_lt_monotone".   intros. apply Z.pow_lt_mono_r; auto with zarith. Qed.
 
 Theorem Zpower_gt_1 x y : 1 < x -> 0 < y -> 1 < x^y.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_gt_1". Undo.   apply Z.pow_gt_1. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_gt_1".   apply Z.pow_gt_1. Qed.
 
 Theorem Zmult_power p q r : 0 <= r -> (p*q)^r = p^r * q^r.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zmult_power". Undo.   intros. apply Z.pow_mul_l. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zmult_power".   intros. apply Z.pow_mul_l. Qed.
 
 Hint Resolve Z.pow_nonneg Z.pow_pos_nonneg : zarith.
 
 Theorem Zpower_le_monotone3 a b c :
 0 <= c -> 0 <= a <= b -> a^c <= b^c.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_le_monotone3". Undo.   intros. now apply Z.pow_le_mono_l. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_le_monotone3".   intros. now apply Z.pow_le_mono_l. Qed.
 
 Lemma Zpower_le_monotone_inv a b c :
 1 < a -> 0 < b -> a^b <= a^c -> b <= c.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_le_monotone_inv". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_le_monotone_inv".  
 intros Ha Hb H. apply (Z.pow_le_mono_r_iff a); trivial.
 apply Z.lt_le_incl; apply (Z.pow_gt_1 a); trivial.
 apply Z.lt_le_trans with (a^b); trivial. now apply Z.pow_gt_1.
@@ -71,14 +71,14 @@ Qed.
 Notation Zpower_nat_Zpower := Zpower_nat_Zpower (only parsing).
 
 Theorem Zpower2_lt_lin n : 0 <= n -> n < 2^n.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower2_lt_lin". Undo.   intros. now apply Z.pow_gt_lin_r. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower2_lt_lin".   intros. now apply Z.pow_gt_lin_r. Qed.
 
 Theorem Zpower2_le_lin n : 0 <= n -> n <= 2^n.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower2_le_lin". Undo.   intros. apply Z.lt_le_incl. now apply Z.pow_gt_lin_r. Qed.
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower2_le_lin".   intros. apply Z.lt_le_incl. now apply Z.pow_gt_lin_r. Qed.
 
 Lemma Zpower2_Psize n p :
 Zpos p < 2^(Z.of_nat n) <-> (Pos.size_nat p <= n)%nat.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower2_Psize". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower2_Psize".  
 revert p; induction n.
 destruct p; now split.
 assert (Hn := Nat2Z.is_nonneg n).
@@ -96,7 +96,7 @@ Qed.
 
 Theorem Zpower_mod p q n :
 0 < n -> (p^q) mod n = ((p mod n)^q) mod n.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_mod". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_mod".  
 intros Hn; destruct (Z.le_gt_cases 0 q) as [H1|H1].
 - pattern q; apply natlike_ind; trivial.
 clear q H1. intros q Hq Rec. rewrite !Z.pow_succ_r; trivial.
@@ -133,7 +133,7 @@ end.
 
 Theorem Zpow_mod_pos_correct a m n :
 n <> 0 -> Zpow_mod_pos a m n = (Z.pow_pos a m) mod n.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpow_mod_pos_correct". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpow_mod_pos_correct".  
 intros Hn. induction m.
 - rewrite Pos.xI_succ_xO at 2. rewrite <- Pos.add_1_r, <- Pos.add_diag.
 rewrite 2 Zpower_pos_is_exp, Zpower_pos_1_r.
@@ -150,7 +150,7 @@ Qed.
 
 Theorem Zpow_mod_correct a m n :
 n <> 0 -> Zpow_mod a m n = (a ^ m) mod n.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpow_mod_correct". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpow_mod_correct".  
 intros Hn. destruct m; simpl; trivial.
 - apply Zpow_mod_pos_correct; auto with zarith.
 Qed.
@@ -158,14 +158,14 @@ Qed.
 
 
 Lemma Zpower_divide p q : 0 < q -> (p | p ^ q).
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zpower_divide". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zpower_divide".  
 exists (p^(q - 1)).
 rewrite Z.mul_comm, <- Z.pow_succ_r; f_equal; auto with zarith.
 Qed.
 
 Theorem rel_prime_Zpower_r i p q :
 0 <= i -> rel_prime p q -> rel_prime p (q^i).
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.rel_prime_Zpower_r". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.rel_prime_Zpower_r".  
 intros Hi Hpq; pattern i; apply natlike_ind; auto with zarith.
 simpl. apply rel_prime_sym, rel_prime_1.
 clear i Hi. intros i Hi Rec; rewrite Z.pow_succ_r; auto.
@@ -174,7 +174,7 @@ Qed.
 
 Theorem rel_prime_Zpower i j p q :
 0 <= i ->  0 <= j -> rel_prime p q -> rel_prime (p^i) (q^j).
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.rel_prime_Zpower". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.rel_prime_Zpower".  
 intros Hi Hj H. apply rel_prime_Zpower_r; trivial.
 apply rel_prime_sym. apply rel_prime_Zpower_r; trivial.
 now apply rel_prime_sym.
@@ -182,7 +182,7 @@ Qed.
 
 Theorem prime_power_prime p q n :
 0 <= n -> prime p -> prime q -> (p | q^n) -> p = q.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.prime_power_prime". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.prime_power_prime".  
 intros Hn Hp Hq; pattern n; apply natlike_ind; auto; clear n Hn.
 - simpl; intros.
 assert (2<=p) by (apply prime_ge_2; auto).
@@ -198,7 +198,7 @@ Qed.
 
 Theorem Zdivide_power_2 x p n :
 0 <= n -> 0 <= x -> prime p -> (x | p^n) -> exists m, x = p^m.
-Proof. try hammer_hook "Zpow_facts" "Zpow_facts.Zdivide_power_2". Undo.  
+Proof. hammer_hook "Zpow_facts" "Zpow_facts.Zdivide_power_2".  
 intros Hn Hx; revert p n Hn. generalize Hx.
 pattern x; apply Z_lt_induction; auto.
 clear x Hx; intros x IH Hx p n Hn Hp H.

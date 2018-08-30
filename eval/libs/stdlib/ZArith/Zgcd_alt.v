@@ -47,14 +47,14 @@ Definition Zgcd_alt a b := Zgcdn (Zgcd_bound a) a b.
 
 Lemma Zgcdn_pos : forall n a b,
 0 <= Zgcdn n a b.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_pos". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_pos".  
 induction n.
 simpl; auto with zarith.
 destruct a; simpl; intros; auto with zarith; auto.
 Qed.
 
 Lemma Zgcd_alt_pos : forall a b, 0 <= Zgcd_alt a b.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_alt_pos". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_alt_pos".  
 intros; unfold Z.gcd; apply Zgcdn_pos; auto.
 Qed.
 
@@ -64,7 +64,7 @@ Qed.
 
 Lemma Zgcdn_linear_bound : forall n a b,
 Z.abs a < Z.of_nat n -> Zis_gcd a b (Zgcdn n a b).
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_linear_bound". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_linear_bound".  
 induction n.
 simpl; intros.
 exfalso; generalize (Z.abs_nonneg a); omega.
@@ -95,7 +95,7 @@ match n with
 end.
 
 Lemma fibonacci_pos : forall n, 0 <= fibonacci n.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.fibonacci_pos". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.fibonacci_pos".  
 enough (forall N n, (n<N)%nat -> 0<=fibonacci n) by eauto.
 induction N.
 inversion 1.
@@ -110,7 +110,7 @@ Qed.
 
 Lemma fibonacci_incr :
 forall n m, (n<=m)%nat -> fibonacci n <= fibonacci m.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.fibonacci_incr". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.fibonacci_incr".  
 induction 1.
 auto with zarith.
 apply Z.le_trans with (fibonacci m); auto.
@@ -129,7 +129,7 @@ Zis_gcd a b (Zgcdn (S n) a b) ->
 Zgcdn n a b <> Zgcdn (S n) a b ->
 fibonacci (S n) <= a /\
 fibonacci (S (S n)) <= b.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_worst_is_fibonacci". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_worst_is_fibonacci".  
 induction n.
 intros [|a|a]; intros; simpl; omega.
 intros [|a|a] b (Ha,Ha'); [simpl; omega | | easy ].
@@ -170,7 +170,7 @@ Qed.
 Lemma Zgcdn_ok_before_fibonacci : forall n a b,
 0 < a < b -> a < fibonacci (S n) ->
 Zis_gcd a b (Zgcdn n a b).
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_ok_before_fibonacci". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_ok_before_fibonacci".  
 destruct a; [ destruct 1; exfalso; omega | | destruct 1; discriminate].
 cut (forall k n b,
 k = (S (Pos.to_nat p) - n)%nat ->
@@ -201,7 +201,7 @@ Qed.
 
 Lemma Zgcd_bound_fibonacci :
 forall a, 0 < a -> a < fibonacci (Zgcd_bound a).
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_bound_fibonacci". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_bound_fibonacci".  
 destruct a; [omega| | intro H; discriminate].
 intros _.
 induction p; [ | | compute; auto ];
@@ -220,19 +220,19 @@ Qed.
 
 
 Lemma Zgcd_bound_opp a : Zgcd_bound (-a) = Zgcd_bound a.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_bound_opp". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_bound_opp".  
 now destruct a.
 Qed.
 
 Lemma Zgcdn_opp n a b : Zgcdn n (-a) b = Zgcdn n a b.
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_opp". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_opp".  
 induction n; simpl; auto.
 destruct a; simpl; auto.
 Qed.
 
 Lemma Zgcdn_is_gcd_pos n a b : (Zgcd_bound (Zpos a) <= n)%nat ->
 Zis_gcd (Zpos a) b (Zgcdn n (Zpos a) b).
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_is_gcd_pos". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_is_gcd_pos".  
 intros.
 generalize (Zgcd_bound_fibonacci (Zpos a)).
 simpl Zgcd_bound in *.
@@ -260,7 +260,7 @@ Qed.
 
 Lemma Zgcdn_is_gcd n a b :
 (Zgcd_bound a <= n)%nat -> Zis_gcd a b (Zgcdn n a b).
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_is_gcd". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcdn_is_gcd".  
 destruct a.
 - simpl; intros.
 destruct n; [exfalso; omega | ].
@@ -273,7 +273,7 @@ Qed.
 
 Lemma Zgcd_is_gcd :
 forall a b, Zis_gcd a b (Zgcd_alt a b).
-Proof. try hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_is_gcd". Undo.  
+Proof. hammer_hook "Zgcd_alt" "Zgcd_alt.Zgcd_is_gcd".  
 unfold Zgcd_alt; intros; apply Zgcdn_is_gcd; auto.
 Qed.
 

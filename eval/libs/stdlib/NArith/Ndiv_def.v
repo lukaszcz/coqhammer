@@ -21,7 +21,7 @@ let (q,r) := Pdiv_eucl a b in Npos a = q * Npos b + r
 
 Lemma Pdiv_eucl_remainder a b :
 snd (Pdiv_eucl a b) < Npos b.
-Proof. try hammer_hook "Ndiv_def" "Ndiv_def.Pdiv_eucl_remainder". Undo.   now apply (N.pos_div_eucl_remainder a (Npos b)). Qed.
+Proof. hammer_hook "Ndiv_def" "Ndiv_def.Pdiv_eucl_remainder".   now apply (N.pos_div_eucl_remainder a (Npos b)). Qed.
 
 Notation Ndiv_eucl := N.div_eucl (compat "8.3").
 Notation Ndiv := N.div (compat "8.3").

@@ -27,99 +27,99 @@ Definition plus_Snm_nSm : forall n m, S n + m = n + S m :=
 Peano.plus_n_Sm.
 
 Lemma plus_assoc_reverse n m p : n + m + p = n + (m + p).
-Proof. try hammer_hook "Plus" "Plus.plus_assoc_reverse". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_assoc_reverse".  
 symmetry. apply Nat.add_assoc.
 Qed.
 
 
 
 Lemma plus_reg_l n m p : p + n = p + m -> n = m.
-Proof. try hammer_hook "Plus" "Plus.plus_reg_l". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_reg_l".  
 apply Nat.add_cancel_l.
 Qed.
 
 Lemma plus_le_reg_l n m p : p + n <= p + m -> n <= m.
-Proof. try hammer_hook "Plus" "Plus.plus_le_reg_l". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_le_reg_l".  
 apply Nat.add_le_mono_l.
 Qed.
 
 Lemma plus_lt_reg_l n m p : p + n < p + m -> n < m.
-Proof. try hammer_hook "Plus" "Plus.plus_lt_reg_l". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_lt_reg_l".  
 apply Nat.add_lt_mono_l.
 Qed.
 
 
 
 Lemma plus_le_compat_l n m p : n <= m -> p + n <= p + m.
-Proof. try hammer_hook "Plus" "Plus.plus_le_compat_l". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_le_compat_l".  
 apply Nat.add_le_mono_l.
 Qed.
 
 Lemma plus_le_compat_r n m p : n <= m -> n + p <= m + p.
-Proof. try hammer_hook "Plus" "Plus.plus_le_compat_r". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_le_compat_r".  
 apply Nat.add_le_mono_r.
 Qed.
 
 Lemma plus_lt_compat_l n m p : n < m -> p + n < p + m.
-Proof. try hammer_hook "Plus" "Plus.plus_lt_compat_l". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_lt_compat_l".  
 apply Nat.add_lt_mono_l.
 Qed.
 
 Lemma plus_lt_compat_r n m p : n < m -> n + p < m + p.
-Proof. try hammer_hook "Plus" "Plus.plus_lt_compat_r". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_lt_compat_r".  
 apply Nat.add_lt_mono_r.
 Qed.
 
 Lemma plus_le_compat n m p q : n <= m -> p <= q -> n + p <= m + q.
-Proof. try hammer_hook "Plus" "Plus.plus_le_compat". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_le_compat".  
 apply Nat.add_le_mono.
 Qed.
 
 Lemma plus_le_lt_compat n m p q : n <= m -> p < q -> n + p < m + q.
-Proof. try hammer_hook "Plus" "Plus.plus_le_lt_compat". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_le_lt_compat".  
 apply Nat.add_le_lt_mono.
 Qed.
 
 Lemma plus_lt_le_compat n m p q : n < m -> p <= q -> n + p < m + q.
-Proof. try hammer_hook "Plus" "Plus.plus_lt_le_compat". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_lt_le_compat".  
 apply Nat.add_lt_le_mono.
 Qed.
 
 Lemma plus_lt_compat n m p q : n < m -> p < q -> n + p < m + q.
-Proof. try hammer_hook "Plus" "Plus.plus_lt_compat". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_lt_compat".  
 apply Nat.add_lt_mono.
 Qed.
 
 Lemma le_plus_l n m : n <= n + m.
-Proof. try hammer_hook "Plus" "Plus.le_plus_l". Undo.  
+Proof. hammer_hook "Plus" "Plus.le_plus_l".  
 apply Nat.le_add_r.
 Qed.
 
 Lemma le_plus_r n m : m <= n + m.
-Proof. try hammer_hook "Plus" "Plus.le_plus_r". Undo.  
+Proof. hammer_hook "Plus" "Plus.le_plus_r".  
 rewrite Nat.add_comm. apply Nat.le_add_r.
 Qed.
 
 Theorem le_plus_trans n m p : n <= m -> n <= m + p.
-Proof. try hammer_hook "Plus" "Plus.le_plus_trans". Undo.  
+Proof. hammer_hook "Plus" "Plus.le_plus_trans".  
 intros. now rewrite <- Nat.le_add_r.
 Qed.
 
 Theorem lt_plus_trans n m p : n < m -> n < m + p.
-Proof. try hammer_hook "Plus" "Plus.lt_plus_trans". Undo.  
+Proof. hammer_hook "Plus" "Plus.lt_plus_trans".  
 intros. apply Nat.lt_le_trans with m. trivial. apply Nat.le_add_r.
 Qed.
 
 
 
 Lemma plus_is_O n m : n + m = 0 -> n = 0 /\ m = 0.
-Proof. try hammer_hook "Plus" "Plus.plus_is_O". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_is_O".  
 destruct n; now split.
 Qed.
 
 Definition plus_is_one m n :
 m + n = 1 -> {m = 0 /\ n = 1} + {m = 1 /\ n = 0}.
-Proof. try hammer_hook "Plus" "Plus.plus_is_one". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_is_one".  
 destruct m as [| m]; auto.
 destruct m; auto.
 discriminate.
@@ -140,7 +140,7 @@ match n with
 end.
 
 Lemma plus_tail_plus : forall n m, n + m = tail_plus n m.
-Proof. try hammer_hook "Plus" "Plus.plus_tail_plus". Undo.  
+Proof. hammer_hook "Plus" "Plus.plus_tail_plus".  
 induction n as [| n IHn]; simpl; auto.
 intro m; rewrite <- IHn; simpl; auto.
 Qed.
@@ -148,18 +148,18 @@ Qed.
 
 
 Lemma succ_plus_discr n m : n <> S (m+n).
-Proof. try hammer_hook "Plus" "Plus.succ_plus_discr". Undo.  
+Proof. hammer_hook "Plus" "Plus.succ_plus_discr".  
 apply Nat.succ_add_discr.
 Qed.
 
 Lemma n_SSn n : n <> S (S n).
-Proof. try hammer_hook "Plus" "Plus.n_SSn". Undo.  exact ((succ_plus_discr n 1)). Qed.
+Proof. hammer_hook "Plus" "Plus.n_SSn".  exact ((succ_plus_discr n 1)). Qed.
 
 Lemma n_SSSn n : n <> S (S (S n)).
-Proof. try hammer_hook "Plus" "Plus.n_SSSn". Undo.  exact ((succ_plus_discr n 2)). Qed.
+Proof. hammer_hook "Plus" "Plus.n_SSSn".  exact ((succ_plus_discr n 2)). Qed.
 
 Lemma n_SSSSn n : n <> S (S (S (S n))).
-Proof. try hammer_hook "Plus" "Plus.n_SSSSn". Undo.  exact ((succ_plus_discr n 3)). Qed.
+Proof. hammer_hook "Plus" "Plus.n_SSSSn".  exact ((succ_plus_discr n 3)). Qed.
 
 
 

@@ -27,7 +27,7 @@ Definition excluded_middle := forall A:Prop, A \/ ~ A.
 
 
 Lemma prop_degen_ext : prop_degeneracy -> prop_extensionality.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.prop_degen_ext". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.prop_degen_ext".  
 intros H A B [Hab Hba].
 destruct (H A); destruct (H B).
 rewrite H1; exact H0.
@@ -41,7 +41,7 @@ rewrite H1; exact H0.
 Qed.
 
 Lemma prop_degen_em : prop_degeneracy -> excluded_middle.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.prop_degen_em". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.prop_degen_em".  
 intros H A.
 destruct (H A).
 left; rewrite H0; exact I.
@@ -50,7 +50,7 @@ Qed.
 
 Lemma prop_ext_em_degen :
 prop_extensionality -> excluded_middle -> prop_degeneracy.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.prop_ext_em_degen". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.prop_ext_em_degen".  
 intros Ext EM A.
 destruct (EM A).
 left; apply (Ext A True); split;
@@ -66,7 +66,7 @@ Definition provable_prop_extensionality := forall A:Prop, A -> A = True.
 
 Lemma provable_prop_ext :
 prop_extensionality -> provable_prop_extensionality.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.provable_prop_ext". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.provable_prop_ext".  
 exact PropExt_imp_ProvPropExt.
 Qed.
 
@@ -82,7 +82,7 @@ Local Notation inhabited A := A (only parsing).
 
 Lemma prop_ext_A_eq_A_imp_A :
 prop_extensionality -> forall A:Prop, inhabited A -> (A -> A) = A.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.prop_ext_A_eq_A_imp_A". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.prop_ext_A_eq_A_imp_A".  
 intros Ext A a.
 apply (Ext (A -> A) A); split; [ exact (fun _ => a) | exact (fun _ _ => a) ].
 Qed.
@@ -92,7 +92,7 @@ Record retract (A B:Prop) : Prop :=
 
 Lemma prop_ext_retract_A_A_imp_A :
 prop_extensionality -> forall A:Prop, inhabited A -> retract A (A -> A).
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.prop_ext_retract_A_A_imp_A". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.prop_ext_retract_A_A_imp_A".  
 intros Ext A a.
 rewrite (prop_ext_A_eq_A_imp_A Ext A a).
 exists (fun x:A => x) (fun x:A => x).
@@ -104,7 +104,7 @@ Record has_fixpoint (A:Prop) : Prop :=
 
 Lemma ext_prop_fixpoint :
 prop_extensionality -> forall A:Prop, inhabited A -> has_fixpoint A.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_fixpoint". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_fixpoint".  
 intros Ext A a.
 case (prop_ext_retract_A_A_imp_A Ext A a); intros g1 g2 g1_o_g2.
 exists (fun f => (fun x:A => f (g1 x x)) (g2 (fun x => f (g1 x x)))).
@@ -138,7 +138,7 @@ Let bool_dep_induction :=
 forall P:bool -> Prop, P true -> P false -> forall b:bool, P b.
 
 Lemma aux : prop_extensionality -> bool_dep_induction -> true = false.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.aux". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.aux".  
 intros Ext Ind.
 case (ext_prop_fixpoint Ext bool true); intros G Gfix.
 set (neg := fun b:bool => bool_elim bool false true b).
@@ -154,7 +154,7 @@ Qed.
 
 Lemma ext_prop_dep_proof_irrel_gen :
 prop_extensionality -> bool_dep_induction -> proof_irrelevance.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_dep_proof_irrel_gen". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_dep_proof_irrel_gen".  
 intros Ext Ind A a1 a2.
 set (f := fun b:bool => bool_elim A a1 a2 b).
 rewrite (bool_elim_redl A a1 a2).
@@ -185,7 +185,7 @@ forall P:BoolP -> Prop, P TrueP -> P FalseP -> forall b:BoolP, P b.
 
 Lemma ext_prop_dep_proof_irrel_cc :
 prop_extensionality -> BoolP_dep_induction -> proof_irrelevance.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_dep_proof_irrel_cc". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_dep_proof_irrel_cc".  
 exact (ext_prop_dep_proof_irrel_gen BoolP TrueP FalseP BoolP_elim BoolP_elim_redl
 BoolP_elim_redr).
 Qed.
@@ -211,7 +211,7 @@ c2 = boolP_ind C c1 c2 falseP := eq_refl c2.
 Scheme boolP_indd := Induction for boolP Sort Prop.
 
 Lemma ext_prop_dep_proof_irrel_cic : prop_extensionality -> proof_irrelevance.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_dep_proof_irrel_cic". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.ext_prop_dep_proof_irrel_cic".  
 exact (fun pe =>
 ext_prop_dep_proof_irrel_gen boolP trueP falseP boolP_ind boolP_elim_redl
 boolP_elim_redr pe boolP_indd).
@@ -258,7 +258,7 @@ Let p2b A := or_elim A (~ A) B (fun _ => b1) (fun _ => b2) (em A).
 Let b2p b := b1 = b.
 
 Lemma p2p1 : forall A:Prop, A -> b2p (p2b A).
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.p2p1". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.p2p1".  
 unfold p2b; intro A; apply or_dep_elim with (b := em A);
 unfold b2p; intros.
 apply (or_elim_redl A (~ A) B (fun _ => b1) (fun _ => b2)).
@@ -266,7 +266,7 @@ destruct (b H).
 Qed.
 
 Lemma p2p2 : b1 <> b2 -> forall A:Prop, b2p (p2b A) -> A.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.p2p2". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.p2p2".  
 intro not_eq_b1_b2.
 unfold p2b; intro A; apply or_dep_elim with (b := em A);
 unfold b2p; intros.
@@ -279,7 +279,7 @@ Qed.
 
 
 Theorem proof_irrelevance_cc : b1 = b2.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.proof_irrelevance_cc". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.proof_irrelevance_cc".  
 refine (or_elim _ _ _ _ _ (em (b1 = b2))); intro H.
 trivial.
 apply (NoRetractFromSmallPropositionToProp.paradox B p2b b2p (p2p2 H) p2p1).
@@ -323,7 +323,7 @@ Let p2b (A:NProp) := or_elim (~~El A) (~El A) B (fun _ => b1) (fun _ => b2) (wem
 Let b2p b : NProp := exist (fun P=>~~P -> P) (~~(b1 = b)) (fun h x => h (fun k => k x)).
 
 Lemma wp2p1 : forall A:NProp, El A -> El (b2p (p2b A)).
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.wp2p1". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.wp2p1".  
 intros A. unfold p2b.
 apply or_dep_elim with  (b := wem (El A)).
 + intros nna a.
@@ -334,7 +334,7 @@ destruct (n x).
 Qed.
 
 Lemma wp2p2 : b1 <> b2 -> forall A:NProp, El (b2p (p2b A)) -> El A.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.wp2p2". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.wp2p2".  
 intro not_eq_b1_b2.
 intros A. unfold p2b.
 apply or_dep_elim with  (b := wem (El A)).
@@ -350,7 +350,7 @@ Qed.
 
 
 Theorem wproof_irrelevance_cc : ~~(b1 = b2).
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.wproof_irrelevance_cc". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.wproof_irrelevance_cc".  
 intros h.
 unshelve (refine (let NB := exist (fun P=>~~P -> P) B _ in _)).
 { exact (fun _ => b1). }
@@ -378,7 +378,7 @@ Definition or_elim_redr (A B C:Prop) (f:A -> C) (g:B -> C)
 Scheme or_indd := Induction for or Sort Prop.
 
 Theorem proof_irrelevance_cci : forall (B:Prop) (b1 b2:B), b1 = b2.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.proof_irrelevance_cci". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.proof_irrelevance_cci".  
 exact (proof_irrelevance_cc or or_introl or_intror or_ind or_elim_redl
 or_elim_redr or_indd em).
 Qed.
@@ -394,7 +394,7 @@ Section Weak_proof_irrelevance_CCI.
 Hypothesis wem : forall A:Prop, ~~A \/ ~ A.
 
 Theorem wem_proof_irrelevance_cci : forall (B:Prop) (b1 b2:B), ~~b1 = b2.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.wem_proof_irrelevance_cci". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.wem_proof_irrelevance_cci".  
 exact (wproof_irrelevance_cc or or_introl or_intror or_ind or_elim_redl
 or_elim_redr or_indd wem).
 Qed.
@@ -426,7 +426,7 @@ forall A B:Prop, ((A -> B) -> B) \/ (A -> B).
 Definition GodelDummett := forall A B:Prop, (A -> B) \/ (B -> A).
 
 Lemma excluded_middle_Godel_Dummett : excluded_middle -> GodelDummett.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_Godel_Dummett". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_Godel_Dummett".  
 intros EM A B. destruct (EM B) as [HB|HnotB].
 left; intros _; exact HB.
 right; intros HB; destruct (HnotB HB).
@@ -439,7 +439,7 @@ forall A B C:Prop, (C -> A\/B) -> (C->A) \/ (C->B).
 
 Lemma Godel_Dummett_iff_right_distr_implication_over_disjunction :
 GodelDummett <-> RightDistributivityImplicationOverDisjunction.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.Godel_Dummett_iff_right_distr_implication_over_disjunction". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.Godel_Dummett_iff_right_distr_implication_over_disjunction".  
 split.
 intros GD A B C HCAB.
 destruct (GD B A) as [HBA|HAB]; [left|right]; intro HC;
@@ -455,7 +455,7 @@ Qed.
 
 Lemma Godel_Dummett_weak_excluded_middle :
 GodelDummett -> weak_excluded_middle.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.Godel_Dummett_weak_excluded_middle". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.Godel_Dummett_weak_excluded_middle".  
 intros GD A. destruct (GD (~A) A) as [HnotAA|HAnotA].
 left; intro HnotA; apply (HnotA (HnotAA HnotA)).
 right; intro HA; apply (HAnotA HA HA).
@@ -472,7 +472,7 @@ inhabited A -> (Q -> exists x, P x) -> exists x, Q -> P x.
 Lemma
 independence_general_premises_right_distr_implication_over_disjunction :
 IndependenceOfGeneralPremises -> RightDistributivityImplicationOverDisjunction.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.IndependenceOfGeneralPremises". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.IndependenceOfGeneralPremises".  
 intros IP A B C HCAB.
 destruct (IP bool (fun b => if b then A else B) C true) as ([|],H).
 intro HC; destruct (HCAB HC); [exists true|exists false]; assumption.
@@ -482,7 +482,7 @@ Qed.
 
 Lemma independence_general_premises_Godel_Dummett :
 IndependenceOfGeneralPremises -> GodelDummett.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.independence_general_premises_Godel_Dummett". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.independence_general_premises_Godel_Dummett".  
 destruct Godel_Dummett_iff_right_distr_implication_over_disjunction.
 auto using independence_general_premises_right_distr_implication_over_disjunction.
 Qed.
@@ -495,7 +495,7 @@ inhabited A -> exists x, (exists x, P x) -> P x.
 
 Lemma independence_general_premises_drinker :
 IndependenceOfGeneralPremises <-> DrinkerParadox.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.independence_general_premises_drinker". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.independence_general_premises_drinker".  
 split.
 intros IP A P InhA; apply (IP A P (exists x, P x) InhA); intro Hx; exact Hx.
 intros Drinker A P Q InhA H; destruct (Drinker A P InhA) as (x,Hx).
@@ -509,7 +509,7 @@ forall A B:Prop, A \/ (A -> B).
 
 Lemma excluded_middle_independence_general_premises :
 generalized_excluded_middle -> DrinkerParadox.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_independence_general_premises". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_independence_general_premises".  
 intros GEM A P x0.
 destruct (GEM (exists x, P x) (P x0)) as [(x,Hx)|Hnot].
 exists x; intro; exact Hx.
@@ -533,7 +533,7 @@ Section Unrestricted_minimization_entails_excluded_middle.
 Hypothesis unrestricted_minimization: forall P, Minimization_Property P.
 
 Theorem unrestricted_minimization_entails_excluded_middle : forall A, A\/~A.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.unrestricted_minimization_entails_excluded_middle". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.unrestricted_minimization_entails_excluded_middle".  
 intros A.
 pose (P := fun n:nat => n=0/\A \/ n=1).
 assert (P 1) as h.
@@ -559,7 +559,7 @@ Hypothesis em : forall A, A\/~A.
 
 Theorem excluded_middle_entails_unrestricted_minimization :
 forall P, Minimization_Property P.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_entails_unrestricted_minimization". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_entails_unrestricted_minimization".  
 intros P n HPn.
 assert (dec : forall n, P n \/ ~ P n) by auto using em.
 assert (ex : exists n, P n) by (exists n; assumption).
@@ -579,7 +579,7 @@ Let P n := exists k, n<=k /\ s k = true.
 
 Example undecidable_predicate_with_the_minimization_property :
 Minimization_Property P.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.undecidable_predicate_with_the_minimization_property". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.undecidable_predicate_with_the_minimization_property".  
 unfold Minimization_Property.
 intros h hn.
 exists 0. split.
@@ -605,7 +605,7 @@ Equivalence R -> exists f, forall x, R x (f x) /\ forall y, R x y -> f x = f y).
 
 Theorem representative_boolean_partition_imp_excluded_middle :
 representative_boolean_partition -> excluded_middle.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.representative_boolean_partition_imp_excluded_middle". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.representative_boolean_partition_imp_excluded_middle".  
 intros ReprFunChoice P.
 pose (R (b1 b2 : bool) := b1 = b2 \/ P).
 assert (Equivalence R).
@@ -625,7 +625,7 @@ Qed.
 
 Theorem excluded_middle_imp_representative_boolean_partition :
 excluded_middle -> representative_boolean_partition.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_imp_representative_boolean_partition". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_imp_representative_boolean_partition".  
 intros EM R H.
 destruct (EM (R true false)).
 - exists (fun _ => true).
@@ -638,7 +638,7 @@ Qed.
 
 Theorem excluded_middle_iff_representative_boolean_partition :
 excluded_middle <-> representative_boolean_partition.
-Proof. try hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_iff_representative_boolean_partition". Undo.  
+Proof. hammer_hook "ClassicalFacts" "ClassicalFacts.excluded_middle_iff_representative_boolean_partition".  
 split; auto using excluded_middle_imp_representative_boolean_partition,
 representative_boolean_partition_imp_excluded_middle.
 Qed.

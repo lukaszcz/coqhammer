@@ -152,13 +152,13 @@ Definition For_all (P : elt -> Prop) s := forall x, In x s -> P x.
 Definition Exists (P : elt -> Prop) s := exists x, In x s /\ P x.
 
 Lemma In_compat : Proper (X.eq==>eq==>iff) In.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.In_compat". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.In_compat".  
 repeat red; intros. subst. rewrite H; auto.
 Qed.
 
 Lemma mem_spec : forall s x `{Ok s},
 mem x s = true <-> In x s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.mem_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.mem_spec".  
 induction s; intros.
 split; intros; inv. discriminate.
 simpl; destruct (X.eq_dec x a); split; intros; inv; auto.
@@ -167,7 +167,7 @@ rewrite IHs; auto.
 Qed.
 
 Lemma isok_iff : forall l, Ok l <-> isok l = true.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.isok_iff". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.isok_iff".  
 induction l.
 intuition.
 simpl.
@@ -182,14 +182,14 @@ rewrite <- mem_spec; auto; congruence.
 Qed.
 
 Global Instance isok_Ok l : isok l = true -> Ok l | 10.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.isok_Ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.isok_Ok".  
 intros. apply <- isok_iff; auto.
 Qed.
 
 Lemma add_spec :
 forall (s : t) (x y : elt) {Hs : Ok s},
 In y (add x s) <-> X.eq y x \/ In y s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.add_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.add_spec".  
 induction s; simpl; intros.
 intuition; inv; auto.
 destruct X.eq_dec; inv; rewrite InA_cons, ?IHs; intuition.
@@ -198,7 +198,7 @@ inv; auto.
 Qed.
 
 Global Instance add_ok s x `(Ok s) : Ok (add x s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.add_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.add_ok".  
 induction s.
 simpl; intuition.
 intros; inv. simpl.
@@ -211,7 +211,7 @@ Qed.
 Lemma remove_spec :
 forall (s : t) (x y : elt) {Hs : Ok s},
 In y (remove x s) <-> In y s /\ ~X.eq y x.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.remove_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.remove_spec".  
 induction s; simpl; intros.
 intuition; inv; auto.
 destruct X.eq_dec as [|Hnot]; inv; rewrite !InA_cons, ?IHs; intuition.
@@ -221,7 +221,7 @@ elim Hnot. eauto.
 Qed.
 
 Global Instance remove_ok s x `(Ok s) : Ok (remove x s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.remove_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.remove_ok".  
 induction s; simpl; intros.
 auto.
 destruct X.eq_dec; inv; auto.
@@ -230,27 +230,27 @@ rewrite remove_spec; intuition.
 Qed.
 
 Lemma singleton_ok : forall x : elt, Ok (singleton x).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.singleton_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.singleton_ok".  
 unfold singleton; simpl; constructors; auto. intro; inv.
 Qed.
 
 Lemma singleton_spec : forall x y : elt, In y (singleton x) <-> X.eq y x.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.singleton_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.singleton_spec".  
 unfold singleton; simpl; split; intros. inv; auto. left; auto.
 Qed.
 
 Lemma empty_ok : Ok empty.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.empty_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.empty_ok".  
 unfold empty; constructors.
 Qed.
 
 Lemma empty_spec : Empty empty.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.empty_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.empty_spec".  
 unfold Empty, empty; red; intros; inv.
 Qed.
 
 Lemma is_empty_spec : forall s : t, is_empty s = true <-> Empty s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.is_empty_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.is_empty_spec".  
 unfold Empty; destruct s; simpl; split; intros; auto.
 intro; inv.
 discriminate.
@@ -258,38 +258,38 @@ elim (H e); auto.
 Qed.
 
 Lemma elements_spec1 : forall (s : t) (x : elt), In x (elements s) <-> In x s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.elements_spec1". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.elements_spec1".  
 unfold elements; intuition.
 Qed.
 
 Lemma elements_spec2w : forall (s : t) {Hs : Ok s}, NoDup (elements s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.elements_spec2w". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.elements_spec2w".  
 unfold elements; auto.
 Qed.
 
 Lemma fold_spec :
 forall (s : t) (A : Type) (i : A) (f : elt -> A -> A),
 fold f s i = fold_left (flip f) (elements s) i.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.fold_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.fold_spec".  
 reflexivity.
 Qed.
 
 Global Instance union_ok : forall s s' `(Ok s, Ok s'), Ok (union s s').
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.union_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.union_ok".  
 induction s; simpl; auto; intros; inv; unfold flip; auto with *.
 Qed.
 
 Lemma union_spec :
 forall (s s' : t) (x : elt) {Hs : Ok s} {Hs' : Ok s'},
 In x (union s s') <-> In x s \/ In x s'.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.union_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.union_spec".  
 induction s; simpl in *; unfold flip; intros; auto; inv.
 intuition; inv.
 rewrite IHs, add_spec, InA_cons; intuition.
 Qed.
 
 Global Instance inter_ok s s' `(Ok s, Ok s') : Ok (inter s s').
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.inter_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.inter_ok".  
 unfold inter, fold, flip.
 set (acc := nil (A:=elt)).
 assert (Hacc : Ok acc) by constructors.
@@ -302,7 +302,7 @@ Qed.
 Lemma inter_spec  :
 forall (s s' : t) (x : elt) {Hs : Ok s} {Hs' : Ok s'},
 In x (inter s s') <-> In x s /\ In x s'.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.inter_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.inter_spec".  
 unfold inter, fold, flip; intros.
 set (acc := nil (A:=elt)) in *.
 assert (Hacc : Ok acc) by constructors.
@@ -322,7 +322,7 @@ rewrite H2, <- mem_spec in H3; auto. congruence.
 Qed.
 
 Global Instance diff_ok : forall s s' `(Ok s, Ok s'), Ok (diff s s').
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.diff_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.diff_ok".  
 unfold diff; intros s s'; revert s.
 induction s'; simpl; unfold flip; auto; intros. inv; auto with *.
 Qed.
@@ -330,7 +330,7 @@ Qed.
 Lemma diff_spec  :
 forall (s s' : t) (x : elt) {Hs : Ok s} {Hs' : Ok s'},
 In x (diff s s') <-> In x s /\ ~In x s'.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.diff_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.diff_spec".  
 unfold diff; intros s s'; revert s.
 induction s'; simpl; unfold flip.
 intuition; inv.
@@ -341,7 +341,7 @@ Qed.
 Lemma subset_spec :
 forall (s s' : t) {Hs : Ok s} {Hs' : Ok s'},
 subset s s' = true <-> Subset s s'.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.subset_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.subset_spec".  
 unfold subset, Subset; intros.
 rewrite is_empty_spec.
 unfold Empty; intros.
@@ -354,7 +354,7 @@ Qed.
 Lemma equal_spec :
 forall (s s' : t) {Hs : Ok s} {Hs' : Ok s'},
 equal s s' = true <-> Equal s s'.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.equal_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.equal_spec".  
 unfold Equal, equal; intros.
 rewrite andb_true_iff, !subset_spec.
 unfold Subset; intuition. rewrite <- H; auto. rewrite H; auto.
@@ -362,12 +362,12 @@ Qed.
 
 Definition choose_spec1 :
 forall (s : t) (x : elt), choose s = Some x -> In x s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.choose_spec1". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.choose_spec1".  
 destruct s; simpl; intros; inversion H; auto.
 Qed.
 
 Definition choose_spec2 : forall s : t, choose s = None -> Empty s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.choose_spec2". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.choose_spec2".  
 destruct s; simpl; intros.
 intros x H0; inversion H0.
 inversion H.
@@ -375,13 +375,13 @@ Qed.
 
 Lemma cardinal_spec :
 forall (s : t) {Hs : Ok s}, cardinal s = length (elements s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.cardinal_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.cardinal_spec".  
 auto.
 Qed.
 
 Lemma filter_spec' : forall s x f,
 In x (filter f s) -> In x s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.filter_spec'". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.filter_spec'".  
 induction s; simpl.
 intuition; inv.
 intros; destruct (f a); inv; intuition; right; eauto.
@@ -391,7 +391,7 @@ Lemma filter_spec :
 forall (s : t) (x : elt) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 (In x (filter f s) <-> In x s /\ f x = true).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.filter_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.filter_spec".  
 induction s; simpl.
 intuition; inv.
 intros.
@@ -401,7 +401,7 @@ setoid_replace a with x in E; auto. congruence.
 Qed.
 
 Global Instance filter_ok s f `(Ok s) : Ok (filter f s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.filter_ok". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.filter_ok".  
 induction s; simpl.
 auto.
 intros; inv.
@@ -415,7 +415,7 @@ Lemma for_all_spec :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 (for_all f s = true <-> For_all (fun x => f x = true) s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.for_all_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.for_all_spec".  
 unfold For_all; induction s; simpl.
 intuition. inv.
 intros; inv.
@@ -431,7 +431,7 @@ Lemma exists_spec :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 (exists_ f s = true <-> Exists (fun x => f x = true) s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.exists_spec". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.exists_spec".  
 unfold Exists; induction s; simpl.
 split; [discriminate| intros (x & Hx & _); inv].
 intros.
@@ -448,7 +448,7 @@ Lemma partition_spec1 :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 Equal (fst (partition f s)) (filter f s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_spec1". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_spec1".  
 simple induction s; simpl; auto; unfold Equal.
 firstorder.
 intros x l Hrec f Hf.
@@ -461,7 +461,7 @@ Lemma partition_spec2 :
 forall (s : t) (f : elt -> bool),
 Proper (X.eq==>eq) f ->
 Equal (snd (partition f s)) (filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_spec2". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_spec2".  
 simple induction s; simpl; auto; unfold Equal.
 firstorder.
 intros x l Hrec f Hf.
@@ -473,7 +473,7 @@ Qed.
 Lemma partition_ok1' :
 forall (s : t) {Hs : Ok s} (f : elt -> bool)(x:elt),
 In x (fst (partition f s)) -> In x s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok1'". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok1'".  
 induction s; simpl; auto; intros. inv.
 generalize (IHs H1 f x).
 destruct (f a); destruct (partition f s); simpl in *; auto.
@@ -483,7 +483,7 @@ Qed.
 Lemma partition_ok2' :
 forall (s : t) {Hs : Ok s} (f : elt -> bool)(x:elt),
 In x (snd (partition f s)) -> In x s.
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok2'". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok2'".  
 induction s; simpl; auto; intros. inv.
 generalize (IHs H1 f x).
 destruct (f a); destruct (partition f s); simpl in *; auto.
@@ -491,7 +491,7 @@ inversion_clear H; auto.
 Qed.
 
 Global Instance partition_ok1 : forall s f `(Ok s), Ok (fst (partition f s)).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok1". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok1".  
 simple induction s; simpl.
 auto.
 intros x l Hrec f Hs; inv.
@@ -501,7 +501,7 @@ case (f x); case (partition f l); simpl; constructors; auto.
 Qed.
 
 Global Instance partition_ok2 : forall s f `(Ok s), Ok (snd (partition f s)).
-Proof. try hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok2". Undo.  
+Proof. hammer_hook "MSetWeakList" "MSetWeakList.MakeRaw.partition_ok2".  
 simple induction s; simpl.
 auto.
 intros x l Hrec f Hs; inv.

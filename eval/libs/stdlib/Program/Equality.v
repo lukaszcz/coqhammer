@@ -161,15 +161,15 @@ Hint Rewrite <- eq_rect_eq : refl_id.
 
 
 Lemma JMeq_eq_refl {A} (x : A) : JMeq_eq (@JMeq_refl _ x) = eq_refl.
-Proof. try hammer_hook "Equality" "Equality.JMeq_eq_refl". Undo.   apply UIP. Qed.
+Proof. hammer_hook "Equality" "Equality.JMeq_eq_refl".   apply UIP. Qed.
 
 Lemma UIP_refl_refl A (x : A) :
 Eqdep.EqdepTheory.UIP_refl A x eq_refl = eq_refl.
-Proof. try hammer_hook "Equality" "Equality.UIP_refl_refl". Undo.   apply UIP_refl. Qed.
+Proof. hammer_hook "Equality" "Equality.UIP_refl_refl".   apply UIP_refl. Qed.
 
 Lemma inj_pairT2_refl A (x : A) (P : A -> Type) (p : P x) :
 Eqdep.EqdepTheory.inj_pairT2 A P x p p eq_refl = eq_refl.
-Proof. try hammer_hook "Equality" "Equality.inj_pairT2_refl". Undo.   apply UIP_refl. Qed.
+Proof. hammer_hook "Equality" "Equality.inj_pairT2_refl".   apply UIP_refl. Qed.
 
 Hint Rewrite @JMeq_eq_refl @UIP_refl_refl @inj_pairT2_refl : refl_id.
 
@@ -264,32 +264,32 @@ Ltac elim_ind p := elim_tac ltac:(fun p el => induction p using el) p.
 
 Lemma solution_left A (B : A -> Type) (t : A) :
 B t -> (forall x, x = t -> B x).
-Proof. try hammer_hook "Equality" "Equality.solution_left". Undo.   intros; subst; assumption. Defined.
+Proof. hammer_hook "Equality" "Equality.solution_left".   intros; subst; assumption. Defined.
 
 Lemma solution_right A (B : A -> Type) (t : A) :
 B t -> (forall x, t = x -> B x).
-Proof. try hammer_hook "Equality" "Equality.solution_right". Undo.   intros; subst; assumption. Defined.
+Proof. hammer_hook "Equality" "Equality.solution_right".   intros; subst; assumption. Defined.
 
 Lemma deletion A B (t : A) : B -> (t = t -> B).
-Proof. try hammer_hook "Equality" "Equality.deletion". Undo.   intros; assumption. Defined.
+Proof. hammer_hook "Equality" "Equality.deletion".   intros; assumption. Defined.
 
 Lemma simplification_heq A B (x y : A) :
 (x = y -> B) -> (JMeq x y -> B).
-Proof. try hammer_hook "Equality" "Equality.simplification_heq". Undo.   intros H J; apply H; apply (JMeq_eq J). Defined.
+Proof. hammer_hook "Equality" "Equality.simplification_heq".   intros H J; apply H; apply (JMeq_eq J). Defined.
 
 Definition conditional_eq {A} (x y : A) := eq x y.
 
 Lemma simplification_existT2 A (P : A -> Type) B (p : A) (x y : P p) :
 (x = y -> B) -> (conditional_eq (existT P p x) (existT P p y) -> B).
-Proof. try hammer_hook "Equality" "Equality.simplification_existT2". Undo.   intros H E. apply H. apply inj_pair2. assumption. Defined.
+Proof. hammer_hook "Equality" "Equality.simplification_existT2".   intros H E. apply H. apply inj_pair2. assumption. Defined.
 
 Lemma simplification_existT1 A (P : A -> Type) B (p q : A) (x : P p) (y : P q) :
 (p = q -> conditional_eq (existT P p x) (existT P q y) -> B) -> (existT P p x = existT P q y -> B).
-Proof. try hammer_hook "Equality" "Equality.simplification_existT1". Undo.   injection 2. auto. Defined.
+Proof. hammer_hook "Equality" "Equality.simplification_existT1".   injection 2. auto. Defined.
 
 Lemma simplification_K A (x : A) (B : x = x -> Type) :
 B eq_refl -> (forall p : x = x, B p).
-Proof. try hammer_hook "Equality" "Equality.simplification_K". Undo.   intros. rewrite (UIP_refl A). assumption. Defined.
+Proof. hammer_hook "Equality" "Equality.simplification_K".   intros. rewrite (UIP_refl A). assumption. Defined.
 
 
 

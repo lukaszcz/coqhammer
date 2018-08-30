@@ -32,25 +32,25 @@ Notation Nxor_nilpotent := N.lxor_nilpotent (compat "8.3").
 
 Lemma Ptestbit_Pbit :
 forall p n, Pos.testbit p (N.of_nat n) = Pos.testbit_nat p n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Ptestbit_Pbit". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ptestbit_Pbit".  
 induction p as [p IH|p IH| ]; intros [|n]; simpl; trivial;
 rewrite <- IH; f_equal; rewrite (pred_Sn n) at 2; now rewrite Nat2N.inj_pred.
 Qed.
 
 Lemma Ntestbit_Nbit : forall a n, N.testbit a (N.of_nat n) = N.testbit_nat a n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Ntestbit_Nbit". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ntestbit_Nbit".  
 destruct a. trivial. apply Ptestbit_Pbit.
 Qed.
 
 Lemma Pbit_Ptestbit :
 forall p n, Pos.testbit_nat p (N.to_nat n) = Pos.testbit p n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Pbit_Ptestbit". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pbit_Ptestbit".  
 intros; now rewrite <- Ptestbit_Pbit, N2Nat.id.
 Qed.
 
 Lemma Nbit_Ntestbit :
 forall a n, N.testbit_nat a (N.to_nat n) = N.testbit a n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit_Ntestbit". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit_Ntestbit".  
 destruct a. trivial. apply Pbit_Ptestbit.
 Qed.
 
@@ -58,19 +58,19 @@ Qed.
 
 Lemma Nshiftr_nat_S : forall a n,
 N.shiftr_nat a (S n) = N.div2 (N.shiftr_nat a n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftr_nat_S". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftr_nat_S".  
 reflexivity.
 Qed.
 
 Lemma Nshiftl_nat_S : forall a n,
 N.shiftl_nat a (S n) = N.double (N.shiftl_nat a n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_S". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_S".  
 reflexivity.
 Qed.
 
 Lemma Nshiftr_nat_equiv :
 forall a n, N.shiftr_nat a (N.to_nat n) = N.shiftr a n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftr_nat_equiv". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftr_nat_equiv".  
 intros a [|n]; simpl. unfold N.shiftr_nat.
 trivial.
 symmetry. apply Pos2Nat.inj_iter.
@@ -78,13 +78,13 @@ Qed.
 
 Lemma Nshiftr_equiv_nat :
 forall a n, N.shiftr a (N.of_nat n) = N.shiftr_nat a n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftr_equiv_nat". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftr_equiv_nat".  
 intros. now rewrite <- Nshiftr_nat_equiv, Nat2N.id.
 Qed.
 
 Lemma Nshiftl_nat_equiv :
 forall a n, N.shiftl_nat a (N.to_nat n) = N.shiftl a n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_equiv". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_equiv".  
 intros [|a] [|n]; simpl; unfold N.shiftl_nat; trivial.
 induction (Pos.to_nat n) as [|? H]; simpl; now try rewrite H.
 rewrite <- Pos2Nat.inj_iter. symmetry. now apply Pos.iter_swap_gen.
@@ -92,7 +92,7 @@ Qed.
 
 Lemma Nshiftl_equiv_nat :
 forall a n, N.shiftl a (N.of_nat n) = N.shiftl_nat a n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftl_equiv_nat". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftl_equiv_nat".  
 intros. now rewrite <- Nshiftl_nat_equiv, Nat2N.id.
 Qed.
 
@@ -100,7 +100,7 @@ Qed.
 
 Lemma Nshiftr_nat_spec : forall a n m,
 N.testbit_nat (N.shiftr_nat a n) m = N.testbit_nat a (m+n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftr_nat_spec". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftr_nat_spec".  
 induction n; intros m.
 now rewrite <- plus_n_O.
 simpl. rewrite <- plus_n_Sm, <- plus_Sn_m, <- IHn.
@@ -109,7 +109,7 @@ Qed.
 
 Lemma Nshiftl_nat_spec_high : forall a n m, (n<=m)%nat ->
 N.testbit_nat (N.shiftl_nat a n) m = N.testbit_nat a (m-n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_spec_high". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_spec_high".  
 induction n; intros m H.
 - now rewrite Nat.sub_0_r.
 - destruct m.
@@ -121,7 +121,7 @@ Qed.
 
 Lemma Nshiftl_nat_spec_low : forall a n m, (m<n)%nat ->
 N.testbit_nat (N.shiftl_nat a n) m = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_spec_low". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nshiftl_nat_spec_low".  
 induction n; intros m H. inversion H.
 rewrite Nshiftl_nat_S.
 destruct m.
@@ -134,22 +134,22 @@ Qed.
 
 
 Lemma Pshiftl_nat_0 : forall p, Pos.shiftl_nat p 0 = p.
-Proof. try hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_0". Undo.   reflexivity. Qed.
+Proof. hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_0".   reflexivity. Qed.
 
 Lemma Pshiftl_nat_S :
 forall p n, Pos.shiftl_nat p (S n) = xO (Pos.shiftl_nat p n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_S". Undo.   reflexivity. Qed.
+Proof. hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_S".   reflexivity. Qed.
 
 Lemma Pshiftl_nat_N :
 forall p n, Npos (Pos.shiftl_nat p n) = N.shiftl_nat (Npos p) n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_N". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_N".  
 unfold Pos.shiftl_nat, N.shiftl_nat.
 induction n; simpl; auto. now rewrite <- IHn.
 Qed.
 
 Lemma Pshiftl_nat_plus : forall n m p,
 Pos.shiftl_nat p (m + n) = Pos.shiftl_nat (Pos.shiftl_nat p n) m.
-Proof. try hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_plus". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pshiftl_nat_plus".  
 induction m; simpl; intros. reflexivity.
 now f_equal.
 Qed.
@@ -158,49 +158,49 @@ Qed.
 
 Lemma Pxor_semantics p p' n :
 N.testbit_nat (Pos.lxor p p') n = xorb (Pos.testbit_nat p n) (Pos.testbit_nat p' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Pxor_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pxor_semantics".  
 rewrite <- Ntestbit_Nbit, <- !Ptestbit_Pbit. apply N.pos_lxor_spec.
 Qed.
 
 Lemma Nxor_semantics a a' n :
 N.testbit_nat (N.lxor a a') n = xorb (N.testbit_nat a n) (N.testbit_nat a' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nxor_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nxor_semantics".  
 rewrite <- !Ntestbit_Nbit. apply N.lxor_spec.
 Qed.
 
 Lemma Por_semantics p p' n :
 Pos.testbit_nat (Pos.lor p p') n = (Pos.testbit_nat p n) || (Pos.testbit_nat p' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Por_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Por_semantics".  
 rewrite <- !Ptestbit_Pbit. apply N.pos_lor_spec.
 Qed.
 
 Lemma Nor_semantics a a' n :
 N.testbit_nat (N.lor a a') n = (N.testbit_nat a n) || (N.testbit_nat a' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nor_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nor_semantics".  
 rewrite <- !Ntestbit_Nbit. apply N.lor_spec.
 Qed.
 
 Lemma Pand_semantics p p' n :
 N.testbit_nat (Pos.land p p') n = (Pos.testbit_nat p n) && (Pos.testbit_nat p' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Pand_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pand_semantics".  
 rewrite <- Ntestbit_Nbit, <- !Ptestbit_Pbit. apply N.pos_land_spec.
 Qed.
 
 Lemma Nand_semantics a a' n :
 N.testbit_nat (N.land a a') n = (N.testbit_nat a n) && (N.testbit_nat a' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Nand_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nand_semantics".  
 rewrite <- !Ntestbit_Nbit. apply N.land_spec.
 Qed.
 
 Lemma Pdiff_semantics p p' n :
 N.testbit_nat (Pos.ldiff p p') n = (Pos.testbit_nat p n) && negb (Pos.testbit_nat p' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Pdiff_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pdiff_semantics".  
 rewrite <- Ntestbit_Nbit, <- !Ptestbit_Pbit. apply N.pos_ldiff_spec.
 Qed.
 
 Lemma Ndiff_semantics a a' n :
 N.testbit_nat (N.ldiff a a') n = (N.testbit_nat a n) && negb (N.testbit_nat a' n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Ndiff_semantics". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ndiff_semantics".  
 rewrite <- !Ntestbit_Nbit. apply N.ldiff_spec.
 Qed.
 
@@ -217,13 +217,13 @@ Local Infix "==" := eqf (at level 70, no associativity).
 Local Notation Step H := (fun n => H (S n)).
 
 Lemma Pbit_faithful_0 : forall p, ~(Pos.testbit_nat p == (fun _ => false)).
-Proof. try hammer_hook "Ndigits" "Ndigits.Pbit_faithful_0". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pbit_faithful_0".  
 induction p as [p IHp|p IHp| ]; intros H; try discriminate (H O).
 apply (IHp (Step H)).
 Qed.
 
 Lemma Pbit_faithful : forall p p', Pos.testbit_nat p == Pos.testbit_nat p' -> p = p'.
-Proof. try hammer_hook "Ndigits" "Ndigits.Pbit_faithful". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Pbit_faithful".  
 induction p as [p IHp|p IHp| ]; intros [p'|p'|] H; trivial;
 try discriminate (H O).
 f_equal. apply (IHp _ (Step H)).
@@ -233,7 +233,7 @@ symmetry in H. destruct (Pbit_faithful_0 _ (Step H)).
 Qed.
 
 Lemma Nbit_faithful : forall n n', N.testbit_nat n == N.testbit_nat n' -> n = n'.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit_faithful". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit_faithful".  
 intros [|p] [|p'] H; trivial.
 symmetry in H. destruct (Pbit_faithful_0 _ H).
 destruct (Pbit_faithful_0 _ H).
@@ -241,7 +241,7 @@ f_equal. apply Pbit_faithful, H.
 Qed.
 
 Lemma Nbit_faithful_iff : forall n n', N.testbit_nat n == N.testbit_nat n' <-> n = n'.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit_faithful_iff". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit_faithful_iff".  
 split. apply Nbit_faithful. intros; now subst.
 Qed.
 
@@ -255,25 +255,25 @@ Definition Nodd (n:N) := N.odd n = true.
 Definition Neven (n:N) := N.odd n = false.
 
 Lemma Nbit0_correct : forall n:N, N.testbit_nat n 0 = N.odd n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit0_correct". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit0_correct".  
 destruct n; trivial.
 destruct p; trivial.
 Qed.
 
 Lemma Ndouble_bit0 : forall n:N, N.odd (N.double n) = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Ndouble_bit0". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ndouble_bit0".  
 destruct n; trivial.
 Qed.
 
 Lemma Ndouble_plus_one_bit0 :
 forall n:N, N.odd (N.succ_double n) = true.
-Proof. try hammer_hook "Ndigits" "Ndigits.Ndouble_plus_one_bit0". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ndouble_plus_one_bit0".  
 destruct n; trivial.
 Qed.
 
 Lemma Ndiv2_double :
 forall n:N, Neven n -> N.double (N.div2 n) = n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Ndiv2_double". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ndiv2_double".  
 destruct n. trivial. destruct p. intro H. discriminate H.
 intros. reflexivity.
 intro H. discriminate H.
@@ -281,7 +281,7 @@ Qed.
 
 Lemma Ndiv2_double_plus_one :
 forall n:N, Nodd n -> N.succ_double (N.div2 n) = n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Ndiv2_double_plus_one". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ndiv2_double_plus_one".  
 destruct n. intro. discriminate H.
 destruct p. intros. reflexivity.
 intro H. discriminate H.
@@ -290,21 +290,21 @@ Qed.
 
 Lemma Ndiv2_correct :
 forall (a:N) (n:nat), N.testbit_nat (N.div2 a) n = N.testbit_nat a (S n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Ndiv2_correct". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Ndiv2_correct".  
 destruct a; trivial.
 destruct p; trivial.
 Qed.
 
 Lemma Nxor_bit0 :
 forall a a':N, N.odd (N.lxor a a') = xorb (N.odd a) (N.odd a').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nxor_bit0". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nxor_bit0".  
 intros. rewrite <- Nbit0_correct, (Nxor_semantics a a' O).
 rewrite Nbit0_correct, Nbit0_correct. reflexivity.
 Qed.
 
 Lemma Nxor_div2 :
 forall a a':N, N.div2 (N.lxor a a') = N.lxor (N.div2 a) (N.div2 a').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nxor_div2". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nxor_div2".  
 intros. apply Nbit_faithful. unfold eqf. intro.
 rewrite (Nxor_semantics (N.div2 a) (N.div2 a') n), Ndiv2_correct, (Nxor_semantics a a' (S n)).
 rewrite 2! Ndiv2_correct.
@@ -314,7 +314,7 @@ Qed.
 Lemma Nneg_bit0 :
 forall a a':N,
 N.odd (N.lxor a a') = true -> N.odd a = negb (N.odd a').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nneg_bit0". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nneg_bit0".  
 intros.
 rewrite <- true_xorb, <- H, Nxor_bit0, xorb_assoc,
 xorb_nilpotent, xorb_false.
@@ -323,21 +323,21 @@ Qed.
 
 Lemma Nneg_bit0_1 :
 forall a a':N, N.lxor a a' = Npos 1 -> N.odd a = negb (N.odd a').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nneg_bit0_1". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nneg_bit0_1".  
 intros. apply Nneg_bit0. rewrite H. reflexivity.
 Qed.
 
 Lemma Nneg_bit0_2 :
 forall (a a':N) (p:positive),
 N.lxor a a' = Npos (xI p) -> N.odd a = negb (N.odd a').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nneg_bit0_2". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nneg_bit0_2".  
 intros. apply Nneg_bit0. rewrite H. reflexivity.
 Qed.
 
 Lemma Nsame_bit0 :
 forall (a a':N) (p:positive),
 N.lxor a a' = Npos (xO p) -> N.odd a = N.odd a'.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nsame_bit0". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nsame_bit0".  
 intros. rewrite <- (xorb_false (N.odd a)).
 assert (H0: N.odd (Npos (xO p)) = false) by reflexivity.
 rewrite <- H0, <- H, Nxor_bit0, <- xorb_assoc, xorb_nilpotent, false_xorb.
@@ -361,7 +361,7 @@ end.
 Lemma Nbit0_less :
 forall a a',
 N.odd a = false -> N.odd a' = true -> Nless a a' = true.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit0_less". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit0_less".  
 intros. destruct (N.discr (N.lxor a a')) as [(p,H2)|H1]. unfold Nless.
 rewrite H2. destruct p. simpl. rewrite H, H0. reflexivity.
 assert (H1: N.odd (N.lxor a a') = false) by (rewrite H2; reflexivity).
@@ -374,7 +374,7 @@ Qed.
 Lemma Nbit0_gt :
 forall a a',
 N.odd a = true -> N.odd a' = false -> Nless a a' = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit0_gt". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit0_gt".  
 intros. destruct (N.discr (N.lxor a a')) as [(p,H2)|H1]. unfold Nless.
 rewrite H2. destruct p. simpl. rewrite H, H0. reflexivity.
 assert (H1: N.odd (N.lxor a a') = false) by (rewrite H2; reflexivity).
@@ -385,13 +385,13 @@ rewrite (Nxor_bit0 a a'), H, H0 in H2. discriminate H2.
 Qed.
 
 Lemma Nless_not_refl : forall a, Nless a a = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_not_refl". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_not_refl".  
 intro. unfold Nless. rewrite (N.lxor_nilpotent a). reflexivity.
 Qed.
 
 Lemma Nless_def_1 :
 forall a a', Nless (N.double a) (N.double a') = Nless a a'.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_def_1". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_def_1".  
 destruct a; destruct a'. reflexivity.
 trivial.
 unfold Nless. simpl. destruct p; trivial.
@@ -402,7 +402,7 @@ Qed.
 Lemma Nless_def_2 :
 forall a a',
 Nless (N.succ_double a) (N.succ_double a') = Nless a a'.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_def_2". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_def_2".  
 destruct a; destruct a'. reflexivity.
 trivial.
 unfold Nless. simpl. destruct p; trivial.
@@ -412,33 +412,33 @@ Qed.
 
 Lemma Nless_def_3 :
 forall a a', Nless (N.double a) (N.succ_double a') = true.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_def_3". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_def_3".  
 intros. apply Nbit0_less. apply Ndouble_bit0.
 apply Ndouble_plus_one_bit0.
 Qed.
 
 Lemma Nless_def_4 :
 forall a a', Nless (N.succ_double a) (N.double a') = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_def_4". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_def_4".  
 intros. apply Nbit0_gt. apply Ndouble_plus_one_bit0.
 apply Ndouble_bit0.
 Qed.
 
 Lemma Nless_z : forall a, Nless a N0 = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_z". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_z".  
 induction a. reflexivity.
 unfold Nless. rewrite (N.lxor_0_r (Npos p)). induction p; trivial.
 Qed.
 
 Lemma N0_less_1 :
 forall a, Nless N0 a = true -> {p : positive | a = Npos p}.
-Proof. try hammer_hook "Ndigits" "Ndigits.N0_less_1". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.N0_less_1".  
 destruct a. discriminate.
 intros. exists p. reflexivity.
 Qed.
 
 Lemma N0_less_2 : forall a, Nless N0 a = false -> a = N0.
-Proof. try hammer_hook "Ndigits" "Ndigits.N0_less_2". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.N0_less_2".  
 induction a as [|p]; intro H. trivial.
 exfalso. induction p as [|p IHp|]; discriminate || simpl; auto using IHp.
 Qed.
@@ -446,7 +446,7 @@ Qed.
 Lemma Nless_trans :
 forall a a' a'',
 Nless a a' = true -> Nless a' a'' = true -> Nless a a'' = true.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_trans". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_trans".  
 induction a as [|a IHa|a IHa] using N.binary_ind; intros a' a'' H H0.
 - case_eq (Nless N0 a'') ; intros Heqn.
 + trivial.
@@ -475,7 +475,7 @@ Qed.
 
 Lemma Nless_total :
 forall a a', {Nless a a' = true} + {Nless a' a = true} + {a = a'}.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nless_total". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nless_total".  
 induction a using N.binary_rec; intro a'.
 - case_eq (Nless N0 a') ; intros Heqb.
 + left. left. auto.
@@ -523,7 +523,7 @@ match bv with
 end.
 
 Lemma Bv2N_N2Bv : forall n, Bv2N _ (N2Bv n) = n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Bv2N_N2Bv". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Bv2N_N2Bv".  
 destruct n.
 simpl; auto.
 induction p; simpl in *; auto; rewrite IHp; simpl; auto.
@@ -532,7 +532,7 @@ Qed.
 
 
 Lemma Bv2N_Nsize : forall n (bv:Bvector n), N.size_nat (Bv2N n bv) <= n.
-Proof. try hammer_hook "Ndigits" "Ndigits.Bv2N_Nsize". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Bv2N_Nsize".  
 induction bv; intros.
 auto.
 simpl.
@@ -546,7 +546,7 @@ Qed.
 Lemma Bv2N_Nsize_1 : forall n (bv:Bvector (S n)),
 Bsign _ bv = true <->
 N.size_nat (Bv2N _ bv) = (S n).
-Proof. try hammer_hook "Ndigits" "Ndigits.Bv2N_Nsize_1". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Bv2N_Nsize_1".  
 apply Vector.rectS ; intros ; simpl.
 destruct a ; compute ; split ; intros x ; now inversion x.
 destruct a, (Bv2N (S n) v) ;
@@ -569,7 +569,7 @@ end.
 
 
 Lemma N2Bv_N2Bv_gen : forall (a:N), N2Bv a = N2Bv_gen (N.size_nat a) a.
-Proof. try hammer_hook "Ndigits" "Ndigits.N2Bv_N2Bv_gen". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.N2Bv_N2Bv_gen".  
 destruct a; simpl.
 auto.
 induction p; simpl; intros; auto; congruence.
@@ -579,7 +579,7 @@ Qed.
 
 Lemma N2Bv_N2Bv_gen_above : forall (a:N)(k:nat),
 N2Bv_gen (N.size_nat a + k) a = Vector.append (N2Bv a) (Bvect_false k).
-Proof. try hammer_hook "Ndigits" "Ndigits.N2Bv_N2Bv_gen_above". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.N2Bv_N2Bv_gen_above".  
 destruct a; simpl.
 destruct k; simpl; auto.
 induction p; simpl; intros;unfold Bcons; f_equal; auto.
@@ -589,7 +589,7 @@ Qed.
 
 Lemma N2Bv_Bv2N : forall n (bv:Bvector n),
 N2Bv_gen n (Bv2N n bv) = bv.
-Proof. try hammer_hook "Ndigits" "Ndigits.N2Bv_Bv2N". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.N2Bv_Bv2N".  
 induction bv; intros.
 auto.
 simpl.
@@ -604,7 +604,7 @@ Qed.
 
 Lemma Nbit0_Blow : forall n, forall (bv:Bvector (S n)),
 N.odd (Bv2N _ bv) = Blow _ bv.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit0_Blow". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit0_Blow".  
 apply Vector.caseS.
 intros.
 unfold Blow.
@@ -617,7 +617,7 @@ Notation Bnth := (@Vector.nth_order bool).
 
 Lemma Bnth_Nbit : forall n (bv:Bvector n) p (H:p<n),
 Bnth bv H = N.testbit_nat (Bv2N _ bv) p.
-Proof. try hammer_hook "Ndigits" "Ndigits.Bnth_Nbit". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Bnth_Nbit".  
 induction bv; intros.
 inversion H.
 destruct p ; simpl.
@@ -627,7 +627,7 @@ simpl in * ; destruct (Bv2N n bv); destruct h; simpl in *; auto.
 Qed.
 
 Lemma Nbit_Nsize : forall n p, N.size_nat n <= p -> N.testbit_nat n p = false.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit_Nsize". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit_Nsize".  
 destruct n as [|n].
 simpl; auto.
 induction n; simpl in *; intros; destruct p; auto with arith.
@@ -637,7 +637,7 @@ Qed.
 
 Lemma Nbit_Bth: forall n p (H:p < N.size_nat n),
 N.testbit_nat n p = Bnth (N2Bv n) H.
-Proof. try hammer_hook "Ndigits" "Ndigits.Nbit_Bth". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nbit_Bth".  
 destruct n as [|n].
 inversion H.
 induction n ; destruct p ; unfold Vector.nth_order in *; simpl in * ; auto.
@@ -648,7 +648,7 @@ Qed.
 
 Lemma Nxor_BVxor : forall n (bv bv' : Bvector n),
 Bv2N _ (BVxor _ bv bv') = N.lxor (Bv2N _ bv) (Bv2N _ bv').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nxor_BVxor". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nxor_BVxor".  
 apply Vector.rect2 ; intros.
 now simpl.
 simpl.
@@ -657,7 +657,7 @@ Qed.
 
 Lemma Nand_BVand : forall n (bv bv' : Bvector n),
 Bv2N _ (BVand _ bv bv') = N.land (Bv2N _ bv) (Bv2N _ bv').
-Proof. try hammer_hook "Ndigits" "Ndigits.Nand_BVand". Undo.  
+Proof. hammer_hook "Ndigits" "Ndigits.Nand_BVand".  
 refine (@Vector.rect2 _ _ _ _ _); simpl; intros; auto.
 rewrite H.
 destruct a, b, (Bv2N n v1), (Bv2N n v2);

@@ -19,7 +19,7 @@ Section Dec_in_Prop.
 Variables (A:Type)(dec:decidable_eq A).
 
 Lemma In_decidable x (l:list A) : decidable (In x l).
-Proof using A dec. try hammer_hook "ListDec" "ListDec.In_decidable". Undo.  
+Proof using A dec. hammer_hook "ListDec" "ListDec.In_decidable".  
 induction l as [|a l IH].
 - now right.
 - destruct (dec a x).
@@ -28,7 +28,7 @@ induction l as [|a l IH].
 Qed.
 
 Lemma incl_decidable (l l':list A) : decidable (incl l l').
-Proof using A dec. try hammer_hook "ListDec" "ListDec.incl_decidable". Undo.  
+Proof using A dec. hammer_hook "ListDec" "ListDec.incl_decidable".  
 induction l as [|a l IH].
 - left. inversion 1.
 - destruct (In_decidable a l') as [IN|IN].
@@ -39,7 +39,7 @@ induction l as [|a l IH].
 Qed.
 
 Lemma NoDup_decidable (l:list A) : decidable (NoDup l).
-Proof using A dec. try hammer_hook "ListDec" "ListDec.NoDup_decidable". Undo.  
+Proof using A dec. hammer_hook "ListDec" "ListDec.NoDup_decidable".  
 induction l as [|a l IH].
 - left; now constructor.
 - destruct (In_decidable a l).
@@ -57,7 +57,7 @@ Variables (A:Type)(dec : forall x y:A, {x=y}+{x<>y}).
 Definition In_dec := List.In_dec dec.
 
 Lemma incl_dec (l l':list A) : {incl l l'}+{~incl l l'}.
-Proof using A dec. try hammer_hook "ListDec" "ListDec.incl_dec". Undo.  
+Proof using A dec. hammer_hook "ListDec" "ListDec.incl_dec".  
 induction l as [|a l IH].
 - left. inversion 1.
 - destruct (In_dec a l') as [IN|IN].
@@ -68,7 +68,7 @@ induction l as [|a l IH].
 Qed.
 
 Lemma NoDup_dec (l:list A) : {NoDup l}+{~NoDup l}.
-Proof using A dec. try hammer_hook "ListDec" "ListDec.NoDup_dec". Undo.  
+Proof using A dec. hammer_hook "ListDec" "ListDec.NoDup_dec".  
 induction l as [|a l IH].
 - left; now constructor.
 - destruct (In_dec a l).
@@ -84,7 +84,7 @@ End Dec_in_Type.
 
 Lemma uniquify_map A B (d:decidable_eq B)(f:A->B)(l:list A) :
 exists l', NoDup (map f l') /\ incl (map f l) (map f l').
-Proof. try hammer_hook "ListDec" "ListDec.uniquify_map". Undo.  
+Proof. hammer_hook "ListDec" "ListDec.uniquify_map".  
 induction l.
 - exists nil. simpl. split; [now constructor | red; trivial].
 - destruct IHl as (l' & N & I).
@@ -98,7 +98,7 @@ Qed.
 
 Lemma uniquify A (d:decidable_eq A)(l:list A) :
 exists l', NoDup l' /\ incl l l'.
-Proof. try hammer_hook "ListDec" "ListDec.uniquify". Undo.  
+Proof. hammer_hook "ListDec" "ListDec.uniquify".  
 destruct (uniquify_map d id l) as (l',H).
 exists l'. now rewrite !map_id in H.
 Qed.

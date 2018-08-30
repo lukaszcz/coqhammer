@@ -308,7 +308,7 @@ forall (f : A -> B), (forall x, f x = h f x) /\ forall g, (forall x, f x = g x) 
 Lemma functional_rel_reification_and_rel_choice_imp_fun_choice :
 forall A B : Type,
 FunctionalRelReification_on A B -> RelationalChoice_on A B -> FunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.functional_rel_reification_and_rel_choice_imp_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.functional_rel_reification_and_rel_choice_imp_fun_choice".  
 intros A B Descr RelCh R H.
 destruct (RelCh R H) as (R',(HR'R,H0)).
 destruct (Descr R') as (f,Hf).
@@ -321,7 +321,7 @@ Qed.
 
 Lemma fun_choice_imp_rel_choice :
 forall A B : Type, FunctionalChoice_on A B -> RelationalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_imp_rel_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_imp_rel_choice".  
 intros A B FunCh R H.
 destruct (FunCh R H) as (f,H0).
 exists (fun x y => f x = y).
@@ -334,7 +334,7 @@ Qed.
 
 Lemma fun_choice_imp_functional_rel_reification :
 forall A B : Type, FunctionalChoice_on A B -> FunctionalRelReification_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_imp_functional_rel_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_imp_functional_rel_reification".  
 intros A B FunCh R H.
 destruct (FunCh R) as [f H0].
 
@@ -348,7 +348,7 @@ Qed.
 Corollary fun_choice_iff_rel_choice_and_functional_rel_reification :
 forall A B : Type, FunctionalChoice_on A B <->
 RelationalChoice_on A B /\ FunctionalRelReification_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_iff_rel_choice_and_functional_rel_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_iff_rel_choice_and_functional_rel_reification".  
 intros A B. split.
 intro H; split;
 [ exact (fun_choice_imp_rel_choice H)
@@ -366,7 +366,7 @@ Qed.
 
 Lemma rel_choice_and_proof_irrel_imp_guarded_rel_choice :
 RelationalChoice -> ProofIrrelevance -> GuardedRelationalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.rel_choice_and_proof_irrel_imp_guarded_rel_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.rel_choice_and_proof_irrel_imp_guarded_rel_choice".  
 intros rel_choice proof_irrel.
 red; intros A B P R H.
 destruct (rel_choice _ _ (fun (x:sigT P) (y:B) => R (projT1 x) y)) as (R',(HR'R,H0)).
@@ -388,7 +388,7 @@ Qed.
 Lemma rel_choice_indep_of_general_premises_imp_guarded_rel_choice :
 forall A B : Type, inhabited B -> RelationalChoice_on A B ->
 IndependenceOfGeneralPremises -> GuardedRelationalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.rel_choice_indep_of_general_premises_imp_guarded_rel_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.rel_choice_indep_of_general_premises_imp_guarded_rel_choice".  
 intros A B Inh AC_rel IndPrem P R H.
 destruct (AC_rel (fun x y => P x -> R x y)) as (R',(HR'R,H0)).
 intro x. apply IndPrem. exact Inh. intro Hx.
@@ -399,7 +399,7 @@ Qed.
 
 Lemma guarded_rel_choice_imp_rel_choice :
 forall A B : Type, GuardedRelationalChoice_on A B -> RelationalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_rel_choice_imp_rel_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_rel_choice_imp_rel_choice".  
 intros A B GAC_rel R H.
 destruct (GAC_rel (fun _ => True) R) as (R',(HR'R,H0)).
 firstorder.
@@ -408,7 +408,7 @@ Qed.
 
 Lemma subset_types_imp_guarded_rel_choice_iff_rel_choice :
 ProofIrrelevance -> (GuardedRelationalChoice <-> RelationalChoice).
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.subset_types_imp_guarded_rel_choice_iff_rel_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.subset_types_imp_guarded_rel_choice_iff_rel_choice".  
 intuition auto using
 guarded_rel_choice_imp_rel_choice,
 rel_choice_and_proof_irrel_imp_guarded_rel_choice.
@@ -418,7 +418,7 @@ Qed.
 
 Corollary guarded_iff_omniscient_rel_choice :
 GuardedRelationalChoice <-> OmniscientRelationalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_iff_omniscient_rel_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_iff_omniscient_rel_choice".  
 split.
 intros GAC_rel A B R.
 apply (GAC_rel A B (fun x => exists y, R x y) R); auto.
@@ -433,7 +433,7 @@ Qed.
 
 Lemma guarded_fun_choice_imp_indep_of_general_premises :
 GuardedFunctionalChoice -> IndependenceOfGeneralPremises.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_fun_choice_imp_indep_of_general_premises". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_fun_choice_imp_indep_of_general_premises".  
 intros GAC_fun A P Q Inh H.
 destruct (GAC_fun unit A (fun _ => Q) (fun _ => P) Inh) as (f,Hf).
 tauto.
@@ -443,7 +443,7 @@ Qed.
 
 Lemma guarded_fun_choice_imp_fun_choice :
 GuardedFunctionalChoice -> FunctionalChoiceOnInhabitedSet.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_fun_choice_imp_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_fun_choice_imp_fun_choice".  
 intros GAC_fun A B Inh R H.
 destruct (GAC_fun A B (fun _ => True) R Inh) as (f,Hf).
 firstorder.
@@ -453,7 +453,7 @@ Qed.
 Lemma fun_choice_and_indep_general_prem_imp_guarded_fun_choice :
 FunctionalChoiceOnInhabitedSet -> IndependenceOfGeneralPremises
 -> GuardedFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_indep_general_prem_imp_guarded_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_indep_general_prem_imp_guarded_fun_choice".  
 intros AC_fun IndPrem A B P R Inh H.
 apply (AC_fun A B Inh (fun x y => P x -> R x y)).
 intro x; apply IndPrem; eauto.
@@ -462,7 +462,7 @@ Qed.
 Corollary fun_choice_and_indep_general_prem_iff_guarded_fun_choice :
 FunctionalChoiceOnInhabitedSet /\ IndependenceOfGeneralPremises
 <-> GuardedFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_indep_general_prem_iff_guarded_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_indep_general_prem_iff_guarded_fun_choice".  
 intuition auto using
 guarded_fun_choice_imp_indep_of_general_premises,
 guarded_fun_choice_imp_fun_choice,
@@ -475,7 +475,7 @@ Qed.
 
 Lemma omniscient_fun_choice_imp_small_drinker :
 OmniscientFunctionalChoice -> SmallDrinker'sParadox.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.omniscient_fun_choice_imp_small_drinker". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.omniscient_fun_choice_imp_small_drinker".  
 intros OAC_fun A P Inh.
 destruct (OAC_fun unit A (fun _ => P)) as (f,Hf).
 auto.
@@ -484,7 +484,7 @@ Qed.
 
 Lemma omniscient_fun_choice_imp_fun_choice :
 OmniscientFunctionalChoice -> FunctionalChoiceOnInhabitedSet.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.omniscient_fun_choice_imp_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.omniscient_fun_choice_imp_fun_choice".  
 intros OAC_fun A B Inh R H.
 destruct (OAC_fun A B R Inh) as (f,Hf).
 exists f; firstorder.
@@ -493,7 +493,7 @@ Qed.
 Lemma fun_choice_and_small_drinker_imp_omniscient_fun_choice :
 FunctionalChoiceOnInhabitedSet -> SmallDrinker'sParadox
 -> OmniscientFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_small_drinker_imp_omniscient_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_small_drinker_imp_omniscient_fun_choice".  
 intros AC_fun Drinker A B R Inh.
 destruct (AC_fun A B Inh (fun x y => (exists y, R x y) -> R x y)) as (f,Hf).
 intro x; apply (Drinker B (R x) Inh).
@@ -503,7 +503,7 @@ Qed.
 Corollary fun_choice_and_small_drinker_iff_omniscient_fun_choice :
 FunctionalChoiceOnInhabitedSet /\ SmallDrinker'sParadox
 <-> OmniscientFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_small_drinker_iff_omniscient_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_small_drinker_iff_omniscient_fun_choice".  
 intuition auto using
 omniscient_fun_choice_imp_small_drinker,
 omniscient_fun_choice_imp_fun_choice,
@@ -516,7 +516,7 @@ Qed.
 
 Theorem guarded_iff_omniscient_fun_choice :
 GuardedFunctionalChoice <-> OmniscientFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_iff_omniscient_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.guarded_iff_omniscient_fun_choice".  
 split.
 intros GAC_fun A B R Inh.
 apply (GAC_fun A B (fun x => exists y, R x y) R); auto.
@@ -532,7 +532,7 @@ Qed.
 
 Lemma iota_imp_constructive_definite_description :
 IotaStatement -> ConstructiveDefiniteDescription.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.iota_imp_constructive_definite_description". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.iota_imp_constructive_definite_description".  
 intros D_iota A P H.
 destruct D_iota with (P:=P) as (x,H1).
 destruct H; red in H; auto.
@@ -543,7 +543,7 @@ Qed.
 
 Lemma epsilon_imp_constructive_indefinite_description:
 EpsilonStatement -> ConstructiveIndefiniteDescription.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.epsilon_imp_constructive_indefinite_description". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.epsilon_imp_constructive_indefinite_description".  
 intros D_epsilon A P H.
 destruct D_epsilon with (P:=P) as (x,H1).
 destruct H; auto.
@@ -553,14 +553,14 @@ Qed.
 Lemma constructive_indefinite_description_and_small_drinker_imp_epsilon :
 SmallDrinker'sParadox -> ConstructiveIndefiniteDescription ->
 EpsilonStatement.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_indefinite_description_and_small_drinker_imp_epsilon". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_indefinite_description_and_small_drinker_imp_epsilon".  
 intros Drinkers D_epsilon A P Inh;
 apply D_epsilon; apply Drinkers; assumption.
 Qed.
 
 Lemma epsilon_imp_small_drinker :
 EpsilonStatement -> SmallDrinker'sParadox.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.epsilon_imp_small_drinker". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.epsilon_imp_small_drinker".  
 intros D_epsilon A P Inh; edestruct D_epsilon; eauto.
 Qed.
 
@@ -569,7 +569,7 @@ Theorem constructive_indefinite_description_and_small_drinker_iff_epsilon :
 EpsilonStatement) *
 (EpsilonStatement ->
 SmallDrinker'sParadox * ConstructiveIndefiniteDescription).
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_indefinite_description_and_small_drinker_iff_epsilon". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_indefinite_description_and_small_drinker_iff_epsilon".  
 intuition auto using
 epsilon_imp_constructive_indefinite_description,
 constructive_indefinite_description_and_small_drinker_imp_epsilon,
@@ -589,7 +589,7 @@ forall A:Type,
 FunctionalRelReification_on A nat ->
 forall R:A->nat->Prop,
 (forall x y, decidable (R x y)) -> FunctionalChoice_on_rel R.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.classical_denumerable_description_imp_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.classical_denumerable_description_imp_fun_choice".  
 intros A Descr.
 red; intros R Rdec H.
 set (R':= fun x y => R x y /\ forall y', R x y' -> y <= y').
@@ -613,7 +613,7 @@ Qed.
 
 Theorem dep_non_dep_functional_choice :
 DependentFunctionalChoice -> FunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.dep_non_dep_functional_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.dep_non_dep_functional_choice".  
 intros AC_depfun A B R H.
 destruct (AC_depfun A (fun _ => B) R H) as (f,Hf).
 exists f; trivial.
@@ -629,7 +629,7 @@ let (a,b) := p in a.
 
 Theorem non_dep_dep_functional_choice :
 FunctionalChoice -> DependentFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.non_dep_dep_functional_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.non_dep_dep_functional_choice".  
 intros AC_fun A B R H.
 pose (B' := { x:A & B x }).
 pose (R' := fun (x:A) (y:B') => projT1 y = x /\ R (projT1 y) (projT2 y)).
@@ -646,7 +646,7 @@ Qed.
 
 Theorem functional_choice_to_inhabited_forall_commute :
 FunctionalChoice -> InhabitedForallCommute.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.functional_choice_to_inhabited_forall_commute". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.functional_choice_to_inhabited_forall_commute".  
 intros choose0 A B Hinhab.
 pose proof (non_dep_dep_functional_choice choose0) as choose;clear choose0.
 assert (Hexists : forall x, exists _ : B x, True).
@@ -660,7 +660,7 @@ Qed.
 
 Theorem inhabited_forall_commute_to_functional_choice :
 InhabitedForallCommute -> FunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.inhabited_forall_commute_to_functional_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.inhabited_forall_commute_to_functional_choice".  
 intros choose A B R Hexists.
 assert (Hinhab : forall x, inhabited {y : B | R x y}).
 { intros x;apply exists_to_inhabited_sig;trivial. }
@@ -675,7 +675,7 @@ Qed.
 
 Theorem dep_non_dep_functional_rel_reification :
 DependentFunctionalRelReification -> FunctionalRelReification.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.dep_non_dep_functional_rel_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.dep_non_dep_functional_rel_reification".  
 intros DepFunReify A B R H.
 destruct (DepFunReify A (fun _ => B) R H) as (f,Hf).
 exists f; trivial.
@@ -685,7 +685,7 @@ Qed.
 
 Theorem non_dep_dep_functional_rel_reification :
 FunctionalRelReification -> DependentFunctionalRelReification.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.non_dep_dep_functional_rel_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.non_dep_dep_functional_rel_reification".  
 intros AC_fun A B R H.
 pose (B' := { x:A & B x }).
 pose (R' := fun (x:A) (y:B') => projT1 y = x /\ R (projT1 y) (projT2 y)).
@@ -704,7 +704,7 @@ Qed.
 
 Corollary dep_iff_non_dep_functional_rel_reification :
 FunctionalRelReification <-> DependentFunctionalRelReification.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.dep_iff_non_dep_functional_rel_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.dep_iff_non_dep_functional_rel_reification".  
 intuition auto using
 non_dep_dep_functional_rel_reification,
 dep_non_dep_functional_rel_reification.
@@ -718,7 +718,7 @@ Qed.
 Lemma relative_non_contradiction_of_indefinite_descr :
 forall C:Prop, (ConstructiveIndefiniteDescription -> C)
 -> (FunctionalChoice -> C).
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.relative_non_contradiction_of_indefinite_descr". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.relative_non_contradiction_of_indefinite_descr".  
 intros C H AC_fun.
 assert (AC_depfun := non_dep_dep_functional_choice AC_fun).
 pose (A0 := { A:Type & { P:A->Prop & exists x, P x }}).
@@ -735,7 +735,7 @@ Qed.
 
 Lemma constructive_indefinite_descr_fun_choice :
 ConstructiveIndefiniteDescription -> FunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_indefinite_descr_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_indefinite_descr_fun_choice".  
 intros IndefDescr A B R H.
 exists (fun x => proj1_sig (IndefDescr B (R x) (H x))).
 intro x.
@@ -747,7 +747,7 @@ Qed.
 Lemma relative_non_contradiction_of_definite_descr :
 forall C:Prop, (ConstructiveDefiniteDescription -> C)
 -> (FunctionalRelReification -> C).
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.relative_non_contradiction_of_definite_descr". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.relative_non_contradiction_of_definite_descr".  
 intros C H FunReify.
 assert (DepFunReify := non_dep_dep_functional_rel_reification FunReify).
 pose (A0 := { A:Type & { P:A->Prop & exists! x, P x }}).
@@ -764,7 +764,7 @@ Qed.
 
 Lemma constructive_definite_descr_fun_reification :
 ConstructiveDefiniteDescription -> FunctionalRelReification.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_definite_descr_fun_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_definite_descr_fun_reification".  
 intros DefDescr A B R H.
 exists (fun x => proj1_sig (DefDescr B (R x) (H x))).
 intro x.
@@ -785,7 +785,7 @@ Require Import Setoid.
 Theorem constructive_definite_descr_excluded_middle :
 (forall A : Type, ConstructiveDefiniteDescription_on A) ->
 (forall P:Prop, P \/ ~ P) -> (forall P:Prop, {P} + {~ P}).
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_definite_descr_excluded_middle". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.constructive_definite_descr_excluded_middle".  
 intros Descr EM P.
 pose (select := fun b:bool => if b then P else ~P).
 assert { b:bool | select b } as ([|],HP).
@@ -804,7 +804,7 @@ Corollary fun_reification_descr_computational_excluded_middle_in_prop_context :
 FunctionalRelReification ->
 (forall P:Prop, P \/ ~ P) ->
 forall C:Prop, ((forall P:Prop, {P} + {~ P}) -> C) -> C.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_reification_descr_computational_excluded_middle_in_prop_context". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_reification_descr_computational_excluded_middle_in_prop_context".  
 intros FunReify EM C H. intuition auto using
 constructive_definite_descr_excluded_middle,
 (relative_non_contradiction_of_definite_descr (C:=C)).
@@ -818,7 +818,7 @@ Require Import Arith.
 
 Theorem functional_choice_imp_functional_dependent_choice :
 FunctionalChoice -> FunctionalDependentChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.functional_choice_imp_functional_dependent_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.functional_choice_imp_functional_dependent_choice".  
 intros FunChoice A R HRfun x0.
 apply FunChoice in HRfun as (g,Rg).
 set (f:=fix f n := match n with 0 => x0 | S n' => g (f n') end).
@@ -827,7 +827,7 @@ Qed.
 
 Theorem functional_dependent_choice_imp_functional_countable_choice :
 FunctionalDependentChoice -> FunctionalCountableChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.functional_dependent_choice_imp_functional_countable_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.functional_dependent_choice_imp_functional_countable_choice".  
 intros H A R H0.
 set (R' (p q:nat*A) := fst q = S (fst p) /\ R (fst p) (snd q)).
 destruct (H0 0) as (y0,Hy0).
@@ -856,7 +856,7 @@ Require Import ClassicalFacts PropExtensionalityFacts.
 
 Theorem repr_fun_choice_imp_ext_prop_repr :
 RepresentativeFunctionalChoice -> ExtensionalPropositionRepresentative.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_ext_prop_repr". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_ext_prop_repr".  
 intros ReprFunChoice A.
 pose (R P Q := P <-> Q).
 assert (Hequiv:Equivalence R) by (split; firstorder).
@@ -865,7 +865,7 @@ Qed.
 
 Theorem repr_fun_choice_imp_ext_pred_repr :
 RepresentativeFunctionalChoice -> ExtensionalPredicateRepresentative.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_ext_pred_repr". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_ext_pred_repr".  
 intros ReprFunChoice A.
 pose (R P Q := forall x : A, P x <-> Q x).
 assert (Hequiv:Equivalence R) by (split; firstorder).
@@ -874,7 +874,7 @@ Qed.
 
 Theorem repr_fun_choice_imp_ext_function_repr :
 RepresentativeFunctionalChoice -> ExtensionalFunctionRepresentative.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_ext_function_repr". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_ext_function_repr".  
 intros ReprFunChoice A B.
 pose (R (f g : A -> B) := forall x : A, f x = g x).
 assert (Hequiv:Equivalence R).
@@ -886,14 +886,14 @@ Qed.
 
 Theorem repr_fun_choice_imp_excluded_middle :
 RepresentativeFunctionalChoice -> ExcludedMiddle.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_excluded_middle". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_excluded_middle".  
 intros ReprFunChoice.
 apply representative_boolean_partition_imp_excluded_middle, ReprFunChoice.
 Qed.
 
 Theorem repr_fun_choice_imp_relational_choice :
 RepresentativeFunctionalChoice -> RelationalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_relational_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.repr_fun_choice_imp_relational_choice".  
 intros ReprFunChoice A B T Hexists.
 pose (D := (A*B)%type).
 pose (R (z z':D) :=
@@ -944,7 +944,7 @@ Qed.
 
 Theorem gen_setoid_fun_choice_imp_setoid_fun_choice  :
 forall A B, GeneralizedSetoidFunctionalChoice_on A B -> SetoidFunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.gen_setoid_fun_choice_imp_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.gen_setoid_fun_choice_imp_setoid_fun_choice".  
 intros A B GenSetoidFunChoice R T Hequiv Hcompat Hex.
 apply GenSetoidFunChoice; try easy.
 apply eq_equivalence.
@@ -953,7 +953,7 @@ Qed.
 
 Theorem setoid_fun_choice_imp_gen_setoid_fun_choice :
 forall A B, SetoidFunctionalChoice_on A B -> GeneralizedSetoidFunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_gen_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_gen_setoid_fun_choice".  
 intros A B SetoidFunChoice R S T HequivR HequivS Hcompat Hex.
 destruct SetoidFunChoice with (R:=R) (T:=T) as (f,Hf); try easy.
 { intros; apply (Hcompat x x' y y); try easy. }
@@ -962,13 +962,13 @@ Qed.
 
 Corollary setoid_fun_choice_iff_gen_setoid_fun_choice :
 forall A B, SetoidFunctionalChoice_on A B <-> GeneralizedSetoidFunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_iff_gen_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_iff_gen_setoid_fun_choice".  
 split; auto using gen_setoid_fun_choice_imp_setoid_fun_choice, setoid_fun_choice_imp_gen_setoid_fun_choice.
 Qed.
 
 Theorem setoid_fun_choice_imp_simple_setoid_fun_choice  :
 forall A B, SetoidFunctionalChoice_on A B -> SimpleSetoidFunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_simple_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_simple_setoid_fun_choice".  
 intros A B SetoidFunChoice R T Hequiv Hexists.
 pose (T' x y := forall x', R x x' -> T x' y).
 assert (Hcompat : forall (x x' : A) (y : B), R x x' -> T' x y -> T' x' y) by firstorder.
@@ -978,14 +978,14 @@ Qed.
 
 Theorem simple_setoid_fun_choice_imp_setoid_fun_choice :
 forall A B, SimpleSetoidFunctionalChoice_on A B -> SetoidFunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.simple_setoid_fun_choice_imp_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.simple_setoid_fun_choice_imp_setoid_fun_choice".  
 intros A B SimpleSetoidFunChoice R T Hequiv Hcompat Hexists.
 destruct (SimpleSetoidFunChoice R T Hequiv) as (f,Hf); firstorder.
 Qed.
 
 Corollary setoid_fun_choice_iff_simple_setoid_fun_choice :
 forall A B, SetoidFunctionalChoice_on A B <-> SimpleSetoidFunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_iff_simple_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_iff_simple_setoid_fun_choice".  
 split; auto using simple_setoid_fun_choice_imp_setoid_fun_choice, setoid_fun_choice_imp_simple_setoid_fun_choice.
 Qed.
 
@@ -994,7 +994,7 @@ Qed.
 
 Theorem setoid_fun_choice_imp_fun_choice :
 forall A B, SetoidFunctionalChoice_on A B -> FunctionalChoice_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_fun_choice".  
 intros A B SetoidFunChoice T Hexists.
 destruct SetoidFunChoice with (R:=@eq A) (T:=T) as (f,Hf).
 - apply eq_equivalence.
@@ -1005,7 +1005,7 @@ Qed.
 
 Corollary setoid_fun_choice_imp_functional_rel_reification :
 forall A B, SetoidFunctionalChoice_on A B -> FunctionalRelReification_on A B.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_functional_rel_reification". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_functional_rel_reification".  
 intros A B SetoidFunChoice.
 apply fun_choice_imp_functional_rel_reification.
 now apply setoid_fun_choice_imp_fun_choice.
@@ -1013,14 +1013,14 @@ Qed.
 
 Theorem setoid_fun_choice_imp_repr_fun_choice :
 SetoidFunctionalChoice -> RepresentativeFunctionalChoice .
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_repr_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_fun_choice_imp_repr_fun_choice".  
 intros SetoidFunChoice A R Hequiv.
 apply SetoidFunChoice; firstorder.
 Qed.
 
 Theorem functional_rel_reification_and_repr_fun_choice_imp_setoid_fun_choice :
 FunctionalRelReification -> RepresentativeFunctionalChoice -> SetoidFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.functional_rel_reification_and_repr_fun_choice_imp_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.functional_rel_reification_and_repr_fun_choice_imp_setoid_fun_choice".  
 intros FunRelReify ReprFunChoice A B R T Hequiv Hcompat Hexists.
 assert (FunChoice : FunctionalChoice).
 { intros A' B'. apply functional_rel_reification_and_rel_choice_imp_fun_choice.
@@ -1037,7 +1037,7 @@ Qed.
 
 Theorem functional_rel_reification_and_repr_fun_choice_iff_setoid_fun_choice :
 FunctionalRelReification /\ RepresentativeFunctionalChoice <-> SetoidFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.functional_rel_reification_and_repr_fun_choice_iff_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.functional_rel_reification_and_repr_fun_choice_iff_setoid_fun_choice".  
 split; intros.
 - now apply functional_rel_reification_and_repr_fun_choice_imp_setoid_fun_choice.
 - split.
@@ -1058,7 +1058,7 @@ Import EqNotations.
 
 Theorem fun_choice_and_ext_functions_repr_and_excluded_middle_imp_setoid_fun_choice :
 FunctionalChoice -> ExtensionalFunctionRepresentative -> ExcludedMiddle -> RepresentativeFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_ext_functions_repr_and_excluded_middle_imp_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_ext_functions_repr_and_excluded_middle_imp_setoid_fun_choice".  
 intros FunChoice SetoidFunRepr EM A R (Hrefl,Hsym,Htrans).
 assert (H:forall P:Prop, exists b, b = true <-> P).
 { intros P. destruct (EM P).
@@ -1099,7 +1099,7 @@ Qed.
 
 Theorem setoid_functional_choice_first_characterization :
 FunctionalChoice /\ ExtensionalFunctionRepresentative /\ ExcludedMiddle <-> SetoidFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_functional_choice_first_characterization". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_functional_choice_first_characterization".  
 split.
 - intros (FunChoice & SetoidFunRepr & EM).
 apply functional_rel_reification_and_repr_fun_choice_imp_setoid_fun_choice.
@@ -1120,7 +1120,7 @@ Qed.
 
 Theorem fun_choice_and_ext_pred_ext_and_proof_irrel_imp_setoid_fun_choice :
 FunctionalChoice -> ExtensionalPredicateRepresentative -> ProofIrrelevance -> RepresentativeFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_ext_pred_ext_and_proof_irrel_imp_setoid_fun_choice". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.fun_choice_and_ext_pred_ext_and_proof_irrel_imp_setoid_fun_choice".  
 intros FunChoice PredExtRepr PI A R (Hrefl,Hsym,Htrans).
 pose (isclass P := exists x:A, P x).
 pose (class := {P:A -> Prop | isclass P}).
@@ -1150,7 +1150,7 @@ Qed.
 
 Theorem setoid_functional_choice_second_characterization :
 FunctionalChoice /\ ExtensionalPredicateRepresentative /\ ProofIrrelevance <-> SetoidFunctionalChoice.
-Proof. try hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_functional_choice_second_characterization". Undo.  
+Proof. hammer_hook "ChoiceFacts" "ChoiceFacts.setoid_functional_choice_second_characterization".  
 split.
 - intros (FunChoice & ExtPredRepr & PI).
 apply functional_rel_reification_and_repr_fun_choice_imp_setoid_fun_choice.

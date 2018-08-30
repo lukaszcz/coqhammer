@@ -22,7 +22,7 @@ Variable P : nat -> Prop.
 Hypothesis HP : forall n, {P n} + {~P n}.
 
 Lemma sig_forall_dec : {n | ~P n} + {forall n, P n}.
-Proof. try hammer_hook "Rlogic" "Rlogic.sig_forall_dec". Undo.  
+Proof. hammer_hook "Rlogic" "Rlogic.sig_forall_dec".  
 assert (Hi: (forall n, 0 < INR n + 1)%R).
 intros n.
 apply Rle_lt_0_plus_1, pos_INR.
@@ -127,7 +127,7 @@ End Arithmetical_dec.
 
 Theorem not_not_archimedean :
 forall r : R, ~ (forall n : nat, (INR n <= r)%R).
-Proof. try hammer_hook "Rlogic" "Rlogic.not_not_archimedean". Undo.  
+Proof. hammer_hook "Rlogic" "Rlogic.not_not_archimedean".  
 intros r H.
 set (E := fun r => exists n : nat, r = INR n).
 assert (exists x : R, E x) by
@@ -168,7 +168,7 @@ Qed.
 
 
 Lemma sig_not_dec : forall P : Prop, {not (not P)} + {not P}.
-Proof. try hammer_hook "Rlogic" "Rlogic.sig_not_dec". Undo.  
+Proof. hammer_hook "Rlogic" "Rlogic.sig_not_dec".  
 intros P.
 set (E := fun x => x = R0 \/ (x = R1 /\ P)).
 destruct (completeness E) as [x H].

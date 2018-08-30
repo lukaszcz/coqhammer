@@ -17,19 +17,19 @@ Module Type NParityProp (Import N : NAxiomsSig')(Import NP : NSubProp N).
 Include NZParityProp N N NP.
 
 Lemma odd_pred : forall n, n~=0 -> odd (P n) = even n.
-Proof. try hammer_hook "NParity" "NParity.NParityProp.odd_pred". Undo.  
+Proof. hammer_hook "NParity" "NParity.NParityProp.odd_pred".  
 intros. rewrite <- (succ_pred n) at 2 by trivial.
 symmetry. apply even_succ.
 Qed.
 
 Lemma even_pred : forall n, n~=0 -> even (P n) = odd n.
-Proof. try hammer_hook "NParity" "NParity.NParityProp.even_pred". Undo.  
+Proof. hammer_hook "NParity" "NParity.NParityProp.even_pred".  
 intros. rewrite <- (succ_pred n) at 2 by trivial.
 symmetry. apply odd_succ.
 Qed.
 
 Lemma even_sub : forall n m, m<=n -> even (n-m) = Bool.eqb (even n) (even m).
-Proof. try hammer_hook "NParity" "NParity.NParityProp.even_sub". Undo.  
+Proof. hammer_hook "NParity" "NParity.NParityProp.even_sub".  
 intros.
 case_eq (even n); case_eq (even m);
 rewrite <- ?negb_true_iff, ?negb_even, ?odd_spec, ?even_spec;
@@ -57,7 +57,7 @@ rewrite add_1_r in Hm,Hn. order.
 Qed.
 
 Lemma odd_sub : forall n m, m<=n -> odd (n-m) = xorb (odd n) (odd m).
-Proof. try hammer_hook "NParity" "NParity.NParityProp.odd_sub". Undo.  
+Proof. hammer_hook "NParity" "NParity.NParityProp.odd_sub".  
 intros. rewrite <- !negb_even. rewrite even_sub by trivial.
 now destruct (even n), (even m).
 Qed.

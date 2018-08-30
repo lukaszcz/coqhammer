@@ -54,7 +54,7 @@ Variable U : Type.
 Lemma make_new_approximant :
 forall A X:Ensemble U,
 ~ Finite U A -> Approximant U A X -> Inhabited U (Setminus U A X).
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.make_new_approximant". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.make_new_approximant".  
 intros A X H' H'0.
 elim H'0; intros H'1 H'2.
 apply Strict_super_set_contains_new_element; auto with sets.
@@ -68,7 +68,7 @@ forall A X:Ensemble U,
 forall n:nat,
 cardinal U X n ->
 Included U X A ->  exists Y : _, cardinal U Y (S n) /\ Included U Y A.
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.approximants_grow". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.approximants_grow".  
 intros A X H' n H'0; elim H'0; auto with sets.
 intro H'1.
 cut (Inhabited U (Setminus U A (Empty_set U))).
@@ -109,7 +109,7 @@ forall n:nat,
 cardinal U X n ->
 Approximant U A X ->
 exists Y : _, cardinal U Y (S n) /\ Approximant U A Y.
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.approximants_grow'". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.approximants_grow'".  
 intros A X H' n H'0 H'1; try assumption.
 elim H'1.
 intros H'2 H'3.
@@ -126,7 +126,7 @@ Lemma approximant_can_be_any_size :
 forall A X:Ensemble U,
 ~ Finite U A ->
 forall n:nat,  exists Y : _, cardinal U Y n /\ Approximant U A Y.
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.approximant_can_be_any_size". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.approximant_can_be_any_size".  
 intros A H' H'0 n; elim n.
 exists (Empty_set U); auto with sets.
 intros n0 H'1; elim H'1.
@@ -142,7 +142,7 @@ Finite V X ->
 Included V X (Im U V A f) ->
 exists n : _,
 (exists Y : _, (cardinal U Y n /\ Included U Y A) /\ Im U V Y f = X).
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.Image_set_continuous". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.Image_set_continuous".  
 intros A f X H'; elim H'.
 intro H'0; exists 0.
 exists (Empty_set U); auto with sets.
@@ -184,7 +184,7 @@ Theorem Image_set_continuous' :
 forall (A:Ensemble U) (f:U -> V) (X:Ensemble V),
 Approximant V (Im U V A f) X ->
 exists Y : _, Approximant U A Y /\ Im U V Y f = X.
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.Image_set_continuous'". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.Image_set_continuous'".  
 intros A f X H'; try assumption.
 cut
 (exists n : _,
@@ -205,7 +205,7 @@ Qed.
 Theorem Pigeonhole_bis :
 forall (A:Ensemble U) (f:U -> V),
 ~ Finite U A -> Finite V (Im U V A f) -> ~ injective U V f.
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.Pigeonhole_bis". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.Pigeonhole_bis".  
 intros A f H'0 H'1; try assumption.
 elim (Image_set_continuous' A f (Im U V A f)); auto with sets.
 intros x H'2; elim H'2; intros H'3 H'4; try exact H'3; clear H'2.
@@ -234,7 +234,7 @@ Qed.
 Theorem Pigeonhole_ter :
 forall (A:Ensemble U) (f:U -> V) (n:nat),
 injective U V f -> Finite V (Im U V A f) -> Finite U A.
-Proof. try hammer_hook "Infinite_sets" "Infinite_sets.Pigeonhole_ter". Undo.  
+Proof. hammer_hook "Infinite_sets" "Infinite_sets.Pigeonhole_ter".  
 intros A f H' H'0 H'1.
 apply NNPP.
 red; intro H'2.

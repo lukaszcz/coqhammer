@@ -41,18 +41,18 @@ forall (x:A) (f g:forall y:{y:A | R y x}, P (`y)),
 Lemma Fix_F_eq :
 forall (x:A) (r:Acc R x),
 F_sub x (fun y:{y:A | R y x} => Fix_F_sub (`y) (Acc_inv r (proj2_sig y))) = Fix_F_sub x r.
-Proof. try hammer_hook "Wf" "Wf.Fix_F_eq". Undo.  
+Proof. hammer_hook "Wf" "Wf.Fix_F_eq".  
 destruct r using Acc_inv_dep; auto.
 Qed.
 
 Lemma Fix_F_inv : forall (x:A) (r s:Acc R x), Fix_F_sub x r = Fix_F_sub x s.
-Proof. try hammer_hook "Wf" "Wf.Fix_F_inv". Undo.  
+Proof. hammer_hook "Wf" "Wf.Fix_F_inv".  
 intro x; induction (Rwf x); intros.
 rewrite (proof_irrelevance (Acc R x) r s) ; auto.
 Qed.
 
 Lemma Fix_eq : forall x:A, Fix_sub x = F_sub x (fun y:{ y:A | R y x} => Fix_sub (proj1_sig y)).
-Proof. try hammer_hook "Wf" "Wf.Fix_eq". Undo.  
+Proof. hammer_hook "Wf" "Wf.Fix_eq".  
 intro x; unfold Fix_sub.
 rewrite <- (Fix_F_eq ).
 apply F_ext; intros.
@@ -64,7 +64,7 @@ forall x : A,
 Fix_sub x =
 let f_sub := F_sub in
 f_sub x (fun y: {y : A | R y x} => Fix_sub (`y)).
-Proof. try hammer_hook "Wf" "Wf.fix_sub_eq". Undo.  
+Proof. hammer_hook "Wf" "Wf.fix_sub_eq".  
 exact Fix_eq.
 Qed.
 
@@ -89,7 +89,7 @@ Variable m: T -> M.
 Definition MR (x y: T): Prop := R (m x) (m y).
 
 Lemma measure_wf: well_founded MR.
-Proof with auto. try hammer_hook "Wf" "Wf.measure_wf". Undo. 
+Proof with auto. hammer_hook "Wf" "Wf.measure_wf". 
 Admitted.
 
 End Measure_well_founded.
@@ -107,7 +107,7 @@ Variable f: forall (x : A), (forall y: { y: A | R y x }, P (proj1_sig y)) -> P x
 Lemma F_unfold x r:
 Fix_F_sub A R P f x r =
 f (fun y => Fix_F_sub A R P f (proj1_sig y) (Acc_inv r (proj2_sig y))).
-Proof. try hammer_hook "Wf" "Wf.F_unfold". Undo.   intros. case r; auto. Qed.
+Proof. hammer_hook "Wf" "Wf.F_unfold".   intros. case r; auto. Qed.
 
 
 
@@ -120,7 +120,7 @@ forall (a: Acc R x),
 Q x (f (fun y: {y: A | R y x} =>
 Fix_F_sub A R P f (proj1_sig y) (Acc_inv a (proj2_sig y)))))
 : forall x a, Q _ (Fix_F_sub A R P f x a).
-Proof with auto. try hammer_hook "Wf" "Wf.Fix_F_sub_rect". Undo.  
+Proof with auto. hammer_hook "Wf" "Wf.Fix_F_sub_rect".  
 set (R' := fun (x: A) => forall a, Q _ (Fix_F_sub A R P f x a)).
 cut (forall x, R' x)...
 apply (well_founded_induction_type Rwf).
@@ -142,7 +142,7 @@ f g = f h.
 Lemma eq_Fix_F_sub x (a a': Acc R x):
 Fix_F_sub A R P f x a =
 Fix_F_sub A R P f x a'.
-Proof. try hammer_hook "Wf" "Wf.eq_Fix_F_sub". Undo.  
+Proof. hammer_hook "Wf" "Wf.eq_Fix_F_sub".  
 revert a'.
 pattern x, (Fix_F_sub A R P f x a).
 apply Fix_F_sub_rect.
@@ -164,7 +164,7 @@ Lemma Fix_sub_rect
 (a: Acc R x),
 Q x (f (fun y: {y: A | R y x} => Fix_sub A R Rwf P f (proj1_sig y))))
 : forall x, Q _ (Fix_sub A R Rwf P f x).
-Proof with auto. try hammer_hook "Wf" "Wf.Fix_sub_rect". Undo.  
+Proof with auto. hammer_hook "Wf" "Wf.Fix_sub_rect".  
 Admitted.
 
 End Fix_rects.
@@ -196,7 +196,7 @@ forall (A : Type) (R : A -> A -> Prop) (Rwf : well_founded R)
 forall x : A,
 Fix_sub A R Rwf P F_sub x =
 F_sub x (fun y:{y : A | R y x} => Fix_sub A R Rwf P F_sub (` y)).
-Proof. try hammer_hook "Wf" "Wf.WfExtensionality.fix_sub_eq_ext". Undo.  
+Proof. hammer_hook "Wf" "Wf.WfExtensionality.fix_sub_eq_ext".  
 intros ; apply Fix_eq ; auto.
 intros.
 assert(f = g).

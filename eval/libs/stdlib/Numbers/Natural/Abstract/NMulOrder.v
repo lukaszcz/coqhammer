@@ -18,41 +18,41 @@ Include NAddOrderProp N.
 
 
 Theorem square_lt_mono : forall n m, n < m <-> n * n < m * m.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.square_lt_mono". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.square_lt_mono".  
 intros n m; split; intro;
 [apply square_lt_mono_nonneg | apply square_lt_simpl_nonneg];
 try assumption; apply le_0_l.
 Qed.
 
 Theorem square_le_mono : forall n m, n <= m <-> n * n <= m * m.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.square_le_mono". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.square_le_mono".  
 intros n m; split; intro;
 [apply square_le_mono_nonneg | apply square_le_simpl_nonneg];
 try assumption; apply le_0_l.
 Qed.
 
 Theorem mul_le_mono_l : forall n m p, n <= m -> p * n <= p * m.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_le_mono_l". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_le_mono_l".  
 intros; apply mul_le_mono_nonneg_l. apply le_0_l. assumption.
 Qed.
 
 Theorem mul_le_mono_r : forall n m p, n <= m -> n * p <= m * p.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_le_mono_r". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_le_mono_r".  
 intros; apply mul_le_mono_nonneg_r. apply le_0_l. assumption.
 Qed.
 
 Theorem mul_lt_mono : forall n m p q, n < m -> p < q -> n * p < m * q.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_lt_mono". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_lt_mono".  
 intros; apply mul_lt_mono_nonneg; try assumption; apply le_0_l.
 Qed.
 
 Theorem mul_le_mono : forall n m p q, n <= m -> p <= q -> n * p <= m * q.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_le_mono". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.mul_le_mono".  
 intros; apply mul_le_mono_nonneg; try assumption; apply le_0_l.
 Qed.
 
 Theorem lt_0_mul' : forall n m, n * m > 0 <-> n > 0 /\ m > 0.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.lt_0_mul'". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.lt_0_mul'".  
 intros n m; split; [intro H | intros [H1 H2]].
 apply lt_0_mul in H. destruct H as [[H1 H2] | [H1 H2]]. now split.
 false_hyp H1 nlt_0_r.
@@ -62,7 +62,7 @@ Qed.
 Notation mul_pos := lt_0_mul' (only parsing).
 
 Theorem eq_mul_1 : forall n m, n * m == 1 <-> n == 1 /\ m == 1.
-Proof. try hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.eq_mul_1". Undo.  
+Proof. hammer_hook "NMulOrder" "NMulOrder.NMulOrderProp.eq_mul_1".  
 intros n m.
 split; [| intros [H1 H2]; now rewrite H1, H2, mul_1_l].
 intro H; destruct (lt_trichotomy n 1) as [H1 | [H1 | H1]].

@@ -47,13 +47,13 @@ Inductive Sorted : list A -> Prop :=
 | Sorted_cons a l : Sorted l -> HdRel a l -> Sorted (a :: l).
 
 Lemma HdRel_inv : forall a b l, HdRel a (b :: l) -> R a b.
-Proof. try hammer_hook "Sorted" "Sorted.HdRel_inv". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.HdRel_inv".  
 inversion 1; auto.
 Qed.
 
 Lemma Sorted_inv :
 forall a l, Sorted (a :: l) -> Sorted l /\ HdRel a l.
-Proof. try hammer_hook "Sorted" "Sorted.Sorted_inv". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.Sorted_inv".  
 intros a l H; inversion H; auto.
 Qed.
 
@@ -62,12 +62,12 @@ forall P:list A -> Type,
 P [] ->
 (forall a l, Sorted l -> P l -> HdRel a l -> P (a :: l)) ->
 forall l:list A, Sorted l -> P l.
-Proof. try hammer_hook "Sorted" "Sorted.Sorted_rect". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.Sorted_rect".  
 induction l. firstorder using Sorted_inv. firstorder using Sorted_inv.
 Qed.
 
 Lemma Sorted_LocallySorted_iff : forall l, Sorted l <-> LocallySorted l.
-Proof. try hammer_hook "Sorted" "Sorted.Sorted_LocallySorted_iff". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.Sorted_LocallySorted_iff".  
 split; [induction 1 as [|a l [|]]| induction 1];
 auto using Sorted, LocallySorted, HdRel.
 inversion H1; subst; auto using LocallySorted.
@@ -81,7 +81,7 @@ Inductive StronglySorted : list A -> Prop :=
 
 Lemma StronglySorted_inv : forall a l, StronglySorted (a :: l) ->
 StronglySorted l /\ Forall (R a) l.
-Proof. try hammer_hook "Sorted" "Sorted.StronglySorted_inv". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.StronglySorted_inv".  
 intros; inversion H; auto.
 Defined.
 
@@ -90,7 +90,7 @@ forall P:list A -> Type,
 P [] ->
 (forall a l, StronglySorted l -> P l -> Forall (R a) l -> P (a :: l)) ->
 forall l, StronglySorted l -> P l.
-Proof. try hammer_hook "Sorted" "Sorted.StronglySorted_rect". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.StronglySorted_rect".  
 induction l; firstorder using StronglySorted_inv.
 Defined.
 
@@ -99,19 +99,19 @@ forall P:list A -> Type,
 P [] ->
 (forall a l, StronglySorted l -> P l -> Forall (R a) l -> P (a :: l)) ->
 forall l, StronglySorted l -> P l.
-Proof. try hammer_hook "Sorted" "Sorted.StronglySorted_rec". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.StronglySorted_rec".  
 firstorder using StronglySorted_rect.
 Qed.
 
 Lemma StronglySorted_Sorted : forall l, StronglySorted l -> Sorted l.
-Proof. try hammer_hook "Sorted" "Sorted.StronglySorted_Sorted". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.StronglySorted_Sorted".  
 induction 1 as [|? ? ? ? HForall]; constructor; trivial.
 destruct HForall; constructor; trivial.
 Qed.
 
 Lemma Sorted_extends :
 Transitive R -> forall a l, Sorted (a::l) -> Forall (R a) l.
-Proof. try hammer_hook "Sorted" "Sorted.Sorted_extends". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.Sorted_extends".  
 intros. change match a :: l with [] => True | a :: l => Forall (R a) l end.
 induction H0 as [|? ? ? ? H1]; [trivial|].
 destruct H1; constructor; trivial.
@@ -121,7 +121,7 @@ Qed.
 
 Lemma Sorted_StronglySorted :
 Transitive R -> forall l, Sorted l -> StronglySorted l.
-Proof. try hammer_hook "Sorted" "Sorted.Sorted_StronglySorted". Undo.  
+Proof. hammer_hook "Sorted" "Sorted.Sorted_StronglySorted".  
 induction 2; constructor; trivial.
 apply Sorted_extends; trivial.
 constructor; trivial.

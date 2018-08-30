@@ -24,7 +24,7 @@ let (r1,r2) := snd (Z.ggcd q1 ('q2))
 in r1#(Z.to_pos r2).
 
 Lemma Qred_correct : forall q, (Qred q) == q.
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_correct". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_correct".  
 unfold Qred, Qeq; intros (n,d); simpl.
 generalize (Z.ggcd_gcd n ('d)) (Z.gcd_nonneg n ('d))
 (Z.ggcd_correct_divisors n ('d)).
@@ -39,7 +39,7 @@ Close Scope Z_scope.
 Qed.
 
 Lemma Qred_complete : forall p q,  p==q -> Qred p = Qred q.
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_complete". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_complete".  
 intros (a,b) (c,d).
 unfold Qred, Qeq in *; simpl in *.
 Open Scope Z_scope.
@@ -95,7 +95,7 @@ Close Scope Z_scope.
 Qed.
 
 Lemma Qred_eq_iff q q' : Qred q = Qred q' <-> q == q'.
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_eq_iff". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_eq_iff".  
 split.
 - intros E. rewrite <- (Qred_correct q), <- (Qred_correct q').
 now rewrite E.
@@ -112,17 +112,17 @@ Definition Qmult' (p q : Q) := Qred (Qmult p q).
 Definition Qminus' x y := Qred (Qminus x y).
 
 Lemma Qplus'_correct : forall p q : Q, (Qplus' p q)==(Qplus p q).
-Proof. try hammer_hook "Qreduction" "Qreduction.Qplus'_correct". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qplus'_correct".  
 intros; unfold Qplus'; apply Qred_correct; auto.
 Qed.
 
 Lemma Qmult'_correct : forall p q : Q, (Qmult' p q)==(Qmult p q).
-Proof. try hammer_hook "Qreduction" "Qreduction.Qmult'_correct". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qmult'_correct".  
 intros; unfold Qmult'; apply Qred_correct; auto.
 Qed.
 
 Lemma Qminus'_correct : forall p q : Q, (Qminus' p q)==(Qminus p q).
-Proof. try hammer_hook "Qreduction" "Qreduction.Qminus'_correct". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qminus'_correct".  
 intros; unfold Qminus'; apply Qred_correct; auto.
 Qed.
 
@@ -145,7 +145,7 @@ rewrite H, H0; auto with qarith.
 Qed.
 
 Lemma Qred_opp: forall q, Qred (-q) = - (Qred q).
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_opp". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_opp".  
 intros (x, y); unfold Qred; simpl.
 rewrite Z.ggcd_opp; case Z.ggcd; intros p1 (p2, p3); simpl.
 unfold Qopp; auto.
@@ -153,16 +153,16 @@ Qed.
 
 Theorem Qred_compare: forall x y,
 Qcompare x y = Qcompare (Qred x) (Qred y).
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_compare". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_compare".  
 intros x y; apply Qcompare_comp; apply Qeq_sym; apply Qred_correct.
 Qed.
 
 Lemma Qred_le q q' : Qred q <= Qred q' <-> q <= q'.
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_le". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_le".  
 now rewrite !Qle_alt, <- Qred_compare.
 Qed.
 
 Lemma Qred_lt q q' : Qred q < Qred q' <-> q < q'.
-Proof. try hammer_hook "Qreduction" "Qreduction.Qred_lt". Undo.  
+Proof. hammer_hook "Qreduction" "Qreduction.Qred_lt".  
 now rewrite !Qlt_alt, <- Qred_compare.
 Qed.

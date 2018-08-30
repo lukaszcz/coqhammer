@@ -362,15 +362,15 @@ Definition partition (f : elt -> bool)(s : t) : t * t :=
 let p := M.partition f s in (Mkt (fst p), Mkt (snd p)).
 
 Instance In_compat : Proper (E.eq==>eq==>iff) In.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.In_compat". Undo.   repeat red. intros; apply M.In_compat; congruence. Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.In_compat".   repeat red. intros; apply M.In_compat; congruence. Qed.
 
 Definition eq : t -> t -> Prop := Equal.
 
 Instance eq_equiv : Equivalence eq.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WRawSets.eq_equiv". Undo.   firstorder. Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WRawSets.eq_equiv".   firstorder. Qed.
 
 Definition eq_dec : forall (s s':t), { eq s s' }+{ ~eq s s' }.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WRaw2SetsOn.eq_dec". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.WRaw2SetsOn.eq_dec".  
 intros (s,Hs) (s',Hs').
 change ({M.Equal s s'}+{~M.Equal s s'}).
 destruct (M.equal s s') eqn:H; [left|right];
@@ -385,54 +385,54 @@ Variable f : elt -> bool.
 Notation compatb := (Proper (E.eq==>Logic.eq)) (only parsing).
 
 Lemma mem_spec : mem x s = true <-> In x s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.mem_spec". Undo.   exact (@M.mem_spec _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.mem_spec".   exact (@M.mem_spec _ _ _). Qed.
 Lemma equal_spec : equal s s' = true <-> Equal s s'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.equal_spec". Undo.   exact (@M.equal_spec _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.equal_spec".   exact (@M.equal_spec _ _ _ _). Qed.
 Lemma subset_spec : subset s s' = true <-> Subset s s'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.subset_spec". Undo.   exact (@M.subset_spec _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.subset_spec".   exact (@M.subset_spec _ _ _ _). Qed.
 Lemma empty_spec : Empty empty.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.empty_spec". Undo.   exact M.empty_spec. Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.empty_spec".   exact M.empty_spec. Qed.
 Lemma is_empty_spec : is_empty s = true <-> Empty s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.is_empty_spec". Undo.   exact (@M.is_empty_spec _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.is_empty_spec".   exact (@M.is_empty_spec _). Qed.
 Lemma add_spec : In y (add x s) <-> E.eq y x \/ In y s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.add_spec". Undo.   exact (@M.add_spec _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.add_spec".   exact (@M.add_spec _ _ _ _). Qed.
 Lemma remove_spec : In y (remove x s) <-> In y s /\ ~E.eq y x.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.remove_spec". Undo.   exact (@M.remove_spec _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.remove_spec".   exact (@M.remove_spec _ _ _ _). Qed.
 Lemma singleton_spec : In y (singleton x) <-> E.eq y x.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.singleton_spec". Undo.   exact (@M.singleton_spec _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.singleton_spec".   exact (@M.singleton_spec _ _). Qed.
 Lemma union_spec : In x (union s s') <-> In x s \/ In x s'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.union_spec". Undo.   exact (@M.union_spec _ _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.union_spec".   exact (@M.union_spec _ _ _ _ _). Qed.
 Lemma inter_spec : In x (inter s s') <-> In x s /\ In x s'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.inter_spec". Undo.   exact (@M.inter_spec _ _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.inter_spec".   exact (@M.inter_spec _ _ _ _ _). Qed.
 Lemma diff_spec : In x (diff s s') <-> In x s /\ ~In x s'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.diff_spec". Undo.   exact (@M.diff_spec _ _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.diff_spec".   exact (@M.diff_spec _ _ _ _ _). Qed.
 Lemma fold_spec : forall (A : Type) (i : A) (f : elt -> A -> A),
 fold f s i = fold_left (fun a e => f e a) (elements s) i.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.fold_spec". Undo.   exact (@M.fold_spec _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.fold_spec".   exact (@M.fold_spec _). Qed.
 Lemma cardinal_spec : cardinal s = length (elements s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.cardinal_spec". Undo.   exact (@M.cardinal_spec s _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.cardinal_spec".   exact (@M.cardinal_spec s _). Qed.
 Lemma filter_spec : compatb f ->
 (In x (filter f s) <-> In x s /\ f x = true).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.filter_spec". Undo.   exact (@M.filter_spec _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.filter_spec".   exact (@M.filter_spec _ _ _). Qed.
 Lemma for_all_spec : compatb f ->
 (for_all f s = true <-> For_all (fun x => f x = true) s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.for_all_spec". Undo.   exact (@M.for_all_spec _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.for_all_spec".   exact (@M.for_all_spec _ _). Qed.
 Lemma exists_spec : compatb f ->
 (exists_ f s = true <-> Exists (fun x => f x = true) s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.exists_spec". Undo.   exact (@M.exists_spec _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.exists_spec".   exact (@M.exists_spec _ _). Qed.
 Lemma partition_spec1 : compatb f -> Equal (fst (partition f s)) (filter f s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.partition_spec1". Undo.   exact (@M.partition_spec1 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.partition_spec1".   exact (@M.partition_spec1 _ _). Qed.
 Lemma partition_spec2 : compatb f ->
 Equal (snd (partition f s)) (filter (fun x => negb (f x)) s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.partition_spec2". Undo.   exact (@M.partition_spec2 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.partition_spec2".   exact (@M.partition_spec2 _ _). Qed.
 Lemma elements_spec1 : InA E.eq x (elements s) <-> In x s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.elements_spec1". Undo.   exact (@M.elements_spec1 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.elements_spec1".   exact (@M.elements_spec1 _ _). Qed.
 Lemma elements_spec2w : NoDupA E.eq (elements s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.elements_spec2w". Undo.   exact (@M.elements_spec2w _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.elements_spec2w".   exact (@M.elements_spec2w _ _). Qed.
 Lemma choose_spec1 : choose s = Some x -> In x s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.choose_spec1". Undo.   exact (@M.choose_spec1 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.choose_spec1".   exact (@M.choose_spec1 _ _). Qed.
 Lemma choose_spec2 : choose s = None -> Empty s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WSetsOn.choose_spec2". Undo.   exact (@M.choose_spec2 _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WSetsOn.choose_spec2".   exact (@M.choose_spec2 _). Qed.
 
 End Spec.
 
@@ -488,13 +488,13 @@ Definition lt (s s':t) := M.lt s s'.
 
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.Raw2SetsOn.lt_strorder". Undo.   constructor ; unfold lt; red.
+Proof. hammer_hook "MSetInterface" "MSetInterface.Raw2SetsOn.lt_strorder".   constructor ; unfold lt; red.
 unfold complement. red. intros. apply (irreflexivity H).
 intros. transitivity y; auto.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.Raw2SetsOn.lt_compat". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.Raw2SetsOn.lt_compat".  
 repeat red. unfold eq, lt.
 intros (s1,p1) (s2,p2) E (s1',p1') (s2',p2') E'; simpl.
 change (M.eq s1 s2) in E.
@@ -507,32 +507,32 @@ Variable s s' s'' : t.
 Variable x y : elt.
 
 Lemma compare_spec : CompSpec eq lt s s' (compare s s').
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.compare_spec". Undo.   unfold compare; destruct (@M.compare_spec s s' _ _); auto. Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.compare_spec".   unfold compare; destruct (@M.compare_spec s s' _ _); auto. Qed.
 
 
 Lemma elements_spec2 : sort O.lt (elements s).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.elements_spec2". Undo.   exact (@M.elements_spec2 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.elements_spec2".   exact (@M.elements_spec2 _ _). Qed.
 
 
 Lemma min_elt_spec1 : min_elt s = Some x -> In x s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.min_elt_spec1". Undo.   exact (@M.min_elt_spec1 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.min_elt_spec1".   exact (@M.min_elt_spec1 _ _). Qed.
 Lemma min_elt_spec2 : min_elt s = Some x -> In y s -> ~ O.lt y x.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.min_elt_spec2". Undo.   exact (@M.min_elt_spec2 _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.min_elt_spec2".   exact (@M.min_elt_spec2 _ _ _ _). Qed.
 Lemma min_elt_spec3 : min_elt s = None -> Empty s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.min_elt_spec3". Undo.   exact (@M.min_elt_spec3 _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.min_elt_spec3".   exact (@M.min_elt_spec3 _). Qed.
 
 
 Lemma max_elt_spec1 : max_elt s = Some x -> In x s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.max_elt_spec1". Undo.   exact (@M.max_elt_spec1 _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.max_elt_spec1".   exact (@M.max_elt_spec1 _ _). Qed.
 Lemma max_elt_spec2 : max_elt s = Some x -> In y s -> ~ O.lt x y.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.max_elt_spec2". Undo.   exact (@M.max_elt_spec2 _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.max_elt_spec2".   exact (@M.max_elt_spec2 _ _ _ _). Qed.
 Lemma max_elt_spec3 : max_elt s = None -> Empty s.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.max_elt_spec3". Undo.   exact (@M.max_elt_spec3 _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.max_elt_spec3".   exact (@M.max_elt_spec3 _). Qed.
 
 
 Lemma choose_spec3 :
 choose s = Some x -> choose s' = Some y -> Equal s s' -> O.eq x y.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.SetsOn.choose_spec3". Undo.   exact (@M.choose_spec3 _ _ _ _ _ _). Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.SetsOn.choose_spec3".   exact (@M.choose_spec3 _ _ _ _ _ _). Qed.
 
 End Spec.
 
@@ -560,7 +560,7 @@ Module Import MO := OrderedTypeFacts O.
 Definition eq : t -> t -> Prop := Equal.
 
 Instance eq_equiv : Equivalence eq.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.WRaw2SetsOn.eq_equiv". Undo.   firstorder. Qed.
+Proof. hammer_hook "MSetInterface" "MSetInterface.WRaw2SetsOn.eq_equiv".   firstorder. Qed.
 
 Instance : Proper (O.eq==>eq==>iff) In.
 Proof.
@@ -605,13 +605,13 @@ setoid_rewrite Ex; setoid_rewrite Ey; setoid_rewrite Es; intuition.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_compat". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_compat".  
 unfold lt. intros s1 s1' E1 s2 s2' E2.
 setoid_rewrite E1; setoid_rewrite E2; intuition.
 Qed.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_strorder". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_strorder".  
 split.
 
 intros s (x & _ & [(IN,Em)|(IN & y & IN' & LT & Be)]).
@@ -687,7 +687,7 @@ rewrite (EQ x'); auto.
 Qed.
 
 Lemma lt_empty_r : forall s s', Empty s' -> ~ lt s s'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_empty_r". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_empty_r".  
 intros s s' Hs' (x & _ & [(IN,_)|(_ & y & IN & _)]).
 elim (Hs' x IN).
 elim (Hs' y IN).
@@ -697,7 +697,7 @@ Definition Add x s s' := forall y, In y s' <-> O.eq x y \/ In y s.
 
 Lemma lt_empty_l : forall x s1 s2 s2',
 Empty s1 -> Above x s2 -> Add x s2 s2' -> lt s1 s2'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_empty_l". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_empty_l".  
 intros x s1 s2 s2' Em Ab Ad.
 exists x; split.
 intros y Hy; split; intros IN.
@@ -712,7 +712,7 @@ Qed.
 Lemma lt_add_lt : forall x1 x2 s1 s1' s2 s2',
 Above x1 s1 -> Above x2 s2 -> Add x1 s1 s1' -> Add x2 s2 s2' ->
 O.lt x1 x2 -> lt s1' s2'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_add_lt". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_add_lt".  
 intros x1 x2 s1 s1' s2 s2' Ab1 Ab2 Ad1 Ad2 LT.
 exists x1; split; [ | right; split]; auto.
 intros y Hy. rewrite (Ad1 y), (Ad2 y).
@@ -729,7 +729,7 @@ Qed.
 Lemma lt_add_eq : forall x1 x2 s1 s1' s2 s2',
 Above x1 s1 -> Above x2 s2 -> Add x1 s1 s1' -> Add x2 s2 s2' ->
 O.eq x1 x2 -> lt s1 s2 -> lt s1' s2'.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_add_eq". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeSetOrdering.lt_add_eq".  
 intros x1 x2 s1 s1' s2 s2' Ab1 Ab2 Ad1 Ad2 Hx (x & EQ & Disj).
 assert (O.lt x1 x).
 destruct Disj as [(IN,_)|(IN,_)]; auto. rewrite Hx; auto.
@@ -774,7 +774,7 @@ Definition lt := lt_list.
 Hint Unfold lt.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.lt_strorder". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.lt_strorder".  
 split.
 
 assert (forall s s', s=s' -> ~lt s s').
@@ -798,7 +798,7 @@ Qed.
 
 Instance lt_compat' :
 Proper (eqlistA O.eq==>eqlistA O.eq==>iff) lt.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.lt_compat'". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.lt_compat'".  
 apply proper_sym_impl_iff_2; auto with *.
 intros s1 s1' E1 s2 s2' E2 H.
 revert s1' E1 s2' E2.
@@ -811,7 +811,7 @@ Qed.
 Lemma eq_cons :
 forall l1 l2 x y,
 O.eq x y -> eq l1 l2 -> eq (x :: l1) (y :: l2).
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.eq_cons". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.eq_cons".  
 unfold eq; intros l1 l2 x y Exy E12 z.
 split; inversion_clear 1.
 left; MO.order. right; rewrite <- E12; auto.
@@ -821,7 +821,7 @@ Hint Resolve eq_cons.
 
 Lemma cons_CompSpec : forall c x1 x2 l1 l2, O.eq x1 x2 ->
 CompSpec eq lt l1 l2 c -> CompSpec eq lt (x1::l1) (x2::l2) c.
-Proof. try hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.cons_CompSpec". Undo.  
+Proof. hammer_hook "MSetInterface" "MSetInterface.MakeListOrdering.cons_CompSpec".  
 destruct c; simpl; inversion_clear 2; auto with relations.
 Qed.
 Hint Resolve cons_CompSpec.

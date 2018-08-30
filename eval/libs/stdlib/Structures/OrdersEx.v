@@ -45,7 +45,7 @@ Definition lt :=
 (relation_disjunction (O1.lt @@1) (O1.eq * O2.lt))%signature.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PairOrderedType.lt_strorder". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PairOrderedType.lt_strorder".  
 split.
 
 intros (x1,x2); compute. destruct 1.
@@ -60,7 +60,7 @@ right; split; etransitivity; eauto.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PairOrderedType.lt_compat". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PairOrderedType.lt_compat".  
 compute.
 intros (x1,x2) (x1',x2') (X1,X2) (y1,y2) (y1',y2') (Y1,Y2).
 rewrite X1,X2,Y1,Y2; intuition.
@@ -74,7 +74,7 @@ match O1.compare (fst x) (fst y) with
 end.
 
 Lemma compare_spec : forall x y, CompSpec eq lt x y (compare x y).
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PairOrderedType.compare_spec". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PairOrderedType.compare_spec".  
 intros (x1,x2) (y1,y2); unfold compare; simpl.
 destruct (O1.compare_spec x1 y1); try (constructor; compute; auto).
 destruct (O2.compare_spec x2 y2); constructor; compute; auto with relations.
@@ -106,23 +106,23 @@ end.
 Definition lt:=bits_lt.
 
 Lemma bits_lt_antirefl : forall x : positive, ~ bits_lt x x.
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.bits_lt_antirefl". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.bits_lt_antirefl".  
 induction x; simpl; auto.
 Qed.
 
 Lemma bits_lt_trans :
 forall x y z : positive, bits_lt x y -> bits_lt y z -> bits_lt x z.
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.bits_lt_trans". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.bits_lt_trans".  
 induction x; destruct y,z; simpl; eauto; intuition.
 Qed.
 
 Instance lt_compat : Proper (eq==>eq==>iff) lt.
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.lt_compat". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.lt_compat".  
 intros x x' Hx y y' Hy. rewrite Hx, Hy; intuition.
 Qed.
 
 Instance lt_strorder : StrictOrder lt.
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.lt_strorder". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.lt_strorder".  
 split; [ exact bits_lt_antirefl | exact bits_lt_trans ].
 Qed.
 
@@ -138,7 +138,7 @@ match x, y with
 end.
 
 Lemma compare_spec : forall x y, CompSpec eq lt x y (compare x y).
-Proof. try hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.compare_spec". Undo.  
+Proof. hammer_hook "OrdersEx" "OrdersEx.PositiveOrderedTypeBits.compare_spec".  
 unfold eq, lt.
 induction x; destruct y; try constructor; simpl; auto.
 destruct (IHx y); subst; auto.

@@ -29,7 +29,7 @@ end.
 
 Lemma append_assoc_0 :
 forall (i j : positive), append i (xO j) = append (append i (xO xH)) j.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.append_assoc_0". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.append_assoc_0".  
 induction i; intros; destruct j; simpl;
 try rewrite (IHi (xI j));
 try rewrite (IHi (xO j));
@@ -39,7 +39,7 @@ Qed.
 
 Lemma append_assoc_1 :
 forall (i j : positive), append i (xI j) = append (append i (xI xH)) j.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.append_assoc_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.append_assoc_1".  
 induction i; intros; destruct j; simpl;
 try rewrite (IHi (xI j));
 try rewrite (IHi (xO j));
@@ -48,12 +48,12 @@ auto.
 Qed.
 
 Lemma append_neutral_r : forall (i : positive), append i xH = i.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.append_neutral_r". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.append_neutral_r".  
 induction i; simpl; congruence.
 Qed.
 
 Lemma append_neutral_l : forall (i : positive), append xH i = i.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.append_neutral_l". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.append_neutral_l".  
 simpl; auto.
 Qed.
 
@@ -186,33 +186,33 @@ Section CompcertSpec.
 
 Theorem gempty:
 forall (i: key), find i empty = None.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gempty". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gempty".  
 destruct i; simpl; auto.
 Qed.
 
 Theorem gss:
 forall (i: key) (x: A) (m: t A), find i (add i x m) = Some x.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gss". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gss".  
 induction i; destruct m; simpl; auto.
 Qed.
 
 Lemma gleaf : forall (i : key), find i (Leaf : t A) = None.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gleaf". Undo.   exact gempty. Qed.
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gleaf".   exact gempty. Qed.
 
 Theorem gso:
 forall (i j: key) (x: A) (m: t A),
 i <> j -> find i (add j x m) = find i m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gso". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gso".  
 induction i; intros; destruct j; destruct m; simpl;
 try rewrite <- (gleaf i); auto; try apply IHi; congruence.
 Qed.
 
 Lemma rleaf : forall (i : key), remove i Leaf = Leaf.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.rleaf". Undo.   destruct i; simpl; auto. Qed.
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.rleaf".   destruct i; simpl; auto. Qed.
 
 Theorem grs:
 forall (i: key) (m: t A), find i (remove i m) = None.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.grs". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.grs".  
 induction i; destruct m.
 simpl; auto.
 destruct m1; destruct o; destruct m2 as [ | ll oo rr]; simpl; auto.
@@ -233,7 +233,7 @@ Qed.
 Theorem gro:
 forall (i j: key) (m: t A),
 i <> j -> find i (remove j m) = find i m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gro". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gro".  
 induction i; intros; destruct j; destruct m;
 try rewrite (rleaf (xI j));
 try rewrite (rleaf (xO j));
@@ -262,7 +262,7 @@ Qed.
 Lemma xelements_correct:
 forall (m: t A) (i j : key) (v: A),
 find i m = Some v -> List.In (append j i, v) (xelements m j).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_correct". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_correct".  
 induction m; intros.
 rewrite (gleaf i) in H; discriminate.
 destruct o; destruct i; simpl; simpl in H.
@@ -279,7 +279,7 @@ Qed.
 Theorem elements_correct:
 forall (m: t A) (i: key) (v: A),
 find i m = Some v -> List.In (i, v) (elements m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_correct". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_correct".  
 intros m i v H.
 exact (xelements_correct m i xH H).
 Qed.
@@ -295,7 +295,7 @@ end.
 Lemma xfind_left :
 forall (j i : key) (m1 m2 : t A) (o : option A) (v : A),
 xfind i (append j (xO xH)) m1 = Some v -> xfind i j (Node m1 o m2) = Some v.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xfind_left". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xfind_left".  
 induction j; intros; destruct i; simpl; simpl in H; auto; try congruence.
 destruct i; simpl in *; auto.
 Qed.
@@ -303,7 +303,7 @@ Qed.
 Lemma xelements_ii :
 forall (m: t A) (i j : key) (v: A),
 List.In (xI i, v) (xelements m (xI j)) -> List.In (i, v) (xelements m j).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_ii". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_ii".  
 induction m.
 simpl; auto.
 intros; destruct o; simpl; simpl in H; destruct (in_app_or _ _ _ H);
@@ -319,7 +319,7 @@ Qed.
 Lemma xelements_io :
 forall (m: t A) (i j : key) (v: A),
 ~List.In (xI i, v) (xelements m (xO j)).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_io". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_io".  
 induction m.
 simpl; auto.
 intros; destruct o; simpl; intro H; destruct (in_app_or _ _ _ H).
@@ -334,7 +334,7 @@ Qed.
 Lemma xelements_oo :
 forall (m: t A) (i j : key) (v: A),
 List.In (xO i, v) (xelements m (xO j)) -> List.In (i, v) (xelements m j).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_oo". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_oo".  
 induction m.
 simpl; auto.
 intros; destruct o; simpl; simpl in H; destruct (in_app_or _ _ _ H);
@@ -350,7 +350,7 @@ Qed.
 Lemma xelements_oi :
 forall (m: t A) (i j : key) (v: A),
 ~List.In (xO i, v) (xelements m (xI j)).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_oi". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_oi".  
 induction m.
 simpl; auto.
 intros; destruct o; simpl; intro H; destruct (in_app_or _ _ _ H).
@@ -365,7 +365,7 @@ Qed.
 Lemma xelements_ih :
 forall (m1 m2: t A) (o: option A) (i : key) (v: A),
 List.In (xI i, v) (xelements (Node m1 o m2) xH) -> List.In (i, v) (xelements m2 xH).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_ih". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_ih".  
 destruct o; simpl; intros; destruct (in_app_or _ _ _ H).
 absurd (List.In (xI i, v) (xelements m1 2)); auto; apply xelements_io; auto.
 destruct (in_inv H0).
@@ -378,7 +378,7 @@ Qed.
 Lemma xelements_oh :
 forall (m1 m2: t A) (o: option A) (i : key) (v: A),
 List.In (xO i, v) (xelements (Node m1 o m2) xH) -> List.In (i, v) (xelements m1 xH).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_oh". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_oh".  
 destruct o; simpl; intros; destruct (in_app_or _ _ _ H).
 apply xelements_oo; auto.
 destruct (in_inv H0).
@@ -391,7 +391,7 @@ Qed.
 Lemma xelements_hi :
 forall (m: t A) (i : key) (v: A),
 ~List.In (xH, v) (xelements m (xI i)).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_hi". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_hi".  
 induction m; intros.
 simpl; auto.
 destruct o; simpl; intro H; destruct (in_app_or _ _ _ H).
@@ -406,7 +406,7 @@ Qed.
 Lemma xelements_ho :
 forall (m: t A) (i : key) (v: A),
 ~List.In (xH, v) (xelements m (xO i)).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_ho". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_ho".  
 induction m; intros.
 simpl; auto.
 destruct o; simpl; intro H; destruct (in_app_or _ _ _ H).
@@ -420,14 +420,14 @@ Qed.
 
 Lemma find_xfind_h :
 forall (m: t A) (i: key), find i m = xfind i xH m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.find_xfind_h". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.find_xfind_h".  
 destruct i; simpl; auto.
 Qed.
 
 Lemma xelements_complete:
 forall (i j : key) (m: t A) (v: A),
 List.In (i, v) (xelements m j) -> xfind i j m = Some v.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_complete". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_complete".  
 induction i; simpl; intros; destruct j; simpl.
 apply IHi; apply xelements_ii; auto.
 absurd (List.In (xI i, v) (xelements m (xO j))); auto; apply xelements_io.
@@ -455,7 +455,7 @@ Qed.
 Theorem elements_complete:
 forall (m: t A) (i: key) (v: A),
 List.In (i, v) (elements m) -> find i m = Some v.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_complete". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_complete".  
 intros m i v H.
 unfold elements in H.
 rewrite find_xfind_h.
@@ -464,7 +464,7 @@ Qed.
 
 Lemma cardinal_1 :
 forall (m: t A), cardinal m = length (elements m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.cardinal_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.cardinal_1".  
 unfold elements.
 intros m; set (p:=1); clearbody p; revert m p.
 induction m; simpl; auto; intros.
@@ -493,12 +493,12 @@ Global Instance ltk_strorder : StrictOrder lt_key := _.
 
 Lemma mem_find :
 forall m x, mem x m = match find x m with None => false | _ => true end.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mem_find". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mem_find".  
 induction m; destruct x; simpl; auto.
 Qed.
 
 Lemma Empty_alt : forall m, Empty m <-> forall a, find a m = None.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.Empty_alt". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.Empty_alt".  
 unfold Empty, MapsTo.
 intuition.
 generalize (H a).
@@ -508,7 +508,7 @@ rewrite H in H0; discriminate.
 Qed.
 
 Lemma Empty_Node : forall l o r, Empty (Node l o r) <-> o=None /\ Empty l /\ Empty r.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.Empty_Node". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.Empty_Node".  
 intros l o r.
 split.
 rewrite Empty_alt.
@@ -529,13 +529,13 @@ Qed.
 Section FMapSpec.
 
 Lemma mem_1 : forall m x, In x m -> mem x m = true.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mem_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mem_1".  
 unfold In, MapsTo; intros m x; rewrite mem_find.
 destruct 1 as (e0,H0); rewrite H0; auto.
 Qed.
 
 Lemma mem_2 : forall m x, mem x m = true -> In x m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mem_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mem_2".  
 unfold In, MapsTo; intros m x; rewrite mem_find.
 destruct (find x m).
 exists a; auto.
@@ -547,21 +547,21 @@ Variable x y z : key.
 Variable e e' : A.
 
 Lemma MapsTo_1 : E.eq x y -> MapsTo x e m -> MapsTo y e m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.MapsTo_1". Undo.   intros; rewrite <- H; auto. Qed.
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.MapsTo_1".   intros; rewrite <- H; auto. Qed.
 
 Lemma find_1 : MapsTo x e m -> find x m = Some e.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.find_1". Undo.   unfold MapsTo; auto. Qed.
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.find_1".   unfold MapsTo; auto. Qed.
 
 Lemma find_2 : find x m = Some e -> MapsTo x e m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.find_2". Undo.   red; auto. Qed.
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.find_2".   red; auto. Qed.
 
 Lemma empty_1 : Empty empty.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.empty_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.empty_1".  
 rewrite Empty_alt; apply gempty.
 Qed.
 
 Lemma is_empty_1 : Empty m -> is_empty m = true.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.is_empty_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.is_empty_1".  
 induction m; simpl; auto.
 rewrite Empty_Node.
 intros (H,(H0,H1)).
@@ -570,7 +570,7 @@ rewrite IHt0_1; simpl; auto.
 Qed.
 
 Lemma is_empty_2 : is_empty m = true -> Empty m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.is_empty_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.is_empty_2".  
 induction m; simpl; auto.
 rewrite Empty_alt.
 intros _; exact gempty.
@@ -581,26 +581,26 @@ intro H; destruct (andb_prop _ _ H); intuition.
 Qed.
 
 Lemma add_1 : E.eq x y -> MapsTo y e (add x e m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.add_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.add_1".  
 unfold MapsTo.
 intro H; rewrite H; clear H.
 apply gss.
 Qed.
 
 Lemma add_2 : ~ E.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.add_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.add_2".  
 unfold MapsTo.
 intros; rewrite gso; auto.
 Qed.
 
 Lemma add_3 : ~ E.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.add_3". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.add_3".  
 unfold MapsTo.
 intro H; rewrite gso; auto.
 Qed.
 
 Lemma remove_1 : E.eq x y -> ~ In y (remove x m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.remove_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.remove_1".  
 intros; intro.
 generalize (mem_1 H0).
 rewrite mem_find.
@@ -611,13 +611,13 @@ intros; discriminate.
 Qed.
 
 Lemma remove_2 : ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.remove_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.remove_2".  
 unfold MapsTo.
 intro H; rewrite gro; auto.
 Qed.
 
 Lemma remove_3 : MapsTo y e (remove x m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.remove_3". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.remove_3".  
 unfold MapsTo.
 destruct (E.eq_dec x y).
 subst.
@@ -627,7 +627,7 @@ Qed.
 
 Lemma elements_1 :
 MapsTo x e m -> InA eq_key_elt (x,e) (elements m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_1".  
 unfold MapsTo.
 rewrite InA_alt.
 intro H.
@@ -639,7 +639,7 @@ Qed.
 
 Lemma elements_2 :
 InA eq_key_elt (x,e) (elements m) -> MapsTo x e m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_2".  
 unfold MapsTo.
 rewrite InA_alt.
 intros ((e0,a),(H,H0)).
@@ -649,7 +649,7 @@ Qed.
 
 Lemma xelements_bits_lt_1 : forall p p0 q m v,
 List.In (p0,v) (xelements m (append p (xO q))) -> E.bits_lt p0 p.
-Proof using. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_bits_lt_1". Undo.  
+Proof using. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_bits_lt_1".  
 intros.
 generalize (xelements_complete _ _ _ _ H); clear H; intros.
 revert p0 H.
@@ -658,7 +658,7 @@ Qed.
 
 Lemma xelements_bits_lt_2 : forall p p0 q m v,
 List.In (p0,v) (xelements m (append p (xI q))) -> E.bits_lt p p0.
-Proof using. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_bits_lt_2". Undo.  
+Proof using. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_bits_lt_2".  
 intros.
 generalize (xelements_complete _ _ _ _ H); clear H; intros.
 revert p0 H.
@@ -666,7 +666,7 @@ induction p; destruct p0; simpl; intros; eauto; try discriminate.
 Qed.
 
 Lemma xelements_sort : forall p, sort lt_key (xelements m p).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_sort". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xelements_sort".  
 induction m.
 simpl; auto.
 destruct o; simpl; intros.
@@ -703,13 +703,13 @@ eapply xelements_bits_lt_2; eauto.
 Qed.
 
 Lemma elements_3 : sort lt_key (elements m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_3". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_3".  
 unfold elements.
 apply xelements_sort; auto.
 Qed.
 
 Lemma elements_3w : NoDupA eq_key (elements m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_3w". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.elements_3w".  
 apply ME.Sort_NoDupA.
 apply elements_3.
 Qed.
@@ -743,7 +743,7 @@ End A.
 Lemma xgmapi:
 forall (A B: Type) (f: key -> A -> B) (i j : key) (m: t A),
 find i (xmapi f m j) = option_map (f (append j i)) (find i m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xgmapi". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xgmapi".  
 induction i; intros; destruct m; simpl; auto.
 rewrite (append_assoc_1 j i); apply IHi.
 rewrite (append_assoc_0 j i); apply IHi.
@@ -753,7 +753,7 @@ Qed.
 Theorem gmapi:
 forall (A B: Type) (f: key -> A -> B) (i: key) (m: t A),
 find i (mapi f m) = option_map (f i) (find i m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gmapi". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gmapi".  
 intros.
 unfold mapi.
 replace (f i) with (f (append xH i)).
@@ -765,7 +765,7 @@ Lemma mapi_1 :
 forall (elt elt':Type)(m: t elt)(x:key)(e:elt)(f:key->elt->elt'),
 MapsTo x e m ->
 exists y, E.eq y x /\ MapsTo x (f y e) (mapi f m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mapi_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mapi_1".  
 intros.
 exists x.
 split; [red; auto|].
@@ -779,7 +779,7 @@ Qed.
 Lemma mapi_2 :
 forall (elt elt':Type)(m: t elt)(x:key)(f:key->elt->elt'),
 In x (mapi f m) -> In x m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mapi_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.mapi_2".  
 intros.
 apply mem_2.
 rewrite mem_find.
@@ -792,14 +792,14 @@ Qed.
 
 Lemma map_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)(f:elt->elt'),
 MapsTo x e m -> MapsTo x (f e) (map f m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.map_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.map_1".  
 intros; unfold map.
 destruct (mapi_1 (fun _ => f) H); intuition.
 Qed.
 
 Lemma map_2 : forall (elt elt':Type)(m: t elt)(x:key)(f:elt->elt'),
 In x (map f m) -> In x m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.map_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.map_2".  
 intros; unfold map in *; eapply mapi_2; eauto.
 Qed.
 
@@ -817,7 +817,7 @@ end.
 
 Lemma xgmap2_l : forall (i : key) (m : t A),
 f None None = None -> find i (xmap2_l m) = f (find i m) None.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xgmap2_l". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xgmap2_l".  
 induction i; intros; destruct m; simpl; auto.
 Qed.
 
@@ -829,7 +829,7 @@ end.
 
 Lemma xgmap2_r : forall (i : key) (m : t B),
 f None None = None -> find i (xmap2_r m) = f None (find i m).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xgmap2_r". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xgmap2_r".  
 induction i; intros; destruct m; simpl; auto.
 Qed.
 
@@ -846,7 +846,7 @@ end.
 Lemma gmap2: forall (i: key)(m1:t A)(m2: t B),
 f None None = None ->
 find i (_map2 m1 m2) = f (find i m1) (find i m2).
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gmap2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.gmap2".  
 induction i; intros; destruct m1; destruct m2; simpl; auto;
 try apply xgmap2_r; try apply xgmap2_l; auto.
 Qed.
@@ -860,7 +860,7 @@ Lemma map2_1 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x m \/ In x m' ->
 find x (map2 f m m') = f (find x m) (find x m').
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.map2_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.map2_1".  
 intros.
 unfold map2.
 rewrite gmap2; auto.
@@ -905,7 +905,7 @@ end.
 Lemma xfoldi_1 :
 forall m v i,
 xfoldi m v i = fold_left (fun a p => f (fst p) (snd p) a) (xelements m i) v.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xfoldi_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.xfoldi_1".  
 set (F := fun a p => f (fst p) (snd p) a).
 induction m; intros; simpl; auto.
 destruct o.
@@ -926,7 +926,7 @@ End Fold.
 Lemma fold_1 :
 forall (A:Type)(m:t A)(B:Type)(i : B) (f : key -> A -> B -> B),
 fold f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.fold_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.fold_1".  
 intros; unfold fold, elements.
 rewrite xfoldi_1; reflexivity.
 Qed.
@@ -953,7 +953,7 @@ Definition Equivb (A:Type)(cmp: A->A->bool) := Equiv (Cmp cmp).
 
 Lemma equal_1 : forall (A:Type)(m m':t A)(cmp:A->A->bool),
 Equivb cmp m m' -> equal cmp m m' = true.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.equal_1". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.equal_1".  
 induction m.
 
 destruct 1.
@@ -1007,7 +1007,7 @@ Qed.
 
 Lemma equal_2 : forall (A:Type)(m m':t A)(cmp:A->A->bool),
 equal cmp m m' = true -> Equivb cmp m m'.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMap.equal_2". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMap.equal_2".  
 induction m.
 
 simpl.
@@ -1066,7 +1066,7 @@ Import PositiveMap.
 Theorem gsspec:
 forall (A:Type)(i j: key) (x: A) (m: t A),
 find i (add j x m) = if E.eq_dec i j then Some x else find i m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.gsspec". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.gsspec".  
 intros.
 destruct (E.eq_dec i j) as [ ->|]; [ apply gss | apply gso; auto ].
 Qed.
@@ -1075,7 +1075,7 @@ Qed.
 Theorem gsident:
 forall (A:Type)(i: key) (m: t A) (v: A),
 find i m = Some v -> add i v m = m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.gsident". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.gsident".  
 induction i; intros; destruct m; simpl; simpl in H; try congruence.
 rewrite (IHi m2 v H); congruence.
 rewrite (IHi m1 v H); congruence.
@@ -1085,7 +1085,7 @@ Lemma xmap2_lr :
 forall (A B : Type)(f g: option A -> option A -> option B)(m : t A),
 (forall (i j : option A), f i j = g j i) ->
 xmap2_l f m = xmap2_r g m.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.xmap2_lr". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.xmap2_lr".  
 induction m; intros; simpl; auto.
 rewrite IHm1; auto.
 rewrite IHm2; auto.
@@ -1097,7 +1097,7 @@ forall (A B: Type) (f g: option A -> option A -> option B),
 (forall (i j: option A), f i j = g j i) ->
 forall (m1 m2: t A),
 _map2 f m1 m2 = _map2 g m2 m1.
-Proof. try hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.map2_commut". Undo.  
+Proof. hammer_hook "FMapPositive" "FMapPositive.PositiveMapAdditionalFacts.map2_commut".  
 intros A B f g Eq1.
 assert (Eq2: forall (i j: option A), g i j = f j i).
 intros; auto.

@@ -23,41 +23,41 @@ Local Open Scope R_scope.
 
 
 Lemma eps2_Rgt_R0 : forall eps:R, eps > 0 -> eps * / 2 > 0.
-Proof. try hammer_hook "Rlimit" "Rlimit.eps2_Rgt_R0". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.eps2_Rgt_R0".  
 intros; fourier.
 Qed.
 
 
 Lemma eps2 : forall eps:R, eps * / 2 + eps * / 2 = eps.
-Proof. try hammer_hook "Rlimit" "Rlimit.eps2". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.eps2".  
 intro esp.
 apply eq_sym, double_var.
 Qed.
 
 
 Lemma eps4 : forall eps:R, eps * / (2 + 2) + eps * / (2 + 2) = eps * / 2.
-Proof. try hammer_hook "Rlimit" "Rlimit.eps4". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.eps4".  
 intro eps.
 field.
 Qed.
 
 
 Lemma Rlt_eps2_eps : forall eps:R, eps > 0 -> eps * / 2 < eps.
-Proof. try hammer_hook "Rlimit" "Rlimit.Rlt_eps2_eps". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.Rlt_eps2_eps".  
 intros.
 fourier.
 Qed.
 
 
 Lemma Rlt_eps4_eps : forall eps:R, eps > 0 -> eps * / (2 + 2) < eps.
-Proof. try hammer_hook "Rlimit" "Rlimit.Rlt_eps4_eps". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.Rlt_eps4_eps".  
 intros.
 fourier.
 Qed.
 
 
 Lemma prop_eps : forall r:R, (forall eps:R, eps > 0 -> r < eps) -> r <= 0.
-Proof. try hammer_hook "Rlimit" "Rlimit.prop_eps". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.prop_eps".  
 intros; elim (Rtotal_order r 0); intro.
 apply Rlt_le; assumption.
 elim H0; intro.
@@ -71,7 +71,7 @@ Definition mul_factor (l l':R) := / (1 + (Rabs l + Rabs l')).
 
 
 Lemma mul_factor_wd : forall l l':R, 1 + (Rabs l + Rabs l') <> 0.
-Proof. try hammer_hook "Rlimit" "Rlimit.mul_factor_wd". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.mul_factor_wd".  
 intros; rewrite (Rplus_comm 1 (Rabs l + Rabs l')); apply tech_Rplus.
 cut (Rabs (l + l') <= Rabs l + Rabs l').
 cut (0 <= Rabs (l + l')).
@@ -83,7 +83,7 @@ Qed.
 
 
 Lemma mul_factor_gt : forall eps l l':R, eps > 0 -> eps * mul_factor l l' > 0.
-Proof. try hammer_hook "Rlimit" "Rlimit.mul_factor_gt". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.mul_factor_gt".  
 intros; unfold Rgt; rewrite <- (Rmult_0_r eps);
 apply Rmult_lt_compat_l.
 assumption.
@@ -161,7 +161,7 @@ limit_in R_met R_met f D x0 l.
 Lemma tech_limit :
 forall (f:R -> R) (D:R -> Prop) (l x0:R),
 D x0 -> limit1_in f D l x0 -> l = f x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.tech_limit". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.tech_limit".  
 intros f D l x0 H H0.
 case (Rabs_pos (f x0 - l)); intros H1.
 absurd (R_met.(@dist) (f x0) l < R_met.(@dist) (f x0) l).
@@ -176,13 +176,13 @@ Qed.
 Lemma tech_limit_contr :
 forall (f:R -> R) (D:R -> Prop) (l x0:R),
 D x0 -> l <> f x0 -> ~ limit1_in f D l x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.tech_limit_contr". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.tech_limit_contr".  
 intros; generalize (tech_limit f D l x0); tauto.
 Qed.
 
 
 Lemma lim_x : forall (D:R -> Prop) (x0:R), limit1_in (fun x:R => x) D x0 x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.lim_x". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.lim_x".  
 unfold limit1_in; unfold limit_in; simpl; intros;
 split with eps; split; auto; intros; elim H0; intros;
 auto.
@@ -193,7 +193,7 @@ Lemma limit_plus :
 forall (f g:R -> R) (D:R -> Prop) (l l' x0:R),
 limit1_in f D l x0 ->
 limit1_in g D l' x0 -> limit1_in (fun x:R => f x + g x) D (l + l') x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_plus". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_plus".  
 intros; unfold limit1_in; unfold limit_in; simpl;
 intros; elim (H (eps * / 2) (eps2_Rgt_R0 eps H1));
 elim (H0 (eps * / 2) (eps2_Rgt_R0 eps H1)); simpl;
@@ -216,7 +216,7 @@ Qed.
 Lemma limit_Ropp :
 forall (f:R -> R) (D:R -> Prop) (l x0:R),
 limit1_in f D l x0 -> limit1_in (fun x:R => - f x) D (- l) x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_Ropp". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_Ropp".  
 unfold limit1_in; unfold limit_in; simpl; intros;
 elim (H eps H0); clear H; intros; elim H; clear H;
 intros; split with x; split; auto; intros; generalize (H1 x1 H2);
@@ -231,7 +231,7 @@ Lemma limit_minus :
 forall (f g:R -> R) (D:R -> Prop) (l l' x0:R),
 limit1_in f D l x0 ->
 limit1_in g D l' x0 -> limit1_in (fun x:R => f x - g x) D (l - l') x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_minus". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_minus".  
 intros; unfold Rminus; generalize (limit_Ropp g D l' x0 H0); intro;
 exact (limit_plus f (fun x:R => - g x) D l (- l') x0 H H1).
 Qed.
@@ -240,7 +240,7 @@ Qed.
 Lemma limit_free :
 forall (f:R -> R) (D:R -> Prop) (x x0:R),
 limit1_in (fun h:R => f x) D (f x) x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_free". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_free".  
 unfold limit1_in; unfold limit_in; simpl; intros;
 split with eps; split; auto; intros; elim (R_dist_refl (f x) (f x));
 intros a b; rewrite (b (eq_refl (f x))); unfold Rgt in H;
@@ -252,7 +252,7 @@ Lemma limit_mul :
 forall (f g:R -> R) (D:R -> Prop) (l l' x0:R),
 limit1_in f D l x0 ->
 limit1_in g D l' x0 -> limit1_in (fun x:R => f x * g x) D (l * l') x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_mul". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_mul".  
 intros; unfold limit1_in; unfold limit_in; simpl;
 intros;
 elim (H (Rmin 1 (eps * mul_factor l l')) (mul_factor_gt_f eps l l' H1));
@@ -316,7 +316,7 @@ forall alp:R, alp > 0 ->  exists x : R, D x /\ R_dist x a < alp.
 Lemma single_limit :
 forall (f:R -> R) (D:R -> Prop) (l l' x0:R),
 adhDa D x0 -> limit1_in f D l x0 -> limit1_in f D l' x0 -> l = l'.
-Proof. try hammer_hook "Rlimit" "Rlimit.single_limit". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.single_limit".  
 unfold limit1_in; unfold limit_in; intros.
 simpl in *.
 cut (forall eps:R, eps > 0 -> dist R_met l l' < 2 * eps).
@@ -391,7 +391,7 @@ Lemma limit_comp :
 forall (f g:R -> R) (Df Dg:R -> Prop) (l l' x0:R),
 limit1_in f Df l x0 ->
 limit1_in g Dg l' l -> limit1_in (fun x:R => g (f x)) (Dgf Df Dg f) l' x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_comp". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_comp".  
 unfold limit1_in, limit_in, Dgf; simpl.
 intros f g Df Dg l l' x0 Hf Hg eps eps_pos.
 elim (Hg eps eps_pos).
@@ -408,7 +408,7 @@ Qed.
 Lemma limit_inv :
 forall (f:R -> R) (D:R -> Prop) (l x0:R),
 limit1_in f D l x0 -> l <> 0 -> limit1_in (fun x:R => / f x) D (/ l) x0.
-Proof. try hammer_hook "Rlimit" "Rlimit.limit_inv". Undo.  
+Proof. hammer_hook "Rlimit" "Rlimit.limit_inv".  
 unfold limit1_in; unfold limit_in; simpl;
 unfold R_dist; intros; elim (H (Rabs l / 2)).
 intros delta1 H2; elim (H (eps * (Rsqr l / 2))).

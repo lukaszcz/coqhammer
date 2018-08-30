@@ -54,7 +54,7 @@ autorewrite with cyclic.
 Ltac zcongruence := repeat red; intros; zify; congruence.
 
 Instance eq_equiv : Equivalence eq.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.eq_equiv". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.eq_equiv".  
 unfold eq. firstorder.
 Qed.
 
@@ -67,49 +67,49 @@ Program Instance sub_wd : Proper (eq ==> eq ==> eq) sub.
 Program Instance mul_wd : Proper (eq ==> eq ==> eq) mul.
 
 Theorem gt_wB_1 : 1 < wB.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.gt_wB_1". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.gt_wB_1".  
 unfold base. apply Zpower_gt_1; unfold Z.lt; auto with zarith.
 Qed.
 
 Theorem gt_wB_0 : 0 < wB.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.gt_wB_0". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.gt_wB_0".  
 pose proof gt_wB_1; auto with zarith.
 Qed.
 
 Lemma one_mod_wB : 1 mod wB = 1.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.one_mod_wB". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.one_mod_wB".  
 rewrite Zmod_small. reflexivity. split. auto with zarith. apply gt_wB_1.
 Qed.
 
 Lemma succ_mod_wB : forall n : Z, (n + 1) mod wB = ((n mod wB) + 1) mod wB.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.succ_mod_wB". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.succ_mod_wB".  
 intro n. rewrite <- one_mod_wB at 2. now rewrite <- Zplus_mod.
 Qed.
 
 Lemma pred_mod_wB : forall n : Z, (n - 1) mod wB = ((n mod wB) - 1) mod wB.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.pred_mod_wB". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.pred_mod_wB".  
 intro n. rewrite <- one_mod_wB at 2. now rewrite Zminus_mod.
 Qed.
 
 Lemma NZ_to_Z_mod : forall n, [| n |] mod wB = [| n |].
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.NZ_to_Z_mod". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.NZ_to_Z_mod".  
 intro n; rewrite Zmod_small. reflexivity. apply ZnZ.spec_to_Z.
 Qed.
 
 Theorem pred_succ : forall n, P (S n) == n.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.pred_succ". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.pred_succ".  
 intro n. zify.
 rewrite <- pred_mod_wB.
 replace ([| n |] + 1 - 1)%Z with [| n |] by ring. apply NZ_to_Z_mod.
 Qed.
 
 Theorem one_succ : one == succ zero.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.one_succ". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.one_succ".  
 zify; simpl Z.add. now rewrite one_mod_wB.
 Qed.
 
 Theorem two_succ : two == succ one.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.two_succ". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.two_succ".  
 reflexivity.
 Qed.
 
@@ -124,12 +124,12 @@ Hypothesis AS : forall n, A n <-> A (S n).
 Let B (n : Z) := A (ZnZ.of_Z n).
 
 Lemma B0 : B 0.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.B0". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.B0".  
 unfold B. apply A0.
 Qed.
 
 Lemma BS : forall n : Z, 0 <= n -> n < wB - 1 -> B n -> B (n + 1).
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.BS". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.BS".  
 intros n H1 H2 H3.
 unfold B in *. apply AS in H3.
 setoid_replace (ZnZ.of_Z (n + 1)) with (S (ZnZ.of_Z n)). assumption.
@@ -143,7 +143,7 @@ Theorem Zbounded_induction :
 Q 0 ->
 (forall n, 0 <= n -> n < b - 1 -> Q n -> Q (n + 1)) ->
 forall n, 0 <= n -> n < b -> Q n)%Z.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.Zbounded_induction". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.Zbounded_induction".  
 intros Q b Q0 QS.
 set (Q' := fun n => (n < b /\ Q n) \/ (b <= n)).
 assert (H : forall n, 0 <= n -> Q' n).
@@ -159,14 +159,14 @@ assumption. now apply Z.le_ngt in H3.
 Qed.
 
 Lemma B_holds : forall n : Z, 0 <= n < wB -> B n.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.B_holds". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.B_holds".  
 intros n [H1 H2].
 apply Zbounded_induction with wB.
 apply B0. apply BS. assumption. assumption.
 Qed.
 
 Theorem bi_induction : forall n, A n.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.bi_induction". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.bi_induction".  
 intro n. setoid_replace n with (ZnZ.of_Z (ZnZ.to_Z n)).
 apply B_holds. apply ZnZ.spec_to_Z.
 red. symmetry. apply ZnZ.of_Z_correct.
@@ -176,13 +176,13 @@ Qed.
 End Induction.
 
 Theorem add_0_l : forall n, 0 + n == n.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.add_0_l". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.add_0_l".  
 intro n. zify.
 rewrite Z.add_0_l. apply Zmod_small. apply ZnZ.spec_to_Z.
 Qed.
 
 Theorem add_succ_l : forall n m, (S n) + m == S (n + m).
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.add_succ_l". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.add_succ_l".  
 intros n m. zify.
 rewrite succ_mod_wB. repeat rewrite Zplus_mod_idemp_l; try apply gt_wB_0.
 rewrite <- (Z.add_assoc ([| n |] mod wB) 1 [| m |]). rewrite Zplus_mod_idemp_l.
@@ -190,24 +190,24 @@ rewrite (Z.add_comm 1 [| m |]); now rewrite Z.add_assoc.
 Qed.
 
 Theorem sub_0_r : forall n, n - 0 == n.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.sub_0_r". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.sub_0_r".  
 intro n. zify. rewrite Z.sub_0_r. apply NZ_to_Z_mod.
 Qed.
 
 Theorem sub_succ_r : forall n m, n - (S m) == P (n - m).
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.sub_succ_r". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.sub_succ_r".  
 intros n m. zify. rewrite Zminus_mod_idemp_r, Zminus_mod_idemp_l.
 now replace ([|n|] - ([|m|] + 1))%Z with ([|n|] - [|m|] - 1)%Z
 by ring.
 Qed.
 
 Theorem mul_0_l : forall n, 0 * n == 0.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.mul_0_l". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.mul_0_l".  
 intro n. now zify.
 Qed.
 
 Theorem mul_succ_l : forall n m, (S n) * m == n * m + m.
-Proof. try hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.mul_succ_l". Undo.  
+Proof. hammer_hook "NZCyclic" "NZCyclic.NZCyclicAxiomsMod.mul_succ_l".  
 intros n m. zify. rewrite Zplus_mod_idemp_l, Zmult_mod_idemp_l.
 now rewrite Z.mul_add_distr_r, Z.mul_1_l.
 Qed.

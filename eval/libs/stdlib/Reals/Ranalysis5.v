@@ -28,7 +28,7 @@ lb < ub ->
 (forall x, f lb <= x -> x <= f ub -> (comp f g) x = id x) ->
 (forall x , f lb <= x -> x <= f ub -> lb <= g x <= ub) ->
 (forall x y, f lb <= x -> x < y -> y <= f ub -> g x < g y).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.f_incr_implies_g_incr_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.f_incr_implies_g_incr_interv".  
 intros f g lb ub lb_lt_ub f_incr f_eq_g g_ok x y lb_le_x x_lt_y y_le_ub.
 assert (x_encad : f lb <= x <= f ub).
 split ; [assumption | apply Rle_trans with (r2:=y) ; [apply Rlt_le|] ; assumption].
@@ -74,7 +74,7 @@ Qed.
 Lemma derivable_pt_id_interv : forall (lb ub x:R),
 lb <= x <= ub ->
 derivable_pt id x.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_id_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_id_interv".  
 intros.
 reg.
 Qed.
@@ -84,7 +84,7 @@ Lemma pr_nu_var2_interv : forall (f g : R -> R) (lb ub x : R) (pr1 : derivable_p
 lb < ub ->
 lb < x < ub ->
 (forall h : R, lb < h < ub -> f h = g h) -> derive_pt f x pr1 = derive_pt g x pr2.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.pr_nu_var2_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.pr_nu_var2_interv".  
 intros f g lb ub x Prf Prg lb_lt_ub x_encad local_eq.
 assert (forall x l, lb < x < ub -> (derivable_pt_abs f x l <-> derivable_pt_abs g x l)).
 intros a l a_encad.
@@ -184,7 +184,7 @@ Lemma leftinv_is_rightinv : forall (f g:R->R),
 (forall x y, x < y -> f x < f y) ->
 (forall x, (comp f g) x = id x) ->
 (forall x, (comp g f) x = id x).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.leftinv_is_rightinv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.leftinv_is_rightinv".  
 intros f g f_incr Hyp x.
 assert (forall x, f (g (f x)) = f x).
 intros ; apply Hyp.
@@ -213,7 +213,7 @@ Lemma leftinv_is_rightinv_interv : forall (f g:R->R) (lb ub:R),
 forall x,
 lb <= x <= ub ->
 (comp g f) x = id x.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.leftinv_is_rightinv_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.leftinv_is_rightinv_interv".  
 intros f g lb ub f_incr_interv Hyp g_wf x x_encad.
 assert(f_inj : forall x y, lb <= x <= ub -> lb <= y <= ub -> f x = f y -> x = y).
 intros a b a_encad b_encad fa_eq_fb.
@@ -246,7 +246,7 @@ Qed.
 Lemma IVT_interv_prelim0 : forall (x y:R) (P:R->bool) (N:nat),
 x < y ->
 x <= Dichotomy_ub x y P N <= y /\ x <= Dichotomy_lb x y P N <= y.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.IVT_interv_prelim0". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.IVT_interv_prelim0".  
 assert (Sublemma : forall x y lb ub, lb <= x <= ub /\ lb <= y <= ub -> lb <= (x+y) / 2 <= ub).
 intros x y lb ub Hyp.
 lra.
@@ -265,7 +265,7 @@ Lemma IVT_interv_prelim1 : forall (x y x0:R) (D : R -> bool),
 x < y ->
 Un_cv (dicho_up x y D) x0 ->
 x <= x0 <= y.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.IVT_interv_prelim1". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.IVT_interv_prelim1".  
 intros x y x0 D x_lt_y bnd.
 assert (Main : forall n, x <= dicho_up x y D n <= y).
 intro n. unfold dicho_up.
@@ -287,7 +287,7 @@ x < y ->
 f x < 0 ->
 0 < f y ->
 {z : R | x <= z <= y /\ f z = 0}.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.IVT_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.IVT_interv".  
 intros.
 cut (x <= y).
 intro.
@@ -436,7 +436,7 @@ lb < ub ->
 f lb <= y <= f ub ->
 (forall x, lb <=  x <= ub -> continuity_pt f x) ->
 {x | lb <= x <= ub /\ f x = y}.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.f_interv_is_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.f_interv_is_interv".  
 intros f lb ub y lb_lt_ub y_encad f_cont_interv.
 case y_encad ; intro y_encad1.
 case_le y_encad1 ; intros y_encad2 y_encad3 ; case_le y_encad3.
@@ -475,7 +475,7 @@ Lemma continuity_pt_recip_prelim : forall (f g:R->R) (lb ub : R) (Pr1:lb < ub),
 forall b,
 f lb < b < f ub ->
 continuity_pt g b.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.continuity_pt_recip_prelim". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.continuity_pt_recip_prelim".  
 assert (Sublemma : forall x y z, Rmax x y < z <-> x < z /\ y < z).
 intros x y z. split.
 unfold Rmax. case (Rle_dec x y) ; intros Hyp Hyp2.
@@ -655,7 +655,7 @@ Lemma continuity_pt_recip_interv : forall (f g:R->R) (lb ub : R) (Pr1:lb < ub),
 forall b,
 f lb < b < f ub ->
 continuity_pt g b.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.continuity_pt_recip_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.continuity_pt_recip_interv".  
 intros f g lb ub lb_lt_ub f_incr_interv f_eq_g g_wf.
 assert (g_eq_f_prelim := leftinv_is_rightinv_interv f g lb ub f_incr_interv f_eq_g).
 assert (g_eq_f : forall x, lb <= x <= ub -> (comp g f) x = id x).
@@ -673,7 +673,7 @@ forall (Prg_incr:g lb <= g x <= g ub),
 (forall x, lb <= x <= ub -> (comp f g) x = id x) ->
 derive_pt f (g x) (Prf (g x) Prg_incr) <> 0 ->
 derivable_pt_lim g x (1 / derive_pt f (g x) (Prf (g x) Prg_incr)).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_lim_recip_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_lim_recip_interv".  
 intros f g lb ub x Prf g_cont_pur lb_lt_ub x_encad Prg_incr f_eq_g df_neq.
 assert (x_encad2 : lb <= x <= ub).
 split ; apply Rlt_le ; intuition.
@@ -868,7 +868,7 @@ forall Prg_incr : g lb <= g x <= g ub,
 (forall x0 : R, lb <= x0 <= ub -> comp f g x0 = id x0) ->
 derive_pt f (g x) (Prf (g x) Prg_incr) <> 0 ->
 derivable_pt g x.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_recip_interv_prelim0". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_recip_interv_prelim0".  
 intros f g lb ub x Prf g_cont_pt lb_lt_ub x_encad Prg_incr f_eq_g Df_neq.
 unfold derivable_pt, derivable_pt_abs.
 exists (1 / derive_pt f (g x) (Prf (g x) Prg_incr)).
@@ -883,7 +883,7 @@ f lb < x < f ub ->
 (forall x y : R, lb <= x -> x < y -> y <= ub -> f x < f y) ->
 (forall a : R, lb <= a <= ub -> derivable_pt f a) ->
 derivable_pt f (g x).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_recip_interv_prelim1". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_recip_interv_prelim1".  
 intros f g lb ub x lb_lt_ub x_encad f_eq_g g_ok f_incr f_derivable.
 apply f_derivable.
 assert (Left_inv := leftinv_is_rightinv_interv f g lb ub f_incr f_eq_g g_ok).
@@ -907,7 +907,7 @@ derive_pt f (g x)
 x_encad f_eq_g g_wf f_incr f_derivable)
 <> 0 ->
 derivable_pt g x.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_recip_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_recip_interv".  
 intros f g lb ub x lb_lt_ub x_encad f_eq_g g_wf f_incr f_derivable Df_neq.
 assert(g_incr : g (f lb) < g x < g (f ub)).
 assert (Temp:= f_incr_implies_g_incr_interv f g lb ub lb_lt_ub f_incr f_eq_g g_wf).
@@ -943,7 +943,7 @@ lb < x < ub ->
 (forall x, lb < x < ub -> (comp f g) x = id x) ->
 derive_pt f (g x) Prf <> 0 ->
 derive_pt g x Prg = 1 / (derive_pt f (g x) Prf).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv_prelim0". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv_prelim0".  
 intros f g lb ub x Prf Prg lb_lt_ub x_encad local_recip Df_neq.
 replace (derive_pt g x Prg) with
 ((derive_pt g x Prg) * (derive_pt f (g x) Prf) * / (derive_pt f (g x) Prf)).
@@ -967,7 +967,7 @@ f lb < x < f ub ->
 (forall x : R, f lb <= x -> x <= f ub -> lb <= g x <= ub) ->
 (forall x, f lb <= x -> x <= f ub -> (comp f g) x = id x) ->
 lb < g x < ub.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv_prelim1_0". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv_prelim1_0".  
 intros f g lb ub x lb_lt_ub x_encad f_incr g_wf f_eq_g.
 assert (Temp:= f_incr_implies_g_incr_interv f g lb ub lb_lt_ub f_incr f_eq_g g_wf).
 assert (Left_inv := leftinv_is_rightinv_interv f g lb ub f_incr f_eq_g g_wf).
@@ -986,7 +986,7 @@ f lb < x < f ub ->
 (forall x : R, f lb <= x -> x <= f ub -> lb <= g x <= ub) ->
 (forall x, f lb <= x -> x <= f ub -> (comp f g) x = id x) ->
 lb <= g x <= ub.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv_prelim1_1". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv_prelim1_1".  
 intros f g lb ub x lb_lt_ub x_encad f_incr g_wf f_eq_g.
 assert (Temp := derive_pt_recip_interv_prelim1_0 f g lb ub x lb_lt_ub x_encad f_incr g_wf f_eq_g).
 split ; apply Rlt_le ; intuition.
@@ -1005,7 +1005,7 @@ g_wf f_incr Prf Df_neq)
 =
 1 / (derive_pt f (g x) (Prf (g x) (derive_pt_recip_interv_prelim1_1 f g lb ub x
 lb_lt_ub x_encad f_incr g_wf f_eq_g))).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derive_pt_recip_interv".  
 intros.
 assert(g_incr := (derive_pt_recip_interv_prelim1_1 f g lb ub x lb_lt_ub
 x_encad f_incr g_wf f_eq_g)).
@@ -1024,7 +1024,7 @@ Qed.
 
 
 Lemma ub_lt_2_pos : forall x ub lb, lb < x -> x < ub -> 0 < (ub-lb)/2.
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.ub_lt_2_pos". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.ub_lt_2_pos".  
 intros x ub lb lb_lt_x x_lt_ub.
 lra.
 Qed.
@@ -1041,7 +1041,7 @@ Lemma derivable_pt_lim_CVU : forall (fn fn':nat -> R -> R) (f g:R->R)
 (CVU fn' g c r) ->
 (forall y, Boule c r y -> continuity_pt g y) ->
 derivable_pt_lim f x (g x).
-Proof. try hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_lim_CVU". Undo.  
+Proof. hammer_hook "Ranalysis5" "Ranalysis5.derivable_pt_lim_CVU".  
 intros fn fn' f g x c' r xinb Dfn_eq_fn' fn_CV_f fn'_CVU_g g_cont eps eps_pos.
 assert (eps_8_pos : 0 < eps / 8) by fourier.
 elim (g_cont x xinb _ eps_8_pos) ; clear g_cont ;

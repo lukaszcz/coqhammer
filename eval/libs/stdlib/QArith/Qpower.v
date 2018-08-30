@@ -11,30 +11,30 @@ From Hammer Require Import Hammer.
 Require Import Zpow_facts Qfield Qreduction.
 
 Lemma Qpower_positive_1 : forall n, Qpower_positive 1 n == 1.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_positive_1". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_positive_1".  
 induction n;
 simpl; try rewrite IHn; reflexivity.
 Qed.
 
 Lemma Qpower_1 : forall n, 1^n == 1.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_1". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_1".  
 intros [|n|n]; simpl; try rewrite Qpower_positive_1; reflexivity.
 Qed.
 
 Lemma Qpower_positive_0 : forall n, Qpower_positive 0 n == 0.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_positive_0". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_positive_0".  
 induction n;
 simpl; try rewrite IHn; reflexivity.
 Qed.
 
 Lemma Qpower_0 : forall n, (n<>0)%Z -> 0^n == 0.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_0". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_0".  
 intros [|n|n] Hn; try (elim Hn; reflexivity); simpl;
 rewrite Qpower_positive_0; reflexivity.
 Qed.
 
 Lemma Qpower_not_0_positive : forall a n, ~a==0 -> ~Qpower_positive a n == 0.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_not_0_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_not_0_positive".  
 intros a n X H.
 apply X; clear X.
 induction n; simpl in *; try assumption;
@@ -43,25 +43,25 @@ try destruct (Qmult_integral _ _ H0); auto.
 Qed.
 
 Lemma Qpower_pos_positive : forall p n, 0 <= p -> 0 <= Qpower_positive p n.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_pos_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_pos_positive".  
 intros p n Hp.
 induction n; simpl; repeat apply Qmult_le_0_compat;assumption.
 Qed.
 
 Lemma Qpower_pos : forall p n, 0 <= p -> 0 <= p^n.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_pos". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_pos".  
 intros p [|n|n] Hp; simpl; try discriminate;
 try apply Qinv_le_0_compat;  apply Qpower_pos_positive; assumption.
 Qed.
 
 Lemma Qmult_power_positive  : forall a b n, Qpower_positive (a*b) n == (Qpower_positive a n)*(Qpower_positive b n).
-Proof. try hammer_hook "Qpower" "Qpower.Qmult_power_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qmult_power_positive".  
 induction n;
 simpl; repeat rewrite IHn; ring.
 Qed.
 
 Lemma Qmult_power : forall a b n, (a*b)^n == a^n*b^n.
-Proof. try hammer_hook "Qpower" "Qpower.Qmult_power". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qmult_power".  
 intros a b [|n|n]; simpl;
 try rewrite Qmult_power_positive;
 try rewrite Qinv_mult_distr;
@@ -69,20 +69,20 @@ reflexivity.
 Qed.
 
 Lemma Qinv_power_positive  : forall a n, Qpower_positive (/a) n == /(Qpower_positive a n).
-Proof. try hammer_hook "Qpower" "Qpower.Qinv_power_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qinv_power_positive".  
 induction n;
 simpl; repeat (rewrite IHn || rewrite Qinv_mult_distr); reflexivity.
 Qed.
 
 Lemma Qinv_power : forall a n, (/a)^n == /a^n.
-Proof. try hammer_hook "Qpower" "Qpower.Qinv_power". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qinv_power".  
 intros a [|n|n]; simpl;
 try rewrite Qinv_power_positive;
 reflexivity.
 Qed.
 
 Lemma Qdiv_power : forall a b n, (a/b)^n == (a^n/b^n).
-Proof. try hammer_hook "Qpower" "Qpower.Qdiv_power". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qdiv_power".  
 unfold Qdiv.
 intros a b n.
 rewrite Qmult_power.
@@ -91,7 +91,7 @@ reflexivity.
 Qed.
 
 Lemma Qinv_power_n : forall n p, (1#p)^n == /(inject_Z ('p))^n.
-Proof. try hammer_hook "Qpower" "Qpower.Qinv_power_n". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qinv_power_n".  
 intros n p.
 rewrite Qmake_Qdiv.
 rewrite Qdiv_power.
@@ -101,7 +101,7 @@ ring.
 Qed.
 
 Lemma Qpower_plus_positive : forall a n m, Qpower_positive a (n+m) == (Qpower_positive a n)*(Qpower_positive a m).
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_plus_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_plus_positive".  
 intros a n m.
 unfold Qpower_positive.
 apply pow_pos_add.
@@ -111,7 +111,7 @@ apply Qmult_assoc.
 Qed.
 
 Lemma Qpower_opp : forall a n, a^(-n) == /a^n.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_opp". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_opp".  
 intros a [|n|n]; simpl; try reflexivity.
 symmetry; apply Qinv_involutive.
 Qed.
@@ -119,7 +119,7 @@ Qed.
 Lemma Qpower_minus_positive : forall a (n m:positive),
 (m < n)%positive ->
 Qpower_positive a (n-m)%positive == (Qpower_positive a n)/(Qpower_positive a m).
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_minus_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_minus_positive".  
 intros a n m H.
 destruct (Qeq_dec a 0) as [EQ|NEQ].
 - now rewrite EQ, !Qpower_positive_0.
@@ -131,7 +131,7 @@ now rewrite Pos.sub_add.
 Qed.
 
 Lemma Qpower_plus : forall a n m, ~a==0 -> a^(n+m) == a^n*a^m.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_plus". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_plus".  
 intros a [|n|n] [|m|m] H; simpl; try ring;
 try rewrite Qpower_plus_positive;
 try apply Qinv_mult_distr; try reflexivity;
@@ -143,7 +143,7 @@ assumption.
 Qed.
 
 Lemma Qpower_plus' : forall a n m, (n+m <> 0)%Z -> a^(n+m) == a^n*a^m.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_plus'". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_plus'".  
 intros a n m H.
 destruct (Qeq_dec a 0)as [X|X].
 rewrite X.
@@ -157,7 +157,7 @@ Qed.
 
 Lemma Qpower_mult_positive : forall a n m,
 Qpower_positive a (n*m) == Qpower_positive (Qpower_positive a n) m.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_mult_positive". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_mult_positive".  
 intros a n m.
 induction n using Pos.peano_ind.
 reflexivity.
@@ -170,7 +170,7 @@ reflexivity.
 Qed.
 
 Lemma Qpower_mult : forall a n m, a^(n*m) ==  (a^n)^m.
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_mult". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_mult".  
 intros a [|n|n] [|m|m]; simpl;
 try rewrite Qpower_positive_1;
 try rewrite Qpower_mult_positive;
@@ -180,7 +180,7 @@ try reflexivity.
 Qed.
 
 Lemma Zpower_Qpower : forall (a n:Z), (0<=n)%Z -> inject_Z (a^n) == (inject_Z a)^n.
-Proof. try hammer_hook "Qpower" "Qpower.Zpower_Qpower". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Zpower_Qpower".  
 intros a [|n|n] H;[reflexivity| |elim H; reflexivity].
 induction n using Pos.peano_ind.
 replace (a^1)%Z with a by ring.
@@ -196,7 +196,7 @@ reflexivity.
 Qed.
 
 Lemma Qsqr_nonneg : forall a, 0 <= a^2.
-Proof. try hammer_hook "Qpower" "Qpower.Qsqr_nonneg". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qsqr_nonneg".  
 intros a.
 destruct (Qlt_le_dec 0 a) as [A|A].
 apply (Qmult_le_0_compat a a);
@@ -209,7 +209,7 @@ Qed.
 
 Theorem Qpower_decomp p x y :
 Qpower_positive (x#y) p = x ^ Zpos p # (y ^ p).
-Proof. try hammer_hook "Qpower" "Qpower.Qpower_decomp". Undo.  
+Proof. hammer_hook "Qpower" "Qpower.Qpower_decomp".  
 induction p; intros; simpl Qpower_positive; rewrite ?IHp.
 -
 unfold Qmult, Qnum, Qden. f_equal.

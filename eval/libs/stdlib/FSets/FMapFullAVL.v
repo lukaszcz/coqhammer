@@ -50,7 +50,7 @@ Hint Constructors avl.
 
 Lemma height_non_negative : forall (s : t elt), avl s ->
 height s >= 0.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.height_non_negative". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.height_non_negative".  
 induction s; simpl; intros; auto with zarith.
 inv avl; intuition; omega_max.
 Qed.
@@ -79,7 +79,7 @@ end.
 Lemma avl_node : forall x e l r, avl l -> avl r ->
 -(2) <= height l - height r <= 2 ->
 avl (Node l x e r (max (height l) (height r) + 1)).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.avl_node". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.avl_node".  
 intros; auto.
 Qed.
 Hint Resolve avl_node.
@@ -88,7 +88,7 @@ Hint Resolve avl_node.
 
 Lemma height_0 : forall l, avl l -> height l = 0 ->
 l = Leaf _.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.height_0". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.height_0".  
 destruct 1; intuition; simpl in *.
 avl_nns; simpl in *; exfalso; omega_max.
 Qed.
@@ -97,7 +97,7 @@ Qed.
 
 
 Lemma empty_avl : avl (empty elt).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.empty_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.empty_avl".  
 unfold empty; auto.
 Qed.
 
@@ -107,20 +107,20 @@ Qed.
 Lemma create_avl :
 forall l x e r, avl l -> avl r ->  -(2) <= height l - height r <= 2 ->
 avl (create l x e r).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.create_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.create_avl".  
 unfold create; auto.
 Qed.
 
 Lemma create_height :
 forall l x e r, avl l -> avl r ->  -(2) <= height l - height r <= 2 ->
 height (create l x e r) = max (height l) (height r) + 1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.create_height". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.create_height".  
 unfold create; intros; auto.
 Qed.
 
 Lemma bal_avl : forall l x e r, avl l -> avl r ->
 -(3) <= height l - height r <= 3 -> avl (bal l x e r).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.bal_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.bal_avl".  
 intros l x e r; functional induction (bal l x e r); intros; clearf;
 inv avl; simpl in *;
 match goal with |- avl (assert_false _ _ _ _) => avl_nns
@@ -131,7 +131,7 @@ Qed.
 Lemma bal_height_1 : forall l x e r, avl l -> avl r ->
 -(3) <= height l - height r <= 3 ->
 0 <= height (bal l x e r) - max (height l) (height r) <= 1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.bal_height_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.bal_height_1".  
 intros l x e r; functional induction (bal l x e r); intros; clearf;
 inv avl; avl_nns; simpl in *; omega_max.
 Qed.
@@ -139,7 +139,7 @@ Qed.
 Lemma bal_height_2 :
 forall l x e r, avl l -> avl r -> -(2) <= height l - height r <= 2 ->
 height (bal l x e r) == max (height l) (height r) +1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.bal_height_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.bal_height_2".  
 intros l x e r; functional induction (bal l x e r); intros; clearf;
 inv avl; avl_nns; simpl in *; omega_max.
 Qed.
@@ -154,7 +154,7 @@ end.
 
 Lemma add_avl_1 :  forall m x e, avl m ->
 avl (add x e m) /\ 0 <= height (add x e m) - height m <= 1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.add_avl_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.add_avl_1".  
 intros m x e; functional induction (add x e m); intros; inv avl; simpl in *.
 intuition; try constructor; simpl; auto; try omega_max.
 
@@ -172,7 +172,7 @@ omega_bal.
 Qed.
 
 Lemma add_avl : forall m x e, avl m -> avl (add x e m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.add_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.add_avl".  
 intros; generalize (add_avl_1 x e H); intuition.
 Qed.
 Hint Resolve add_avl.
@@ -182,7 +182,7 @@ Hint Resolve add_avl.
 Lemma remove_min_avl_1 : forall l x e r h, avl (Node l x e r h) ->
 avl (remove_min l x e r)#1 /\
 0 <= height (Node l x e r h) - height (remove_min l x e r)#1 <= 1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_min_avl_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_min_avl_1".  
 intros l x e r; functional induction (remove_min l x e r); simpl in *; intros.
 inv avl; simpl in *; split; auto.
 avl_nns; omega_max.
@@ -195,7 +195,7 @@ Qed.
 
 Lemma remove_min_avl : forall l x e r h, avl (Node l x e r h) ->
 avl (remove_min l x e r)#1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_min_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_min_avl".  
 intros; generalize (remove_min_avl_1 H); intuition.
 Qed.
 
@@ -205,7 +205,7 @@ Lemma merge_avl_1 : forall m1 m2, avl m1 -> avl m2 ->
 -(2) <= height m1 - height m2 <= 2 ->
 avl (merge m1 m2) /\
 0<= height (merge m1 m2) - max (height m1) (height m2) <=1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.merge_avl_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.merge_avl_1".  
 intros m1 m2; functional induction (merge m1 m2); intros;
 try factornode _x _x0 _x1 _x2 _x3 as m1.
 simpl; split; auto; avl_nns; omega_max.
@@ -220,7 +220,7 @@ Qed.
 
 Lemma merge_avl : forall m1 m2, avl m1 -> avl m2 ->
 -(2) <= height m1 - height m2 <= 2 -> avl (merge m1 m2).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.merge_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.merge_avl".  
 intros; generalize (merge_avl_1 H H0 H1); intuition.
 Qed.
 
@@ -229,7 +229,7 @@ Qed.
 
 Lemma remove_avl_1 : forall m x, avl m ->
 avl (remove x m) /\ 0 <= height m - height (remove x m) <= 1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_avl_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_avl_1".  
 intros m x; functional induction (remove x m); intros.
 split; auto; omega_max.
 
@@ -253,7 +253,7 @@ omega_bal.
 Qed.
 
 Lemma remove_avl : forall m x, avl m -> avl (remove x m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.remove_avl".  
 intros; generalize (remove_avl_1 x H); intuition.
 Qed.
 Hint Resolve remove_avl.
@@ -264,7 +264,7 @@ Hint Resolve remove_avl.
 Lemma join_avl_1 : forall l x d r, avl l -> avl r ->
 avl (join l x d r) /\
 0<= height (join l x d r) - max (height l) (height r) <= 1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.join_avl_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.join_avl_1".  
 join_tac.
 
 split; simpl; auto.
@@ -310,7 +310,7 @@ rewrite create_height; auto; omega_max.
 Qed.
 
 Lemma join_avl : forall l x d r, avl l -> avl r -> avl (join l x d r).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.join_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.join_avl".  
 intros; destruct (join_avl_1 x d H H0); auto.
 Qed.
 Hint Resolve join_avl.
@@ -318,7 +318,7 @@ Hint Resolve join_avl.
 
 
 Lemma concat_avl : forall m1 m2, avl m1 -> avl m2 -> avl (concat m1 m2).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.concat_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.concat_avl".  
 intros m1 m2; functional induction (concat m1 m2); auto.
 intros; apply join_avl; auto.
 generalize (remove_min_avl H0); rewrite e1; simpl; auto.
@@ -329,7 +329,7 @@ Hint Resolve concat_avl.
 
 Lemma split_avl : forall m x, avl m ->
 avl (split x m)#l /\ avl (split x m)#r.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.split_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.split_avl".  
 intros m x; functional induction (split x m); simpl; auto.
 rewrite e1 in IHt;simpl in IHt;inversion_clear 1; intuition.
 simpl; inversion_clear 1; auto.
@@ -344,12 +344,12 @@ Variable elt elt' : Type.
 Variable f : elt -> elt'.
 
 Lemma map_height : forall m, height (map f m) = height m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map_height". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map_height".  
 destruct m; simpl; auto.
 Qed.
 
 Lemma map_avl : forall m, avl m -> avl (map f m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map_avl".  
 induction m; simpl; auto.
 inversion_clear 1; constructor; auto; do 2 rewrite map_height; auto.
 Qed.
@@ -361,12 +361,12 @@ Variable elt elt' : Type.
 Variable f : key -> elt -> elt'.
 
 Lemma mapi_height : forall m, height (mapi f m) = height m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.mapi_height". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.mapi_height".  
 destruct m; simpl; auto.
 Qed.
 
 Lemma mapi_avl : forall m, avl m -> avl (mapi f m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.mapi_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.mapi_avl".  
 induction m; simpl; auto.
 inversion_clear 1; constructor; auto; do 2 rewrite mapi_height; auto.
 Qed.
@@ -378,7 +378,7 @@ Variable elt elt' : Type.
 Variable f : key -> elt -> option elt'.
 
 Lemma map_option_avl : forall m, avl m -> avl (map_option f m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map_option_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map_option_avl".  
 induction m; simpl; auto; intros.
 inv avl; destruct (f k e); auto using join_avl, concat_avl.
 Qed.
@@ -397,7 +397,7 @@ Notation map2_opt := (map2_opt f mapl mapr).
 
 Lemma map2_opt_avl : forall m1 m2, avl m1 -> avl m2 ->
 avl (map2_opt m1 m2).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map2_opt_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map2_opt_avl".  
 intros m1 m2; functional induction (map2_opt m1 m2); auto;
 factornode _x0 _x1 _x2 _x3 _x4 as r2; intros;
 destruct (split_avl x1 H0); rewrite e1 in *; simpl in *; inv avl;
@@ -411,7 +411,7 @@ Variable elt elt' elt'' : Type.
 Variable f : option elt -> option elt' -> option elt''.
 
 Lemma map2_avl : forall m1 m2, avl m1 -> avl m2 -> avl (map2 f m1 m2).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map2_avl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.AvlProofs.map2_avl".  
 unfold map2; auto using map2_opt_avl, map_option_avl.
 Qed.
 
@@ -468,74 +468,74 @@ Definition eq_key_elt : (key*elt) -> (key*elt) -> Prop := @PX.eqke elt.
 Definition lt_key : (key*elt) -> (key*elt) -> Prop := @PX.ltk elt.
 
 Lemma MapsTo_1 : forall m x y e, E.eq x y -> MapsTo x e m -> MapsTo y e m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.MapsTo_1". Undo.   intros m; exact (@MapsTo_1 _ m.(this)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.MapsTo_1".   intros m; exact (@MapsTo_1 _ m.(this)). Qed.
 
 Lemma mem_1 : forall m x, In x m -> mem x m = true.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mem_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mem_1".  
 unfold In, mem; intros m x; rewrite In_alt; simpl; apply mem_1; auto.
 apply m.(is_bst).
 Qed.
 
 Lemma mem_2 : forall m x, mem x m = true -> In x m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mem_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mem_2".  
 unfold In, mem; intros m x; rewrite In_alt; simpl; apply mem_2; auto.
 Qed.
 
 Lemma empty_1 : Empty empty.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.empty_1". Undo.   exact (@empty_1 elt). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.empty_1".   exact (@empty_1 elt). Qed.
 
 Lemma is_empty_1 : forall m, Empty m -> is_empty m = true.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.is_empty_1". Undo.   intros m; exact (@is_empty_1 _ m.(this)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.is_empty_1".   intros m; exact (@is_empty_1 _ m.(this)). Qed.
 Lemma is_empty_2 : forall m, is_empty m = true -> Empty m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.is_empty_2". Undo.   intros m; exact (@is_empty_2 _ m.(this)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.is_empty_2".   intros m; exact (@is_empty_2 _ m.(this)). Qed.
 
 Lemma add_1 : forall m x y e, E.eq x y -> MapsTo y e (add x e m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.add_1". Undo.   intros m x y e; exact (@add_1 elt _ x y e). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.add_1".   intros m x y e; exact (@add_1 elt _ x y e). Qed.
 Lemma add_2 : forall m x y e e', ~ E.eq x y -> MapsTo y e m -> MapsTo y e (add x e' m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.add_2". Undo.   intros m x y e e'; exact (@add_2 elt _ x y e e'). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.add_2".   intros m x y e e'; exact (@add_2 elt _ x y e e'). Qed.
 Lemma add_3 : forall m x y e e', ~ E.eq x y -> MapsTo y e (add x e' m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.add_3". Undo.   intros m x y e e'; exact (@add_3 elt _ x y e e'). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.add_3".   intros m x y e e'; exact (@add_3 elt _ x y e e'). Qed.
 
 Lemma remove_1 : forall m x y, E.eq x y -> ~ In y (remove x m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.remove_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.remove_1".  
 unfold In, remove; intros m x y; rewrite In_alt; simpl; apply remove_1; auto.
 apply m.(is_bst).
 Qed.
 Lemma remove_2 : forall m x y e, ~ E.eq x y -> MapsTo y e m -> MapsTo y e (remove x m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.remove_2". Undo.   intros m x y e; exact (@remove_2 elt _ x y e m.(is_bst)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.remove_2".   intros m x y e; exact (@remove_2 elt _ x y e m.(is_bst)). Qed.
 Lemma remove_3 : forall m x y e, MapsTo y e (remove x m) -> MapsTo y e m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.remove_3". Undo.   intros m x y e; exact (@remove_3 elt _ x y e m.(is_bst)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.remove_3".   intros m x y e; exact (@remove_3 elt _ x y e m.(is_bst)). Qed.
 
 
 Lemma find_1 : forall m x e, MapsTo x e m -> find x m = Some e.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.find_1". Undo.   intros m x e; exact (@find_1 elt _ x e m.(is_bst)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.find_1".   intros m x e; exact (@find_1 elt _ x e m.(is_bst)). Qed.
 Lemma find_2 : forall m x e, find x m = Some e -> MapsTo x e m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.find_2". Undo.   intros m; exact (@find_2 elt m.(this)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.find_2".   intros m; exact (@find_2 elt m.(this)). Qed.
 
 Lemma fold_1 : forall m (A : Type) (i : A) (f : key -> elt -> A -> A),
 fold f m i = fold_left (fun a p => f (fst p) (snd p) a) (elements m) i.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.fold_1". Undo.   intros m; exact (@fold_1 elt m.(this) m.(is_bst)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.fold_1".   intros m; exact (@fold_1 elt m.(this) m.(is_bst)). Qed.
 
 Lemma elements_1 : forall m x e,
 MapsTo x e m -> InA eq_key_elt (x,e) (elements m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_1".  
 intros; unfold elements, MapsTo, eq_key_elt; rewrite elements_mapsto; auto.
 Qed.
 
 Lemma elements_2 : forall m x e,
 InA eq_key_elt (x,e) (elements m) -> MapsTo x e m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_2".  
 intros; unfold elements, MapsTo, eq_key_elt; rewrite <- elements_mapsto; auto.
 Qed.
 
 Lemma elements_3 : forall m, sort lt_key (elements m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_3". Undo.   intros m; exact (@elements_sort elt m.(this) m.(is_bst)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_3".   intros m; exact (@elements_sort elt m.(this) m.(is_bst)). Qed.
 
 Lemma elements_3w : forall m, NoDupA eq_key (elements m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_3w". Undo.   intros m; exact (@elements_nodup elt m.(this) m.(is_bst)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.elements_3w".   intros m; exact (@elements_nodup elt m.(this) m.(is_bst)). Qed.
 
 Lemma cardinal_1 : forall m, cardinal m = length (elements m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.cardinal_1". Undo.   intro m; exact (@elements_cardinal elt m.(this)). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.cardinal_1".   intro m; exact (@elements_cardinal elt m.(this)). Qed.
 
 Definition Equal m m' := forall y, find y m = find y m'.
 Definition Equiv (eq_elt:elt->elt->Prop) m m' :=
@@ -545,7 +545,7 @@ Definition Equivb cmp := Equiv (Cmp cmp).
 
 Lemma Equivb_Equivb : forall cmp m m',
 Equivb cmp m m' <-> Raw.Proofs.Equivb cmp m m'.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.Equivb_Equivb". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.Equivb_Equivb".  
 intros; unfold Equivb, Equiv, Raw.Proofs.Equivb, In; intuition.
 generalize (H0 k); do 2 rewrite In_alt; intuition.
 generalize (H0 k); do 2 rewrite In_alt; intuition.
@@ -555,14 +555,14 @@ Qed.
 
 Lemma equal_1 : forall m m' cmp,
 Equivb cmp m m' -> equal cmp m m' = true.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.equal_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.equal_1".  
 unfold equal; intros (m,b,a) (m',b',a') cmp; rewrite Equivb_Equivb;
 intros; simpl in *; rewrite equal_Equivb; auto.
 Qed.
 
 Lemma equal_2 : forall m m' cmp,
 equal cmp m m' = true -> Equivb cmp m m'.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.equal_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.equal_2".  
 unfold equal; intros (m,b,a) (m',b',a') cmp; rewrite Equivb_Equivb;
 intros; simpl in *; rewrite <-equal_Equivb; auto.
 Qed.
@@ -571,10 +571,10 @@ End Elt.
 
 Lemma map_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)(f:elt->elt'),
 MapsTo x e m -> MapsTo x (f e) (map f m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map_1". Undo.   intros elt elt' m x e f; exact (@map_1 elt elt' f m.(this) x e). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map_1".   intros elt elt' m x e f; exact (@map_1 elt elt' f m.(this) x e). Qed.
 
 Lemma map_2 : forall (elt elt':Type)(m:t elt)(x:key)(f:elt->elt'), In x (map f m) -> In x m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map_2".  
 intros elt elt' m x f; do 2 unfold In in *; do 2 rewrite In_alt; simpl.
 apply map_2; auto.
 Qed.
@@ -582,10 +582,10 @@ Qed.
 Lemma mapi_1 : forall (elt elt':Type)(m: t elt)(x:key)(e:elt)
 (f:key->elt->elt'), MapsTo x e m ->
 exists y, E.eq y x /\ MapsTo x (f y e) (mapi f m).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mapi_1". Undo.   intros elt elt' m x e f; exact (@mapi_1 elt elt' f m.(this) x e). Qed.
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mapi_1".   intros elt elt' m x e f; exact (@mapi_1 elt elt' f m.(this) x e). Qed.
 Lemma mapi_2 : forall (elt elt':Type)(m: t elt)(x:key)
 (f:key->elt->elt'), In x (mapi f m) -> In x m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mapi_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.mapi_2".  
 intros elt elt' m x f; unfold In in *; do 2 rewrite In_alt; simpl; apply mapi_2; auto.
 Qed.
 
@@ -593,7 +593,7 @@ Lemma map2_1 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x m \/ In x m' ->
 find x (map2 f m m') = f (find x m) (find x m').
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map2_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map2_1".  
 unfold find, map2, In; intros elt elt' elt'' m m' x f.
 do 2 rewrite In_alt; intros; simpl; apply map2_1; auto.
 apply m.(is_bst).
@@ -603,7 +603,7 @@ Qed.
 Lemma map2_2 : forall (elt elt' elt'':Type)(m: t elt)(m': t elt')
 (x:key)(f:option elt->option elt'->option elt''),
 In x (map2 f m m') -> In x m \/ In x m'.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map2_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake.map2_2".  
 unfold In, map2; intros elt elt' elt'' m m' x f.
 do 3 rewrite In_alt; intros; simpl in *; eapply map2_2; eauto.
 apply m.(is_bst).
@@ -642,7 +642,7 @@ end.
 
 Lemma cons_cardinal_e : forall m e,
 cardinal_e (Raw.cons m e) = (Raw.cardinal m + cardinal_e e)%nat.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.cons_cardinal_e". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.cons_cardinal_e".  
 induction m; simpl; intros; auto.
 rewrite IHm1; simpl; rewrite <- plus_n_Sm; auto with arith.
 Qed.
@@ -669,7 +669,7 @@ end
 | GT _ => Gt
 end
 end.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.cardinal_e_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.cardinal_e_2".  
 intros; unfold cardinal_e_2; simpl;
 abstract (do 2 rewrite cons_cardinal_e; romega with * ).
 Defined.
@@ -684,14 +684,14 @@ end.
 Lemma cons_Cmp : forall c x1 x2 d1 d2 l1 l2,
 X.eq x1 x2 -> D.eq d1 d2 ->
 Cmp c l1 l2 -> Cmp c ((x1,d1)::l1) ((x2,d2)::l2).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.cons_Cmp". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.cons_Cmp".  
 destruct c; simpl; intros; MX.elim_comp; auto.
 Qed.
 Hint Resolve cons_Cmp.
 
 Lemma compare_aux_Cmp : forall e,
 Cmp (compare_aux e) (flatten_e (fst e)) (flatten_e (snd e)).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.compare_aux_Cmp". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.compare_aux_Cmp".  
 intros e; functional induction (compare_aux e); simpl in *;
 auto; intros; try clear e0; try clear e3; try MX.elim_comp; auto.
 rewrite 2 cons_1 in IHc; auto.
@@ -700,7 +700,7 @@ Qed.
 Lemma compare_Cmp : forall m1 m2,
 Cmp (compare_aux (Raw.cons m1 (Raw.End _), Raw.cons m2 (Raw.End _)))
 (Raw.elements m1) (Raw.elements m2).
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.compare_Cmp". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.compare_Cmp".  
 intros.
 assert (H1:=cons_1 m1 (Raw.End _)).
 assert (H2:=cons_1 m2 (Raw.End _)).
@@ -713,7 +713,7 @@ Definition eq (m1 m2 : t) := LO.eq_list (Raw.elements m1) (Raw.elements m2).
 Definition lt (m1 m2 : t) := LO.lt_list (Raw.elements m1) (Raw.elements m2).
 
 Definition compare (s s':t) : Compare lt eq s s'.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.compare". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.compare".  
 destruct s as (s,b,a), s' as (s',b',a').
 generalize (compare_Cmp s s').
 destruct compare_aux; intros; [apply EQ|apply LT|apply GT]; red; auto.
@@ -729,17 +729,17 @@ Definition seq (m1 m2 : t) := LO.eq (selements m1) (selements m2).
 Definition slt (m1 m2 : t) := LO.lt (selements m1) (selements m2).
 
 Lemma eq_seq : forall m1 m2, eq m1 m2 <-> seq m1 m2.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_seq". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_seq".  
 unfold eq, seq, selements, elements, LO.eq; intuition.
 Qed.
 
 Lemma lt_slt : forall m1 m2, lt m1 m2 <-> slt m1 m2.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.lt_slt". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.lt_slt".  
 unfold lt, slt, selements, elements, LO.lt; intuition.
 Qed.
 
 Lemma eq_1 : forall (m m' : t), MapS.Equivb cmp m m' -> eq m m'.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_1". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_1".  
 intros m m'.
 rewrite eq_seq; unfold seq.
 rewrite Equivb_Equivb.
@@ -748,7 +748,7 @@ auto using LO.eq_1.
 Qed.
 
 Lemma eq_2 : forall m m', eq m m' -> MapS.Equivb cmp m m'.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_2". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_2".  
 intros m m'.
 rewrite eq_seq; unfold seq.
 rewrite Equivb_Equivb.
@@ -759,29 +759,29 @@ auto.
 Qed.
 
 Lemma eq_refl : forall m : t, eq m m.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_refl". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_refl".  
 intros; rewrite eq_seq; unfold seq; intros; apply LO.eq_refl.
 Qed.
 
 Lemma eq_sym : forall m1 m2 : t, eq m1 m2 -> eq m2 m1.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_sym". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_sym".  
 intros m1 m2; rewrite 2 eq_seq; unfold seq; intros; apply LO.eq_sym; auto.
 Qed.
 
 Lemma eq_trans : forall m1 m2 m3 : t, eq m1 m2 -> eq m2 m3 -> eq m1 m3.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_trans". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.eq_trans".  
 intros m1 m2 M3; rewrite 3 eq_seq; unfold seq.
 intros; eapply LO.eq_trans; eauto.
 Qed.
 
 Lemma lt_trans : forall m1 m2 m3 : t, lt m1 m2 -> lt m2 m3 -> lt m1 m3.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.lt_trans". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.lt_trans".  
 intros m1 m2 m3; rewrite 3 lt_slt; unfold slt;
 intros; eapply LO.lt_trans; eauto.
 Qed.
 
 Lemma lt_not_eq : forall m1 m2 : t, lt m1 m2 -> ~ eq m1 m2.
-Proof. try hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.lt_not_eq". Undo.  
+Proof. hammer_hook "FMapFullAVL" "FMapFullAVL.IntMake_ord.lt_not_eq".  
 intros m1 m2; rewrite lt_slt, eq_seq; unfold slt, seq;
 intros; apply LO.lt_not_eq; auto.
 Qed.

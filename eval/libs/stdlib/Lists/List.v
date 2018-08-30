@@ -74,7 +74,7 @@ Variable A : Type.
 
 
 Theorem nil_cons : forall (x:A) (l:list A), [] <> x :: l.
-Proof. try hammer_hook "List" "List.nil_cons". Undo.  
+Proof. hammer_hook "List" "List.nil_cons".  
 intros; discriminate.
 Qed.
 
@@ -82,7 +82,7 @@ Qed.
 
 
 Theorem destruct_list : forall l : list A, {x:A & {tl:list A | l = x::tl}}+{l = []}.
-Proof. try hammer_hook "List" "List.destruct_list". Undo.  
+Proof. hammer_hook "List" "List.destruct_list".  
 induction l as [|a tail].
 right; reflexivity.
 left; exists a, tail; reflexivity.
@@ -90,7 +90,7 @@ Qed.
 
 Lemma hd_error_tl_repr : forall l (a:A) r,
 hd_error l = Some a /\ tl l = r <-> l = a :: r.
-Proof. try hammer_hook "List" "List.hd_error_tl_repr". Undo.   destruct l as [|x xs].
+Proof. hammer_hook "List" "List.hd_error_tl_repr".   destruct l as [|x xs].
 - unfold hd_error, tl; intros a r. split; firstorder discriminate.
 - intros. simpl. split.
 * intros (H1, H2). inversion H1. rewrite H2. reflexivity.
@@ -98,23 +98,23 @@ Proof. try hammer_hook "List" "List.hd_error_tl_repr". Undo.   destruct l as [|x
 Qed.
 
 Lemma hd_error_some_nil : forall l (a:A), hd_error l = Some a -> l <> nil.
-Proof. try hammer_hook "List" "List.hd_error_some_nil". Undo.   unfold hd_error. destruct l; now discriminate. Qed.
+Proof. hammer_hook "List" "List.hd_error_some_nil".   unfold hd_error. destruct l; now discriminate. Qed.
 
 Theorem length_zero_iff_nil (l : list A):
 length l = 0 <-> l=[].
-Proof. try hammer_hook "List" "List.length_zero_iff_nil". Undo.  
+Proof. hammer_hook "List" "List.length_zero_iff_nil".  
 split; [now destruct l | now intros ->].
 Qed.
 
 
 
 Theorem hd_error_nil : hd_error (@nil A) = None.
-Proof. try hammer_hook "List" "List.hd_error_nil". Undo.  
+Proof. hammer_hook "List" "List.hd_error_nil".  
 simpl; reflexivity.
 Qed.
 
 Theorem hd_error_cons : forall (l : list A) (x : A), hd_error (x::l) = Some x.
-Proof. try hammer_hook "List" "List.hd_error_cons". Undo.  
+Proof. hammer_hook "List" "List.hd_error_cons".  
 intros; simpl; reflexivity.
 Qed.
 
@@ -127,28 +127,28 @@ Qed.
 
 
 Theorem in_eq : forall (a:A) (l:list A), In a (a :: l).
-Proof. try hammer_hook "List" "List.in_eq". Undo.  
+Proof. hammer_hook "List" "List.in_eq".  
 simpl; auto.
 Qed.
 
 Theorem in_cons : forall (a b:A) (l:list A), In b l -> In b (a :: l).
-Proof. try hammer_hook "List" "List.in_cons". Undo.  
+Proof. hammer_hook "List" "List.in_cons".  
 simpl; auto.
 Qed.
 
 Theorem not_in_cons (x a : A) (l : list A):
 ~ In x (a::l) <-> x<>a /\ ~ In x l.
-Proof. try hammer_hook "List" "List.not_in_cons". Undo.  
+Proof. hammer_hook "List" "List.not_in_cons".  
 simpl. intuition.
 Qed.
 
 Theorem in_nil : forall a:A, ~ In a [].
-Proof. try hammer_hook "List" "List.in_nil". Undo.  
+Proof. hammer_hook "List" "List.in_nil".  
 unfold not; intros a H; inversion_clear H.
 Qed.
 
 Theorem in_split : forall x (l:list A), In x l -> exists l1 l2, l = l1++x::l2.
-Proof. try hammer_hook "List" "List.in_split". Undo.  
+Proof. hammer_hook "List" "List.in_split".  
 induction l; simpl; destruct 1.
 subst a; auto.
 exists [], l; auto.
@@ -158,7 +158,7 @@ Qed.
 
 
 Lemma in_inv : forall (a b:A) (l:list A), In b (a :: l) -> a = b \/ In b l.
-Proof. try hammer_hook "List" "List.in_inv". Undo.  
+Proof. hammer_hook "List" "List.in_inv".  
 intros a b l H; inversion_clear H; auto.
 Qed.
 
@@ -166,7 +166,7 @@ Qed.
 Theorem in_dec :
 (forall x y:A, {x = y} + {x <> y}) ->
 forall (a:A) (l:list A), {In a l} + {~ In a l}.
-Proof. try hammer_hook "List" "List.in_dec". Undo.  
+Proof. hammer_hook "List" "List.in_dec".  
 intro H; induction l as [| a0 l IHl].
 right; apply in_nil.
 destruct (H a0 a); simpl; auto.
@@ -181,7 +181,7 @@ Defined.
 
 
 Theorem app_cons_not_nil : forall (x y:list A) (a:A), [] <> x ++ a :: y.
-Proof. try hammer_hook "List" "List.app_cons_not_nil". Undo.  
+Proof. hammer_hook "List" "List.app_cons_not_nil".  
 unfold not.
 destruct x as [| a l]; simpl; intros.
 discriminate H.
@@ -191,31 +191,31 @@ Qed.
 
 
 Theorem app_nil_l : forall l:list A, [] ++ l = l.
-Proof. try hammer_hook "List" "List.app_nil_l". Undo.  
+Proof. hammer_hook "List" "List.app_nil_l".  
 reflexivity.
 Qed.
 
 Theorem app_nil_r : forall l:list A, l ++ [] = l.
-Proof. try hammer_hook "List" "List.app_nil_r". Undo.  
+Proof. hammer_hook "List" "List.app_nil_r".  
 induction l; simpl; f_equal; auto.
 Qed.
 
 
 
 Theorem app_nil_end : forall (l:list A), l = l ++ [].
-Proof. try hammer_hook "List" "List.app_nil_end". Undo.   symmetry; apply app_nil_r. Qed.
+Proof. hammer_hook "List" "List.app_nil_end".   symmetry; apply app_nil_r. Qed.
 
 
 
 Theorem app_assoc : forall l m n:list A, l ++ m ++ n = (l ++ m) ++ n.
-Proof. try hammer_hook "List" "List.app_assoc". Undo.  
+Proof. hammer_hook "List" "List.app_assoc".  
 intros l m n; induction l; simpl; f_equal; auto.
 Qed.
 
 
 
 Theorem app_assoc_reverse : forall l m n:list A, (l ++ m) ++ n = l ++ m ++ n.
-Proof. try hammer_hook "List" "List.app_assoc_reverse". Undo.  
+Proof. hammer_hook "List" "List.app_assoc_reverse".  
 auto using app_assoc.
 Qed.
 Hint Resolve app_assoc_reverse.
@@ -223,14 +223,14 @@ Hint Resolve app_assoc_reverse.
 
 
 Theorem app_comm_cons : forall (x y:list A) (a:A), a :: (x ++ y) = (a :: x) ++ y.
-Proof. try hammer_hook "List" "List.app_comm_cons". Undo.  
+Proof. hammer_hook "List" "List.app_comm_cons".  
 auto.
 Qed.
 
 
 
 Theorem app_eq_nil : forall l l':list A, l ++ l' = [] -> l = [] /\ l' = [].
-Proof. try hammer_hook "List" "List.app_eq_nil". Undo.  
+Proof. hammer_hook "List" "List.app_eq_nil".  
 destruct l as [| x l]; destruct l' as [| y l']; simpl; auto.
 intro; discriminate.
 intros H; discriminate H.
@@ -239,7 +239,7 @@ Qed.
 Theorem app_eq_unit :
 forall (x y:list A) (a:A),
 x ++ y = [a] -> x = [] /\ y = [a] \/ x = [a] /\ y = [].
-Proof. try hammer_hook "List" "List.app_eq_unit". Undo.  
+Proof. hammer_hook "List" "List.app_eq_unit".  
 destruct x as [| a l]; [ destruct y as [| a l] | destruct y as [| a0 l0] ];
 simpl.
 intros a H; discriminate H.
@@ -256,7 +256,7 @@ Qed.
 
 Lemma app_inj_tail :
 forall (x y:list A) (a b:A), x ++ [a] = y ++ [b] -> x = y /\ a = b.
-Proof. try hammer_hook "List" "List.app_inj_tail". Undo.  
+Proof. hammer_hook "List" "List.app_inj_tail".  
 induction x as [| x l IHl];
 [ destruct y as [| a l] | destruct y as [| a l0] ];
 simpl; auto.
@@ -280,12 +280,12 @@ Qed.
 
 
 Lemma app_length : forall l l' : list A, length (l++l') = length l + length l'.
-Proof. try hammer_hook "List" "List.app_length". Undo.  
+Proof. hammer_hook "List" "List.app_length".  
 induction l; simpl; auto.
 Qed.
 
 Lemma in_app_or : forall (l m:list A) (a:A), In a (l ++ m) -> In a l \/ In a m.
-Proof. try hammer_hook "List" "List.in_app_or". Undo.  
+Proof. hammer_hook "List" "List.in_app_or".  
 intros l m a.
 elim l; simpl; auto.
 intros a0 y H H0.
@@ -297,7 +297,7 @@ elim (H H1); auto.
 Qed.
 
 Lemma in_or_app : forall (l m:list A) (a:A), In a l \/ In a m -> In a (l ++ m).
-Proof. try hammer_hook "List" "List.in_or_app". Undo.  
+Proof. hammer_hook "List" "List.in_or_app".  
 intros l m a.
 elim l; simpl; intro H.
 now_show (In a m).
@@ -313,19 +313,19 @@ elim H2; auto.
 Qed.
 
 Lemma in_app_iff : forall l l' (a:A), In a (l++l') <-> In a l \/ In a l'.
-Proof. try hammer_hook "List" "List.in_app_iff". Undo.  
+Proof. hammer_hook "List" "List.in_app_iff".  
 split; auto using in_app_or, in_or_app.
 Qed.
 
 Lemma app_inv_head:
 forall l l1 l2 : list A, l ++ l1 = l ++ l2 -> l1 = l2.
-Proof. try hammer_hook "List" "List.app_inv_head". Undo.  
+Proof. hammer_hook "List" "List.app_inv_head".  
 induction l; simpl; auto; injection 1; auto.
 Qed.
 
 Lemma app_inv_tail:
 forall l l1 l2 : list A, l1 ++ l = l2 ++ l -> l1 = l2.
-Proof. try hammer_hook "List" "List.app_inv_tail". Undo.  
+Proof. hammer_hook "List" "List.app_inv_tail".  
 intros l l1 l2; revert l1 l2 l.
 induction l1 as [ | x1 l1]; destruct l2 as [ | x2 l2];
 simpl; auto; intros l H.
@@ -378,7 +378,7 @@ end.
 
 Lemma nth_in_or_default :
 forall (n:nat) (l:list A) (d:A), {In (nth n l d) l} + {nth n l d = d}.
-Proof. try hammer_hook "List" "List.nth_in_or_default". Undo.  
+Proof. hammer_hook "List" "List.nth_in_or_default".  
 intros n l d; revert n; induction l.
 - right; destruct n; trivial.
 - intros [|n]; simpl.
@@ -389,7 +389,7 @@ Qed.
 Lemma nth_S_cons :
 forall (n:nat) (l:list A) (d a:A),
 In (nth n l d) l -> In (nth (S n) (a :: l) d) (a :: l).
-Proof. try hammer_hook "List" "List.nth_S_cons". Undo.  
+Proof. hammer_hook "List" "List.nth_S_cons".  
 simpl; auto.
 Qed.
 
@@ -408,7 +408,7 @@ end.
 
 Lemma nth_default_eq :
 forall n l (d:A), nth_default d l n = nth n l d.
-Proof. try hammer_hook "List" "List.nth_default_eq". Undo.  
+Proof. hammer_hook "List" "List.nth_default_eq".  
 unfold nth_default; induction n; intros [ | ] ?; simpl; auto.
 Qed.
 
@@ -416,7 +416,7 @@ Qed.
 
 Lemma nth_In :
 forall (n:nat) (l:list A) (d:A), n < length l -> In (nth n l d) l.
-Proof. try hammer_hook "List" "List.nth_In". Undo.  
+Proof. hammer_hook "List" "List.nth_In".  
 unfold lt; induction n as [| n hn]; simpl.
 - destruct l; simpl; [ inversion 2 | auto ].
 - destruct l; simpl.
@@ -426,7 +426,7 @@ Qed.
 
 Lemma In_nth l x d : In x l ->
 exists n, n < length l /\ nth n l d = x.
-Proof. try hammer_hook "List" "List.In_nth". Undo.  
+Proof. hammer_hook "List" "List.In_nth".  
 induction l as [|a l IH].
 - easy.
 - intros [H|H].
@@ -436,7 +436,7 @@ exists (S n); simpl; auto with arith.
 Qed.
 
 Lemma nth_overflow : forall l n d, length l <= n -> nth n l d = d.
-Proof. try hammer_hook "List" "List.nth_overflow". Undo.  
+Proof. hammer_hook "List" "List.nth_overflow".  
 induction l; destruct n; simpl; intros; auto.
 - inversion H.
 - apply IHl; auto with arith.
@@ -444,7 +444,7 @@ Qed.
 
 Lemma nth_indep :
 forall l n d d', n < length l -> nth n l d = nth n l d'.
-Proof. try hammer_hook "List" "List.nth_indep". Undo.  
+Proof. hammer_hook "List" "List.nth_indep".  
 induction l.
 - inversion 1.
 - intros [|n] d d'; simpl; auto with arith.
@@ -452,7 +452,7 @@ Qed.
 
 Lemma app_nth1 :
 forall l l' d n, n < length l -> nth n (l++l') d = nth n l d.
-Proof. try hammer_hook "List" "List.app_nth1". Undo.  
+Proof. hammer_hook "List" "List.app_nth1".  
 induction l.
 - inversion 1.
 - intros l' d [|n]; simpl; auto with arith.
@@ -460,7 +460,7 @@ Qed.
 
 Lemma app_nth2 :
 forall l l' d n, n >= length l -> nth n (l++l') d = nth (n-length l) l' d.
-Proof. try hammer_hook "List" "List.app_nth2". Undo.  
+Proof. hammer_hook "List" "List.app_nth2".  
 induction l; intros l' d [|n]; auto.
 - inversion 1.
 - intros; simpl; rewrite IHl; auto with arith.
@@ -468,7 +468,7 @@ Qed.
 
 Lemma nth_split n l d : n < length l ->
 exists l1, exists l2, l = l1 ++ nth n l d :: l2 /\ length l1 = n.
-Proof. try hammer_hook "List" "List.nth_split". Undo.  
+Proof. hammer_hook "List" "List.nth_split".  
 revert l.
 induction n as [|n IH]; intros [|a l] H; try easy.
 - exists nil; exists l; now simpl.
@@ -479,14 +479,14 @@ Qed.
 
 
 Lemma nth_error_In l n x : nth_error l n = Some x -> In x l.
-Proof. try hammer_hook "List" "List.nth_error_In". Undo.  
+Proof. hammer_hook "List" "List.nth_error_In".  
 revert n. induction l as [|a l IH]; intros [|n]; simpl; try easy.
 - injection 1; auto.
 - eauto.
 Qed.
 
 Lemma In_nth_error l x : In x l -> exists n, nth_error l n = Some x.
-Proof. try hammer_hook "List" "List.In_nth_error". Undo.  
+Proof. hammer_hook "List" "List.In_nth_error".  
 induction l as [|a l IH].
 - easy.
 - intros [H|H].
@@ -496,7 +496,7 @@ exists (S n); simpl; auto with arith.
 Qed.
 
 Lemma nth_error_None l n : nth_error l n = None <-> length l <= n.
-Proof. try hammer_hook "List" "List.nth_error_None". Undo.  
+Proof. hammer_hook "List" "List.nth_error_None".  
 revert n. induction l; destruct n; simpl.
 - split; auto.
 - split; auto with arith.
@@ -505,7 +505,7 @@ revert n. induction l; destruct n; simpl.
 Qed.
 
 Lemma nth_error_Some l n : nth_error l n <> None <-> n < length l.
-Proof. try hammer_hook "List" "List.nth_error_Some". Undo.  
+Proof. hammer_hook "List" "List.nth_error_Some".  
 revert n. induction l; destruct n; simpl.
 - split; [now destruct 1 | inversion 1].
 - split; [now destruct 1 | inversion 1].
@@ -515,7 +515,7 @@ Qed.
 
 Lemma nth_error_split l n a : nth_error l n = Some a ->
 exists l1, exists l2, l = l1 ++ a :: l2 /\ length l1 = n.
-Proof. try hammer_hook "List" "List.nth_error_split". Undo.  
+Proof. hammer_hook "List" "List.nth_error_split".  
 revert l.
 induction n as [|n IH]; intros [|x l] H; simpl in *; try easy.
 - exists nil; exists l. now injection H as ->.
@@ -525,7 +525,7 @@ Qed.
 
 Lemma nth_error_app1 l l' n : n < length l ->
 nth_error (l++l') n = nth_error l n.
-Proof. try hammer_hook "List" "List.nth_error_app1". Undo.  
+Proof. hammer_hook "List" "List.nth_error_app1".  
 revert l.
 induction n; intros [|a l] H; auto; try solve [inversion H].
 simpl in *. apply IHn. auto with arith.
@@ -533,7 +533,7 @@ Qed.
 
 Lemma nth_error_app2 l l' n : length l <= n ->
 nth_error (l++l') n = nth_error l' (n-length l).
-Proof. try hammer_hook "List" "List.nth_error_app2". Undo.  
+Proof. hammer_hook "List" "List.nth_error_app2".  
 revert l.
 induction n; intros [|a l] H; auto; try solve [inversion H].
 simpl in *. apply IHn. auto with arith.
@@ -552,7 +552,7 @@ match l with
 end.
 
 Theorem remove_In : forall (l : list A) (x : A), ~ In x (remove x l).
-Proof. try hammer_hook "List" "List.remove_In". Undo.  
+Proof. hammer_hook "List" "List.remove_In".  
 induction l as [|x l]; auto.
 intro y; simpl; destruct (eq_dec y x) as [yeqx | yneqx].
 apply IHl.
@@ -585,7 +585,7 @@ end.
 
 Lemma app_removelast_last :
 forall l d, l <> [] -> l = removelast l ++ [last l d].
-Proof. try hammer_hook "List" "List.app_removelast_last". Undo.  
+Proof. hammer_hook "List" "List.app_removelast_last".  
 induction l.
 destruct 1; auto.
 intros d _.
@@ -595,7 +595,7 @@ Qed.
 
 Lemma exists_last :
 forall l, l <> [] -> { l' : (list A) & { a : A | l = l' ++ [a]}}.
-Proof. try hammer_hook "List" "List.exists_last". Undo.  
+Proof. hammer_hook "List" "List.exists_last".  
 induction l.
 destruct 1; auto.
 intros _.
@@ -608,7 +608,7 @@ Qed.
 
 Lemma removelast_app :
 forall l l', l' <> [] -> removelast (l++l') = l ++ removelast l'.
-Proof. try hammer_hook "List" "List.removelast_app". Undo.  
+Proof. hammer_hook "List" "List.removelast_app".  
 induction l.
 simpl; auto.
 simpl; intros.
@@ -635,25 +635,25 @@ end.
 
 
 Theorem count_occ_In l x : In x l <-> count_occ l x > 0.
-Proof. try hammer_hook "List" "List.count_occ_In". Undo.  
+Proof. hammer_hook "List" "List.count_occ_In".  
 induction l as [|y l]; simpl.
 - split; [destruct 1 | apply gt_irrefl].
 - destruct eq_dec as [->|Hneq]; rewrite IHl; intuition.
 Qed.
 
 Theorem count_occ_not_In l x : ~ In x l <-> count_occ l x = 0.
-Proof. try hammer_hook "List" "List.count_occ_not_In". Undo.  
+Proof. hammer_hook "List" "List.count_occ_not_In".  
 rewrite count_occ_In. unfold gt. now rewrite Nat.nlt_ge, Nat.le_0_r.
 Qed.
 
 Lemma count_occ_nil x : count_occ [] x = 0.
-Proof. try hammer_hook "List" "List.count_occ_nil". Undo.  
+Proof. hammer_hook "List" "List.count_occ_nil".  
 reflexivity.
 Qed.
 
 Theorem count_occ_inv_nil l :
 (forall x:A, count_occ l x = 0) <-> l = [].
-Proof. try hammer_hook "List" "List.count_occ_inv_nil". Undo.  
+Proof. hammer_hook "List" "List.count_occ_inv_nil".  
 split.
 - induction l as [|x l]; trivial.
 intros H. specialize (H x). simpl in H.
@@ -663,13 +663,13 @@ Qed.
 
 Lemma count_occ_cons_eq l x y :
 x = y -> count_occ (x::l) y = S (count_occ l y).
-Proof. try hammer_hook "List" "List.count_occ_cons_eq". Undo.  
+Proof. hammer_hook "List" "List.count_occ_cons_eq".  
 intros H. simpl. now destruct (eq_dec x y).
 Qed.
 
 Lemma count_occ_cons_neq l x y :
 x <> y -> count_occ (x::l) y = count_occ l y.
-Proof. try hammer_hook "List" "List.count_occ_cons_neq". Undo.  
+Proof. hammer_hook "List" "List.count_occ_cons_neq".  
 intros H. simpl. now destruct (eq_dec x y).
 Qed.
 
@@ -694,7 +694,7 @@ match l with
 end.
 
 Lemma rev_app_distr : forall x y:list A, rev (x ++ y) = rev y ++ rev x.
-Proof. try hammer_hook "List" "List.rev_app_distr". Undo.  
+Proof. hammer_hook "List" "List.rev_app_distr".  
 induction x as [| a l IHl].
 destruct y as [| a l].
 simpl.
@@ -710,13 +710,13 @@ rewrite app_assoc; trivial.
 Qed.
 
 Remark rev_unit : forall (l:list A) (a:A), rev (l ++ [a]) = a :: rev l.
-Proof. try hammer_hook "List" "List.rev_unit". Undo.  
+Proof. hammer_hook "List" "List.rev_unit".  
 intros.
 apply (rev_app_distr l [a]); simpl; auto.
 Qed.
 
 Lemma rev_involutive : forall l:list A, rev (rev l) = l.
-Proof. try hammer_hook "List" "List.rev_involutive". Undo.  
+Proof. hammer_hook "List" "List.rev_involutive".  
 induction l as [| a l IHl].
 simpl; auto.
 
@@ -729,7 +729,7 @@ Qed.
 
 
 Lemma in_rev : forall l x, In x l <-> In x (rev l).
-Proof. try hammer_hook "List" "List.in_rev". Undo.  
+Proof. hammer_hook "List" "List.in_rev".  
 induction l.
 simpl; intuition.
 intros.
@@ -742,7 +742,7 @@ destruct (in_app_or _ _ _ H); firstorder.
 Qed.
 
 Lemma rev_length : forall l, length (rev l) = length l.
-Proof. try hammer_hook "List" "List.rev_length". Undo.  
+Proof. hammer_hook "List" "List.rev_length".  
 induction l;simpl; auto.
 rewrite app_length.
 rewrite IHl.
@@ -752,7 +752,7 @@ Qed.
 
 Lemma rev_nth : forall l d n,  n < length l ->
 nth n (rev l) d = nth (length l - S n) l d.
-Proof. try hammer_hook "List" "List.rev_nth". Undo.  
+Proof. hammer_hook "List" "List.rev_nth".  
 induction l.
 intros; inversion H.
 intros.
@@ -784,13 +784,13 @@ end.
 Definition rev' l : list A := rev_append l [].
 
 Lemma rev_append_rev : forall l l', rev_append l l' = rev l ++ l'.
-Proof. try hammer_hook "List" "List.rev_append_rev". Undo.  
+Proof. hammer_hook "List" "List.rev_append_rev".  
 induction l; simpl; auto; intros.
 rewrite <- app_assoc; firstorder.
 Qed.
 
 Lemma rev_alt : forall l, rev l = rev_append l [].
-Proof. try hammer_hook "List" "List.rev_alt". Undo.  
+Proof. hammer_hook "List" "List.rev_alt".  
 intros; rewrite rev_append_rev.
 rewrite app_nil_r; trivial.
 Qed.
@@ -807,7 +807,7 @@ forall P:list A-> Prop,
 P [] ->
 (forall (a:A) (l:list A), P (rev l) -> P (rev (a :: l))) ->
 forall l:list A, P (rev l).
-Proof. try hammer_hook "List" "List.rev_list_ind". Undo.  
+Proof. hammer_hook "List" "List.rev_list_ind".  
 induction l; auto.
 Qed.
 
@@ -815,7 +815,7 @@ Theorem rev_ind :
 forall P:list A -> Prop,
 P [] ->
 (forall (x:A) (l:list A), P l -> P (l ++ [x])) -> forall l:list A, P l.
-Proof. try hammer_hook "List" "List.rev_ind". Undo.  
+Proof. hammer_hook "List" "List.rev_ind".  
 intros.
 generalize (rev_involutive l).
 intros E; rewrite <- E.
@@ -841,17 +841,17 @@ match l with
 end.
 
 Lemma concat_nil : concat nil = nil.
-Proof. try hammer_hook "List" "List.concat_nil". Undo.  
+Proof. hammer_hook "List" "List.concat_nil".  
 reflexivity.
 Qed.
 
 Lemma concat_cons : forall x l, concat (cons x l) = x ++ concat l.
-Proof. try hammer_hook "List" "List.concat_cons". Undo.  
+Proof. hammer_hook "List" "List.concat_cons".  
 reflexivity.
 Qed.
 
 Lemma concat_app : forall l1 l2, concat (l1 ++ l2) = concat l1 ++ concat l2.
-Proof. try hammer_hook "List" "List.concat_app". Undo.  
+Proof. hammer_hook "List" "List.concat_app".  
 intros l1; induction l1 as [|x l1 IH]; intros l2; simpl.
 + reflexivity.
 + rewrite IH; apply app_assoc.
@@ -864,7 +864,7 @@ Qed.
 Hypothesis eq_dec : forall (x y : A), {x = y}+{x <> y}.
 
 Lemma list_eq_dec : forall l l':list A, {l = l'} + {l <> l'}.
-Proof. try hammer_hook "List" "List.list_eq_dec". Undo.   decide equality. Defined.
+Proof. hammer_hook "List" "List.list_eq_dec".   decide equality. Defined.
 
 End ListOps.
 
@@ -887,54 +887,54 @@ match l with
 end.
 
 Lemma map_cons (x:A)(l:list A) : map (x::l) = (f x) :: (map l).
-Proof. try hammer_hook "List" "List.map_cons". Undo.  
+Proof. hammer_hook "List" "List.map_cons".  
 reflexivity.
 Qed.
 
 Lemma in_map :
 forall (l:list A) (x:A), In x l -> In (f x) (map l).
-Proof. try hammer_hook "List" "List.in_map". Undo.  
+Proof. hammer_hook "List" "List.in_map".  
 induction l; firstorder (subst; auto).
 Qed.
 
 Lemma in_map_iff : forall l y, In y (map l) <-> exists x, f x = y /\ In x l.
-Proof. try hammer_hook "List" "List.in_map_iff". Undo.  
+Proof. hammer_hook "List" "List.in_map_iff".  
 induction l; firstorder (subst; auto).
 Qed.
 
 Lemma map_length : forall l, length (map l) = length l.
-Proof. try hammer_hook "List" "List.map_length". Undo.  
+Proof. hammer_hook "List" "List.map_length".  
 induction l; simpl; auto.
 Qed.
 
 Lemma map_nth : forall l d n,
 nth n (map l) (f d) = f (nth n l d).
-Proof. try hammer_hook "List" "List.map_nth". Undo.  
+Proof. hammer_hook "List" "List.map_nth".  
 induction l; simpl map; destruct n; firstorder.
 Qed.
 
 Lemma map_nth_error : forall n l d,
 nth_error l n = Some d -> nth_error (map l) n = Some (f d).
-Proof. try hammer_hook "List" "List.map_nth_error". Undo.  
+Proof. hammer_hook "List" "List.map_nth_error".  
 induction n; intros [ | ] ? Heq; simpl in *; inversion Heq; auto.
 Qed.
 
 Lemma map_app : forall l l',
 map (l++l') = (map l)++(map l').
-Proof. try hammer_hook "List" "List.map_app". Undo.  
+Proof. hammer_hook "List" "List.map_app".  
 induction l; simpl; auto.
 intros; rewrite IHl; auto.
 Qed.
 
 Lemma map_rev : forall l, map (rev l) = rev (map l).
-Proof. try hammer_hook "List" "List.map_rev". Undo.  
+Proof. hammer_hook "List" "List.map_rev".  
 induction l; simpl; auto.
 rewrite map_app.
 rewrite IHl; auto.
 Qed.
 
 Lemma map_eq_nil : forall l, map l = [] -> l = [].
-Proof. try hammer_hook "List" "List.map_eq_nil". Undo.  
+Proof. hammer_hook "List" "List.map_eq_nil".  
 destruct l; simpl; reflexivity || discriminate.
 Qed.
 
@@ -946,7 +946,7 @@ Hypothesis Hfinjective: forall x1 x2: A, (f x1) = (f x2) -> x1 = x2.
 
 Theorem count_occ_map x l:
 count_occ decA l x = count_occ decB (map l) (f x).
-Proof. try hammer_hook "List" "List.count_occ_map". Undo.  
+Proof. hammer_hook "List" "List.count_occ_map".  
 revert x. induction l as [| a l' Hrec]; intro x; simpl.
 - reflexivity.
 - specialize (Hrec x).
@@ -968,7 +968,7 @@ end.
 
 Lemma in_flat_map : forall (f:A->list B)(l:list A)(y:B),
 In y (flat_map f l) <-> exists x, In x l /\ In y (f x).
-Proof using A B. try hammer_hook "List" "List.in_flat_map". Undo.  
+Proof using A B. hammer_hook "List" "List.in_flat_map".  
 clear Hfinjective.
 induction l; simpl; split; intros.
 contradiction.
@@ -988,14 +988,14 @@ End Map.
 
 Lemma flat_map_concat_map : forall A B (f : A -> list B) l,
 flat_map f l = concat (map f l).
-Proof. try hammer_hook "List" "List.flat_map_concat_map". Undo.  
+Proof. hammer_hook "List" "List.flat_map_concat_map".  
 intros A B f l; induction l as [|x l IH]; simpl.
 + reflexivity.
 + rewrite IH; reflexivity.
 Qed.
 
 Lemma concat_map : forall A B (f : A -> B) l, map f (concat l) = concat (map (map f) l).
-Proof. try hammer_hook "List" "List.concat_map". Undo.  
+Proof. hammer_hook "List" "List.concat_map".  
 intros A B f l; induction l as [|x l IH]; simpl.
 + reflexivity.
 + rewrite map_app, IH; reflexivity.
@@ -1003,27 +1003,27 @@ Qed.
 
 Lemma map_id : forall (A :Type) (l : list A),
 map (fun x => x) l = l.
-Proof. try hammer_hook "List" "List.map_id". Undo.  
+Proof. hammer_hook "List" "List.map_id".  
 induction l; simpl; auto; rewrite IHl; auto.
 Qed.
 
 Lemma map_map : forall (A B C:Type)(f:A->B)(g:B->C) l,
 map g (map f l) = map (fun x => g (f x)) l.
-Proof. try hammer_hook "List" "List.map_map". Undo.  
+Proof. hammer_hook "List" "List.map_map".  
 induction l; simpl; auto.
 rewrite IHl; auto.
 Qed.
 
 Lemma map_ext_in :
 forall (A B : Type)(f g:A->B) l, (forall a, In a l -> f a = g a) -> map f l = map g l.
-Proof. try hammer_hook "List" "List.map_ext_in". Undo.  
+Proof. hammer_hook "List" "List.map_ext_in".  
 induction l; simpl; auto.
 intros; rewrite H by intuition; rewrite IHl; auto.
 Qed.
 
 Lemma map_ext :
 forall (A B : Type)(f g:A->B), (forall a, f a = g a) -> forall l, map f l = map g l.
-Proof. try hammer_hook "List" "List.map_ext". Undo.  
+Proof. hammer_hook "List" "List.map_ext".  
 intros; apply map_ext_in; auto.
 Qed.
 
@@ -1044,7 +1044,7 @@ end.
 
 Lemma fold_left_app : forall (l l':list B)(i:A),
 fold_left (l++l') i = fold_left l' (fold_left l i).
-Proof. try hammer_hook "List" "List.fold_left_app". Undo.  
+Proof. hammer_hook "List" "List.fold_left_app".  
 induction l.
 simpl; auto.
 intros.
@@ -1056,7 +1056,7 @@ End Fold_Left_Recursor.
 
 Lemma fold_left_length :
 forall (A:Type)(l:list A), fold_left (fun x _ => S x) l 0 = length l.
-Proof. try hammer_hook "List" "List.fold_left_length". Undo.  
+Proof. hammer_hook "List" "List.fold_left_length".  
 intros A l.
 enough (H : forall n, fold_left (fun x _ => S x) l n = n + length l) by exact (H 0).
 induction l; simpl; auto.
@@ -1083,7 +1083,7 @@ End Fold_Right_Recursor.
 
 Lemma fold_right_app : forall (A B:Type)(f:A->B->B) l l' i,
 fold_right f i (l++l') = fold_right f (fold_right f i l') l.
-Proof. try hammer_hook "List" "List.fold_right_app". Undo.  
+Proof. hammer_hook "List" "List.fold_right_app".  
 induction l.
 simpl; auto.
 simpl; intros.
@@ -1092,7 +1092,7 @@ Qed.
 
 Lemma fold_left_rev_right : forall (A B:Type)(f:A->B->B) l i,
 fold_right f i (rev l) = fold_left (fun x y => f y x) l i.
-Proof. try hammer_hook "List" "List.fold_left_rev_right". Undo.  
+Proof. hammer_hook "List" "List.fold_left_rev_right".  
 induction l.
 simpl; auto.
 intros.
@@ -1105,7 +1105,7 @@ forall (A : Type) (f : A -> A -> A),
 (forall x y z : A, f x (f y z) = f (f x y) z) ->
 forall (a0 : A), (forall y : A, f a0 y = f y a0) ->
 forall (l : list A), fold_left f l a0 = fold_right f a0 l.
-Proof. try hammer_hook "List" "List.fold_symmetric". Undo.  
+Proof. hammer_hook "List" "List.fold_symmetric".  
 intros A f assoc a0 comma0 l.
 induction l as [ | a1 l ]; [ simpl; reflexivity | ].
 simpl. rewrite <- IHl. clear IHl. revert a1. induction l; [ auto | ].
@@ -1142,7 +1142,7 @@ end.
 
 Lemma existsb_exists :
 forall l, existsb l = true <-> exists x, In x l /\ f x = true.
-Proof. try hammer_hook "List" "List.existsb_exists". Undo.  
+Proof. hammer_hook "List" "List.existsb_exists".  
 induction l; simpl; intuition.
 inversion H.
 firstorder.
@@ -1154,7 +1154,7 @@ Qed.
 
 Lemma existsb_nth : forall l n d, n < length l ->
 existsb l = false -> f (nth n l d) = false.
-Proof. try hammer_hook "List" "List.existsb_nth". Undo.  
+Proof. hammer_hook "List" "List.existsb_nth".  
 induction l.
 inversion 1.
 simpl; intros.
@@ -1165,7 +1165,7 @@ Qed.
 
 Lemma existsb_app : forall l1 l2,
 existsb (l1++l2) = existsb l1 || existsb l2.
-Proof. try hammer_hook "List" "List.existsb_app". Undo.  
+Proof. hammer_hook "List" "List.existsb_app".  
 induction l1; intros l2; simpl.
 solve[auto].
 case (f a); simpl; solve[auto].
@@ -1181,7 +1181,7 @@ end.
 
 Lemma forallb_forall :
 forall l, forallb l = true <-> (forall x, In x l -> f x = true).
-Proof. try hammer_hook "List" "List.forallb_forall". Undo.  
+Proof. hammer_hook "List" "List.forallb_forall".  
 induction l; simpl; intuition.
 destruct (andb_prop _ _ H1).
 congruence.
@@ -1193,7 +1193,7 @@ Qed.
 
 Lemma forallb_app :
 forall l1 l2, forallb (l1++l2) = forallb l1 && forallb l2.
-Proof. try hammer_hook "List" "List.forallb_app". Undo.  
+Proof. hammer_hook "List" "List.forallb_app".  
 induction l1; simpl.
 solve[auto].
 case (f a); simpl; solve[auto].
@@ -1207,7 +1207,7 @@ match l with
 end.
 
 Lemma filter_In : forall x l, In x (filter l) <-> In x l /\ f x = true.
-Proof. try hammer_hook "List" "List.filter_In". Undo.  
+Proof. hammer_hook "List" "List.filter_In".  
 induction l; simpl.
 intuition.
 intros.
@@ -1223,7 +1223,7 @@ match l with
 end.
 
 Lemma find_some l x : find l = Some x -> In x l /\ f x = true.
-Proof. try hammer_hook "List" "List.find_some". Undo.  
+Proof. hammer_hook "List" "List.find_some".  
 induction l as [|a l IH]; simpl; [easy| ].
 case_eq (f a); intros Ha Eq.
 * injection Eq as ->; auto.
@@ -1231,7 +1231,7 @@ case_eq (f a); intros Ha Eq.
 Qed.
 
 Lemma find_none l : find l = None -> forall x, In x l -> f x = false.
-Proof. try hammer_hook "List" "List.find_none". Undo.  
+Proof. hammer_hook "List" "List.find_none".  
 induction l as [|a l IH]; simpl; [easy|].
 case_eq (f a); intros Ha Eq x IN; [easy|].
 destruct IN as [<-|IN]; auto.
@@ -1250,7 +1250,7 @@ Theorem partition_cons1 a l l1 l2:
 partition l = (l1, l2) ->
 f a = true ->
 partition (a::l) = (a::l1, l2).
-Proof. try hammer_hook "List" "List.partition_cons1". Undo.  
+Proof. hammer_hook "List" "List.partition_cons1".  
 simpl. now intros -> ->.
 Qed.
 
@@ -1258,14 +1258,14 @@ Theorem partition_cons2 a l l1 l2:
 partition l = (l1, l2) ->
 f a=false ->
 partition (a::l) = (l1, a::l2).
-Proof. try hammer_hook "List" "List.partition_cons2". Undo.  
+Proof. hammer_hook "List" "List.partition_cons2".  
 simpl. now intros -> ->.
 Qed.
 
 Theorem partition_length l l1 l2:
 partition l = (l1, l2) ->
 length l = length l1 + length l2.
-Proof. try hammer_hook "List" "List.partition_length". Undo.  
+Proof. hammer_hook "List" "List.partition_length".  
 revert l1 l2. induction l as [ | a l' Hrec]; intros l1 l2.
 - now intros [= <- <- ].
 - simpl. destruct (f a), (partition l') as (left, right);
@@ -1274,7 +1274,7 @@ Qed.
 
 Theorem partition_inv_nil (l : list A):
 partition l = ([], []) <-> l = [].
-Proof. try hammer_hook "List" "List.partition_inv_nil". Undo.  
+Proof. hammer_hook "List" "List.partition_inv_nil".  
 split.
 - destruct l as [|a l'].
 * intuition.
@@ -1285,7 +1285,7 @@ Qed.
 Theorem elements_in_partition l l1 l2:
 partition l = (l1, l2) ->
 forall x:A, In x l <-> In x l1 \/ In x l2.
-Proof. try hammer_hook "List" "List.elements_in_partition". Undo.  
+Proof. hammer_hook "List" "List.elements_in_partition".  
 revert l1 l2. induction l as [| a l' Hrec]; simpl; intros l1 l2 Eq x.
 - injection Eq as <- <-. tauto.
 - destruct (partition l') as (left, right).
@@ -1315,7 +1315,7 @@ end.
 
 Lemma in_split_l : forall (l:list (A*B))(p:A*B),
 In p l -> In (fst p) (fst (split l)).
-Proof. try hammer_hook "List" "List.in_split_l". Undo.  
+Proof. hammer_hook "List" "List.in_split_l".  
 induction l; simpl; intros; auto.
 destruct p; destruct a; destruct (split l); simpl in *.
 destruct H.
@@ -1325,7 +1325,7 @@ Qed.
 
 Lemma in_split_r : forall (l:list (A*B))(p:A*B),
 In p l -> In (snd p) (snd (split l)).
-Proof. try hammer_hook "List" "List.in_split_r". Undo.  
+Proof. hammer_hook "List" "List.in_split_r".  
 induction l; simpl; intros; auto.
 destruct p; destruct a; destruct (split l); simpl in *.
 destruct H.
@@ -1335,7 +1335,7 @@ Qed.
 
 Lemma split_nth : forall (l:list (A*B))(n:nat)(d:A*B),
 nth n l d = (nth n (fst (split l)) (fst d), nth n (snd (split l)) (snd d)).
-Proof. try hammer_hook "List" "List.split_nth". Undo.  
+Proof. hammer_hook "List" "List.split_nth".  
 induction l.
 destruct n; destruct d; simpl; auto.
 destruct n; destruct d; simpl; auto.
@@ -1346,14 +1346,14 @@ Qed.
 
 Lemma split_length_l : forall (l:list (A*B)),
 length (fst (split l)) = length l.
-Proof. try hammer_hook "List" "List.split_length_l". Undo.  
+Proof. hammer_hook "List" "List.split_length_l".  
 induction l; simpl; auto.
 destruct a; destruct (split l); simpl; auto.
 Qed.
 
 Lemma split_length_r : forall (l:list (A*B)),
 length (snd (split l)) = length l.
-Proof. try hammer_hook "List" "List.split_length_r". Undo.  
+Proof. hammer_hook "List" "List.split_length_r".  
 induction l; simpl; auto.
 destruct a; destruct (split l); simpl; auto.
 Qed.
@@ -1368,7 +1368,7 @@ end.
 
 Lemma split_combine : forall (l: list (A*B)),
 let (l1,l2) := split l in combine l1 l2 = l.
-Proof. try hammer_hook "List" "List.split_combine". Undo.  
+Proof. hammer_hook "List" "List.split_combine".  
 induction l.
 simpl; auto.
 destruct a; simpl.
@@ -1378,14 +1378,14 @@ Qed.
 
 Lemma combine_split : forall (l:list A)(l':list B), length l = length l' ->
 split (combine l l') = (l,l').
-Proof. try hammer_hook "List" "List.combine_split". Undo.  
+Proof. hammer_hook "List" "List.combine_split".  
 induction l, l'; simpl; trivial; try discriminate.
 now intros [= ->%IHl].
 Qed.
 
 Lemma in_combine_l : forall (l:list A)(l':list B)(x:A)(y:B),
 In (x,y) (combine l l') -> In x l.
-Proof. try hammer_hook "List" "List.in_combine_l". Undo.  
+Proof. hammer_hook "List" "List.in_combine_l".  
 induction l.
 simpl; auto.
 destruct l'; simpl; auto; intros.
@@ -1397,7 +1397,7 @@ Qed.
 
 Lemma in_combine_r : forall (l:list A)(l':list B)(x:A)(y:B),
 In (x,y) (combine l l') -> In y l'.
-Proof. try hammer_hook "List" "List.in_combine_r". Undo.  
+Proof. hammer_hook "List" "List.in_combine_r".  
 induction l.
 simpl; intros; contradiction.
 destruct l'; simpl; auto; intros.
@@ -1408,7 +1408,7 @@ Qed.
 
 Lemma combine_length : forall (l:list A)(l':list B),
 length (combine l l') = min (length l) (length l').
-Proof. try hammer_hook "List" "List.combine_length". Undo.  
+Proof. hammer_hook "List" "List.combine_length".  
 induction l.
 simpl; auto.
 destruct l'; simpl; auto.
@@ -1417,7 +1417,7 @@ Qed.
 Lemma combine_nth : forall (l:list A)(l':list B)(n:nat)(x:A)(y:B),
 length l = length l' ->
 nth n (combine l l') (x,y) = (nth n l x, nth n l' y).
-Proof. try hammer_hook "List" "List.combine_nth". Undo.  
+Proof. hammer_hook "List" "List.combine_nth".  
 induction l; destruct l'; intros; try discriminate.
 destruct n; simpl; auto.
 destruct n; simpl in *; auto.
@@ -1435,7 +1435,7 @@ end.
 Lemma in_prod_aux :
 forall (x:A) (y:B) (l:list B),
 In y l -> In (x, y) (map (fun y0:B => (x, y0)) l).
-Proof. try hammer_hook "List" "List.in_prod_aux". Undo.  
+Proof. hammer_hook "List" "List.in_prod_aux".  
 induction l;
 [ simpl; auto
 | simpl; destruct 1 as [H1| ];
@@ -1445,7 +1445,7 @@ Qed.
 Lemma in_prod :
 forall (l:list A) (l':list B) (x:A) (y:B),
 In x l -> In y l' -> In (x, y) (list_prod l l').
-Proof. try hammer_hook "List" "List.in_prod". Undo.  
+Proof. hammer_hook "List" "List.in_prod".  
 induction l;
 [ simpl; tauto
 | simpl; intros; apply in_or_app; destruct H;
@@ -1455,7 +1455,7 @@ Qed.
 Lemma in_prod_iff :
 forall (l:list A)(l':list B)(x:A)(y:B),
 In (x,y) (list_prod l l') <-> In x l /\ In y l'.
-Proof. try hammer_hook "List" "List.in_prod_iff". Undo.  
+Proof. hammer_hook "List" "List.in_prod_iff".  
 split; [ | intros; apply in_prod; intuition ].
 induction l; simpl; intros.
 intuition.
@@ -1468,7 +1468,7 @@ Qed.
 
 Lemma prod_length : forall (l:list A)(l':list B),
 length (list_prod l l') = (length l) * (length l').
-Proof. try hammer_hook "List" "List.prod_length". Undo.  
+Proof. hammer_hook "List" "List.prod_length".  
 induction l; simpl; auto.
 intros.
 rewrite app_length.
@@ -1500,34 +1500,34 @@ Variables a b : A.
 Variables l m n : list A.
 
 Lemma lel_refl : lel l l.
-Proof. try hammer_hook "List" "List.lel_refl". Undo.  
+Proof. hammer_hook "List" "List.lel_refl".  
 unfold lel; auto with arith.
 Qed.
 
 Lemma lel_trans : lel l m -> lel m n -> lel l n.
-Proof. try hammer_hook "List" "List.lel_trans". Undo.  
+Proof. hammer_hook "List" "List.lel_trans".  
 unfold lel; intros.
 now_show (length l <= length n).
 apply le_trans with (length m); auto with arith.
 Qed.
 
 Lemma lel_cons_cons : lel l m -> lel (a :: l) (b :: m).
-Proof. try hammer_hook "List" "List.lel_cons_cons". Undo.  
+Proof. hammer_hook "List" "List.lel_cons_cons".  
 unfold lel; simpl; auto with arith.
 Qed.
 
 Lemma lel_cons : lel l m -> lel l (b :: m).
-Proof. try hammer_hook "List" "List.lel_cons". Undo.  
+Proof. hammer_hook "List" "List.lel_cons".  
 unfold lel; simpl; auto with arith.
 Qed.
 
 Lemma lel_tail : lel (a :: l) (b :: m) -> lel l m.
-Proof. try hammer_hook "List" "List.lel_tail". Undo.  
+Proof. hammer_hook "List" "List.lel_tail".  
 unfold lel; simpl; auto with arith.
 Qed.
 
 Lemma lel_nil : forall l':list A, lel l' nil -> nil = l'.
-Proof. try hammer_hook "List" "List.lel_nil". Undo.  
+Proof. hammer_hook "List" "List.lel_nil".  
 intro l'; elim l'; auto with arith.
 intros a' y H H0.
 now_show (nil = a' :: y).
@@ -1551,37 +1551,37 @@ Definition incl (l m:list A) := forall a:A, In a l -> In a m.
 Hint Unfold incl.
 
 Lemma incl_refl : forall l:list A, incl l l.
-Proof. try hammer_hook "List" "List.incl_refl". Undo.  
+Proof. hammer_hook "List" "List.incl_refl".  
 auto.
 Qed.
 Hint Resolve incl_refl.
 
 Lemma incl_tl : forall (a:A) (l m:list A), incl l m -> incl l (a :: m).
-Proof. try hammer_hook "List" "List.incl_tl". Undo.  
+Proof. hammer_hook "List" "List.incl_tl".  
 auto with datatypes.
 Qed.
 Hint Immediate incl_tl.
 
 Lemma incl_tran : forall l m n:list A, incl l m -> incl m n -> incl l n.
-Proof. try hammer_hook "List" "List.incl_tran". Undo.  
+Proof. hammer_hook "List" "List.incl_tran".  
 auto.
 Qed.
 
 Lemma incl_appl : forall l m n:list A, incl l n -> incl l (n ++ m).
-Proof. try hammer_hook "List" "List.incl_appl". Undo.  
+Proof. hammer_hook "List" "List.incl_appl".  
 auto with datatypes.
 Qed.
 Hint Immediate incl_appl.
 
 Lemma incl_appr : forall l m n:list A, incl l n -> incl l (m ++ n).
-Proof. try hammer_hook "List" "List.incl_appr". Undo.  
+Proof. hammer_hook "List" "List.incl_appr".  
 auto with datatypes.
 Qed.
 Hint Immediate incl_appr.
 
 Lemma incl_cons :
 forall (a:A) (l m:list A), In a m -> incl l m -> incl (a :: l) m.
-Proof. try hammer_hook "List" "List.incl_cons". Undo.  
+Proof. hammer_hook "List" "List.incl_cons".  
 unfold incl; simpl; intros a l m H H0 a0 H1.
 now_show (In a0 m).
 elim H1.
@@ -1595,7 +1595,7 @@ Qed.
 Hint Resolve incl_cons.
 
 Lemma incl_app : forall l m n:list A, incl l n -> incl m n -> incl (l ++ m) n.
-Proof. try hammer_hook "List" "List.incl_app". Undo.  
+Proof. hammer_hook "List" "List.incl_app".  
 unfold incl; simpl; intros l m n H H0 a H1.
 now_show (In a n).
 elim (in_app_or _ _ _ H1); auto.
@@ -1626,16 +1626,16 @@ end
 end.
 
 Lemma firstn_nil n: firstn n [] = [].
-Proof. try hammer_hook "List" "List.firstn_nil". Undo.   induction n; now simpl. Qed.
+Proof. hammer_hook "List" "List.firstn_nil".   induction n; now simpl. Qed.
 
 Lemma firstn_cons n a l: firstn (S n) (a::l) = a :: (firstn n l).
-Proof. try hammer_hook "List" "List.firstn_cons". Undo.   now simpl. Qed.
+Proof. hammer_hook "List" "List.firstn_cons".   now simpl. Qed.
 
 Lemma firstn_all l: firstn (length l) l = l.
-Proof. try hammer_hook "List" "List.firstn_all". Undo.   induction l as [| ? ? H]; simpl; [reflexivity | now rewrite H]. Qed.
+Proof. hammer_hook "List" "List.firstn_all".   induction l as [| ? ? H]; simpl; [reflexivity | now rewrite H]. Qed.
 
 Lemma firstn_all2 n: forall (l:list A), (length l) <= n -> firstn n l = l.
-Proof. try hammer_hook "List" "List.firstn_all2". Undo.   induction n as [|k iHk].
+Proof. hammer_hook "List" "List.firstn_all2".   induction n as [|k iHk].
 - intro. inversion 1 as [H1|?].
 rewrite (length_zero_iff_nil l) in H1. subst. now simpl.
 - destruct l as [|x xs]; simpl.
@@ -1644,10 +1644,10 @@ rewrite (length_zero_iff_nil l) in H1. subst. now simpl.
 Qed.
 
 Lemma firstn_O l: firstn 0 l = [].
-Proof. try hammer_hook "List" "List.firstn_O". Undo.   now simpl. Qed.
+Proof. hammer_hook "List" "List.firstn_O".   now simpl. Qed.
 
 Lemma firstn_le_length n: forall l:list A, length (firstn n l) <= n.
-Proof. try hammer_hook "List" "List.firstn_le_length". Undo.  
+Proof. hammer_hook "List" "List.firstn_le_length".  
 induction n as [|k iHk]; simpl; [auto | destruct l as [|x xs]; simpl].
 - auto with arith.
 - apply Peano.le_n_S, iHk.
@@ -1655,7 +1655,7 @@ Qed.
 
 Lemma firstn_length_le: forall l:list A, forall n:nat,
 n <= length l -> length (firstn n l) = n.
-Proof. try hammer_hook "List" "List.firstn_length_le". Undo.   induction l as [|x xs Hrec].
+Proof. hammer_hook "List" "List.firstn_length_le".   induction l as [|x xs Hrec].
 - simpl. intros n H. apply le_n_0_eq in H. rewrite <- H. now simpl.
 - destruct n.
 * now simpl.
@@ -1665,7 +1665,7 @@ Qed.
 Lemma firstn_app n:
 forall l1 l2,
 firstn n (l1 ++ l2) = (firstn n l1) ++ (firstn (n - length l1) l2).
-Proof. try hammer_hook "List" "List.firstn_app". Undo.   induction n as [|k iHk]; intros l1 l2.
+Proof. hammer_hook "List" "List.firstn_app".   induction n as [|k iHk]; intros l1 l2.
 - now simpl.
 - destruct l1 as [|x xs].
 * unfold firstn at 2, length. now rewrite 2!app_nil_l, <- minus_n_O.
@@ -1675,7 +1675,7 @@ Qed.
 Lemma firstn_app_2 n:
 forall l1 l2,
 firstn ((length l1) + n) (l1 ++ l2) = l1 ++ firstn n l2.
-Proof. try hammer_hook "List" "List.firstn_app_2". Undo.   induction n as [| k iHk];intros l1 l2.
+Proof. hammer_hook "List" "List.firstn_app_2".   induction n as [| k iHk];intros l1 l2.
 - unfold firstn at 2. rewrite <- plus_n_O, app_nil_r.
 rewrite firstn_app. rewrite <- minus_diag_reverse.
 unfold firstn at 2. rewrite app_nil_r. apply firstn_all.
@@ -1690,7 +1690,7 @@ Lemma firstn_firstn:
 forall l:list A,
 forall i j : nat,
 firstn i (firstn j l) = firstn (min i j) l.
-Proof. try hammer_hook "List" "List.firstn_firstn". Undo.   induction l as [|x xs Hl].
+Proof. hammer_hook "List" "List.firstn_firstn".   induction l as [|x xs Hl].
 - intros. simpl. now rewrite ?firstn_nil.
 - destruct i.
 * intro. now simpl.
@@ -1709,7 +1709,7 @@ end
 end.
 
 Lemma firstn_skipn : forall n l, firstn n l ++ skipn n l = l.
-Proof. try hammer_hook "List" "List.firstn_skipn". Undo.  
+Proof. hammer_hook "List" "List.firstn_skipn".  
 induction n.
 simpl; auto.
 destruct l; simpl; auto.
@@ -1717,13 +1717,13 @@ f_equal; auto.
 Qed.
 
 Lemma firstn_length : forall n l, length (firstn n l) = min n (length l).
-Proof. try hammer_hook "List" "List.firstn_length". Undo.  
+Proof. hammer_hook "List" "List.firstn_length".  
 induction n; destruct l; simpl; auto.
 Qed.
 
 Lemma removelast_firstn : forall n l, n < length l ->
 removelast (firstn (S n) l) = firstn n l.
-Proof. try hammer_hook "List" "List.removelast_firstn". Undo.  
+Proof. hammer_hook "List" "List.removelast_firstn".  
 induction n; destruct l.
 simpl; auto.
 simpl; auto.
@@ -1742,7 +1742,7 @@ Qed.
 
 Lemma firstn_removelast : forall n l, n < length l ->
 firstn n (removelast l) = firstn n l.
-Proof. try hammer_hook "List" "List.firstn_removelast". Undo.  
+Proof. hammer_hook "List" "List.firstn_removelast".  
 induction n; destruct l.
 simpl; auto.
 simpl; auto.
@@ -1771,13 +1771,13 @@ Inductive Add (a:A) : list A -> list A -> Prop :=
 | Add_cons x l l' : Add a l l' -> Add a (x::l) (x::l').
 
 Lemma Add_app a l1 l2 : Add a (l1++l2) (l1++a::l2).
-Proof. try hammer_hook "List" "List.Add_app". Undo.  
+Proof. hammer_hook "List" "List.Add_app".  
 induction l1; simpl; now constructor.
 Qed.
 
 Lemma Add_split a l l' :
 Add a l l' -> exists l1 l2, l = l1++l2 /\ l' = l1++a::l2.
-Proof. try hammer_hook "List" "List.Add_split". Undo.  
+Proof. hammer_hook "List" "List.Add_split".  
 induction 1.
 - exists nil; exists l; split; trivial.
 - destruct IHAdd as (l1 & l2 & Hl & Hl').
@@ -1786,24 +1786,24 @@ Qed.
 
 Lemma Add_in a l l' : Add a l l' ->
 forall x, In x l' <-> In x (a::l).
-Proof. try hammer_hook "List" "List.Add_in". Undo.  
+Proof. hammer_hook "List" "List.Add_in".  
 induction 1; intros; simpl in *; rewrite ?IHAdd; tauto.
 Qed.
 
 Lemma Add_length a l l' : Add a l l' -> length l' = S (length l).
-Proof. try hammer_hook "List" "List.Add_length". Undo.  
+Proof. hammer_hook "List" "List.Add_length".  
 induction 1; simpl; auto with arith.
 Qed.
 
 Lemma Add_inv a l : In a l -> exists l', Add a l' l.
-Proof. try hammer_hook "List" "List.Add_inv". Undo.  
+Proof. hammer_hook "List" "List.Add_inv".  
 intro Ha. destruct (in_split _ _ Ha) as (l1 & l2 & ->).
 exists (l1 ++ l2). apply Add_app.
 Qed.
 
 Lemma incl_Add_inv a l u v :
 ~In a l -> incl (a::l) v -> Add a u v -> incl l u.
-Proof. try hammer_hook "List" "List.incl_Add_inv". Undo.  
+Proof. hammer_hook "List" "List.incl_Add_inv".  
 intros Ha H AD y Hy.
 assert (Hy' : In y (a::u)).
 { rewrite <- (Add_in AD). apply H; simpl; auto. }
@@ -1825,7 +1825,7 @@ Inductive NoDup : list A -> Prop :=
 | NoDup_cons : forall x l, ~ In x l -> NoDup l -> NoDup (x::l).
 
 Lemma NoDup_Add a l l' : Add a l l' -> (NoDup l' <-> NoDup l /\ ~In a l).
-Proof. try hammer_hook "List" "List.NoDup_Add". Undo.  
+Proof. hammer_hook "List" "List.NoDup_Add".  
 induction 1 as [l|x l l' AD IH].
 - split; [ inversion_clear 1; now split | now constructor ].
 - split.
@@ -1838,23 +1838,23 @@ Qed.
 
 Lemma NoDup_remove l l' a :
 NoDup (l++a::l') -> NoDup (l++l') /\ ~In a (l++l').
-Proof. try hammer_hook "List" "List.NoDup_remove". Undo.  
+Proof. hammer_hook "List" "List.NoDup_remove".  
 apply NoDup_Add. apply Add_app.
 Qed.
 
 Lemma NoDup_remove_1 l l' a : NoDup (l++a::l') -> NoDup (l++l').
-Proof. try hammer_hook "List" "List.NoDup_remove_1". Undo.  
+Proof. hammer_hook "List" "List.NoDup_remove_1".  
 intros. now apply NoDup_remove with a.
 Qed.
 
 Lemma NoDup_remove_2 l l' a : NoDup (l++a::l') -> ~In a (l++l').
-Proof. try hammer_hook "List" "List.NoDup_remove_2". Undo.  
+Proof. hammer_hook "List" "List.NoDup_remove_2".  
 intros. now apply NoDup_remove.
 Qed.
 
 Theorem NoDup_cons_iff a l:
 NoDup (a::l) <-> ~ In a l /\ NoDup l.
-Proof. try hammer_hook "List" "List.NoDup_cons_iff". Undo.  
+Proof. hammer_hook "List" "List.NoDup_cons_iff".  
 split.
 + inversion_clear 1. now split.
 + now constructor.
@@ -1871,7 +1871,7 @@ match l with
 end.
 
 Lemma nodup_In l x : In x (nodup l) <-> In x l.
-Proof. try hammer_hook "List" "List.nodup_In". Undo.  
+Proof. hammer_hook "List" "List.nodup_In".  
 induction l as [|a l' Hrec]; simpl.
 - reflexivity.
 - destruct (in_dec decA a l'); simpl; rewrite Hrec.
@@ -1880,7 +1880,7 @@ induction l as [|a l' Hrec]; simpl.
 Qed.
 
 Lemma NoDup_nodup l: NoDup (nodup l).
-Proof. try hammer_hook "List" "List.NoDup_nodup". Undo.  
+Proof. hammer_hook "List" "List.NoDup_nodup".  
 induction l as [|a l' Hrec]; simpl.
 - constructor.
 - destruct (in_dec decA a l'); simpl.
@@ -1889,7 +1889,7 @@ induction l as [|a l' Hrec]; simpl.
 Qed.
 
 Lemma nodup_inv k l a : nodup k = a :: l -> ~ In a l.
-Proof. try hammer_hook "List" "List.nodup_inv". Undo.  
+Proof. hammer_hook "List" "List.nodup_inv".  
 intros H.
 assert (H' : NoDup (a::l)).
 { rewrite <- H. apply NoDup_nodup. }
@@ -1898,7 +1898,7 @@ Qed.
 
 Theorem NoDup_count_occ l:
 NoDup l <-> (forall x:A, count_occ decA l x <= 1).
-Proof. try hammer_hook "List" "List.NoDup_count_occ". Undo.  
+Proof. hammer_hook "List" "List.NoDup_count_occ".  
 induction l as [| a l' Hrec].
 - simpl; split; auto. constructor.
 - rewrite NoDup_cons_iff, Hrec, (count_occ_not_In decA). clear Hrec. split.
@@ -1913,7 +1913,7 @@ Qed.
 
 Theorem NoDup_count_occ' l:
 NoDup l <-> (forall x:A, In x l -> count_occ decA l x = 1).
-Proof. try hammer_hook "List" "List.NoDup_count_occ'". Undo.  
+Proof. hammer_hook "List" "List.NoDup_count_occ'".  
 rewrite NoDup_count_occ.
 setoid_rewrite (count_occ_In decA). unfold gt, lt in *.
 split; intros H x; specialize (H x);
@@ -1930,7 +1930,7 @@ Qed.
 Lemma NoDup_nth_error l :
 NoDup l <->
 (forall i j, i<length l -> nth_error l i = nth_error l j -> i = j).
-Proof. try hammer_hook "List" "List.NoDup_nth_error". Undo.  
+Proof. hammer_hook "List" "List.NoDup_nth_error".  
 split.
 { intros H; induction H as [|a l Hal Hl IH]; intros i j Hi E.
 - inversion Hi.
@@ -1950,7 +1950,7 @@ Lemma NoDup_nth l d :
 NoDup l <->
 (forall i j, i<length l -> j<length l ->
 nth i l d = nth j l d -> i = j).
-Proof. try hammer_hook "List" "List.NoDup_nth". Undo.  
+Proof. hammer_hook "List" "List.NoDup_nth".  
 split.
 { intros H; induction H as [|a l Hal Hl IH]; intros i j Hi Hj E.
 - inversion Hi.
@@ -1969,7 +1969,7 @@ Qed.
 
 Lemma NoDup_incl_length l l' :
 NoDup l -> incl l l' -> length l <= length l'.
-Proof. try hammer_hook "List" "List.NoDup_incl_length". Undo.  
+Proof. hammer_hook "List" "List.NoDup_incl_length".  
 intros N. revert l'. induction N as [|a l Hal N IH]; simpl.
 - auto with arith.
 - intros l' H.
@@ -1980,7 +1980,7 @@ Qed.
 
 Lemma NoDup_length_incl l l' :
 NoDup l -> length l' <= length l -> incl l l' -> incl l' l.
-Proof. try hammer_hook "List" "List.NoDup_length_incl". Undo.  
+Proof. hammer_hook "List" "List.NoDup_length_incl".  
 intros N. revert l'. induction N as [|a l Hal N IH].
 - destruct l'; easy.
 - intros l' E H x Hx.
@@ -1999,7 +1999,7 @@ End ReDun.
 
 
 Lemma NoDup_map_inv A B (f:A->B) l : NoDup (map f l) -> NoDup l.
-Proof. try hammer_hook "List" "List.NoDup_map_inv". Undo.  
+Proof. hammer_hook "List" "List.NoDup_map_inv".  
 induction l; simpl; inversion_clear 1; subst; constructor; auto.
 intro H. now apply (in_map f) in H.
 Qed.
@@ -2019,13 +2019,13 @@ match len with
 end.
 
 Lemma seq_length : forall len start, length (seq start len) = len.
-Proof. try hammer_hook "List" "List.seq_length". Undo.  
+Proof. hammer_hook "List" "List.seq_length".  
 induction len; simpl; auto.
 Qed.
 
 Lemma seq_nth : forall len start n d,
 n < len -> nth n (seq start len) d = start+n.
-Proof. try hammer_hook "List" "List.seq_nth". Undo.  
+Proof. hammer_hook "List" "List.seq_nth".  
 induction len; intros.
 inversion H.
 simpl seq.
@@ -2036,7 +2036,7 @@ Qed.
 
 Lemma seq_shift : forall len start,
 map S (seq start len) = seq (S start) len.
-Proof. try hammer_hook "List" "List.seq_shift". Undo.  
+Proof. hammer_hook "List" "List.seq_shift".  
 induction len; simpl; auto.
 intros.
 rewrite IHlen.
@@ -2045,7 +2045,7 @@ Qed.
 
 Lemma in_seq len start n :
 In n (seq start len) <-> start <= n < start+len.
-Proof. try hammer_hook "List" "List.in_seq". Undo.  
+Proof. hammer_hook "List" "List.in_seq".  
 revert start. induction len; simpl; intros.
 - rewrite <- plus_n_O. split;[easy|].
 intros (H,H'). apply (Lt.lt_irrefl _ (Lt.le_lt_trans _ _ _ H H')).
@@ -2055,7 +2055,7 @@ intros (H,H'). apply (Lt.lt_irrefl _ (Lt.le_lt_trans _ _ _ H H')).
 Qed.
 
 Lemma seq_NoDup len start : NoDup (seq start len).
-Proof. try hammer_hook "List" "List.seq_NoDup". Undo.  
+Proof. hammer_hook "List" "List.seq_NoDup".  
 revert start; induction len; simpl; constructor; trivial.
 rewrite in_seq. intros (H,_). apply (Lt.lt_irrefl _ H).
 Qed.
@@ -2080,23 +2080,23 @@ Hint Constructors Exists.
 
 Lemma Exists_exists (l:list A) :
 Exists l <-> (exists x, In x l /\ P x).
-Proof. try hammer_hook "List" "List.Exists_exists". Undo.  
+Proof. hammer_hook "List" "List.Exists_exists".  
 split.
 - induction 1; firstorder.
 - induction l; firstorder; subst; auto.
 Qed.
 
 Lemma Exists_nil : Exists nil <-> False.
-Proof. try hammer_hook "List" "List.Exists_nil". Undo.   split; inversion 1. Qed.
+Proof. hammer_hook "List" "List.Exists_nil".   split; inversion 1. Qed.
 
 Lemma Exists_cons x l:
 Exists (x::l) <-> P x \/ Exists l.
-Proof. try hammer_hook "List" "List.Exists_cons". Undo.   split; inversion 1; auto. Qed.
+Proof. hammer_hook "List" "List.Exists_cons".   split; inversion 1; auto. Qed.
 
 Lemma Exists_dec l:
 (forall x:A, {P x} + { ~ P x }) ->
 {Exists l} + {~ Exists l}.
-Proof. try hammer_hook "List" "List.Exists_dec". Undo.  
+Proof. hammer_hook "List" "List.Exists_dec".  
 intro Pdec. induction l as [|a l' Hrec].
 - right. now rewrite Exists_nil.
 - destruct Hrec as [Hl'|Hl'].
@@ -2114,27 +2114,27 @@ Hint Constructors Forall.
 
 Lemma Forall_forall (l:list A):
 Forall l <-> (forall x, In x l -> P x).
-Proof. try hammer_hook "List" "List.Forall_forall". Undo.  
+Proof. hammer_hook "List" "List.Forall_forall".  
 split.
 - induction 1; firstorder; subst; auto.
 - induction l; firstorder.
 Qed.
 
 Lemma Forall_inv : forall (a:A) l, Forall (a :: l) -> P a.
-Proof. try hammer_hook "List" "List.Forall_inv". Undo.  
+Proof. hammer_hook "List" "List.Forall_inv".  
 intros; inversion H; trivial.
 Qed.
 
 Lemma Forall_rect : forall (Q : list A -> Type),
 Q [] -> (forall b l, P b -> Q (b :: l)) -> forall l, Forall l -> Q l.
-Proof. try hammer_hook "List" "List.Forall_rect". Undo.  
+Proof. hammer_hook "List" "List.Forall_rect".  
 intros Q H H'; induction l; intro; [|eapply H', Forall_inv]; eassumption.
 Qed.
 
 Lemma Forall_dec :
 (forall x:A, {P x} + { ~ P x }) ->
 forall l:list A, {Forall l} + {~ Forall l}.
-Proof. try hammer_hook "List" "List.Forall_dec". Undo.  
+Proof. hammer_hook "List" "List.Forall_dec".  
 intro Pdec. induction l as [|a l' Hrec].
 - left. apply Forall_nil.
 - destruct Hrec as [Hl'|Hl'].
@@ -2148,14 +2148,14 @@ End One_predicate.
 
 Lemma Forall_Exists_neg (P:A->Prop)(l:list A) :
 Forall (fun x => ~ P x) l <-> ~(Exists P l).
-Proof. try hammer_hook "List" "List.Forall_Exists_neg". Undo.  
+Proof. hammer_hook "List" "List.Forall_Exists_neg".  
 rewrite Forall_forall, Exists_exists. firstorder.
 Qed.
 
 Lemma Exists_Forall_neg (P:A->Prop)(l:list A) :
 (forall x, P x \/ ~P x) ->
 Exists (fun x => ~ P x) l <-> ~(Forall P l).
-Proof. try hammer_hook "List" "List.Exists_Forall_neg". Undo.  
+Proof. hammer_hook "List" "List.Exists_Forall_neg".  
 intro Dec.
 split.
 - rewrite Forall_forall, Exists_exists; firstorder.
@@ -2171,7 +2171,7 @@ Lemma Forall_Exists_dec (P:A->Prop) :
 (forall x:A, {P x} + { ~ P x }) ->
 forall l:list A,
 {Forall P l} + {Exists (fun x => ~ P x) l}.
-Proof. try hammer_hook "List" "List.Forall_Exists_dec". Undo.  
+Proof. hammer_hook "List" "List.Forall_Exists_dec".  
 intros Pdec l.
 destruct (Forall_dec P Pdec l); [left|right]; trivial.
 apply Exists_Forall_neg; trivial.
@@ -2180,7 +2180,7 @@ Qed.
 
 Lemma Forall_impl : forall (P Q : A -> Prop), (forall a, P a -> Q a) ->
 forall l, Forall P l -> Forall Q l.
-Proof. try hammer_hook "List" "List.Forall_impl". Undo.  
+Proof. hammer_hook "List" "List.Forall_impl".  
 intros P Q H l. rewrite !Forall_forall. firstorder.
 Qed.
 
@@ -2204,12 +2204,12 @@ R x y -> Forall2 l l' -> Forall2 (x::l) (y::l').
 Hint Constructors Forall2.
 
 Theorem Forall2_refl : Forall2 [] [].
-Proof. try hammer_hook "List" "List.Forall2_refl". Undo.   intros; apply Forall2_nil. Qed.
+Proof. hammer_hook "List" "List.Forall2_refl".   intros; apply Forall2_nil. Qed.
 
 Theorem Forall2_app_inv_l : forall l1 l2 l',
 Forall2 (l1 ++ l2) l' ->
 exists l1' l2', Forall2 l1 l1' /\ Forall2 l2 l2' /\ l' = l1' ++ l2'.
-Proof. try hammer_hook "List" "List.Forall2_app_inv_l". Undo.  
+Proof. hammer_hook "List" "List.Forall2_app_inv_l".  
 induction l1; intros.
 exists [], l'; auto.
 simpl in H; inversion H; subst; clear H.
@@ -2220,7 +2220,7 @@ Qed.
 Theorem Forall2_app_inv_r : forall l1' l2' l,
 Forall2 l (l1' ++ l2') ->
 exists l1 l2, Forall2 l1 l1' /\ Forall2 l2 l2' /\ l = l1 ++ l2.
-Proof. try hammer_hook "List" "List.Forall2_app_inv_r". Undo.  
+Proof. hammer_hook "List" "List.Forall2_app_inv_r".  
 induction l1'; intros.
 exists [], l; auto.
 simpl in H; inversion H; subst; clear H.
@@ -2230,7 +2230,7 @@ Qed.
 
 Theorem Forall2_app : forall l1 l2 l1' l2',
 Forall2 l1 l1' -> Forall2 l2 l2' -> Forall2 (l1 ++ l2) (l1' ++ l2').
-Proof. try hammer_hook "List" "List.Forall2_app". Undo.  
+Proof. hammer_hook "List" "List.Forall2_app".  
 intros. induction l1 in l1', H, H0 |- *; inversion H; subst; simpl; auto.
 Qed.
 End Forall2.
@@ -2259,7 +2259,7 @@ Hint Constructors ForallOrdPairs.
 Lemma ForallOrdPairs_In : forall l,
 ForallOrdPairs l ->
 forall x y, In x l -> In y l -> x=y \/ R x y \/ R y x.
-Proof. try hammer_hook "List" "List.ForallOrdPairs_In". Undo.  
+Proof. hammer_hook "List" "List.ForallOrdPairs_In".  
 induction 1.
 inversion 1.
 simpl; destruct 1; destruct 1; subst; auto.
@@ -2270,7 +2270,7 @@ Qed.
 
 
 Lemma ForallPairs_ForallOrdPairs l: ForallPairs l -> ForallOrdPairs l.
-Proof. try hammer_hook "List" "List.ForallPairs_ForallOrdPairs". Undo.  
+Proof. hammer_hook "List" "List.ForallPairs_ForallOrdPairs".  
 induction l; auto. intros H.
 constructor.
 apply <- Forall_forall. intros; apply H; simpl; auto.
@@ -2281,7 +2281,7 @@ Lemma ForallOrdPairs_ForallPairs :
 (forall x, R x x) ->
 (forall x y, R x y -> R y x) ->
 forall l, ForallOrdPairs l -> ForallPairs l.
-Proof. try hammer_hook "List" "List.ForallOrdPairs_ForallPairs". Undo.  
+Proof. hammer_hook "List" "List.ForallOrdPairs_ForallPairs".  
 intros Refl Sym l Hl x y Hx Hy.
 destruct (ForallOrdPairs_In Hl _ _ Hx Hy); subst; intuition.
 Qed.
@@ -2364,13 +2364,13 @@ end.
 
 Theorem repeat_length x n:
 length (repeat x n) = n.
-Proof. try hammer_hook "List" "List.repeat_length". Undo.  
+Proof. hammer_hook "List" "List.repeat_length".  
 induction n as [| k Hrec]; simpl; rewrite ?Hrec; reflexivity.
 Qed.
 
 Theorem repeat_spec n x y:
 In y (repeat x n) -> y=x.
-Proof. try hammer_hook "List" "List.repeat_spec". Undo.  
+Proof. hammer_hook "List" "List.repeat_spec".  
 induction n as [|k Hrec]; simpl; destruct 1; auto.
 Qed.
 

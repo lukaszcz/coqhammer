@@ -78,7 +78,7 @@ Require Import Compare_dec Le Lt.
 
 Lemma is_path_from_restrict : forall P n n' l, n <= n' ->
 is_path_from P n' l -> is_path_from P n l.
-Proof. try hammer_hook "WKL" "WKL.is_path_from_restrict". Undo.  
+Proof. hammer_hook "WKL" "WKL.is_path_from_restrict".  
 intros * Hle H; induction H in n, Hle, H |- * ; intros.
 - apply le_n_0_eq in Hle as <-. apply here. assumption.
 - destruct n.
@@ -91,7 +91,7 @@ Qed.
 
 Lemma inductively_barred_at_monotone : forall P l n n', n' <= n ->
 inductively_barred_at P n' l -> inductively_barred_at P n l.
-Proof. try hammer_hook "WKL" "WKL.inductively_barred_at_monotone". Undo.  
+Proof. hammer_hook "WKL" "WKL.inductively_barred_at_monotone".  
 intros * Hle Hbar.
 induction Hbar in n, l, Hle, Hbar |- *.
 - apply now_at; auto.
@@ -108,7 +108,7 @@ forall n l, demorgan_or (inductively_barred_at P n) (true::l) (false::l).
 Lemma inductively_barred_at_imp_is_path_from :
 forall P, demorgan_inductively_barred_at P -> forall n l,
 ~ inductively_barred_at P n l -> is_path_from P n l.
-Proof. try hammer_hook "WKL" "WKL.inductively_barred_at_imp_is_path_from". Undo.  
+Proof. hammer_hook "WKL" "WKL.inductively_barred_at_imp_is_path_from".  
 intros P Hdemorgan; induction n; intros l H.
 - apply here.
 intro. apply H.
@@ -121,7 +121,7 @@ Qed.
 
 Lemma is_path_from_imp_inductively_barred_at : forall P n l,
 is_path_from P n l -> inductively_barred_at P n l -> False.
-Proof. try hammer_hook "WKL" "WKL.is_path_from_imp_inductively_barred_at". Undo.  
+Proof. hammer_hook "WKL" "WKL.is_path_from_imp_inductively_barred_at".  
 intros P; induction n; intros l H1 H2.
 - inversion_clear H1. inversion_clear H2. auto.
 - inversion_clear H1.
@@ -135,7 +135,7 @@ Qed.
 
 Lemma find_left_path : forall P l n,
 is_path_from P (S n) l -> inductively_barred_at P n (false :: l) -> is_path_from P n (true :: l).
-Proof. try hammer_hook "WKL" "WKL.find_left_path". Undo.  
+Proof. hammer_hook "WKL" "WKL.find_left_path".  
 inversion 1; subst; intros.
 - auto.
 - exfalso. eauto using is_path_from_imp_inductively_barred_at.
@@ -143,7 +143,7 @@ Qed.
 
 Lemma Y_unique : forall P, demorgan_inductively_barred_at P ->
 forall l1 l2, length l1 = length l2 -> Y P l1 -> Y P l2 -> l1 = l2.
-Proof. try hammer_hook "WKL" "WKL.Y_unique". Undo.  
+Proof. hammer_hook "WKL" "WKL.Y_unique".  
 intros * DeMorgan. induction l1, l2.
 - trivial.
 - discriminate.
@@ -165,7 +165,7 @@ Definition X P n := exists l, length l = n /\ Y P (true::l).
 
 Lemma Y_approx : forall P, demorgan_inductively_barred_at P ->
 forall l, approx (X P) l -> Y P l.
-Proof. try hammer_hook "WKL" "WKL.Y_approx". Undo.  
+Proof. hammer_hook "WKL" "WKL.Y_approx".  
 intros P DeMorgan. induction l.
 - trivial.
 - intros (H,Hb). split.
@@ -182,7 +182,7 @@ Qed.
 
 Theorem PreWeakKonigsLemma : forall P,
 demorgan_inductively_barred_at P -> infinite_from P [] -> has_infinite_path P.
-Proof. try hammer_hook "WKL" "WKL.PreWeakKonigsLemma". Undo.  
+Proof. hammer_hook "WKL" "WKL.PreWeakKonigsLemma".  
 intros P DeMorgan Hinf.
 exists (X P). intros l Hl.
 assert (infinite_from P l).
@@ -208,7 +208,7 @@ Qed.
 
 Lemma inductively_barred_at_decidable :
 forall P, (forall l, P l \/ ~ P l) -> forall n l, inductively_barred_at P n l \/ ~ inductively_barred_at P n l.
-Proof. try hammer_hook "WKL" "WKL.inductively_barred_at_decidable". Undo.  
+Proof. hammer_hook "WKL" "WKL.inductively_barred_at_decidable".  
 intros P HP. induction n; intros.
 - destruct (HP l).
 + left. apply now_at, H.
@@ -224,7 +224,7 @@ Qed.
 
 Lemma inductively_barred_at_is_path_from_decidable :
 forall P, (forall l, P l \/ ~ P l) -> demorgan_inductively_barred_at P.
-Proof. try hammer_hook "WKL" "WKL.inductively_barred_at_is_path_from_decidable". Undo.  
+Proof. hammer_hook "WKL" "WKL.inductively_barred_at_is_path_from_decidable".  
 intros P Hdec n l H.
 destruct (inductively_barred_at_decidable P Hdec n (true::l)).
 - destruct (inductively_barred_at_decidable P Hdec n (false::l)).
@@ -237,7 +237,7 @@ Qed.
 
 Corollary WeakKonigsLemma : forall P, (forall l, P l \/ ~ P l) ->
 infinite_from P [] -> has_infinite_path P.
-Proof. try hammer_hook "WKL" "WKL.WeakKonigsLemma". Undo.  
+Proof. hammer_hook "WKL" "WKL.WeakKonigsLemma".  
 intros P Hdec Hinf.
 apply inductively_barred_at_is_path_from_decidable in Hdec.
 apply PreWeakKonigsLemma; assumption.

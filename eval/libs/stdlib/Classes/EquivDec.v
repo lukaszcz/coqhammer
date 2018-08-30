@@ -77,7 +77,7 @@ Program Instance bool_eqdec : EqDec bool eq := bool_dec.
 Program Instance unit_eqdec : EqDec unit eq := fun x y => in_left.
 
 Next Obligation.
-Proof. try hammer_hook "EquivDec" "EquivDec.unit_eqdec". Undo.  
+Proof. hammer_hook "EquivDec" "EquivDec.unit_eqdec".  
 destruct x ; destruct y.
 reflexivity.
 Qed.
@@ -113,7 +113,7 @@ else in_right
 else in_right }.
 
 Next Obligation.
-Proof. try hammer_hook "EquivDec" "EquivDec.bool_function_eqdec". Undo.  
+Proof. hammer_hook "EquivDec" "EquivDec.bool_function_eqdec".  
 extensionality x.
 destruct x ; auto.
 Qed.

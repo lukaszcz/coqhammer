@@ -33,22 +33,22 @@ Hint Constructors InA.
 
 
 Lemma InA_altdef : forall x l, InA x l <-> Exists (eqA x) l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_altdef". Undo.   split; induction 1; auto. Qed.
+Proof. hammer_hook "SetoidList" "SetoidList.InA_altdef".   split; induction 1; auto. Qed.
 
 Lemma InA_cons : forall x y l, InA x (y::l) <-> eqA x y \/ InA x l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_cons". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_cons".  
 intuition. invlist InA; auto.
 Qed.
 
 Lemma InA_nil : forall x, InA x nil <-> False.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_nil". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_nil".  
 intuition. invlist InA.
 Qed.
 
 
 
 Lemma InA_alt : forall x l, InA x l <-> exists y, eqA x y /\ In y l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_alt". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_alt".  
 intros; rewrite InA_altdef, Exists_exists; firstorder.
 Qed.
 
@@ -64,7 +64,7 @@ Hint Constructors NoDupA.
 
 Lemma NoDupA_altdef : forall l,
 NoDupA l <-> ForallOrdPairs (complement eqA) l.
-Proof. try hammer_hook "SetoidList" "SetoidList.NoDupA_altdef". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.NoDupA_altdef".  
 split; induction 1; constructor; auto.
 rewrite Forall_forall. intros b Hb.
 intro Eq; elim H. rewrite InA_alt. exists b; auto.
@@ -79,7 +79,7 @@ Definition inclA l l' := forall x, InA x l -> InA x l'.
 Definition equivlistA l l' := forall x, InA x l <-> InA x l'.
 
 Lemma incl_nil l : inclA nil l.
-Proof. try hammer_hook "SetoidList" "SetoidList.incl_nil". Undo.   intro. intros. inversion H. Qed.
+Proof. hammer_hook "SetoidList" "SetoidList.incl_nil".   intro. intros. inversion H. Qed.
 Hint Resolve incl_nil : list.
 
 
@@ -94,7 +94,7 @@ Hint Constructors eqlistA.
 
 
 Lemma eqlistA_altdef : forall l l', eqlistA l l' <-> Forall2 eqA l l'.
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_altdef". Undo.   split; induction 1; auto. Qed.
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_altdef".   split; induction 1; auto. Qed.
 
 
 
@@ -111,12 +111,12 @@ Ltac inv := invlist InA; invlist sort; invlist lelistA; invlist NoDupA.
 
 
 Global Instance equivlist_equiv : Equivalence equivlistA.
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlist_equiv". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlist_equiv".  
 firstorder.
 Qed.
 
 Global Instance eqlistA_equiv : Equivalence eqlistA.
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_equiv". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_equiv".  
 constructor; red.
 induction x; auto.
 induction 1; auto.
@@ -126,7 +126,7 @@ Qed.
 
 
 Global Instance eqlistA_equivlistA : subrelation eqlistA equivlistA.
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_equivlistA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_equivlistA".  
 intros x x' H. induction H.
 intuition.
 red; intros.
@@ -137,7 +137,7 @@ Qed.
 
 
 Global Instance InA_compat : Proper (eqA==>equivlistA==>iff) InA.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_compat". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_compat".  
 intros x x' Hxx' l l' Hll'. rewrite (Hll' x).
 rewrite 2 InA_alt; firstorder.
 Qed.
@@ -145,13 +145,13 @@ Qed.
 
 
 Lemma InA_eqA : forall l x y, eqA x y -> InA x l -> InA y l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_eqA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_eqA".  
 intros l x y H H'. rewrite <- H. auto.
 Qed.
 Hint Immediate InA_eqA.
 
 Lemma In_InA : forall l x, In x l -> InA x l.
-Proof. try hammer_hook "SetoidList" "SetoidList.In_InA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.In_InA".  
 simple induction l; simpl; intuition.
 subst; auto.
 Qed.
@@ -159,7 +159,7 @@ Hint Resolve In_InA.
 
 Lemma InA_split : forall l x, InA x l ->
 exists l1 y l2, eqA x y /\ l = l1++y::l2.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_split". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_split".  
 induction l; intros; inv.
 exists (@nil A); exists a; exists l; auto.
 destruct (IHl x H0) as (l1,(y,(l2,(H1,H2)))).
@@ -169,7 +169,7 @@ Qed.
 
 Lemma InA_app : forall l1 l2 x,
 InA x (l1 ++ l2) -> InA x l1 \/ InA x l2.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_app". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_app".  
 induction l1; simpl in *; intuition.
 inv; auto.
 elim (IHl1 l2 x H0); auto.
@@ -177,7 +177,7 @@ Qed.
 
 Lemma InA_app_iff : forall l1 l2 x,
 InA x (l1 ++ l2) <-> InA x l1 \/ InA x l2.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_app_iff". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_app_iff".  
 split.
 apply InA_app.
 destruct 1; generalize H; do 2 rewrite InA_alt.
@@ -189,7 +189,7 @@ Qed.
 
 Lemma InA_rev : forall p m,
 InA p (rev m) <-> InA p m.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_rev". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_rev".  
 intros; do 2 rewrite InA_alt.
 split; intros (y,H); exists y; intuition.
 rewrite In_rev; auto.
@@ -199,24 +199,24 @@ Qed.
 
 
 Lemma InA_singleton x y : InA x (y::nil) <-> eqA x y.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_singleton". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_singleton".  
 rewrite InA_cons, InA_nil; tauto.
 Qed.
 
 Lemma InA_double_head x y l :
 InA x (y :: y :: l) <-> InA x (y :: l).
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_double_head". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_double_head".  
 rewrite !InA_cons; tauto.
 Qed.
 
 Lemma InA_permute_heads x y z l :
 InA x (y :: z :: l) <-> InA x (z :: y :: l).
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_permute_heads". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_permute_heads".  
 rewrite !InA_cons; tauto.
 Qed.
 
 Lemma InA_app_idem x l : InA x (l ++ l) <-> InA x l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_app_idem". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_app_idem".  
 rewrite InA_app_iff; tauto.
 Qed.
 
@@ -225,7 +225,7 @@ Section NoDupA.
 Lemma NoDupA_app : forall l l', NoDupA l -> NoDupA l' ->
 (forall x, InA x l -> InA x l' -> False) ->
 NoDupA (l++l').
-Proof. try hammer_hook "SetoidList" "SetoidList.NoDupA_app". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.NoDupA_app".  
 induction l; simpl; auto; intros.
 inv.
 constructor.
@@ -244,7 +244,7 @@ apply (H1 x); auto.
 Qed.
 
 Lemma NoDupA_rev : forall l, NoDupA l -> NoDupA (rev l).
-Proof. try hammer_hook "SetoidList" "SetoidList.NoDupA_rev". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.NoDupA_rev".  
 induction l.
 simpl; auto.
 simpl; intros.
@@ -263,7 +263,7 @@ rewrite In_rev; auto.
 Qed.
 
 Lemma NoDupA_split : forall l l' x, NoDupA (l++x::l') -> NoDupA (l++l').
-Proof. try hammer_hook "SetoidList" "SetoidList.NoDupA_split". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.NoDupA_split".  
 induction l; simpl in *; intros; inv; auto.
 constructor; eauto.
 contradict H0.
@@ -273,7 +273,7 @@ intuition.
 Qed.
 
 Lemma NoDupA_swap : forall l l' x, NoDupA (l++x::l') -> NoDupA (x::l++l').
-Proof. try hammer_hook "SetoidList" "SetoidList.NoDupA_swap". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.NoDupA_swap".  
 induction l; simpl in *; intros; inv; auto.
 constructor; eauto.
 assert (H2:=IHl _ _ H1).
@@ -290,7 +290,7 @@ eapply NoDupA_split; eauto.
 Qed.
 
 Lemma NoDupA_singleton x : NoDupA (x::nil).
-Proof. try hammer_hook "SetoidList" "SetoidList.NoDupA_singleton". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.NoDupA_singleton".  
 repeat constructor. inversion 1.
 Qed.
 
@@ -300,48 +300,48 @@ Section EquivlistA.
 
 Global Instance equivlistA_cons_proper:
 Proper (eqA ==> equivlistA ==> equivlistA) (@cons A).
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_cons_proper". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_cons_proper".  
 intros ? ? E1 ? ? E2 ?; now rewrite !InA_cons, E1, E2.
 Qed.
 
 Global Instance equivlistA_app_proper:
 Proper (equivlistA ==> equivlistA ==> equivlistA) (@app A).
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_app_proper". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_app_proper".  
 intros ? ? E1 ? ? E2 ?. now rewrite !InA_app_iff, E1, E2.
 Qed.
 
 Lemma equivlistA_cons_nil x l : ~ equivlistA (x :: l) nil.
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_cons_nil". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_cons_nil".  
 intros E. now eapply InA_nil, E, InA_cons_hd.
 Qed.
 
 Lemma equivlistA_nil_eq l : equivlistA l nil -> l = nil.
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_nil_eq". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_nil_eq".  
 destruct l.
 - trivial.
 - intros H. now apply equivlistA_cons_nil in H.
 Qed.
 
 Lemma equivlistA_double_head x l : equivlistA (x :: x :: l) (x :: l).
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_double_head". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_double_head".  
 intro. apply InA_double_head.
 Qed.
 
 Lemma equivlistA_permute_heads x y l :
 equivlistA (x :: y :: l) (y :: x :: l).
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_permute_heads". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_permute_heads".  
 intro. apply InA_permute_heads.
 Qed.
 
 Lemma equivlistA_app_idem l : equivlistA (l ++ l) l.
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_app_idem". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_app_idem".  
 intro. apply InA_app_idem.
 Qed.
 
 Lemma equivlistA_NoDupA_split l l1 l2 x y : eqA x y ->
 NoDupA (x::l) -> NoDupA (l1++y::l2) ->
 equivlistA (x::l) (l1++y::l2) -> equivlistA l (l1++l2).
-Proof. try hammer_hook "SetoidList" "SetoidList.equivlistA_NoDupA_split". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.equivlistA_NoDupA_split".  
 intros; intro a.
 generalize (H2 a).
 rewrite !InA_app_iff, !InA_cons.
@@ -372,7 +372,7 @@ Variable Comp:Proper (eqA==>eqB==>eqB) f.
 Lemma fold_right_eqlistA :
 forall s s', eqlistA s s' ->
 eqB (fold_right f i s) (fold_right f i s').
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_eqlistA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_eqlistA".  
 induction 1; simpl; auto with relations.
 apply Comp; auto.
 Qed.
@@ -391,7 +391,7 @@ Hypothesis R_compat : Proper (eqA==>eqA==>iff) R.
 
 Lemma ForallOrdPairs_inclA : forall l l',
 NoDupA l' -> inclA l' l -> ForallOrdPairs R l -> ForallOrdPairs R l'.
-Proof. try hammer_hook "SetoidList" "SetoidList.ForallOrdPairs_inclA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.ForallOrdPairs_inclA".  
 induction l' as [|x l' IH].
 constructor.
 intros ND Incl FOP. apply FOP_cons; inv; unfold inclA in *; auto.
@@ -419,7 +419,7 @@ Variable TraR :transpose_restr R f.
 Lemma fold_right_commutes_restr :
 forall s1 s2 x, ForallOrdPairs R (s1++x::s2) ->
 eqB (fold_right f i (s1++x::s2)) (f x (fold_right f i (s1++s2))).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_commutes_restr". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_commutes_restr".  
 induction s1; simpl; auto; intros.
 reflexivity.
 transitivity (f a (f x (fold_right f i (s1++s2)))).
@@ -435,7 +435,7 @@ Qed.
 Lemma fold_right_equivlistA_restr :
 forall s s', NoDupA s -> NoDupA s' -> ForallOrdPairs R s ->
 equivlistA s s' -> eqB (fold_right f i s) (fold_right f i s').
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA_restr". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA_restr".  
 simple induction s.
 destruct s'; simpl.
 intros; reflexivity.
@@ -463,7 +463,7 @@ Qed.
 Lemma fold_right_add_restr :
 forall s' s x, NoDupA s -> NoDupA s' -> ForallOrdPairs R s' -> ~ InA x s ->
 equivlistA s' (x::s) -> eqB (fold_right f i s') (f x (fold_right f i s)).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_add_restr". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_add_restr".  
 intros; apply (@fold_right_equivlistA_restr s' (x::s)); auto.
 Qed.
 
@@ -475,7 +475,7 @@ Variable Tra :transpose f.
 
 Lemma fold_right_commutes : forall s1 s2 x,
 eqB (fold_right f i (s1++x::s2)) (f x (fold_right f i (s1++s2))).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_commutes". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_commutes".  
 induction s1; simpl; auto; intros.
 reflexivity.
 transitivity (f a (f x (fold_right f i (s1++s2)))); auto.
@@ -485,7 +485,7 @@ Qed.
 Lemma fold_right_equivlistA :
 forall s s', NoDupA s -> NoDupA s' ->
 equivlistA s s' -> eqB (fold_right f i s) (fold_right f i s').
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA".  
 intros; apply fold_right_equivlistA_restr with (R:=fun _ _ => True);
 repeat red; auto.
 apply ForallPairs_ForallOrdPairs; try red; auto.
@@ -494,7 +494,7 @@ Qed.
 Lemma fold_right_add :
 forall s' s x, NoDupA s -> NoDupA s' -> ~ InA x s ->
 equivlistA s' (x::s) -> eqB (fold_right f i s') (f x (fold_right f i s)).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_add". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_add".  
 intros; apply (@fold_right_equivlistA s' (x::s)); auto.
 Qed.
 
@@ -513,7 +513,7 @@ Variable Comp:Proper (eqA==>eqB==>eqB) f.
 Lemma fold_right_eqlistA2 :
 forall s s' (i j:B) (heqij: eqB i j) (heqss': eqlistA s s'),
 eqB (fold_right f i s) (fold_right f j s').
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_eqlistA2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_eqlistA2".  
 intros s.
 induction s;intros.
 - inversion heqss'.
@@ -547,7 +547,7 @@ Variable TraR :transpose_restr2 R f.
 Lemma fold_right_commutes_restr2 :
 forall s1 s2 x (i j:B) (heqij: eqB i j), ForallOrdPairs R (s1++x::s2) ->
 eqB (fold_right f i (s1++x::s2)) (f x (fold_right f j (s1++s2))).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_commutes_restr2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_commutes_restr2".  
 induction s1; simpl; auto; intros.
 - apply Comp.
 + destruct eqA_equiv. apply Equivalence_Reflexive.
@@ -571,7 +571,7 @@ forall s s' i j,
 NoDupA s -> NoDupA s' -> ForallOrdPairs R s ->
 equivlistA s s' -> eqB i j ->
 eqB (fold_right f i s) (fold_right f j s').
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA_restr2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA_restr2".  
 simple induction s.
 destruct s'; simpl.
 intros. assumption.
@@ -606,7 +606,7 @@ Qed.
 Lemma fold_right_add_restr2 :
 forall s' s i j x, NoDupA s -> NoDupA s' -> eqB i j -> ForallOrdPairs R s' -> ~ InA x s ->
 equivlistA s' (x::s) -> eqB (fold_right f i s') (f x (fold_right f j s)).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_add_restr2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_add_restr2".  
 intros; apply (@fold_right_equivlistA_restr2 s' (x::s) i j); auto.
 Qed.
 
@@ -617,7 +617,7 @@ Variable Tra :transpose2 f.
 Lemma fold_right_commutes2 : forall s1 s2 i x x',
 eqA x x' ->
 eqB (fold_right f i (s1++x::s2)) (f x' (fold_right f i (s1++s2))).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_commutes2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_commutes2".  
 induction s1;simpl;intros.
 - apply Comp;auto.
 reflexivity.
@@ -630,7 +630,7 @@ Qed.
 Lemma fold_right_equivlistA2 :
 forall s s' i j, NoDupA s -> NoDupA s' -> eqB i j ->
 equivlistA s s' -> eqB (fold_right f i s) (fold_right f j s').
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_equivlistA2".  
 red in Tra.
 intros; apply fold_right_equivlistA_restr2 with (R:=fun _ _ => True);
 repeat red; auto.
@@ -640,7 +640,7 @@ Qed.
 Lemma fold_right_add2 :
 forall s' s i j x, NoDupA s -> NoDupA s' -> eqB i j -> ~ InA x s ->
 equivlistA s' (x::s) -> eqB (fold_right f i s') (f x (fold_right f j s)).
-Proof. try hammer_hook "SetoidList" "SetoidList.fold_right_add2". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.fold_right_add2".  
 intros.
 replace (f x (fold_right f j s)) with (fold_right f j (x::s)) by auto.
 eapply fold_right_equivlistA2;auto.
@@ -653,7 +653,7 @@ Section Remove.
 Hypothesis eqA_dec : forall x y : A, {eqA x y}+{~(eqA x y)}.
 
 Lemma InA_dec : forall x l, { InA x l } + { ~ InA x l }.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_dec". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_dec".  
 induction l.
 right; auto.
 intro; inv.
@@ -672,14 +672,14 @@ end.
 
 Lemma removeA_filter : forall x l,
 removeA x l = filter (fun y => if eqA_dec x y then false else true) l.
-Proof. try hammer_hook "SetoidList" "SetoidList.removeA_filter". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.removeA_filter".  
 induction l; simpl; auto.
 destruct (eqA_dec x a); auto.
 rewrite IHl; auto.
 Qed.
 
 Lemma removeA_InA : forall l x y, InA y (removeA x l) <-> InA y l /\ ~eqA x y.
-Proof. try hammer_hook "SetoidList" "SetoidList.removeA_InA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.removeA_InA".  
 induction l; simpl; auto.
 split.
 intro; inv.
@@ -701,7 +701,7 @@ Qed.
 
 Lemma removeA_NoDupA :
 forall s x, NoDupA s ->  NoDupA (removeA x s).
-Proof. try hammer_hook "SetoidList" "SetoidList.removeA_NoDupA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.removeA_NoDupA".  
 simple induction s; simpl; intros.
 auto.
 inv.
@@ -713,7 +713,7 @@ Qed.
 
 Lemma removeA_equivlistA : forall l l' x,
 ~InA x l -> equivlistA (x :: l) l' -> equivlistA l (removeA x l').
-Proof. try hammer_hook "SetoidList" "SetoidList.removeA_equivlistA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.removeA_equivlistA".  
 unfold equivlistA; intros.
 rewrite removeA_InA.
 split; intros.
@@ -747,12 +747,12 @@ Hint Constructors lelistA sort.
 
 Lemma InfA_ltA :
 forall l x y, ltA x y -> InfA y l -> InfA x l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InfA_ltA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InfA_ltA".  
 destruct l; constructor. inv; eauto.
 Qed.
 
 Global Instance InfA_compat : Proper (eqA==>eqlistA==>iff) InfA.
-Proof using eqA_equiv ltA_compat. try hammer_hook "SetoidList" "SetoidList.InfA_compat". Undo.  
+Proof using eqA_equiv ltA_compat. hammer_hook "SetoidList" "SetoidList.InfA_compat".  
 intros x x' Hxx' l l' Hll'.
 inversion_clear Hll'.
 intuition.
@@ -763,14 +763,14 @@ Qed.
 
 
 Lemma InfA_eqA l x y : eqA x y -> InfA y l -> InfA x l.
-Proof using eqA_equiv ltA_compat. try hammer_hook "SetoidList" "SetoidList.InfA_eqA". Undo.  
+Proof using eqA_equiv ltA_compat. hammer_hook "SetoidList" "SetoidList.InfA_eqA".  
 intros H; now rewrite H.
 Qed.
 Hint Immediate InfA_ltA InfA_eqA.
 
 Lemma SortA_InfA_InA :
 forall l x a, SortA l -> InfA a l -> InA x l -> ltA a x.
-Proof. try hammer_hook "SetoidList" "SetoidList.SortA_InfA_InA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.SortA_InfA_InA".  
 simple induction l.
 intros. inv.
 intros. inv.
@@ -780,13 +780,13 @@ Qed.
 
 Lemma In_InfA :
 forall l x, (forall y, In y l -> ltA x y) -> InfA x l.
-Proof. try hammer_hook "SetoidList" "SetoidList.In_InfA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.In_InfA".  
 simple induction l; simpl; intros; constructor; auto.
 Qed.
 
 Lemma InA_InfA :
 forall l x, (forall y, InA y l -> ltA x y) -> InfA x l.
-Proof. try hammer_hook "SetoidList" "SetoidList.InA_InfA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InA_InfA".  
 simple induction l; simpl; intros; constructor; auto.
 Qed.
 
@@ -794,14 +794,14 @@ Qed.
 
 Lemma InfA_alt :
 forall l x, SortA l -> (InfA x l <-> (forall y, InA y l -> ltA x y)).
-Proof. try hammer_hook "SetoidList" "SetoidList.InfA_alt". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InfA_alt".  
 split.
 intros; eapply SortA_InfA_InA; eauto.
 apply InA_InfA.
 Qed.
 
 Lemma InfA_app : forall l1 l2 a, InfA a l1 -> InfA a l2 -> InfA a (l1++l2).
-Proof. try hammer_hook "SetoidList" "SetoidList.InfA_app". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.InfA_app".  
 induction l1; simpl; auto.
 intros; inv; auto.
 Qed.
@@ -810,7 +810,7 @@ Lemma SortA_app :
 forall l1 l2, SortA l1 -> SortA l2 ->
 (forall x y, InA x l1 -> InA y l2 -> ltA x y) ->
 SortA (l1 ++ l2).
-Proof. try hammer_hook "SetoidList" "SetoidList.SortA_app". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.SortA_app".  
 induction l1; simpl in *; intuition.
 inv.
 constructor; auto.
@@ -819,7 +819,7 @@ destruct l2; auto.
 Qed.
 
 Lemma SortA_NoDupA : forall l, SortA l -> NoDupA l.
-Proof. try hammer_hook "SetoidList" "SetoidList.SortA_NoDupA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.SortA_NoDupA".  
 simple induction l; auto.
 intros x l' H H0.
 inv.
@@ -835,34 +835,34 @@ Qed.
 Section EqlistA.
 
 Lemma eqlistA_length : forall l l', eqlistA l l' -> length l = length l'.
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_length". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_length".  
 induction 1; auto; simpl; congruence.
 Qed.
 
 Global Instance app_eqlistA_compat :
 Proper (eqlistA==>eqlistA==>eqlistA) (@app A).
-Proof. try hammer_hook "SetoidList" "SetoidList.app_eqlistA_compat". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.app_eqlistA_compat".  
 repeat red; induction 1; simpl; auto.
 Qed.
 
 
 Lemma eqlistA_app : forall l1 l1' l2 l2',
 eqlistA l1 l1' -> eqlistA l2 l2' -> eqlistA (l1++l2) (l1'++l2').
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_app". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_app".  
 intros l1 l1' l2 l2' H H'; rewrite H, H'; reflexivity.
 Qed.
 
 Lemma eqlistA_rev_app : forall l1 l1',
 eqlistA l1 l1' -> forall l2 l2', eqlistA l2 l2' ->
 eqlistA ((rev l1)++l2) ((rev l1')++l2').
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_rev_app". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_rev_app".  
 induction 1; auto.
 simpl; intros.
 do 2 rewrite app_ass; simpl; auto.
 Qed.
 
 Global Instance rev_eqlistA_compat : Proper (eqlistA==>eqlistA) (@rev A).
-Proof. try hammer_hook "SetoidList" "SetoidList.rev_eqlistA_compat". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.rev_eqlistA_compat".  
 repeat red. intros.
 rewrite <- (app_nil_r (rev x)), <- (app_nil_r (rev y)).
 apply eqlistA_rev_app; auto.
@@ -870,13 +870,13 @@ Qed.
 
 Lemma eqlistA_rev : forall l1 l1',
 eqlistA l1 l1' -> eqlistA (rev l1) (rev l1').
-Proof. try hammer_hook "SetoidList" "SetoidList.eqlistA_rev". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.eqlistA_rev".  
 apply rev_eqlistA_compat.
 Qed.
 
 Lemma SortA_equivlistA_eqlistA : forall l l',
 SortA l -> SortA l' -> equivlistA l l' -> eqlistA l l'.
-Proof. try hammer_hook "SetoidList" "SetoidList.SortA_equivlistA_eqlistA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.SortA_equivlistA_eqlistA".  
 induction l; destruct l'; simpl; intros; auto.
 destruct (H1 a); assert (InA a nil) by auto; inv.
 destruct (H1 a); assert (InA a nil) by auto; inv.
@@ -910,7 +910,7 @@ End EqlistA.
 Section Filter.
 
 Lemma filter_sort : forall f l, SortA l -> SortA (List.filter f l).
-Proof. try hammer_hook "SetoidList" "SetoidList.filter_sort". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.filter_sort".  
 induction l; simpl; auto.
 intros; inv; auto.
 destruct (f a); auto.
@@ -924,7 +924,7 @@ Arguments eq {A} x _.
 
 Lemma filter_InA : forall f, Proper (eqA==>eq) f ->
 forall l x, InA x (List.filter f l) <-> InA x l /\ f x = true.
-Proof. try hammer_hook "SetoidList" "SetoidList.filter_InA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.filter_InA".  
 clear sotrans ltA ltA_strorder ltA_compat.
 intros; do 2 rewrite InA_alt; intuition.
 destruct H0 as (y,(H0,H1)); rewrite filter_In in H1; exists y; intuition.
@@ -937,7 +937,7 @@ Qed.
 Lemma filter_split :
 forall f, (forall x y, f x = true -> f y = false -> ltA x y) ->
 forall l, SortA l -> l = filter f l ++ filter (fun x=>negb (f x)) l.
-Proof. try hammer_hook "SetoidList" "SetoidList.filter_split". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.filter_split".  
 induction l; simpl; intros; auto.
 inv.
 rewrite IHl at 1; auto.
@@ -980,7 +980,7 @@ forall l a b,
 NoDupA (fun p p' => eqA (fst p) (fst p')) l ->
 (InA (fun p p' => eqA (fst p) (fst p') /\ snd p = snd p') (a,b) l <->
 findA (fun a' => if eqA_dec a a' then true else false) l = Some b).
-Proof. try hammer_hook "SetoidList" "SetoidList.findA_NoDupA". Undo.  
+Proof. hammer_hook "SetoidList" "SetoidList.findA_NoDupA".  
 set (eqk := fun p p' : A*B => eqA (fst p) (fst p')).
 set (eqke := fun p p' : A*B => eqA (fst p) (fst p') /\ snd p = snd p').
 induction l; intros; simpl.

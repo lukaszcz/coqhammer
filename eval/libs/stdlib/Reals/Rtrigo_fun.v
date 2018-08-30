@@ -21,7 +21,7 @@ Local Open Scope R_scope.
 
 Lemma Alembert_exp :
 Un_cv (fun n:nat => Rabs (/ INR (fact (S n)) * / / INR (fact n))) 0.
-Proof. try hammer_hook "Rtrigo_fun" "Rtrigo_fun.Alembert_exp". Undo.  
+Proof. hammer_hook "Rtrigo_fun" "Rtrigo_fun.Alembert_exp".  
 unfold Un_cv; intros; destruct (Rgt_dec eps 1) as [Hgt|Hnotgt].
 - split with 0%nat; intros; rewrite (simpl_fact n); unfold R_dist;
 rewrite (Rminus_0_r (Rabs (/ INR (S n))));

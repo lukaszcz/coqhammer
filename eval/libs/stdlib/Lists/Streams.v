@@ -42,7 +42,7 @@ Lemma unfold_Stream :
 forall x:Stream, x = match x with
 | Cons a s => Cons a s
 end.
-Proof. try hammer_hook "Streams" "Streams.unfold_Stream". Undo.  
+Proof. hammer_hook "Streams" "Streams.unfold_Stream".  
 intro x.
 case x.
 trivial.
@@ -50,7 +50,7 @@ Qed.
 
 Lemma tl_nth_tl :
 forall (n:nat) (s:Stream), tl (Str_nth_tl n s) = Str_nth_tl n (tl s).
-Proof. try hammer_hook "Streams" "Streams.tl_nth_tl". Undo.  
+Proof. hammer_hook "Streams" "Streams.tl_nth_tl".  
 simple induction n; simpl; auto.
 Qed.
 Hint Resolve tl_nth_tl: datatypes.
@@ -142,7 +142,7 @@ CoInductive ForAll (x: Stream) : Prop :=
 HereAndFurther : P x -> ForAll (tl x) -> ForAll x.
 
 Lemma ForAll_Str_nth_tl : forall m x, ForAll x -> ForAll (Str_nth_tl m x).
-Proof. try hammer_hook "Streams" "Streams.ForAll_Str_nth_tl". Undo.  
+Proof. hammer_hook "Streams" "Streams.ForAll_Str_nth_tl".  
 induction m.
 tauto.
 intros x [_ H].
@@ -171,7 +171,7 @@ Variable f : A -> B.
 CoFixpoint map (s:Stream A) : Stream B := Cons (f (hd s)) (map (tl s)).
 
 Lemma Str_nth_tl_map : forall n s, Str_nth_tl n (map s)= map (Str_nth_tl n s).
-Proof. try hammer_hook "Streams" "Streams.Str_nth_tl_map". Undo.  
+Proof. hammer_hook "Streams" "Streams.Str_nth_tl_map".  
 induction n.
 reflexivity.
 simpl.
@@ -180,7 +180,7 @@ apply IHn.
 Qed.
 
 Lemma Str_nth_map : forall n s, Str_nth n (map s)= f (Str_nth n s).
-Proof. try hammer_hook "Streams" "Streams.Str_nth_map". Undo.  
+Proof. hammer_hook "Streams" "Streams.Str_nth_map".  
 intros n s.
 unfold Str_nth.
 rewrite Str_nth_tl_map.
@@ -189,7 +189,7 @@ Qed.
 
 Lemma ForAll_map : forall (P:Stream B -> Prop) (S:Stream A), ForAll (fun s => P
 (map s)) S <-> ForAll P (map S).
-Proof. try hammer_hook "Streams" "Streams.ForAll_map". Undo.  
+Proof. hammer_hook "Streams" "Streams.ForAll_map".  
 intros P S.
 split; generalize S; clear S; cofix; intros S; constructor;
 destruct H as [H0 H]; firstorder.
@@ -197,7 +197,7 @@ Qed.
 
 Lemma Exists_map : forall (P:Stream B -> Prop) (S:Stream A), Exists (fun s => P
 (map s)) S -> Exists P (map S).
-Proof. try hammer_hook "Streams" "Streams.Exists_map". Undo.  
+Proof. hammer_hook "Streams" "Streams.Exists_map".  
 intros P S H.
 (induction H;[left|right]); firstorder.
 Defined.
@@ -220,7 +220,7 @@ Cons (f (hd a) (hd b)) (zipWith (tl a) (tl b)).
 
 Lemma Str_nth_tl_zipWith : forall n (a:Stream A) (b:Stream B),
 Str_nth_tl n (zipWith a b)= zipWith (Str_nth_tl n a) (Str_nth_tl n b).
-Proof. try hammer_hook "Streams" "Streams.Str_nth_tl_zipWith". Undo.  
+Proof. hammer_hook "Streams" "Streams.Str_nth_tl_zipWith".  
 induction n.
 reflexivity.
 intros [x xs] [y ys].
@@ -231,7 +231,7 @@ Qed.
 
 Lemma Str_nth_zipWith : forall n (a:Stream A) (b:Stream B), Str_nth n (zipWith a
 b)= f (Str_nth n a) (Str_nth n b).
-Proof. try hammer_hook "Streams" "Streams.Str_nth_zipWith". Undo.  
+Proof. hammer_hook "Streams" "Streams.Str_nth_zipWith".  
 intros.
 unfold Str_nth.
 rewrite Str_nth_tl_zipWith.
