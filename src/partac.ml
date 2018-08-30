@@ -1,15 +1,15 @@
 (* Parallel invocation of tactics *)
 
-let partac n lst0 cont =
+let partac time lst0 cont =
   let rec pom lst pids =
     match lst with
     | [] ->
        let pid2 = Unix.fork () in
        if pid2 = 0 then
          begin (* the watchdog *)
-           if n > 0 then
+           if time > 0 then
              begin
-               Unix.sleep n;
+               Unix.sleep time;
                List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) pids
              end;
            exit 0
@@ -20,26 +20,33 @@ let partac n lst0 cont =
            ignore (try Unix.kill pid2 Sys.sigterm with _ -> ());
            List.iter (fun i -> try ignore (Unix.waitpid [] i) with _ -> ()) pids
          in
-         let rec wait k pids =
-           match pids with
-           | [] ->
-              begin
-                clean ();
-                cont (-1) (Proofview.tclZERO Proofview.Timeout)
-              end
-           | pid :: t ->
-              begin
-                try
-                  let (_, status) = Unix.waitpid [] pid
-                  in
-                  match status with
-                  | Unix.WEXITED 0 -> clean (); cont k (List.nth lst0 k)
-                  | _ -> wait (k + 1) t
-                with
-                | _ -> wait (k + 1) t
-              end
+         let n = List.length lst0 in
+         let rec wait k =
+           if k = 0 then
+               begin
+                 clean ();
+                 cont (-1) (Proofview.tclZERO Proofview.Timeout)
+               end
+           else
+             let (pid, status) = Unix.wait () in
+             if pid = pid2 && time > 0 then
+               begin
+                 clean ();
+                 cont (-1) (Proofview.tclZERO Proofview.Timeout)
+               end
+             else if List.mem pid pids then
+               match status with
+               | Unix.WEXITED 0 ->
+                  begin
+                    clean ();
+                    let i = n - Hhlib.index pid pids - 1 in
+                    cont i (List.nth lst0 i)
+                  end
+               | _ -> wait (k - 1)
+             else
+               wait k
          in
-         wait 0 (List.rev pids)
+         wait n
     | tac :: t ->
        let pid = Unix.fork () in
        if pid = 0 then
