@@ -1,8 +1,8 @@
-
 From Hammer Require Import Hammer Reconstr.
 Require Import List.
 
 Hammer_version.
+Hammer_objects.
 
 Set Hammer CrushLimit 0.
 

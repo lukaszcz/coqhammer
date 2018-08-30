@@ -30,7 +30,7 @@ let _ =
   in
   declare_int_option gdopt
 
-let atp_timelimit = ref 15
+let atp_timelimit = ref 10
 
 let _ =
   let gdopt=
@@ -40,7 +40,7 @@ let _ =
       optread=(fun ()->Some !atp_timelimit);
       optwrite=
    (function
-        None -> atp_timelimit := 15
+        None -> atp_timelimit := 10
       |	Some i -> atp_timelimit := (max i 0))}
   in
   declare_int_option gdopt
@@ -55,7 +55,7 @@ let _ =
       optread=(fun ()->Some !reconstr_timelimit);
       optwrite=
    (function
-        None -> reconstr_timelimit := 5
+        None -> reconstr_timelimit := 10
       |	Some i -> reconstr_timelimit := (max i 0))}
   in
   declare_int_option gdopt

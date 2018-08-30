@@ -538,7 +538,7 @@ let hammer_tac () =
                                tac ^ " " ^ mk_lst_str deps ^ " " ^ mk_lst_str defs ^ ".")
                 end
                 begin fun () ->
-                  Msg.error ("Reconstruction failed. Hammer failed to solve the goal.")
+                  Msg.error ("Hammer failed: proof reconstruction failed")
                 end
             end
           end
