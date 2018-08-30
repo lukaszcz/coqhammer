@@ -40,17 +40,17 @@ end.
 Hint Unfold log_inf log_sup.
 
 Lemma Psize_log_inf : forall p, Zpos (Pos.size p) = Z.succ (log_inf p).
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.Psize_log_inf". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.Psize_log_inf".  
 induction p; simpl; now rewrite ?Pos2Z.inj_succ, ?IHp.
 Qed.
 
 Lemma Zlog2_log_inf : forall p, Z.log2 (Zpos p) = log_inf p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.Zlog2_log_inf". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.Zlog2_log_inf".  
 unfold Z.log2. destruct p; simpl; trivial; apply Psize_log_inf.
 Qed.
 
 Lemma Zlog2_up_log_sup : forall p, Z.log2_up (Zpos p) = log_sup p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.Zlog2_up_log_sup". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.Zlog2_up_log_sup".  
 induction p; simpl log_sup.
 - change (Zpos p~1) with (2*(Zpos p)+1).
 rewrite Z.log2_up_succ_double, Zlog2_log_inf; try easy.
@@ -67,7 +67,7 @@ Hint Resolve Z.le_trans: zarith.
 Theorem log_inf_correct :
 forall x:positive,
 0 <= log_inf x /\ two_p (log_inf x) <= Zpos x < two_p (Z.succ (log_inf x)).
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_inf_correct". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_inf_correct".  
 simple induction x; intros; simpl;
 [ elim H; intros Hp HR; clear H; split;
 [ auto with zarith
@@ -93,7 +93,7 @@ Opaque log_inf_correct1 log_inf_correct2.
 Hint Resolve log_inf_correct1 log_inf_correct2: zarith.
 
 Lemma log_sup_correct1 : forall p:positive, 0 <= log_sup p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_sup_correct1". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_sup_correct1".  
 simple induction p; intros; simpl; auto with zarith.
 Qed.
 
@@ -103,7 +103,7 @@ Theorem log_sup_log_inf :
 forall p:positive,
 IF Zpos p = two_p (log_inf p) then Zpos p = two_p (log_sup p)
 else log_sup p = Z.succ (log_inf p).
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_sup_log_inf". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_sup_log_inf".  
 simple induction p; intros;
 [ elim H; right; simpl;
 rewrite (two_p_S (log_inf p0) (log_inf_correct1 p0));
@@ -123,7 +123,7 @@ Qed.
 
 Theorem log_sup_correct2 :
 forall x:positive, two_p (Z.pred (log_sup x)) < Zpos x <= two_p (log_sup x).
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_sup_correct2". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_sup_correct2".  
 intro.
 elim (log_sup_log_inf x).
 
@@ -135,12 +135,12 @@ generalize (log_inf_correct2 x); omega.
 Qed.
 
 Lemma log_inf_le_log_sup : forall p:positive, log_inf p <= log_sup p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_inf_le_log_sup". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_inf_le_log_sup".  
 simple induction p; simpl; intros; omega.
 Qed.
 
 Lemma log_sup_le_Slog_inf : forall p:positive, log_sup p <= Z.succ (log_inf p).
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_sup_le_Slog_inf". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_sup_le_Slog_inf".  
 simple induction p; simpl; intros; omega.
 Qed.
 
@@ -156,7 +156,7 @@ match x with
 end.
 
 Theorem log_near_correct1 : forall p:positive, 0 <= log_near p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_near_correct1". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_near_correct1".  
 simple induction p; simpl; intros;
 [ elim p0; auto with zarith
 | elim p0; auto with zarith
@@ -169,7 +169,7 @@ Qed.
 
 Theorem log_near_correct2 :
 forall p:positive, log_near p = log_inf p \/ log_near p = log_sup p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_near_correct2". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_near_correct2".  
 simple induction p.
 intros p0 [Einf| Esup].
 simpl. rewrite Einf.
@@ -205,19 +205,19 @@ match x with
 end.
 
 Lemma ZERO_le_N_digits : forall x:Z, 0 <= N_digits x.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.ZERO_le_N_digits". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.ZERO_le_N_digits".  
 simple induction x; simpl;
 [ apply Z.le_refl | exact log_inf_correct1 | exact log_inf_correct1 ].
 Qed.
 
 Lemma log_inf_shift_nat : forall n:nat, log_inf (shift_nat n 1) = Z.of_nat n.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_inf_shift_nat". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_inf_shift_nat".  
 simple induction n; intros;
 [ try trivial | rewrite Nat2Z.inj_succ; rewrite <- H; reflexivity ].
 Qed.
 
 Lemma log_sup_shift_nat : forall n:nat, log_sup (shift_nat n 1) = Z.of_nat n.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.log_sup_shift_nat". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.log_sup_shift_nat".  
 simple induction n; intros;
 [ try trivial | rewrite Nat2Z.inj_succ; rewrite <- H; reflexivity ].
 Qed.
@@ -232,7 +232,7 @@ end.
 
 Lemma Is_power_correct :
 forall p:positive, Is_power p <-> (exists y : nat, p = shift_nat y 1).
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.Is_power_correct". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.Is_power_correct".  
 split;
 [ elim p;
 [ simpl; tauto
@@ -243,7 +243,7 @@ intros y0 Hy0; exists (S y0); rewrite Hy0; reflexivity
 Qed.
 
 Lemma Is_power_or : forall p:positive, Is_power p \/ ~ Is_power p.
-Proof. try hammer_hook "Zlogarithm" "Zlogarithm.Is_power_or". Undo.  
+Proof. hammer_hook "Zlogarithm" "Zlogarithm.Is_power_or".  
 simple induction p;
 [ intros; right; simpl; tauto
 | intros; elim H;

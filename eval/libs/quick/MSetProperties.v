@@ -27,14 +27,14 @@ Module Import FM := Dec.F .
 Import M.
 
 Lemma In_dec : forall x s, {In x s} + {~ In x s}.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.In_dec". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.In_dec".  
 intros; generalize (mem_iff s x); case (mem x s); intuition.
 Qed.
 
 Definition Add x s s' := forall y, In y s' <-> E.eq x y \/ In y s.
 
 Lemma Add_Equal : forall x s s', Add x s s' <-> s' [=] add x s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Add_Equal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Add_Equal".  
 unfold Add.
 split; intros.
 red; intros.
@@ -51,216 +51,216 @@ Variable s s' s'' s1 s2 s3 : t.
 Variable x x' : elt.
 
 Lemma equal_refl : s[=]s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.equal_refl". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.equal_refl".   fsetdec. Qed.
 
 Lemma equal_sym : s[=]s' -> s'[=]s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.equal_sym". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.equal_sym".   fsetdec. Qed.
 
 Lemma equal_trans : s1[=]s2 -> s2[=]s3 -> s1[=]s3.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.equal_trans". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.equal_trans".   fsetdec. Qed.
 
 Lemma subset_refl : s[<=]s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_refl". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_refl".   fsetdec. Qed.
 
 Lemma subset_trans : s1[<=]s2 -> s2[<=]s3 -> s1[<=]s3.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_trans". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_trans".   fsetdec. Qed.
 
 Lemma subset_antisym : s[<=]s' -> s'[<=]s -> s[=]s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_antisym". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_antisym".   fsetdec. Qed.
 
 Lemma subset_equal : s[=]s' -> s[<=]s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_equal". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_equal".   fsetdec. Qed.
 
 Lemma subset_empty : empty[<=]s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_empty". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_empty".   fsetdec. Qed.
 
 Lemma subset_remove_3 : s1[<=]s2 -> remove x s1 [<=] s2.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_remove_3". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_remove_3".   fsetdec. Qed.
 
 Lemma subset_diff : s1[<=]s3 -> diff s1 s2 [<=] s3.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_diff". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_diff".   fsetdec. Qed.
 
 Lemma subset_add_3 : In x s2 -> s1[<=]s2 -> add x s1 [<=] s2.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_add_3". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_add_3".   fsetdec. Qed.
 
 Lemma subset_add_2 : s1[<=]s2 -> s1[<=] add x s2.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_add_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_add_2".   fsetdec. Qed.
 
 Lemma in_subset : In x s1 -> s1[<=]s2 -> In x s2.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.in_subset". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.in_subset".   fsetdec. Qed.
 
 Lemma double_inclusion : s1[=]s2 <-> s1[<=]s2 /\ s2[<=]s1.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.double_inclusion". Undo.   intuition fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.double_inclusion".   intuition fsetdec. Qed.
 
 Lemma empty_is_empty_1 : Empty s -> s[=]empty.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_is_empty_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_is_empty_1".   fsetdec. Qed.
 
 Lemma empty_is_empty_2 : s[=]empty -> Empty s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_is_empty_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_is_empty_2".   fsetdec. Qed.
 
 Lemma add_equal : In x s -> add x s [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_equal". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_equal".   fsetdec. Qed.
 
 Lemma add_add : add x (add x' s) [=] add x' (add x s).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_add". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_add".   fsetdec. Qed.
 
 Lemma remove_equal : ~ In x s -> remove x s [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_equal". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_equal".   fsetdec. Qed.
 
 Lemma Equal_remove : s[=]s' -> remove x s [=] remove x s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Equal_remove". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Equal_remove".   fsetdec. Qed.
 
 Lemma add_remove : In x s -> add x (remove x s) [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_remove". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_remove".   fsetdec. Qed.
 
 Lemma remove_add : ~In x s -> remove x (add x s) [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_add". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_add".   fsetdec. Qed.
 
 Lemma singleton_equal_add : singleton x [=] add x empty.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.singleton_equal_add". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.singleton_equal_add".   fsetdec. Qed.
 
 Lemma remove_singleton_empty :
 In x s -> remove x s [=] empty -> singleton x [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_singleton_empty". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_singleton_empty".   fsetdec. Qed.
 
 Lemma union_sym : union s s' [=] union s' s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_sym". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_sym".   fsetdec. Qed.
 
 Lemma union_subset_equal : s[<=]s' -> union s s' [=] s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_equal". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_equal".   fsetdec. Qed.
 
 Lemma union_equal_1 : s[=]s' -> union s s'' [=] union s' s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_equal_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_equal_1".   fsetdec. Qed.
 
 Lemma union_equal_2 : s'[=]s'' -> union s s' [=] union s s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_equal_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_equal_2".   fsetdec. Qed.
 
 Lemma union_assoc : union (union s s') s'' [=] union s (union s' s'').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_assoc". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_assoc".   fsetdec. Qed.
 
 Lemma add_union_singleton : add x s [=] union (singleton x) s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_union_singleton". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_union_singleton".   fsetdec. Qed.
 
 Lemma union_add : union (add x s) s' [=] add x (union s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_add". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_add".   fsetdec. Qed.
 
 Lemma union_remove_add_1 :
 union (remove x s) (add x s') [=] union (add x s) (remove x s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_remove_add_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_remove_add_1".   fsetdec. Qed.
 
 Lemma union_remove_add_2 : In x s ->
 union (remove x s) (add x s') [=] union s s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_remove_add_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_remove_add_2".   fsetdec. Qed.
 
 Lemma union_subset_1 : s [<=] union s s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_1".   fsetdec. Qed.
 
 Lemma union_subset_2 : s' [<=] union s s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_2".   fsetdec. Qed.
 
 Lemma union_subset_3 : s[<=]s'' -> s'[<=]s'' -> union s s' [<=] s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_3". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_3".   fsetdec. Qed.
 
 Lemma union_subset_4 : s[<=]s' -> union s s'' [<=] union s' s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_4". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_4".   fsetdec. Qed.
 
 Lemma union_subset_5 : s[<=]s' -> union s'' s [<=] union s'' s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_5". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_subset_5".   fsetdec. Qed.
 
 Lemma empty_union_1 : Empty s -> union s s' [=] s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_union_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_union_1".   fsetdec. Qed.
 
 Lemma empty_union_2 : Empty s -> union s' s [=] s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_union_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_union_2".   fsetdec. Qed.
 
 Lemma not_in_union : ~In x s -> ~In x s' -> ~In x (union s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.not_in_union". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.not_in_union".   fsetdec. Qed.
 
 Lemma inter_sym : inter s s' [=] inter s' s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_sym". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_sym".   fsetdec. Qed.
 
 Lemma inter_subset_equal : s[<=]s' -> inter s s' [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_equal". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_equal".   fsetdec. Qed.
 
 Lemma inter_equal_1 : s[=]s' -> inter s s'' [=] inter s' s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_equal_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_equal_1".   fsetdec. Qed.
 
 Lemma inter_equal_2 : s'[=]s'' -> inter s s' [=] inter s s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_equal_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_equal_2".   fsetdec. Qed.
 
 Lemma inter_assoc : inter (inter s s') s'' [=] inter s (inter s' s'').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_assoc". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_assoc".   fsetdec. Qed.
 
 Lemma union_inter_1 : inter (union s s') s'' [=] union (inter s s'') (inter s' s'').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_inter_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_inter_1".   fsetdec. Qed.
 
 Lemma union_inter_2 : union (inter s s') s'' [=] inter (union s s'') (union s' s'').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_inter_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_inter_2".   fsetdec. Qed.
 
 Lemma inter_add_1 : In x s' -> inter (add x s) s' [=] add x (inter s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_add_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_add_1".   fsetdec. Qed.
 
 Lemma inter_add_2 : ~ In x s' -> inter (add x s) s' [=] inter s s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_add_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_add_2".   fsetdec. Qed.
 
 Lemma empty_inter_1 : Empty s -> Empty (inter s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_inter_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_inter_1".   fsetdec. Qed.
 
 Lemma empty_inter_2 : Empty s' -> Empty (inter s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_inter_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_inter_2".   fsetdec. Qed.
 
 Lemma inter_subset_1 : inter s s' [<=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_1".   fsetdec. Qed.
 
 Lemma inter_subset_2 : inter s s' [<=] s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_2".   fsetdec. Qed.
 
 Lemma inter_subset_3 :
 s''[<=]s -> s''[<=]s' -> s''[<=] inter s s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_3". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_subset_3".   fsetdec. Qed.
 
 Lemma empty_diff_1 : Empty s -> Empty (diff s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_diff_1". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_diff_1".   fsetdec. Qed.
 
 Lemma empty_diff_2 : Empty s -> diff s' s [=] s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_diff_2". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_diff_2".   fsetdec. Qed.
 
 Lemma diff_subset : diff s s' [<=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_subset". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_subset".   fsetdec. Qed.
 
 Lemma diff_subset_equal : s[<=]s' -> diff s s' [=] empty.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_subset_equal". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_subset_equal".   fsetdec. Qed.
 
 Lemma remove_diff_singleton :
 remove x s [=] diff s (singleton x).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_diff_singleton". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_diff_singleton".   fsetdec. Qed.
 
 Lemma diff_inter_empty : inter (diff s s') (inter s s') [=] empty.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_inter_empty". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_inter_empty".   fsetdec. Qed.
 
 Lemma diff_inter_all : union (diff s s') (inter s s') [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_inter_all". Undo.   fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_inter_all".   fsetdec. Qed.
 
 Lemma Add_add : Add x s (add x s).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Add_add". Undo.   expAdd; fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Add_add".   expAdd; fsetdec. Qed.
 
 Lemma Add_remove : In x s -> Add x (remove x s) s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Add_remove". Undo.   expAdd; fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Add_remove".   expAdd; fsetdec. Qed.
 
 Lemma union_Add : Add x s s' -> Add x (union s s'') (union s' s'').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_Add". Undo.   expAdd; fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_Add".   expAdd; fsetdec. Qed.
 
 Lemma inter_Add :
 In x s'' -> Add x s s' -> Add x (inter s s'') (inter s' s'').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_Add". Undo.   expAdd; fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_Add".   expAdd; fsetdec. Qed.
 
 Lemma union_Equal :
 In x s'' -> Add x s s' -> union s s'' [=] union s' s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_Equal". Undo.   expAdd; fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_Equal".   expAdd; fsetdec. Qed.
 
 Lemma inter_Add_2 :
 ~In x s'' -> Add x s s' -> inter s s'' [=] inter s' s''.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_Add_2". Undo.   expAdd; fsetdec. Qed.
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.inter_Add_2".   expAdd; fsetdec. Qed.
 
 End BasicProperties.
 
@@ -281,7 +281,7 @@ Equal_remove add_add : set.
 
 
 Lemma elements_Empty : forall s, Empty s <-> elements s = nil.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.elements_Empty". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.elements_Empty".  
 intros.
 unfold Empty.
 split; intros.
@@ -299,7 +299,7 @@ rewrite H in H0; destruct H0 as (_,H0); inversion H0.
 Qed.
 
 Lemma elements_empty : elements empty = nil.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.elements_empty". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.elements_empty".  
 rewrite <-elements_Empty; auto with set.
 Qed.
 
@@ -310,20 +310,20 @@ Definition of_list (l : list elt) := List.fold_right add empty l.
 Definition to_list := elements.
 
 Lemma of_list_1 : forall l x, In x (of_list l) <-> InA E.eq x l.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.of_list_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.of_list_1".  
 induction l; simpl; intro x.
 rewrite empty_iff, InA_nil. intuition.
 rewrite add_iff, InA_cons, IHl. intuition.
 Qed.
 
 Lemma of_list_2 : forall l, equivlistA E.eq (to_list (of_list l)) l.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.of_list_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.of_list_2".  
 unfold to_list; red; intros.
 rewrite <- elements_iff; apply of_list_1.
 Qed.
 
 Lemma of_list_3 : forall s, of_list (to_list s) [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.of_list_3". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.of_list_3".  
 unfold to_list; red; intros.
 rewrite of_list_1; symmetry; apply elements_iff.
 Qed.
@@ -339,7 +339,7 @@ Notation InA := (InA E.eq).
 
 Lemma fold_spec_right (s:t)(A:Type)(i:A)(f : elt -> A -> A) :
 fold f s i = List.fold_right f i (rev (elements s)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_spec_right". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_spec_right".  
 rewrite fold_spec. symmetry. apply fold_left_rev_right.
 Qed.
 
@@ -353,7 +353,7 @@ forall (A:Type)(P : t -> A -> Type)(f : elt -> A -> A)(i:A)(s:t),
 (forall x a s' s'', In x s -> ~In x s' -> Add x s' s'' ->
 P s' a -> P s'' (f x a)) ->
 P s (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec".  
 intros A P f i s Pempty Pstep.
 rewrite fold_spec_right. set (l:=rev (elements s)).
 assert (Pstep' : forall x a s' s'', InA x l -> ~In x s' -> Add x s' s'' ->
@@ -387,7 +387,7 @@ forall (A:Type)(P : t -> A -> Type)(f : elt -> A -> A)(i:A)(s:t),
 (P empty i) ->
 (forall x a s', In x s -> ~In x s' -> P s' a -> P (add x s') (f x a)) ->
 P s (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec_bis". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec_bis".  
 intros A P f i s Pmorphism Pempty Pstep.
 apply fold_rec; intros.
 apply Pmorphism with empty; auto with set.
@@ -399,7 +399,7 @@ Lemma fold_rec_nodep :
 forall (A:Type)(P : A -> Type)(f : elt -> A -> A)(i:A)(s:t),
 P i -> (forall x a, In x s -> P a -> P (f x a)) ->
 P (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec_nodep". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec_nodep".  
 intros; apply fold_rec_bis with (P:=fun _ => P); auto.
 Qed.
 
@@ -411,7 +411,7 @@ forall (A:Type)(P : t -> A -> Type)(f : elt -> A -> A)(i:A),
 P empty i ->
 (forall x a s, ~In x s -> P s a -> P (add x s) (f x a)) ->
 forall s, P s (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec_weak". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rec_weak".  
 intros; apply fold_rec_bis; auto.
 Qed.
 
@@ -421,7 +421,7 @@ forall (A B:Type)(R : A -> B -> Type)
 R i j ->
 (forall x a b, In x s -> R a b -> R (f x a) (g x b)) ->
 R (fold f s i) (fold g s j).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rel". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_rel".  
 intros A B R f g i j s Rempty Rstep.
 rewrite 2 fold_spec_right. set (l:=rev (elements s)).
 assert (Rstep' : forall x a b, InA x l -> R a b -> R (f x a) (g x b)) by
@@ -437,7 +437,7 @@ forall P : t -> Type,
 (forall s, Empty s -> P s) ->
 (forall s s', P s -> forall x, ~In x s -> Add x s s' -> P s') ->
 forall s, P s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.set_induction". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.set_induction".  
 intros. apply (@fold_rec _ (fun s _ => P s) (fun _ _ => tt) tt s); eauto.
 Qed.
 
@@ -447,7 +447,7 @@ forall P : t -> Type,
 P empty ->
 (forall x s, ~In x s -> P s -> P (add x s)) ->
 forall s, P s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.set_induction_bis". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.set_induction_bis".  
 intros.
 apply (@fold_rec_bis _ (fun s _ => P s) (fun _ _ => tt) tt s); eauto.
 Qed.
@@ -455,7 +455,7 @@ Qed.
 
 
 Lemma fold_identity : forall s, fold add s empty [=] s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_identity". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_identity".  
 intros.
 apply fold_rec with (P:=fun s acc => acc[=]s); auto with set.
 intros. rewrite H2; rewrite Add_Equal in H1; auto with set.
@@ -471,7 +471,7 @@ exists l : list elt,
 NoDup l /\
 (forall x : elt, In x s <-> InA x l) /\
 fold f s i = fold_right f i l.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_0". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_0".  
 intros; exists (rev (elements s)); split.
 apply NoDupA_rev; auto with *.
 split; intros.
@@ -486,7 +486,7 @@ Lemma fold_1 :
 forall s (A : Type) (eqA : A -> A -> Prop)
 (st : Equivalence eqA) (i : A) (f : elt -> A -> A),
 Empty s -> eqA (fold f s i) i.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_1".  
 unfold Empty; intros; destruct (fold_0 s i f) as (l,(H1, (H2, H3))).
 rewrite H3; clear H3.
 generalize H H2; clear H H2; case l; simpl; intros.
@@ -501,7 +501,7 @@ forall s s' x (A : Type) (eqA : A -> A -> Prop)
 Proper (E.eq==>eqA==>eqA) f ->
 transpose eqA f ->
 ~ In x s -> Add x s s' -> eqA (fold f s' i) (f x (fold f s i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_2".  
 intros; destruct (fold_0 s i f) as (l,(Hl, (Hl1, Hl2)));
 destruct (fold_0 s' i f) as (l',(Hl', (Hl'1, Hl'2))).
 rewrite Hl2; rewrite Hl'2; clear Hl2 Hl'2.
@@ -517,7 +517,7 @@ Qed.
 Lemma fold_1b :
 forall s (A : Type)(i : A) (f : elt -> A -> A),
 Empty s -> (fold f s i) = i.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_1b". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_1b".  
 intros.
 rewrite FM.fold_1.
 rewrite elements_Empty in H; rewrite H; simpl; auto.
@@ -530,7 +530,7 @@ Variables (f:elt->A->A)(Comp:Proper (E.eq==>eqA==>eqA) f)(Ass:transpose eqA f).
 
 Lemma fold_commutes : forall i s x,
 eqA (fold f s (f x i)) (f x (fold f s i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_commutes". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_commutes".  
 intros.
 apply fold_rel with (R:=fun u v => eqA u (f x v)); intros.
 reflexivity.
@@ -542,14 +542,14 @@ Qed.
 
 Lemma fold_init : forall i i' s, eqA i i' ->
 eqA (fold f s i) (fold f s i').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_init". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_init".  
 intros. apply fold_rel with (R:=eqA); auto.
 intros; apply Comp; auto with relations.
 Qed.
 
 Lemma fold_equal :
 forall i s s', s[=]s' -> eqA (fold f s i) (fold f s' i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_equal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_equal".  
 intros i s; pattern s; apply set_induction; clear s; intros.
 transitivity i.
 apply fold_1; auto.
@@ -565,25 +565,25 @@ Qed.
 
 
 Lemma fold_empty : forall i, fold f empty i = i.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_empty". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_empty".  
 intros i; apply fold_1b; auto with set.
 Qed.
 
 Lemma fold_add : forall i s x, ~In x s ->
 eqA (fold f (add x s) i) (f x (fold f s i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_add". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_add".  
 intros; apply fold_2 with (eqA := eqA); auto with set.
 Qed.
 
 Lemma add_fold : forall i s x, In x s ->
 eqA (fold f (add x s) i) (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_fold". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_fold".  
 intros; apply fold_equal; auto with set.
 Qed.
 
 Lemma remove_fold_1: forall i s x, In x s ->
 eqA (f x (fold f (remove x s) i)) (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_fold_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_fold_1".  
 intros.
 symmetry.
 apply fold_2 with (eqA:=eqA); auto with set relations.
@@ -591,7 +591,7 @@ Qed.
 
 Lemma remove_fold_2: forall i s x, ~In x s ->
 eqA (fold f (remove x s) i) (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_fold_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_fold_2".  
 intros.
 apply fold_equal; auto with set.
 Qed.
@@ -599,7 +599,7 @@ Qed.
 Lemma fold_union_inter : forall i s s',
 eqA (fold f (union s s') (fold f (inter s s') i))
 (fold f s (fold f s' i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_union_inter". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_union_inter".  
 intros; pattern s; apply set_induction; clear s; intros.
 transitivity (fold f s' (fold f (inter s s') i)).
 apply fold_equal; auto with set.
@@ -637,7 +637,7 @@ Qed.
 
 Lemma fold_diff_inter : forall i s s',
 eqA (fold f (diff s s') (fold f (inter s s') i)) (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_diff_inter". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_diff_inter".  
 intros.
 transitivity (fold f (union (diff s s') (inter s s'))
 (fold f (inter (diff s s') (inter s s')) i)).
@@ -651,7 +651,7 @@ Qed.
 Lemma fold_union: forall i s s',
 (forall x, ~(In x s/\In x s')) ->
 eqA (fold f (union s s') i) (fold f s (fold f s' i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_union". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_union".  
 intros.
 transitivity (fold f (union s s') (fold f (inter s s') i)).
 apply fold_init; auto.
@@ -664,7 +664,7 @@ End Fold_More.
 
 Lemma fold_plus :
 forall s p, fold (fun _ => S) s p = fold (fun _ => S) s 0 + p.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_plus". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.fold_plus".  
 intros. apply fold_rel with (R:=fun u v => u = v + p); simpl; auto.
 Qed.
 
@@ -675,7 +675,7 @@ End Fold.
 
 
 Lemma cardinal_fold : forall s, cardinal s = fold (fun _ => S) s 0.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_fold". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_fold".  
 intros; rewrite cardinal_1; rewrite FM.fold_1.
 symmetry; apply fold_left_length; auto.
 Qed.
@@ -687,18 +687,18 @@ forall s, exists l : list elt,
 NoDupA E.eq l /\
 (forall x : elt, In x s <-> InA E.eq x l) /\
 cardinal s = length l.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_0". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_0".  
 intros; exists (elements s); intuition; apply cardinal_1.
 Qed.
 
 Lemma cardinal_1 : forall s, Empty s -> cardinal s = 0.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_1".  
 intros; rewrite cardinal_fold; apply fold_1; auto with *.
 Qed.
 
 Lemma cardinal_2 :
 forall s s' x, ~ In x s -> Add x s s' -> cardinal s' = S (cardinal s).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_2".  
 intros; do 2 rewrite cardinal_fold.
 change S with ((fun _ => S) x).
 apply fold_2; auto.
@@ -709,21 +709,21 @@ Qed.
 
 
 Lemma cardinal_Empty : forall s, Empty s <-> cardinal s = 0.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_Empty". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_Empty".  
 intros.
 rewrite elements_Empty, FM.cardinal_1.
 destruct (elements s); intuition; discriminate.
 Qed.
 
 Lemma cardinal_inv_1 : forall s, cardinal s = 0 -> Empty s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_inv_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_inv_1".  
 intros; rewrite cardinal_Empty; auto.
 Qed.
 Hint Resolve cardinal_inv_1.
 
 Lemma cardinal_inv_2 :
 forall s n, cardinal s = S n -> { x : elt | In x s }.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_inv_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_inv_2".  
 intros; rewrite FM.cardinal_1 in H.
 generalize (elements_2 (s:=s)).
 destruct (elements s); try discriminate.
@@ -732,7 +732,7 @@ Qed.
 
 Lemma cardinal_inv_2b :
 forall s, cardinal s <> 0 -> { x : elt | In x s }.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_inv_2b". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_inv_2b".  
 intro; generalize (@cardinal_inv_2 s); destruct cardinal;
 [intuition|eauto].
 Qed.
@@ -740,7 +740,7 @@ Qed.
 
 
 Lemma Equal_cardinal : forall s s', s[=]s' -> cardinal s = cardinal s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Equal_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.Equal_cardinal".  
 symmetry.
 remember (cardinal s) as n; symmetry in Heqn; revert s s' Heqn H.
 induction n; intros.
@@ -754,7 +754,7 @@ eauto with set relations.
 Qed.
 
 Instance cardinal_m : Proper (Equal==>Logic.eq) cardinal.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_m". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.cardinal_m".  
 exact Equal_cardinal.
 Qed.
 
@@ -763,14 +763,14 @@ Hint Resolve Add_add Add_remove Equal_remove cardinal_inv_1 Equal_cardinal.
 
 
 Lemma empty_cardinal : cardinal empty = 0.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.empty_cardinal".  
 rewrite cardinal_fold; apply fold_1; auto with *.
 Qed.
 
 Hint Immediate empty_cardinal cardinal_1 : set.
 
 Lemma singleton_cardinal : forall x, cardinal (singleton x) = 1.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.singleton_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.singleton_cardinal".  
 intros.
 rewrite (singleton_equal_add x).
 replace 0 with (cardinal empty); auto with set.
@@ -781,7 +781,7 @@ Hint Resolve singleton_cardinal: set.
 
 Lemma diff_inter_cardinal :
 forall s s', cardinal (diff s s') + cardinal (inter s s') = cardinal s .
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_inter_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.diff_inter_cardinal".  
 intros; do 3 rewrite cardinal_fold.
 rewrite <- fold_plus.
 apply fold_diff_inter with (eqA:=@Logic.eq nat); auto with *.
@@ -791,7 +791,7 @@ Qed.
 Lemma union_cardinal:
 forall s s', (forall x, ~(In x s/\In x s')) ->
 cardinal (union s s')=cardinal s+cardinal s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_cardinal".  
 intros; do 3 rewrite cardinal_fold.
 rewrite <- fold_plus.
 apply fold_union; auto.
@@ -801,7 +801,7 @@ Qed.
 
 Lemma subset_cardinal :
 forall s s', s[<=]s' -> cardinal s <= cardinal s' .
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_cardinal".  
 intros.
 rewrite <- (diff_inter_cardinal s' s).
 rewrite (inter_sym s' s).
@@ -810,7 +810,7 @@ Qed.
 
 Lemma subset_cardinal_lt :
 forall s s' x, s[<=]s' -> In x s' -> ~In x s -> cardinal s < cardinal s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_cardinal_lt". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.subset_cardinal_lt".  
 intros.
 rewrite <- (diff_inter_cardinal s' s).
 rewrite (inter_sym s' s).
@@ -826,7 +826,7 @@ Qed.
 
 Theorem union_inter_cardinal :
 forall s s', cardinal (union s s') + cardinal (inter s s')  = cardinal s  + cardinal s' .
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_inter_cardinal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_inter_cardinal".  
 intros.
 do 4 rewrite cardinal_fold.
 do 2 rewrite <- fold_plus.
@@ -836,7 +836,7 @@ Qed.
 
 Lemma union_cardinal_inter :
 forall s s', cardinal (union s s') = cardinal s + cardinal s' - cardinal (inter s s').
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_cardinal_inter". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_cardinal_inter".  
 intros.
 rewrite <- union_inter_cardinal.
 rewrite Plus.plus_comm.
@@ -845,20 +845,20 @@ Qed.
 
 Lemma union_cardinal_le :
 forall s s', cardinal (union s s') <= cardinal s  + cardinal s'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_cardinal_le". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.union_cardinal_le".  
 intros; generalize (union_inter_cardinal s s').
 intros; rewrite <- H; auto with arith.
 Qed.
 
 Lemma add_cardinal_1 :
 forall s x, In x s -> cardinal (add x s) = cardinal s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_cardinal_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_cardinal_1".  
 auto with set.
 Qed.
 
 Lemma add_cardinal_2 :
 forall s x, ~In x s -> cardinal (add x s) = S (cardinal s).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_cardinal_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.add_cardinal_2".  
 intros.
 do 2 rewrite cardinal_fold.
 change S with ((fun _ => S) x);
@@ -868,7 +868,7 @@ Qed.
 
 Lemma remove_cardinal_1 :
 forall s x, In x s -> S (cardinal (remove x s)) = cardinal s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_cardinal_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_cardinal_1".  
 intros.
 do 2 rewrite cardinal_fold.
 change S with ((fun _ =>S) x).
@@ -878,7 +878,7 @@ Qed.
 
 Lemma remove_cardinal_2 :
 forall s x, ~In x s -> cardinal (remove x s) = cardinal s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_cardinal_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.WPropertiesOn.remove_cardinal_2".  
 auto with set.
 Qed.
 
@@ -910,7 +910,7 @@ max_elt_spec1 max_elt_spec2 max_elt_spec3 : set.
 
 Lemma sort_equivlistA_eqlistA : forall l l' : list elt,
 sort E.lt l -> sort E.lt l' -> equivlistA E.eq l l' -> eqlistA E.eq l l'.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.sort_equivlistA_eqlistA". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.sort_equivlistA_eqlistA".  
 apply SortA_equivlistA_eqlistA; eauto with *.
 Qed.
 
@@ -921,31 +921,31 @@ Definition elements_lt x s := List.filter (gtb x) (elements s).
 Definition elements_ge x s := List.filter (leb x) (elements s).
 
 Lemma gtb_1 : forall x y, gtb x y = true <-> E.lt y x.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.gtb_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.gtb_1".  
 intros; rewrite <- compare_gt_iff. unfold gtb.
 destruct E.compare; intuition; try discriminate.
 Qed.
 
 Lemma leb_1 : forall x y, leb x y = true <-> ~E.lt y x.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.leb_1". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.leb_1".  
 intros; rewrite <- compare_gt_iff. unfold leb, gtb.
 destruct E.compare; intuition; try discriminate.
 Qed.
 
 Instance gtb_compat x : Proper (E.eq==>Logic.eq) (gtb x).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.gtb_compat". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.gtb_compat".  
 intros a b H. unfold gtb. rewrite H; auto.
 Qed.
 
 Instance leb_compat x : Proper (E.eq==>Logic.eq) (leb x).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.leb_compat". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.leb_compat".  
 intros a b H; unfold leb. rewrite H; auto.
 Qed.
 Hint Resolve gtb_compat leb_compat.
 
 Lemma elements_split : forall x s,
 elements s = elements_lt x s ++ elements_ge x s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_split". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_split".  
 unfold elements_lt, elements_ge, leb; intros.
 eapply (@filter_split _ E.eq); eauto with *.
 intros.
@@ -958,7 +958,7 @@ Qed.
 
 Lemma elements_Add : forall s s' x, ~In x s -> Add x s s' ->
 eqlistA E.eq (elements s') (elements_lt x s ++ x :: elements_ge x s).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_Add". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_Add".  
 intros; unfold elements_ge, elements_lt.
 apply sort_equivlistA_eqlistA; auto with set.
 apply (@SortA_app _ E.eq); auto with *.
@@ -996,7 +996,7 @@ Definition Below x s := forall y, In y s -> E.lt x y.
 Lemma elements_Add_Above : forall s s' x,
 Above x s -> Add x s s' ->
 eqlistA E.eq (elements s') (elements s ++ x::nil).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_Add_Above". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_Add_Above".  
 intros.
 apply sort_equivlistA_eqlistA; auto with set.
 apply (@SortA_app _ E.eq); auto with *.
@@ -1013,7 +1013,7 @@ Qed.
 Lemma elements_Add_Below : forall s s' x,
 Below x s -> Add x s s' ->
 eqlistA E.eq (elements s') (x::elements s).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_Add_Below". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.elements_Add_Below".  
 intros.
 apply sort_equivlistA_eqlistA; auto with set.
 change (sort E.lt ((x::nil) ++ elements s)).
@@ -1033,7 +1033,7 @@ forall P : t -> Type,
 (forall s : t, Empty s -> P s) ->
 (forall s s', P s -> forall x, Above x s -> Add x s s' -> P s') ->
 forall s : t, P s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.set_induction_max". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.set_induction_max".  
 intros; remember (cardinal s) as n; revert s Heqn; induction n; intros; auto.
 case_eq (max_elt s); intros.
 apply X0 with (remove e s) e; auto with set.
@@ -1054,7 +1054,7 @@ forall P : t -> Type,
 (forall s : t, Empty s -> P s) ->
 (forall s s', P s -> forall x, Below x s -> Add x s s' -> P s') ->
 forall s : t, P s.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.set_induction_min". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.set_induction_min".  
 intros; remember (cardinal s) as n; revert s Heqn; induction n; intros; auto.
 case_eq (min_elt s); intros.
 apply X0 with (remove e s) e; auto with set.
@@ -1077,7 +1077,7 @@ forall s s' x (A : Type) (eqA : A -> A -> Prop)
 (st : Equivalence eqA) (i : A) (f : elt -> A -> A),
 Proper (E.eq==>eqA==>eqA) f ->
 Above x s -> Add x s s' -> eqA (fold f s' i) (f x (fold f s i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.fold_3". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.fold_3".  
 intros.
 rewrite 2 fold_spec_right.
 change (f x (fold_right f i (rev (elements s)))) with
@@ -1093,7 +1093,7 @@ forall s s' x (A : Type) (eqA : A -> A -> Prop)
 (st : Equivalence eqA) (i : A) (f : elt -> A -> A),
 Proper (E.eq==>eqA==>eqA) f ->
 Below x s -> Add x s s' -> eqA (fold f s' i) (fold f s (f x i)).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.fold_4". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.fold_4".  
 intros.
 rewrite !fold_spec.
 change (eqA (fold_left (flip f) (elements s') i)
@@ -1112,7 +1112,7 @@ Variables (f:elt->A->A)(Comp:Proper (E.eq==>eqA==>eqA) f).
 
 Lemma fold_equal :
 forall i s s', s[=]s' -> eqA (fold f s i) (fold f s' i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.fold_equal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.fold_equal".  
 intros.
 rewrite 2 fold_spec_right.
 apply (@fold_right_eqlistA E.t E.eq A eqA st); auto.
@@ -1123,13 +1123,13 @@ Qed.
 
 Lemma add_fold : forall i s x, In x s ->
 eqA (fold f (add x s) i) (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.add_fold". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.add_fold".  
 intros; apply fold_equal; auto with set.
 Qed.
 
 Lemma remove_fold_2: forall i s x, ~In x s ->
 eqA (fold f (remove x s) i) (fold f s i).
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.remove_fold_2". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.remove_fold_2".  
 intros.
 apply fold_equal; auto with set.
 Qed.
@@ -1144,7 +1144,7 @@ match choose s, choose s' with
 | None, None => True
 | _, _ => False
 end.
-Proof. try hammer_hook "MSetProperties" "MSetProperties.OrdProperties.choose_equal". Undo.  
+Proof. hammer_hook "MSetProperties" "MSetProperties.OrdProperties.choose_equal".  
 intros s s' H;
 generalize (@choose_spec1 s)(@choose_spec2 s)
 (@choose_spec1 s')(@choose_spec2 s')(@choose_spec3 s s');

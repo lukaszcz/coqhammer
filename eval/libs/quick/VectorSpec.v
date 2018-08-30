@@ -21,7 +21,7 @@ with | eq_refl => conj eq_refl eq_refl
 end.
 
 Lemma eta {A} {n} (v : t A (S n)) : v = hd v :: tl v.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.eta". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.eta".  
 intros; apply caseS with (v:=v); intros; reflexivity.
 Defined.
 
@@ -29,7 +29,7 @@ Defined.
 
 Lemma eq_nth_iff A n (v1 v2: t A n):
 (forall p1 p2, p1 = p2 -> v1 [@ p1 ] = v2 [@ p2 ]) <-> v1 = v2.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.eq_nth_iff". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.eq_nth_iff".  
 split.
 - revert n v1 v2; refine (@rect2 _ _ _ _ _); simpl; intros.
 + reflexivity.
@@ -41,26 +41,26 @@ Qed.
 
 Lemma nth_order_last A: forall n (v: t A (S n)) (H: n < S n),
 nth_order v H = last v.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.nth_order_last". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.nth_order_last".  
 unfold nth_order; refine (@rectS _ _ _ _); now simpl.
 Qed.
 
 Lemma shiftin_nth A a n (v: t A n) k1 k2 (eq: k1 = k2):
 nth (shiftin a v) (Fin.L_R 1 k1) = nth v k2.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.shiftin_nth". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.shiftin_nth".  
 subst k2; induction k1.
 - generalize dependent n. apply caseS ; intros. now simpl.
 - generalize dependent n. refine (@caseS _ _ _) ; intros. now simpl.
 Qed.
 
 Lemma shiftin_last A a n (v: t A n): last (shiftin a v) = a.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.shiftin_last". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.shiftin_last".  
 induction v ;now simpl.
 Qed.
 
 Lemma shiftrepeat_nth A: forall n k (v: t A (S n)),
 nth (shiftrepeat v) (Fin.L_R 1 k) = nth v k.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.shiftrepeat_nth". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.shiftrepeat_nth".  
 refine (@Fin.rectS _ _ _); lazy beta; [ intros n v | intros n p H v ].
 - revert n v; refine (@caseS _ _ _); simpl; intros. now destruct t.
 - revert p H.
@@ -73,18 +73,18 @@ refine (match v as v' in t _ m return match m as m' return t A m' -> Prop with
 Qed.
 
 Lemma shiftrepeat_last A: forall n (v: t A (S n)), last (shiftrepeat v) = last v.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.shiftrepeat_last". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.shiftrepeat_last".  
 refine (@rectS _ _ _ _); now simpl.
 Qed.
 
 Lemma const_nth A (a: A) n (p: Fin.t n): (const a n)[@ p] = a.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.const_nth". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.const_nth".  
 now induction p.
 Qed.
 
 Lemma nth_map {A B} (f: A -> B) {n} v (p1 p2: Fin.t n) (eq: p1 = p2):
 (map f v) [@ p1] = f (v [@ p2]).
-Proof. try hammer_hook "VectorSpec" "VectorSpec.nth_map". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.nth_map".  
 subst p2; induction p1.
 - revert n v; refine (@caseS _ _ _); now simpl.
 - revert n v p1 IHp1; refine (@caseS _  _ _); now simpl.
@@ -92,7 +92,7 @@ Qed.
 
 Lemma nth_map2 {A B C} (f: A -> B -> C) {n} v w (p1 p2 p3: Fin.t n):
 p1 = p2 -> p2 = p3 -> (map2 f v w) [@p1] = f (v[@p2]) (w[@p3]).
-Proof. try hammer_hook "VectorSpec" "VectorSpec.nth_map2". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.nth_map2".  
 intros; subst p2; subst p3; revert n v w p1.
 refine (@rect2 _ _ _ _ _); simpl.
 - exact (Fin.case0 _).
@@ -103,7 +103,7 @@ Qed.
 Lemma fold_left_right_assoc_eq {A B} {f: A -> B -> A}
 (assoc: forall a b c, f (f a b) c = f (f a c) b)
 {n} (v: t B n): forall a, fold_left f a v = fold_right (fun x y => f y x) v a.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.fold_left_right_assoc_eq". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.fold_left_right_assoc_eq".  
 assert (forall n h (v: t B n) a, fold_left f (f a h) v = f (fold_left f a v) h).
 - induction v0.
 + now simpl.
@@ -114,27 +114,27 @@ assert (forall n h (v: t B n) a, fold_left f (f a h) v = f (fold_left f a v) h).
 Qed.
 
 Lemma to_list_of_list_opp {A} (l: list A): to_list (of_list l) = l.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.to_list_of_list_opp". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.to_list_of_list_opp".  
 induction l.
 - reflexivity.
 - unfold to_list; simpl. now f_equal.
 Qed.
 
 Lemma take_O : forall {A} {n} le (v:t A n), take 0 le v = [].
-Proof. try hammer_hook "VectorSpec" "VectorSpec.take_O". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.take_O".  
 reflexivity.
 Qed.
 
 Lemma take_idem : forall {A} p n (v:t A n)  le le',
 take p le' (take p le v) = take p le v.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.take_idem". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.take_idem".  
 induction p; intros n v le le'.
 - auto.
 - destruct v. inversion le. simpl. apply f_equal. apply IHp.
 Qed.
 
 Lemma take_app : forall {A} {n} (v:t A n) {m} (w:t A m) le, take n le (append v w) = v.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.take_app". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.take_app".  
 induction v; intros m w le.
 - reflexivity.
 - simpl. apply f_equal. apply IHv.
@@ -142,7 +142,7 @@ Qed.
 
 
 Lemma take_prf_irr : forall {A} p {n} (v:t A n) le le', take p le v = take p le' v.
-Proof. try hammer_hook "VectorSpec" "VectorSpec.take_prf_irr". Undo.  
+Proof. hammer_hook "VectorSpec" "VectorSpec.take_prf_irr".  
 induction p; intros n v le le'.
 - reflexivity.
 - destruct v. inversion le. simpl. apply f_equal. apply IHp.

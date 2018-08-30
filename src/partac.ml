@@ -15,11 +15,12 @@ let partac n lst0 cont =
            exit 0
          end
        else
+         let clean () =
+           List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) pids;
+           ignore (try Unix.kill pid2 Sys.sigterm with _ -> ());
+           List.iter (fun i -> try ignore (Unix.waitpid [] i) with _ -> ()) pids
+         in
          let rec wait k pids =
-           let clean () =
-             List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) pids;
-             ignore (try Unix.kill pid2 Sys.sigterm with _ -> ())
-           in
            match pids with
            | [] ->
               begin

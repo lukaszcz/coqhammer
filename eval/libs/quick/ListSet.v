@@ -85,7 +85,7 @@ Definition set_In : A -> set -> Prop := In (A:=A).
 
 Lemma set_In_dec : forall (a:A) (x:set), {set_In a x} + {~ set_In a x}.
 
-Proof. try hammer_hook "ListSet" "ListSet.set_In_dec". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_In_dec".  
 unfold set_In.
 
 simple induction x.
@@ -102,7 +102,7 @@ Lemma set_mem_ind :
 forall (B:Type) (P:B -> Prop) (y z:B) (a:A) (x:set),
 (set_In a x -> P y) -> P z -> P (if set_mem a x then y else z).
 
-Proof. try hammer_hook "ListSet" "ListSet.set_mem_ind". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_mem_ind".  
 simple induction x; simpl; intros.
 assumption.
 elim (Aeq_dec a a0); auto with datatypes.
@@ -113,7 +113,7 @@ forall (B:Type) (P:B -> Prop) (y z:B) (a:A) (x:set),
 (set_In a x -> P y) ->
 (~ set_In a x -> P z) -> P (if set_mem a x then y else z).
 
-Proof. try hammer_hook "ListSet" "ListSet.set_mem_ind2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_mem_ind2".  
 simple induction x; simpl; intros.
 apply H0; red; trivial.
 case (Aeq_dec a a0); auto with datatypes.
@@ -125,7 +125,7 @@ Qed.
 
 Lemma set_mem_correct1 :
 forall (a:A) (x:set), set_mem a x = true -> set_In a x.
-Proof. try hammer_hook "ListSet" "ListSet.set_mem_correct1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_mem_correct1".  
 simple induction x; simpl.
 discriminate.
 intros a0 l; elim (Aeq_dec a a0); auto with datatypes.
@@ -133,7 +133,7 @@ Qed.
 
 Lemma set_mem_correct2 :
 forall (a:A) (x:set), set_In a x -> set_mem a x = true.
-Proof. try hammer_hook "ListSet" "ListSet.set_mem_correct2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_mem_correct2".  
 simple induction x; simpl.
 intro Ha; elim Ha.
 intros a0 l; elim (Aeq_dec a a0); auto with datatypes.
@@ -144,7 +144,7 @@ Qed.
 
 Lemma set_mem_complete1 :
 forall (a:A) (x:set), set_mem a x = false -> ~ set_In a x.
-Proof. try hammer_hook "ListSet" "ListSet.set_mem_complete1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_mem_complete1".  
 simple induction x; simpl.
 tauto.
 intros a0 l; elim (Aeq_dec a a0).
@@ -154,7 +154,7 @@ Qed.
 
 Lemma set_mem_complete2 :
 forall (a:A) (x:set), ~ set_In a x -> set_mem a x = false.
-Proof. try hammer_hook "ListSet" "ListSet.set_mem_complete2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_mem_complete2".  
 simple induction x; simpl.
 tauto.
 intros a0 l; elim (Aeq_dec a a0).
@@ -165,7 +165,7 @@ Qed.
 Lemma set_add_intro1 :
 forall (a b:A) (x:set), set_In a x -> set_In a (set_add b x).
 
-Proof. try hammer_hook "ListSet" "ListSet.set_add_intro1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_intro1".  
 unfold set_In; simple induction x; simpl.
 auto with datatypes.
 intros a0 l H [Ha0a| Hal].
@@ -176,7 +176,7 @@ Qed.
 Lemma set_add_intro2 :
 forall (a b:A) (x:set), a = b -> set_In a (set_add b x).
 
-Proof. try hammer_hook "ListSet" "ListSet.set_add_intro2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_intro2".  
 unfold set_In; simple induction x; simpl.
 auto with datatypes.
 intros a0 l H Hab.
@@ -191,14 +191,14 @@ Hint Resolve set_add_intro1 set_add_intro2.
 Lemma set_add_intro :
 forall (a b:A) (x:set), a = b \/ set_In a x -> set_In a (set_add b x).
 
-Proof. try hammer_hook "ListSet" "ListSet.set_add_intro". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_intro".  
 intros a b x [H1| H2]; auto with datatypes.
 Qed.
 
 Lemma set_add_elim :
 forall (a b:A) (x:set), set_In a (set_add b x) -> a = b \/ set_In a x.
 
-Proof. try hammer_hook "ListSet" "ListSet.set_add_elim". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_elim".  
 unfold set_In.
 simple induction x.
 simpl; intros [H1| H2]; auto with datatypes.
@@ -220,19 +220,19 @@ Qed.
 Hint Resolve set_add_intro set_add_elim set_add_elim2.
 
 Lemma set_add_not_empty : forall (a:A) (x:set), set_add a x <> empty_set.
-Proof. try hammer_hook "ListSet" "ListSet.set_add_not_empty". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_not_empty".  
 simple induction x; simpl.
 discriminate.
 intros; elim (Aeq_dec a a0); intros; discriminate.
 Qed.
 
 Lemma set_add_iff a b l : In a (set_add b l) <-> a = b \/ In a l.
-Proof. try hammer_hook "ListSet" "ListSet.set_add_iff". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_iff".  
 split. apply set_add_elim. apply set_add_intro.
 Qed.
 
 Lemma set_add_nodup a l : NoDup l -> NoDup (set_add a l).
-Proof. try hammer_hook "ListSet" "ListSet.set_add_nodup". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_add_nodup".  
 induction 1 as [|x l H H' IH]; simpl.
 - constructor; [ tauto | constructor ].
 - destruct (Aeq_dec a x) as [<-|Hax]; constructor; trivial.
@@ -241,7 +241,7 @@ Qed.
 
 Lemma set_remove_1 (a b : A) (l : set) :
 In a (set_remove b l) -> In a l.
-Proof. try hammer_hook "ListSet" "ListSet.set_remove_1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_remove_1".  
 induction l as [|x xs Hrec].
 - intros. auto.
 - simpl. destruct (Aeq_dec b x).
@@ -253,7 +253,7 @@ Qed.
 
 Lemma set_remove_2 (a b:A) (l : set) :
 NoDup l -> In a (set_remove b l) -> a <> b.
-Proof. try hammer_hook "ListSet" "ListSet.set_remove_2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_remove_2".  
 induction l as [|x l IH]; intro ND; simpl.
 - tauto.
 - inversion_clear ND.
@@ -264,7 +264,7 @@ Qed.
 
 Lemma set_remove_3 (a b : A) (l : set) :
 In a l -> a <> b -> In a (set_remove b l).
-Proof. try hammer_hook "ListSet" "ListSet.set_remove_3". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_remove_3".  
 induction l as [|x xs Hrec].
 - now simpl.
 - simpl. destruct (Aeq_dec b x) as [<-|Hbx]; simpl; intuition.
@@ -273,7 +273,7 @@ Qed.
 
 Lemma set_remove_iff (a b : A) (l : set) :
 NoDup l -> (In a (set_remove b l) <-> In a l /\ a <> b).
-Proof. try hammer_hook "ListSet" "ListSet.set_remove_iff". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_remove_iff".  
 split; try split.
 - eapply set_remove_1; eauto.
 - eapply set_remove_2; eauto.
@@ -281,7 +281,7 @@ split; try split.
 Qed.
 
 Lemma set_remove_nodup a l : NoDup l -> NoDup (set_remove a l).
-Proof. try hammer_hook "ListSet" "ListSet.set_remove_nodup". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_remove_nodup".  
 induction 1 as [|x l H H' IH]; simpl.
 - constructor.
 - destruct (Aeq_dec a x) as [<-|Hax]; trivial.
@@ -291,13 +291,13 @@ Qed.
 
 Lemma set_union_intro1 :
 forall (a:A) (x y:set), set_In a x -> set_In a (set_union x y).
-Proof. try hammer_hook "ListSet" "ListSet.set_union_intro1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_union_intro1".  
 simple induction y; simpl; auto with datatypes.
 Qed.
 
 Lemma set_union_intro2 :
 forall (a:A) (x y:set), set_In a y -> set_In a (set_union x y).
-Proof. try hammer_hook "ListSet" "ListSet.set_union_intro2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_union_intro2".  
 simple induction y; simpl.
 tauto.
 intros; elim H0; auto with datatypes.
@@ -308,14 +308,14 @@ Hint Resolve set_union_intro2 set_union_intro1.
 Lemma set_union_intro :
 forall (a:A) (x y:set),
 set_In a x \/ set_In a y -> set_In a (set_union x y).
-Proof. try hammer_hook "ListSet" "ListSet.set_union_intro". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_union_intro".  
 intros; elim H; auto with datatypes.
 Qed.
 
 Lemma set_union_elim :
 forall (a:A) (x y:set),
 set_In a (set_union x y) -> set_In a x \/ set_In a y.
-Proof. try hammer_hook "ListSet" "ListSet.set_union_elim". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_union_elim".  
 simple induction y; simpl.
 auto with datatypes.
 intros.
@@ -326,12 +326,12 @@ tauto.
 Qed.
 
 Lemma set_union_iff a l l': In a (set_union l l') <-> In a l \/ In a l'.
-Proof. try hammer_hook "ListSet" "ListSet.set_union_iff". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_union_iff".  
 split. apply set_union_elim. apply set_union_intro.
 Qed.
 
 Lemma set_union_nodup l l' : NoDup l -> NoDup l' -> NoDup (set_union l l').
-Proof. try hammer_hook "ListSet" "ListSet.set_union_nodup". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_union_nodup".  
 induction 2 as [|x' l' ? ? IH]; simpl; trivial. now apply set_add_nodup.
 Qed.
 
@@ -348,7 +348,7 @@ Qed.
 Lemma set_inter_intro :
 forall (a:A) (x y:set),
 set_In a x -> set_In a y -> set_In a (set_inter x y).
-Proof. try hammer_hook "ListSet" "ListSet.set_inter_intro". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_inter_intro".  
 simple induction x.
 auto with datatypes.
 simpl; intros a0 l Hrec y [Ha0a| Hal] Hy.
@@ -363,7 +363,7 @@ Qed.
 
 Lemma set_inter_elim1 :
 forall (a:A) (x y:set), set_In a (set_inter x y) -> set_In a x.
-Proof. try hammer_hook "ListSet" "ListSet.set_inter_elim1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_inter_elim1".  
 simple induction x.
 auto with datatypes.
 simpl; intros a0 l Hrec y.
@@ -375,7 +375,7 @@ Qed.
 
 Lemma set_inter_elim2 :
 forall (a:A) (x y:set), set_In a (set_inter x y) -> set_In a y.
-Proof. try hammer_hook "ListSet" "ListSet.set_inter_elim2". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_inter_elim2".  
 simple induction x.
 simpl; tauto.
 simpl; intros a0 l Hrec y.
@@ -391,19 +391,19 @@ Hint Resolve set_inter_elim1 set_inter_elim2.
 Lemma set_inter_elim :
 forall (a:A) (x y:set),
 set_In a (set_inter x y) -> set_In a x /\ set_In a y.
-Proof. try hammer_hook "ListSet" "ListSet.set_inter_elim". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_inter_elim".  
 eauto with datatypes.
 Qed.
 
 Lemma set_inter_iff a l l' : In a (set_inter l l') <-> In a l /\ In a l'.
-Proof. try hammer_hook "ListSet" "ListSet.set_inter_iff". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_inter_iff".  
 split.
 - apply set_inter_elim.
 - destruct 1. now apply set_inter_intro.
 Qed.
 
 Lemma set_inter_nodup l l' : NoDup l -> NoDup l' -> NoDup (set_inter l l').
-Proof. try hammer_hook "ListSet" "ListSet.set_inter_nodup". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_inter_nodup".  
 induction 1 as [|x l H H' IH]; intro Hl'; simpl.
 - constructor.
 - destruct (set_mem x l'); auto.
@@ -413,7 +413,7 @@ Qed.
 Lemma set_diff_intro :
 forall (a:A) (x y:set),
 set_In a x -> ~ set_In a y -> set_In a (set_diff x y).
-Proof. try hammer_hook "ListSet" "ListSet.set_diff_intro". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_diff_intro".  
 simple induction x.
 simpl; tauto.
 simpl; intros a0 l Hrec y [Ha0a| Hal] Hay.
@@ -425,7 +425,7 @@ Qed.
 
 Lemma set_diff_elim1 :
 forall (a:A) (x y:set), set_In a (set_diff x y) -> set_In a x.
-Proof. try hammer_hook "ListSet" "ListSet.set_diff_elim1". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_diff_elim1".  
 simple induction x.
 simpl; tauto.
 simpl; intros a0 l Hrec y; elim (set_mem a0 y).
@@ -445,14 +445,14 @@ rewrite H; trivial.
 Qed.
 
 Lemma set_diff_iff a l l' : In a (set_diff l l') <-> In a l /\ ~In a l'.
-Proof. try hammer_hook "ListSet" "ListSet.set_diff_iff". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_diff_iff".  
 split.
 - split; [eapply set_diff_elim1 | eapply set_diff_elim2]; eauto.
 - destruct 1. now apply set_diff_intro.
 Qed.
 
 Lemma set_diff_nodup l l' : NoDup l -> NoDup l' -> NoDup (set_diff l l').
-Proof. try hammer_hook "ListSet" "ListSet.set_diff_nodup". Undo.  
+Proof. hammer_hook "ListSet" "ListSet.set_diff_nodup".  
 induction 1 as [|x l H H' IH]; intro Hl'; simpl.
 - constructor.
 - destruct (set_mem x l'); auto using set_add_nodup.

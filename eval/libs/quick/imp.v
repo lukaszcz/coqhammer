@@ -40,7 +40,7 @@ Fixpoint asimp (e : aexpr) :=
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
   induction e; sauto.
-  hammer_hook "imp" "imp.lem_aval_asimp.subgoal_1". Undo.
+  hammer_hook "imp" "imp.lem_aval_asimp.subgoal_1".
   Reconstr.reasy (@lem_aval_plus) Reconstr.Empty.
 Qed.
 
@@ -106,10 +106,10 @@ Qed.
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
   induction e; sauto.
-  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_1". Undo. Reconstr.reasy (@lem_bval_not) Reconstr.Empty.
-  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_2". Undo. Reconstr.reasy (@lem_bval_and) Reconstr.Empty.
-  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_3". Undo. ycrush.
-  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_4". Undo. ycrush.
+  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_1". Reconstr.reasy (@lem_bval_not) Reconstr.Empty.
+  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_2". Reconstr.reasy (@lem_bval_and) Reconstr.Empty.
+  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_3". ycrush.
+  - hammer_hook "imp" "imp.lem_bval_bsimp.subgoal_4". ycrush.
 Qed.
 
 Inductive cmd :=
@@ -141,7 +141,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  hammer_hook "imp" "imp.lem_seq_assoc". Undo.
+  hammer_hook "imp" "imp.lem_seq_assoc".
   scrush. (* > 2s *)
 Qed.
 
@@ -151,14 +151,14 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  hammer_hook "imp" "imp.lem_unfold_loop". Undo.
+  hammer_hook "imp" "imp.lem_unfold_loop".
   unfold equiv_cmd; intros; split; intro H; inversion H; ycrush.
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
                                                (While b c', s) ==> s'.
 Proof.
-  hammer_hook "imp" "imp.lem_while_cong_aux". Undo.
+  hammer_hook "imp" "imp.lem_while_cong_aux".
   assert (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s').
   intros p s' H.
   induction H; sauto.
@@ -169,14 +169,14 @@ Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b c ~~ While b c'.
 Proof.
-  hammer_hook "imp" "imp.lem_while_cong". Undo.
+  hammer_hook "imp" "imp.lem_while_cong".
   Reconstr.reasy (@lem_while_cong_aux) (@equiv_cmd).
 Qed.
 
 Lemma lem_big_step_deterministic :
   forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
-  hammer_hook "imp" "imp.lem_big_step_deterministic". Undo.
+  hammer_hook "imp" "imp.lem_big_step_deterministic".
   intros c s s1 s2 H.
   revert s2.
   induction H; try yelles 1.
@@ -210,7 +210,7 @@ Notation "A -->* B" := (small_step_star A B) (at level 80, no associativity).
 Lemma lem_small_step_deterministic :
   forall c s s1 s2, (c, s) --> s1 -> (c, s) --> s2 -> s1 = s2.
 Proof.
-  hammer_hook "imp" "imp.lem_small_step_deterministic". Undo.
+  hammer_hook "imp" "imp.lem_small_step_deterministic".
   intros c s s1 s2 H.
   revert s2.
   induction H; try yelles 1.
@@ -221,7 +221,7 @@ Qed.
 Lemma lem_star_seq2 : forall c1 c2 s c1' s', (c1, s) -->* (c1', s') ->
                                              (Seq c1 c2, s) -->* (Seq c1' c2, s').
 Proof.
-  hammer_hook "imp" "imp.lem_star_seq2". Undo.
+  hammer_hook "imp" "imp.lem_star_seq2".
   assert (forall p1 p2, p1 -->* p2 ->
                         forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
                                                (Seq c1 c2, s) -->* (Seq c1' c2, s')).
@@ -239,7 +239,7 @@ Qed.
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2) -->* (Skip, s3) ->
                                             (Seq c1 c2, s1) -->* (Skip, s3).
 Proof.
-  hammer_hook "imp" "imp.lem_seq_comp". Undo.
+  hammer_hook "imp" "imp.lem_seq_comp".
   intros c1 c2 s1 s2 s3 H1 H2.
   assert ((Seq c1 c2, s1) -->* (Seq Skip c2, s2)).
   pose lem_star_seq2; scrush.
@@ -252,11 +252,11 @@ Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').
 Proof.
   intros p s' H.
   induction H as [ | | | | | | b c s1 s2 ]; try yelles 1.
-  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_1". Undo. Reconstr.reasy (@lem_seq_comp) Reconstr.Empty.
-  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_2". Undo. pose_rt; pose IfTrueS; scrush.
-  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_3". Undo. pose_rt; pose IfFalseS; scrush.
-  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_4". Undo. pose_rt; pose WhileS; pose IfFalseS; ycrush.
-  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_5". Undo.
+  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_1". Reconstr.reasy (@lem_seq_comp) Reconstr.Empty.
+  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_2". pose_rt; pose IfTrueS; scrush.
+  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_3". pose_rt; pose IfFalseS; scrush.
+  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_4". pose_rt; pose WhileS; pose IfFalseS; ycrush.
+  - hammer_hook "imp" "imp.lem_big_to_small.subgoal_5".
     assert ((While b c, s1) -->* (Seq c (While b c), s1)) by
         (pose_rt; pose WhileS; pose IfTrueS; ycrush).
     assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)) by
@@ -268,7 +268,7 @@ Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==
 Proof.
   intros p p' H.
   induction H; sauto; try yelles 1.
-  hammer_hook "imp" "imp.lem_big_to_small_aux.subgoal_1". Undo.
+  hammer_hook "imp" "imp.lem_big_to_small_aux.subgoal_1".
   Reconstr.reasy (@lem_unfold_loop) (@equiv_cmd).
 Qed.
 
@@ -276,7 +276,7 @@ Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' ==> s -> p
 Proof.
   intros p p' H.
   induction H; sauto.
-  hammer_hook "imp" "imp.lem_big_to_small_aux_2.subgoal_1". Undo.
+  hammer_hook "imp" "imp.lem_big_to_small_aux_2.subgoal_1".
   Reconstr.reasy (@lem_small_to_big_aux) Reconstr.Empty.
 Qed.
 
@@ -285,14 +285,14 @@ Proof.
   assert (forall p p', p -->* p' -> forall s, p' = (Skip, s) -> p ==> s).
   intros p p' H.
   induction H; sauto.
-  - hammer_hook "imp" "imp.lem_small_to_big.subgoal_1". Undo. ycrush.
-  - hammer_hook "imp" "imp.lem_small_to_big.subgoal_2". Undo.
+  - hammer_hook "imp" "imp.lem_small_to_big.subgoal_1". ycrush.
+  - hammer_hook "imp" "imp.lem_small_to_big.subgoal_2".
     Reconstr.rsimple (@lem_small_to_big_aux_2) (@small_step_star).
-  - hammer_hook "imp" "imp.lem_small_to_big.subgoal_3". Undo. ycrush.
+  - hammer_hook "imp" "imp.lem_small_to_big.subgoal_3". ycrush.
 Qed.
 
 Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
-  hammer_hook "imp" "imp.cor_big_iff_small". Undo.
+  hammer_hook "imp" "imp.cor_big_iff_small".
   Reconstr.reasy (@lem_small_to_big, @lem_big_to_small) Reconstr.Empty.
 Qed.

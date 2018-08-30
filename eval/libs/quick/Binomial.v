@@ -17,7 +17,7 @@ Definition C (n p:nat) : R :=
 INR (fact n) / (INR (fact p) * INR (fact (n - p))).
 
 Lemma pascal_step1 : forall n i:nat, (i <= n)%nat -> C n i = C n (n - i).
-Proof. try hammer_hook "Binomial" "Binomial.pascal_step1". Undo.
+Proof. hammer_hook "Binomial" "Binomial.pascal_step1".
 intros; unfold C; replace (n - (n - i))%nat with i.
 rewrite Rmult_comm.
 reflexivity.
@@ -27,7 +27,7 @@ Qed.
 Lemma pascal_step2 :
 forall n i:nat,
 (i <= n)%nat -> C (S n) i = INR (S n) / INR (S n - i) * C n i.
-Proof. try hammer_hook "Binomial" "Binomial.pascal_step2". Undo.
+Proof. hammer_hook "Binomial" "Binomial.pascal_step2".
 intros; unfold C; replace (S n - i)%nat with (S (n - i)).
 cut (forall n:nat, fact (S n) = (S n * fact n)%nat).
 intro; repeat rewrite H0.
@@ -47,7 +47,7 @@ Qed.
 
 Lemma pascal_step3 :
 forall n i:nat, (i < n)%nat -> C n (S i) = INR (n - i) / INR (S i) * C n i.
-Proof. try hammer_hook "Binomial" "Binomial.pascal_step3". Undo.
+Proof. hammer_hook "Binomial" "Binomial.pascal_step3".
 intros; unfold C.
 cut (forall n:nat, fact (S n) = (S n * fact n)%nat).
 intro.
@@ -78,7 +78,7 @@ Qed.
 
 Lemma pascal :
 forall n i:nat, (i < n)%nat -> C n i + C n (S i) = C (S n) (S i).
-Proof. try hammer_hook "Binomial" "Binomial.pascal". Undo.
+Proof. hammer_hook "Binomial" "Binomial.pascal".
 intros.
 rewrite pascal_step3; [ idtac | assumption ].
 replace (C n i + INR (n - i) / INR (S i) * C n i) with
