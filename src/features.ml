@@ -111,13 +111,9 @@ let is_nontrivial (def : hhdef) : bool =
     (if !Opt.filter_hurkens then
         not (Hhlib.string_begins_with name "Coq.Logic.Hurkens.") else true)
 
-module StringSet = Set.Make(String)
-
-let strset_from_lst lst = List.fold_left (fun a x -> StringSet.add x a) StringSet.empty lst
-
 let get_goal_features (hyps : hhdef list) (goal : hhdef) : string list =
   List.concat (List.map get_def_features (goal :: hyps))
-    
+
 let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
   let fname = Filename.temp_file "predict" "" in
@@ -127,7 +123,7 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   let defs = List.filter is_nontrivial defs in
   if !Opt.debug_mode then
     Msg.info ("After filtering: " ^ string_of_int (List.length defs) ^ " Coq objects.");
-  let names = strset_from_lst (List.map get_hhdef_name defs) in
+  let names = Hhlib.strset_from_lst (List.map get_hhdef_name defs) in
   let write_def def =
     let name = get_hhdef_name def in
     output_string ocseq name; output_char ocseq '\n';
@@ -138,7 +134,7 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
     Hhlib.oiter (output_string ocfea) (output_string ocfea) "\", \"" fea;
     output_string ocfea "\"\n";
     let pre_deps = get_deps_cached def in
-    let deps = List.filter (fun a -> StringSet.mem a names) pre_deps in
+    let deps = List.filter (fun a -> Hhlib.StringSet.mem a names) pre_deps in
     output_string ocdep name; output_char ocdep ':';
     if deps <> [] then Hhlib.oiter (output_string ocdep) (output_string ocdep) " " deps;
     output_char ocdep '\n';
@@ -174,14 +170,14 @@ let run_predict fname defs pred_num pred_method =
   let ic = open_in oname in
   try
     let predicts =
-      strset_from_lst
+      Hhlib.strset_from_lst
         (Str.split (Str.regexp " ")
            (try input_line ic with End_of_file ->
              close_in ic; Sys.remove oname;
              raise (HammerError "Predictor did not return advice.")))
     in
     close_in ic; Sys.remove oname;
-    List.filter (fun def -> StringSet.mem (get_hhdef_name def) predicts) defs
+    List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) predicts) defs
   with e ->
     close_in ic; Sys.remove oname;
     raise e

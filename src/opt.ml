@@ -60,18 +60,18 @@ let _ =
   in
   declare_int_option gdopt
 
-let max_atp_predictions = ref 16
+let minimize_threshold = ref 6
 
 let _ =
   let gdopt=
     { optdepr=false;
-      optname="Hammer MaxATPPredictions";
-      optkey=["Hammer";"MaxATPPredictions"];
-      optread=(fun ()->Some !max_atp_predictions);
+      optname="Hammer MinimizationThreshold";
+      optkey=["Hammer";"MinimizationThreshold"];
+      optread=(fun ()->Some !minimize_threshold);
       optwrite=
    (function
-        None -> max_atp_predictions := 16
-      |	Some i -> max_atp_predictions := (max i 8))}
+        None -> minimize_threshold := 0
+      |	Some i -> minimize_threshold := (max i 0))}
   in
   declare_int_option gdopt
 

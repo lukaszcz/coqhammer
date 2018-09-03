@@ -169,8 +169,8 @@ Set/Unset Hammer FilterClasses.
 (* ignore dependencies from Coq.Classes.*, default: on *)
 Set/Unset Hammer FilterHurkens.
 (* ignore dependencies from Coq.Logic.Hurkens.*, default: on *)
-Set Hammer MaxATPPredictions n.
-(* maximum number of predictions returned by an ATP, default: 16 *)
+Set Hammer MinimizationThreshold n.
+(* the minimum number of dependencies returned by an ATP for which minimization is performed, default: 6 *)
 Set/Unset Hammer SearchBlacklist.
 (* ignore dependencies blacklisted with the Search Blacklist
    vernacular command, default: on *)

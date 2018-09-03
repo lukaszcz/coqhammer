@@ -404,33 +404,33 @@ let run_tactics deps defs args msg_success msg_fail =
           end
     end
 
-let do_predict hyps defs goal =
+let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
     let greedy_sequence =
-      [(!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
-       (!Opt.z3_enabled, Opt.z3_enabled, "knn", 128);
-       (!Opt.eprover_enabled, Opt.eprover_enabled, "knn", 1024);
-       (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 512);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
-       (!Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 16);
-       (!Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 1024);
-       (!Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 256);
-       (!Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
-       (!Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 512);
-       (!Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 128);
-       (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 32);
-       (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
-       (!Opt.vampire_enabled, Opt.vampire_enabled, "knn", 16);
-       (!Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       (!Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64)]
+      [("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
+       ("Z3 (knn-128)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 128);
+       ("Eprover (knn-1024)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 1024);
+       ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
+       ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
+       ("Z3 (nbayes-512)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 512);
+       ("Z3 (nbayes-128)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
+       ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
+       ("Z3 (nbayes-16)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 16);
+       ("Eprover (nbayes-1024)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 1024);
+       ("Vampire (nbayes-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 256);
+       ("Z3 (knn-64)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
+       ("Eprover (nbayes-512)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 512);
+       ("Eprover (nbayes-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 128);
+       ("Vampire (knn-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 32);
+       ("Vampire (knn-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
+       ("Vampire (knn-16)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 16);
+       ("Vampire (knn-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
+       ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64)]
     in
-    let fname = Features.extract hyps defs goal in
+    let fname = Features.extract hyps deps goal in
     let jobs =
       List.map
-        begin fun (enabled, pref, pred_method, preds_num) _ ->
+        begin fun (pname, enabled, pref, pred_method, preds_num) _ ->
           if not enabled then
             exit 1;
           Opt.vampire_enabled := false;
@@ -440,10 +440,12 @@ let do_predict hyps defs goal =
           pref := true;
           Opt.parallel_mode := false;
           try
-            let defs1 = Features.run_predict fname defs preds_num pred_method in
-            (* All hypotheses are always passed to the ATPs (only defs
+            let deps1 = Features.run_predict fname deps preds_num pred_method in
+            (* All hypotheses are always passed to the ATPs (only deps
                are subject to premise selection) *)
-            Provers.predict defs1 hyps defs goal
+            let info = Provers.predict deps1 hyps deps goal in
+            Msg.info (pname ^ " succeeded");
+            info
           with
           | HammerError(msg) ->
              Msg.error ("Hammer error: " ^ msg);
@@ -451,7 +453,7 @@ let do_predict hyps defs goal =
           | _ ->
              exit 1
         end
-        (Hhlib.take !Opt.gs_mode (List.filter (fun (enabled, _, _, _) -> enabled) greedy_sequence))
+        (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _, _) -> enabled) greedy_sequence))
     in
     let time = (float_of_int !Opt.atp_timelimit) *. 1.5
     in
@@ -471,10 +473,21 @@ let do_predict hyps defs goal =
     in
     match ret with
     | None -> clean (); raise (HammerFailure "ATPs failed to find a proof")
-    | Some x -> clean (); x
+    | Some info ->
+       begin
+         clean ();
+         let info =
+           if List.length info.Provers.deps >= !Opt.minimize_threshold then
+             Provers.minimize info hyps deps goal
+           else
+             info
+         in
+         Msg.info(Provers.prn_atp_info info);
+         info
+       end
   else
-    let defs1 = Features.predict hyps defs goal in
-    Provers.predict defs1 hyps defs goal
+    let deps1 = Features.predict hyps deps goal in
+    Provers.predict deps1 hyps deps goal
 
 let try_scrush () =
   if !Opt.scrush_timelimit = 0 then
@@ -528,8 +541,8 @@ let hammer_tac () =
               let defs = get_defs () in
               if !Opt.debug_mode then
                 Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
-              let (deps, defs) = do_predict hyps defs goal in
-              let (deps, defs, args) = get_tac_args deps defs in
+              let info = do_predict hyps defs goal in
+              let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
               Msg.info ("Reconstructing the proof...");
               run_tactics deps defs args
                 begin fun tac deps defs ->
@@ -766,8 +779,8 @@ let hammer_hook_tac prefix name =
                           then
                             try
                               Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
-                              let (deps, defs) = extract fname in
-                              let (deps, defs, args) = get_tac_args deps defs in
+                              let info = extract fname in
+                              let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
                               ignore begin
                                 run_tactics deps defs args
                                   begin fun tac deps defs ->

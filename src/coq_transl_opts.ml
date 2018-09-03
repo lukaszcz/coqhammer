@@ -42,8 +42,6 @@ let opt_omit_toplevel_prop_typing_axioms = true
 (* should the typing predicate $HasType be used? *)
 (* (requires either opt_multiple_arity_optimization = true or opt_arity_optimization = false) *)
 let opt_hastype = true
-(* should evaluate type targets (for inversion for inductive predicates)? *)
-let opt_eval_type_targets = false
 (* should the inversion axioms be more precise for non-propositional
    inductive types? *)
 let opt_precise_inversion = true

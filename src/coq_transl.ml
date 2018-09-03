@@ -19,39 +19,6 @@ open Hh_term
 let coqterm_hash = Hashing.create ()
 
 (***************************************************************************************)
-(* Definitions hash *)
-
-let defhash = Hashtbl.create 1024
-
-let defhash_add_lazy name x =
-  if Hashtbl.mem defhash name then
-    failwith ("duplicate global definition of " ^ name);
-  Hashtbl.add defhash name (ref x)
-
-let defhash_add x =
-  defhash_add_lazy (coqdef_name x) (lazy x)
-
-let defhash_remove name =
-  Hashtbl.remove defhash name
-
-let defhash_clear () = Hashtbl.clear defhash
-
-let defhash_find name =
-  try
-    Lazy.force !(Hashtbl.find defhash name)
-  with Not_found ->
-    failwith ("defhash_find: " ^ name)
-
-let defhash_mem name = Hashtbl.mem defhash name
-
-let hastype_type = mk_fun_ty (Const("$Any")) (mk_fun_ty SortType SortProp)
-
-let add_logop_defs () =
-  List.iter defhash_add logop_defs;
-  if opt_hastype then
-    defhash_add ("$HasType", Const("$HasType"), hastype_type, SortType)
-
-(***************************************************************************************)
 (* Adjust variable names *)
 
 let adjust_varnames =
@@ -123,347 +90,22 @@ let reinit (lst : hhdef list) =
     match lst with
     | h :: t ->
       let name = get_hhdef_name h in
-      if not (defhash_mem name) then
-        defhash_add_lazy name (lazy (conv h t));
+      if not (Defhash.mem name) then
+        Defhash.add_lazy name (lazy (conv h t));
       add_defs t
     | [] ->
         ()
   in
   log 1 "Reinitializing...";
-  (try add_logop_defs () with _ -> ());
+  let hastype_type = mk_fun_ty (Const("$Any")) (mk_fun_ty SortType SortProp) in
+  begin
+    try
+      List.iter Defhash.add logop_defs;
+      if opt_hastype then
+        Defhash.add ("$HasType", Const("$HasType"), hastype_type, SortType)
+    with _ -> ()
+  end;
   add_defs lst
-
-(***************************************************************************************)
-(* Normalization by evaluation *)
-
-type coqvalue =
-  N of coqneutral
-| PROD of coqterm Lazy.t * coqvalue_abstr
-| LAM of coqterm Lazy.t * coqvalue_abstr
-| FIX of coqterm Lazy.t * coqvalue Lazy.t
-and coqneutral =
-| VAR of string
-| CONST of string
-| APP of coqneutral * coqvalue Lazy.t
-| TERM of coqterm Lazy.t
-and coqvalue_abstr =  string * coqterm Lazy.t * (coqvalue Lazy.t -> coqvalue)
-
-let rec reify v =
-  let rec reify_neutral n =
-    match n with
-    | VAR x -> Var(x)
-    | CONST c -> Const(c)
-    | APP (x, y) -> App(reify_neutral x, reify (Lazy.force y))
-    | TERM t -> Lazy.force t
-  in
-  match v with
-  | N x -> reify_neutral x
-  | PROD(t, _) -> Lazy.force t
-  | LAM(t, _) -> Lazy.force t
-  | FIX(t, _) -> Lazy.force t
-
-(* evaluation to normal form *)
-let eval (tm : coqterm) : coqvalue =
-  let rec eval (env : (string * coqvalue Lazy.t) list) (tm : coqterm) : coqvalue =
-    debug 5 (fun () -> print_newline (); print_endline "eval"; print_coqterm tm; print_newline ());
-    let delay_subst env tm =
-      if env = [] then
-        lazy tm
-      else
-        lazy (dsubst (List.map (fun (n, v) -> (n, lazy (reify (Lazy.force v)))) env) tm)
-    and delay_eval env tm =
-      lazy (eval env tm)
-    in
-    let eval_abstr env (name, ty, value) =
-      (name, delay_subst env ty, (fun x -> eval ((name, x) :: env) value))
-    in
-    match tm with
-    | Var(x) ->
-      begin
-        try
-          Lazy.force (List.assoc x env)
-        with Not_found ->
-          N (VAR(x))
-      end
-    | Const(c) ->
-      begin
-        let tm2 = try coqdef_value (defhash_find c) with _ -> tm
-        in
-        if tm2 = tm then
-          N (CONST c)
-        else
-          match tm2 with
-          | IndType(_) ->
-              N (CONST c)
-          | _ ->
-              eval [] tm2
-      end
-    | App(x, y) ->
-      let rec apply x y =
-        match x with
-        | LAM(_, (_, _, f)) -> f y
-        | FIX(_, v) -> apply (Lazy.force v) y
-        | N x2 -> N (APP(x2, y))
-        | _ -> failwith "apply"
-      in
-      apply (eval env x) (delay_eval env y)
-    | Cast(x, y) ->
-      eval env x
-    | Lam a ->
-      LAM(delay_subst env tm, eval_abstr env a)
-    | Prod a ->
-      PROD(delay_subst env tm, eval_abstr env a)
-    | Let(value, (vname, ty, body)) ->
-      eval ((vname, delay_eval env value) :: env) body
-    | Case(indname, matched_term, return_type, params_num, branches) ->
-      let rec eval_valapp v args =
-        match args with
-        | h :: t ->
-          begin
-            match v with
-            | LAM(_, (_, _, f)) -> eval_valapp (f h) t
-            | N n -> eval_valapp (N (APP(n, h))) t
-            | _ -> failwith "eval_app"
-          end
-        | [] -> v
-      and flatten_valapp v =
-        let rec hlp n acc =
-          match n with
-          | (APP(x, y)) ->
-            hlp x (y :: acc)
-          | _ ->
-            (N n, acc)
-        in
-        match v with
-        | N n -> hlp n []
-        | _ -> (v, [])
-      in
-      begin
-        let mt2 = eval env matched_term
-        in
-        try
-          begin
-            let (v, args) = flatten_valapp mt2
-            and (_, IndType(_, constrs, _), indtype, indsort) =
-              try defhash_find indname with _ -> raise Not_found
-            in
-            match v with
-            | (N (CONST c)) when List.mem c constrs ->
-              let i = Hhlib.index c constrs
-              in
-              let (n, b) = List.nth branches i
-              in
-              if List.length args > n + params_num then
-                begin
-                  print_coqterm tm;
-                  print_list print_string constrs;
-                  print_int i; print_newline ();
-                  print_int n; print_newline ();
-                  print_int params_num; print_newline ();
-                  failwith ("eval: bad number of constructor arguments: " ^ c)
-                end
-              else
-                eval_valapp (eval env b) (Hhlib.drop params_num args)
-            | _ ->
-              N (TERM (delay_subst env
-                         (Case(indname, reify mt2, return_type, params_num, branches))))
-          end
-        with Not_found ->
-          N (TERM (delay_subst env
-                     (Case(indname, reify mt2, return_type, params_num, branches))))
-      end
-    | Fix(cft, k, names, types, bodies) ->
-      let rec mkenv m lst acc =
-        match lst with
-        | h :: t ->
-            let fx = Fix(cft, m, names, types, bodies)
-            in
-            let v =
-              if cft = CoqFix then
-                lazy (FIX(delay_subst env fx, delay_eval env fx))
-              else
-                lazy (N (TERM (delay_subst env fx)))
-            in
-            mkenv (m + 1) t ((h, v) :: acc)
-        | [] ->
-            acc
-      in
-      FIX(delay_subst env tm, lazy (eval (mkenv 0 names env) (List.nth bodies k)))
-    | _ ->
-      N (TERM (delay_subst env tm))
-  in
-  eval [] tm
-
-(***************************************************************************************)
-(* Limited typechecking *)
-
-let rec check_prop args ctx tm =
-  let is_prop_tgt args ty =
-    let rec hlp args v =
-      match v with
-      | PROD(_, (_, _, f)) ->
-          begin
-            match args with
-            | h :: args2 ->
-                hlp args2 (f (lazy (eval h)))
-            | _ ->
-                false
-          end
-      | FIX(_, v2) ->
-          hlp args (Lazy.force v2)
-      | N (TERM tm) ->
-          if args = [] then
-            Lazy.force tm = SortProp
-          else
-            false
-      | _ ->
-          false
-    in
-    hlp args (eval ty)
-  in
-  debug 4 (fun () -> print_header "check_prop" tm ctx);
-  match tm with
-  | Var(x) ->
-      begin
-        try
-          is_prop_tgt args (List.assoc x ctx)
-        with Not_found ->
-          print_list (fun (name, _) -> print_string name) (List.rev ctx);
-          failwith ("check_prop: var not found: " ^ x)
-      end
-  | Const(c) ->
-      begin
-        try
-          is_prop_tgt args (coqdef_type (defhash_find c))
-        with _ ->
-          false
-      end
-  | App(x, y) ->
-      check_prop (y :: args) ctx x
-  | Lam(vname, ty, body) ->
-      begin (* NOTE: the lambda case is incomplete, but this should be enough in practice *)
-        match args with
-        | _ :: args2 ->
-            check_prop args2 ((vname, ty) :: ctx) body
-        | _ ->
-            false
-      end
-  | Prod(vname, ty1, ty2) ->
-      if args = [] then
-        check_prop [] ((vname, ty1) :: ctx) ty2
-      else
-        false
-  | Cast(v, ty2) ->
-      is_prop_tgt args ty2
-  | Case(indname, matched_term, return_type, params_num, branches) ->
-      (* NOTE: this is incorrect if `params_num' is smaller than the
-         number of arguments of the inductive type `indname' *)
-      is_prop_tgt args (App(return_type, matched_term))
-  | Fix(_, k, names, types, bodies) ->
-      is_prop_tgt args (List.nth types k)
-  | Let(value, (name, ty, body)) ->
-      check_prop args ctx (dsubst [(name, lazy (Cast(value, ty)))] body)
-  | SortProp | SortSet | SortType ->
-      false
-  | Quant(_) | Equal(_) ->
-      args = []
-  | _ ->
-      failwith "check_prop"
-
-let check_prop ctx tm =
-  match tm with
-  | App(Const("~"), _) -> true
-  | App(App(Const(c), _), _) when is_bin_logop c -> true
-  | _ -> check_prop [] ctx tm
-
-let check_proof_var ctx name =
-  let rec pom ctx name =
-    match ctx with
-    | (n, ty) :: ctx2 when n = name ->
-      check_prop ctx2 ty
-    | _ :: ctx2 ->
-      pom ctx2 name
-    | _ ->
-      failwith "check_proof_var"
-  in
-  pom ctx name
-
-let check_type_target_is_prop ty =
-  let rec hlp v =
-    match v with
-    | PROD(_, (name, _, f)) ->
-      hlp (f (lazy (N (VAR name))))
-    | FIX(_, v2) ->
-      hlp (Lazy.force v2)
-    | N (TERM tm) ->
-      Lazy.force tm = SortProp
-    | _ ->
-      false
-  in
-  hlp (eval ty)
-
-let check_type_target_is_type ty =
-  let rec hlp v =
-    match v with
-    | PROD(_, (name, _, f)) ->
-      hlp (f (lazy (N (VAR name))))
-    | FIX(_, v2) ->
-      hlp (Lazy.force v2)
-    | N (TERM tm) ->
-      let tm2 = Lazy.force tm
-      in
-      tm2 = SortSet || tm2 = SortType
-    | _ ->
-      false
-  in
-  hlp (eval ty)
-
-let destruct_type_eval ty =
-  let rec hlp v acc =
-    match v with
-    | PROD(_, (name, ty, f)) ->
-      let name2 = refresh_varname name
-      in
-      hlp (f (lazy (N (VAR name2))))
-        ((name2, refresh_bvars (Lazy.force ty)) :: acc)
-    | FIX(_, v2) -> hlp (Lazy.force v2) acc
-    | _ -> (v, List.rev acc)
-  in
-  hlp (eval ty) []
-
-let destruct_type_noeval ty =
-  let rec hlp t acc =
-    match t with
-    | Prod(name, ty, body) ->
-      let name2 = refresh_varname name
-      in
-      hlp (substvar name (Var(name2)) body)
-        ((name2, refresh_bvars ty) :: acc)
-    | _ -> (t, List.rev acc)
-  in
-  hlp ty []
-
-let get_type_args ty = snd (destruct_type_eval ty)
-
-let destruct_type ty =
-  if opt_eval_type_targets then
-    let (x, y) = destruct_type_eval ty in (reify x, y)
-  else
-    destruct_type_noeval ty
-
-let destruct_type_for_ind indname ty =
-  let (target, cargs) = destruct_type ty
-  in
-  let (tgt, targs) = flatten_app target
-  in
-  if tgt <> Const(indname) then
-    let (target2, cargs2) = destruct_type_eval ty
-    in
-    let (_, targs2) = flatten_app (reify target2)
-    in
-    (targs2, cargs2)
-  else
-    (targs, cargs)
 
 (***************************************************************************************)
 (* Axioms *)
@@ -498,7 +140,7 @@ let mk_inversion_conjs params_num args targs cacc =
     match args, targs with
     | ((name, ty) :: args2), (y :: targs2) ->
       let cacc2 =
-        if check_prop ctx ty then
+        if Coq_typing.check_prop ctx ty then
           cacc
         else
           (mk_eq (Var(name)) y) :: cacc
@@ -532,7 +174,7 @@ let mk_inversion params indname constrs matched_term f =
   let rec mk_disjs constrs acc =
     match constrs with
     | cname :: constrs2 ->
-      let (targs, cargs) = destruct_type_for_ind indname (coqdef_type (defhash_find cname))
+      let (_, targs, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
       in
       let params_num = List.length params
       in
@@ -565,9 +207,9 @@ let mk_prop_inversion params indname args constrs =
   let rec mk_disjs constrs acc =
     match constrs with
     | cname :: constrs2 ->
-      let ty = coqdef_type (defhash_find cname)
+      let ty = coqdef_type (Defhash.find cname)
       in
-      let (targs, cargs) = destruct_type_for_ind indname ty
+      let (_, targs, cargs) = Coq_typing.destruct_type_app ty
       in
       let params_num = List.length params
       in
@@ -667,7 +309,7 @@ and lambda_lifting axname name fvars lvars1 tm =
         (close fvars
            begin fun ctx ->
              let mk_eqv =
-               if check_prop (List.rev_append lvars ctx) body2 then
+               if Coq_typing.check_prop (List.rev_append lvars ctx) body2 then
                  mk_equiv
                else
                  mk_eq
@@ -708,8 +350,8 @@ and fix_lifting axname dname fvars lvars tm =
           let ty2 = mk_long_prod fvars (mk_long_prod lvars ty)
           in
           try
-            defhash_add (mk_def name2 (Const(name2)) ty2
-                           (if check_prop [] ty2 then SortProp else SortType))
+            Defhash.add (mk_def name2 (Const(name2)) ty2
+                           (if Coq_typing.check_prop [] ty2 then SortProp else SortType))
           with _ -> ())
         names2 types;
       List.nth
@@ -725,7 +367,7 @@ and fix_lifting axname dname fvars lvars tm =
 and case_lifting axname0 name0 fvars lvars tm =
   debug 3 (fun () -> print_header "case_lifting" tm (fvars @ lvars));
   let get_params indty rt params_num =
-    let (_, args) = destruct_type_eval indty
+    let args = Coq_typing.get_type_args indty
     in
     let rec pom n tm =
       match tm with
@@ -749,7 +391,7 @@ and case_lifting axname0 name0 fvars lvars tm =
     in
     let def = (name, Const(name), Const("$Any"), SortType)
     in
-    defhash_add def;
+    Defhash.add def;
     Const(name)
   in
   try
@@ -759,10 +401,10 @@ and case_lifting axname0 name0 fvars lvars tm =
         generic_match ()
       | Case(indname, matched_term, return_type, params_num, branches) ->
         let (_, IndType(_, constrs, pnum), indty, _) =
-          try defhash_find indname with _ -> raise Not_found
+          try Defhash.find indname with _ -> raise Not_found
         in
         assert (pnum = params_num);
-        if check_type_target_is_prop indty then
+        if Coq_typing.check_type_target_is_prop indty then
           generic_match ()
         else
           let fname = if name0 = "" then "$_case_" ^ indname ^ "_" ^ unique_id () else name0
@@ -804,10 +446,10 @@ and case_lifting axname0 name0 fvars lvars tm =
               match cr with
               | Case(indname2, mt2, return_type2, pnum2, branches2) ->
                 let (_, IndType(_, constrs2, pn), indty2, _) =
-                  try defhash_find indname2 with _ -> raise Not_found
+                  try Defhash.find indname2 with _ -> raise Not_found
                 in
                 assert (pn = pnum2);
-                if check_type_target_is_prop indty2 then
+                if Coq_typing.check_type_target_is_prop indty2 then
                   eqt
                 else
                   let params2 = get_params indty2 return_type2 pnum2
@@ -818,7 +460,7 @@ and case_lifting axname0 name0 fvars lvars tm =
                                    (hlp constrs2 branches2 params2 pnum2 (vars @ args) cr)))
               | _ ->
                 let eqv =
-                  if check_prop ctx cr then
+                  if Coq_typing.check_prop ctx cr then
                     mk_equiv case_repl2 cr
                   else
                     mk_eq case_repl2 cr
@@ -849,7 +491,7 @@ and convert ctx tm =
       assert (ty <> type_any);
       let mk = if op = "!" then mk_impl else mk_and
       in
-      if check_prop ctx ty then
+      if Coq_typing.check_prop ctx ty then
         mk (prop_to_formula ctx ty)
           (prop_to_formula ctx (subst_proof name ty body))
       else
@@ -897,7 +539,7 @@ and convert ctx tm =
   | Let(_) ->
       remove_let ctx tm
   | Prod(_) ->
-      if check_prop ctx tm then
+      if Coq_typing.check_prop ctx tm then
         prop_to_formula ctx tm
       else
         remove_type ctx tm
@@ -908,7 +550,7 @@ and convert ctx tm =
   | SortType ->
       Const("Type")
   | Var(name) ->
-      if check_proof_var ctx name then
+      if Coq_typing.check_proof_var ctx name then
         Const("$Proof")
       else
         Var(name)
@@ -925,7 +567,7 @@ and convert_term ctx tm =
     | App(App(Const(c), _), _) when is_bin_logop c -> true
     | App(Const("~"), _) -> true
     | App(_) -> false
-    | _ -> check_prop ctx tm
+    | _ -> Coq_typing.check_prop ctx tm
   in
   if should_lift then
     let name = "$_prop_" ^ unique_id ()
@@ -944,7 +586,7 @@ and prop_to_formula ctx tm =
   debug 3 (fun () -> print_header "prop_to_formula" tm ctx);
   match tm with
   | Prod(vname, ty1, ty2) ->
-    if check_prop ctx ty1 then
+    if Coq_typing.check_prop ctx ty1 then
       mk_impl (prop_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
     else
       mk_forall vname type_any
@@ -973,7 +615,7 @@ and type_to_guard ctx ty x =
   debug 3 (fun () -> print_header_nonl "type_to_guard" ty ctx; print_coqterm x; print_newline ());
   match ty with
   | Prod(vname, ty1, ty2) ->
-    if check_prop ctx ty1 then
+    if Coq_typing.check_prop ctx ty1 then
       mk_impl (prop_to_formula ctx ty1) (type_to_guard ctx (subst_proof vname ty1 ty2) x)
     else
       mk_forall vname type_any
@@ -987,7 +629,7 @@ and mk_fol_forall ctx vars tm =
   let rec hlp ctx vars tm =
     match vars with
     | (name, ty) :: vars2 ->
-      if check_prop ctx ty then
+      if Coq_typing.check_prop ctx ty then
         hlp ((name, ty) :: ctx) vars2 (subst_proof name ty tm)
       else
         mk_forall name type_any
@@ -1012,7 +654,7 @@ and mk_guarded_forall ctx vars cont =
 and mk_guards ctx vars tm =
   match vars with
   | (name, ty) :: vars2 ->
-    if check_prop ctx ty then
+    if Coq_typing.check_prop ctx ty then
       (mk_impl ty
          (mk_guards ((name, ty) :: ctx) vars2 (subst_proof name ty tm)))
     else
@@ -1064,7 +706,7 @@ and remove_cast ctx tm =
       let tm2 = convert ctx (mk_long_app (Const(fname)) (mk_vars fvars))
       and ty2 = mk_long_prod fvars ty
       in
-      let srt = if check_prop [] ty2 then SortProp else SortType
+      let srt = if Coq_typing.check_prop [] ty2 then SortProp else SortType
       in
       if srt <> SortProp then
         begin
@@ -1095,11 +737,11 @@ and remove_let ctx tm =
       let ty2 = mk_long_prod fvars ty
       and val2 = mk_long_app (Const(name2)) (mk_vars fvars)
       in
-      let srt = if check_prop [] ty2 then SortProp else SortType
+      let srt = if Coq_typing.check_prop [] ty2 then SortProp else SortType
       in
       let def = mk_def name2 (mk_long_lam fvars value) ty2 srt
       in
-      defhash_add def;
+      Defhash.add def;
       if srt <> SortProp then
         begin
           add_def_eq_axiom def
@@ -1137,10 +779,10 @@ and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
-      if opt_omit_prop_typing_axioms && check_type_target_is_prop ty then
+      if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
         ()
       else if opt_type_optimization &&
-          (check_type_target_is_type ty || check_type_target_is_prop ty) then
+          (Coq_typing.check_type_target_is_type ty || Coq_typing.check_type_target_is_prop ty) then
         begin
           let fix_ax ax =
             let xvar = refresh_varname "X"
@@ -1163,7 +805,7 @@ and add_typing_axiom name ty =
             mk_forall xvar type_any (hlp ax)
           in
           let name2 = "$_type_" ^ name ^ "_" ^ unique_id ()
-          and args = get_type_args ty
+          and args = Coq_typing.get_type_args ty
           in
           (* TODO: fix proof arguments in ax *)
           let ys = mk_vars args
@@ -1205,7 +847,7 @@ and add_def_eq_axiom (name, value, ty, srt) =
 
 and add_injection_axioms constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
-  let ty = coqdef_type (defhash_find constr)
+  let ty = coqdef_type (Defhash.find constr)
   in
   let rec hlp ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
@@ -1262,8 +904,8 @@ and add_injection_axioms constr =
 
 and add_discrim_axioms constr1 constr2 =
   debug 2 (fun () -> print_endline ("add_discrim_axioms: " ^ constr1 ^ ", " ^ constr2));
-  let ty1 = coqdef_type (defhash_find constr1)
-  and ty2 = coqdef_type (defhash_find constr2)
+  let ty1 = coqdef_type (Defhash.find constr1)
+  and ty2 = coqdef_type (Defhash.find constr2)
   in
   let rec hlp ty1 ty2 args1 args2 =
     match ty1, ty2 with
@@ -1318,9 +960,9 @@ and add_discrim_axioms constr1 constr2 =
 
 and add_inversion_axioms is_prop indname constrs =
   debug 2 (fun () -> print_endline ("add_inversion_axioms: " ^ indname));
-  let (_, IndType(_, constrs, params_num), indtype, indsort) = defhash_find indname
+  let (_, IndType(_, constrs, params_num), indtype, indsort) = Defhash.find indname
   in
-  let args = get_type_args indtype
+  let args = Coq_typing.get_type_args indtype
   and vname = "X" ^ unique_id ()
   in
   assert (params_num <= List.length args);
@@ -1353,7 +995,7 @@ and add_def_axioms ((name, value, ty, srt) as def) =
       add_axiom (mk_axiom name (prop_to_formula [] ty))
     else
       begin
-        if check_type_target_is_prop ty then
+        if Coq_typing.check_type_target_is_prop ty then
           begin
             if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
               add_inversion_axioms true name constrs;
@@ -1403,7 +1045,7 @@ let axhash_find name =
 let translate name =
   log 1 ("translate: " ^ name);
   clear_axioms ();
-  add_def_axioms (defhash_find name);
+  add_def_axioms (Defhash.find name);
   let axs = axioms ()
   in
   clear_axioms ();
@@ -1421,11 +1063,11 @@ let get_axioms lst =
   coq_axioms @ List.concat (List.map axhash_find lst)
 
 let remove_def name =
-  defhash_remove name;
+  Defhash.remove name;
   axhash_remove name
 
 let cleanup () =
-  defhash_clear ();
+  Defhash.clear ();
   axhash_clear ();
   Hashing.clear coqterm_hash
 

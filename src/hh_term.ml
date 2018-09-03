@@ -1,5 +1,4 @@
-
-type hhterm = 
+type hhterm =
    Id of string (* may be a constant or variable *)
  | Comb of hhterm * hhterm
 

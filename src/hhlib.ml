@@ -1,3 +1,7 @@
+module StringSet = Set.Make(String)
+
+let strset_from_lst lst = List.fold_left (fun a x -> StringSet.add x a) StringSet.empty lst
+
 (* numbers from m up to but not including n *)
 let range m n =
   let rec go acc i j =
@@ -8,8 +12,8 @@ let rec zip xs ys =
   match xs with
   | []    -> []
   | x::vs -> match ys with
-	     | []    -> []
-	     | y::ws -> (x,y)::(zip vs ws)
+             | []    -> []
+             | y::ws -> (x,y)::(zip vs ws)
 
 let unique cmp lst =
   let rec pom prev lst =
@@ -17,9 +21,9 @@ let unique cmp lst =
     | [] -> []
     | h :: t ->
       if cmp prev h = 0 then
-	pom prev t
+        pom prev t
       else
-	h :: pom h t
+        h :: pom h t
   in
   match lst with
   | [] -> []
