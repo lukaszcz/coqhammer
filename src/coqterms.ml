@@ -41,6 +41,16 @@ type coqdef = (* coq global definition *)
 
 type coqcontext = (string * coqterm) list
 
+(* fol is a coqterm for which is_fol holds *)
+type fol = coqterm
+type fol_axioms = (string * fol) list
+
+let is_fol tm =
+  match tm with
+  | Fix(_) | Case(_) | Lam(_) | Cast(_) | Prod(_) | IndType(_) | Let(_) |
+      SortProp | SortSet | SortType -> false
+  | _ -> true
+
 let mk_fun_ty ty1 ty2 = Prod("$Anonymous", ty1, ty2)
 let quant_type = Prod("T", SortType, mk_fun_ty (mk_fun_ty (Var("1")) SortProp) SortProp)
 let eq_type = Prod("T", SortType, mk_fun_ty (Var("1")) (mk_fun_ty (Var("2")) SortProp))
@@ -148,6 +158,16 @@ let flatten_app tm =
     match tm with
     | App(x, y) -> hlp x (y :: acc)
     | _ -> (tm, acc)
+  in
+  hlp tm []
+
+let flatten_fol_quant op tm =
+  let rec hlp tm acc =
+    match tm with
+    | Quant(op2, (vname, ty, body)) when op = op2 ->
+      assert (ty = type_any);
+      hlp body (vname :: acc)
+    | _ -> (tm, List.rev acc)
   in
   hlp tm []
 

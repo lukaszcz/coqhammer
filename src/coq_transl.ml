@@ -1023,21 +1023,18 @@ and add_def_axioms ((name, value, ty, srt) as def) =
 (***************************************************************************************)
 (* Axioms hash *)
 
-let axhash = Hashtbl.create 1024
-
-let axhash_clear () = Hashtbl.clear axhash
-
-let axhash_add name lst =
-  if Hashtbl.mem axhash name then
-    failwith ("axhash_add: " ^ name);
-  Hashtbl.add axhash name lst
-
-let axhash_remove name = Hashtbl.remove axhash name
-
-let axhash_mem name = Hashtbl.mem axhash name
-
-let axhash_find name =
-  try Hashtbl.find axhash name with Not_found -> failwith ("axhash_find: " ^ name)
+module Axhash = struct
+  let axhash = Hashtbl.create 1024
+  let clear () = Hashtbl.clear axhash
+  let add name lst =
+    if Hashtbl.mem axhash name then
+      failwith ("Axhash.add: " ^ name);
+    Hashtbl.add axhash name lst
+  let remove name = Hashtbl.remove axhash name
+  let mem name = Hashtbl.mem axhash name
+  let find name =
+    try Hashtbl.find axhash name with Not_found -> failwith ("Axhash.find: " ^ name)
+end
 
 (***************************************************************************************)
 (* Translation *)
@@ -1054,21 +1051,21 @@ let translate name =
 let retranslate lst =
   List.iter
     begin fun name ->
-      if not (axhash_mem name) then
-        axhash_add name (translate name)
+      if not (Axhash.mem name) then
+        Axhash.add name (translate name)
     end
     lst
 
 let get_axioms lst =
-  coq_axioms @ List.concat (List.map axhash_find lst)
+  coq_axioms @ List.concat (List.map Axhash.find lst)
 
 let remove_def name =
   Defhash.remove name;
-  axhash_remove name
+  Axhash.remove name
 
 let cleanup () =
   Defhash.clear ();
-  axhash_clear ();
+  Axhash.clear ();
   Hashing.clear coqterm_hash
 
 (******************************************************************************)

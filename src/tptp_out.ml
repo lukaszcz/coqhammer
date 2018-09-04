@@ -9,22 +9,6 @@ let pred_hash = Hashtbl.create 100
 let mconst_hash = Hashtbl.create 100
 let tconst_hash = Hashtbl.create 100
 
-let is_fol tm =
-  match tm with
-  | Fix(_) | Case(_) | Lam(_) | Cast(_) | Prod(_) | IndType(_) | Let(_) |
-      SortProp | SortSet | SortType-> false
-  | _ -> true
-
-let flatten_fol_quant op tm =
-  let rec hlp tm acc =
-    match tm with
-    | Quant(op2, (vname, ty, body)) when op = op2 ->
-      assert (ty = type_any);
-      hlp body (vname :: acc)
-    | _ -> (tm, List.rev acc)
-  in
-  hlp tm []
-
 (******************************************************************************)
 (* Constant hashes *)
 
