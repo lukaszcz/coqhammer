@@ -16,7 +16,7 @@ open Hh_term
 (***************************************************************************************)
 (* Coqterms hash *)
 
-let coqterm_hash = Hashing.create ()
+let coqterm_hash = Hashing.create (fun x -> x)
 
 (***************************************************************************************)
 (* Adjust variable names *)
@@ -1057,7 +1057,9 @@ let retranslate lst =
     lst
 
 let get_axioms lst =
-  coq_axioms @ List.concat (List.map Axhash.find lst)
+  coq_axioms @
+    Hhlib.sort_uniq (fun x y -> Pervasives.compare (fst x) (fst y))
+    (List.concat (List.map Axhash.find lst))
 
 let remove_def name =
   Defhash.remove name;

@@ -52,14 +52,16 @@ let canonical ctx tm =
          (List.map (fun (y, t1) -> (y, sub (var n) x t1)) rest) (sub (var n) x tm)
   in can_ctx_aux [] [] 0 (List.rev ctx) tm
 
-type coqterms_hash = (coqcontext * coqterm , coqterm) Hashtbl.t
+type 'a lift_fun = (coqterm -> coqterm) -> 'a -> 'a
+type 'a coqterms_hash = (coqcontext * coqterm, 'a) Hashtbl.t * 'a lift_fun
 
-let create () = Hashtbl.create 128
+let create lift = (Hashtbl.create 128, lift)
 
-let clear tbl = Hashtbl.clear tbl
+let clear tbl = Hashtbl.clear (fst tbl)
 
-let find_or_insert tbl ctx tm f =
+let find_or_insert tbl ctx tm mk =
   debug 4 (fun () -> print_header "find_or_insert" tm ctx);
+  let (tbl, lift) = tbl in
   let ctx' = vars_to_ctx (get_fvars ctx tm) in
   let (cctx,ctm,sigma) = canonical ctx' tm in
   debug 4 begin fun () ->
@@ -68,9 +70,8 @@ let find_or_insert tbl ctx tm f =
   end;
   let revsigma = List.map (fun (x,y) -> (y,x)) sigma in
   try
-    let hashtm = Hashtbl.find tbl (cctx,ctm) in
-    subs revsigma hashtm
+    lift (subs revsigma) (Hashtbl.find tbl (cctx,ctm))
   with _ ->
-    let tm2 = f cctx ctm in
-    Hashtbl.add tbl (cctx,ctm) tm2;
-    subs revsigma tm2
+    let x = mk cctx ctm in
+    Hashtbl.add tbl (cctx,ctm) x;
+    lift (subs revsigma) x
