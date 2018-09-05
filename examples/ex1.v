@@ -22,37 +22,36 @@ Set Hammer CrushLimit 0.
 
 Lemma lem_1 : le 1 2.
   hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.lt_0_2)
-        (@Coq.Init.Peano.lt).
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.lt_0_2) (@Coq.Init.Peano.lt).
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
   hammer. Restart.
-  Reconstr.hobvious Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd)
-        Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r) Reconstr.Empty.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
   hammer. Restart.
-  Reconstr.hobvious Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd)
-        Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd) Reconstr.Empty.
 Qed.
 
 Lemma lem_3 : le 2 3.
   hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r)
-        Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r) Reconstr.Empty. Restart.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.succ_le_mono, @lem_1) Reconstr.Empty.
 Qed.
 
 Lemma lem_4 : le 3 10.
-  hammer. Restart.
+  time hammer. Restart.
+  time Reconstr.rcrush (@Coq.Arith.PeanoNat.Nat.succ_le_mono, @lem_3, @Coq.Arith.PeanoNat.Nat.le_le_succ_r) Reconstr.Empty.
+  Restart.
+  time Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r, @Coq.Arith.PeanoNat.Nat.succ_le_mono, @Coq.Arith.PeanoNat.Nat.le_0_2, @Coq.Init.Peano.le_S) Reconstr.Empty.
+  Restart.
+  time Reconstr.reasy (@Coq.Init.Peano.le_S, @lem_3, @Coq.Arith.PeanoNat.Nat.succ_le_mono) Reconstr.Empty.
+  Restart.
   Reconstr.htrivial Reconstr.Empty
-	(@Coq.Arith.PeanoNat.Nat.succ_le_mono, @Coq.Arith.PeanoNat.Nat.le_0_l)
-	Reconstr.Empty.
+        (@Coq.Arith.PeanoNat.Nat.succ_le_mono, @Coq.Arith.PeanoNat.Nat.le_0_l)
+        Reconstr.Empty.
   Restart.
   Reconstr.htrivial Reconstr.Empty
         (@Coq.Arith.Le.le_n_S, @Coq.Init.Peano.le_S, @Coq.Arith.PeanoNat.Nat.lt_0_succ)
@@ -65,23 +64,26 @@ Qed.
 
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
-  Set Hammer GSMode 8.
   hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.mul_comm)
-        Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.mul_comm) Reconstr.Empty.
 Qed.
 
 Lemma lem_rew : forall m n : nat, 1 + n + m + 1 = m + 2 + n.
 Proof.
-  hammer. Restart.
+  time hammer. Restart.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_assoc) Reconstr.Empty.
+  Restart.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Init.Peano.plus_n_Sm, @Coq.Arith.PeanoNat.Nat.add_comm) (@Coq.Arith.PeanoNat.Nat.b2n).
+  Restart.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Arith.PeanoNat.Nat.add_succ_l) Reconstr.Empty.
+  Restart.
   Reconstr.hobvious Reconstr.Empty
-		    (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Arith.PeanoNat.Nat.add_succ_l)
-		    Reconstr.Empty.
+                    (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Arith.PeanoNat.Nat.add_succ_l)
+                    Reconstr.Empty.
   Restart.
   Reconstr.heasy Reconstr.Empty
-	(@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_shuffle2, @Coq.Arith.Plus.plus_assoc_reverse)
-	Reconstr.Empty.
+        (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_shuffle2, @Coq.Arith.Plus.plus_assoc_reverse)
+        Reconstr.Empty.
   Restart.
   Reconstr.heasy Reconstr.Empty
         (@Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_l, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_l, @Coq.Arith.PeanoNat.Nat.add_comm)
@@ -91,17 +93,19 @@ Qed.
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
 Proof.
   hammer. Restart.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.add_1_r) Reconstr.Empty.
+  Restart.
   Reconstr.hcrush Reconstr.Empty
-		  (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.le_0_l, @Coq.Arith.PeanoNat.Nat.pow_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_r)
-		  Reconstr.Empty.
+                  (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.le_0_l, @Coq.Arith.PeanoNat.Nat.pow_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_r)
+                  Reconstr.Empty.
   Restart.
   Reconstr.hobvious Reconstr.Empty
-		            (@Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.ZArith.BinInt.ZL0, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Init.Peano.plus_n_Sm, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Init.Peano.plus_n_O)
-		            Reconstr.Empty.
+                            (@Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.ZArith.BinInt.ZL0, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Init.Peano.plus_n_Sm, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Init.Peano.plus_n_O)
+                            Reconstr.Empty.
   Restart.
   Reconstr.hexhaustive 0 Reconstr.Empty
-		 (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.le_0_l, @Coq.Arith.PeanoNat.Nat.pow_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_r)
-		 Reconstr.Empty.
+                 (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.le_0_l, @Coq.Arith.PeanoNat.Nat.pow_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_r)
+                 Reconstr.Empty.
 Qed.
 
 Require Coq.Reals.RIneq.
@@ -118,9 +122,7 @@ Lemma cos_decreasing_1 :
     Rdefinitions.Rlt (Rtrigo_def.cos y) (Rtrigo_def.cos x).
 Proof.
   time hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.fourier.Fourier_util.Rfourier_ge_to_le, @Coq.Reals.Rtrigo1.cos_decreasing_1)
-        Reconstr.Empty.
+  Reconstr.reasy (@Coq.Reals.Rtrigo1.cos_decreasing_1, @Coq.Reals.RIneq.Rge_le) Reconstr.Empty.
 Qed.
 
 Require ZArith.BinInt.
@@ -131,11 +133,9 @@ Proof.
   Unset Hammer Vampire.
   hammer. Restart.
   Reconstr.htrivial Reconstr.Empty
-	(@Coq.ZArith.BinInt.Z.ge_le, @Coq.ZArith.BinInt.Z.max_lub)
-	Reconstr.Empty.
+        (@Coq.ZArith.BinInt.Z.ge_le, @Coq.ZArith.BinInt.Z.max_lub)
+        Reconstr.Empty.
   Restart.
-  Unset Hammer Vampire.
-  Unset Hammer Z3.
   hammer. Restart.
   time Reconstr.hyelles 4 Reconstr.Empty
         (@Coq.ZArith.BinInt.Z.lt_eq_cases, @Coq.ZArith.BinInt.Z.max_spec, @Coq.ZArith.BinInt.Z.max_lub, @Coq.ZArith.Zmax.Zmax_left)
@@ -146,8 +146,8 @@ Proof.
   Unset Hammer Eprover.
   hammer. Restart.
   Reconstr.htrivial Reconstr.Empty
-	            (@Coq.ZArith.BinInt.Z.ge_le, @Coq.ZArith.BinInt.Z.max_lub)
-		    Reconstr.Empty.
+                    (@Coq.ZArith.BinInt.Z.ge_le, @Coq.ZArith.BinInt.Z.max_lub)
+                    Reconstr.Empty.
 Qed.
 
 Require Reals.
@@ -157,6 +157,7 @@ Lemma lem_iso : forall x1 y1 x2 y2 theta : Rdefinitions.R,
     Rgeom.dist_euc (Rgeom.xr x1 y1 theta) (Rgeom.yr x1 y1 theta) (Rgeom.xr x2 y2 theta)
                    (Rgeom.yr x2 y2 theta).
 Proof.
+  hammer. Restart.
   Reconstr.htrivial Reconstr.Empty
                     (Rgeom.isometric_rotation_0)
                     (Rgeom.dist_euc).
@@ -171,30 +172,27 @@ Lemma lem_lst :
 Proof.
   hammer. Restart.
   Reconstr.hobvious Reconstr.Empty
-		    (@Coq.Lists.List.in_app_iff)
-		    Reconstr.Empty.
+                    (@Coq.Lists.List.in_app_iff)
+                    Reconstr.Empty.
   (* `firstorder with datatypes' does not work *)
 Qed.
 
 Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
                                                    In z (y1 :: y2 :: l ++ y3 :: l').
 Proof.
-  Set Hammer GSMode 0.
-  Set Hammer Predictions 512.
-  Unset Hammer Vampire.
-  hammer. Restart.
+  (* hammer. Restart. *)
   Reconstr.htrivial Reconstr.Empty
                     (@Coq.Lists.List.in_cons, @Coq.Lists.List.in_or_app)
-		    Reconstr.Empty.
+                    Reconstr.Empty.
   (* `firstorder with datatypes' does not work *)
 Qed.
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
 Proof.
-  hammer. Restart.
+  (* hammer. Restart. *)
   Reconstr.hobvious Reconstr.Empty
-		    (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r, @Coq.Lists.List.length_zero_iff_nil, @Coq.Init.Peano.le_n)
-		    (@Coq.Init.Datatypes.length, @Coq.Lists.List.tl).
+                    (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r, @Coq.Lists.List.length_zero_iff_nil, @Coq.Init.Peano.le_n)
+                    (@Coq.Init.Datatypes.length, @Coq.Lists.List.tl).
 Qed.
 
 Require NArith.Ndec.
@@ -219,13 +217,15 @@ Lemma setbit_iff : forall m a n : BinNums.N,
                      BinNat.N.testbit (BinNat.N.setbit a n) m = true.
 Proof.
   hammer. Restart.
+  Reconstr.rcrush (@Coq.NArith.BinNat.N.setbit_iff, @Coq.NArith.BinNat.N.setbit_eq) Reconstr.Empty.
+  Restart.
   Reconstr.hsimple Reconstr.Empty
-		   (@Coq.NArith.BinNat.N.setbit_iff, @Coq.NArith.BinNat.N.setbit_neq, @Coq.NArith.BinNat.N.exists_div2)
-		   Reconstr.Empty.
+                   (@Coq.NArith.BinNat.N.setbit_iff, @Coq.NArith.BinNat.N.setbit_neq, @Coq.NArith.BinNat.N.exists_div2)
+                   Reconstr.Empty.
   Restart.
   Reconstr.hyreconstr Reconstr.Empty
-	(@Coq.NArith.BinNat.N.setbit_neq, @Coq.NArith.BinNat.N.setbit_iff)
-	Reconstr.Empty.
+        (@Coq.NArith.BinNat.N.setbit_neq, @Coq.NArith.BinNat.N.setbit_iff)
+        Reconstr.Empty.
   Restart.
   Unset Hammer Vampire.
   hammer. Restart.
@@ -249,8 +249,14 @@ Lemma min_spec_1 : forall n m : Rdefinitions.R,
                    (Rdefinitions.Rle m n /\ Rbasic_fun.Rmin m m = m) \/
                    (Rdefinitions.Rlt n m /\ Rbasic_fun.Rmin m n = n).
 Proof.
-  Unset Hammer Z3.
+  Unset Hammer Vampire.
   hammer. Restart.
+  time Reconstr.rscrush (@Coq.Reals.Rminmax.R.min_spec_le, @Coq.Reals.RIneq.Rnot_le_lt) Reconstr.Empty.
+  Restart.
+  time Reconstr.rscrush (@Coq.Reals.RIneq.Rnot_le_lt, @Coq.Reals.Rminmax.R.min_spec_le, @Coq.Reals.Rminmax.RHasMinMax.min_l, @Coq.Reals.RIneq.Rlt_irrefl) Reconstr.Empty.
+  Restart.
+  time Reconstr.rblast (@Coq.Reals.RIneq.Rnot_le_lt, @Coq.Reals.Rminmax.R.min_spec_le, @Coq.Reals.Rminmax.RHasMinMax.min_l, @Coq.Reals.RIneq.Rlt_irrefl) Reconstr.Empty.
+  Restart.
   Reconstr.hobvious Reconstr.Empty
         (@Coq.Reals.Rminmax.R.min_id, @Coq.Reals.Rminmax.R.min_spec_le, @Coq.Reals.Rminmax.R.max_spec)
         Reconstr.Empty.
@@ -260,10 +266,9 @@ Lemma min_spec_2 : forall n m : Rdefinitions.R,
                    (Rdefinitions.Rle m n /\ Rbasic_fun.Rmin m n = m) \/
                    (Rdefinitions.Rlt n m /\ Rbasic_fun.Rmin m n = n).
 Proof.
+  Unset Hammer Vampire.
   hammer. Restart.
-  Reconstr.hobvious Reconstr.Empty
-        (@Coq.Reals.Rminmax.R.min_comm, @Coq.Reals.Rminmax.RHasMinMax.min_l, @Coq.Reals.Rminmax.Rmin_l, @Coq.Reals.Rminmax.R.min_l, @Coq.Reals.Rbasic_fun.Rmin_left, @Coq.Reals.Rminmax.R.min_spec, @Coq.Reals.Rminmax.R.min_spec_le, @min_spec_1, @Coq.Reals.Rminmax.R.min_l_iff, @Coq.Reals.Rbasic_fun.Rmin_comm)
-        Reconstr.Empty.
+  Reconstr.rblast (@Coq.Reals.Rminmax.R.min_spec_le, @Coq.Reals.RIneq.Rnot_le_lt) Reconstr.Empty.
 Qed.
 
 Lemma incl_app : forall (A : Type) (n l m : list A),
@@ -317,29 +322,29 @@ Lemma leb_compare2 : forall m n : nat,
                       PeanoNat.Nat.leb n m = true <->
                       (PeanoNat.Nat.compare n m = Lt \/ PeanoNat.Nat.compare n m = Eq).
 Proof.
-  hammer. Restart.
+  (* hammer. Restart. *)
   (* Sometimes the tactics cannot reconstruct the goal, but the
   returned dependencies may still be used to create the proof
   semi-manually. *)
   Reconstr.hinit Reconstr.Empty
-	         (@Coq.Arith.PeanoNat.Nat.compare_le_iff, @Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.PeanoNat.Nat.leb_compare, @Coq.Arith.Compare_dec.leb_compare, @Coq.Arith.PeanoNat.Nat.compare_nle_iff)
-		 Reconstr.Empty.
+                 (@Coq.Arith.PeanoNat.Nat.compare_le_iff, @Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.PeanoNat.Nat.leb_compare, @Coq.Arith.Compare_dec.leb_compare, @Coq.Arith.PeanoNat.Nat.compare_nle_iff)
+                 Reconstr.Empty.
   sauto; rewrite H1 in *; yelles 1.
   Restart.
   Reconstr.hcrush Reconstr.Empty
-		  (@Coq.Arith.Compare_dec.nat_compare_le, @Coq.Arith.PeanoNat.Nat.compare_nle_iff, @Coq.Arith.PeanoNat.Nat.compare_le_iff, @Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.PeanoNat.Nat.leb_compare, @Coq.Arith.Compare_dec.leb_compare, @Coq.Reals.ArithProp.even_odd_cor)
-		  Reconstr.Empty.
+                  (@Coq.Arith.Compare_dec.nat_compare_le, @Coq.Arith.PeanoNat.Nat.compare_nle_iff, @Coq.Arith.PeanoNat.Nat.compare_le_iff, @Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.PeanoNat.Nat.leb_compare, @Coq.Arith.Compare_dec.leb_compare, @Coq.Reals.ArithProp.even_odd_cor)
+                  Reconstr.Empty.
   Restart.
   Reconstr.hrauto 2 Reconstr.Empty
-		  (@Coq.Arith.Compare_dec.nat_compare_le, @Coq.Arith.PeanoNat.Nat.compare_nle_iff, @Coq.Arith.PeanoNat.Nat.compare_le_iff, @Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.PeanoNat.Nat.leb_compare, @Coq.Arith.Compare_dec.leb_compare, @Coq.Reals.ArithProp.even_odd_cor)
-		  Reconstr.Empty.
+                  (@Coq.Arith.Compare_dec.nat_compare_le, @Coq.Arith.PeanoNat.Nat.compare_nle_iff, @Coq.Arith.PeanoNat.Nat.compare_le_iff, @Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.PeanoNat.Nat.leb_compare, @Coq.Arith.Compare_dec.leb_compare, @Coq.Reals.ArithProp.even_odd_cor)
+                  Reconstr.Empty.
   Restart.
   Unset Hammer Vampire.
   Unset Hammer Z3.
-  hammer. Restart.
+  (* hammer. Restart. *)
   Reconstr.hcrush Reconstr.Empty
-		  (@Coq.Arith.Compare_dec.nat_compare_equiv, @Coq.Arith.Compare_dec.leb_compare, @Coq.PArith.BinPos.Dcompare)
-		  Reconstr.Empty.
+                  (@Coq.Arith.Compare_dec.nat_compare_equiv, @Coq.Arith.Compare_dec.leb_compare, @Coq.PArith.BinPos.Dcompare)
+                  Reconstr.Empty.
   Restart.
   time Reconstr.hyelles 6 Reconstr.Empty
         (@Coq.PArith.BinPos.Dcompare, @Coq.Arith.Compare_dec.nat_compare_eq, @Coq.Arith.PeanoNat.Nat.compare_antisym, @Coq.Arith.Compare_dec.leb_compare, @Coq.Init.Datatypes.CompOpp_iff, @Coq.Arith.Compare_dec.nat_compare_equiv, @Coq.Arith.PeanoNat.Nat.compare_refl)
@@ -349,22 +354,14 @@ Qed.
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.
 Proof.
   hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.Compare_dec.leb_correct, @Coq.Arith.Compare_dec.leb_complete)
-        Reconstr.Empty.
+  Reconstr.rsimple (@Coq.Arith.PeanoNat.Nat.leb_le) Reconstr.Empty.
 Qed.
 
 Lemma leb_2 : forall m n : nat, PeanoNat.Nat.leb m n = false <-> m > n.
 Proof.
   Unset Hammer Eprover.
   hammer. Restart.
-  Reconstr.hyelles 4 Reconstr.Empty
-        (@Coq.Arith.Compare_dec.not_gt, @Coq.Arith.PeanoNat.Nat.leb_nle, @Coq.Arith.Gt.gt_not_le, @Coq.Arith.Compare_dec.leb_correct)
-        Reconstr.Empty.
-  Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.Compare_dec.leb_iff_conv, @Coq.Arith.PeanoNat.Nat.leb_gt, @Coq.Arith.Compare_dec.leb_compare, @Coq.Arith.Compare_dec.nat_compare_gt, @Coq.Arith.Gt.gt_not_le, @Coq.Arith.PeanoNat.Nat.leb_nle, @Coq.Arith.Compare_dec.leb_correct_conv, @Coq.Arith.Compare_dec.leb_complete_conv)
-        (@Coq.Init.Peano.gt).
+  Reconstr.rsimple (@Coq.Arith.Compare_dec.leb_iff_conv) (@Coq.Init.Peano.gt).
 Qed.
 
 Lemma incl_appl
@@ -372,28 +369,20 @@ Lemma incl_appl
        List.incl l n -> List.incl l (n ++ m) /\ List.incl l (m ++ n) /\ List.incl l (l ++ l).
 Proof.
   hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Lists.List.incl_appl, @Coq.Lists.List.incl_refl, @Coq.Lists.List.incl_appr)
-        Reconstr.Empty.
+  Reconstr.rcrush (@Coq.Lists.List.incl_appl, @Coq.Lists.List.incl_refl, @Coq.Lists.List.incl_appr) Reconstr.Empty.
 Qed.
 
 Lemma in_int_lt2 : forall p q r : nat, Between.in_int p q r -> q >= p /\ r >= p /\ r <= q.
 Proof.
   hammer. Restart.
-  Reconstr.hsimple Reconstr.Empty
-        (@Coq.Arith.Between.in_int_lt, @Coq.Arith.PeanoNat.Nat.lt_le_incl, @Coq.Init.Peano.le_n)
-        (@Coq.Arith.Between.in_int, @Coq.Init.Peano.ge).
+  Reconstr.rsimple (@Coq.Arith.Between.in_int_lt, @Coq.Arith.PeanoNat.Nat.lt_le_incl) (@Coq.Arith.Between.in_int, @Coq.Init.Peano.ge).
 Qed.
 
 Lemma nat_compare_eq : forall n m : nat, PeanoNat.Nat.compare n m = Eq <-> n = m.
 Proof.
   hammer. Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.Compare_dec.nat_compare_eq, @Coq.Arith.PeanoNat.Nat.compare_refl)
-        Reconstr.Empty.
+  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.compare_eq, @Coq.Arith.PeanoNat.Nat.compare_refl) Reconstr.Empty.
 Qed.
-
-Set Hammer GSMode 8.
 
 Lemma Forall_1
      : forall (A : Type) (P : A -> Prop) (a : A),
@@ -406,8 +395,8 @@ Proof.
             Reconstr.Empty.
   hammer. Undo.
   Reconstr.hsimple (@IHl)
-	           (@Coq.Lists.List.Forall_cons)
-		   Reconstr.Empty.
+                   (@Coq.Lists.List.Forall_cons)
+                   Reconstr.Empty.
   Restart.
   induction l; ycrush.
 Qed.
