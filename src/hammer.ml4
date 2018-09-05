@@ -475,13 +475,13 @@ let do_predict hyps deps goal =
     | None -> clean (); raise (HammerFailure "ATPs failed to find a proof")
     | Some info ->
        begin
-         clean ();
          let info =
            if List.length info.Provers.deps >= !Opt.minimize_threshold then
              Provers.minimize info hyps deps goal
            else
              info
          in
+         clean ();
          Msg.info(Provers.prn_atp_info info);
          info
        end

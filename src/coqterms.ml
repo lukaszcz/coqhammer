@@ -459,14 +459,6 @@ let simple_subst vname value =
 
 let subst_proof name ty = simple_subst name (Cast(Const("$Proof"), refresh_bvars ty))
 
-let iter_pairs f lst =
-  let rec hlp lst =
-    match lst with
-    | h :: t -> List.iter (f h) t; hlp t
-    | [] -> ()
-  in
-  hlp lst
-
 let simpl =
   map_coqterm
     begin fun ctx tm ->

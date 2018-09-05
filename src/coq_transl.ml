@@ -14,11 +14,6 @@ open Coq_transl_opts
 open Hh_term
 
 (***************************************************************************************)
-(* Coqterms hash *)
-
-let coqterm_hash = Hashing.create (fun x -> x)
-
-(***************************************************************************************)
 (* Adjust variable names *)
 
 let adjust_varnames =
@@ -108,7 +103,28 @@ let reinit (lst : hhdef list) =
   add_defs lst
 
 (***************************************************************************************)
-(* Axioms *)
+(* Axioms monad *)
+
+(* the second element is a function which given a list of axioms
+   prepends to it a fixed list of axioms (in time proportional to the
+   prepended list) and returns the result *)
+type 'a axioms_monad = 'a * ((string * fol) -> (string * fol))
+
+let return tm = (tm, fun axs -> axs)
+let bind (x, mk1) f =
+  let (y, mk2) = f x
+  in
+  (y, (fun axs -> mk2 (mk1 axs)))
+
+let (>>=) = bind
+let (>>) m1 m2 = bind m1 (fun _ -> m2)
+let lift f m = m >>= fun x -> return (f x)
+
+let add_axiom ax =
+  log 3 ("add_axiom: " ^ fst ax);
+  ((), fun axs -> ax :: axs)
+
+let extract_axioms m = (snd m) []
 
 (* general axioms for any Coq translation *)
 let coq_axioms = [
@@ -124,13 +140,10 @@ let coq_axioms = [
         (mk_hastype (Var("X")) (Const("Type")))))
 ]
 
-let axioms_stack = ref []
+(***************************************************************************************)
+(* Coqterms hash *)
 
-let clear_axioms () = axioms_stack := []
-
-let add_axiom ax = log 3 ("add_axiom: " ^ fst ax); axioms_stack := ax :: !axioms_stack
-
-let axioms () = !axioms_stack
+let coqterm_hash = Hashing.create lift
 
 (***************************************************************************************)
 (* Inversion axioms for inductive types *)
@@ -246,6 +259,21 @@ let mk_prop_inversion params indname args constrs =
     | [] -> Const("$False")
     | _ -> join_right mk_or disjs
 
+let rec mk_guards ctx vars tm =
+  match vars with
+  | (name, ty) :: vars2 ->
+     if Coq_typing.check_prop ctx ty then
+       (mk_impl ty
+          (mk_guards ((name, ty) :: ctx) vars2 (subst_proof name ty tm)))
+     else
+       (mk_impl (App(App(Const("$HasType"), Var(name)), ty))
+          (mk_guards ((name, ty) :: ctx) vars2 tm))
+  | [] ->
+     tm
+
+(* The following mutually recursively defined functions return
+   (coqterm axioms_monad) or (unit axioms_monad).  *)
+
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
   (* Note: the correctness of calling `prop_to_formula' below
      depends on the implementation of `convert_term' (that it
@@ -254,35 +282,35 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
   let inv = mkinv indname constrs matched_term f
   in
   match inv with
-  | Const("$False") -> ()
+  | Const("$False") -> return ()
   | _ ->
-    let tm =
-      if !opt_closure_guards then
-        close (fvars @ lvars)
-          (fun ctx -> prop_to_formula ctx inv)
-      else if opt_lambda_guards then
-        let ctx = List.rev fvars
-        in
-        let mtfvars = get_fvars ctx matched_term
-        in
-        let fvars0 =
-          List.filter (fun (name, _) -> not (List.mem_assoc name mtfvars)) fvars
-        and fvars1 = mtfvars
-        in
-        (close fvars0
-           (fun ctx1 ->
-             mk_guarded_forall ctx1 fvars1
-               (fun _ -> prop_to_formula ctx (mk_long_forall lvars inv))))
-      else
-        let vars = fvars @ lvars
-        in
-        let ctx = List.rev vars
-        in
-        let vars1 = get_fvars ctx matched_term
-        in
-        mk_fol_forall [] vars (mk_guards [] vars1 inv)
-    in
-    add_axiom (mk_axiom axname tm)
+     let m =
+       if !opt_closure_guards then
+         close (fvars @ lvars)
+           (fun ctx -> prop_to_formula ctx inv)
+       else if opt_lambda_guards then
+         let ctx = List.rev fvars
+         in
+         let mtfvars = get_fvars ctx matched_term
+         in
+         let fvars0 =
+           List.filter (fun (name, _) -> not (List.mem_assoc name mtfvars)) fvars
+         and fvars1 = mtfvars
+         in
+         (close fvars0
+            (fun ctx1 ->
+              make_guarded_forall ctx1 fvars1
+                (fun _ -> prop_to_formula ctx (mk_long_forall lvars inv))))
+       else
+         let vars = fvars @ lvars
+         in
+         let ctx = List.rev vars
+         in
+         let vars1 = get_fvars ctx matched_term
+         in
+         make_fol_forall [] vars (mk_guards [] vars1 inv)
+     in
+     m >>= fun tm -> add_axiom (mk_axiom axname tm)
 
 (***************************************************************************************)
 (* Lambda-lifting, fix-lifting and case-lifting *)
@@ -300,30 +328,29 @@ and lambda_lifting axname name fvars lvars1 tm =
   in
   match body2 with
   | Fix(_) ->
-    fix_lifting axname name fvars lvars body2
+     fix_lifting axname name fvars lvars body2
   | Case(_) ->
-    case_lifting axname name fvars lvars body2
+     case_lifting axname name fvars lvars body2
   | _ ->
-    let ax =
-      mk_axiom axname
-        (close fvars
-           begin fun ctx ->
-             let mk_eqv =
-               if Coq_typing.check_prop (List.rev_append lvars ctx) body2 then
-                 mk_equiv
-               else
-                 mk_eq
-             in
-             let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
-             in
-             if !opt_closure_guards || opt_lambda_guards then
-               prop_to_formula ctx (mk_long_forall lvars eqv)
-             else
-               mk_fol_forall ctx lvars eqv
-           end)
-    in
-    add_axiom ax;
-    convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
+     close fvars
+       begin fun ctx ->
+         let mk_eqv =
+           if Coq_typing.check_prop (List.rev_append lvars ctx) body2 then
+             mk_equiv
+           else
+             mk_eq
+         in
+         let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
+         in
+         if !opt_closure_guards || opt_lambda_guards then
+           prop_to_formula ctx (mk_long_forall lvars eqv)
+         else
+           make_fol_forall ctx lvars eqv
+       end
+     >>=
+     (fun tm -> add_axiom (mk_axiom axname tm))
+     >>
+     convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
 
 and fix_lifting axname dname fvars lvars tm =
   debug 3 (fun () -> print_header "fix_lifting" tm (fvars @ lvars));
@@ -398,22 +425,22 @@ and case_lifting axname0 name0 fvars lvars tm =
     begin
       match tm with
       | Cast(Const("$Proof"), _) | Const("$Proof") ->
-        generic_match ()
+         return (generic_match ())
       | Case(indname, matched_term, return_type, params_num, branches) ->
         let (_, IndType(_, constrs, pnum), indty, _) =
           try Defhash.find indname with _ -> raise Not_found
         in
         assert (pnum = params_num);
         if Coq_typing.check_type_target_is_prop indty then
-          generic_match ()
+          return (generic_match ())
         else
           let fname = if name0 = "" then "$_case_" ^ indname ^ "_" ^ unique_id () else name0
           in
           let axname = if name0 = "" then fname else axname0
           in
-          let case_replacement =
-            convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
-          in
+          convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+          >>=
+          fun case_replacement ->
           let case_repl2 = mk_long_app case_replacement (mk_vars lvars)
           in
           let params = get_params indty return_type params_num
@@ -470,14 +497,15 @@ and case_lifting axname0 name0 fvars lvars tm =
           in
           add_inversion_axioms0
             (mk_inversion params) indname axname fvars lvars constrs matched_term
-            (hlp constrs branches params params_num (fvars @ lvars) tm);
-          case_replacement
+            (hlp constrs branches params params_num (fvars @ lvars) tm)
+          >>
+          return case_replacement
       | _ ->
         failwith "case_lifting"
     end
   with Not_found ->
     log 2 ("case exception: " ^ name0);
-    generic_match ()
+    return (generic_match ())
 
 (*****************************************************************************************)
 (* Convert definitions to axioms *)
@@ -488,50 +516,50 @@ and convert ctx tm =
   debug 3 (fun () -> print_header "convert" tm ctx);
   match tm with
   | Quant(op, (name, ty, body)) ->
-      assert (ty <> type_any);
-      let mk = if op = "!" then mk_impl else mk_and
-      in
-      if Coq_typing.check_prop ctx ty then
-        mk (prop_to_formula ctx ty)
-          (prop_to_formula ctx (subst_proof name ty body))
-      else
-        Quant(op, (name, type_any,
-                   mk (mk_guard ctx ty (Var(name)))
-                     (prop_to_formula ((name, ty) :: ctx) body)))
+     assert (ty <> type_any);
+     let mk = if op = "!" then mk_impl else mk_and
+     in
+     if Coq_typing.check_prop ctx ty then
+       (prop_to_formula ctx ty) >>= fun x1 ->
+       (prop_to_formula ctx (subst_proof name ty body)) >>= fun x2 ->
+       return (mk x1 x2)
+     else
+       (make_guard ctx ty (Var(name))) >>= fun x1 ->
+       (prop_to_formula ((name, ty) :: ctx) body) >>= fun x2 ->
+       return (Quant(op, (name, type_any, mk x1 x2)))
   | Equal(x, y) ->
-      Equal(convert_term ctx x, convert_term ctx y)
+     convert_term ctx x >>= fun x1 ->
+     convert_term ctx y >>= fun x2 ->
+     return (Equal(x1, x2))
   | App(App(Const(c), x), y) when is_bin_logop c ->
-      let x2 = prop_to_formula ctx x
-      and y2 = prop_to_formula ctx y
-      in
+      prop_to_formula ctx x >>= fun x2 ->
+      prop_to_formula ctx y >>= fun y2 ->
       assert (x2 <> Const("$Proof"));
       assert (y2 <> Const("$Proof"));
-      App(App(Const(c), x2), y2)
+      return (App(App(Const(c), x2), y2))
   | App(Const("~"), x) ->
-      let x2 = prop_to_formula ctx x
-      in
+      prop_to_formula ctx x >>= fun x2 ->
       assert (x2 <> Const("$Proof"));
-      App(Const("~"), x2)
+      return (App(Const("~"), x2))
   | App(App(Const("$HasType"), x), y) ->
-      mk_guard ctx y (convert ctx x)
+      convert ctx x >>= fun x2 ->
+      make_guard ctx y x2
   | App(x, y) ->
-      let x2 = convert ctx x
-      in
+      convert ctx x >>= fun x2 ->
       if x2 = Const("$Proof") then
-        Const("$Proof")
+        return (Const("$Proof"))
       else
-        let y2 = convert_term ctx y
-        in
+        convert_term ctx y >>= fun y2 ->
         if y2 = Const("$Proof") then
-          x2
+          return x2
         else
-          App(x2, y2)
+          return (App(x2, y2))
   | Lam(_) ->
       remove_lambda ctx tm
   | Case(_) ->
       remove_case ctx tm
   | Cast(Const("$Proof"), _) ->
-      Const("$Proof")
+      return (Const("$Proof"))
   | Cast(_) ->
       remove_cast ctx tm
   | Fix(_) ->
@@ -544,18 +572,18 @@ and convert ctx tm =
       else
         remove_type ctx tm
   | SortProp ->
-      Const("Prop")
+      return (Const("Prop"))
   | SortSet ->
-      Const("Set")
+      return (Const("Set"))
   | SortType ->
-      Const("Type")
+      return (Const("Type"))
   | Var(name) ->
       if Coq_typing.check_proof_var ctx name then
-        Const("$Proof")
+        return (Const("$Proof"))
       else
-        Var(name)
+        return (Var(name))
   | Const(_) ->
-      tm
+      return tm
   | IndType(_) ->
       failwith "convert"
 
@@ -574,11 +602,14 @@ and convert_term ctx tm =
     in
     let fvars = get_fvars ctx tm
     in
-    let tm2 = convert ctx (mk_long_app (Const(name)) (mk_vars fvars))
-    in
-    add_axiom (mk_axiom name
-                 (close fvars (fun ctx -> mk_equiv tm2 (convert ctx tm))));
-    tm2
+    convert ctx (mk_long_app (Const(name)) (mk_vars fvars)) >>= fun tm2 ->
+    close fvars
+      begin fun ctx ->
+        convert ctx tm >>= fun r ->
+        return (mk_equiv tm2 r)
+      end >>= fun r ->
+    add_axiom (mk_axiom name r) >>
+    return tm2
   else
     convert ctx tm
 
@@ -586,94 +617,91 @@ and prop_to_formula ctx tm =
   debug 3 (fun () -> print_header "prop_to_formula" tm ctx);
   match tm with
   | Prod(vname, ty1, ty2) ->
-    if Coq_typing.check_prop ctx ty1 then
-      mk_impl (prop_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
-    else
-      mk_forall vname type_any
-        (mk_impl
-           (mk_guard ctx ty1 (Var(vname)))
-           (prop_to_formula ((vname, ty1) :: ctx) ty2))
+     if Coq_typing.check_prop ctx ty1 then
+       prop_to_formula ctx ty1 >>= fun tm1 ->
+       prop_to_formula ctx (subst_proof vname ty1 ty2) >>= fun tm2 ->
+       return (mk_impl tm1 tm2)
+     else
+       make_guard ctx ty1 (Var(vname)) >>= fun tm1 ->
+       prop_to_formula ((vname, ty1) :: ctx) ty2 >>= fun tm2 ->
+       return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
     convert ctx tm
 
 (* `x' does not get converted *)
-and mk_guard ctx ty x =
-  debug 3 (fun () -> print_header_nonl "mk_guard" ty ctx; print_coqterm x; print_newline ());
+and make_guard ctx ty x =
+  debug 3 (fun () -> print_header_nonl "make_guard" ty ctx; print_coqterm x; print_newline ());
   match ty with
   | Prod(_) ->
      if opt_type_lifting then
-       mk_hastype x (remove_type ctx ty)
+       remove_type ctx ty >>= fun ty1 ->
+       return (mk_hastype x ty1)
      else
        (* refresh_bvars is necessary here to correctly translate
           e.g. Prod(x, Prod(x, ty1, ty2), ty3) *)
        type_to_guard ctx (refresh_bvars ty) x
   | _ ->
-     mk_hastype x (convert ctx ty)
+     convert ctx ty >>= fun ty1 ->
+     return (mk_hastype x ty1)
 
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
   debug 3 (fun () -> print_header_nonl "type_to_guard" ty ctx; print_coqterm x; print_newline ());
   match ty with
   | Prod(vname, ty1, ty2) ->
-    if Coq_typing.check_prop ctx ty1 then
-      mk_impl (prop_to_formula ctx ty1) (type_to_guard ctx (subst_proof vname ty1 ty2) x)
-    else
-      mk_forall vname type_any
-        (mk_impl
-           (mk_guard ctx ty1 (Var(vname)))
-           (type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname))))))
+     if Coq_typing.check_prop ctx ty1 then
+       prop_to_formula ctx ty1 >>= fun tm1 ->
+       type_to_guard ctx (subst_proof vname ty1 ty2) x >>= fun tm2 ->
+       return (mk_impl tm1 tm2)
+     else
+       make_guard ctx ty1 (Var(vname)) >>= fun tm1 ->
+       type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname)))) >>= fun tm2 ->
+       return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
-    mk_hastype x (convert ctx ty)
+     convert ctx ty >>= fun tm ->
+     return (mk_hastype x tm)
 
-and mk_fol_forall ctx vars tm =
+and make_fol_forall ctx vars tm =
   let rec hlp ctx vars tm =
     match vars with
     | (name, ty) :: vars2 ->
       if Coq_typing.check_prop ctx ty then
         hlp ((name, ty) :: ctx) vars2 (subst_proof name ty tm)
       else
-        mk_forall name type_any
-          (hlp ((name, ty) :: ctx) vars2 tm)
+        hlp ((name, ty) :: ctx) vars2 tm >>= fun r ->
+        return (mk_forall name type_any r)
     | [] ->
       prop_to_formula ctx tm
   in
   hlp ctx vars tm
 
-and mk_guarded_forall ctx vars cont =
+and make_guarded_forall ctx vars cont =
   let rec hlp ctx vars =
     match vars with
     | (name, ty) :: vars2 ->
-      mk_forall name type_any
-        (mk_impl (mk_guard ctx ty (Var(name)))
-           (hlp ((name, ty) :: ctx) vars2))
+       begin
+         make_guard ctx ty (Var(name)) >>= fun guard ->
+         hlp ((name, ty) :: ctx) vars2 >>= fun r ->
+         return (mk_forall name type_any (mk_impl guard r))
+       end
     | [] ->
-        cont ctx
+       cont ctx
   in
   hlp ctx vars
 
-and mk_guards ctx vars tm =
-  match vars with
-  | (name, ty) :: vars2 ->
-    if Coq_typing.check_prop ctx ty then
-      (mk_impl ty
-         (mk_guards ((name, ty) :: ctx) vars2 (subst_proof name ty tm)))
-    else
-      (mk_impl (App(App(Const("$HasType"), Var(name)), ty))
-         (mk_guards ((name, ty) :: ctx) vars2 tm))
-  | [] ->
-    tm
-
 and close vars cont =
   if !opt_closure_guards then
-    mk_guarded_forall [] vars cont
+    make_guarded_forall [] vars cont
   else
     let rec hlp ctx vars =
       match vars with
       | (name, ty) :: vars2 ->
-        mk_forall name type_any
-          (hlp ((name, ty) :: ctx) vars2)
+         begin
+           hlp ((name, ty) :: ctx) vars2 >>= fun r ->
+           return (mk_forall name type_any r)
+         end
       | [] ->
-        cont ctx
+         cont ctx
     in
     hlp [] vars
 
@@ -703,8 +731,8 @@ and remove_cast ctx tm =
       let fvars = get_fvars ctx tm
       and fname = "$_cast_" ^ unique_id ()
       in
-      let tm2 = convert ctx (mk_long_app (Const(fname)) (mk_vars fvars))
-      and ty2 = mk_long_prod fvars ty
+      convert ctx (mk_long_app (Const(fname)) (mk_vars fvars)) >>= fun tm2 ->
+      let ty2 = mk_long_prod fvars ty
       in
       let srt = if Coq_typing.check_prop [] ty2 then SortProp else SortType
       in
@@ -712,11 +740,11 @@ and remove_cast ctx tm =
         begin
           let def = mk_def fname (mk_long_lam fvars trm) ty2 srt
           in
-          add_def_eq_axiom def;
-          tm2
+          add_def_eq_axiom def >>
+          return tm2
         end
       else
-        Const("$Proof")
+        return (Const("$Proof"))
   | _ ->
       failwith "remove_cast"
 
@@ -742,10 +770,12 @@ and remove_let ctx tm =
       let def = mk_def name2 (mk_long_lam fvars value) ty2 srt
       in
       Defhash.add def;
-      if srt <> SortProp then
-        begin
+      begin
+        if srt <> SortProp then
           add_def_eq_axiom def
-        end;
+        else
+          return ()
+      end >>
       convert ctx (simple_subst name val2 body)
   | _ ->
       failwith "remove_let"
@@ -757,7 +787,7 @@ and remove_type ctx ty =
       let name = "$_type_" ^ unique_id ()
       and vars = ctx_to_vars cctx
       in
-      add_def_eq_type_axiom name name vars cty;
+      add_def_eq_type_axiom name name vars cty >>
       convert cctx (mk_long_app (Const(name)) (mk_vars vars))
     end
 
@@ -765,22 +795,21 @@ and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
   let vname = "var_" ^ unique_id ()
   in
-  add_axiom (mk_axiom axname
-               (close fvars
-                  (fun ctx ->
-                    (mk_forall vname type_any
-                       (mk_equiv
-                          (mk_hastype
-                             (Var(vname))
-                             (convert ctx (mk_long_app (Const(name)) (mk_vars fvars))))
-                          (type_to_guard ctx ty (Var(vname))))))))
+  close fvars
+    begin fun ctx ->
+      convert ctx (mk_long_app (Const(name)) (mk_vars fvars)) >>= fun tp ->
+      type_to_guard ctx ty (Var(vname)) >>= fun guard ->
+      return (mk_forall vname type_any
+                (mk_equiv (mk_hastype (Var(vname)) tp) guard))
+    end >>= fun r ->
+  add_axiom (mk_axiom axname r)
 
 and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
       if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
-        ()
+        return ()
       else if opt_type_optimization &&
           (Coq_typing.check_type_target_is_type ty || Coq_typing.check_type_target_is_prop ty) then
         begin
@@ -816,12 +845,18 @@ and add_typing_axiom name ty =
                  (mk_long_app (Const(name2)) ys)
                  (mk_long_app (Const(name)) ys))
           in
-          add_axiom (mk_axiom ("$_tydef_" ^ name2) (fix_ax ax));
-          add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name2))))
+          make_guard [] ty (Const(name2)) >>= fun guard ->
+          add_axiom (mk_axiom ("$_tydef_" ^ name2) (fix_ax ax)) >>
+          add_axiom (mk_axiom ("$_typeof_" ^ name) guard)
         end
       else
-        add_axiom (mk_axiom ("$_typeof_" ^ name) (mk_guard [] ty (Const(name))))
+        begin
+          make_guard [] ty (Const(name)) >>= fun guard ->
+          add_axiom (mk_axiom ("$_typeof_" ^ name) guard)
+        end
     end
+  else
+    return ()
 
 and add_def_eq_axiom (name, value, ty, srt) =
   debug 2 (fun () -> print_endline ("add_def_eq_axiom: " ^ name));
@@ -829,20 +864,28 @@ and add_def_eq_axiom (name, value, ty, srt) =
   in
   match value with
   | Lam(_) ->
-      ignore (lambda_lifting axname name [] [] value)
+     lambda_lifting axname name [] [] value >>
+     return ()
   | Fix(_) ->
-      ignore (fix_lifting axname name [] [] value)
+     fix_lifting axname name [] [] value >>
+     return ()
   | Const(c) when c = name ->
-      ()
+     return ()
   | _ ->
       begin
         match ty with
         | SortProp ->
-            add_axiom (mk_axiom axname (mk_equiv (Const(name)) (prop_to_formula [] value)))
+           begin
+             prop_to_formula [] value >>= fun r ->
+             add_axiom (mk_axiom axname (mk_equiv (Const(name)) r))
+           end
         | SortType | SortSet ->
-            add_def_eq_type_axiom axname name [] value
+           add_def_eq_type_axiom axname name [] value
         | _ ->
-            add_axiom (mk_axiom axname (mk_eq (Const(name)) (convert [] value)))
+           begin
+             convert [] value >>= fun r ->
+             add_axiom (mk_axiom axname (mk_eq (Const(name)) r))
+           end
       end
 
 and add_injection_axioms constr =
@@ -878,11 +921,10 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
-      mk_forall lname1 type_any
-        (mk_forall lname2 type_any
-           (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
-              (Var(lname1) :: args1) (Var(lname2) :: args2)
-              ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
+      (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
+         (Var(lname1) :: args1) (Var(lname2) :: args2)
+         ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)) >>= fun r ->
+      return (mk_forall lname1 type_any (mk_forall lname2 type_any r))
     | _ ->
       prop_to_formula ctx
         (mk_impl
@@ -892,15 +934,15 @@ and add_injection_axioms constr =
   in
   match ty with
   | Prod(_) ->
-     let ax =
+     begin
        if !opt_closure_guards || opt_injectivity_guards then
          prop_to_formula [] (hlp ty ty [] [] [])
        else
          hlp2 [] ty ty [] [] []
-     in
+     end >>= fun ax ->
      add_axiom (mk_axiom ("$_inj_" ^ constr) ax)
   | _ ->
-    ()
+     return ()
 
 and add_discrim_axioms constr1 constr2 =
   debug 2 (fun () -> print_endline ("add_discrim_axioms: " ^ constr1 ^ ", " ^ constr2));
@@ -930,32 +972,34 @@ and add_discrim_axioms constr1 constr2 =
   let rec hlp2 ctx ty1 ty2 args1 args2 =
     match ty1, ty2 with
     | Prod(name1, lty1, value1), _ ->
-      let lname1 = refresh_varname name1
-      in
-      let lvalue1 = simple_subst name1 (Var(lname1)) value1
-      in
-      mk_forall lname1 type_any (hlp2 ((lname1, lty1) :: ctx) lvalue1 ty2
-                                   (Var(lname1) :: args1) args2)
+       let lname1 = refresh_varname name1
+       in
+       let lvalue1 = simple_subst name1 (Var(lname1)) value1
+       in
+       (hlp2 ((lname1, lty1) :: ctx) lvalue1 ty2
+          (Var(lname1) :: args1) args2) >>= fun r ->
+       return (mk_forall lname1 type_any r)
     | _, Prod(name2, lty2, value2) ->
-      let lname2 = refresh_varname name2
-      in
-      let lvalue2 = simple_subst name2 (Var(lname2)) value2
-      in
-      mk_forall lname2 type_any (hlp2 ((lname2, lty2) :: ctx) ty1 lvalue2
-                                   args1 (Var(lname2) :: args2))
+       let lname2 = refresh_varname name2
+       in
+       let lvalue2 = simple_subst name2 (Var(lname2)) value2
+       in
+       (hlp2 ((lname2, lty2) :: ctx) ty1 lvalue2
+          args1 (Var(lname2) :: args2)) >>= fun r ->
+       return (mk_forall lname2 type_any r)
     | _ ->
-      prop_to_formula ctx
-        (mk_not
-           (mk_eq
-              (mk_long_app (Const(constr1)) (List.rev args1))
-              (mk_long_app (Const(constr2)) (List.rev args2))))
+       prop_to_formula ctx
+         (mk_not
+            (mk_eq
+               (mk_long_app (Const(constr1)) (List.rev args1))
+               (mk_long_app (Const(constr2)) (List.rev args2))))
   in
-  let ax =
+  begin
     if !opt_closure_guards || opt_discrimination_guards then
       prop_to_formula [] (hlp ty1 ty2 [] [])
     else
       hlp2 [] ty1 ty2 [] []
-  in
+  end >>= fun ax ->
   add_axiom (mk_axiom ("$_discrim_" ^ constr1 ^ "$" ^ constr2) ax)
 
 and add_inversion_axioms is_prop indname constrs =
@@ -991,34 +1035,46 @@ and add_def_axioms ((name, value, ty, srt) as def) =
   debug 2 (fun () -> print_endline ("add_def_axioms: " ^ name));
   match value with
   | IndType(_, constrs, _) ->
-    if srt = SortProp then
-      add_axiom (mk_axiom name (prop_to_formula [] ty))
-    else
-      begin
-        if Coq_typing.check_type_target_is_prop ty then
-          begin
-            if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
-              add_inversion_axioms true name constrs;
-            if not opt_omit_toplevel_prop_typing_axioms then
-              add_typing_axiom name ty
-          end
+     if srt = SortProp then
+       (prop_to_formula [] ty) >>= fun r ->
+       add_axiom (mk_axiom name r)
+     else
+       begin
+         if Coq_typing.check_type_target_is_prop ty then
+           begin
+             begin
+               if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
+                 add_inversion_axioms true name constrs
+               else
+                 return ()
+             end >>
+             if not opt_omit_toplevel_prop_typing_axioms then
+               add_typing_axiom name ty
+             else
+               return ()
+           end
         else
           begin
-            List.iter add_injection_axioms constrs;
-            iter_pairs add_discrim_axioms constrs;
-            add_typing_axiom name ty;
+            List.fold_left (fun acc c -> add_injection_axioms c >> acc) (return ()) constrs >>
+            List.fold_left (fun acc (c1, c2) -> add_discrim_axioms c1 c2) (return ()) (Hhlib.mk_pairs constrs) >>
+            add_typing_axiom name ty >>
             if opt_inversion_axioms then
               add_inversion_axioms false name constrs
-          end;
+            else
+              return ()
+          end
       end
   | _ ->
-    if srt = SortProp then
-      add_axiom (mk_axiom name (prop_to_formula [] ty))
-    else
-      begin
-        add_typing_axiom name ty;
-        add_def_eq_axiom def
-      end
+     if srt = SortProp then
+       begin
+         prop_to_formula [] ty >>= fun r ->
+         add_axiom (mk_axiom name r)
+       end
+     else
+       begin
+         add_typing_axiom name ty >>
+         add_def_eq_axiom def
+       end
 
 (***************************************************************************************)
 (* Axioms hash *)
@@ -1041,12 +1097,9 @@ end
 
 let translate name =
   log 1 ("translate: " ^ name);
-  clear_axioms ();
-  add_def_axioms (Defhash.find name);
-  let axs = axioms ()
+  let axs = extract_axioms (add_def_axioms (Defhash.find name))
   in
-  clear_axioms ();
-  axs
+  Hhlib.sort_uniq (fun x y -> Pervasives.compare (fst x) (fst y)) axs
 
 let retranslate lst =
   List.iter

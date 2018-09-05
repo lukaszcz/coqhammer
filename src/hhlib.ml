@@ -2,6 +2,14 @@ module StringSet = Set.Make(String)
 
 let strset_from_lst lst = List.fold_left (fun a x -> StringSet.add x a) StringSet.empty lst
 
+let mk_pairs lst =
+  let rec hlp lst acc =
+    match lst with
+    | h :: t -> hlp t (List.fold_left (fun a x -> (h, x) :: a) acc t)
+    | [] -> acc
+  in
+  hlp lst []
+
 (* numbers from m up to but not including n *)
 let range m n =
   let rec go acc i j =

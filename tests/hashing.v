@@ -49,6 +49,13 @@ Proof.
   hammer.
 Qed.
 
+Lemma lem_type_3 : forall P : Type -> Prop,
+    P (nat -> nat -> nat) ->
+    P (nat -> nat -> nat).
+Proof.
+  hammer.
+Qed.
+
 Lemma lem_forall_conj_trivial {A : Type} (l : list A) (f g : A -> A) (P : A -> Prop) :
   Forall (fun x => P (f x)) l -> Forall (fun x => P (g x)) l -> Forall (fun x => P (g x)) l /\ Forall (fun x => P (f x)) l.
 Proof.
