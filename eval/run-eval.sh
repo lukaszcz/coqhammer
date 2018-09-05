@@ -1,9 +1,6 @@
 #!/bin/bash
 
-./gen-atp.sh $1
-if [ -n "$2" ]; then
-    echo "" | mail -s "ATP problem generation finished" "$2"
-fi
+./gen-atp.sh $1 $2
 cd atp
 ./run-provers.sh $1 $2
 cd ..

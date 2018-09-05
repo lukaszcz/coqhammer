@@ -39,7 +39,7 @@ Otherwise follow all steps below.
    edited manually to make them compile with `coqc`. The errors may be
    viewed in the `check.log` file.
 
-6. `./gen-atp.sh N`
+6. `./gen-atp.sh N [your.mail@mail.com]`
 
    After running this command the generated ATP problems are in the
    `atp/problems/` directory.
