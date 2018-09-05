@@ -131,14 +131,19 @@ let coq_axioms = [
   ("_HAMMER_COQ_TRUE", Const("$True"));
   ("_HAMMER_COQ_FALSE", App(Const("~"), Const("$False")));
   ("_HAMMER_COQ_PROP_TYPE", mk_hastype (Const("Prop")) (Const("Type")));
-  ("_HAMMER_COQ_SET_TYPE", mk_hastype (Const("Set")) (Const("Type")));
-  ("_HAMMER_COQ_TYPE_TYPE", mk_hastype (Const("Type")) (Const("Type")));
-  ("_HAMMER_COQ_SET_SUB_TYPE",
-   mk_forall "X" type_any
-     (mk_impl
-        (mk_hastype (Var("X")) (Const("Set")))
-        (mk_hastype (Var("X")) (Const("Type")))))
-]
+  ("_HAMMER_COQ_TYPE_TYPE", mk_hastype (Const("Type")) (Const("Type")))
+] @
+  if opt_set_to_type then
+    []
+  else
+    [
+      ("_HAMMER_COQ_SET_TYPE", mk_hastype (Const("Set")) (Const("Type")));
+      ("_HAMMER_COQ_SET_SUB_TYPE",
+       mk_forall "X" type_any
+         (mk_impl
+            (mk_hastype (Var("X")) (Const("Set")))
+            (mk_hastype (Var("X")) (Const("Type")))))
+    ]
 
 (***************************************************************************************)
 (* Coqterms hash *)

@@ -18,7 +18,7 @@ let to_coqsort kind =
   match kind with
   | Comb(Id "$Sort", Id "$Prop") -> SortProp
   | Comb(Id "$Sort", Id "$Type") -> SortType
-  | Comb(Id "$Sort", Id "$Set") -> SortSet
+  | Comb(Id "$Sort", Id "$Set") -> if opt_set_to_type then SortType else SortSet
   | _ -> SortType
 (* the last case may happen with e.g.: Let U := Type. Variable A : U. Variable x : A. *)
 
@@ -146,7 +146,7 @@ let rec to_coqterm tm =
     SortProp
 
   | Comb(Id "$Sort", Id "$Set") ->
-    SortSet
+    if opt_set_to_type then SortType else SortSet
 
   | Comb(Id "$Sort", Id "$Type") ->
     SortType

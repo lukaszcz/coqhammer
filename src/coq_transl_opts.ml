@@ -47,6 +47,8 @@ let opt_hastype = true
 let opt_precise_inversion = true
 (* should guard types be lifted? *)
 let opt_type_lifting = true
+(* should translate Set to Type? *)
+let opt_set_to_type = true
 
 (***************************************************************************************)
 (* Debugging *)
