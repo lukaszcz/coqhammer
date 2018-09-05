@@ -718,7 +718,7 @@ END
 
 let hammer_hook_tac prefix name =
   let premises = [("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
-                  ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
+                  ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
   and provers = [("vampire", Provers.extract_vampire_data); ("eprover", Provers.extract_eprover_data);
                  ("z3", Provers.extract_z3_data); ("cvc4", Provers.extract_cvc4_data)]
   in
