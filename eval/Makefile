@@ -18,15 +18,12 @@ logs/check/%.log: problems/%.v
 atp: $(patsubst problems/%.v,logs/atp/%.log,$(FFILES))
 logs/atp/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	coqc -Q tests "" "$<" > "$@" 2>&1
+	coqc "$<" > "$@" 2>&1
 
 reconstr: $(patsubst problems/%.v,logs/reconstr/%.log,$(FFILES))
 logs/reconstr/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	coqc -Q tests "" "$<" > "$@" 2>&1
-
-tests:
-	cd tests && $(MAKE)
+	coqc "$<" > "$@" 2>&1
 
 clean-vo:
 	rm -f $(OFILES)
