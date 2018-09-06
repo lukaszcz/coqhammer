@@ -69,7 +69,7 @@ Proof.
   - hammer_hook "arith" "arith.even_odd_cor.subgoal_1".
     Reconstr.reasy (@Coq.Init.Peano.plus_O_n) Reconstr.Empty.
   - hammer_hook "arith" "arith.even_odd_cor.subgoal_2".
-    Reconstr.rsimple (@Coq.Arith.PeanoNat.Nat.add_succ_l, @Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_l) Reconstr.Empty.
+    Reconstr.rsimple (@Coq.Arith.PeanoNat.Nat.add_succ_l, @Coq.Init.Peano.plus_n_O, @Coq.Init.Peano.plus_n_Sm) Reconstr.Empty.
 Qed.
 
 Lemma le_double : forall m n:nat, 2 * m <= 2 * n -> m <= n.

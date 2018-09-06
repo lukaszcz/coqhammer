@@ -10,6 +10,9 @@ let mk_pairs lst =
   in
   hlp lst []
 
+let mk_all_pairs lst1 lst2 =
+  List.fold_left (fun a x -> List.fold_left (fun a y -> (x, y) :: a) a lst2) [] lst1
+
 (* numbers from m up to but not including n *)
 let range m n =
   let rec go acc i j =

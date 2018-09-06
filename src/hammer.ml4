@@ -758,55 +758,57 @@ let hammer_hook_tac prefix name =
             end
           else if str = "reconstr" then
             begin
-              List.iter
-                begin fun (prover, extract) ->
-                  List.iter
-                    begin fun (prem_sel, prem_num) ->
-                      let str = prover ^ "-" ^ prem_sel  ^ "-" ^ string_of_int prem_num
-                      in
-                      let dir = "atp/o/" ^ str
-                      and odir = "out/" ^ str
-                      in
-                      let fname = dir ^ "/" ^ name ^ ".p"
-                      and ofname =  odir ^ "/" ^ name ^ ".out"
-                      in
-                      ignore (Sys.command ("mkdir -p " ^ odir));
-                      if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
-                        not (Sys.file_exists ofname)
-                      then
-                        let pid = Unix.fork () in
-                        if pid = 0 then
-                          begin
-                            try
-                              Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
-                              let info = extract fname in
-                              let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
-                              ignore begin
-                                run_tactics deps defs args
-                                  begin fun tac deps defs ->
-                                    let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
-                                    ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                                    Msg.info msg
-                                  end
-                                  begin fun () ->
-                                    let msg = "Failure " ^ name ^ " " ^ str in
-                                    ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                                    Msg.info msg
-                                  end
-                              end;
-                              exit 0
-                            with (HammerError s) ->
-                              Msg.info s; exit 1
-                          end
-                        else
-                          begin
-                            ignore (Unix.waitpid [] pid)
-                          end
-                    end
-                    premises
-                end
-                provers;
-              ltac_apply "idtac" []
+              let rec hlp lst =
+                match lst with
+                | ((prem_sel, prem_num), (prover, extract)) :: lst2 ->
+                   begin
+                     let str = prover ^ "-" ^ prem_sel  ^ "-" ^ string_of_int prem_num
+                     in
+                     let dir = "atp/o/" ^ str
+                     and odir = "out/" ^ str
+                     in
+                     let fname = dir ^ "/" ^ name ^ ".p"
+                     and ofname =  odir ^ "/" ^ name ^ ".out"
+                     in
+                     ignore (Sys.command ("mkdir -p " ^ odir));
+                     if Sys.command ("grep -q -s \"SZS status Theorem\" \"" ^ fname ^ "\"") = 0 &&
+                       not (Sys.file_exists ofname)
+                     then
+                       let pid = Unix.fork () in
+                       if pid = 0 then
+                         begin
+                           try
+                             Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
+                             let info = extract fname in
+                             let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
+                             run_tactics deps defs args
+                               begin fun tac deps defs ->
+                                 let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
+                                 ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                                 Msg.info msg;
+                                 exit 0
+                               end
+                               begin fun () ->
+                                 let msg = "Failure " ^ name ^ " " ^ str in
+                                 ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                                 Msg.info msg;
+                                 exit 1
+                               end
+                           with (HammerError s) ->
+                             Msg.info s; exit 1
+                         end
+                       else
+                         begin
+                           ignore (Unix.waitpid [] pid);
+                           hlp lst2
+                         end
+                     else
+                       hlp lst2
+                   end
+                | [] ->
+                   ltac_apply "idtac" []
+              in
+              hlp (Hhlib.mk_all_pairs premises provers)
             end
           else
             failwith ("Unknown option in coqhammer.opt: " ^ str)
