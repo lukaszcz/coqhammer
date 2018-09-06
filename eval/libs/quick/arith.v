@@ -84,6 +84,12 @@ Proof.
   Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.mul_le_mono_pos_l) (@Coq.Init.Peano.gt).
 Qed.
 
+Lemma lem_lt_le_trans : forall m n, m + 1 > m - n.
+Proof.
+  hammer_hook "arith" "arith.lem_lt_le_trans".
+  Reconstr.rsimple (@Coq.Arith.PeanoNat.Nat.sub_0_le, @Coq.Arith.PeanoNat.Nat.lt_succ_r, @Coq.Arith.PeanoNat.Nat.le_sub_l, @Coq.Arith.PeanoNat.Nat.le_ge_cases, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.sub_succ_l) (@Coq.Init.Peano.gt, @Coq.Init.Peano.lt).
+Qed.
+
 Lemma leb_compare2 : forall m n : nat,
                       PeanoNat.Nat.leb n m = true <->
                       (PeanoNat.Nat.compare n m = Lt \/ PeanoNat.Nat.compare n m = Eq).

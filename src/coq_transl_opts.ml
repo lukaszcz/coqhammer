@@ -5,6 +5,9 @@ let opt_debug_level = 0
 (* should guards be generated from types of free variables?
    opt_closure_guards = true implies opt_lambda_guards = true *)
 let opt_closure_guards = ref false
+(* should the translation be simplified, making it less complete but
+   possibly more efficient? *)
+let opt_simple_transl = ref false
 (* should guards be generated from types of lambda-bound variables? *)
 let opt_lambda_guards = false
 (* should guards be generated for injectivity axioms? *)
@@ -24,8 +27,6 @@ let opt_always_zero_arity = true
 let opt_inversion_axioms = true
 (* should inversion axioms be added for inductive predicates? *)
 let opt_prop_inversion_axioms = true
-(* should axioms be added for the combinators S and K? *)
-let opt_combinator_axioms = false
 (* should simplify input? *)
 let opt_simpl = true
 (* should add induction principles? *)

@@ -72,7 +72,7 @@ let get_types lst =
            in
            let tgt = Coq_typing.get_type_app_target (Coqterms.coqdef_type (Defhash.find s)) in
            match tgt with
-           | Const(x) -> x
+           | Coqterms.Const(x) -> x
            | _ -> "$none"
          with _ ->
            "$none"

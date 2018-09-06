@@ -130,7 +130,6 @@ let extract_axioms m = (snd m) []
 let coq_axioms = [
   ("_HAMMER_COQ_TRUE", Const("$True"));
   ("_HAMMER_COQ_FALSE", App(Const("~"), Const("$False")));
-  ("_HAMMER_COQ_PROP_TYPE", mk_hastype (Const("Prop")) (Const("Type")));
   ("_HAMMER_COQ_TYPE_TYPE", mk_hastype (Const("Type")) (Const("Type")))
 ] @
   if opt_set_to_type then
@@ -277,7 +276,7 @@ let rec mk_guards ctx vars tm =
      tm
 
 (* The following mutually recursively defined functions return
-   (coqterm axioms_monad) or (unit axioms_monad).  *)
+   (coqterm axioms_monad) or (unit axioms_monad). *)
 
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
   (* Note: the correctness of calling `prop_to_formula' below

@@ -399,17 +399,6 @@ let write_fol what out (name, formula) =
   write_fol_formula out formula;
   out ").\n"
 
-let write_comb_axioms out =
-  write_fol "axiom" out
-    ("__K_axiom",
-     (mk_long_forall [("X",type_any); ("Y", type_any)]
-        (mk_eq (App(App(Const("$K"), Var("X")), Var("Y"))) (Var("X")))));
-  write_fol "axiom" out
-    ("__S_axiom",
-     (mk_long_forall [("X",type_any); ("Y", type_any); ("Z", type_any)]
-        (mk_eq (App(App(App(Const("$S"), Var("X")), Var("Y")), Var("Z")))
-           (App(App(Var("X"), Var("Z")), App(Var("Y"), Var("Z")))))))
-
 let write_mult_arity_axioms out =
   let do_write k v n m =
     let rec hlp lst n =
@@ -527,15 +516,11 @@ let write_fol_problem out axioms thm =
       build_pred_hash (snd thm)
     end;
   List.iter (write_fol "axiom" out) axioms;
-  if opt_combinator_axioms then
-    begin
-      write_comb_axioms out
-    end;
-  if opt_multiple_arity_optimization then
+  if opt_multiple_arity_optimization && not !opt_simple_transl then
     begin
       write_mult_arity_axioms out
     end;
-  if opt_hastype then
+  if opt_hastype && not !opt_simple_transl then
     begin
       write_type_axioms out
     end;
