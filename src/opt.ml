@@ -202,16 +202,6 @@ let _ =
   in
   declare_bool_option gdopt
 
-let _ =
-  let gdopt=
-    { optdepr=false;
-      optname="Hammer SimpleTransl";
-      optkey=["Hammer";"SimpleTransl"];
-      optread=(fun () -> !Coq_transl_opts.opt_simple_transl);
-      optwrite=(fun b -> Coq_transl_opts.opt_simple_transl := b)}
-  in
-  declare_bool_option gdopt
-
 let filter_program = ref true
 
 let _ =

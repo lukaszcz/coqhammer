@@ -516,11 +516,11 @@ let write_fol_problem out axioms thm =
       build_pred_hash (snd thm)
     end;
   List.iter (write_fol "axiom" out) axioms;
-  if opt_multiple_arity_optimization && not !opt_simple_transl then
+  if opt_multiple_arity_optimization then
     begin
       write_mult_arity_axioms out
     end;
-  if opt_hastype && not !opt_simple_transl then
+  if opt_hastype then
     begin
       write_type_axioms out
     end;
