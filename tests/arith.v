@@ -4,6 +4,7 @@ Hammer_version.
 Hammer_objects.
 
 Set Hammer CrushLimit 0.
+Set Hammer GSMode 6.
 
 Require Import Arith.
 

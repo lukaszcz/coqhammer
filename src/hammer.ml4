@@ -407,25 +407,29 @@ let run_tactics deps defs args msg_success msg_fail =
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
     let greedy_sequence =
-      [("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
-       ("Z3 (knn-128)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 128);
-       ("Eprover (knn-1024)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 1024);
-       ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
-       ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
-       ("Z3 (nbayes-512)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 512);
+      [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
+       ("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
+       ("CVC4 (knn-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
+       ("CVC4 (knn-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 256);
+       ("Vampire (nbayes-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 64);
+       ("CVC4 (nbayes-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 256);
+       ("Eprover (nbayes-64)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 64);
        ("Z3 (nbayes-128)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
-       ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
-       ("Z3 (nbayes-16)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 16);
-       ("Eprover (nbayes-1024)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 1024);
-       ("Vampire (nbayes-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 256);
+       ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
+       ("CVC4 (nbayes-32)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 32);
+       ("CVC4 (nbayes-1024)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 1024);
+       ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
+       ("Vampire (nbayes-128)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 128);
+       ("Eprover (knn-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 128);
+       ("Vampire (nbayes-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
        ("Z3 (knn-64)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
-       ("Eprover (nbayes-512)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 512);
-       ("Eprover (nbayes-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 128);
-       ("Vampire (knn-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 32);
        ("Vampire (knn-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
-       ("Vampire (knn-16)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 16);
-       ("Vampire (knn-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64)]
+       ("Eprover (nbayes-32)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 32);
+       ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
+       ("CVC4 (nbayes-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 64);
+       ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
+       ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
+       ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
     in
     let fname = Features.extract hyps deps goal in
     let jobs =

@@ -4,7 +4,7 @@ Requirements
 ------------
 
 - [Coq 8.8](https://coq.inria.fr/download)
-- automated provers ([Eprover](http://www.eprover.org), [Vampire](https://vprover.github.io/download.html), and/or [Z3](https://github.com/Z3Prover/z3/releases))
+- automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
 ------------
@@ -61,16 +61,22 @@ Installation of first-order provers
 -----------------------------------
 
 To use the plugin you need at least one of the following ATPs
-available in the path: Eprover (`eprover`), Vampire (`vampire`), Z3
-(`z3_tptp`). It is recommended to have all three ATPs.
-
-Eprover may be downloaded from http://www.eprover.org.
-Vampire may be downloaded from https://vprover.github.io.
-Z3 may be downloaded from https://github.com/Z3Prover/z3/releases.
+available in the path (under the command name in brackets): Vampire
+(`vampire`), CVC4 (`cvc4`), Eprover (`eprover`), Z3 (`z3_tptp`). It is
+recommended to have all four ATPs, or at least Vampire and CVC4.
 
 Note that the default version of Z3 does not support the TPTP format.
 You need to compile a TPTP frontend located in `examples/tptp` in the Z3
 source package.
+
+CVC4 needs to be version 1.6 or later. Earlier versions do not fully
+support the TPTP format.
+
+The websites for the provers are:
+- Vampire: https://vprover.github.io.
+- CVC4: http://cvc4.cs.stanford.edu.
+- Eprover: http://www.eprover.org.
+- Z3: https://github.com/Z3Prover/z3/releases.
 
 Tactics
 -------
@@ -161,7 +167,7 @@ Set Hammer ReconstrLimit n.
 Set Hammer CrushLimit n.
 (* before invoking external ATPs the hammer first tries to solve the
    goal using a crush-like tactic with a time limit of n seconds; default: 1s *)
-Set/Unset Hammer Eprover/Vampire/Z3.
+Set/Unset Hammer Vampire/CVC4/Eprover/Z3.
 Set Hammer PredictPath "/path/to/predict". (* default: "predict" *)
 Set/Unset Hammer FilterProgram.
 (* ignore dependencies from Coq.Program.*, default: on *)
