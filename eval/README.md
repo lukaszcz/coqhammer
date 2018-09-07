@@ -5,10 +5,10 @@ Let `N` be the number of parallel jobs to execute. Unless otherwise
 stated, execute all commands in the `eval/` directory.
 
 If the library to evaluate is one of the libraries already prepared in
-the `libs/` directory, then just do:
+the `../deps/libs/` directory, then just do:
 
 ```bash
-ln -s libs/library problems
+ln -s ../deps/libs/library problems
 ./run-eval.sh N [your.mail@mail.com]
 ```
 

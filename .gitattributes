@@ -1,2 +1,2 @@
 .* export-ignore
-deps/libs export-ignore
+deps export-ignore
