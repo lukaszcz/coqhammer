@@ -120,6 +120,27 @@ let (>>=) = bind
 let (>>) m1 m2 = bind m1 (fun _ -> m2)
 let lift f m = m >>= fun x -> return (f x)
 
+let listM_nth lst n =
+  let rec pom lst n acc x =
+    match lst with
+    | [] -> return x
+    | h :: t ->
+       if n = 0 then
+         begin
+           acc >> h >>= fun r ->
+           pom t (n - 1) (return r) r
+         end
+       else
+         pom t (n - 1) (acc >> h) x
+  in
+  match lst with
+  | [] -> failwith "listM_nth"
+  | h :: t ->
+     begin
+       h >>= fun r ->
+       pom t n (return r) r
+     end
+
 let add_axiom ax =
   log 3 ("add_axiom: " ^ fst ax);
   ((), fun axs -> ax :: axs)
@@ -385,7 +406,7 @@ and fix_lifting axname dname fvars lvars tm =
                            (if Coq_typing.check_prop [] ty2 then SortProp else SortType))
           with _ -> ())
         names2 types;
-      List.nth
+      listM_nth
         (List.map2
            (fun (axname2, name2) body ->
              lambda_lifting axname2 name2 fvars lvars (prep body))
