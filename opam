@@ -19,6 +19,7 @@ depends: [ "coq" {((>= "8.8" & < "8.9~") | (= "dev"))} ]
 tags: [ "keyword:automation" ]
 
 authors: [
-  "Lukasz Czajka <>"
-  "Cezary Kaliszyk <>"
+  "Lukasz Czajka <lukaszcz@mimuw.edu.pl>"
+  "Cezary Kaliszyk <cezary.kaliszyk@uibk.ac.at>"
+  "Burak Ekici <burak.ekici@uibk.ac.at>"
 ]
