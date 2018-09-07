@@ -1,2 +1,2 @@
 .* export-ignore
-eval/libs export-ignore
+deps/libs export-ignore
