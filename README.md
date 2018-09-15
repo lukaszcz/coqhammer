@@ -6,15 +6,25 @@ Requirements
 - [Coq 8.8](https://coq.inria.fr/download)
 - automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
-Installation
-------------
+Installation via OPAM
+---------------------
 
-To build and install CoqHammer, run `make` followed by `make
+The latest release of CoqHammer is most easily installed via
+[OPAM](https://opam.ocaml.org/):
+```
+opam repo add coq-released https://coq.inria.fr/opam/released
+opam install coq-hammer
+```
+
+To fully use CoqHammer, you will also need some automated provers
+installed. More information about provers is provided below.
+
+Manual Installation
+-------------------
+
+To build and install CoqHammer manually, run `make` followed by `make
 install`. Then optionally run `make tests` to check if everything
 works.
-
-To use CoqHammer you will also need some automated provers
-installed. More information about provers is provided below.
 
 The plugin has been tested on Linux and MacOS X. On MacOS X you need
 `grep` available in the path. You also need the GNU C and C++
