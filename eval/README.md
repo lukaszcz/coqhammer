@@ -4,11 +4,12 @@ How to evaluate a new Coq library?
 Let `N` be the number of parallel jobs to execute. Unless otherwise
 stated, execute all commands in the `eval/` directory.
 
-If the library to evaluate is one of the libraries already prepared in
-the `../deps/libs/` directory, then just do:
+Some libraries prepared for evaluation are available at
+https://github.com/lukaszcz/coqhammer-eval.git. If the library to
+evaluate is already prepared (according to steps 1-5 below), then put
+it in the `problems/` subdirectory and do:
 
 ```bash
-ln -s ../deps/libs/library problems
 ./run-eval.sh N [your.mail@mail.com]
 ```
 
