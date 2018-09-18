@@ -1,4 +1,4 @@
-CoqHammer (github-master) for Coq 8.8
+CoqHammer (dev) for Coq 8.8
 
 Requirements
 ------------
@@ -194,19 +194,6 @@ Set/Unset Hammer ClosureGuards.
    use functional extensionality and get many unreconstructible
    proofs; default: off *)
 ```
-
-Bugs
-----
-
-In case you encounter any bugs, report them to:
-lukaszcz@mimuw.edu.pl. Include a minimal reproducible example of the
-bug.
-
-Known bugs
-----------
-
-Occasionally, the hammer tactic hangs. The authors believe that this
-is due to an error in Coq's `timeout` tactical.
 
 Debugging
 ---------
