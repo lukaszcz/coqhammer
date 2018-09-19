@@ -24,27 +24,6 @@ open Tacarg
 
 let (++) f g x = f(g(x))
 
-let mkdir s =
-  try Unix.mkdir s 0o777 with Unix.Unix_error (Unix.EEXIST,_,_) -> ()
-
-let rec mkdir_rec s =
-  if s = "." || s = ".." || s = "" || s = "/" then ()
-  else (mkdir_rec (Filename.dirname s); mkdir s)
-
-let append file str =
-  let oc = open_out_gen [Open_creat; Open_text; Open_append] 0o640 file in
-  output_string oc str;
-  close_out oc
-
-let export_statement dir (file,str) =
-  let fileo = match dir with
-             | None -> "./" ^ file ^ ".p"
-             | Some s -> s ^ "/" ^ file ^ ".p"
-  in
-  let diro = Filename.dirname fileo in
-  mkdir_rec diro;
-  append fileo (str ^ "\n")
-
 (***************************************************************************************)
 
 let mk_id x = Hh_term.Id x
@@ -250,9 +229,6 @@ let my_search () =
     end
     (List.rev !ans)
 
-let my_print_refl dir l : unit =
-  List.iter (export_statement dir) l
-
 let unique_hhdefs hhdefs =
   let hash = Hashtbl.create 128 in
   List.filter
@@ -267,15 +243,6 @@ let unique_hhdefs hhdefs =
         end
     end
     hhdefs
-
-let all_objects dir =
-  my_print_refl dir
-    (List.map string_of_hhdef_2
-       (unique_hhdefs (List.map hhdef_of_global (my_search ()))))
-
-VERNAC COMMAND EXTEND Hammer_plugin_all_objects CLASSIFIED AS QUERY
-| [ "Hammer_export" string(dir)] -> [ all_objects (Some dir) ]
-END
 
 let get_defs () : Hh_term.hhdef list =
   List.map snd (unique_hhdefs

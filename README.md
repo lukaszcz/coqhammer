@@ -52,9 +52,8 @@ command                          | description
 -------------------------------- | ------------------------------------
 `hammer`                         |  Runs the hammer tactic.
 `predict n`                      |  Prints n dependencies for the current goal predicted by the machine-learning premise selection.
-`Hammer_cleanup`                 |  Resets the hammer cache.
-`Hammer_export Dir "dir"`        |  Exports all visible objects to dir.
 `Hammer_version`                 |  Prints the version of CoqHammer.
+`Hammer_cleanup`                 |  Resets the hammer cache.
 
 More actual examples are given in the [`examples`](examples) directory.
 
