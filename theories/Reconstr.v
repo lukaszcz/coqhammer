@@ -964,7 +964,7 @@ Ltac yelles0 defs n rtrace gtrace :=
         | [ |- _ ] =>
           solve [ isolve ]
         | [ |- _ ] =>
-          solve [ econstructor; yelles0 defs k rtrace (gtrace, G) ]
+          solve [ econstructor; cbn; yelles0 defs k rtrace (gtrace, G) ]
         | [ H : forall x y z u v, _ _ |- _ _ ] =>
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ H : forall x y z u v w, _ _ |- _ _ ] =>
@@ -1062,9 +1062,9 @@ Ltac yelles1 defs n :=
   repeat (yintros; repeat ysplit);
   doyelles defs n.
 
-Ltac yellesd defs n := cbn; unshelve yelles1 defs n; dsolve.
+Ltac yellesd defs n := cbn in *; unshelve yelles1 defs n; dsolve.
 
-Ltac yelles n := cbn; unshelve yelles1 Empty n; dsolve.
+Ltac yelles n := cbn in *; unshelve yelles1 Empty n; dsolve.
 
 Ltac yauto n := generalizing; yelles n.
 

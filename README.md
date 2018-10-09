@@ -71,18 +71,14 @@ available in the path (under the command name in brackets): Vampire
 (`vampire`), CVC4 (`cvc4`), Eprover (`eprover`), Z3 (`z3_tptp`). It is
 recommended to have all four ATPs, or at least Vampire and CVC4.
 
-Note that the default version of Z3 does not support the TPTP format.
-You need to compile a TPTP frontend located in `examples/tptp` in the Z3
-source package.
-
-CVC4 needs to be version 1.6 or later. Earlier versions do not fully
-support the TPTP format.
-
 The websites for the provers are:
 - Vampire: https://vprover.github.io.
-- CVC4: http://cvc4.cs.stanford.edu.
+- CVC4: http://cvc4.cs.stanford.edu. CVC4 needs to be version 1.6 or
+later. Earlier versions do not fully support the TPTP format.
 - Eprover: http://www.eprover.org.
-- Z3: https://github.com/Z3Prover/z3/releases.
+- Z3: https://github.com/Z3Prover/z3/releases. Note that the default
+version of Z3 does not support the TPTP format. You need to compile a
+TPTP frontend located in `examples/tptp` in the Z3 source package.
 
 Tactics
 -------
