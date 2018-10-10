@@ -16,7 +16,7 @@ open Term
 open Libnames
 open Globnames
 open Nametab
-open Misctypes
+open Constr
 
 open Ltac_plugin
 open Stdarg
@@ -254,7 +254,7 @@ let get_tactic (s : string) =
 let get_tacexpr tac args =
   Tacexpr.TacArg(None,
                  Tacexpr.TacCall(None,
-                                 (Misctypes.ArgArg(None, get_tactic tac),
+                                 (Locus.ArgArg(None, get_tactic tac),
                                  args)))
 
 let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
@@ -263,7 +263,7 @@ let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
 let ltac_eval tac (args: Tacinterp.Value.t list) =
   let fold arg (i, vars, lfun) =
     let id = Id.of_string ("x" ^ string_of_int i) in
-    let x = Tacexpr.Reference (ArgVar CAst.(make @@ id)) in
+    let x = Tacexpr.Reference (Locus.ArgVar CAst.(make @@ id)) in
     (succ i, x :: vars, Id.Map.add id arg lfun)
   in
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
