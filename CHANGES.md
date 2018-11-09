@@ -19,6 +19,7 @@ list of hypotheses, and a different set of tactics is used.
 * Added `opam` support.
 * More consistent removal of temporary files.
 * Debugging commands.
+* Tests (`make test`).
 
 Technical details of improvements to the translation
 ----------------------------------------------------
@@ -28,20 +29,21 @@ Technical details of improvements to the translation
 ```coq
 forall f : nat -> nat, g : (nat -> nat) -> nat -> nat, ...
 ```
-    is translated to
+
+is translated to
 
 ```coq
 forall f, T1(f) -> forall g, T2(g) -> ...
 ```
 
-    with axioms
+with axioms
 
 ```coq
 forall f, T1(f) <-> forall x, nat(x) -> nat(f x)
 forall g, T2(g) <-> forall h, T1(h) -> forall x, nat(x) -> nat(g h x)
 ```
 
-    instead of translating this to
+instead of translating this to
 
 ```coq
 forall f, (forall x, nat(x) -> nat(f x)) -> forall g, (forall h,
