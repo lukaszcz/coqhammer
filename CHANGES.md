@@ -19,7 +19,7 @@ list of hypotheses, and a different set of tactics is used.
 * Added `opam` support.
 * More consistent removal of temporary files.
 * Debugging commands.
-* Tests (`make test`).
+* Tests (`make tests`).
 
 Technical details of improvements to the translation
 ----------------------------------------------------
