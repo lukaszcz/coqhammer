@@ -1,4 +1,4 @@
-CoqHammer 1.1 for Coq 8.8
+CoqHammer 1.1 for Coq 8.8 and Coq 8.9beta
 
 Requirements
 ------------
