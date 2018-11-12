@@ -288,6 +288,8 @@ Lemma leb_compare2 : forall m n : nat,
                       PeanoNat.Nat.leb n m = true <->
                       (PeanoNat.Nat.compare n m = Lt \/ PeanoNat.Nat.compare n m = Eq).
 Proof.
+  Set Hammer Debug.
+  hammer.
   (* hammer. Restart. *)
   (* Sometimes the tactics cannot reconstruct the goal, but the
   returned dependencies may still be used to create the proof
