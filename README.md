@@ -1,4 +1,4 @@
-CoqHammer (dev) for Coq master
+CoqHammer (dev) for Coq master (use other branches for other versions of Coq)
 
 Requirements
 ------------
