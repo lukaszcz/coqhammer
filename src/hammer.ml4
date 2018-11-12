@@ -1,6 +1,6 @@
 DECLARE PLUGIN "hammer_plugin"
 
-let hammer_version_string = "CoqHammer (dev) for Coq 8.8"
+let hammer_version_string = "CoqHammer (dev) for Coq master"
 
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
@@ -13,9 +13,7 @@ open Hammer_errors
 open Util
 open Names
 open Term
-open Libnames
 open Globnames
-open Nametab
 open Constr
 
 open Ltac_plugin
@@ -493,7 +491,7 @@ let try_tactic f =
     ltac_apply "idtac" []
 
 let try_goal_tactic f =
-  Proofview.Goal.nf_enter
+  Proofview.Goal.enter
     begin fun gl ->
       try_tactic (fun () -> f gl)
     end
@@ -501,7 +499,7 @@ let try_goal_tactic f =
 (***************************************************************************************)
 
 let hammer_tac () =
-  Proofview.Goal.nf_enter
+  Proofview.Goal.enter
     begin fun gl ->
         Proofview.tclOR
           (try_scrush ())
@@ -797,8 +795,6 @@ let hammer_hook_tac prefix name =
 TACTIC EXTEND Hammer_hook_tac
 | [ "hammer_hook" string(prefix) string(name) ] -> [ hammer_hook_tac prefix name ]
 END
-
-open Genarg
 
 let pr_taclist _ _ _ lst = Pp.pr_comma () (* TODO: LC: I haven't figured out how to print a tactic *)
 

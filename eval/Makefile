@@ -31,11 +31,10 @@ clean-vo:
 clean: clean-vo
 	rm -rf logs coqhammer.opt check.log gen_atp.log
 	cd tools && $(MAKE) clean
-	cd tests && $(MAKE) clean
 
 clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/.%.aux,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
-.PHONY: tests
+.PHONY: clean

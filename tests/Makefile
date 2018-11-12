@@ -13,4 +13,3 @@ arith.vo : arith.v
 
 clean:
 	-rm -f *.vo *.glob .*.aux
-

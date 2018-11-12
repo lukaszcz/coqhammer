@@ -1,8 +1,8 @@
-CoqHammer (dev) for Coq master (ea38cc10b1b3d81e2346de6b95076733ef4fd7bb)
+CoqHammer (dev) for Coq master
 
 Requirements
 ------------
-- [Coq master (ea38cc10b1b3d81e2346de6b95076733ef4fd7bb)](https://coq.inria.fr/download)
+- [Coq master](https://github.com/coq/coq)
 - automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
@@ -15,9 +15,10 @@ opam repo add coq-released https://coq.inria.fr/opam/released
 opam install coq-hammer
 ```
 
-To instead build and install CoqHammer manually, run `make` followed by `make
-install`. Then optionally run `make tests` to check if everything
-works.
+To instead build and install CoqHammer manually, run `make` followed
+by `make install`. Then optionally run `make tests` to check if
+everything works (some of the tests may fail if your machine is not
+fast enough or you do not have all provers installed).
 
 To use CoqHammer, you will also need some automated provers
 installed. More information about provers is provided below.
@@ -73,7 +74,9 @@ recommended to have all four ATPs, or at least Vampire and CVC4.
 The websites for the provers are:
 - Vampire: https://vprover.github.io.
 - CVC4: http://cvc4.cs.stanford.edu. CVC4 needs to be version 1.6 or
-later. Earlier versions do not fully support the TPTP format.
+later. Earlier versions do not fully support the TPTP format. It is
+recommended to have the better-performing GPL version of CVC4 instead
+of the BSD version.
 - Eprover: http://www.eprover.org.
 - Z3: https://github.com/Z3Prover/z3/releases. Note that the default
 version of Z3 does not support the TPTP format. You need to compile a

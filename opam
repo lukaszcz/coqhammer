@@ -14,9 +14,15 @@ remove: [
   ["sh" "-c" "rm -rf '%{lib}%/coq/user-contrib/Hammer'"]
   ["sh" "-c" "rm -f '%{bin}%/predict' '%{bin}%/htimeout'"]
 ]
-depends: [ "coq" {((>= "8.8" & < "8.9~") | (= "dev"))} ]
+depends: [
+  "coq" {(>= "8.8" & < "8.10~") | (= "dev")}
+]
 
-tags: [ "keyword:automation" ]
+tags: [
+  "category:Misc/Coq Extensions"
+  "keyword:automation"
+  "logpath:Hammer"
+]
 
 authors: [
   "Lukasz Czajka <lukaszcz@mimuw.edu.pl>"
