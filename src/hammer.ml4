@@ -13,10 +13,9 @@ open Hammer_errors
 open Util
 open Names
 open Term
-open Libnames
 open Globnames
-open Nametab
 open Misctypes
+open Constr
 
 open Ltac_plugin
 open Stdarg
