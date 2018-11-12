@@ -10,7 +10,7 @@ env:
   - NJOBS="2"
   - CONTRIB_NAME="coqhammer"
   matrix:
-  - COQ_IMAGE="coqorg/coq:dev"
+  - COQ_IMAGE="coqorg/coq:8.8"
 
 install: |
   # Prepare the COQ container
