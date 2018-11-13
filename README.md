@@ -1,9 +1,9 @@
-CoqHammer (dev) for Coq 8.8
+CoqHammer (dev) for Coq 8.9
 
 Requirements
 ------------
 
-- [Coq 8.8](https://coq.inria.fr/download)
+- [Coq 8.9](https://coq.inria.fr/download)
 - automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
