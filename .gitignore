@@ -18,6 +18,8 @@ Makefile.coq.conf
 *.cmx
 *.cmxs
 *.cmxa
+*.cmt
+*.cmti
 
 # ocamlbuild working directory
 _build/
@@ -29,3 +31,4 @@ _build/
 # oasis generated files
 setup.data
 setup.log
+/src/hammer.ml

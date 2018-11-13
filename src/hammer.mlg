@@ -1,5 +1,6 @@
 DECLARE PLUGIN "hammer_plugin"
 
+{
 let hammer_version_string = "CoqHammer (dev) for Coq master"
 
 open Feedback
@@ -158,7 +159,7 @@ let hhdef_of_global glob_ref : (string * Hh_term.hhdef) =
     | _ -> lazy (mk_id "$Axiom")
   in
   let filename =
-     let l = Str.split (Str.regexp "\.") filename_aux in
+     let l = Str.split (Str.regexp "\\.") filename_aux in
      Filename.dirname (String.concat "/" l)
   in
   (filename, (const, hhterm_of kind, lazy (hhterm_of ty), term))
@@ -526,10 +527,13 @@ let hammer_tac () =
           end
     end
 
+}
+
 TACTIC EXTEND Hammer_tac
-| [ "hammer" ] -> [ hammer_tac () ]
+| [ "hammer" ] -> { hammer_tac () }
 END
 
+{
 let predict_tac n pred_method =
   try_goal_tactic
     begin fun gl ->
@@ -562,14 +566,17 @@ let predict_tac n pred_method =
       ltac_apply "idtac" []
     end
 
+}
+
 TACTIC EXTEND Predict_tac_1
-| [ "predict" integer(n) ] -> [ predict_tac n !Opt.predict_method ]
+| [ "predict" integer(n) ] -> { predict_tac n !Opt.predict_method }
 END
 
 TACTIC EXTEND Predict_tac_2
-| [ "predict" integer(n) string(pred_method) ] -> [ predict_tac n pred_method ]
+| [ "predict" integer(n) string(pred_method) ] -> { predict_tac n pred_method }
 END
 
+{
 let hammer_features_tac () =
   try_goal_tactic
     begin fun gl ->
@@ -577,19 +584,23 @@ let hammer_features_tac () =
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
       ltac_apply "idtac" []
     end
+}
 
 TACTIC EXTEND Hammer_features_tac
-| [ "hammer_features" ] -> [ hammer_features_tac () ]
+| [ "hammer_features" ] -> { hammer_features_tac () }
 END
 
+{
 let hammer_cleanup () =
   Coq_transl.cleanup ();
   Features.cleanup ()
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_cleanup CLASSIFIED AS SIDEFF
-| [ "Hammer_cleanup" ] -> [ hammer_cleanup () ]
+| [ "Hammer_cleanup" ] -> { hammer_cleanup () }
 END
 
+{
 let hammer_print name =
   try
     let glob = get_global name in
@@ -600,11 +611,13 @@ let hammer_print name =
     Msg.notice (" : " ^ Hh_term.string_of_hhterm kind)
   with Not_found ->
     Msg.error ("Not found: " ^ name)
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_print CLASSIFIED AS QUERY
-| [ "Hammer_print" string(name) ] -> [ hammer_print name ]
+| [ "Hammer_print" string(name) ] -> { hammer_print name }
 END
 
+{
 let hammer_transl name0 =
   try
     let glob = get_global name0 in
@@ -620,11 +633,13 @@ let hammer_transl name0 =
       (Coq_transl.translate name)
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_transl CLASSIFIED AS QUERY
-| [ "Hammer_transl" string(name) ] -> [ hammer_transl name ]
+| [ "Hammer_transl" string(name) ] -> { hammer_transl name }
 END
 
+{
 let hammer_transl_tac () =
   try_goal_tactic
     begin fun gl ->
@@ -642,11 +657,13 @@ let hammer_transl_tac () =
         (Coq_transl.translate name);
       ltac_apply "idtac" []
     end
+}
 
 TACTIC EXTEND Hammer_plugin_transl_tac
-| [ "hammer_transl" ] -> [ hammer_transl_tac () ]
+| [ "hammer_transl" ] -> { hammer_transl_tac () }
 END
 
+{
 let hammer_features name =
   try
     let glob = get_global name in
@@ -654,11 +671,13 @@ let hammer_features name =
     Msg.notice (Hhlib.sfold (fun x -> x) ", " (Features.get_def_features def))
   with Not_found ->
     Msg.error ("Not found: " ^ name)
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_features CLASSIFIED AS QUERY
-| [ "Hammer_features" string(name) ] -> [ hammer_features name ]
+| [ "Hammer_features" string(name) ] -> { hammer_features name }
 END
 
+{
 let hammer_features_cached name =
   try
     let glob = get_global name in
@@ -666,25 +685,31 @@ let hammer_features_cached name =
     Msg.notice (Hhlib.sfold (fun x -> x) ", " (Features.get_def_features_cached def))
   with Not_found ->
     Msg.error ("Not found: " ^ name)
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_features_cached CLASSIFIED AS QUERY
-| [ "Hammer_features_cached" string(name) ] -> [ hammer_features_cached name ]
+| [ "Hammer_features_cached" string(name) ] -> { hammer_features_cached name }
 END
 
+{
 let hammer_objects () =
   Msg.info ("Found " ^ string_of_int (List.length (get_defs ())) ^ " accessible Coq objects.")
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_objects CLASSIFIED AS QUERY
-| [ "Hammer_objects" ] -> [ hammer_objects () ]
+| [ "Hammer_objects" ] -> { hammer_objects () }
 END
 
+{
 let hammer_version () =
   Msg.info hammer_version_string
+}
 
 VERNAC COMMAND EXTEND Hammer_plugin_version CLASSIFIED AS QUERY
-| [ "Hammer_version" ] -> [ hammer_version () ]
+| [ "Hammer_version" ] -> { hammer_version () }
 END
 
+{
 let hammer_hook_tac prefix name =
   let premises = [("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
                   ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
@@ -791,18 +816,23 @@ let hammer_hook_tac prefix name =
       Msg.notice ("Warning: " ^ s);
       ltac_apply "idtac" []
   end
+}
 
 TACTIC EXTEND Hammer_hook_tac
-| [ "hammer_hook" string(prefix) string(name) ] -> [ hammer_hook_tac prefix name ]
+| [ "hammer_hook" string(prefix) string(name) ] -> { hammer_hook_tac prefix name }
 END
 
+{
 let pr_taclist _ _ _ lst = Pp.pr_comma () (* TODO: LC: I haven't figured out how to print a tactic *)
 
-ARGUMENT EXTEND taclist TYPED AS tactic_list PRINTED BY pr_taclist
-| [ tactic3(tac) "|" taclist(l) ] -> [ tac :: l ]
-| [ tactic3(tac) ] -> [ [ tac ] ]
+}
+
+ARGUMENT EXTEND taclist TYPED AS tactic list PRINTED BY { pr_taclist }
+| [ tactic3(tac) "|" taclist(l) ] -> { tac :: l }
+| [ tactic3(tac) ] -> { [ tac ] }
 END
 
+{
 let partac_tac n lst =
   Partac.partac n (List.map (Tacinterp.tactic_of_value (Tacinterp.default_ist ())) lst)
     begin fun k tac ->
@@ -812,18 +842,19 @@ let partac_tac n lst =
         Msg.info "All tactics failed";
       tac
     end
+}
 
 TACTIC EXTEND Hammer_partac_tac
 | [ "partac" "[" taclist(lst) "]" ] ->
-   [ partac_tac max_int lst ]
+  { partac_tac max_int lst }
 END
 
 TACTIC EXTEND Hammer_partac1_tac
 | [ "partac" integer(n) "[" taclist(lst) "]" ] ->
-   [ partac_tac n lst ]
+  { partac_tac n lst }
 END
 
 TACTIC EXTEND Hammer_ptimeout_tac
 | [ "ptimeout" integer(n) tactic3(tac) ] ->
-   [ Timeout.ptimeout n (Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac) ]
+  { Timeout.ptimeout n (Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac) }
 END
