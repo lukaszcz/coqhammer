@@ -9,10 +9,11 @@ successfully found proofs. A typical use is to prove relatively simple
 goals using available lemmas. The problem is to find appropriate
 lemmas in a large collection of all accessible lemmas and combine them
 to prove the goal. The advantage of a hammer is that it is a general
-system not depending on any domain-specific knowledge. The hammer
-plugin may use all currently accessible lemmas, including those proven
-earlier in a given formalization, not only the lemmas from the
-standard library or other predefined libraries.
+system not depending on any domain-specific knowledge and not
+requiring configuration by the user. The hammer plugin may use all
+currently accessible lemmas, including those proven earlier in a given
+formalization, not only the lemmas from predefined libraries or hint
+databases.
 
 Requirements
 ------------
