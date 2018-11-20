@@ -3,8 +3,8 @@ CoqHammer (dev) for Coq 8.9
 [![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=master)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
 CoqHammer is a general-purpose automated reasoning hammer tool for
-Coq. It combines learning from previous proofs with translation of the
-problems to the logics of automated systems and reconstruction of the
+Coq. It combines learning from previous proofs with the translation of
+problems to the logics of automated systems and the reconstruction of
 successfully found proofs. A typical use is to prove relatively simple
 goals using available lemmas. The problem is to find appropriate
 lemmas in a large collection of all accessible lemmas and combine them
