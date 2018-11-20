@@ -251,10 +251,10 @@ let get_tactic (s : string) =
   (Tacenv.locate_tactic (Libnames.qualid_of_string s))
 
 let get_tacexpr tac args =
-  Tacexpr.TacArg(None,
-                 Tacexpr.TacCall(None,
+  Tacexpr.TacArg(CAst.make
+                 Tacexpr.(TacCall(CAst.make
                                  (Locus.ArgArg(None, get_tactic tac),
-                                 args)))
+                                 args))))
 
 let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
   Tacinterp.eval_tactic (get_tacexpr tac args)
