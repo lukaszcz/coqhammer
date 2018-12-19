@@ -5,6 +5,7 @@ open Names
 open Term
 open Globnames
 open Constr
+open Context
 
 open Ltac_plugin
 
@@ -27,6 +28,7 @@ let hhterm_of_global glob =
   mk_id (Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob)))
 
 let hhterm_of_sort s = match Sorts.family s with
+  | InSProp -> mk_id "$SProp"
   | InProp -> mk_id "$Prop"
   | InSet  -> mk_id "$Set"
   | InType -> mk_id "$Type"
@@ -57,7 +59,7 @@ let hhterm_of_caseinfo ci =
          hhterm_of_intarray ci_cstr_nargs]
 
 (* Unsafe *)
-let hhterm_of_name name = match name with
+let hhterm_of_name name = match name.binder_name with
   | Name.Name id -> tuple [mk_id "$Name"; mk_id (Id.to_string id)]
   | Name.Anonymous  -> tuple [mk_id "$Name"; mk_id "$Anonymous"]
 
@@ -160,9 +162,9 @@ let econstr_to_constr x = EConstr.to_constr Evd.empty x
 let make_good =
   function
   | Context.Named.Declaration.LocalAssum(x, y) ->
-     (x, None, econstr_to_constr y)
+     (x.binder_name, None, econstr_to_constr y)
   | Context.Named.Declaration.LocalDef(x, y, z) ->
-     (x, Some (econstr_to_constr y), econstr_to_constr z)
+     (x.binder_name, Some (econstr_to_constr y), econstr_to_constr z)
 
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
