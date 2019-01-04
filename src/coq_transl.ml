@@ -767,7 +767,7 @@ and lambda_lifting axname name fvars lvars1 tm =
   match body2 with
   | Fix(_) ->
       fix_lifting axname name fvars lvars body2
-  | Case(_) -> 
+  | Case(_) ->
 	  case_lifting axname name fvars lvars body2
   | _ ->
     let ax =
@@ -827,7 +827,7 @@ and fix_lifting axname dname fvars lvars tm =
           in
           try
             defhash_add (mk_def name2 (Const(name2)) ty2
-                           (if check_prop [] ty2 then SortProp (* else if check_bool [] ty then SortSet *) else SortType))
+                           (if check_prop [] ty2 then SortProp  else if check_bool [] ty2 then SortSet else SortType))
           with _ -> ())
         names2 types;
       List.nth
@@ -942,6 +942,10 @@ and case_lifting axname0 name0 fvars lvars tm =
 				    begin
 					  mk_equiv case_repl2 cr
 					end
+				  else if check_bool ctx cr then
+				    begin
+					  mk_eq case_repl2 (convert_bool ctx cr)
+					end
                   else
 				    begin
                       mk_eq case_repl2 cr
@@ -1054,20 +1058,17 @@ and convert_bool ctx tm =
 
     | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.orb" -> Coqterms.mk_or (convert_bool ctx x) (convert_bool ctx y)
     | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.andb" -> Coqterms.mk_and (convert_bool ctx x) (convert_bool ctx y)
-    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.implb" -> 
-
-	   Coqterms.mk_impl (convert_bool ctx x) (convert_bool ctx y) 
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.implb" -> Coqterms.mk_impl (convert_bool ctx x) (convert_bool ctx y)
     | App (App (Const (c), x), y) when c = "Coq.Bool.Bool.eqb" -> Coqterms.mk_equiv
 	(convert_bool ctx x) (convert_bool ctx y)
 
     | App (App (Const (c), x), y) when  c = "Coq.ZArith.BinIntDef.Z.eqb" || c = "Coq.Init.Nat.eqb" || 
 	                   c = "mathcomp.ssreflect.eqtype.eqb" || c = "mathcomp.ssreflect.ssrnat.eqn" || c = "mathcomp.ssreflect.ssrnat.leq" ->
-	    (* Msg.info ("there I am"); *) Coqterms.mk_eqb (convert_bool ctx x) (convert_bool ctx y)
+	    Coqterms.mk_eq (convert_bool ctx x) (convert_bool ctx y)
 	| App (App (App (Const (c), Const (d)), x), y) when c = "mathcomp.ssreflect.eqtype.eq_op" ->
 	   Coqterms.mk_eq (convert_bool ctx x) (convert_bool ctx y)
 	| App (App (App (Const (c), Const (d)), x), y) when c = "mathcomp.ssreflect.eqtype.Equality.sort" ->
 	   Coqterms.mk_equiv (convert_bool ctx x) (convert_bool ctx y)	   
-
 	| _ -> bool_to_formula ctx tm
 
 and convert_term ctx tm =
@@ -1110,10 +1111,13 @@ and prop_to_formula ctx tm =
   match tm with
   | Prod(vname, ty1, ty2) ->
     if check_prop ctx ty1 then
-      mk_impl (prop_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
-	  
+	  begin
+		mk_impl (prop_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
+	  end 
     else if check_bool ctx ty1 then
-      mk_impl (bool_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
+	  begin
+        mk_impl (bool_to_formula ctx ty1) (prop_to_formula ctx (subst_proof vname ty1 ty2))
+	  end
     else
       mk_forall vname type_any
         (mk_impl
@@ -1562,15 +1566,17 @@ and add_def_axioms ((name, value, ty, srt) as def) =
           end;
       end
   | _ ->
-	if  (* (snd (check_type_target_is_bool ty)) *)  ty = (Const ("Coq.Init.Datatypes.bool"))
+	if ty = (Const ("Coq.Init.Datatypes.bool"))
 	  then
 	  begin
 		if (name <> "Coq.Init.Datatypes.false") then
+		  begin
 	       add_axiom (mk_axiom (name) (bool_to_formula [] value));
+		  end
 	  end
     else if ((*check_type_target_is_prop ty || (** more likely to yield in failures *)*)  srt = SortProp) then
 	  begin
-        add_axiom (mk_axiom name (prop_to_formula [] ty))		
+        add_axiom (mk_axiom name (prop_to_formula [] ty))
 	  end
     else
       begin 
