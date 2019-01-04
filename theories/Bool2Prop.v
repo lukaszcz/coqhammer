@@ -82,18 +82,6 @@ Proof. split; intros. rewrite Z.geb_le in H. now apply Z.le_ge in H.
        rewrite Z.geb_le. now apply Z.ge_le in H.
 Qed.
 
-(*
-Lemma ttr: forall a b: nat, a == b = true <-> a = b.
-Admitted.
-*)
-
-Ltac amid B :=
-  let tyB := type of B in
-  lazymatch tyB with
-    | comparison => unfold is_true; rewrite Z_eqb_eq
-    | _ => fail 1
-  end.
-
 Ltac bool2prop :=
   repeat
     match goal with
