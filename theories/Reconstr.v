@@ -1164,7 +1164,7 @@ Ltac blast := sauto; try bum; repeat instering; sauto; try bum;
               repeat (progress (einsting; esimp_hyps); sauto; try bum).
 
 Ltac hinit hyps lems defs :=
-(*   try Bool2Prop.bool2prop; *)
+  try Bool2Prop.bool2prop;
   let rec pose_all ls acc :=
       match ls with
         | Empty => idtac

@@ -82,13 +82,10 @@ Proof. split; intros. rewrite Z.geb_le in H. now apply Z.le_ge in H.
        rewrite Z.geb_le. now apply Z.ge_le in H.
 Qed.
 
-Ltac bool2prop :=
+Ltac conv_hyps :=
   repeat
     match goal with
-    | [ |- context [ match ?A with _ => _ end = true ] ] => destruct A; cbn in *
-    | [ H: context [ Z.eqb _ _]   |- _ ] => unfold is_true in H; rewrite Z_eqb_eq in H
-    | [ H: context [ Z.geb _ _]   |- _ ] => unfold is_true in H; rewrite Z_geb_ge in H
-    | [ H: context [ Z.gtb _ _]   |- _ ] => unfold is_true in H; rewrite Z_gtb_gt in H
+    | [ |- context [ match ?A with _ => _ end ] ] => case_eq A; let Ha := fresh "H" in intro Ha
     | [ H: context [ ?G0 && ?G1  ] |- _ ] => let Ha := fresh "H" in
                                              let Hb := fresh "H" in unfold is_true in H;
        specialize (@andP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
@@ -97,6 +94,14 @@ Ltac bool2prop :=
                                              let Hb := fresh "H" in unfold is_true in H;
        specialize (@orP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
        destruct H as [Ha | Hb]
+     end.
+
+Ltac bool2prop :=
+  repeat
+    match goal with
+    | [ H: context [ Z.eqb _ _]   |- _ ] => unfold is_true in H; rewrite Z_eqb_eq in H
+    | [ H: context [ Z.geb _ _]   |- _ ] => unfold is_true in H; rewrite Z_geb_ge in H
+    | [ H: context [ Z.gtb _ _]   |- _ ] => unfold is_true in H; rewrite Z_gtb_gt in H
     | [ |- context[ Z.eqb _ _ ] ]  => unfold is_true; rewrite Z_eqb_eq
     | [ |- context[ Z.leb _ _ ] ]  => unfold is_true; rewrite Z.leb_le
     | [ |- context[ Z.ltb _ _ ] ]  => unfold is_true; rewrite Z.ltb_lt
