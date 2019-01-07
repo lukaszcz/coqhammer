@@ -13,7 +13,8 @@ system not depending on any domain-specific knowledge and not
 requiring configuration by the user. The hammer plugin may use all
 currently accessible lemmas, including those proven earlier in a given
 formalization, not only the lemmas from predefined libraries or hint
-databases.
+databases. At present, however, best results are achieved for statements
+"close to" first-order logic and lemmas from the standard library or similar.
 
 Requirements
 ------------
