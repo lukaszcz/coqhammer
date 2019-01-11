@@ -82,10 +82,30 @@ Proof. split; intros. rewrite Z.geb_le in H. now apply Z.le_ge in H.
        rewrite Z.geb_le. now apply Z.ge_le in H.
 Qed.
 
-Ltac conv_hyps :=
+Lemma Z_ltb_lt: forall a b: Z, Z.ltb a b = true <-> Z.lt a b.
+Proof. split; intros. now rewrite Z.ltb_lt in H. now rewrite Z.ltb_lt.
+Qed.
+
+Lemma Z_leb_le: forall a b: Z, Z.leb a b = true <-> Z.le a b.
+Proof. split; intros. now rewrite Z.leb_le in H. now rewrite Z.leb_le.
+Qed.
+
+Ltac prep :=
   repeat
     match goal with
-    | [ |- context [ match ?A with _ => _ end ] ] => case_eq A; let Ha := fresh "H" in intro Ha
+    | [ |- context [ match ?A with _ => _ end ] ] =>
+        match type of A with
+          | bool       => case_eq A; let Ha := fresh "H" in intro Ha
+          | comparison => case_eq A; let Ha := fresh "H" in intro Ha
+          | _ => idtac
+        end
+    | [ |- context [ if ?b then _ else _ ] ] => case_eq b; let Ha := fresh "H" in intro Ha
+
+    | [ H: context [ ?G0 <--> ?G1  ] |- _ ] => let Ha := fresh "H" in
+                                               let Hb := fresh "H" in unfold is_true in H;
+       rewrite <- (@reflect_iff (G0 = true <-> G1 = true) (G0 <--> G1)); [ | apply iffP];
+       destruct H as (Ha, Hb)
+
     | [ H: context [ ?G0 && ?G1  ] |- _ ] => let Ha := fresh "H" in
                                              let Hb := fresh "H" in unfold is_true in H;
        specialize (@andP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
@@ -94,6 +114,10 @@ Ltac conv_hyps :=
                                              let Hb := fresh "H" in unfold is_true in H;
        specialize (@orP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
        destruct H as [Ha | Hb]
+    | [ H: context [ ?G0 /\ ?G1  ] |- _ ] => let Ha := fresh "H" in
+                                             let Hb := fresh "H" in destruct H as (Ha, Hb)
+    | [ H: context [ ?G0 \/ ?G1  ] |- _ ] => let Ha := fresh "H" in
+                                             let Hb := fresh "H" in destruct H as [Ha | Hb]
      end.
 
 Ltac bool2prop :=
@@ -102,6 +126,8 @@ Ltac bool2prop :=
     | [ H: context [ Z.eqb _ _]   |- _ ] => unfold is_true in H; rewrite Z_eqb_eq in H
     | [ H: context [ Z.geb _ _]   |- _ ] => unfold is_true in H; rewrite Z_geb_ge in H
     | [ H: context [ Z.gtb _ _]   |- _ ] => unfold is_true in H; rewrite Z_gtb_gt in H
+    | [ H: context [ Z.ltb _ _]   |- _ ] => unfold is_true in H; rewrite Z_ltb_lt in H
+    | [ H: context [ Z.leb _ _]   |- _ ] => unfold is_true in H; rewrite Z_leb_le in H
     | [ |- context[ Z.eqb _ _ ] ]  => unfold is_true; rewrite Z_eqb_eq
     | [ |- context[ Z.leb _ _ ] ]  => unfold is_true; rewrite Z.leb_le
     | [ |- context[ Z.ltb _ _ ] ]  => unfold is_true; rewrite Z.ltb_lt
@@ -124,7 +150,6 @@ Ltac bool2prop :=
       [ | apply negP]
     | [ |- context[ false = true ] ] => rewrite FalseB
     | [ |- context[ true = true ] ] => rewrite TrueB
-
   end.
 
 

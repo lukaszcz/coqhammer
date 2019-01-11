@@ -1151,8 +1151,8 @@ and bool_to_formula ctx tm =
             (mk_impl
                (type_to_guard ctx ty1 (Var(vname)))
                (bool_to_formula ((vname, ty1) :: ctx) ty2))
-	     end
-    | _ ->  convert ctx tm
+	     end    
+	| _ ->  convert ctx tm
   
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
