@@ -101,15 +101,19 @@ Ltac prep :=
         end
     | [ |- context [ if ?b then _ else _ ] ] => case_eq b; let Ha := fresh "H" in intro Ha
 
-    | [ H: context [ ?G0 <--> ?G1  ] |- _ ] => let Ha := fresh "H" in
-                                               let Hb := fresh "H" in unfold is_true in H;
-       rewrite <- (@reflect_iff (G0 = true <-> G1 = true) (G0 <--> G1)); [ | apply iffP];
-       destruct H as (Ha, Hb)
-
+    | [ H: context [ Bool.eqb ?G0 ?G1 ] |- _ ] => let Ha := fresh "H" in
+                                                  let Hb := fresh "H" in unfold is_true in H;
+       specialize (@iffP G0 G1); intro Ha; 
+       apply reflect_iff in Ha; apply Ha in H; clear Ha
     | [ H: context [ ?G0 && ?G1  ] |- _ ] => let Ha := fresh "H" in
                                              let Hb := fresh "H" in unfold is_true in H;
        specialize (@andP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
        destruct H as (Ha, Hb)
+    | [ H: context [ ?G0 --> ?G1 ] |- _ ] => let Ha := fresh "H" in
+                                             let Hb := fresh "H" in unfold is_true in H;
+       specialize (@implyP G0 G1); intro Ha; apply reflect_iff in Ha;
+       (assert (Hb: G0 -> G1) by now apply Ha); clear Ha; clear H
+
     | [ H: context [ ?G0 || ?G1  ] |- _ ] => let Ha := fresh "H" in
                                              let Hb := fresh "H" in unfold is_true in H;
        specialize (@orP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
