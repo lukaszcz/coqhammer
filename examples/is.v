@@ -1,6 +1,9 @@
 From Hammer Require Import Hammer Reconstr.
 
+
 Require Import ZArith Bool.
+
+(* Require Import Coq.micromega.Lia.*)
 
 Infix "-->" := implb (at level 60, right associativity) : bool_scope.
 Infix "<-->" := Bool.eqb (at level 60, right associativity) : bool_scope.
@@ -49,11 +52,10 @@ Lemma is_sorted_cons x xs: (is_sorted (x::xs)) <--> (is_sorted xs && smaller x x
 Proof.
       induction xs as [ |y ys IHys].
       - easy.
-      - change (is_sorted (x :: y :: ys)) with ((x <=? y)%Z && (is_sorted (y::ys))). 
-        change (smaller x (y :: ys)) with ((x <=? y)%Z && (smaller x ys)).
+      - simpl.
         generalize (is_sorted_smaller x y ys). 
         revert IHys.
-      	Reconstr.reasy Reconstr.Empty Reconstr.Empty.
+        Reconstr.reasy Reconstr.Empty (@is_sorted).
 Qed.
 
 Lemma insert_keeps_smaller x y ys :
@@ -61,7 +63,7 @@ Lemma insert_keeps_smaller x y ys :
 Proof.
   induction ys as [ |z zs IHzs].
   - simpl. Reconstr.reasy (@Coq.Init.Datatypes.true) Reconstr.Empty.
-  - cbn. case (x <=? z).
+  - simpl. case (x <=? z).
     + cbn. Reconstr.reasy Reconstr.Empty Reconstr.Empty.
     + simpl. revert IHzs.
 	    Reconstr.reasy Reconstr.Empty Reconstr.Empty.

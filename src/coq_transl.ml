@@ -1137,7 +1137,7 @@ and bool_to_formula ctx tm =
   debug 3 (fun () -> print_header "bool_to_formula" tm ctx);
   match tm with
     | Prod(vname, ty1, ty2) ->
-      if ty1 = Const ("Coq.Init.Datatypes.Bool") then
+      if ty1 = Const ("Coq.Init.Datatypes.bool") then
 	    begin
           mk_impl (bool_to_formula ctx ty1) (bool_to_formula ctx (subst_proof vname ty1 ty2))
 	    end

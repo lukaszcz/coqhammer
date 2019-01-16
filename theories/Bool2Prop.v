@@ -1,4 +1,4 @@
-Require Import Bool BinInt Nat.
+Require Import Bool BinInt Nat PeanoNat.
 (*From mathcomp Require Import all_ssreflect.*)
 
 Infix "-->" := implb (at level 60, right associativity) : bool_scope.
@@ -60,14 +60,16 @@ Proof. intros; destruct H; [now left | now right]. Qed.
         case_eq b1; case_eq b2; intros; try easy; try compute in *; now apply H1.
  Qed.
 
- Lemma FalseB : (false = true) <-> False.
- Proof. split; auto; try congruence. Qed.
+Lemma FalseB : (false = true) <-> False.
+Proof. split; auto; try congruence. Qed.
 
- Lemma TrueB : (true = true) <-> True.
+Lemma TrueB : (true = true) <-> True.
 Proof. split; auto. Qed.
 
 Lemma beq_eq: forall b1 b2, b1 <--> b2 <-> b1 = b2.
 Proof. intros; case_eq b1; case_eq b2; intros; subst; try easy. Qed.
+
+(** Z *)
 
 Lemma Z_eqb_eq: forall a b: Z, Z.eqb a b = true <-> a = b.
 Proof. intros; now rewrite Z.eqb_eq. Qed.
@@ -89,6 +91,22 @@ Qed.
 Lemma Z_leb_le: forall a b: Z, Z.leb a b = true <-> Z.le a b.
 Proof. split; intros. now rewrite Z.leb_le in H. now rewrite Z.leb_le.
 Qed.
+
+(** nat *)
+
+Lemma Nat_eqb_eq: forall a b: nat, Nat.eqb a b = true <-> a = b.
+Proof. intro a;
+       induction a; intros; cbn; case b; try easy;
+         intro n; rewrite IHa;
+         split; intro H; subst; try easy;
+         now inversion H.
+Qed.
+
+Lemma Nat_leb_le: forall a b: nat, Nat.leb a b = true <-> Nat.le a b.
+Proof. intros; now rewrite Nat.leb_le. Qed.
+
+Lemma Nat_ltb_lt: forall a b: nat, Nat.ltb a b = true <-> Nat.lt a b.
+Proof. intros; now rewrite Nat.ltb_lt. Qed.
 
 Ltac prep :=
   repeat
@@ -132,11 +150,14 @@ Ltac bool2prop :=
     | [ H: context [ Z.gtb _ _]   |- _ ] => unfold is_true in H; rewrite Z_gtb_gt in H
     | [ H: context [ Z.ltb _ _]   |- _ ] => unfold is_true in H; rewrite Z_ltb_lt in H
     | [ H: context [ Z.leb _ _]   |- _ ] => unfold is_true in H; rewrite Z_leb_le in H
-    | [ |- context[ Z.eqb _ _ ] ]  => unfold is_true; rewrite Z_eqb_eq
-    | [ |- context[ Z.leb _ _ ] ]  => unfold is_true; rewrite Z.leb_le
-    | [ |- context[ Z.ltb _ _ ] ]  => unfold is_true; rewrite Z.ltb_lt
-    | [ |- context[ Z.gtb _ _ ] ]  => unfold is_true; rewrite Z_gtb_gt
-    | [ |- context[ Z.geb _ _ ] ]  => unfold is_true; rewrite Z_geb_ge
+    | [ |- context[ Z.eqb _ _ ] ]   => unfold is_true; rewrite Z_eqb_eq
+    | [ |- context[ Z.leb _ _ ] ]   => unfold is_true; rewrite Z.leb_le
+    | [ |- context[ Z.ltb _ _ ] ]   => unfold is_true; rewrite Z.ltb_lt
+    | [ |- context[ Z.gtb _ _ ] ]   => unfold is_true; rewrite Z_gtb_gt
+    | [ |- context[ Z.geb _ _ ] ]   => unfold is_true; rewrite Z_geb_ge
+    | [ |- context[ Nat.eqb _ _ ] ] => unfold is_true; rewrite Nat_eqb_eq
+    | [ |- context[ Nat.leb _ _ ] ] => unfold is_true; rewrite Nat.leb_le
+    | [ |- context[ Nat.ltb _ _ ] ] => unfold is_true; rewrite Nat.ltb_lt
     | [ |- context[?G0 --> ?G1 ] ] =>
         rewrite <- (@reflect_iff (G0 = true -> G1 = true)  (G0 --> G1)); 
       [ | apply implyP]
