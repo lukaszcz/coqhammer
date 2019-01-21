@@ -5,7 +5,6 @@ Infix "-->" := implb (at level 60, right associativity) : bool_scope.
 Infix "<-->" := Bool.eqb (at level 60, right associativity) : bool_scope.
 Local Coercion is_true : bool >-> Sortclass.
 
-
 Lemma reflect_iff : forall P b, reflect P b -> (P<->b=true).
 Proof.
  intros; destruct H; intuition.
@@ -177,6 +176,25 @@ Ltac bool2prop :=
     | [ |- context[ true = true ] ] => rewrite TrueB
   end.
 
+Ltac lc :=
+  repeat
+    match goal with
+    | [ |- context[?G0 --> ?G1 ] ] =>
+        rewrite <- (@reflect_iff (G0 = true -> G1 = true)  (G0 --> G1)); 
+      [ | apply implyP]
+    | [ |- context[?G0 || ?G1 ] ] =>
+        rewrite <- (@reflect_iff (G0 = true \/ G1 = true) (G0 || G1)); 
+      [ | apply orP]
+    | [ |- context[?G0 && ?G1 ] ] =>
+        rewrite <- (@reflect_iff (G0 = true /\ G1 = true) (G0 && G1)); 
+      [ | apply andP]
+    | [ |- context[?G0 <--> ?G1 ] ] =>
+        rewrite <- (@reflect_iff (G0 = true <-> G1 = true) (G0 <--> G1)); 
+      [ | apply iffP]
+    | [ |- context[ negb ?G ] ] =>
+        rewrite <- (@reflect_iff (G <> true) (negb G)); 
+      [ | apply negP]
+  end.
 
 
 

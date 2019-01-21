@@ -1163,9 +1163,19 @@ Ltac bum := solve [ eauto with yhints | yrauto 1 ].
 Ltac blast := sauto; try bum; repeat instering; sauto; try bum;
               repeat (progress (einsting; esimp_hyps); sauto; try bum).
 
+Ltac ul l :=
+  let rec doul ls :=
+  match ls with
+    | nil         => idtac
+    | cons ?x ?xs => unfold x; doul xs
+  end
+  in doul l.
+
 Ltac hinit hyps lems defs :=
-  try Bool2Prop.bool2prop;
-  let rec pose_all ls acc :=
+(*   try ul defs; *)
+(*   try Bool2Prop.bool2prop; *)
+  try Bool2Prop.lc;
+  let rec pose_all ls acc := 
       match ls with
         | Empty => idtac
         | (?LS, ?X) => generalize X; let H := fresh "H" in intro H; pose_all LS (acc, H)

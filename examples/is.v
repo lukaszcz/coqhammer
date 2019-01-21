@@ -10,6 +10,8 @@ Infix "<-->" := Bool.eqb (at level 60, right associativity) : bool_scope.
 
 Local Open Scope Z_scope.
 Local Open Scope list_scope.
+
+Notation "[ x ; y ; .. ; z ]" := (cons x (cons y .. (cons z nil) ..)) : list_scope.
 Local Coercion is_true : bool >-> Sortclass.
 
 Fixpoint insert (x:Z) (l:list Z) : list Z :=
@@ -50,10 +52,10 @@ Qed.
 
 Lemma is_sorted_cons x xs: (is_sorted (x::xs)) <--> (is_sorted xs && smaller x xs).
 Proof.
-      induction xs as [ |y ys IHys].
-      - easy.
-      - simpl.
-        generalize (is_sorted_smaller x y ys). 
+     induction xs as [ |y ys IHys].
+     - easy.
+     - cbn.
+        generalize (is_sorted_smaller x y ys).
         revert IHys.
         Reconstr.reasy Reconstr.Empty (@is_sorted).
 Qed.
