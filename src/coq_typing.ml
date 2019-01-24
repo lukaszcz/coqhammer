@@ -246,6 +246,92 @@ let check_prop ctx tm =
   | App(App(Const(c), _), _) when is_bin_logop c -> true
   | _ -> check_prop [] ctx tm
 
+let rec check_bool args ctx tm =
+  let is_bool_tgt args ty =
+    let rec hlp args v =
+      match v with
+      | PROD(_, (_, ct, f)) ->
+          begin
+            match args with
+            | h :: args2 -> hlp args2 (f (lazy (eval h)))
+            | _ -> false
+          end
+      | FIX(_, v2) ->
+          hlp args (Lazy.force v2)
+      | N (TERM tm) ->
+          if args = [] then
+		  begin
+			if Lazy.force tm = Const "Coq.Init.Datatypes.bool" then 
+			begin true end
+			else
+			begin false end
+		  end
+          else false
+	  | N (CONST s) ->
+          if args = [] then
+		    s = "Coq.Init.Datatypes.bool"
+          else false	  
+	  | LAM (_, (_, ct, f)) ->
+          begin
+            match args with
+            | h :: args2 -> hlp args2 (f (lazy (eval h)))
+            | _ -> false
+          end
+      | _ -> false
+    in
+    hlp args (eval ty)
+  in
+  debug 4 (fun () -> print_header "check_bool" tm ctx);
+  match tm with
+  | Var(x) ->
+      begin
+        try is_bool_tgt args (List.assoc x ctx)
+        with Not_found ->
+          print_list (fun (name, _) -> print_string name) (List.rev ctx);
+          failwith ("check_bool: var not found:  [check_bool]" ^ x)
+      end
+  | Const(c) ->
+      begin
+        try is_bool_tgt args (coqdef_type (Defhash.find c))
+        with _ -> false
+      end
+  | App(x, y) ->
+      if check_bool (y :: args) ctx x then
+	    begin
+		  true
+		end
+		else
+		begin
+		  false
+		end
+  | Lam(vname, ty, body) ->
+      begin (* NOTE: the lambda case is incomplete, but this should be enough in practice *)
+        match args with
+        | _ :: args2 -> check_bool args2 ((vname, ty) :: ctx) body
+        | _ -> false
+      end
+  | Prod(vname, ty1, ty2) ->
+      if args = [] then
+        check_bool [] ((vname, ty1) :: ctx) ty2
+      else false
+  | Cast(v, ty2) -> is_bool_tgt args ty2
+  | Case(indname, matched_term, return_type, params_num, branches) ->
+	  (* Msg.info ("here in Case (_,_,_,_) match case [check_bool]  \n"); *)
+      (* NOTE: this is incorrect if `params_num' is smaller than the
+         number of arguments of the inductive type `indname' *)
+      is_bool_tgt args (App(return_type, matched_term))
+  | Fix(_, k, names, types, bodies) -> is_bool_tgt args (List.nth types k)
+  | Let(value, (name, ty, body)) -> check_bool args ctx (dsubst [(name, lazy (Cast(value, ty)))] body)
+  | SortProp | SortSet | SortType -> false
+  | Quant(_) | Equal(_) -> args = []
+  | _ -> failwith "check_bool"
+	  
+let check_bool ctx tm =
+  match tm with
+  | App(Const("~"), _) -> true
+  | App(App(Const(c), _), _) when is_bin_logop c -> true
+  | _ -> check_bool [] ctx tm
+
 let check_proof_var ctx name =
   let rec pom ctx name =
     match ctx with

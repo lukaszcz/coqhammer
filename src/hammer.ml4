@@ -502,9 +502,11 @@ let try_goal_tactic f =
 let hammer_tac () =
   Proofview.Goal.nf_enter
     begin fun gl ->
+	(*
         Proofview.tclOR
           (try_scrush ())
           begin fun _ ->
+	*)
             try_tactic begin fun () ->
               let goal = get_goal gl in
               let hyps = get_hyps gl in
@@ -523,7 +525,7 @@ let hammer_tac () =
                 begin fun () ->
                   Msg.error ("Hammer failed: proof reconstruction failed")
                 end
-            end
+           (* end *)
           end
     end
 

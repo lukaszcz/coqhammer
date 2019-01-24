@@ -47,7 +47,8 @@ let opt_precise_inversion = true
 let opt_type_lifting = true
 (* should translate Set to Type? *)
 let opt_set_to_type = true
-
+(* should translate Boolean connectives? *)
+let opt_bool_conn = ref true
 (***************************************************************************************)
 (* Debugging *)
 

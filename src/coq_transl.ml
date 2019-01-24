@@ -569,6 +569,8 @@ and convert ctx tm =
   | App(App(Const("$HasType"), x), y) ->
       convert ctx x >>= fun x2 ->
       make_guard ctx y x2
+  | App(Const (c), x) when (c = "Coq.Init.Datatypes.is_true") && !opt_bool_conn = true -> 
+      convert_bool ctx x
   | App(x, y) ->
       convert ctx x >>= fun x2 ->
       if x2 = Const("$Proof") then
@@ -611,6 +613,56 @@ and convert ctx tm =
       return tm
   | IndType(_) ->
       failwith "convert"
+
+and convert_bool ctx tm =
+  match tm with
+    | Const c -> return (Const c)
+	| Var x -> return (Var x)
+	| App (Const (c), x) when c = "Coq.Init.Datatypes.negb" -> 
+	    convert_bool ctx x >>= fun t1 -> 
+		return (mk_not t1)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.orb" -> 
+	    convert_bool ctx x >>= fun t1 ->
+		convert_bool ctx y >>= fun t2 ->
+		return (mk_or t1 t2)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.andb" ->
+	    convert_bool ctx x >>= fun t1 ->
+		convert_bool ctx y >>= fun t2 ->
+		return (mk_and t1 t2)
+    | App (App (Const (c), x), y) when c = "Coq.Init.Datatypes.implb" ->
+	    convert_bool ctx x >>= fun t1 ->
+		convert_bool ctx y >>= fun t2 ->
+		return (mk_impl t1 t2)
+    | App (App (Const (c), x), y) when c = "Coq.Bool.Bool.eqb" ->
+	    convert_bool ctx x >>= fun t1 ->
+		convert_bool ctx y >>= fun t2 ->
+		return (mk_eq t1 t2)
+	| _ -> bool_to_formula ctx tm
+	
+and bool_to_formula ctx tm =
+  debug 3 (fun () -> print_header "bool_to_formula" tm ctx);
+  match tm with
+    | Prod(vname, ty1, ty2) ->
+      if Coq_typing.check_bool ctx ty1 then
+	    begin
+           bool_to_formula ctx ty1 >>= fun t1 ->
+		   bool_to_formula ctx (subst_proof vname ty1 ty2) >>= fun t2 ->
+		   return (mk_impl t1 t2)
+	    end
+      else if Coq_typing.check_prop ctx ty1 then
+	    begin
+		   prop_to_formula ctx ty1 >>= fun t1 ->
+		   bool_to_formula ctx (subst_proof vname ty1 ty2) >>= fun t2 ->
+		   return (mk_impl t1 t2)
+	    end
+	  else
+	    begin
+		  type_to_guard ctx ty1 (Var(vname)) >>= fun t1 ->
+		  bool_to_formula ((vname, ty1) :: ctx) ty2 >>= fun t2 ->
+          return (mk_forall vname type_any (mk_impl t1 t2))
+	     end    
+	| _ -> convert ctx tm
+
 
 and convert_term ctx tm =
   debug 3 (fun () -> print_header "convert_term" tm ctx);
