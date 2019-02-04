@@ -1,11 +1,10 @@
 opam-version: "1.2"
-version: "dev"
 maintainer: "palmskog@gmail.com"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
 dev-repo: "https://github.com/lukaszcz/coqhammer.git"
 bug-reports: "https://github.com/lukaszcz/coqhammer/issues"
-license: "LGPL 2.1"
+license: "LGPL-2.1-only"
 
 build: [ make "-j%{jobs}%" ]
 build-test: [ make "tests" ]
@@ -15,12 +14,13 @@ remove: [
   ["sh" "-c" "rm -f '%{bin}%/predict' '%{bin}%/htimeout'"]
 ]
 depends: [
-  "coq" {(>= "8.8" & < "8.10~") | (= "dev")}
+  "coq" {>= "8.8" & < "8.10~"}
 ]
 
 tags: [
-  "category:Misc/Coq Extensions"
+  "category:Miscellaneous/Coq Extensions"
   "keyword:automation"
+  "keyword:hammer"
   "logpath:Hammer"
 ]
 
