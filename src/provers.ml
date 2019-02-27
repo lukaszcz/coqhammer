@@ -190,7 +190,7 @@ let call_vampire infile outfile =
   let tmt = string_of_int !Opt.atp_timelimit in
   let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
   let cmd =
-    "htimeout " ^ tmt2 ^ " vampire --mode casc -t " ^ tmt ^ " --proof tptp --output_axiom_names on " ^ infile ^ " 2>/dev/null | grep \"file[(]'\|% SZS\" > " ^ outfile
+    "htimeout " ^ tmt2 ^ " vampire --mode casc -t " ^ tmt ^ " --proof tptp --output_axiom_names on " ^ infile ^ " 2>/dev/null | grep \"file[(]'\\|% SZS\" > " ^ outfile
   in
   invoke_prover "vampire" cmd outfile
 

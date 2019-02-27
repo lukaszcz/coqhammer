@@ -52,6 +52,8 @@ let extract_features (t : hhterm) : string list =
          | "" -> app_fea acc moreargs
          | s -> app_fea ((c ^ "-" ^ s) :: acc) moreargs
          end
+      | _ ->
+         failwith "impossible"
       in
       pom args (c :: (app_fea acc args))
     | Comb(x, y) ->

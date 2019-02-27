@@ -114,29 +114,35 @@ let eval (tm : coqterm) : coqvalue =
         try
           begin
             let (v, args) = flatten_valapp mt2
-            and (_, IndType(_, constrs, _), indtype, indsort) =
+            and df =
               try Defhash.find indname with _ -> raise Not_found
             in
-            match v with
-            | (N (CONST c)) when List.mem c constrs ->
-              let i = Hhlib.index c constrs
-              in
-              let (n, b) = List.nth branches i
-              in
-              if List.length args > n + params_num then
-                begin
-                  print_coqterm tm;
-                  print_list print_string constrs;
-                  print_int i; print_newline ();
-                  print_int n; print_newline ();
-                  print_int params_num; print_newline ();
-                  failwith ("eval: bad number of constructor arguments: " ^ c)
-                end
-              else
-                eval_valapp (eval env b) (Hhlib.drop params_num args)
+            match df with
+            | (_, IndType(_, constrs, _), indtype, indsort) ->
+               begin
+                 match v with
+                 | (N (CONST c)) when List.mem c constrs ->
+                    let i = Hhlib.index c constrs
+                    in
+                    let (n, b) = List.nth branches i
+                    in
+                    if List.length args > n + params_num then
+                      begin
+                        print_coqterm tm;
+                        print_list print_string constrs;
+                        print_int i; print_newline ();
+                        print_int n; print_newline ();
+                        print_int params_num; print_newline ();
+                        failwith ("eval: bad number of constructor arguments: " ^ c)
+                      end
+                    else
+                      eval_valapp (eval env b) (Hhlib.drop params_num args)
+                 | _ ->
+                    N (TERM (delay_subst env
+                               (Case(indname, reify mt2, return_type, params_num, branches))))
+               end
             | _ ->
-              N (TERM (delay_subst env
-                         (Case(indname, reify mt2, return_type, params_num, branches))))
+               failwith "impossible"
           end
         with Not_found ->
           N (TERM (delay_subst env
