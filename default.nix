@@ -18,11 +18,15 @@ pkgs.stdenv.mkDerivation {
   buildInputs = with coq.ocamlPackages; [ ocaml findlib ]
     ++ pkgs.lib.optionals shell [ merlin ocp-indent ocp-index ];
 
-  propagatedBuildInputs = [
-    coq
-  ];
+  propagatedBuildInputs = [ coq ];
 
   src = if shell then null else ./.;
 
-  installFlags = [ "COQBIN=$(out)/" "COQLIB=$(out)/lib/coq/${coq.coq-version}/" ];
+  installFlags = [
+    "COQC=${coq}/bin/coqc"
+    "COQTOP=${coq}/bin/coqtop"
+    "COQMKFILE=${coq}/bin/coq_makefile"
+    "COQBIN=$(out)/bin/"
+    "COQLIB=$(out)/lib/coq/${coq.coq-version}/"
+  ];
 }

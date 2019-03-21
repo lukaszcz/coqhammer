@@ -7,6 +7,7 @@ htimeout: src/htimeout/htimeout.c
 	gcc -O2 -Wall src/htimeout/htimeout.c -o htimeout
 
 install-extra::
+	install -d $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
 	install -m 0755 predict $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)predict
 	install -m 0755 htimeout $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)htimeout
 
