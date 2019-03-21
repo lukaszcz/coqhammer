@@ -1,20 +1,29 @@
-opam-version: "1.2"
+opam-version: "2.0"
 maintainer: "palmskog@gmail.com"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
-dev-repo: "https://github.com/lukaszcz/coqhammer.git"
+dev-repo: "git+https://github.com/lukaszcz/coqhammer.git"
 bug-reports: "https://github.com/lukaszcz/coqhammer/issues"
 license: "LGPL-2.1-only"
 
+synopsis: "A general-purpose automated reasoning hammer tool for Coq"
+description: """
+A general-purpose automated reasoning hammer tool for Coq that combines
+learning from previous proofs with the translation of problems to the
+logics of automated systems and the reconstruction of successfully found proofs.
+"""
+
 build: [ make "-j%{jobs}%" ]
-build-test: [ make "tests" ]
 install: [ make "install" ]
 remove: [
   ["sh" "-c" "rm -rf '%{lib}%/coq/user-contrib/Hammer'"]
   ["sh" "-c" "rm -f '%{bin}%/predict' '%{bin}%/htimeout'"]
 ]
+flags: light-uninstall
 depends: [
+  "ocaml"
   "coq" {= "dev"}
+  "conf-g++" {build}
 ]
 
 tags: [
