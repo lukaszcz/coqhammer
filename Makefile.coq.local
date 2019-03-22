@@ -4,7 +4,7 @@ predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp s
 	c++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict
 
 htimeout: src/htimeout/htimeout.c
-	gcc -O2 -Wall src/htimeout/htimeout.c -o htimeout
+	cc -O2 -Wall src/htimeout/htimeout.c -o htimeout
 
 install-extra::
 	install -m 0755 predict $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)predict
