@@ -6,9 +6,12 @@ predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp s
 htimeout: src/htimeout/htimeout.c
 	gcc -O2 -Wall src/htimeout/htimeout.c -o htimeout
 
+BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
+
 install-extra::
-	install -m 0755 predict $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)predict
-	install -m 0755 htimeout $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)htimeout
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 0755 predict $(DESTDIR)$(BINDIR)predict
+	install -m 0755 htimeout $(DESTDIR)$(BINDIR)htimeout
 
 clean::
 	rm -f predict htimeout
