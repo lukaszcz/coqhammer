@@ -1,10 +1,10 @@
 post-all:: predict htimeout
 
 predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp src/predict/knn.cpp src/predict/nbayes.cpp src/predict/rforest.cpp src/predict/tfidf.cpp src/predict/dtree.cpp
-	g++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict
+	c++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict
 
 htimeout: src/htimeout/htimeout.c
-	gcc -O2 -Wall src/htimeout/htimeout.c -o htimeout
+	cc -O2 -Wall src/htimeout/htimeout.c -o htimeout
 
 BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
 
