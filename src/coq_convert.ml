@@ -162,31 +162,37 @@ let rec to_coqterm tm =
 let to_coqdef (def : hhdef) (lst : hhdef list) =
   let rec parse_constrs lst cacc =
     match lst with
-    | (Comb(Comb(Id "$Construct", _), Id constrname), kind, ty, _) :: t ->
+    | (Comb(Comb(Id "$Construct", _), Id constrname), _, kind, ty, _) :: t ->
         parse_constrs t (constrname :: cacc)
     | _ -> List.rev cacc
   in
   match def with
-  | (Comb(Comb(Id "$Ind", Id indname), Id params_num), kind, ty, _) ->
+  | (Comb(Comb(Id "$Ind", Id indname), Id params_num), _, kind, ty, _) ->
       let constrs = parse_constrs lst []
       in
       log 2 ("to_coqdef: " ^ indname);
       (indname, IndType(indname, constrs, int_of_string params_num),
        to_coqterm (Lazy.force ty), to_coqsort kind)
-  | (Comb(Id "$Const", Id name), Comb(Id "$Sort", Id "$Prop"), ty, _) ->
+  | (Comb(Id "$Const", Id name), _, Comb(Id "$Sort", Id "$Prop"), ty, _) ->
       log 2 ("to_coqdef (omit proof): " ^ name);
       (name, Const(name), to_coqterm (Lazy.force ty), SortProp)
-  | (Comb(Id "$Const", Id name), kind, ty, prf) ->
+  | (Comb(Id "$Const", Id name), opaque, kind, ty, prf) ->
     begin
       log 2 ("to_coqdef: " ^ name);
-      let vp = Lazy.force prf in
-      match vp with
-      | Id "$Axiom" ->
-        (name, Const(name), to_coqterm (Lazy.force ty), to_coqsort kind)
-      | _ ->
-        (name, to_coqterm vp, to_coqterm (Lazy.force ty), to_coqsort kind)
+      let prf =
+        if opaque then
+          Const(name)
+        else
+          let vp = Lazy.force prf in
+          match vp with
+          | Id "$Axiom" ->
+             Const(name)
+          | _ ->
+             to_coqterm vp
+      in
+      (name, prf, to_coqterm (Lazy.force ty), to_coqsort kind)
     end
-  | (Comb(Comb(Id "$Construct", _), Id constrname), kind, ty, _) ->
+  | (Comb(Comb(Id "$Construct", _), Id constrname), _, kind, ty, _) ->
       log 2 ("to_coqdef: " ^ constrname);
       (constrname, Const(constrname), to_coqterm (Lazy.force ty), to_coqsort kind)
   | _ ->

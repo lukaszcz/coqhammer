@@ -4,6 +4,7 @@ type hhterm =
 
 type hhdef =
   hhterm (* "name" term; use get_hhdef_name to extract the name string *) *
+    bool (* is opaque? *) *
     hhterm (* kind; Comb(Id "$Sort", Id "$Prop") if type is a proposition *) *
     hhterm Lazy.t (* type *) *
     hhterm Lazy.t (* term: definiens (value or proof term) *)
@@ -21,7 +22,7 @@ let get_hhterm_name (c : hhterm) : string =
   | _ ->
     ""
 
-let get_hhdef_name ((c, _, _, _) : hhdef) : string =
+let get_hhdef_name ((c, _, _, _, _) : hhdef) : string =
   get_hhterm_name c
 
 let rec string_of_hhterm t =
