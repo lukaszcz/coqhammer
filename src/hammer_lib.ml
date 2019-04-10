@@ -142,11 +142,15 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
     | ConstRef c -> lazy (hhproof_of c)
     | _ -> lazy (mk_id "$Axiom")
   in
+  let opaque = match glob_ref with
+    | ConstRef c -> Declareops.is_opaque (Global.lookup_constant c)
+    | _ -> true
+  in
   let filename =
      let l = Str.split (Str.regexp "\\.") filename_aux in
      Filename.dirname (String.concat "/" l)
   in
-  (filename, (const, hhterm_of kind, lazy (hhterm_of ty), term))
+  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of ty), term))
 
 let hhdef_of_hyp env sigma (id, maybe_body, ty) =
   let kind = get_type_of env sigma ty in
@@ -155,7 +159,12 @@ let hhdef_of_hyp env sigma (id, maybe_body, ty) =
     | Some b -> lazy (hhterm_of b)
     | None -> lazy (mk_id "$Axiom")
   in
-  (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), hhterm_of kind, lazy (hhterm_of ty), body)
+  let opaque =
+    match maybe_body with
+    | Some b -> false
+    | None -> true
+  in
+  (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind, lazy (hhterm_of ty), body)
 
 let econstr_to_constr x = EConstr.to_constr Evd.empty x
 
@@ -173,6 +182,7 @@ let get_hyps gl =
 
 let get_goal gl =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
+   true,
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
    lazy (hhterm_of (econstr_to_constr (Proofview.Goal.concl gl))),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
@@ -560,11 +570,12 @@ let hammer_print name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try
     let glob = get_global name in
-    let (_, (const, kind, ty, trm)) = hhdef_of_global env sigma glob in
+    let (_, (const, opaque, kind, ty, trm)) = hhdef_of_global env sigma glob in
     Msg.notice (Hh_term.string_of_hhterm const ^ " = ");
     Msg.notice (Hh_term.string_of_hhterm (Lazy.force trm));
     Msg.notice (" : " ^ Hh_term.string_of_hhterm (Lazy.force ty));
-    Msg.notice (" : " ^ Hh_term.string_of_hhterm kind)
+    Msg.notice (" : " ^ Hh_term.string_of_hhterm kind);
+    if opaque then Msg.notice ("(opaque)")
   with Not_found ->
     Msg.error ("Not found: " ^ name)
 
