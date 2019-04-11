@@ -38,7 +38,7 @@ let hhterm_of_constant c =
 
 let hhterm_of_inductive i =
   tuple [mk_id "$Ind"; hhterm_of_global (IndRef i);
-         mk_id (string_of_int (Inductiveops.inductive_nparams i))]
+         mk_id (string_of_int (Inductiveops.inductive_nparams (Global.env()) i))]
 
 let hhterm_of_construct cstr =
   tuple [mk_id "$Construct"; hhterm_of_inductive (fst cstr); hhterm_of_global (ConstructRef cstr)]
