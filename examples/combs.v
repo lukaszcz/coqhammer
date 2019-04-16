@@ -109,7 +109,7 @@ Inductive WeakEqual : Term -> Term -> Prop :=
 | we_refl : forall (t : Term), WeakEqual t t
 | we_sym : forall (t u : Term), WeakEqual t u -> WeakEqual u t
 | we_trans : forall (t u w : Term), WeakEqual t u -> WeakEqual u w -> WeakEqual t w
-| we_cong : forall (t1 t2 s1 s2 : Term), 
+| we_cong : forall (t1 t2 s1 s2 : Term),
               WeakEqual t1 t2 -> WeakEqual s1 s2 -> WeakEqual (t1 @ s1) (t2 @ s2)
 | we_s : forall (x y z : Term), WeakEqual (LS @ x @ y @ z) ((x @ z) @ (y @ z))
 | we_k : forall (x y : Term), WeakEqual (LK @ x @ y) x

@@ -1,12 +1,12 @@
 From Hammer Require Import Hammer Reconstr.
 
+Require Import Arith.
+
 Hammer_version.
 Hammer_objects.
 
 Set Hammer CrushLimit 0.
 Set Hammer GSMode 6.
-
-Require Import Arith.
 
 Lemma lem_1 : le 1 2.
   hammer.
