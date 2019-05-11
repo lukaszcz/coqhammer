@@ -107,6 +107,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
                                mk_id (string_of_int n);
                                hhterm_of_precdeclaration recdef]
   | Int _ -> assert false
+  | Float _          -> raise (HammerError "Primitive floats not supported.")
 
 and hhterm_of_constrarray a =
   tuple ((mk_id "$ConstrArray") :: List.map hhterm_of (Array.to_list a))
