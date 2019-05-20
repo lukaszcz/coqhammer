@@ -14,7 +14,7 @@ matrix:
     sudo: required
     services: docker
     env:
-    - COQ_IMAGE=coqorg/coq:dev
+    - COQ_IMAGE=coqorg/coq:8.10
     - CONTRIB_NAME=coqhammer
     - NJOBS=2
     install: |
