@@ -1,4 +1,4 @@
-CoqHammer (dev) for Coq master (use other branches for other versions of Coq)
+CoqHammer (dev) for Coq 8.10
 
 [![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=master)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
@@ -18,7 +18,7 @@ databases. At present, however, best results are achieved for statements
 
 Requirements
 ------------
-- [Coq master](https://github.com/coq/coq)
+- [Coq 8.10](https://github.com/coq/coq)
 - automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
