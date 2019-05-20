@@ -28,7 +28,7 @@ let hhterm_of_global glob =
   mk_id (Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob)))
 
 let hhterm_of_sort s = match Sorts.family s with
-  | InSProp -> mk_id "$SProp"
+  | InSProp -> mk_id "$Prop"
   | InProp -> mk_id "$Prop"
   | InSet  -> mk_id "$Set"
   | InType -> mk_id "$Type"
