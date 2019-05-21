@@ -13,11 +13,6 @@ Proof.
   hammer.
 Qed.
 
-Lemma lem_2 : forall n : Z, BinInt.Z.Odd n \/ BinInt.Z.Odd (n + 1).
-Proof.
-  hammer.
-Qed.
-
 Lemma lem_3 : Z.le 2 3.
 Proof.
   hammer.
