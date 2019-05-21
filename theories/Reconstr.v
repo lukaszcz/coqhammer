@@ -1,4 +1,4 @@
-(* Coq v8.7 required *)
+(* Coq v8.9 required *)
 (* author: Lukasz Czajka *)
 (* This file contains reconstruction tactics for CoqHammer. *)
 (* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
