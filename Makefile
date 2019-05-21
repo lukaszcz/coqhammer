@@ -6,7 +6,7 @@ plugin: Makefile.coq Makefile.coq.local
 tactics: Makefile.coq.tactics
 	$(MAKE) -f Makefile.coq.tactics
 
-install: install-plugin install-tactics
+install: install-plugin
 
 install-plugin: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq install
@@ -14,7 +14,7 @@ install-plugin: Makefile.coq Makefile.coq.local
 install-tactics: Makefile.coq.tactics
 	$(MAKE) -f Makefile.coq.tactics install
 
-uninstall: uninstall-plugin uninstall-tactics
+uninstall: uninstall-plugin
 
 uninstall-plugin: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq uninstall
