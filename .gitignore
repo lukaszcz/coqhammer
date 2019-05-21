@@ -8,6 +8,9 @@ htimeout
 Makefile.coq
 Makefile.coq.bak
 Makefile.coq.conf
+Makefile.coq.tactics
+Makefile.coq.tactics.bak
+Makefile.coq.tactics.conf
 
 *.annot
 *.cmo
