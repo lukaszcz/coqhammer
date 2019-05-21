@@ -53,6 +53,15 @@ Note that some old versions of Proof General encounter problems with
 the plugin. If you use Proof General you might need the most recent
 version obtained directly from https://proofgeneral.github.io.
 
+If you are only interested in the CoqHammer's reconstruction tactics,
+they can be installed standalone (without the hammer plugin) via OPAM
+after adding the `coq-released` repository as above:
+```
+opam install coq-hammer-tactics
+```
+To instead build and install the tactics manually, use `make tactics`
+followed by `make install-tactics`.
+
 Usage
 -----
 
