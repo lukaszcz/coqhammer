@@ -1,14 +1,26 @@
-all: Makefile.coq Makefile.coq.tactics Makefile.coq.local
-	$(MAKE) -f Makefile.coq.tactics
+all: plugin
+
+plugin: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq
 
-install: install-tactics install-plugin
+tactics: Makefile.coq.tactics
+	$(MAKE) -f Makefile.coq.tactics
+
+install: install-plugin install-tactics
 
 install-plugin: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq install
 
 install-tactics: Makefile.coq.tactics
 	$(MAKE) -f Makefile.coq.tactics install
+
+uninstall: uninstall-plugin uninstall-tactics
+
+uninstall-plugin: Makefile.coq Makefile.coq.local
+	$(MAKE) -f Makefile.coq uninstall
+
+uninstall-tactics: Makefile.coq.tactics
+	$(MAKE) -f Makefile.coq.tactics uninstall
 
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o Makefile.coq
@@ -24,4 +36,4 @@ clean: Makefile.coq Makefile.coq.tactics Makefile.coq.local
 	$(MAKE) -f Makefile.coq.tactics cleanall
 	rm -f Makefile.coq Makefile.coq.conf Makefile.coq.tactics Makefile.coq.tactics.conf
 
-.PHONY: all install install-tactics install-plugin clean tests
+.PHONY: all plugin tactics install install-tactics install-plugin clean tests

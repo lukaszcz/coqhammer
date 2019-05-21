@@ -29,4 +29,5 @@ src/provers.ml
 src/partac.ml
 src/hammer.ml4
 src/hammer_plugin.mllib
+theories/Reconstr.v
 theories/Hammer.v
