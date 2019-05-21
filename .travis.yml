@@ -12,8 +12,9 @@ opam: &OPAM
       export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
       set -ex  # -e = exit on failure; -x = trace for debug
       opam update -y
-      opam pin add ${CONTRIB_NAME} . -y --no-action
-      opam install ${CONTRIB_NAME} -y -j ${NJOBS} --deps-only
+      opam pin add coq-hammer-tactics . -y -n -k path
+      opam pin add coq-hammer . -y -n -k path
+      opam install ${CONTRIB_NAME}.8.9.dev -y -j ${NJOBS} --deps-only
       opam config list
       opam repo list
       opam list
@@ -25,13 +26,23 @@ opam: &OPAM
       export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
       set -ex
       sudo chown -R coq:coq /home/coq/${CONTRIB_NAME}
-      opam install ${CONTRIB_NAME} -v -y -j ${NJOBS}
+      opam install ${CONTRIB_NAME}.8.9.dev -v -y -j ${NJOBS}
       "
   - docker stop COQ  # optional
   - echo -en 'travis_fold:end:script\\r'
 
+nix: &NIX
+  language: nix
+  script:
+  - nix-build --argstr coq-version-or-url "$COQ" --extra-substituters https://coq.cachix.org --trusted-public-keys "cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY= coq.cachix.org-1:5QW/wwEnD+l2jvN6QRbRRsa4hBHG3QiQQ26cxu1F5tI="
+
 matrix:
   include:
+
+  # Test supported versions of Coq via Nix
+  - env:
+    - COQ=8.9
+    <<: *NIX
 
   # Test supported versions of Coq via OPAM
   - env:
