@@ -61,20 +61,10 @@ let extract_features (t : hhterm) : string list =
 
 let get_def_features (def : hhdef) : string list =
   match def with
-  | (Comb(Comb(Id "$Ind", Id _), _), _, kind, ty, _) ->
+  | (_, true, _, ty, _) ->
      extract_features (Lazy.force ty)
-  | (Comb(Id "$Const", Id _), _, Comb(Id "$Sort", Id "$Prop"), ty, _) ->
-     extract_features (Lazy.force ty)
-  | (Comb(Id "$Const", Id _), true, kind, ty, prf) ->
-     extract_features (Lazy.force ty)
-  | (Comb(Id "$Const", Id _), false, kind, ty, prf) ->
+  | (_, false, _, ty, prf) ->
      extract_features (Comb(Lazy.force ty, Lazy.force prf))
-  | (Comb(Comb(Id "$Construct", _), Id cname), _, kind, ty, _) ->
-     extract_features (Lazy.force ty)
-  | (Comb(Id "$Var", Id _), _, kind, ty, _) ->
-     extract_features (Lazy.force ty)
-  | _ ->
-     []
 
 let get_deps (def : hhdef) : string list =
   match def with
