@@ -18,7 +18,7 @@ build: [make "-j%{jobs}%" "tactics"]
 install: [make "install-tactics"]
 depends: [
   "ocaml"
-  "coq" {= "dev"}
+  "coq" {>= "8.10"}
 ]
 conflicts: [
   "coq-hammer"

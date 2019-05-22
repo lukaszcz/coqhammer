@@ -17,7 +17,7 @@ build: [make "-j%{jobs}%"]
 install: [make "install"]
 depends: [
   "ocaml"
-  "coq" {= "dev"}
+  "coq" {>= "8.10"}
   "conf-g++" {build}
 ]
 conflicts: [
