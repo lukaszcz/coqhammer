@@ -1,2 +1,2 @@
--Q theories/Tactics Hammer.Tactics
-theories/Tactics/Reconstr.v
+-Q theories Hammer
+theories/Reconstr.v
