@@ -30,5 +30,5 @@ src/partac.ml
 src/hammer_lib.ml
 src/hammer.mlg
 src/hammer_plugin.mllib
-theories/Tactics/Reconstr.v
-theories/Plugin/Hammer.v
+theories/Reconstr.v
+theories/Hammer.v
