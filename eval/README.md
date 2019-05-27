@@ -63,7 +63,7 @@ After executing these steps, the reconstruction results are in the
    the `stat` program (see below).
 
 Steps 6-9 may be run using the script `./run-eval.sh [-v] N [your.mail@mail.com]`.
-The optional flat -v enables the verbose mode (more emails about the progress are sent).
+The optional flag -v enables the verbose mode (more emails about the progress are sent).
 
 Tools
 -----
