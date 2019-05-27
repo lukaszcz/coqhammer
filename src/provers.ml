@@ -14,6 +14,8 @@ type atp_info = {
 
 (******************************************************************************)
 
+let unescape s = Scanf.unescaped (Scanf.unescaped s)
+
 let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
 
 let is_good_dep s = is_alpha (String.get s 0) && not (Hhlib.string_begins_with s "_HAMMER_")
@@ -148,7 +150,7 @@ let extract_eprover_data outfile =
         else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
           let i = String.rindex ln ',' + 2 in
           let j = String.rindex ln '\'' in
-          let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+          let name = unescape (String.sub ln (i + 1) (j - i - 1)) in
           pom (name :: acc)
         else
           pom acc
@@ -180,7 +182,7 @@ let extract_z3_data outfile =
     ignore (input_line ic);
     let ln = String.trim (input_line ic) in
     let s = String.sub ln 13 (String.length ln - 2 - 13) in
-    let names = List.map Scanf.unescaped (Str.split (Str.regexp "'| |'") s) in
+    let names = List.map unescape (Str.split (Str.regexp "'| |'") s) in
     close_in ic;
     get_atp_info names
   with _ ->
@@ -206,7 +208,7 @@ let extract_vampire_data outfile =
         else
           let i = String.rindex ln ',' + 1 in
           let j = String.rindex ln '\'' in
-          let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+          let name = unescape (String.sub ln (i + 1) (j - i - 1)) in
           if name <> "HAMMER_GOAL" then
             pom (name :: acc)
           else
@@ -243,7 +245,7 @@ let extract_cvc4_data outfile =
         else
           let i = String.index ln '\''  in
           let j = String.rindex ln '\'' in
-          let name = Scanf.unescaped (String.sub ln (i + 1) (j - i - 1)) in
+          let name = unescape (String.sub ln (i + 1) (j - i - 1)) in
           if name <> "HAMMER_GOAL" then
             pom (name :: acc)
           else

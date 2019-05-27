@@ -481,25 +481,32 @@ let try_scrush () =
 
 (***************************************************************************************)
 
-let try_tactic f =
+let try_fun (f : unit -> 'a) (g : unit -> 'a) =
   try
     f ()
   with
   | HammerError(msg) ->
      Msg.error ("Hammer error: " ^ msg);
-    ltac_apply "idtac" []
+     g ()
   | HammerFailure(msg) ->
      Msg.error ("Hammer failed: " ^ msg);
-    ltac_apply "idtac" []
+     g ()
   | Failure s ->
      Msg.error ("CoqHammer bug: " ^ s);
-    Msg.error "Please report.";
-    ltac_apply "idtac" []
+     Msg.error "Please report.";
+     g ()
   | Sys.Break ->
      raise Sys.Break
+  | CErrors.UserError(_, p) ->
+     Msg.error ("Coq error:");
+     msg_notice p;
+     g ()
   | e ->
      Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
-    ltac_apply "idtac" []
+     g ()
+
+let try_tactic (f : unit -> unit Proofview.tactic) =
+  try_fun f (fun () -> ltac_apply "idtac" [])
 
 let try_goal_tactic f =
   Proofview.Goal.nf_enter
@@ -759,24 +766,28 @@ let hammer_hook_tac prefix name =
                        if pid = 0 then
                          begin
                            try
-                             Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
-                             let info = extract fname in
-                             let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
-                             run_tactics deps defs args
-                               begin fun tac deps defs ->
-                                 let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
-                                 ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                                 Msg.info msg;
-                                 exit 0
-                               end
+                             try_fun
                                begin fun () ->
-                                 let msg = "Failure " ^ name ^ " " ^ str in
-                                 ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
-                                 Msg.info msg;
-                                 exit 1
+                                 Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
+                                 let info = extract fname in
+                                 let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
+                                 run_tactics deps defs args
+                                   begin fun tac deps defs ->
+                                     let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
+                                     ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                                     Msg.info msg;
+                                     exit 0
+                                   end
+                                   begin fun () ->
+                                     let msg = "Failure " ^ name ^ " " ^ str in
+                                     ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                                     Msg.info msg;
+                                     exit 1
+                                   end
                                end
-                           with (HammerError s) ->
-                             Msg.info s; exit 1
+                               (fun () -> exit 1)
+                           with _ ->
+                             exit 1
                          end
                        else
                          begin
