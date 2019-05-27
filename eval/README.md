@@ -10,7 +10,7 @@ evaluate is already prepared (according to steps 1-5 below), then put
 it in the `problems/` subdirectory and do:
 
 ```bash
-./run-eval.sh N [your.mail@mail.com]
+./run-eval.sh [-v] N [your.mail@mail.com]
 ```
 
 Otherwise follow all steps below.
@@ -62,7 +62,8 @@ After executing these steps, the reconstruction results are in the
    This computes the statistics (including the greedy sequence), using
    the `stat` program (see below).
 
-Steps 6-9 may be run using the script `./run-eval.sh N [your.mail@mail.com]`.
+Steps 6-9 may be run using the script `./run-eval.sh [-v] N [your.mail@mail.com]`.
+The optional flat -v enables the verbose mode (more emails about the progress are sent).
 
 Tools
 -----
