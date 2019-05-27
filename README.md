@@ -34,11 +34,18 @@ opam install coq-hammer
 
 To instead build and install CoqHammer manually, run `make` followed
 by `make install`. Then optionally run `make tests` to check if
-everything works (some of the tests may fail if your machine is not
-fast enough or you do not have all provers installed).
+everything works. Some of the tests may fail if your machine is not
+fast enough or you do not have all provers installed. More information
+about provers is provided below.
 
-To use CoqHammer, you will also need some automated provers
-installed. More information about provers is provided below.
+If you are only interested in the CoqHammer's reconstruction tactics,
+they can be installed standalone (without the hammer plugin) via OPAM
+after adding the `coq-released` repository as above:
+```
+opam install coq-hammer-tactics
+```
+To instead build and install the tactics manually, use `make tactics`
+followed by `make install-tactics`.
 
 The plugin has been tested on Linux and MacOS X. On MacOS X you need
 `grep` available in the path. You also need the GNU C and C++
@@ -53,15 +60,6 @@ directory is guessed basing on the Coq library directory.
 Note that some old versions of Proof General encounter problems with
 the plugin. If you use Proof General you might need the most recent
 version obtained directly from https://proofgeneral.github.io.
-
-If you are only interested in the CoqHammer's reconstruction tactics,
-they can be installed standalone (without the hammer plugin) via OPAM
-after adding the `coq-released` repository as above:
-```
-opam install coq-hammer-tactics
-```
-To instead build and install the tactics manually, use `make tactics`
-followed by `make install-tactics`.
 
 Usage
 -----
