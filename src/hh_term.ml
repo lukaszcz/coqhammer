@@ -25,6 +25,9 @@ let get_hhterm_name (c : hhterm) : string =
 let get_hhdef_name ((c, _, _, _, _) : hhdef) : string =
   get_hhterm_name c
 
+let hhdef_is_opaque ((_, opaque, _, _, _) : hhdef) : bool =
+  opaque
+
 let rec string_of_hhterm t =
   match t with
   | Id(s) -> s

@@ -29,44 +29,84 @@ let rec top_feature = function
   | _ -> ""
 
 let extract_features (t : hhterm) : string list =
-  let rec pom t acc =
+  let get_polarized c pos =
+    if pos then
+      c ^ "+"
+    else
+      c ^ "-"
+  in
+  let add_feature c pos acc =
+    c :: (get_polarized c pos) :: acc
+  in
+  let rec pom t pos acc =
     match t with
     | Id _ ->
       acc
+    | Comb(Comb(Comb(Id "$Prod", Comb(Id "$Name", Id _)), vartype), body) ->
+       pom vartype (not pos) (pom body pos acc)
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.and"), _)), args) ->
+       pom args pos acc
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.or"), _)), args) ->
+       pom args pos acc
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.not"), _)), args) ->
+       pom args (not pos) acc
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.iff"), _)), args) ->
+       pom args pos (pom args (not pos) acc)
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.ex"), _)),
+           Comb(Comb(Id "$ConstrArray", _),
+                Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id _)), vartype), body))) ->
+       pom vartype pos (pom body pos acc)
+    | Comb(Comb(Id "$App", Comb(Id "$Const", Id "Coq.Init.Logic.all")),
+           Comb(Comb(Id "$ConstrArray", _),
+                Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id _)), vartype), body))) ->
+       pom vartype (not pos) (pom body pos acc)
     | Comb(Comb(Id "$Construct", x), Id c)
         when
           not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
-      pom x (c :: acc)
+       pom x pos (add_feature c pos acc)
     | Comb(Id x, Id c)
         when (x = "$Const" || x = "$Ind") &&
           not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
-      (c :: acc)
+       add_feature c pos acc
     | Comb(Comb(Id "$App", Comb(Id "$Const", Id c)), args)
     | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id c), _)), args)
     | Comb(Comb(Id "$App", Comb(Id "$Var", Id c)), args)
     | Comb(Comb(Id "$App", Comb(Comb(Id "$Construct", _), Id c)), args) ->
-      let rec app_fea acc = function
-      | Id "$ConstrArray" -> acc
-      | Comb(moreargs, arg) ->
-         begin match top_feature arg with
-         | "" -> app_fea acc moreargs
-         | s -> app_fea ((c ^ "-" ^ s) :: acc) moreargs
-         end
-      | _ ->
-         failwith "impossible"
-      in
-      pom args (c :: (app_fea acc args))
+       let rec app_fea acc = function
+         | Id "$ConstrArray" -> acc
+         | Comb(moreargs, arg) ->
+            begin match top_feature arg with
+            | "" -> app_fea acc moreargs
+            | s -> app_fea ((c ^ "-" ^ s) :: acc) moreargs
+            end
+         | _ ->
+            failwith "impossible"
+       in
+       let feas = c :: app_fea [] args in
+       pom args pos (List.fold_left (fun acc c -> add_feature c pos acc) acc feas)
     | Comb(x, y) ->
-      pom y (pom x acc)
+       pom y pos (pom x pos acc)
   in
-  Hhlib.sort_uniq compare (pom t [])
+  Hhlib.sort_uniq compare (pom t true [])
 
-let get_def_features (def : hhdef) : string list =
+let get_def_fea_term (def : hhdef) : hhterm =
   match def with
   | (_, true, _, ty, _) ->
-     extract_features (Lazy.force ty)
+     Lazy.force ty
   | (_, false, _, ty, prf) ->
-     extract_features (Comb(Lazy.force ty, Lazy.force prf))
+     Comb(Lazy.force ty, Lazy.force prf)
+
+let get_def_features (def : hhdef) : string list =
+  extract_features (get_def_fea_term def)
+
+let get_goal_features (hyps : hhdef list) (goal : hhdef) : string list =
+  let rec pom lst =
+    match lst with
+    | [] -> get_def_fea_term goal
+    | h :: t ->
+       Comb(Comb(Comb(Id "$Prod", Comb(Id "$Name", Id "$Anonymous")), get_def_fea_term h), pom t)
+  in
+  extract_features (pom hyps)
 
 let get_deps (def : hhdef) : string list =
   match def with
@@ -105,9 +145,6 @@ let is_nontrivial (def : hhdef) : bool =
     (if !Opt.filter_classes then not (Hhlib.string_begins_with name "Coq.Classes.") else true) &&
     (if !Opt.filter_hurkens then
         not (Hhlib.string_begins_with name "Coq.Logic.Hurkens.") else true)
-
-let get_goal_features (hyps : hhdef list) (goal : hhdef) : string list =
-  List.concat (List.map get_def_features (goal :: hyps))
 
 let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
