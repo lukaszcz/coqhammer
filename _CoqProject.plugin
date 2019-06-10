@@ -1,4 +1,4 @@
--Q theories Hammer
+-Q theories/Plugin Hammer.Plugin
 -Q src Hammer.Plugin
 -I src
 src/hammer_errors.ml
@@ -30,5 +30,4 @@ src/partac.ml
 src/hammer_lib.ml
 src/hammer.mlg
 src/hammer_plugin.mllib
-theories/Tactics/Reconstr.v
 theories/Plugin/Hammer.v

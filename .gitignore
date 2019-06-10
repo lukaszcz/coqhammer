@@ -11,6 +11,9 @@ Makefile.coq.conf
 Makefile.coq.tactics
 Makefile.coq.tactics.bak
 Makefile.coq.tactics.conf
+Makefile.coq.plugin
+Makefile.coq.plugin.bak
+Makefile.coq.plugin.conf
 
 *.annot
 *.cmo
