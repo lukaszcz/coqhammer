@@ -1,6 +1,13 @@
 open Hh_term
 open Hammer_errors
 
+(*********************************************************************************)
+(* feature options *)
+
+let opt_feature_polarity = true
+
+(*********************************************************************************)
+
 let extract_consts (t : hhterm) : string list =
   let rec pom t acc =
     match t with
@@ -36,7 +43,10 @@ let extract_features (t : hhterm) : string list =
       c ^ "-"
   in
   let add_feature c pos acc =
-    c :: (get_polarized c pos) :: acc
+    if opt_feature_polarity then
+      c :: (get_polarized c pos) :: acc
+    else
+      c :: acc
   in
   let rec pom t pos acc =
     match t with
