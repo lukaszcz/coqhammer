@@ -42,10 +42,10 @@ tests:
 quicktest: test-plugin test-tactics
 
 test-plugin:
-	cd tests && coqc plugin_test.v
+	$(MAKE) -C tests plugin_test.vo
 
 test-tactics:
-	cd tests && coqc tactics_test.v
+	$(MAKE) -C tests tactics_test.vo
 
 clean: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq cleanall
