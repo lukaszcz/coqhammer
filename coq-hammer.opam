@@ -15,7 +15,10 @@ logics of automated systems and the reconstruction of successfully found proofs.
 """
 
 build: [make "-j%{jobs}%" "plugin"]
-install: [make "install-plugin"]
+install: [
+  [make "install-plugin"]
+  [make "test-plugin"] {with-test}
+]
 depends: [
   "ocaml"
   "coq" {>= "8.10" & < "8.11~"}
