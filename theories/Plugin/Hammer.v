@@ -1,2 +1,2 @@
-From Hammer Require Reconstr.
+From Hammer Require Tactics.Reconstr.
 Declare ML Module "hammer_plugin".
