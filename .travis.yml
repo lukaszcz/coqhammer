@@ -26,7 +26,7 @@ opam: &OPAM
       export PS4='+ \e[33;1m(\$0 @ line \$LINENO) \$\e[0m '
       set -ex
       sudo chown -R coq:coq /home/coq/${CONTRIB_NAME}
-      opam install ${CONTRIB_NAME}.dev -v -y -j ${NJOBS}
+      opam install ${CONTRIB_NAME}.dev -v -y -t -j ${NJOBS}
       "
   - docker stop COQ  # optional
   - echo -en 'travis_fold:end:script\\r'
