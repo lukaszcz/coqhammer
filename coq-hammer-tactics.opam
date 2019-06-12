@@ -1,4 +1,5 @@
 opam-version: "2.0"
+version: "8.9.dev"
 maintainer: "palmskog@gmail.com"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
@@ -6,12 +7,12 @@ dev-repo: "git+https://github.com/lukaszcz/coqhammer.git"
 bug-reports: "https://github.com/lukaszcz/coqhammer/issues"
 license: "LGPL-2.1-only"
 
-synopsis: "Standalone reconstruction tactics output by the hammer for Coq"
+synopsis: "Reconstruction tactics for the hammer for Coq"
 description: """
-Standalone collection of tactics that are used by the hammer for Coq
+Collection of tactics that are used by the hammer for Coq
 to reconstruct proofs found by automated theorem provers. When the hammer
 has been successfully applied to a project, only this package needs
-to be installed, eliding the full hammer plugin.
+to be installed; the hammer plugin is not required.
 """
 
 build: [make "-j%{jobs}%" "tactics"]
@@ -19,9 +20,6 @@ install: [make "install-tactics"]
 depends: [
   "ocaml"
   "coq" {>= "8.8" & < "8.10~"}
-]
-conflicts: [
-  "coq-hammer"
 ]
 
 tags: [
