@@ -1,8 +1,22 @@
+CoqHammer v. 1.1.1
+==================
+
+Coq versions compatibility: 8.9.
+
+Overview of changes
+-------------------
+* Separate packaging of the plugin and the reconstruction tactics.
+* Quick plugin and tactics tests which do not require ATP provers
+  installed (`make quicktest`, `make test-plugin`, `make test-tactics`).
+* Machine-learning features now take into account the polarity
+  (positive/negative) of symbol occurrences (`opt_feature_polarity`).
+* Opaqueness information now taken into account with constant
+  unfolding.
 
 CoqHammer v. 1.1
 ================
 
-Coq versions compatibility: 8.8.
+Coq versions compatibility: 8.8, 8.9.
 
 Overview of changes
 -------------------
