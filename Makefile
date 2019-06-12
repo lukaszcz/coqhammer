@@ -39,8 +39,16 @@ Makefile.coq.tactics: _CoqProject.tactics
 tests:
 	cd tests && $(MAKE) -B
 
+quicktest: test-plugin test-tactics
+
+test-plugin:
+	cd tests && coqc plugin_test.v
+
+test-tactics:
+	cd tests && coqc tactics_test.v
+
 clean: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq cleanall
 	rm -f Makefile.coq Makefile.coq.conf Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf
 
-.PHONY: default all tactics plugin install install-tactics install-plugin uninstall uninstall-tactics uninstall-plugin tests clean
+.PHONY: default all tactics plugin install install-tactics install-plugin uninstall uninstall-tactics uninstall-plugin tests quicktest test-plugin test-tactics clean
