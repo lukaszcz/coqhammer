@@ -16,7 +16,10 @@ to be installed; the hammer plugin is not required.
 """
 
 build: [make "-j%{jobs}%" "tactics"]
-install: [make "install-tactics"]
+install: [
+  [make "install-tactics"]
+  [make "test-tactics"] {with-test}
+]
 depends: [
   "ocaml"
   "coq" {= "dev"}
