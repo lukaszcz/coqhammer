@@ -484,7 +484,7 @@ let try_fun (f : unit -> 'a) (g : unit -> 'a) =
      raise Sys.Break
   | CErrors.UserError(_, p) ->
      Msg.error ("Coq error:");
-     msg_notice p;
+     Feedback.msg_notice p;
      g ()
   | e ->
      Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
@@ -716,7 +716,9 @@ let hammer_hook_tac prefix name =
                                begin fun () ->
                                  Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
                                  let info = extract fname in
-                                 let (deps, defs, args) = get_tac_args info.Provers.deps info.Provers.defs in
+                                 let (deps, defs, args) =
+                                   get_tac_args env sigma info.Provers.deps info.Provers.defs
+                                 in
                                  run_tactics deps defs args
                                    begin fun tac deps defs ->
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
