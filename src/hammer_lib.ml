@@ -118,7 +118,7 @@ let get_type_of env evmap t =
 (* only for constants *)
 let hhproof_of c =
   begin match Global.body_of_constant Library.indirect_accessor c with
-  | Some b -> hhterm_of (fst b)
+  | Some (b, _, _) -> hhterm_of b
   | None -> mk_id "$Axiom"
   end
 
