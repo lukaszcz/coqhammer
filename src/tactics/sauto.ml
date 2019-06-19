@@ -349,7 +349,7 @@ let is_case_split opts evd t =
         let open Constr in
         let open EConstr in
         match kind evd t with
-        | Case (ci, _, _, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits -> raise Exit
+        | Case (ci, _, _, _, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits -> raise Exit
         | _ -> acc
       end false evd t
     with Exit ->
@@ -485,7 +485,7 @@ let case_splitting b_all opts =
          let open Constr in
          let open EConstr in
          match kind evd t with
-         | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
+         | Case (ci, _, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
             Proofview.tclTHEN (sdestruct c <*> subst_simpl opts) acc
          | _ -> acc
        end (Proofview.tclUNIT ()) evd (Proofview.Goal.concl gl)
@@ -632,7 +632,7 @@ let create_case_actions opts evd t acc =
     let open Constr in
     let open EConstr in
     match kind evd t with
-    | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
+    | Case (ci, _, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
        let num_ctrs = Utils.get_ind_nconstrs ci.ci_ind in
        (40 + num_ctrs * 5, num_ctrs, ActDestruct c) :: acc
     | _ -> acc

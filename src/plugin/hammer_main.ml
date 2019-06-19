@@ -93,7 +93,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | Evar (evk,cl)     -> raise (HammerError "Existential variables not supported.")
   | Ind (ind,u)       -> hhterm_of_inductive ind
   | Construct (ctr,u) -> hhterm_of_construct ctr
-  | Case (ci,p,c,bl)  ->
+  | Case (ci,p,_,c,bl)  ->
       tuple ([mk_id "$Case"; hhterm_of_caseinfo ci ; hhterm_of p;
         hhterm_of c; hhterm_of_constrarray bl])
   | Fix (nvn,recdef) -> tuple [mk_id "$Fix";
