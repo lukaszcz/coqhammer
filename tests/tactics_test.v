@@ -85,18 +85,14 @@ Inductive NoLambdas : Term -> Prop :=
 | nl_var : forall n : nat, NoLambdas (LVar n)
 | nl_app : forall x y : Term, NoLambdas x -> NoLambdas y -> NoLambdas (LApp x y).
 
-Ltac pose_nolams := generalize nl_s nl_k nl_i nl_var nl_app; intros.
-
 Lemma no_lams_abstr : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr v t).
 Proof.
-  pose_nolams.
-  induction t; yelles 2.
+  induction t; yelles 3.
 Qed.
 
 Lemma no_lams_transl : forall t : Term, NoLambdas (transl t).
 Proof.
   pose proof no_lams_abstr.
-  pose_nolams.
   induction t; yelles 2.
 Qed.
 
@@ -262,14 +258,12 @@ Fixpoint transl2 (t : Term) : Term :=
 
 Lemma no_lams_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr2 v t).
 Proof.
-  pose_nolams.
-  induction t; yelles 2.
+  induction t; yelles 3.
 Qed.
 
 Lemma no_lams_transl2 : forall t : Term, NoLambdas (transl2 t).
 Proof.
   pose proof no_lams_abstr2.
-  pose_nolams.
   induction t; yelles 2.
 Qed.
 
