@@ -1,6 +1,8 @@
 (* Coq v8.9 required *)
 (* author: Lukasz Czajka *)
-(* This file contains reconstruction tactics for CoqHammer. *)
+(* NOTE: This file is for backward compatibility only. It should not
+   be used in new developments. *)
+(* This file contains backward compatibility reconstruction tactics for CoqHammer. *)
 (* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 (* Fragments of this file are based on the "crush" tactic of Adam Chlipala. *)
@@ -725,6 +727,9 @@ Ltac ysplit :=
     | [ |- ?A /\ _ ] =>
       cut A; [ let H := fresh "H" in
                intro H; split; [ exact H | ysimp H ] | idtac ]
+    | [ |- prod ?A _ ] =>
+      cut A; [ let H := fresh "H" in
+               intro H; split; [ exact H | ysimp H ] | idtac ]
     | [ |- context[match ?X with _ => _ end] ] => ydestruct X
     | [ H : context[match ?X with _ => _ end] |- _ ] => ydestruct X
   end.
@@ -883,13 +888,6 @@ Ltac orinst H :=
       elim H; clear H; yintro
   end.
 
-Ltac tryexfalso f :=
-  first [ f tt |
-          lazymatch goal with
-             | [ |- False ] => fail
-             | _ => exfalso; f tt
-          end ].
-
 Ltac yapply H :=
   lazymatch goal with
     | [ H0 : context[_ = _] |- _ ] => rapply H
@@ -931,6 +929,10 @@ Ltac yelles0 defs n rtrace gtrace :=
         | [ |- context[match ?X with _ => _ end] ] => doyelles defs n || fail 1
         | [ H : context[match ?X with _ => _ end] |- _ ] => doyelles defs n || fail 1
         | [ |- exists x, _ ] =>
+          eexists; yelles0 defs n rtrace (gtrace, G)
+        | [ |- { x & _ } ] =>
+          eexists; yelles0 defs n rtrace (gtrace, G)
+        | [ |- { x | _ } ] =>
           eexists; yelles0 defs n rtrace (gtrace, G)
         | [ H : forall x, G |- _ ] =>
           simple eapply H; yelles0 defs k rtrace (gtrace, G)

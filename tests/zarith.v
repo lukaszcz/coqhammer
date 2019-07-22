@@ -1,4 +1,4 @@
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
 
 Require Import ZArith.
 Open Scope Z_scope.

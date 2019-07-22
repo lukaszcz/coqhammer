@@ -1,5 +1,11 @@
 module StringSet = Set.Make(String)
 
+let (@$) f x = f x
+
+let comp f g x = f (g x)
+
+let flip f x y = f y x
+
 let strset_from_lst lst = List.fold_left (fun a x -> StringSet.add x a) StringSet.empty lst
 
 let mk_pairs lst =

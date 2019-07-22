@@ -1,5 +1,4 @@
 Hammer_errors
-Hhlib
 Hh_term
 Msg
 Timeout
@@ -17,5 +16,5 @@ Features
 Provers
 Reconstr
 Partac
-Hammer_lib
-Hammer
+Hammer_main
+G_hammer

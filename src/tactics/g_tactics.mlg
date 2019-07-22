@@ -1,0 +1,60 @@
+DECLARE PLUGIN "hammer_tactics"
+
+{
+open Ltac_plugin
+open Stdarg
+open Names
+open Sauto
+open Tactics_main
+
+module Utils = Hhutils
+}
+
+TACTIC EXTEND Hammer_simple_splitting
+| [ "simple_splitting" ] -> { simple_splitting default_s_opts }
+END
+
+TACTIC EXTEND Hammer_eager_inverting
+| [ "eager_inverting" ] -> { eager_inverting default_s_opts }
+END
+
+TACTIC EXTEND Hammer_ssimpl_gen
+| [ "ssimpl" ] -> {
+  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "ssimpl" "unfolding" constr(unfolds) ] -> {
+  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_unfolding = SSome (List.map to_const (destruct_constr unfolds)) }
+}
+END
+
+TACTIC EXTEND Hammer_sauto_gen
+| [ "sauto_gen" int_or_var_opt(n) ] -> { sauto default_s_opts (get_opt n default_sauto_limit) }
+| [ "sauto_gen" int_or_var_opt(n) "with" ne_preident_list(bases) "using" constr(lemmas) "unfolding" constr(unfoldings)
+      "inverting" constr(inverting) "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> {
+  if lemmas = Utils.get_constr "Tactics.default" then
+    sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_limit)
+  else
+    Proofview.tclTHEN
+      (Tactics.generalize (destruct_constr lemmas))
+      (sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_limit))
+}
+END
+
+VERNAC COMMAND EXTEND Hammer_shint_unfold CLASSIFIED AS SIDEFF
+| [ "Tactics" "Hint" "Unfold" ident(id) ] -> {
+  add_unfold_hint (Utils.get_const (Id.to_string id))
+}
+END
+
+VERNAC COMMAND EXTEND Hammer_shint_constructors CLASSIFIED AS SIDEFF
+| [ "Tactics" "Hint" "Constructors" ident(id) ] -> {
+  add_ctrs_hint (Utils.get_inductive (Id.to_string id))
+}
+END
+
+VERNAC COMMAND EXTEND Hammer_shint_rewrite CLASSIFIED AS SIDEFF
+| [ "Tactics" "Hint" "Inversion" ident(id) ] -> {
+  add_inversion_hint (Utils.get_inductive (Id.to_string id))
+}
+END
