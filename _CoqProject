@@ -1,6 +1,10 @@
 -Q theories Hammer
 -Q src Hammer.Plugin
 -I src
+src/utils.mli
+src/utils.ml
+src/sauto.mli
+src/sauto.ml
 src/hammer_errors.ml
 src/hhlib.ml
 src/hh_term.ml
