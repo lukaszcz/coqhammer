@@ -9,6 +9,8 @@ open Context
 
 open Ltac_plugin
 
+module Utils = Hhutils
+
 let (++) f g x = f(g(x))
 
 (***************************************************************************************)
@@ -241,30 +243,8 @@ let get_defs env sigma : Hh_term.hhdef list =
   List.map snd (unique_hhdefs
                   (List.map (hhdef_of_global env sigma) (my_search env)))
 
-let get_tactic (s : string) =
-  (Tacenv.locate_tactic (Libnames.qualid_of_string s))
-
-let get_tacexpr tac args =
-  Tacexpr.TacArg(CAst.make
-                 Tacexpr.(TacCall(CAst.make
-                                 (Locus.ArgArg(None, get_tactic tac),
-                                 args))))
-
-let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
-  Tacinterp.eval_tactic (get_tacexpr tac args)
-
-let ltac_eval tac (args: Tacinterp.Value.t list) =
-  let fold arg (i, vars, lfun) =
-    let id = Id.of_string ("x" ^ string_of_int i) in
-    let x = Tacexpr.Reference (Locus.ArgVar CAst.(make @@ id)) in
-    (succ i, x :: vars, Id.Map.add id arg lfun)
-  in
-  let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
-  let ist = { (Tacinterp.default_ist ()) with Tacinterp.lfun = lfun; } in
-  Tacinterp.eval_tactic_ist ist (get_tacexpr tac args)
-
 let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
-  Timeout.ptimeout tm (ltac_eval tac args)
+  Timeout.ptimeout tm (Utils.ltac_eval tac args)
 
 let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
 
@@ -289,17 +269,17 @@ let mk_pair env evmap x y =
 
 let rec mk_lst env sigma lst =
   match lst with
-  | [] -> get_constr "Reconstr.Empty"
+  | [] -> get_constr "Tactics.default"
   | [h] -> h
   | h :: t -> mk_pair env sigma (mk_lst env sigma t) h
 
-let mk_lst_str lst =
+let mk_lst_str pref lst =
   let get_name x =
-    "@" ^ (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.")
+    "@" ^ (Hhlib.drop_prefix (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.") "Coq.")
   in
   match lst with
-  | [] -> "Reconstr.Empty"
-  | h :: t -> "(" ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h) ^ ")"
+  | [] -> ""
+  | h :: t -> pref ^ " (" ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h) ^ ")"
 
 let get_tac_args env sigma deps defs =
   let map_locate =
@@ -333,36 +313,24 @@ let check_goal_prop gl =
 (***************************************************************************************)
 
 let run_tactics deps defs args msg_success msg_fail =
-  let tactics1 =
-    [ "Reconstr.reasy"; "Reconstr.rsimple"; "Reconstr.rcrush" ]
-  and tactics2 =
-    ["Reconstr.ryelles4"; "Reconstr.rblast"; "Reconstr.ryreconstr"; "Reconstr.rreconstr4";
-     "Reconstr.ryelles6"; "Reconstr.rexhaustive1"; "Reconstr.rscrush"]
+  let tactics =
+    [ ("rhauto", "hauto"); ("rhauto200", "hauto 200"); ("rhauto2000", "hauto 2000");
+      ("rsauto", "sauto"); ("rscrush", "scrush") ]
   in
-  let tacs1 = List.map (fun tac -> ltac_eval tac args) tactics1
-  and tacs2 = List.map (fun tac -> ltac_eval tac args) tactics2
+  let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
   in
-  Partac.partac (3 * !Opt.reconstr_timelimit / 10) tacs1
+  Partac.partac !Opt.reconstr_timelimit tacs
     begin fun k tac ->
       if k >= 0 then
         begin
-          msg_success (List.nth tactics1 k) deps defs;
+          msg_success (snd (List.nth tactics k)) deps defs;
           tac
         end
       else
-        Partac.partac !Opt.reconstr_timelimit tacs2
-          begin fun k tac ->
-            if k >= 0 then
-              begin
-                msg_success (List.nth tactics2 k) deps defs;
-                tac
-              end
-            else
-              begin
-                msg_fail ();
-                ltac_apply "idtac" []
-              end
-          end
+        begin
+          msg_fail ();
+          Tacticals.New.tclIDTAC
+        end
     end
 
 let do_predict hyps deps goal =
@@ -459,10 +427,10 @@ let try_scrush () =
     Proofview.tclZERO (Failure "timeout")
   else
     Proofview.tclBIND
-      (ltac_timeout !Opt.scrush_timelimit "Reconstr.scrush" [])
+      (ltac_timeout !Opt.scrush_timelimit "Tactics.rcrush" [])
       (fun _ ->
-        Msg.info "Replace the hammer tactic with: Reconstr.scrush";
-        ltac_apply "idtac" [])
+        Msg.info "Replace the hammer tactic with: scrush";
+        Tacticals.New.tclIDTAC)
 
 (***************************************************************************************)
 
@@ -491,7 +459,7 @@ let try_fun (f : unit -> 'a) (g : unit -> 'a) =
      g ()
 
 let try_tactic (f : unit -> unit Proofview.tactic) =
-  try_fun f (fun () -> ltac_apply "fail" [])
+  try_fun f (fun () -> Proofview.tclZERO (Failure "Hammer failed"))
 
 let try_goal_tactic f =
   Proofview.Goal.enter
@@ -522,7 +490,7 @@ let hammer_tac () =
                 begin fun tac deps defs ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ " " ^ mk_lst_str deps ^ " " ^ mk_lst_str defs ^ ".")
+                               tac ^ mk_lst_str " using" deps ^ mk_lst_str " unfolding" defs ^ ".")
                 end
                 begin fun () ->
                   Msg.error ("Hammer failed: proof reconstruction failed")
@@ -562,7 +530,7 @@ let predict_tac n pred_method =
           with e ->
             restore (); raise e
         end;
-      ltac_apply "idtac" []
+      Tacticals.New.tclIDTAC
     end
 
 let hammer_features_tac () =
@@ -570,7 +538,7 @@ let hammer_features_tac () =
     begin fun gl ->
       let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
-      ltac_apply "idtac" []
+      Tacticals.New.tclIDTAC
     end
 
 let hammer_print name =
@@ -593,7 +561,7 @@ let hammer_transl name0 =
     let (_, def) = hhdef_of_global env sigma glob in
     let name = Hh_term.get_hhdef_name def in
     Coq_transl.remove_def name;
-    Coq_transl.reinit (def :: get_defs env sigma);
+    Coq_transl.reinit (get_defs env sigma);
     List.iter
       begin fun (n, a) ->
         if not (Hhlib.string_begins_with n "_HAMMER_") then
@@ -620,7 +588,7 @@ let hammer_transl_tac () =
           Msg.notice (n ^ ": " ^ Coqterms.string_of_coqterm a)
         end
         (Coq_transl.translate name);
-      ltac_apply "idtac" []
+      Tacticals.New.tclIDTAC
     end
 
 let hammer_features name =
@@ -661,7 +629,7 @@ let hammer_hook_tac prefix name =
           let str = input_line fopt in
           close_in fopt;
           if str = "check" then
-            ltac_apply "idtac" []
+            Tacticals.New.tclIDTAC
           else if str = "gen-atp" then
             begin
               let env = Proofview.Goal.env gl in
@@ -686,7 +654,7 @@ let hammer_hook_tac prefix name =
                 end
                 premises;
               Msg.info ("Done processing " ^ name ^ ".\n");
-              ltac_apply "idtac" []
+              Tacticals.New.tclIDTAC
             end
           else if str = "reconstr" then
             begin
@@ -746,7 +714,7 @@ let hammer_hook_tac prefix name =
                        hlp lst2
                    end
                 | [] ->
-                   ltac_apply "idtac" []
+                   Tacticals.New.tclIDTAC
               in
               hlp (Hhlib.mk_all_pairs premises provers)
             end
@@ -756,9 +724,9 @@ let hammer_hook_tac prefix name =
       else
         begin
           Msg.info "Goal not a proposition.\n";
-          ltac_apply "idtac" []
+          Tacticals.New.tclIDTAC
         end
     with Sys_error s ->
       Msg.notice ("Warning: " ^ s);
-      ltac_apply "idtac" []
+      Tacticals.New.tclIDTAC
   end

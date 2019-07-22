@@ -1,7 +1,7 @@
 CoqHammer v. 1.1.1
 ==================
 
-Coq versions compatibility: 8.9.
+Coq versions compatibility: 8.9, 8.10.
 
 Overview of changes
 -------------------
@@ -72,4 +72,4 @@ CoqHammer v. 1.0
 
 Coq versions compatibility: 8.6.
 
-First complete CoqHammer version.
+First full CoqHammer version.

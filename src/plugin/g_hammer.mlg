@@ -14,7 +14,7 @@ let () = Mltop.add_known_plugin (fun () ->
   "Hammer"
 ;;
 
-open Hammer_lib
+open Hammer_main
 
 }
 

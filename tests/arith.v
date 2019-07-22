@@ -1,4 +1,4 @@
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
 
 Require Import Arith.
 
@@ -24,11 +24,8 @@ Lemma lem_3 : le 2 3.
 Qed.
 
 Lemma lem_4 : le 3 10.
-  Unset Hammer Eprover.
   hammer.
 Qed.
-
-Set Hammer Eprover.
 
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
@@ -52,17 +49,6 @@ Qed.
 
 Lemma le_minusni_n : forall n i:nat, i <= n -> n - i <= n.
 Proof.
-  hammer.
-Qed.
-
-Lemma even_odd_cor :
-  forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
-Proof.
-  induction n; sauto.
-  exists 0; ycrush.
-  Unset Hammer Vampire.
-  Unset Hammer Z3.
-  Unset Hammer Eprover.
   hammer.
 Qed.
 

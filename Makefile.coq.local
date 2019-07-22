@@ -1,3 +1,5 @@
+COQ_SRC_SUBDIRS+=user-contrib/Hammer/Tactics
+
 post-all:: predict htimeout
 
 predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp src/predict/knn.cpp src/predict/nbayes.cpp src/predict/rforest.cpp src/predict/tfidf.cpp src/predict/dtree.cpp
