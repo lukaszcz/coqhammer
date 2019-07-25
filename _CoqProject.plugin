@@ -1,31 +1,31 @@
 -Q theories/Plugin Hammer.Plugin
--Q src Hammer.Plugin
--I src
-src/hammer_errors.ml
-src/hh_term.ml
-src/msg.ml
-src/timeout.ml
-src/coq_transl_opts.ml
-src/coqterms.ml
-src/defhash.mli
-src/defhash.ml
-src/coq_typing.mli
-src/coq_typing.ml
-src/hashing.mli
-src/hashing.ml
-src/coq_convert.mli
-src/coq_convert.ml
-src/tptp_out.mli
-src/tptp_out.ml
-src/coq_transl.mli
-src/coq_transl.ml
-src/opt.ml
-src/parallel.ml
-src/features.mli
-src/features.ml
-src/provers.mli
-src/provers.ml
-src/partac.ml
-src/g_hammer.ml4
-src/hammer_plugin.mlpack
+-Q src/plugin Hammer.Plugin
+-I src/plugin
+src/plugin/hammer_errors.ml
+src/plugin/hh_term.ml
+src/plugin/msg.ml
+src/plugin/timeout.ml
+src/plugin/coq_transl_opts.ml
+src/plugin/coqterms.ml
+src/plugin/defhash.mli
+src/plugin/defhash.ml
+src/plugin/coq_typing.mli
+src/plugin/coq_typing.ml
+src/plugin/hashing.mli
+src/plugin/hashing.ml
+src/plugin/coq_convert.mli
+src/plugin/coq_convert.ml
+src/plugin/tptp_out.mli
+src/plugin/tptp_out.ml
+src/plugin/coq_transl.mli
+src/plugin/coq_transl.ml
+src/plugin/opt.ml
+src/plugin/parallel.ml
+src/plugin/features.mli
+src/plugin/features.ml
+src/plugin/provers.mli
+src/plugin/provers.ml
+src/plugin/partac.ml
+src/plugin/g_hammer.ml4
+src/plugin/hammer_plugin.mlpack
 theories/Plugin/Hammer.v

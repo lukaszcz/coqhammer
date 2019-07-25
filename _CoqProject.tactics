@@ -1,14 +1,16 @@
 -Q theories/Tactics Hammer.Tactics
--Q src Hammer.Plugin
--I src
-src/hhutils.mli
-src/hhutils.ml
-src/hhlib.ml
-src/g_hammer_lib.ml4
-src/hammer_lib.mllib
-src/sauto.mli
-src/sauto.ml
-src/g_tactics.ml4
-src/hammer_tactics.mlpack
+-Q src/lib Hammer.Tactics
+-Q src/tactics Hammer.Tactics
+-I src/lib
+-I src/tactics
+src/lib/hhutils.mli
+src/lib/hhutils.ml
+src/lib/hhlib.ml
+src/lib/g_hammer_lib.ml4
+src/lib/hammer_lib.mllib
+src/tactics/sauto.mli
+src/tactics/sauto.ml
+src/tactics/g_tactics.ml4
+src/tactics/hammer_tactics.mlpack
 theories/Tactics/Tactics.v
 theories/Tactics/Reconstr.v
