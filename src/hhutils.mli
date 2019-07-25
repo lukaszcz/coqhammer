@@ -24,6 +24,8 @@ val ltac_apply : string -> Tacexpr.glob_tactic_arg list -> unit Proofview.tactic
 
 val ltac_eval : string -> Tacinterp.Value.t list -> unit Proofview.tactic
 
+val get_hyps : Proofview.Goal.t -> (Id.t * EConstr.t) list
+
 val drop_lambdas : Evd.evar_map -> int -> EConstr.t -> EConstr.t
 
 val take_lambdas : Evd.evar_map -> int -> EConstr.t -> (Name.t * EConstr.t) list

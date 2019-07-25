@@ -53,7 +53,7 @@ let get_tactic (s : string) =
 let get_tacexpr tac args =
   Tacexpr.TacArg(None,
                  Tacexpr.TacCall(None,
-                                 (Misctypes.ArgArg(None, get_tactic tac),
+                                 (Locus.ArgArg(None, get_tactic tac),
                                  args)))
 
 let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
@@ -68,6 +68,13 @@ let ltac_eval tac (args: Tacinterp.Value.t list) =
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
   let ist = { (Tacinterp.default_ist ()) with Tacinterp.lfun = lfun; } in
   Tacinterp.eval_tactic_ist ist (get_tacexpr tac args)
+
+let get_hyps gl =
+  List.map
+    (function
+    | Context.Named.Declaration.LocalAssum(x, y) -> (x, y)
+    | Context.Named.Declaration.LocalDef(x, _, y) -> (x, y))
+    (Proofview.Goal.hyps gl)
 
 (***************************************************************************************)
 

@@ -20,6 +20,8 @@ open Ltac_plugin
 open Stdarg
 open Tacarg
 
+module Utils = Hhutils
+
 let (++) f g x = f(g(x))
 
 (***************************************************************************************)

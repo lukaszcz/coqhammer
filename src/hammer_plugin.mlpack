@@ -1,7 +1,4 @@
-Utils
-Sauto
 Hammer_errors
-Hhlib
 Hh_term
 Msg
 Timeout
@@ -19,4 +16,4 @@ Features
 Provers
 Reconstr
 Partac
-Hammer
+G_hammer
