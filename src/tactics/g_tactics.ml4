@@ -6,5 +6,5 @@ open Tacarg
 open Sauto
 
 TACTIC EXTEND Hammer_ssauto
-| [ "ssauto" ] -> [ sauto default_sauto_opts 2 ]
+| [ "ssauto" ] -> [ sauto default_sauto_opts 6 ]
 END

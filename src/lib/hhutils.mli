@@ -42,6 +42,9 @@ val drop_all_prods : Evd.evar_map -> EConstr.t -> EConstr.t
 
 val take_all_prods : Evd.evar_map -> EConstr.t -> (Name.t * EConstr.t) list
 
+val destruct_prod : Evd.evar_map -> EConstr.t ->
+  (Name.t * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t list (* args *)
+
 val map_fold_constr : (int -> 'a -> EConstr.t -> 'a * EConstr.t) ->
                       'a -> Evd.evar_map -> EConstr.t ->
                       'a * EConstr.t

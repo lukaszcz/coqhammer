@@ -62,7 +62,7 @@ let ltac_apply tac (args:Tacexpr.glob_tactic_arg list) =
 let ltac_eval tac (args: Tacinterp.Value.t list) =
   let fold arg (i, vars, lfun) =
     let id = Id.of_string ("x" ^ string_of_int i) in
-    let x = Tacexpr.Reference (Locus.ArgVar CAst.(make @@ id)) in
+    let x = Tacexpr.Reference (Locus.ArgVar CAst.(make id)) in
     (succ i, x :: vars, Id.Map.add id arg lfun)
   in
   let (_, args, lfun) = List.fold_right fold args (0, [], Id.Map.empty) in
@@ -145,6 +145,17 @@ let rec take_all_prods evd t =
   match kind evd t with
   | Prod (na, ty, body) -> (na, ty) :: take_all_prods evd body
   | _ -> []
+
+let destruct_prod evd t =
+  let prods = take_all_prods evd t
+  and concl = drop_all_prods evd t
+  in
+  let open Constr in
+  let open EConstr in
+  match kind evd concl with
+  | App (h, args) -> (prods, h, Array.to_list args)
+  | _ -> (prods, t, [])
+
 
 (***************************************************************************************)
 

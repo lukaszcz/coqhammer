@@ -423,7 +423,7 @@ with simp_hyp H :=
 Ltac simp_hyps :=
   unfold iff in *; unfold not in *;
   repeat match goal with
-           | [ H1 : ?A, H2 : ?A -> ?B |- _ ] =>
+           | [ H2 : ?A -> ?B, H1 : ?A |- _ ] =>
              assert B by (apply H2; exact H1); clear H2
            | [ H : True |- _ ] =>
              clear H
@@ -434,7 +434,7 @@ Ltac simp_hyps :=
 Ltac esimp_hyps :=
   unfold iff in *; unfold not in *;
   repeat match goal with
-         | [ H1 : ?A1, H2 : ?A2 -> ?B |- _ ] =>
+         | [ H2 : ?A2 -> ?B, H1 : ?A1 |- _ ] =>
            unify A1 A2; notHyp B;
            assert B by (apply H2; exact H1); clear H2
          | [ H : True |- _ ] =>
