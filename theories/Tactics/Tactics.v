@@ -1,7 +1,7 @@
 (* Coq v8.9 required *)
 (* author: Lukasz Czajka *)
 (* This file contains reconstruction tactics for CoqHammer. *)
-(* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
+(* Copyright (c) 2017-2019, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 (* Fragments of this file are based on the "crush" tactic of Adam Chlipala. *)
 
@@ -67,16 +67,6 @@ Ltac notProp t :=
   lazymatch type of t with
     | Prop => fail
     | _ => idtac
-  end.
-
-Ltac checkListLen lst n :=
-  lazymatch n with
-    | 0 => constr_eq lst Empty
-    | S ?k =>
-      lazymatch lst with
-        | (?t, ?h) => checkListLen t k
-        | _ => idtac
-      end
   end.
 
 Ltac noEvars t := tryif has_evar t then fail else idtac.
@@ -148,22 +138,6 @@ Ltac with_atom_hyps := with_hyps isAtom.
 Ltac all_hyps f := with_hyps ltac:(fun _ => idtac) ltac:(all f).
 Ltac all_prop_hyps f := with_prop_hyps ltac:(all f).
 Ltac all_atom_hyps f := with_atom_hyps ltac:(all f).
-
-Ltac countHyps inb :=
-  let rec hlp n :=
-      match goal with
-        | [ H : _ |- _ ] =>
-          revert H; hlp (S n); intro H
-        | _ => pose (inb := n)
-      end
-  in
-  hlp 0.
-
-Ltac checkHypsNum n :=
-  let m := fresh "m" in
-  countHyps m;
-  let k := (eval unfold m in m) in
-  natLe k n; clear m.
 
 Ltac yeasy :=
   let rec use_hyp H :=
@@ -419,6 +393,8 @@ with simp_hyp H :=
         | [ H1 : A |- _ ] => isProp A; cut B; [ clear H; sintro tt | apply H; exact H1 ]
       end
   end.
+
+Ltac yintros := repeat yintro.
 
 Ltac simp_hyps :=
   unfold iff in *; unfold not in *;

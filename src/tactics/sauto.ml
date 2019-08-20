@@ -6,16 +6,18 @@ open Ltac_plugin
 
 module Utils = Hhutils
 
+type 'a soption = SNone | SAll | SSome of 'a
+
 type sauto_opts = {
   exhaustive : bool;
   leaf_tac : unit Proofview.tactic;
-  inversions : string list;
+  inversions : string list soption;
 }
 
 let default_sauto_opts =
   { exhaustive = false;
     leaf_tac = Tacticals.New.tclIDTAC;
-    inversions = [] }
+    inversions = SAll }
 
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t |
@@ -31,6 +33,8 @@ let rewrite_lr_tac tac id = Equality.rewriteLR ~tac:(tac, Equality.AllMatches) (
 let rewrite_rl_tac tac id = Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id)
 let einst_tac id = Utils.ltac_apply "Tactics.einst" [mk_tac_arg_id id]
 let exfalso_tac = Utils.ltac_apply "exfalso" []
+let yintros_tac = Utils.ltac_apply "Tactics.yintros" []
+let generalising_tac = Utils.ltac_apply "Tactics.generalizing" []
 
 let eval_hyp evd (id, hyp) =
   let (prods, head, args) as dh = Utils.destruct_prod evd hyp in
@@ -87,7 +91,7 @@ let repeat2 tac1 tac2 =
 
 let (<~>) = repeat2
 
-let rec search opts n hyps visited =
+let rec search opts n hyps hyp_ids visited =
   if n = 0 then
     opts.leaf_tac
   else
@@ -97,29 +101,30 @@ let rec search opts n hyps visited =
         fail_tac
       else
         let evd = Proofview.Goal.sigma gl in
-        let hyps =
+        let (hyps, hyp_ids) =
           if hyps = [] then
-            List.map (eval_hyp evd) (Utils.get_hyps gl)
+            let rhyps = Utils.get_hyps gl in
+            (List.map (eval_hyp evd) rhyps, Id.Set.of_list (List.map fst rhyps))
           else
-            hyps
+            (hyps, hyp_ids)
         in
         let actions = create_actions evd goal hyps in
         if actions = [] then
           opts.leaf_tac
         else
-          apply_actions opts n actions hyps (goal :: visited)
+          apply_actions opts n actions hyps hyp_ids (goal :: visited)
     end
 
-and apply_actions opts n actions hyps visited =
-  let cont branch tac acts =
-    branch
-      (tac <*> search opts (n - 1) hyps visited)
-      (fun _ -> apply_actions opts n acts hyps visited)
-  in
+and apply_actions opts n actions hyps hyp_ids visited =
   let branch =
     if opts.exhaustive then Proofview.tclOR else Proofview.tclORELSE
   in
-  let continue = cont branch in
+  let cont tac acts =
+    branch tac (fun _ -> apply_actions opts n acts hyps hyp_ids visited)
+  in
+  let continue tac acts =
+    cont (tac <*> search opts (n - 1) hyps hyp_ids visited) acts
+  in
   match actions with
   | ActApply id :: acts ->
      continue (Tactics.Simple.eapply (EConstr.mkVar id)) acts
@@ -128,26 +133,29 @@ and apply_actions opts n actions hyps visited =
   | ActRewriteRL id :: acts ->
      continue (rewrite_rl_tac opts.leaf_tac id) acts
   | ActInvert id :: acts ->
-     continue (Inv.inv_clear_tac id) acts
+     cont
+       (Inv.inv_clear_tac id <*> Tactics.simpl_in_concl <*>
+          simplify opts (Id.Set.remove id hyp_ids) <*> search opts (n - 1) [] Id.Set.empty [])
+       acts
   | ActInst id :: acts ->
      continue (einst_tac id) acts
   | ActExFalso :: acts ->
      continue exfalso_tac acts
   | ActConstructor :: acts ->
-     branch
+     cont
        (Tactics.any_constructor true
-          (Some (Tactics.simpl_in_concl <*> search opts (n - 1) hyps visited)))
-       (fun _ -> apply_actions opts n acts hyps visited)
+          (Some (Tactics.simpl_in_concl <*> search opts (n - 1) hyps hyp_ids visited)))
+       acts
   | [] ->
      fail_tac
 
-and simplify opts =
+and simplify opts hyp_ids =
   simp_hyps_tac
 
-and intros opts n =
+and intros opts n hyp_ids =
   Tactics.simpl_in_concl <*>
-  Tactics.intros <*>
-    simplify opts <*>
-    search opts n [] []
+    yintros_tac <*>
+    simplify opts hyp_ids <*>
+    search opts n [] Id.Set.empty []
 
-let sauto opts n = intros opts n
+let sauto opts n = generalising_tac <*> intros opts n Id.Set.empty
