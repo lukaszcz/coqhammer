@@ -112,7 +112,7 @@ let create_actions evd goal hyps =
   List.map snd
     (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
 
-let rec search opts n hyps hyp_ids visited =
+let rec search opts n hyps visited =
   if n = 0 then
     opts.s_leaf_tac
   else
@@ -122,29 +122,28 @@ let rec search opts n hyps hyp_ids visited =
         fail_tac
       else
         let evd = Proofview.Goal.sigma gl in
-        let (hyps, hyp_ids) =
+        let hyps =
           if hyps = [] then
-            let rhyps = Utils.get_hyps gl in
-            (List.map (eval_hyp evd) rhyps, Id.Set.of_list (List.map fst rhyps))
+            List.map (eval_hyp evd) (Utils.get_hyps gl)
           else
-            (hyps, hyp_ids)
+            hyps
         in
         let actions = create_actions evd goal hyps in
         if actions = [] then
           opts.s_leaf_tac
         else
-          apply_actions opts n actions hyps hyp_ids (goal :: visited)
+          apply_actions opts n actions hyps (goal :: visited)
     end
 
-and apply_actions opts n actions hyps hyp_ids visited =
+and apply_actions opts n actions hyps visited =
   let branch =
     if opts.s_exhaustive then Proofview.tclOR else Proofview.tclORELSE
   in
   let cont tac acts =
-    branch tac (fun _ -> apply_actions opts n acts hyps hyp_ids visited)
+    branch tac (fun _ -> apply_actions opts n acts hyps visited)
   in
   let continue tac acts =
-    cont (tac <*> search opts (n - 1) hyps hyp_ids visited) acts
+    cont (tac <*> search opts (n - 1) hyps visited) acts
   in
   match actions with
   | ActApply id :: acts ->
@@ -155,8 +154,7 @@ and apply_actions opts n actions hyps hyp_ids visited =
      continue (rewrite_rl_tac opts.s_leaf_tac id) acts
   | ActInvert id :: acts ->
      cont
-       (Inv.inv_clear_tac id <*> Tactics.simpl_in_concl <*>
-          start_search opts (n - 1) (Id.Set.remove id hyp_ids))
+       (Inv.inv_clear_tac id <*> Tactics.simpl_in_concl <*> start_search opts (n - 1))
        acts
   | ActInst id :: acts ->
      continue (einst_tac id) acts
@@ -165,50 +163,20 @@ and apply_actions opts n actions hyps hyp_ids visited =
   | ActConstructor :: acts ->
      cont
        (Tactics.any_constructor true
-          (Some (Tactics.simpl_in_concl <*> search opts (n - 1) hyps hyp_ids visited)))
+          (Some (Tactics.simpl_in_concl <*> search opts (n - 1) hyps visited)))
        acts
   | [] ->
      fail_tac
 
-and forward_reasoning opts hyp_ids =
-  let rec go n hyp_ids =
-    if n = 0 then
-      Tacticals.New.tclIDTAC
-    else
-      Proofview.Goal.nf_enter begin fun gl ->
-        let rhyps =
-          List.filter (fun (id, _) -> not (Id.Set.mem id hyp_ids)) (Utils.get_hyps gl)
-        in
-        if rhyps = [] then
-          Tacticals.New.tclIDTAC
-        else
-          List.fold_left
-            begin fun tac (id, hyp) ->
-              if Id.Set.mem id hyp_ids then
-                tac
-              else
-                let evd = Proofview.Goal.sigma gl in
-                tac <*> forward_resolve evd id hyp
-            end
-            Tacticals.New.tclIDTAC
-            rhyps
-          <*>
-            let hyp_ids = Id.Set.of_list (List.map fst rhyps) in
-            go (n - 1) hyp_ids
-      end
-  in
-  go 5 hyp_ids
+and start_search opts n =
+  simplify opts <*> search opts n [] []
 
-and start_search opts n hyp_ids =
-  forward_reasoning opts hyp_ids <*>
-    search opts n [] Id.Set.empty []
-
-and intros opts n hyp_ids =
+and intros opts n =
   Tactics.simpl_in_concl <*>
     yintros_tac <*>
     opt opts.s_simple_inverting simple_inverting_tac <*>
-    start_search opts n hyp_ids
+    start_search opts n
 
 (*****************************************************************************************)
 
-let sauto opts n = generalizing_tac <*> intros opts n Id.Set.empty
+let sauto opts n = generalizing_tac <*> intros opts n
