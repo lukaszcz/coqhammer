@@ -8,16 +8,23 @@ module Utils = Hhutils
 
 type 'a soption = SNone | SAll | SSome of 'a
 
-type sauto_opts = {
-  exhaustive : bool;
-  leaf_tac : unit Proofview.tactic;
-  inversions : string list soption;
+type s_opts = {
+  s_exhaustive : bool;
+  s_leaf_tac : unit Proofview.tactic;
+  s_inversions : string list soption;
+  s_simple_inverting : bool;
+  s_forwarding : bool;
 }
 
-let default_sauto_opts =
-  { exhaustive = false;
-    leaf_tac = Tacticals.New.tclIDTAC;
-    inversions = SAll }
+let default_s_opts = {
+  s_exhaustive = false;
+  s_leaf_tac = Tacticals.New.tclIDTAC;
+  s_inversions = SAll;
+  s_simple_inverting = true;
+  s_forwarding = true;
+}
+
+(*****************************************************************************************)
 
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t |
@@ -34,7 +41,28 @@ let rewrite_rl_tac tac id = Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (
 let einst_tac id = Utils.ltac_apply "Tactics.einst" [mk_tac_arg_id id]
 let exfalso_tac = Utils.ltac_apply "exfalso" []
 let yintros_tac = Utils.ltac_apply "Tactics.yintros" []
-let generalising_tac = Utils.ltac_apply "Tactics.generalizing" []
+let generalizing_tac = Utils.ltac_apply "Tactics.generalizing" []
+let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
+
+(*****************************************************************************************)
+
+let repeat2 tac1 tac2 =
+  Tacticals.New.tclTHEN tac1
+    (Tacticals.New.tclREPEAT
+       (Tacticals.New.tclTHEN (Tacticals.New.tclPROGRESS tac2) tac1))
+
+let (<~>) = repeat2
+
+let opt b tac = if b then tac else Tacticals.New.tclIDTAC
+
+let forward_resolve evd id t =
+  Tacticals.New.tclIDTAC
+
+let forward_rewrite evd id t = Tacticals.New.tclIDTAC (* TODO *)
+
+let simplify opts = simp_hyps_tac (* TODO *)
+
+(*****************************************************************************************)
 
 let eval_hyp evd (id, hyp) =
   let (prods, head, args) as dh = Utils.destruct_prod evd hyp in
@@ -84,16 +112,9 @@ let create_actions evd goal hyps =
   List.map snd
     (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
 
-let repeat2 tac1 tac2 =
-  Tacticals.New.tclTHEN tac1
-    (Tacticals.New.tclREPEAT
-       (Tacticals.New.tclTHEN (Tacticals.New.tclPROGRESS tac2) tac1))
-
-let (<~>) = repeat2
-
 let rec search opts n hyps hyp_ids visited =
   if n = 0 then
-    opts.leaf_tac
+    opts.s_leaf_tac
   else
     Proofview.Goal.nf_enter begin fun gl ->
       let goal = Proofview.Goal.concl gl in
@@ -110,14 +131,14 @@ let rec search opts n hyps hyp_ids visited =
         in
         let actions = create_actions evd goal hyps in
         if actions = [] then
-          opts.leaf_tac
+          opts.s_leaf_tac
         else
           apply_actions opts n actions hyps hyp_ids (goal :: visited)
     end
 
 and apply_actions opts n actions hyps hyp_ids visited =
   let branch =
-    if opts.exhaustive then Proofview.tclOR else Proofview.tclORELSE
+    if opts.s_exhaustive then Proofview.tclOR else Proofview.tclORELSE
   in
   let cont tac acts =
     branch tac (fun _ -> apply_actions opts n acts hyps hyp_ids visited)
@@ -129,13 +150,13 @@ and apply_actions opts n actions hyps hyp_ids visited =
   | ActApply id :: acts ->
      continue (Tactics.Simple.eapply (EConstr.mkVar id)) acts
   | ActRewriteLR id :: acts ->
-     continue (rewrite_lr_tac opts.leaf_tac id) acts
+     continue (rewrite_lr_tac opts.s_leaf_tac id) acts
   | ActRewriteRL id :: acts ->
-     continue (rewrite_rl_tac opts.leaf_tac id) acts
+     continue (rewrite_rl_tac opts.s_leaf_tac id) acts
   | ActInvert id :: acts ->
      cont
        (Inv.inv_clear_tac id <*> Tactics.simpl_in_concl <*>
-          simplify opts (Id.Set.remove id hyp_ids) <*> search opts (n - 1) [] Id.Set.empty [])
+          start_search opts (n - 1) (Id.Set.remove id hyp_ids))
        acts
   | ActInst id :: acts ->
      continue (einst_tac id) acts
@@ -149,13 +170,45 @@ and apply_actions opts n actions hyps hyp_ids visited =
   | [] ->
      fail_tac
 
-and simplify opts hyp_ids =
-  simp_hyps_tac
+and forward_reasoning opts hyp_ids =
+  let rec go n hyp_ids =
+    if n = 0 then
+      Tacticals.New.tclIDTAC
+    else
+      Proofview.Goal.nf_enter begin fun gl ->
+        let rhyps =
+          List.filter (fun (id, _) -> not (Id.Set.mem id hyp_ids)) (Utils.get_hyps gl)
+        in
+        if rhyps = [] then
+          Tacticals.New.tclIDTAC
+        else
+          List.fold_left
+            begin fun tac (id, hyp) ->
+              if Id.Set.mem id hyp_ids then
+                tac
+              else
+                let evd = Proofview.Goal.sigma gl in
+                tac <*> forward_resolve evd id hyp
+            end
+            Tacticals.New.tclIDTAC
+            rhyps
+          <*>
+            let hyp_ids = Id.Set.of_list (List.map fst rhyps) in
+            go (n - 1) hyp_ids
+      end
+  in
+  go 5 hyp_ids
+
+and start_search opts n hyp_ids =
+  forward_reasoning opts hyp_ids <*>
+    search opts n [] Id.Set.empty []
 
 and intros opts n hyp_ids =
   Tactics.simpl_in_concl <*>
     yintros_tac <*>
-    simplify opts hyp_ids <*>
-    search opts n [] Id.Set.empty []
+    opt opts.s_simple_inverting simple_inverting_tac <*>
+    start_search opts n hyp_ids
 
-let sauto opts n = generalising_tac <*> intros opts n Id.Set.empty
+(*****************************************************************************************)
+
+let sauto opts n = generalizing_tac <*> intros opts n Id.Set.empty

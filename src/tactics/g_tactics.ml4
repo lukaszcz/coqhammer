@@ -5,6 +5,6 @@ open Stdarg
 open Tacarg
 open Sauto
 
-TACTIC EXTEND Hammer_ssauto
-| [ "ssauto" ] -> [ sauto default_sauto_opts 6 ]
+TACTIC EXTEND Hammer_sauto
+| [ "sauto" ] -> [ sauto default_s_opts 6 ]
 END

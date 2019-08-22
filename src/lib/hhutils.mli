@@ -66,3 +66,9 @@ val rel_occurs : Evd.evar_map -> EConstr.t -> int list -> bool
 val shift_binders_down : Evd.evar_map -> int -> EConstr.t -> EConstr.t
 
 val shift_binders_up : Evd.evar_map -> int -> EConstr.t -> EConstr.t
+
+val is_atom : Evd.evar_map -> EConstr.t -> bool
+
+val is_ind_atom : Evd.evar_map -> EConstr.t -> bool
+
+val is_product : Evd.evar_map -> EConstr.t -> bool
