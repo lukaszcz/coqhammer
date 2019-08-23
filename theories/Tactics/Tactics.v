@@ -10,42 +10,42 @@ Require List Arith ZArith Bool.
 
 Inductive ReconstrT : Set := Empty : ReconstrT | AllHyps : ReconstrT.
 
-Create HintDb yhints discriminated.
+Create HintDb shints discriminated.
 
-Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.add_assoc : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_assoc : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_l : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_l : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.sub_add_distr : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.add_0_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.add_assoc : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_assoc : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_l : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_l : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.sub_add_distr : yhints.
-Hint Rewrite -> List.in_app_iff : yhints.
-Hint Rewrite -> List.in_map_iff : yhints.
-Hint Rewrite -> List.in_inv : yhints.
-Hint Rewrite <- List.app_assoc : yhints.
-Hint Rewrite -> Bool.orb_true_r : yhints.
-Hint Rewrite -> Bool.orb_true_l : yhints.
-Hint Rewrite -> Bool.orb_false_r : yhints.
-Hint Rewrite -> Bool.orb_false_l : yhints.
-Hint Rewrite -> Bool.andb_true_r : yhints.
-Hint Rewrite -> Bool.andb_true_l : yhints.
-Hint Rewrite -> Bool.andb_false_r : yhints.
-Hint Rewrite -> Bool.andb_false_l : yhints.
+Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.add_assoc : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_assoc : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_l : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_l : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.sub_add_distr : shints.
+Hint Rewrite -> ZArith.BinInt.Z.add_0_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.add_assoc : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_assoc : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_l : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_l : shints.
+Hint Rewrite -> ZArith.BinInt.Z.sub_add_distr : shints.
+Hint Rewrite -> List.in_app_iff : shints.
+Hint Rewrite -> List.in_map_iff : shints.
+Hint Rewrite -> List.in_inv : shints.
+Hint Rewrite <- List.app_assoc : shints.
+Hint Rewrite -> Bool.orb_true_r : shints.
+Hint Rewrite -> Bool.orb_true_l : shints.
+Hint Rewrite -> Bool.orb_false_r : shints.
+Hint Rewrite -> Bool.orb_false_l : shints.
+Hint Rewrite -> Bool.andb_true_r : shints.
+Hint Rewrite -> Bool.andb_true_l : shints.
+Hint Rewrite -> Bool.andb_false_r : shints.
+Hint Rewrite -> Bool.andb_false_l : shints.
 
 Ltac tyexact L := let tp := type of L in exact tp.
 
@@ -123,7 +123,7 @@ Ltac tryunfold x :=
   end.
 
 Ltac unfolding defs :=
-  repeat (autounfold with yhints; unfold iff in *; unfold not in *; all tryunfold defs).
+  repeat (autounfold with shints; unfold iff in *; unfold not in *; all tryunfold defs).
 
 Ltac einst e :=
   let tpe := type of e
@@ -316,7 +316,10 @@ with simp_hyp H :=
   end.
 
 Ltac yintros :=
-  repeat match goal with [ |- ?P -> False ] => fail 1 | [ |- _ ] => yintro end.
+  repeat match goal with [ |- ?G ] => isAtom G; fail 1 | [ |- _ ] => yintro end.
+
+Ltac intros_until_atom :=
+  repeat match goal with [ |- ?G ] => isAtom G; fail 1 | [ |- _ ] => intro end.
 
 Ltac simp_hyps :=
   unfold iff in *; unfold not in *;
@@ -377,11 +380,11 @@ Ltac isplit :=
   end.
 
 Ltac trysolve :=
-  eauto 2 with nocore yhints; try solve [ constructor ]; try subst;
+  eauto 2 with shints; try solve [ constructor ]; try subst;
   match goal with
-    | [ |- ?t = ?u ] => try solve [ hnf in *; congruence 8 ]
-    | [ |- ?t <> ?u ] => try solve [ hnf in *; congruence 8 ]
-    | [ |- False ] => try solve [ hnf in *; congruence 8 ]
+    | [ |- ?t = ?u ] => try solve [ cbn in *; congruence 8 ]
+    | [ |- ?t <> ?u ] => try solve [ cbn in *; congruence 8 ]
+    | [ |- False ] => try solve [ cbn in *; congruence 8 ]
     | _ => idtac
   end.
 
@@ -394,18 +397,17 @@ Ltac isolve :=
       msplit splt simp;
       lazymatch goal with
         | [ H : False |- _ ] => exfalso; exact H
-        | [ |- _ \/ _ ] =>
-          trysolve;
-            try solve [ left; msolve splt simp | right; msolve splt simp ]
-        | [ |- exists x, _ ] =>
-          trysolve; try solve [ eexists; msolve splt simp ]
         | _ =>
-          trysolve
+          solve [ trysolve | left; msolve splt simp | right; msolve splt simp |
+                  eexists; msolve splt simp ]
       end
   in
   msolve ltac:(fun _ => isplit) ltac:(fun _ => intros; simp_hyps; repeat exsimpl).
 
-Ltac dsolve := auto with yhints; try yeasy; try solve [ repeat constructor ].
+Ltac dsolve := auto with shints; try yeasy; try solve [ repeat constructor ].
+
+Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try yeasy;
+               try congruence 16; try solve [ constructor; isolve ].
 
 Ltac yisolve := try solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
 
@@ -429,20 +431,17 @@ Ltac bnat_reflect :=
          | [ H : (Nat.ltb ?A ?B) = false |- _ ] =>
            notHyp (B <= A);
            assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; yisolve)
-         end; try subst; auto.
+         end.
+
+Ltac subst_simpl := try subst; cbn in *.
 
 Ltac simple_invert H := solve [ inversion H ] || (inversion H; [idtac]; clear H; try subst; cbn).
 Ltac simple_inverting :=
   repeat match goal with
-         | [ H : ?P |- _ ] => isIndAtom P; simple_invert H
+         | [ H : ?P |- _ ] => simple_invert H
          end.
 
-Ltac generalizing :=
-  repeat match goal with
-           | [ H : _ |- _ ] => generalize H; clear H
-         end.
-
-Ltac ysplit :=
+Ltac simple_split :=
   match goal with
     | [ |- ?A /\ _ ] =>
       cut A; [ let H := fresh "H" in
@@ -450,17 +449,46 @@ Ltac ysplit :=
     | [ |- prod ?A _ ] =>
       cut A; [ let H := fresh "H" in
                intro H; split; [ exact H | simp_hyp H ] | idtac ]
-    | [ |- context[match ?X with _ => _ end] ] => ydestruct X
-    | [ H : context[match ?X with _ => _ end] |- _ ] => ydestruct X
   end.
 
-Ltac ysplitting :=
-  repeat ysplit;
-  let n := numgoals in
-  guard n < 12;
-  yisolve;
-  let n := numgoals in
-  guard n < 6.
+Ltac simple_splitting := repeat (simple_split; cbn).
+
+Ltac case_split :=
+  match goal with
+  | [ |- context[match ?X with _ => _ end] ] => ydestruct X
+  | [ H : context[match ?X with _ => _ end] |- _ ] => ydestruct X
+  end.
+
+Ltac case_splitting := repeat (case_split; subst_simpl).
+
+Ltac generalizing :=
+  repeat match goal with
+           | [ H : _ |- _ ] => generalize H; clear H
+         end.
+
+Ltac fsolve := solve [ eassumption | econstructor | symmetry; eassumption ].
+
+Ltac finst e :=
+  let tpe := type of e
+  in
+  lazymatch tpe with
+    | ?T -> ?Q =>
+      let H := fresh "H" in
+      assert (H : T); [ try fsolve | finst (e H); clear H ]
+    | forall x : ?T, _ =>
+      let v := fresh "v" in
+      evar (v : T);
+      let v2 := eval unfold v in v in
+      clear v;
+      finst (e v2)
+    | _ =>
+      generalize e
+  end.
+
+Ltac einvert H :=
+  finst H;
+  let H1 := fresh "H" in
+  intro H1; inversion_clear H1; cbn.
 
 Ltac einster e tac :=
   let tpe := type of e
@@ -482,11 +510,30 @@ Ltac einster e tac :=
       generalize e
   end.
 
-Ltac finst e := einster e idtac.
+Ltac forward H :=
+  einst H;
+  match goal with
+  | [ |- (?P -> ?Q) -> _ ] =>
+    let H1 := fresh "H" in
+    intro H1;
+    let H2 := fresh "H" in
+    assert (H2 : P) by fsolve;
+    generalize (H1 H2);
+    clear H1; clear H2;
+    intro H1;
+    einster H1 fsolve;
+    clear H1;
+    match goal with
+    | [ |- ?P -> _ ] => noteHyp P; lazymatch type of P with Type => fail | _ => yintro end
+    end
+  end.
 
-Ltac invinst H :=
-  finst H;
-  let H1 := fresh "H" in
-  intro H1; inversion_clear H1; cbn.
+Ltac forwarding :=
+  repeat match goal with
+         | [ H : forall x : _,_ |- _ ] => forward H
+         end.
 
 Declare ML Module "hammer_tactics".
+
+Ltac sauto := unshelve sauto_gen; dsolve.
+Ltac ssimpl := unshelve ssimpl_gen; dsolve.

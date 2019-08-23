@@ -1,21 +1,4 @@
-From Hammer Require Import Tactics.
-From Hammer Require Reconstr.
-
-Lemma lem_test_1 : (forall x y, x + y = y + x -> False) -> forall x, x > x.
-  ssimpl.
-Qed.
-
-Lemma lem_test_2 : (forall x, x > x) -> (forall x, x + x > x) -> exists x, x > x \/ x + x > x.
-  yisolve.
-Qed.
-
-Lemma lem_test_3 : (forall x, x > x) -> (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
-  yisolve.
-Qed.
-
-Lemma lem_test_4 : (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
-  sauto.
-Qed.
+From Hammer Require Import Reconstr.
 
 Section Sets.
 
@@ -28,7 +11,7 @@ Lemma lem_sets_1 :
   (forall x, P x \/ Q x) /\ (forall x y, x = y /\ P x -> R y) /\
   (forall x y, x = y /\ Q x -> R y) -> forall x, R x.
 Proof.
-  sauto.
+  yelles 2.
 Qed.
 
 Variable Sum : U -> U -> U.

@@ -12,7 +12,7 @@ TACTIC EXTEND Hammer_isAtom
     if Utils.is_atom Evd.empty t then
       Tacticals.New.tclIDTAC
     else
-      Proofview.tclZERO (Failure "not an atom")
+      Tacticals.New.tclFAIL 0 Pp.(str "not an atom")
   ]
 END
 
@@ -21,6 +21,6 @@ TACTIC EXTEND Hammer_isIndAtom
     if Utils.is_ind_atom Evd.empty t then
       Tacticals.New.tclIDTAC
     else
-      Proofview.tclZERO (Failure "not an inductive atom")
+      Tacticals.New.tclFAIL 0 Pp.(str "not an inductive atom")
   ]
 END

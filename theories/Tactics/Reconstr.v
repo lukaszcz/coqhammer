@@ -888,13 +888,6 @@ Ltac orinst H :=
       elim H; clear H; yintro
   end.
 
-Ltac tryexfalso f :=
-  first [ f tt |
-          lazymatch goal with
-             | [ |- False ] => fail
-             | _ => exfalso; f tt
-          end ].
-
 Ltac yapply H :=
   lazymatch goal with
     | [ H0 : context[_ = _] |- _ ] => rapply H

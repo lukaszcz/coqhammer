@@ -5,6 +5,14 @@ open Stdarg
 open Tacarg
 open Sauto
 
-TACTIC EXTEND Hammer_sauto
-| [ "sauto" ] -> [ sauto default_s_opts 6 ]
+module Utils = Hhutils
+
+TACTIC EXTEND Hammer_sauto_gen
+| [ "sauto_gen" ] -> [ sauto default_s_opts 3 ]
+END
+
+TACTIC EXTEND Hammer_ssimpl_gen
+| [ "ssimpl_gen" ] -> [
+  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+]
 END

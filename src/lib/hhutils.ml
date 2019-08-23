@@ -327,6 +327,13 @@ let shift_binders_up evd k t =
   else
     do_shift evd k t
 
+let is_False evd t =
+  let open Constr in
+  let open EConstr in
+  match kind evd t with
+  | Ind (ind, _) when get_ind_name ind = "Coq.Init.Logic.False" -> true
+  | _ -> false
+
 let rec is_atom evd t =
   let open Constr in
   let open EConstr in
@@ -336,12 +343,7 @@ let rec is_atom evd t =
      let s = get_ind_name ind in
      s <> "Coq.Init.Logic.and" && s <> "Coq.Init.Logic.or" && s <> "Coq.Init.Logic.ex"
   | Const _ | Sort _ | Evar _ | Meta _ | Var _ | Rel _ -> true
-  | Prod (_, h, f) when is_atom evd h ->
-     begin
-       match kind evd f with
-       | Ind (ind, _) when get_ind_name ind = "Coq.Init.Logic.False" -> true
-       | _ -> false
-     end
+  | Prod (_, h, f) when is_atom evd h && is_False evd f -> true
   | _ -> false
 
 let rec is_ind_atom evd t =
@@ -358,3 +360,5 @@ let is_product evd t =
   match kind evd t with
   | Prod _ when not (is_atom evd t) -> true
   | _ -> false
+
+let get_head evd t = match destruct_prod evd t with (_, h, _) -> h
