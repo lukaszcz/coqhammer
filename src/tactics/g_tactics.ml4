@@ -8,7 +8,7 @@ open Sauto
 module Utils = Hhutils
 
 TACTIC EXTEND Hammer_sauto_gen
-| [ "sauto_gen" ] -> [ sauto default_s_opts 3 ]
+| [ "sauto_gen" ] -> [ sauto default_s_opts 5 ]
 END
 
 TACTIC EXTEND Hammer_ssimpl_gen

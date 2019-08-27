@@ -8,6 +8,8 @@ type s_opts = {
   s_simpl_tac : unit Proofview.tactic;
   s_splits : string list soption;
   s_inversions : string list soption;
+  s_unfolding : string list soption;
+  s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_case_splitting : bool;
   s_simple_inverting : bool;

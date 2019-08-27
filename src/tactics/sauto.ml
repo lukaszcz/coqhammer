@@ -2,6 +2,7 @@
 
 open Names
 open Tactypes
+open Locus
 open Proofview.Notations
 open Ltac_plugin
 
@@ -15,6 +16,8 @@ type s_opts = {
   s_simpl_tac : unit Proofview.tactic;
   s_splits : string list soption;
   s_inversions : string list soption;
+  s_unfolding : string list soption;
+  s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_case_splitting : bool;
   s_simple_inverting : bool;
@@ -23,10 +26,12 @@ type s_opts = {
 
 let default_s_opts = {
   s_exhaustive = false;
-  s_leaf_tac = Tacticals.New.tclSOLVE [ Utils.ltac_apply "Tactics.isolve" [] ];
-  s_simpl_tac = Tacticals.New.tclIDTAC;
+  s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
+  s_simpl_tac = Utils.ltac_apply "Tactics.simpl_solve" [];
   s_splits = SAll;
   s_inversions = SAll;
+  s_unfolding = SSome [ "iff"; "not" ];
+  s_rew_bases = [];
   s_bnat_reflect = true;
   s_case_splitting = true;
   s_simple_inverting = true;
@@ -37,22 +42,33 @@ let default_s_opts = {
 
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActInvert of Id.t |
-        ActConstructor
+        ActUnfold of Id.t | ActConstructor
 
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let simp_hyp_tac id = Utils.ltac_apply "Tactics.simp_hyp" [mk_tac_arg_id id]
 let fail_tac = Tacticals.New.tclFAIL 0 Pp.(str "sauto")
-let rewrite_lr_tac tac id = Equality.rewriteLR ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id)
-let rewrite_rl_tac tac id = Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id)
-let einvert_tac id = Utils.ltac_apply "Tactics.einvert" [mk_tac_arg_id id]
+let rewrite_lr_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteLR ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
+let rewrite_rl_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
+let einvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.einvert" [mk_tac_arg_id id])
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
-let case_splitting_tac = Utils.ltac_apply "Tactics.simple_splitting" []
+let case_splitting_tac = Utils.ltac_apply "Tactics.case_splitting" []
 let forwarding_tac = Utils.ltac_apply "Tactics.forwarding" []
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
+
+let autorewrite bases =
+  let bases =
+    if List.mem "noshints" bases then
+      bases
+    else
+      ["shints"; "list"] @ bases
+  in
+  Autorewrite.auto_multi_rewrite
+    bases
+    { onhyps = None; concl_occs = AllOccurrences }
 
 (*****************************************************************************************)
 
@@ -70,7 +86,7 @@ let (<~>) = repeat2
 
 let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 
-let autorewriting opts = Tacticals.New.tclIDTAC
+let autorewriting opts = autorewrite opts.s_rew_bases
 
 let rec simple_splitting opts =
   Proofview.Goal.nf_enter begin fun gl ->
@@ -85,7 +101,8 @@ let rec simple_splitting opts =
 
 let simplify opts =
   simp_hyps_tac <~>
-    (opt opts.s_bnat_reflect bnat_reflect_tac <*> simple_splitting opts <*>
+    opt opts.s_bnat_reflect bnat_reflect_tac <~>
+    (simple_splitting opts <*>
        intros_until_atom_tac <*> subst_simpl_tac) <~>
     opts.s_simpl_tac <~>
     autorewriting opts <~>

@@ -8,8 +8,6 @@ Declare ML Module "hammer_lib".
 
 Require List Arith ZArith Bool.
 
-Inductive ReconstrT : Set := Empty : ReconstrT | AllHyps : ReconstrT.
-
 Create HintDb shints discriminated.
 
 Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : shints.
@@ -47,10 +45,6 @@ Hint Rewrite -> Bool.andb_true_l : shints.
 Hint Rewrite -> Bool.andb_false_r : shints.
 Hint Rewrite -> Bool.andb_false_l : shints.
 
-Ltac tyexact L := let tp := type of L in exact tp.
-
-Ltac getgoal := match goal with [ |- ?G ] => G end.
-
 Ltac notHyp P :=
   match goal with
     | [ H : ?P1 |- _ ] => constr_eq P P1; fail 1
@@ -64,14 +58,6 @@ Ltac noteHyp P :=
   end.
 
 Ltac noEvars t := tryif has_evar t then fail else idtac.
-
-Ltac all f ls :=
-  match ls with
-    | Empty => idtac
-    | (?LS, ?X) => f X; all f LS
-    | (_, _) => fail 1
-    | _ => f ls
-  end.
 
 Ltac yeasy :=
   let rec use_hyp H :=
@@ -122,9 +108,6 @@ Ltac tryunfold x :=
     | _ => idtac
   end.
 
-Ltac unfolding defs :=
-  repeat (autounfold with shints; unfold iff in *; unfold not in *; all tryunfold defs).
-
 Ltac einst e :=
   let tpe := type of e
   in
@@ -150,8 +133,6 @@ Ltac ydestruct t :=
       else
         (is_var t; destruct t)
   end.
-
-Ltac yinversion H := inversion H; try subst; try clear H.
 
 Ltac xintro x :=
   tryif intro x then
@@ -326,6 +307,8 @@ Ltac simp_hyps :=
   repeat match goal with
            | [ H2 : ?A -> ?B, H1 : ?A |- _ ] =>
              assert B by (apply H2; exact H1); clear H2
+           | [ H1 : ?P, H2 : ?P |- _ ] =>
+             clear H2 || clear H1
            | [ H : _ |- _ ] =>
              simp_hyp H
          end.
@@ -336,6 +319,8 @@ Ltac esimp_hyps :=
          | [ H2 : ?A2 -> ?B, H1 : ?A1 |- _ ] =>
            unify A1 A2; notHyp B;
            assert B by (apply H2; exact H1); clear H2
+         | [ H1 : ?P, H2 : ?P |- _ ] =>
+           clear H2 || clear H1
          | [ H : _ |- _ ] =>
            simp_hyp H
          end.
@@ -388,37 +373,39 @@ Ltac trysolve :=
     | _ => idtac
   end.
 
-Ltac msplit splt simp :=
-  simp tt;
-  repeat (progress splt tt; simp tt).
-
 Ltac isolve :=
-  let rec msolve splt simp :=
-      msplit splt simp;
+  let simp := intros; simp_hyps; repeat exsimpl
+  in
+  let rec msolve :=
+      simp; repeat (progress isplit; simp);
       lazymatch goal with
-        | [ H : False |- _ ] => exfalso; exact H
+        | [ H : False |- _ ] => elim H
         | _ =>
-          solve [ trysolve | left; msolve splt simp | right; msolve splt simp |
-                  eexists; msolve splt simp ]
+          solve [ trysolve | left; msolve | right; msolve |
+                  eexists; msolve ]
       end
   in
-  msolve ltac:(fun _ => isplit) ltac:(fun _ => intros; simp_hyps; repeat exsimpl).
+  msolve.
 
 Ltac dsolve := auto with shints; try yeasy; try solve [ repeat constructor ].
 
-Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try yeasy;
-               try congruence 16; try solve [ constructor; isolve ].
+Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try congruence 32; try yeasy;
+               try solve [ econstructor; isolve ].
 
-Ltac yisolve := try solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+Ltac seasy := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+
+Ltac leaf_solve := solve [ isolve ].
+Ltac simpl_solve := solve [ isolve ].
 
 Ltac bnat_reflect :=
   repeat match goal with
          | [ H : (Nat.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
-           assert (A = B) by (pose Arith.PeanoNat.Nat.eqb_eq; yisolve)
+           assert (A = B) by (pose Arith.PeanoNat.Nat.eqb_eq; seasy);
+           try subst
          | [ H : (Nat.eqb ?A ?B) = false |- _ ] =>
-           notHyp (A <> B);
-           assert (A <> B) by (pose Arith.PeanoNat.Nat.eqb_neq; yisolve)
+           notHyp (A = B -> False);
+           assert (A = B -> False) by (pose Arith.PeanoNat.Nat.eqb_neq; seasy)
          | [ H : (Nat.leb ?A ?B) = true |- _ ] =>
            notHyp (A <= B);
            assert (A <= B) by (eauto using Arith.Compare_dec.leb_complete)
@@ -427,15 +414,19 @@ Ltac bnat_reflect :=
            assert (B < A) by (eauto using Arith.Compare_dec.leb_complete_conv)
          | [ H : (Nat.ltb ?A ?B) = true |- _ ] =>
            notHyp (A < B);
-           assert (A < B) by (pose Arith.PeanoNat.Nat.ltb_lt; yisolve)
+           assert (A < B) by (pose Arith.PeanoNat.Nat.ltb_lt; seasy)
          | [ H : (Nat.ltb ?A ?B) = false |- _ ] =>
            notHyp (B <= A);
-           assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; yisolve)
+           assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; seasy)
          end.
 
 Ltac subst_simpl := try subst; cbn in *.
 
-Ltac simple_invert H := solve [ inversion H ] || (inversion H; [idtac]; clear H; try subst; cbn).
+Ltac invert_one_subgoal H :=
+  let ty := type of H in
+  inversion H; [idtac]; clear H; notHyp ty; try subst; cbn.
+
+Ltac simple_invert H := solve [ inversion H ] || invert_one_subgoal H.
 Ltac simple_inverting :=
   repeat match goal with
          | [ H : ?P |- _ ] => simple_invert H
@@ -445,10 +436,10 @@ Ltac simple_split :=
   match goal with
     | [ |- ?A /\ _ ] =>
       cut A; [ let H := fresh "H" in
-               intro H; split; [ exact H | simp_hyp H ] | idtac ]
+               intro H; split; [ exact H | try simp_hyp H ] | idtac ]
     | [ |- prod ?A _ ] =>
       cut A; [ let H := fresh "H" in
-               intro H; split; [ exact H | simp_hyp H ] | idtac ]
+               intro H; split; [ exact H | try simp_hyp H ] | idtac ]
   end.
 
 Ltac simple_splitting := repeat (simple_split; cbn).
@@ -486,9 +477,17 @@ Ltac finst e :=
   end.
 
 Ltac einvert H :=
-  finst H;
-  let H1 := fresh "H" in
-  intro H1; inversion_clear H1; cbn.
+  lazymatch type of H with
+  | _ -> _ =>
+    finst H;
+    let H1 := fresh "H" in
+    intro H1; inversion_clear H1
+  | _ =>
+    lazymatch goal with
+    | [ |- context[H] ] => destruct H
+    | [ |- _ ] => inversion_clear H
+    end
+  end; cbn.
 
 Ltac einster e tac :=
   let tpe := type of e
@@ -524,7 +523,12 @@ Ltac forward H :=
     einster H1 fsolve;
     clear H1;
     match goal with
-    | [ |- ?P -> _ ] => noteHyp P; lazymatch type of P with Type => fail | _ => yintro end
+    | [ |- ?P -> _ ] =>
+      noEvars P; notHyp P;
+      lazymatch type of P with
+      | Type => fail
+      | _ => let H := fresh "H" in intro H; move H at top
+      end
     end
   end.
 
@@ -537,3 +541,4 @@ Declare ML Module "hammer_tactics".
 
 Ltac sauto := unshelve sauto_gen; dsolve.
 Ltac ssimpl := unshelve ssimpl_gen; dsolve.
+Ltac scrush := try seasy; ssimpl; sauto.

@@ -6,14 +6,18 @@ Lemma lem_test_1 : (forall x y, x + y = y + x -> False) -> forall x, x > x.
 Qed.
 
 Lemma lem_test_2 : (forall x, x > x) -> (forall x, x + x > x) -> exists x, x > x \/ x + x > x.
-  yisolve.
+  seasy.
 Qed.
 
 Lemma lem_test_3 : (forall x, x > x) -> (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
-  yisolve.
+  seasy.
 Qed.
 
 Lemma lem_test_4 : (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
+  sauto.
+Qed.
+
+Lemma lem_test_5 : (forall P : nat -> Prop, P 0 -> (forall x, P x -> P (S x)) -> P 4).
   sauto.
 Qed.
 
@@ -42,14 +46,45 @@ Lemma lem_sets_2 :
   (forall A B, Subset A B <-> forall X, In X A -> In X B) ->
   (forall A, Seteq (Sum A A) A).
 Proof.
-  yelles 3.
+  sauto.
 Qed.
 
 End Sets.
 
+Require Import List.
+
+Section Lists.
+
+Lemma lem_lst :
+  forall {A} (x : A) l1 l2 (P : A -> Prop),
+    In x (l1 ++ l2) -> (forall y, In y l1 -> P y) -> (forall y, In y l2 -> P y) ->
+    P x.
+Proof.
+  sauto.
+Qed.
+
+Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
+                                                   In z (y1 :: y2 :: l ++ y3 :: l').
+Proof.
+  sauto.
+Qed.
+
+Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
+Proof.
+  sauto.
+Qed.
+
+Lemma lem_lst4 : forall {A} (l : list A), l <> nil -> length (tl l) < length l.
+Proof.
+  sauto.
+Qed.
+
+End Lists.
+
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
-  reasy (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm) Reconstr.Empty.
+  pose proof PeanoNat.Nat.mul_comm; pose proof PeanoNat.Nat.add_comm.
+  sauto.
 Qed.
 
 Require Import PeanoNat.
@@ -102,15 +137,17 @@ Inductive NoLambdas : Term -> Prop :=
 | nl_var : forall n : nat, NoLambdas (LVar n)
 | nl_app : forall x y : Term, NoLambdas x -> NoLambdas y -> NoLambdas (LApp x y).
 
+Ltac repeat2 tac1 tac2 := tac1; repeat (progress tac2; tac1).
+
 Lemma no_lams_abstr : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr v t).
 Proof.
-  induction t; yelles 3.
+  induction t; sauto.
 Qed.
 
 Lemma no_lams_transl : forall t : Term, NoLambdas (transl t).
 Proof.
   pose proof no_lams_abstr.
-  induction t; yelles 2.
+  induction t; sauto.
 Qed.
 
 Inductive HasVar : nat -> Term -> Prop :=
@@ -123,25 +160,23 @@ Ltac pose_hasvar := generalize hs_var hs_app hs_lem; intros.
 Lemma vars_abstr :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr v t)).
 Proof.
-  pose_hasvar.
-  induction t; sauto.
-  Reconstr.reasy (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
+  pose_hasvar; induction t; ssimpl.
 Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).
 Proof.
-  pose_hasvar.
-  induction t; sauto.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.eqb_refl, @Coq.Bool.Bool.not_true_iff_false) Reconstr.Empty.
+  pose_hasvar; induction t; ssimpl.
 Qed.
 
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
 Proof.
   pose_hasvar.
-  induction t; sauto.
-  - Reconstr.reasy (@vars_abstr) Reconstr.Empty.
+  induction t; ssimpl.
+  - pose proof vars_abstr; sauto.
   - Reconstr.rsimple (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl) Reconstr.Empty.
 Qed.
+
+From Hammer Require Import Reconstr.
 
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
 
