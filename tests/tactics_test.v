@@ -173,8 +173,6 @@ Proof.
   - sauto using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
 Qed.
 
-From Hammer Require Import Reconstr.
-
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
 
 Inductive WeakEqual : Term -> Term -> Prop :=
@@ -194,15 +192,13 @@ Notation "X =w Y" := (WeakEqual X Y) (at level 80).
 Lemma abstr_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr v t @ s =w csubst t v s.
 Proof.
-  pose_we.
-  induction t; Reconstr.sauto.
-  ycrush.
+  pose_we; induction t; ssimpl; eauto.
 Qed.
 
 Lemma abstr_size :
   forall (t : Term) (v : nat), size (abstr v t) <= 3 * size t.
 Proof.
-  intros; induction t; Reconstr.sauto; omega.
+  intros; induction t; ssimpl; omega.
 Qed.
 
 Lemma lem_pow_3 : (forall x y : nat, 3 ^ x + 3 ^ y + 1 <= 3 ^ (x + y + 1)).
@@ -216,24 +212,24 @@ Qed.
 Lemma transl_size :
   forall (t : Term), size (transl t) <= 3 ^ (size t).
 Proof.
-  induction t; Reconstr.sauto; try omega.
+  induction t; ssimpl; try omega.
   assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_le_mono) Reconstr.Empty.
+  eauto using PeanoNat.Nat.add_le_mono.
   assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
   auto with zarith.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r)  Reconstr.Empty.
+  sauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
   assert (size (abstr n (transl t)) <= 3 * size (transl t)).
   pose proof abstr_size; eauto with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
   pose proof le_trans; eauto with zarith.
   assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.shiftl_1_l, @Coq.Arith.PeanoNat.Nat.pow_1_r, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r) Reconstr.Empty.
-  ycrush.
+  scrush using (@Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.shiftl_1_l, @Coq.Arith.PeanoNat.Nat.pow_1_r, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r).
+  scrush.
 Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
 Proof.
-  intros; induction t; Reconstr.sauto; omega.
+  intros; induction t; ssimpl; omega.
 Qed.
 
 Fixpoint long_app (n : nat) : Term :=
@@ -258,10 +254,10 @@ Qed.
 Lemma transl_size_lb : forall (n : nat), size (transl (cex_term n)) >= 2^n.
 Proof.
   assert (forall (n m : nat), size (transl (long_term n m)) >= 2^n).
-  induction n; Reconstr.sauto.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg) Reconstr.Empty.
+  induction n; ssimpl.
+  scrush using (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg).
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
-  Reconstr.reasy (@abstr_size_lb, @no_lams_transl) Reconstr.Empty.
+  sauto using (@abstr_size_lb, @no_lams_transl).
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
   pose proof (IHn m); eauto with zarith.
   scrush.
@@ -279,12 +275,10 @@ Fixpoint occurs (v : nat) (t : Term) : bool :=
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t = true <-> HasVar v t.
 Proof.
   pose_hasvar.
-  pose proof Coq.Arith.EqNat.beq_nat_true.
-  pose proof Coq.Arith.EqNat.beq_nat_false.
-  induction t; Reconstr.sauto; unfold orb; try yelles 2.
+  induction t; ssimpl; unfold orb; ssimpl.
   assert (occurs v t1 = true \/ occurs v t2 = true).
-  Reconstr.reasy (@Coq.Bool.Bool.orb_prop) Reconstr.Empty.
-  yelles 1.
+  sauto using (@Coq.Bool.Bool.orb_prop).
+  sauto.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
@@ -307,71 +301,63 @@ Fixpoint transl2 (t : Term) : Term :=
 
 Lemma no_lams_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr2 v t).
 Proof.
-  induction t; yelles 3.
+  induction t; sauto.
 Qed.
 
 Lemma no_lams_transl2 : forall t : Term, NoLambdas (transl2 t).
 Proof.
-  pose proof no_lams_abstr2.
-  induction t; yelles 2.
+  induction t; sauto using no_lams_abstr2.
 Qed.
 
 Lemma vars_abstr2 :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr2 v t)).
 Proof.
-  pose_hasvar.
-  induction t; Reconstr.sauto.
-  Reconstr.reasy (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
+  induction t; scrush.
 Qed.
 
 Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr2 v t)).
 Proof.
   pose_hasvar.
   pose (u := t).
-  induction t; destruct (occurs v u) eqn:?; Reconstr.sauto.
-  - Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.eqb_refl, @Coq.Bool.Bool.not_true_iff_false) Reconstr.Empty.
-  - Reconstr.rsimple (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) (@Coq.Init.Datatypes.orb).
-  - Reconstr.rscrush (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) (@Coq.Init.Datatypes.orb).
+  induction t; destruct (occurs v u) eqn:?; ssimpl.
+  - unfold orb in *; sauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false).
+  - unfold orb in *; sauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false).
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
 Proof.
-  pose_hasvar.
-  induction t; Reconstr.sauto.
-  - Reconstr.reasy (@vars_abstr2) Reconstr.Empty.
-  - Reconstr.rsimple (@no_lams_transl2, @vars_abstr2, @novar_abstr2, @hs_lem) Reconstr.Empty.
+  induction t; ssimpl.
+  - sauto using (@vars_abstr2).
+  - sauto using (@no_lams_transl2, @vars_abstr2, @novar_abstr2, @hs_lem).
 Qed.
 
 Lemma hasvar_inv :
   forall (t1 t2 : Term) (v : nat), ~(HasVar v (t1 @ t2)) -> ~(HasVar v t1) /\ ~(HasVar v t2).
 Proof.
-  scrush.
+  sauto.
 Qed.
 
 Lemma csubst_novar :
   forall (t s : Term) (v : nat), NoLambdas t -> ~(HasVar v t) -> csubst t v s = t.
 Proof.
-  pose_hasvar.
-  induction t; Reconstr.sauto.
-  Reconstr.rsimple (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
+  pose_hasvar; induction t; ssimpl.
 Qed.
 
 Lemma abstr2_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr2 v t @ s =w csubst t v s.
 Proof.
   pose_we.
-  induction t; Reconstr.sauto.
-  ycrush.
+  induction t; ssimpl; eauto.
   assert (HH: forall b1 b2, (b1 || b2)%bool = false -> b1 = false /\ b2 = false).
-  unfold orb; ycrush.
+  unfold orb; sauto.
   pose proof occurs_spec.
-  rewrite csubst_novar by ycrush.
-  rewrite csubst_novar by ycrush.
-  ycrush.
+  rewrite csubst_novar by sauto.
+  rewrite csubst_novar by sauto.
+  sauto.
 Qed.
 
 Lemma abstr2_size_ub :
   forall (t : Term) (v : nat), size (abstr2 v t) <= 3 * size t.
 Proof.
-  intros; induction t; Reconstr.sauto; omega.
+  intros; induction t; ssimpl; omega.
 Qed.

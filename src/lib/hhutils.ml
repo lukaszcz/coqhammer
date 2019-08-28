@@ -167,8 +167,7 @@ let destruct_prod evd t =
   let open EConstr in
   match kind evd concl with
   | App (h, args) -> (prods, h, Array.to_list args)
-  | _ -> (prods, t, [])
-
+  | _ -> (prods, concl, [])
 
 (***************************************************************************************)
 

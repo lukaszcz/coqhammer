@@ -105,7 +105,7 @@ let unfolding opts =
 let in_sopt_list hints x opt =
   match opt with
   | SAll -> true
-  | SSome lst when List.mem x lst || List.mem x hints -> true
+  | SSome lst when (List.mem x lst || List.mem x hints) -> true
   | SNoHints lst when List.mem x lst -> true
   | _ -> false
 
@@ -186,9 +186,9 @@ let case_splitting opts =
 let simplify opts =
   simp_hyps_tac <~>
     opt opts.s_bnat_reflect bnat_reflect_tac <~>
+    opts.s_simpl_tac <~>
     (simple_splitting opts <*>
        intros_until_atom_tac <*> subst_simpl_tac) <~>
-    opts.s_simpl_tac <~>
     autorewriting opts <~>
     opt (opts.s_case_splits = SAll) case_splitting_tac <~>
     opt opts.s_simple_inverting simple_inverting_tac <~>
@@ -197,10 +197,10 @@ let simplify opts =
 (*****************************************************************************************)
 
 let eval_hyp evd (id, hyp) =
-  let (prods, head, args) as dh = Utils.destruct_prod evd hyp in
+  let (prods, head, args) = Utils.destruct_prod evd hyp in
   let num_subgoals = List.length (List.filter (fun (name, _) -> name = Name.Anonymous) prods) in
   let n = List.length prods in
-  (id, hyp, n + num_subgoals * 10, dh)
+  (id, hyp, n + num_subgoals * 10, (prods, head, args))
 
 let hyp_cost evd hyp =
   match eval_hyp evd (None, hyp) with
@@ -352,5 +352,5 @@ and intros opts n =
 let sauto opts n = unfolding opts <*> subst_simpl_tac <*> intros opts n
 
 let ssimpl opts =
-  Tactics.intros <*> unfolding opts <*> subst_simpl_tac <*>
+  Tactics.intros <*> unfolding opts <*>
     (simplify opts <~> (Tactics.intros <*> unfolding opts))
