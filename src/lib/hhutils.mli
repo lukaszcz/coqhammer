@@ -18,6 +18,8 @@ val get_ind_name : inductive -> string
 
 val get_ind_nparams : inductive -> int
 
+val get_ind_constrs : inductive -> Constr.t list
+
 val get_ind_nconstrs : inductive -> int
 
 val close : (Name.t * 'a * 'a -> 'a) -> (Name.t * 'a) list -> 'a -> 'a

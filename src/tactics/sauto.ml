@@ -14,10 +14,11 @@ type s_opts = {
   s_exhaustive : bool;
   s_leaf_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
+  s_unfolding : Constant.t list soption;
+  s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
   s_case_splits : inductive list soption;
   s_inversions : inductive list soption;
-  s_unfolding : Constant.t list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_case_splitting : bool;
@@ -29,10 +30,11 @@ let default_s_opts = {
   s_exhaustive = false;
   s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
   s_simpl_tac = Utils.ltac_apply "Tactics.simpl_solve" [];
+  s_unfolding = SSome [];
+  s_constructors = SAll;
   s_simple_splits = SSome [];
   s_case_splits = SAll;
   s_inversions = SAll;
-  s_unfolding = SSome [];
   s_rew_bases = [];
   s_bnat_reflect = true;
   s_case_splitting = true;
@@ -43,6 +45,7 @@ let default_s_opts = {
 (*****************************************************************************************)
 
 let unfolding_hints = ref [ Utils.get_const "iff"; Utils.get_const "not" ]
+let constructor_hints = ref []
 let simple_split_hints = ref [ Utils.get_inductive "and"; Utils.get_inductive "ex";
                                Utils.get_inductive "prod"; Utils.get_inductive "sig";
                                Utils.get_inductive "sigT" ]
@@ -195,9 +198,18 @@ let simplify opts =
 
 let eval_hyp evd (id, hyp) =
   let (prods, head, args) as dh = Utils.destruct_prod evd hyp in
-  let n = List.length prods in
   let num_subgoals = List.length (List.filter (fun (name, _) -> name = Name.Anonymous) prods) in
+  let n = List.length prods in
   (id, hyp, n + num_subgoals * 10, dh)
+
+let hyp_cost evd hyp =
+  match eval_hyp evd (None, hyp) with
+  | (_, _, cost, _) -> cost
+
+let constrs_cost ind =
+  let evd = Evd.empty in
+  let cstrs = Utils.get_ind_constrs ind in
+  List.fold_left (fun acc x -> acc + hyp_cost evd (EConstr.of_constr x)) 0 cstrs
 
 let create_hyp_actions evd ghead (id, hyp, cost, (prods, head, args)) =
   if Utils.is_False evd head && prods = [] then
@@ -222,13 +234,10 @@ let create_actions opts evd goal hyps =
     let open Constr in
     let open EConstr in
     match kind evd ghead with
-    | Ind _ ->
-       (50, ActConstructor) :: actions (* TODO: constructor cost estimation *)
-    | Const (c, _) ->
-       if in_sopt_list !unfolding_hints c opts.s_unfolding then
-         (60, ActUnfold c) :: actions
-       else
-         actions
+    | Ind (ind, _) when in_sopt_list !constructor_hints ind opts.s_constructors ->
+       (constrs_cost ind, ActConstructor) :: actions
+    | Const (c, _) when in_sopt_list !unfolding_hints c opts.s_unfolding ->
+       (60, ActUnfold c) :: actions
     | _ ->
        actions
   in

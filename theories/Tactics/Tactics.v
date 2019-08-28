@@ -537,8 +537,27 @@ Ltac forwarding :=
          | [ H : forall x : _,_ |- _ ] => forward H
          end.
 
+Definition nohints := tt.
+Definition default := tt.
+Definition none := tt.
+
 Declare ML Module "hammer_tactics".
 
-Ltac sauto := unshelve sauto_gen; dsolve.
+Tactic Notation "sauto" := unshelve sauto_gen; dsolve.
+Tactic Notation "sauto" int_or_var(i) :=
+  unshelve (sauto_gen i using default unfolding default); dsolve.
+Tactic Notation "sauto" "using" constr_list(lst) :=
+  unshelve (sauto_gen using lst unfolding default); dsolve.
+Tactic Notation "sauto" int_or_var(i) "using" constr_list(lst) :=
+  unshelve (sauto_gen i using lst unfolding default); dsolve.
+Tactic Notation "sauto" "using" constr_list(lst) "unfolding" ident_list(unfolds) :=
+  unshelve (sauto_gen using lst unfolding unfolds); dsolve.
+Tactic Notation "sauto" int_or_var(i) "using" constr_list(lst) "unfolding" ident_list(unfolds) :=
+  unshelve (sauto_gen i using lst unfolding unfolds); dsolve.
+Tactic Notation "sauto" "unfolding" ident_list(unfolds) :=
+  unshelve (sauto_gen using default unfolding unfolds); dsolve.
+Tactic Notation "sauto" int_or_var(i) "unfolding" ident_list(unfolds) :=
+  unshelve (sauto_gen i using default unfolding unfolds); dsolve.
+
 Ltac ssimpl := unshelve ssimpl_gen; dsolve.
 Ltac scrush := try seasy; ssimpl; sauto.

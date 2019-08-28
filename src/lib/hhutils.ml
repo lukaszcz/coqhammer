@@ -45,10 +45,13 @@ let get_ind_nparams ind =
   let open Declarations in
   mind.mind_nparams
 
-let get_ind_nconstrs ind =
+let get_ind_constrs ind =
   let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
   let open Declarations in
-  Array.length mind.mind_packets.(snd ind).mind_user_lc
+  Array.to_list mind.mind_packets.(snd ind).mind_user_lc
+
+let get_ind_nconstrs ind =
+  List.length (get_ind_constrs ind)
 
 let rec close f ctx t =
   match ctx with
