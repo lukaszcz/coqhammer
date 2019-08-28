@@ -32,6 +32,11 @@ let get_inductive s =
   | IndRef(i) -> i
   | _ -> failwith "get_inductive: not an inductive type"
 
+let get_const s =
+  match get_global s with
+  | ConstRef(c) -> c
+  | _ -> failwith "get_const: not a constant"
+
 let get_ind_name ind =
   Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr (IndRef ind)))
 
@@ -39,6 +44,11 @@ let get_ind_nparams ind =
   let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
   let open Declarations in
   mind.mind_nparams
+
+let get_ind_nconstrs ind =
+  let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
+  let open Declarations in
+  Array.length mind.mind_packets.(snd ind).mind_user_lc
 
 let rec close f ctx t =
   match ctx with

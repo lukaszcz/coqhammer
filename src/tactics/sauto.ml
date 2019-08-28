@@ -8,15 +8,16 @@ open Ltac_plugin
 
 module Utils = Hhutils
 
-type 'a soption = SNone | SAll | SSome of 'a | SHints
+type 'a soption = SNone | SAll | SSome of 'a | SNoHints of 'a
 
 type s_opts = {
   s_exhaustive : bool;
   s_leaf_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
-  s_splits : string list soption;
-  s_inversions : string list soption;
-  s_unfolding : string list soption;
+  s_simple_splits : inductive list soption;
+  s_case_splits : inductive list soption;
+  s_inversions : inductive list soption;
+  s_unfolding : Constant.t list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_case_splitting : bool;
@@ -28,9 +29,10 @@ let default_s_opts = {
   s_exhaustive = false;
   s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
   s_simpl_tac = Utils.ltac_apply "Tactics.simpl_solve" [];
-  s_splits = SAll;
+  s_simple_splits = SSome [];
+  s_case_splits = SAll;
   s_inversions = SAll;
-  s_unfolding = SSome [ "iff"; "not" ];
+  s_unfolding = SSome [];
   s_rew_bases = [];
   s_bnat_reflect = true;
   s_case_splitting = true;
@@ -40,14 +42,23 @@ let default_s_opts = {
 
 (*****************************************************************************************)
 
+let unfolding_hints = ref [ Utils.get_const "iff"; Utils.get_const "not" ]
+let simple_split_hints = ref [ Utils.get_inductive "and"; Utils.get_inductive "ex";
+                               Utils.get_inductive "prod"; Utils.get_inductive "sig";
+                               Utils.get_inductive "sigT" ]
+let case_split_hints = ref []
+let inversion_hints = ref []
+
+(*****************************************************************************************)
+
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActInvert of Id.t |
-        ActUnfold of Id.t | ActConstructor
+        ActUnfold of Constant.t | ActConstructor
 
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
+let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
-let simp_hyp_tac id = Utils.ltac_apply "Tactics.simp_hyp" [mk_tac_arg_id id]
 let fail_tac = Tacticals.New.tclFAIL 0 Pp.(str "sauto")
 let rewrite_lr_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteLR ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
 let rewrite_rl_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
@@ -58,11 +69,12 @@ let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
 let case_splitting_tac = Utils.ltac_apply "Tactics.case_splitting" []
 let forwarding_tac = Utils.ltac_apply "Tactics.forwarding" []
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
+let tryunfold_tac t = Utils.ltac_apply "Tactics.tryunfold" [mk_tac_arg_constr t]
 
 let autorewrite bases =
   let bases =
-    if List.mem "noshints" bases then
-      bases
+    if List.mem "nohints" bases then
+      List.filter (fun s -> s <> "nohints") bases
     else
       ["shints"; "list"] @ bases
   in
@@ -70,10 +82,57 @@ let autorewrite bases =
     bases
     { onhyps = None; concl_occs = AllOccurrences }
 
+let unfold c = Tactics.unfold_constr (GlobRef.ConstRef c) <*> Tactics.simpl_in_concl
+
+let unfolding opts =
+  let do_unfolding lst =
+    Tacticals.New.tclREPEAT
+      (List.fold_left
+         (fun acc c -> tryunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c, None)), None) <*> acc)
+         Tacticals.New.tclIDTAC
+         lst)
+  in
+  match opts.s_unfolding with
+  | SSome lst -> do_unfolding (!unfolding_hints @ lst)
+  | SNoHints lst -> do_unfolding lst
+  | _ -> Tacticals.New.tclIDTAC
+
 (*****************************************************************************************)
 
-let is_simple_split opts evd t = false
-let is_inversion opts evd t = false
+let in_sopt_list hints x opt =
+  match opt with
+  | SAll -> true
+  | SSome lst when List.mem x lst || List.mem x hints -> true
+  | SNoHints lst when List.mem x lst -> true
+  | _ -> false
+
+let is_simple_ind ind = Utils.get_ind_nconstrs ind = 1
+
+let is_simple_split opts evd t =
+  let open Constr in
+  let open EConstr in
+  let head = Utils.get_head evd t in
+  match kind evd head with
+  | Ind (ind, _) when is_simple_ind ind ->
+     in_sopt_list !simple_split_hints ind opts.s_simple_splits
+  | _ -> false
+
+let is_case_split opts evd t =
+  if opts.s_case_splits = SNone then
+    false
+  else
+    try
+      Utils.fold_constr begin fun n acc t ->
+        let open Constr in
+        let open EConstr in
+        match kind evd t with
+        | Case (ci, _, _, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits -> raise Exit
+        | _ -> acc
+      end false evd t
+    with Exit ->
+      true
+
+let is_inversion opts evd ind = in_sopt_list !inversion_hints ind opts.s_inversions
 
 (*****************************************************************************************)
 
@@ -99,6 +158,28 @@ let rec simple_splitting opts =
       Tacticals.New.tclIDTAC
   end
 
+let case_splitting opts =
+  match opts.s_case_splits with
+  | SAll -> case_splitting_tac
+  | SSome lst ->
+     let introp =
+       Some (CAst.make (IntroAndPattern [CAst.make (IntroAction IntroWildcard)]))
+     in
+     Proofview.Goal.nf_enter begin fun gl ->
+       let evd = Proofview.Goal.sigma gl in
+       Utils.fold_constr begin fun n acc t ->
+         let open Constr in
+         let open EConstr in
+         match kind evd t with
+         | Case (ci, _, _, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
+            Proofview.tclTHEN (Tactics.destruct false None t introp None) acc
+         | _ -> acc
+       end (Proofview.tclUNIT ())
+         (Proofview.Goal.sigma gl)
+         (Proofview.Goal.concl gl)
+     end
+  | _ -> Tacticals.New.tclIDTAC
+
 let simplify opts =
   simp_hyps_tac <~>
     opt opts.s_bnat_reflect bnat_reflect_tac <~>
@@ -106,7 +187,7 @@ let simplify opts =
        intros_until_atom_tac <*> subst_simpl_tac) <~>
     opts.s_simpl_tac <~>
     autorewriting opts <~>
-    opt opts.s_case_splitting case_splitting_tac <~>
+    opt (opts.s_case_splits = SAll) case_splitting_tac <~>
     opt opts.s_simple_inverting simple_inverting_tac <~>
     opt opts.s_forwarding forwarding_tac
 
@@ -132,9 +213,7 @@ let create_hyp_actions evd ghead (id, hyp, cost, (prods, head, args)) =
     | _ ->
        []
 
-let create_actions evd goal hyps =
-  let open Constr in
-  let open EConstr in
+let create_actions opts evd goal hyps =
   let ghead = Utils.get_head evd goal in
   let actions =
     List.concat (List.map (create_hyp_actions evd ghead) hyps)
@@ -145,24 +224,29 @@ let create_actions evd goal hyps =
     match kind evd ghead with
     | Ind _ ->
        (50, ActConstructor) :: actions (* TODO: constructor cost estimation *)
+    | Const (c, _) ->
+       if in_sopt_list !unfolding_hints c opts.s_unfolding then
+         (60, ActUnfold c) :: actions
+       else
+         actions
     | _ ->
        actions
   in
   List.map snd
     (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
 
-let create_extra_hyp_actions evd (id, hyp, cost, (prods, head, args)) =
+let create_extra_hyp_actions opts evd (id, hyp, cost, (prods, head, args)) =
   let open Constr in
   let open EConstr in
   match kind evd head with
-  | Ind _ ->
+  | Ind (ind, _) when is_inversion opts evd ind ->
      [(cost, ActInvert id)]
   | _ ->
      []
 
-let create_extra_actions evd goal hyps =
+let create_extra_actions opts evd goal hyps =
   let actions =
-    List.concat (List.map (create_extra_hyp_actions evd) hyps)
+    List.concat (List.map (create_extra_hyp_actions opts evd) hyps)
   in
   List.map snd
     (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
@@ -185,6 +269,8 @@ let rec search opts n hyps visited =
         | _ ->
            if is_simple_split opts evd goal then
              simple_splitting opts <*> search opts n hyps (goal :: visited)
+           else if is_case_split opts evd goal then
+             case_splitting opts <*> start_search opts n
            else
              let hyps =
                if hyps = [] then
@@ -192,7 +278,7 @@ let rec search opts n hyps visited =
                else
                  hyps
              in
-             let actions = create_actions evd goal hyps in
+             let actions = create_actions opts evd goal hyps in
              if actions = [] then
                opts.s_leaf_tac
              else
@@ -218,6 +304,8 @@ and apply_actions opts n actions hyps visited =
      continue (rewrite_rl_tac opts.s_leaf_tac id) acts
   | ActInvert id :: acts ->
      cont (einvert_tac id <*> start_search opts (n - 1)) acts
+  | ActUnfold c :: acts ->
+     continue (unfold c) acts
   | ActConstructor :: acts ->
      cont
        (Tactics.any_constructor true
@@ -231,12 +319,12 @@ and extra_search opts n =
     let goal = Proofview.Goal.concl gl in
     let evd = Proofview.Goal.sigma gl in
     let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
-    let actions = create_extra_actions evd goal hyps in
+    let actions = create_extra_actions opts evd goal hyps in
     apply_actions opts n actions [] []
   end
 
 and start_search opts n =
-  simplify opts <*> Proofview.tclORELSE (search opts n [] []) (fun _ -> extra_search opts n)
+  unfolding opts <*> simplify opts <*> Proofview.tclORELSE (search opts n [] []) (fun _ -> extra_search opts n)
 
 and intros opts n =
   Tactics.simpl_in_concl <*>
@@ -247,4 +335,6 @@ and intros opts n =
 
 let sauto opts n = subst_simpl_tac <*> intros opts n
 
-let ssimpl opts = Tactics.intros <*> subst_simpl_tac <*> (simplify opts <~> Tactics.intros)
+let ssimpl opts =
+  Tactics.intros <*> unfolding opts <*> subst_simpl_tac <*>
+    (simplify opts <~> (Tactics.intros <*> unfolding opts))

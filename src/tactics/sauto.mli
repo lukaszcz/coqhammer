@@ -1,14 +1,17 @@
 (* sauto -- interface *)
 
-type 'a soption = SNone | SAll | SSome of 'a | SHints
+open Names
+
+type 'a soption = SNone | SAll | SSome of 'a | SNoHints of 'a
 
 type s_opts = {
   s_exhaustive : bool;
   s_leaf_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
-  s_splits : string list soption;
-  s_inversions : string list soption;
-  s_unfolding : string list soption;
+  s_simple_splits : inductive list soption;
+  s_case_splits : inductive list soption;
+  s_inversions : inductive list soption;
+  s_unfolding : Constant.t list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_case_splitting : bool;

@@ -8,11 +8,17 @@ val exists_global : string -> bool
 
 val get_constr : string -> EConstr.t
 
+val get_global : string -> GlobRef.t
+
 val get_inductive : string -> inductive
+
+val get_const : string -> Constant.t
 
 val get_ind_name : inductive -> string
 
 val get_ind_nparams : inductive -> int
+
+val get_ind_nconstrs : inductive -> int
 
 val close : (Name.t * 'a * 'a -> 'a) -> (Name.t * 'a) list -> 'a -> 'a
 
