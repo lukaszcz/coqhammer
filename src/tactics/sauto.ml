@@ -62,7 +62,7 @@ let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
-let fail_tac = Tacticals.New.tclFAIL 0 Pp.(str "sauto")
+let fail_tac = Utils.ltac_apply "fail" []
 let rewrite_lr_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteLR ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
 let rewrite_rl_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
 let einvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.einvert" [mk_tac_arg_id id])
@@ -270,6 +270,7 @@ let rec search opts n hyps visited =
         fail_tac
       else
         let evd = Proofview.Goal.sigma gl in
+        (* Feedback.msg_notice (Printer.pr_constr (EConstr.to_constr evd goal)); *)
         let open Constr in
         let open EConstr in
         match kind evd goal with
@@ -288,10 +289,15 @@ let rec search opts n hyps visited =
                  hyps
              in
              let actions = create_actions opts evd goal hyps in
-             if actions = [] then
-               opts.s_leaf_tac
-             else
-               apply_actions opts n actions hyps (goal :: visited)
+             let tac =
+               if actions = [] then
+                 opts.s_leaf_tac
+               else
+                 apply_actions opts n actions hyps (goal :: visited)
+             in
+             match kind evd goal with
+             | Prod _ -> Proofview.tclORELSE tac (fun _ -> Tactics.intros <*> start_search opts n)
+             | _ -> tac
     end
 
 and apply_actions opts n actions hyps visited =
@@ -333,7 +339,8 @@ and extra_search opts n =
   end
 
 and start_search opts n =
-  unfolding opts <*> simplify opts <*> Proofview.tclORELSE (search opts n [] []) (fun _ -> extra_search opts n)
+  unfolding opts <*> simplify opts <*>
+    Proofview.tclORELSE (search opts n [] []) (fun _ -> extra_search opts n)
 
 and intros opts n =
   Tactics.simpl_in_concl <*>
@@ -342,7 +349,7 @@ and intros opts n =
 
 (*****************************************************************************************)
 
-let sauto opts n = subst_simpl_tac <*> intros opts n
+let sauto opts n = unfolding opts <*> subst_simpl_tac <*> intros opts n
 
 let ssimpl opts =
   Tactics.intros <*> unfolding opts <*> subst_simpl_tac <*>

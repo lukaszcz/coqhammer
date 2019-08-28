@@ -158,7 +158,7 @@ Ltac pose_hasvar := generalize hs_var hs_app hs_lem; intros.
 Lemma vars_abstr :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr v t)).
 Proof.
-  pose_hasvar; induction t; ssimpl.
+  induction t; sauto.
 Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).
@@ -168,10 +168,9 @@ Qed.
 
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
 Proof.
-  pose_hasvar.
   induction t; ssimpl.
   - sauto using vars_abstr.
-  - Reconstr.rsimple (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl) Reconstr.Empty.
+  - sauto using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
 Qed.
 
 From Hammer Require Import Reconstr.

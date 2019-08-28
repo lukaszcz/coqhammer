@@ -420,7 +420,13 @@ Ltac bnat_reflect :=
            assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; seasy)
          end.
 
-Ltac subst_simpl := try subst; cbn in *.
+Ltac ssubst :=
+  try subst;
+  repeat match goal with
+         | [ H : ?A = ?B |- _ ] => is_var A; rewrite H in *; clear H
+         end.
+
+Ltac subst_simpl := ssubst; cbn in *.
 
 Ltac invert_one_subgoal H :=
   let ty := type of H in
