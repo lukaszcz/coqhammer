@@ -32,7 +32,7 @@ let default_s_opts = {
   s_simpl_tac = Utils.ltac_apply "Tactics.simpl_solve" [];
   s_unfolding = SSome [];
   s_constructors = SAll;
-  s_simple_splits = SSome [];
+  s_simple_splits = SAll;
   s_case_splits = SAll;
   s_inversions = SAll;
   s_rew_bases = [];
@@ -109,7 +109,21 @@ let in_sopt_list hints x opt =
   | SNoHints lst when List.mem x lst -> true
   | _ -> false
 
-let is_simple_ind ind = Utils.get_ind_nconstrs ind = 1
+let is_simple_ind ind =
+  let cstrs = Utils.get_ind_constrs ind in
+  match cstrs with
+  | [ t ] ->
+     Utils.fold_constr_ker
+       begin fun k acc x ->
+         let open Constr in
+         match kind x with
+         | Ind (ind2, _) when ind2 = ind -> false
+         | Rel n when n > k -> false
+         | _ -> acc
+       end
+       true
+       t
+  | _ -> false
 
 let is_simple_split opts evd t =
   let open Constr in
@@ -187,7 +201,7 @@ let simplify opts =
   simp_hyps_tac <~>
     opt opts.s_bnat_reflect bnat_reflect_tac <~>
     opts.s_simpl_tac <~>
-    (simple_splitting opts <*>
+    (Tactics.simpl_in_concl <*> simple_splitting opts <*>
        intros_until_atom_tac <*> subst_simpl_tac) <~>
     autorewriting opts <~>
     opt (opts.s_case_splits = SAll) case_splitting_tac <~>

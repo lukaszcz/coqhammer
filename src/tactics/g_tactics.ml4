@@ -25,6 +25,10 @@ let get_s_opts unfoldings =
   in
   get_unfoldings default_s_opts
 
+TACTIC EXTEND Hammer_simple_splitting
+| [ "simple_splitting" ] -> [ simple_splitting default_s_opts ]
+END
+
 TACTIC EXTEND Hammer_sauto_gen_1
 | [ "sauto_gen" int_or_var_opt(n) ] -> [ sauto default_s_opts (get_opt n default_sauto_depth) ]
 END

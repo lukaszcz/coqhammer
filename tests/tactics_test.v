@@ -158,7 +158,7 @@ Ltac pose_hasvar := generalize hs_var hs_app hs_lem; intros.
 Lemma vars_abstr :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr v t)).
 Proof.
-  induction t; sauto.
+  induction t; scrush.
 Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).

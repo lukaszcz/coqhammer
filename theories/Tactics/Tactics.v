@@ -393,6 +393,8 @@ Ltac dsolve := auto with shints; try yeasy; try solve [ do 10 constructor ].
 Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try congruence 32; try yeasy;
                try solve [ econstructor; isolve ].
 
+Ltac sintuition := cbn; intros; simp_hyps; ssolve; repeat (progress (intros; simp_hyps); ssolve).
+
 Ltac seasy := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
 
 Ltac leaf_solve := solve [ isolve ].
@@ -438,18 +440,6 @@ Ltac simple_inverting :=
   repeat match goal with
          | [ H : ?P |- _ ] => simple_invert H
          end.
-
-Ltac simple_split :=
-  match goal with
-    | [ |- ?A /\ _ ] =>
-      cut A; [ let H := fresh "H" in
-               intro H; split; [ exact H | try simp_hyp H ] | idtac ]
-    | [ |- prod ?A _ ] =>
-      cut A; [ let H := fresh "H" in
-               intro H; split; [ exact H | try simp_hyp H ] | idtac ]
-  end.
-
-Ltac simple_splitting := repeat (simple_split; cbn).
 
 Ltac case_split :=
   match goal with
