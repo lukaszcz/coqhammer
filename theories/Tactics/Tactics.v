@@ -108,6 +108,8 @@ Ltac tryunfold x :=
     | _ => idtac
   end.
 
+Ltac fullunfold h := unfold h in *.
+
 Ltac einst e :=
   let tpe := type of e
   in
@@ -534,26 +536,27 @@ Ltac forwarding :=
          | [ H : forall x : _,_ |- _ ] => forward H
          end.
 
-Definition nohints := tt.
 Definition default := tt.
 Definition none := tt.
+Definition hints := tt.
+Definition nohints := tt.
 
 Declare ML Module "hammer_tactics".
 
 Tactic Notation "sauto" := unshelve sauto_gen; dsolve.
 Tactic Notation "sauto" int_or_var(i) :=
   unshelve (sauto_gen i using default unfolding default); dsolve.
-Tactic Notation "sauto" "using" constr_list(lst) :=
+Tactic Notation "sauto" "using" constr(lst) :=
   unshelve (sauto_gen using lst unfolding default); dsolve.
-Tactic Notation "sauto" int_or_var(i) "using" constr_list(lst) :=
+Tactic Notation "sauto" int_or_var(i) "using" constr(lst) :=
   unshelve (sauto_gen i using lst unfolding default); dsolve.
-Tactic Notation "sauto" "using" constr_list(lst) "unfolding" constr_list(unfolds) :=
+Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) :=
   unshelve (sauto_gen using lst unfolding unfolds); dsolve.
-Tactic Notation "sauto" int_or_var(i) "using" constr_list(lst) "unfolding" constr_list(unfolds) :=
+Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
   unshelve (sauto_gen i using lst unfolding unfolds); dsolve.
-Tactic Notation "sauto" "unfolding" constr_list(unfolds) :=
+Tactic Notation "sauto" "unfolding" constr(unfolds) :=
   unshelve (sauto_gen using default unfolding unfolds); dsolve.
-Tactic Notation "sauto" int_or_var(i) "unfolding" constr_list(unfolds) :=
+Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) :=
   unshelve (sauto_gen i using default unfolding unfolds); dsolve.
 
 Ltac ssimpl := unshelve ssimpl_gen; dsolve.
@@ -561,5 +564,5 @@ Ltac ssimpl := unshelve ssimpl_gen; dsolve.
 Tactic Notation "scrush" := try seasy; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
   pose proof lst; try seasy; ssimpl; sauto.
-Tactic Notation "scrush" "using" constr(lst) "unfolding" constr_list(unfolds) :=
+Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
   pose proof lst; try seasy; ssimpl; sauto unfolding unfolds.

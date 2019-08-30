@@ -32,7 +32,7 @@ let default_s_opts = {
   s_simpl_tac = Utils.ltac_apply "Tactics.simpl_solve" [];
   s_unfolding = SSome [];
   s_constructors = SAll;
-  s_simple_splits = SAll;
+  s_simple_splits = SSome [];
   s_case_splits = SAll;
   s_inversions = SAll;
   s_rew_bases = [];
@@ -56,7 +56,7 @@ let inversion_hints = ref []
 
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActInvert of Id.t |
-        ActUnfold of Constant.t | ActConstructor
+        ActUnfold of Constant.t | ActCaseUnfold of Constant.t | ActConstructor
 
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
@@ -72,7 +72,9 @@ let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
 let case_splitting_tac = Utils.ltac_apply "Tactics.case_splitting" []
 let forwarding_tac = Utils.ltac_apply "Tactics.forwarding" []
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
-let tryunfold_tac t = Utils.ltac_apply "Tactics.tryunfold" [mk_tac_arg_constr t]
+let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr t]
+
+(*****************************************************************************************)
 
 let autorewrite bases =
   let bases =
@@ -85,13 +87,53 @@ let autorewrite bases =
     bases
     { onhyps = None; concl_occs = AllOccurrences }
 
+(*****************************************************************************************)
+
+let is_simple_unfold c =
+  match Global.body_of_constant c with
+  | Some (b, _) ->
+     begin
+       let t = EConstr.of_constr b in
+       let body = Utils.drop_all_lambdas Evd.empty t in
+       let open Constr in
+       let open EConstr in
+       match kind Evd.empty body with
+       | Prod _  | App _ | Const _ | Ind _ | Sort _ | Var _ | Rel _ -> true
+       | _ -> false
+     end
+  | None -> false
+
+(* -1 if not a case unfold *)
+let case_unfold_cost c =
+  match Global.body_of_constant c with
+  | Some (b, _) ->
+     begin
+       let t = EConstr.of_constr b in
+       let lambdas = Utils.take_all_lambdas Evd.empty t in
+       let body = Utils.drop_all_lambdas Evd.empty t in
+       let open Constr in
+       let open EConstr in
+       match kind Evd.empty body with
+       | Case _ -> List.length lambdas * 10 + 10
+       | _ -> -1
+     end
+  | None -> -1
+
 let unfold c = Tactics.unfold_constr (GlobRef.ConstRef c) <*> Tactics.simpl_in_concl
+
+let fullunfold c = fullunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c, None)), None)
+
+let tryunfold c =
+  if is_simple_unfold c then
+    fullunfold c
+  else
+    Tacticals.New.tclIDTAC
 
 let unfolding opts =
   let do_unfolding lst =
     Tacticals.New.tclREPEAT
       (List.fold_left
-         (fun acc c -> tryunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c, None)), None) <*> acc)
+         (fun acc c -> tryunfold c <*> acc)
          Tacticals.New.tclIDTAC
          lst)
   in
@@ -263,13 +305,47 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, (prods, head, args)) =
   let open EConstr in
   match kind evd head with
   | Ind (ind, _) when is_inversion opts evd ind ->
-     [(cost, ActInvert id)]
+     [(cost + 40, ActInvert id)]
   | _ ->
      []
+
+let create_case_unfolding_actions opts evd goal hyps =
+  let create lst =
+    List.fold_left begin fun acc c ->
+      let cost = case_unfold_cost c in
+      if cost >= 0 then
+        (cost, ActCaseUnfold c) :: acc
+      else
+        acc
+    end [] lst
+  in
+  let get_consts lst =
+    Hhlib.sort_uniq Pervasives.compare
+      (List.concat
+         (List.map
+            begin fun t ->
+              Utils.fold_constr begin fun n acc t ->
+                let open Constr in
+                let open EConstr in
+                match kind evd t with
+                | Const (c, _) -> c :: acc
+                | _ -> acc
+              end [] evd t
+            end
+            lst))
+  in
+  match opts.s_unfolding with
+  | SSome lst -> create (!unfolding_hints @ lst)
+  | SNoHints lst -> create lst
+  | SAll -> create (get_consts (goal :: List.map (fun (_, x, _, _) -> x) hyps))
+  | SNone -> []
 
 let create_extra_actions opts evd goal hyps =
   let actions =
     List.concat (List.map (create_extra_hyp_actions opts evd) hyps)
+  in
+  let actions =
+    create_case_unfolding_actions opts evd goal hyps @ actions
   in
   List.map snd
     (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
@@ -314,6 +390,24 @@ let rec search opts n hyps visited =
              | _ -> tac
     end
 
+and extra_search opts n =
+  Proofview.Goal.nf_enter begin fun gl ->
+    let goal = Proofview.Goal.concl gl in
+    let evd = Proofview.Goal.sigma gl in
+    let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
+    let actions = create_extra_actions opts evd goal hyps in
+    apply_actions opts n actions [] []
+  end
+
+and start_search opts n =
+  unfolding opts <*> simplify opts <*>
+    Proofview.tclORELSE (search opts n [] []) (fun _ -> extra_search opts n)
+
+and intros opts n =
+  Tactics.simpl_in_concl <*>
+    intros_until_atom_tac <*>
+    start_search opts n
+
 and apply_actions opts n actions hyps visited =
   let branch =
     if opts.s_exhaustive then Proofview.tclOR else Proofview.tclORELSE
@@ -335,6 +429,8 @@ and apply_actions opts n actions hyps visited =
      cont (einvert_tac id <*> start_search opts (n - 1)) acts
   | ActUnfold c :: acts ->
      continue (unfold c) acts
+  | ActCaseUnfold c :: acts ->
+     cont (Tacticals.New.tclPROGRESS (fullunfold c) <*> start_search opts (n - 1)) acts
   | ActConstructor :: acts ->
      cont
        (Tactics.any_constructor true
@@ -342,24 +438,6 @@ and apply_actions opts n actions hyps visited =
        acts
   | [] ->
      fail_tac
-
-and extra_search opts n =
-  Proofview.Goal.nf_enter begin fun gl ->
-    let goal = Proofview.Goal.concl gl in
-    let evd = Proofview.Goal.sigma gl in
-    let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
-    let actions = create_extra_actions opts evd goal hyps in
-    apply_actions opts n actions [] []
-  end
-
-and start_search opts n =
-  unfolding opts <*> simplify opts <*>
-    Proofview.tclORELSE (search opts n [] []) (fun _ -> extra_search opts n)
-
-and intros opts n =
-  Tactics.simpl_in_concl <*>
-    intros_until_atom_tac <*>
-    start_search opts n
 
 (*****************************************************************************************)
 

@@ -136,8 +136,6 @@ Inductive NoLambdas : Term -> Prop :=
 | nl_var : forall n : nat, NoLambdas (LVar n)
 | nl_app : forall x y : Term, NoLambdas x -> NoLambdas y -> NoLambdas (LApp x y).
 
-Ltac repeat2 tac1 tac2 := tac1; repeat (progress tac2; tac1).
-
 Lemma no_lams_abstr : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr v t).
 Proof.
   induction t; sauto.
@@ -320,8 +318,8 @@ Proof.
   pose_hasvar.
   pose (u := t).
   induction t; destruct (occurs v u) eqn:?; ssimpl.
-  - unfold orb in *; sauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false).
-  - unfold orb in *; sauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false).
+  - sauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) unfolding orb.
+  - sauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) unfolding orb.
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
@@ -349,7 +347,7 @@ Proof.
   pose_we.
   induction t; ssimpl; eauto.
   assert (HH: forall b1 b2, (b1 || b2)%bool = false -> b1 = false /\ b2 = false).
-  unfold orb; sauto.
+  sauto unfolding orb.
   pose proof occurs_spec.
   rewrite csubst_novar by sauto.
   rewrite csubst_novar by sauto.
