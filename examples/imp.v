@@ -9,7 +9,7 @@
    and our reconstruction tactics compares to the automation available
    in Isabelle/HOL. *)
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer Tactics.
 
 Require Import String.
 Require Import Arith.PeanoNat.
@@ -50,8 +50,8 @@ Fixpoint asimp (e : aexpr) :=
 
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
-  induction e; sauto.
-  Reconstr.reasy (@lem_aval_plus) Reconstr.Empty.
+  induction e; ssimpl.
+  sauto using lem_aval_plus.
 Qed.
 
 Inductive bexpr :=
@@ -115,11 +115,11 @@ Qed.
 
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
-  induction e; sauto.
-  - Reconstr.reasy (@lem_bval_not) Reconstr.Empty.
-  - Reconstr.reasy (@lem_bval_and) Reconstr.Empty.
-  - ycrush.
-  - ycrush.
+  induction e; ssimpl.
+  - sauto using lem_bval_not.
+  - sauto using lem_bval_and.
+  - sauto unfolding less.
+  - sauto unfolding less.
 Qed.
 
 Inductive cmd :=
@@ -151,7 +151,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  scrush. (* > 2s *)
+  sauto. (* 0.4s *)
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -160,23 +160,20 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  unfold equiv_cmd; intros; split; intro H; inversion H; ycrush.
+  sauto unfolding equiv_cmd. (* 0.4s *)
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
                                                (While b c', s) ==> s'.
 Proof.
-  assert (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s').
+  enough (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s') by eauto.
   intros p s' H.
-  induction H; sauto.
-  - ycrush.
-  - unfold equiv_cmd in *; ycrush.
-  - eauto.
+  induction H; sauto unfolding equiv_cmd.
 Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b c ~~ While b c'.
 Proof.
-  Reconstr.reasy (@lem_while_cong_aux) (@equiv_cmd).
+  sauto using lem_while_cong_aux unfolding equiv_cmd.
 Qed.
 
 Lemma lem_big_step_deterministic :
@@ -184,9 +181,11 @@ Lemma lem_big_step_deterministic :
 Proof.
   intros c s s1 s2 H.
   revert s2.
-  induction H; try yelles 1.
-  scrush.
-  intros s0 H2; inversion H2; scrush.
+  induction H; ssimpl.
+  - sauto.
+  - sauto.
+  - sauto.
+  - inversion H2; sauto.
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
@@ -204,11 +203,11 @@ Notation "A --> B" := (small_step A B) (at level 80, no associativity).
 
 Require Import Relations.
 
-Ltac pose_rt := pose @rt_step; pose @rt_refl; pose @rt_trans.
+Let rel_lems := (@rt_step, @rt_refl, @rt_trans).
 
 Definition small_step_star := clos_refl_trans (cmd * state) small_step.
 
-Hint Unfold small_step_star : yhints.
+Hint Unfold small_step_star : shints. (* !!! doesn't work with sauto !!! *)
 
 Notation "A -->* B" := (small_step_star A B) (at level 80, no associativity).
 
@@ -217,79 +216,74 @@ Lemma lem_small_step_deterministic :
 Proof.
   intros c s s1 s2 H.
   revert s2.
-  induction H; try yelles 1.
-  scrush.
-  intros s2 H2; inversion H2; scrush.
+  induction H; ssimpl.
+  - sauto.
+  - inversion H0; sauto. (* !!! sauto 0 hangs !!! *)
+  - sauto.
+  - sauto.
 Qed.
 
 Lemma lem_star_seq2 : forall c1 c2 s c1' s', (c1, s) -->* (c1', s') ->
                                              (Seq c1 c2, s) -->* (Seq c1' c2, s').
 Proof.
-  assert (forall p1 p2, p1 -->* p2 ->
+  enough (forall p1 p2, p1 -->* p2 ->
                         forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
-                                               (Seq c1 c2, s) -->* (Seq c1' c2, s')).
+                                               (Seq c1 c2, s) -->* (Seq c1' c2, s')) by eauto.
   intros p1 p2 H.
-  induction H as [ | | ? y ]; try yelles 1.
-  pose_rt; pose SeqSemS2; scrush.
-  intros c1 c2 s c1' s' H1 H2; subst.
-  destruct y as [ c0 s0 ].
-  assert ((Seq c1 c2, s) -->* (Seq c0 c2, s0)) by scrush.
-  assert ((Seq c0 c2, s0) -->* (Seq c1' c2, s')) by scrush.
-  pose_rt; scrush.
-  scrush.
+  induction H as [ | | ? y ]; ssimpl.
+  - sauto unfolding small_step_star.
+  - destruct y as [ c0 s0 ].
+    sauto unfolding small_step_star.
 Qed.
 
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2) -->* (Skip, s3) ->
                                             (Seq c1 c2, s1) -->* (Skip, s3).
 Proof.
   intros c1 c2 s1 s2 s3 H1 H2.
-  assert ((Seq c1 c2, s1) -->* (Seq Skip c2, s2)).
-  pose lem_star_seq2; scrush.
-  assert ((Seq Skip c2, s2) -->* (c2, s2)).
-  pose_rt; scrush.
-  pose_rt; scrush.
+  assert ((Seq c1 c2, s1) -->* (Seq Skip c2, s2)) by sauto using lem_star_seq2.
+  assert ((Seq Skip c2, s2) -->* (c2, s2)) by (scrush using rel_lems).
+  scrush using rel_lems.
 Qed.
 
 Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').
 Proof.
   intros p s' H.
-  induction H as [ | | | | | | b c s1 s2 ]; try yelles 1.
-  - Reconstr.reasy (@lem_seq_comp) Reconstr.Empty.
-  - pose_rt; pose IfTrueS; scrush.
-  - pose_rt; pose IfFalseS; scrush.
-  - pose_rt; pose WhileS; pose IfFalseS; ycrush.
+  induction H as [ | | | | | | b c s1 s2 ]; ssimpl.
+  - sauto using (@lem_seq_comp).
+  - eapply rt_trans; [ do 2 constructor | idtac ]; assumption.
+  - eapply rt_trans; [ do 2 constructor | idtac ]; assumption.
+  - eapply rt_trans; sauto.
   - assert ((While b c, s1) -->* (Seq c (While b c), s1)) by
-        (pose_rt; pose WhileS; pose IfTrueS; ycrush).
+        (eapply rt_trans; scrush).
     assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)) by
-        Reconstr.reasy (@lem_star_seq2) Reconstr.Empty.
-    pose_rt; pose SeqSemS1; ycrush.
+        sauto using lem_star_seq2.
+    eapply rt_trans; sauto.
 Qed.
 
 Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
-  induction H; sauto; try yelles 1.
-  Reconstr.reasy (@lem_unfold_loop) (@equiv_cmd).
+  induction H; ssimpl.
+  sauto using lem_unfold_loop unfolding equiv_cmd.
 Qed.
 
 Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
-  induction H; sauto.
-  Reconstr.reasy (@lem_small_to_big_aux) Reconstr.Empty.
+  induction H; ssimpl.
+  sauto using (@lem_small_to_big_aux).
 Qed.
 
 Lemma lem_small_to_big : forall p s, p -->* (Skip, s) -> p ==> s.
 Proof.
-  assert (forall p p', p -->* p' -> forall s, p' = (Skip, s) -> p ==> s).
+  enough (forall p p', p -->* p' -> forall s, p' = (Skip, s) -> p ==> s) by eauto.
   intros p p' H.
-  induction H; sauto.
-  - ycrush.
-  - Reconstr.rsimple (@lem_small_to_big_aux_2) (@small_step_star).
-  - ycrush.
+  induction H; ssimpl.
+  - sauto.
+  - sauto using (@lem_small_to_big_aux_2) unfolding (@small_step_star).
 Qed.
 
 Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
-  Reconstr.reasy (@lem_small_to_big, @lem_big_to_small) Reconstr.Empty.
+  sauto using (@lem_small_to_big, @lem_big_to_small).
 Qed.
