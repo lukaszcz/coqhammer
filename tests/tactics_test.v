@@ -87,7 +87,7 @@ Proof.
 Qed.
 
 Require Import PeanoNat.
-Require Import Omega.
+Require Import Psatz.
 
 Inductive Term : Set :=
 | LS : Term
@@ -196,21 +196,21 @@ Qed.
 Lemma abstr_size :
   forall (t : Term) (v : nat), size (abstr v t) <= 3 * size t.
 Proof.
-  intros; induction t; ssimpl; omega.
+  intros; induction t; ssimpl.
 Qed.
 
 Lemma lem_pow_3 : (forall x y : nat, 3 ^ x + 3 ^ y + 1 <= 3 ^ (x + y + 1)).
 Proof.
   intros.
   induction x; simpl in *.
-  induction y; simpl in *; omega.
-  omega.
+  induction y; simpl in *; lia.
+  lia.
 Qed.
 
 Lemma transl_size :
   forall (t : Term), size (transl t) <= 3 ^ (size t).
 Proof.
-  induction t; ssimpl; try omega.
+  induction t; ssimpl.
   assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
   eauto using PeanoNat.Nat.add_le_mono.
   assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
@@ -219,7 +219,7 @@ Proof.
   assert (size (abstr n (transl t)) <= 3 * size (transl t)).
   pose proof abstr_size; eauto with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
-  pose proof le_trans; eauto with zarith.
+  pose proof Nat.le_trans; eauto with zarith.
   assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
   scrush using (@Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.shiftl_1_l, @Coq.Arith.PeanoNat.Nat.pow_1_r, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r).
   scrush.
@@ -227,7 +227,7 @@ Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
 Proof.
-  intros; induction t; ssimpl; omega.
+  intros; induction t; ssimpl.
 Qed.
 
 Fixpoint long_app (n : nat) : Term :=
@@ -246,7 +246,7 @@ Definition cex_term (n : nat) := long_term n n.
 
 Lemma size_nonneg : forall (t : Term), size t > 0.
 Proof.
-  induction t; simpl; omega.
+  induction t; simpl; lia.
 Qed.
 
 Lemma transl_size_lb : forall (n : nat), size (transl (cex_term n)) >= 2^n.
@@ -357,5 +357,5 @@ Qed.
 Lemma abstr2_size_ub :
   forall (t : Term) (v : nat), size (abstr2 v t) <= 3 * size t.
 Proof.
-  intros; induction t; ssimpl; omega.
+  intros; induction t; ssimpl.
 Qed.

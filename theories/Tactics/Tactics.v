@@ -6,7 +6,7 @@
 
 Declare ML Module "hammer_lib".
 
-Require List Arith ZArith Bool.
+Require List Arith ZArith Bool Psatz.
 
 Create HintDb shints discriminated.
 
@@ -377,10 +377,16 @@ Ltac isplit :=
 Ltac trysolve :=
   eauto 2 with shints; try solve [ constructor ]; try subst;
   match goal with
-    | [ |- ?t = ?u ] => try solve [ cbn in *; congruence 8 ]
-    | [ |- ?t <> ?u ] => try solve [ cbn in *; congruence 8 ]
-    | [ |- False ] => try solve [ cbn in *; congruence 8 ]
-    | _ => idtac
+  | [ |- ?t = ?u ] => try solve [ cbn in *; congruence 8 |
+                                  match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
+  | [ |- ?t <> ?u ] => try solve [ cbn in *; congruence 8 |
+                                   match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
+  | [ |- False ] => try solve [ cbn in *; congruence 8 ]
+  | [ |- ?t >= ?u ] => try solve [ Psatz.lia ]
+  | [ |- ?t <= ?u ] => try solve [ Psatz.lia ]
+  | [ |- ?t > ?u ] => try solve [ Psatz.lia ]
+  | [ |- ?t < ?u ] => try solve [ Psatz.lia ]
+  | _ => idtac
   end.
 
 Ltac isolve :=
