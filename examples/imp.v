@@ -185,7 +185,7 @@ Proof.
   - sauto.
   - sauto.
   - sauto.
-  - inversion H2; sauto.
+  - inversion H2; sauto. (* !!! sauto 0 hangs !!! *)
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
