@@ -391,13 +391,16 @@ let rec search opts n hyps visited =
     end
 
 and extra_search opts n =
-  Proofview.Goal.nf_enter begin fun gl ->
-    let goal = Proofview.Goal.concl gl in
-    let evd = Proofview.Goal.sigma gl in
-    let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
-    let actions = create_extra_actions opts evd goal hyps in
-    apply_actions opts n actions [] []
-  end
+  if n = 0 then
+    fail_tac
+  else
+    Proofview.Goal.nf_enter begin fun gl ->
+      let goal = Proofview.Goal.concl gl in
+      let evd = Proofview.Goal.sigma gl in
+      let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
+      let actions = create_extra_actions opts evd goal hyps in
+      apply_actions opts n actions [] []
+    end
 
 and start_search opts n =
   unfolding opts <*> simplify opts <*>

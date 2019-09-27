@@ -185,7 +185,7 @@ Proof.
   - sauto.
   - sauto.
   - sauto.
-  - inversion H2; sauto. (* !!! sauto 0 hangs !!! *)
+  - inversion H2; sauto.
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
@@ -218,7 +218,7 @@ Proof.
   revert s2.
   induction H; ssimpl.
   - sauto.
-  - inversion H0; sauto. (* !!! sauto 0 hangs !!! *)
+  - inversion H0; sauto.
   - inversion H0; sauto.
   - inversion H0; sauto.
 Qed.
