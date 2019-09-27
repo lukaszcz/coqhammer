@@ -488,16 +488,16 @@ Ltac finst e :=
       generalize e
   end.
 
-Ltac einvert H :=
+Ltac sinvert H :=
   lazymatch type of H with
   | _ -> _ =>
     finst H;
     let H1 := fresh "H" in
-    intro H1; inversion_clear H1
+    intro H1; inversion H1; try subst; try clear H1
   | _ =>
     lazymatch goal with
     | [ |- context[H] ] => destruct H
-    | [ |- _ ] => inversion_clear H
+    | [ |- _ ] => inversion H; try subst; try clear H
     end
   end; cbn.
 

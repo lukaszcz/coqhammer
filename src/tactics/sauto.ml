@@ -65,7 +65,7 @@ let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
 let rewrite_lr_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteLR ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
 let rewrite_rl_tac tac id = Tacticals.New.tclPROGRESS (Equality.rewriteRL ~tac:(tac, Equality.AllMatches) (EConstr.mkVar id))
-let einvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.einvert" [mk_tac_arg_id id])
+let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
@@ -429,7 +429,7 @@ and apply_actions opts n actions hyps visited =
   | ActRewriteRL id :: acts ->
      continue (rewrite_rl_tac opts.s_leaf_tac id) acts
   | ActInvert id :: acts ->
-     cont (einvert_tac id <*> start_search opts (n - 1)) acts
+     cont (sinvert_tac id <*> start_search opts (n - 1)) acts
   | ActUnfold c :: acts ->
      continue (unfold c) acts
   | ActCaseUnfold c :: acts ->

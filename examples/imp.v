@@ -179,13 +179,8 @@ Qed.
 Lemma lem_big_step_deterministic :
   forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
-  intros c s s1 s2 H.
-  revert s2.
-  induction H; ssimpl.
-  - sauto.
-  - sauto.
-  - sauto.
-  - inversion H2; sauto.
+  intros c s s1 s2 H; revert s2.
+  induction H; sauto.
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
@@ -214,13 +209,8 @@ Notation "A -->* B" := (small_step_star A B) (at level 80, no associativity).
 Lemma lem_small_step_deterministic :
   forall c s s1 s2, (c, s) --> s1 -> (c, s) --> s2 -> s1 = s2.
 Proof.
-  intros c s s1 s2 H.
-  revert s2.
-  induction H; ssimpl.
-  - sauto.
-  - inversion H0; sauto.
-  - inversion H0; sauto.
-  - inversion H0; sauto.
+  intros c s s1 s2 H; revert s2.
+  induction H; sauto.
 Qed.
 
 Lemma lem_star_seq2 : forall c1 c2 s c1' s', (c1, s) -->* (c1', s') ->
@@ -230,9 +220,7 @@ Proof.
                         forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
                                                (Seq c1 c2, s) -->* (Seq c1' c2, s')) by eauto.
   intros p1 p2 H.
-  induction H as [ | | ? y ]; ssimpl.
-  - sauto unfolding small_step_star.
-  - sauto unfolding small_step_star.
+  induction H; sauto unfolding small_step_star.
 Qed.
 
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2) -->* (Skip, s3) ->
