@@ -219,8 +219,8 @@ Proof.
   induction H; ssimpl.
   - sauto.
   - inversion H0; sauto. (* !!! sauto 0 hangs !!! *)
-  - sauto.
-  - sauto.
+  - inversion H0; sauto.
+  - inversion H0; sauto.
 Qed.
 
 Lemma lem_star_seq2 : forall c1 c2 s c1' s', (c1, s) -->* (c1', s') ->
@@ -232,8 +232,7 @@ Proof.
   intros p1 p2 H.
   induction H as [ | | ? y ]; ssimpl.
   - sauto unfolding small_step_star.
-  - destruct y as [ c0 s0 ].
-    sauto unfolding small_step_star.
+  - sauto unfolding small_step_star.
 Qed.
 
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2) -->* (Skip, s3) ->

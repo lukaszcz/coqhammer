@@ -6,11 +6,11 @@ Lemma lem_test_1 : (forall x y, x + y = y + x -> False) -> forall x, x > x.
 Qed.
 
 Lemma lem_test_2 : (forall x, x > x) -> (forall x, x + x > x) -> exists x, x > x \/ x + x > x.
-  seasy.
+  strivial.
 Qed.
 
 Lemma lem_test_3 : (forall x, x > x) -> (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
-  seasy.
+  strivial.
 Qed.
 
 Lemma lem_test_4 : (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.

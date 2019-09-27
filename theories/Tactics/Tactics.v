@@ -59,10 +59,11 @@ Ltac noteHyp P :=
 
 Ltac noEvars t := tryif has_evar t then fail else idtac.
 
-Ltac yeasy :=
+Ltac seasy :=
   let rec use_hyp H :=
     match type of H with
     | _ /\ _ => exact H || destruct_hyp H
+    | prod _ _ => exact H || destruct_hyp H
     | _ => try solve [ inversion H ]
     end
   with do_intro := let H := fresh in intro H; use_hyp H
@@ -70,6 +71,7 @@ Ltac yeasy :=
   let rec use_hyps :=
     match goal with
     | H : _ /\ _ |- _ => exact H || (destruct_hyp H; use_hyps)
+    | H : prod _ _ |- _ => exact H || (destruct_hyp H; use_hyps)
     | H : _ |- _ => solve [ inversion H ]
     | _ => idtac
     end
@@ -167,7 +169,12 @@ with simp_hyp H :=
     | ?A -> ?B = ?B => clear H
     | ?A /\ ?A => cut A; [ clear H; yintro | destruct H; assumption ]
     | ?A /\ ?B => elim H; clear H; yintro; yintro
-    | prod ?A ?B => elim H; clear H; yintro; yintro
+    | prod ?A ?B =>
+      let H1 := fresh H in
+      let H2 := fresh H in
+      destruct H as [ H1 H2 ];
+      try simp_hyp H1;
+      try simp_hyp H2
     | ?A /\ ?B -> ?C => cut (A -> B -> C);
                                     [ clear H; yintro
                                     | intro; intro; apply H; split; assumption ]
@@ -390,14 +397,14 @@ Ltac isolve :=
   in
   msolve.
 
-Ltac dsolve := auto with shints; try yeasy; try solve [ do 10 constructor ].
+Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
-Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try congruence 32; try yeasy;
+Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try congruence 32; try seasy;
                try solve [ econstructor; isolve ].
 
 Ltac sintuition := cbn; intros; simp_hyps; ssolve; repeat (progress (intros; simp_hyps); ssolve).
 
-Ltac seasy := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+Ltac strivial := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
 
 Ltac leaf_solve := solve [ isolve ].
 Ltac simpl_solve := solve [ isolve ].
@@ -406,11 +413,11 @@ Ltac bnat_reflect :=
   repeat match goal with
          | [ H : (Nat.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
-           assert (A = B) by (pose Arith.PeanoNat.Nat.eqb_eq; seasy);
+           assert (A = B) by (pose Arith.PeanoNat.Nat.eqb_eq; strivial);
            try subst
          | [ H : (Nat.eqb ?A ?B) = false |- _ ] =>
            notHyp (A = B -> False);
-           assert (A = B -> False) by (pose Arith.PeanoNat.Nat.eqb_neq; seasy)
+           assert (A = B -> False) by (pose Arith.PeanoNat.Nat.eqb_neq; strivial)
          | [ H : (Nat.leb ?A ?B) = true |- _ ] =>
            notHyp (A <= B);
            assert (A <= B) by (eauto using Arith.Compare_dec.leb_complete)
@@ -419,10 +426,10 @@ Ltac bnat_reflect :=
            assert (B < A) by (eauto using Arith.Compare_dec.leb_complete_conv)
          | [ H : (Nat.ltb ?A ?B) = true |- _ ] =>
            notHyp (A < B);
-           assert (A < B) by (pose Arith.PeanoNat.Nat.ltb_lt; seasy)
+           assert (A < B) by (pose Arith.PeanoNat.Nat.ltb_lt; strivial)
          | [ H : (Nat.ltb ?A ?B) = false |- _ ] =>
            notHyp (B <= A);
-           assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; seasy)
+           assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; strivial)
          end.
 
 Ltac ssubst :=
@@ -561,8 +568,8 @@ Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) :=
 
 Ltac ssimpl := unshelve ssimpl_gen; dsolve.
 
-Tactic Notation "scrush" := try seasy; ssimpl; sauto.
+Tactic Notation "scrush" := try strivial; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
-  pose proof lst; try seasy; ssimpl; sauto.
+  pose proof lst; try strivial; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
-  pose proof lst; try seasy; ssimpl; sauto unfolding unfolds.
+  pose proof lst; try strivial; ssimpl; sauto unfolding unfolds.
