@@ -21,7 +21,6 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
-  s_case_splitting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
 }
@@ -37,20 +36,30 @@ let default_s_opts = {
   s_inversions = SAll;
   s_rew_bases = [];
   s_bnat_reflect = true;
-  s_case_splitting = true;
   s_simple_inverting = true;
   s_forwarding = true;
 }
 
 (*****************************************************************************************)
 
-let unfolding_hints = ref [ Utils.get_const "iff"; Utils.get_const "not" ]
-let constructor_hints = ref []
+let logic_constants = [ Utils.get_const "iff"; Utils.get_const "not" ]
+let logic_inductives = [ Utils.get_inductive "and"; Utils.get_inductive "or"; Utils.get_inductive "ex";
+                         Utils.get_inductive "prod"; Utils.get_inductive "sumbool"; Utils.get_inductive "sig";
+                         Utils.get_inductive "sum"; Utils.get_inductive "sigT" ]
+
+let unfolding_hints = ref logic_constants
+let constructor_hints = ref logic_inductives
 let simple_split_hints = ref [ Utils.get_inductive "and"; Utils.get_inductive "ex";
                                Utils.get_inductive "prod"; Utils.get_inductive "sig";
                                Utils.get_inductive "sigT" ]
 let case_split_hints = ref []
-let inversion_hints = ref []
+let inversion_hints = ref logic_inductives
+
+let add_unfold_hint c = unfolding_hints := c :: !unfolding_hints
+let add_ctrs_hint c = constructor_hints := c :: !constructor_hints
+let add_simple_split_hint c = simple_split_hints := c :: !simple_split_hints
+let add_case_split_hint c = case_split_hints := c :: !case_split_hints
+let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 
 (*****************************************************************************************)
 
@@ -81,7 +90,7 @@ let autorewrite bases =
     if List.mem "nohints" bases then
       List.filter (fun s -> s <> "nohints") bases
     else
-      ["shints"; "list"] @ bases
+      ["shints"; "list"] @ (List.filter (fun s -> s <> "shints" && s <> "list") bases)
   in
   Autorewrite.auto_multi_rewrite
     bases
@@ -298,7 +307,7 @@ let create_actions opts evd goal hyps =
        actions
   in
   List.map snd
-    (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
+    (List.stable_sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
 
 let create_extra_hyp_actions opts evd (id, hyp, cost, (prods, head, args)) =
   let open Constr in
@@ -348,7 +357,7 @@ let create_extra_actions opts evd goal hyps =
     create_case_unfolding_actions opts evd goal hyps @ actions
   in
   List.map snd
-    (List.sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
+    (List.stable_sort (fun x y -> Pervasives.compare (fst x) (fst y)) actions)
 
 let rec search opts n hyps visited =
   if n = 0 then

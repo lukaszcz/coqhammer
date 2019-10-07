@@ -128,7 +128,7 @@ Ltac einst e :=
       generalize e
   end.
 
-Ltac ydestruct t :=
+Ltac sdestruct t :=
   lazymatch t with
     | _ _ => destruct t eqn:?
     | _ =>
@@ -360,8 +360,8 @@ Ltac isplit :=
     | [ H : _ \/ _ |- _ ] => elim H; clear H; intro
     | [ H : (?a +{ ?b }) |- _ ] => elim H; clear H; intro
     | [ H : ({ ?a }+{ ?b }) |- _ ] => elim H; clear H; intro
-    | [ |- context[match ?X with _ => _ end] ] => ydestruct X
-    | [ H : context[match ?X with _ => _ end] |- _ ] => ydestruct X
+    | [ |- context[match ?X with _ => _ end] ] => sdestruct X
+    | [ H : context[match ?X with _ => _ end] |- _ ] => sdestruct X
     | [ H : forall (x : ?T1), _ \/ _ |- _ ] =>
       einst H; clear H; intro H; elim H; clear H
     | [ H : forall (x : ?T1) (y : ?T2), _ \/ _ |- _ ] =>
@@ -458,8 +458,8 @@ Ltac simple_inverting :=
 
 Ltac case_split :=
   match goal with
-  | [ |- context[match ?X with _ => _ end] ] => ydestruct X
-  | [ H : context[match ?X with _ => _ end] |- _ ] => ydestruct X
+  | [ |- context[match ?X with _ => _ end] ] => sdestruct X
+  | [ H : context[match ?X with _ => _ end] |- _ ] => sdestruct X
   end.
 
 Ltac case_splitting := repeat (case_split; subst_simpl).
@@ -553,24 +553,41 @@ Definition default := tt.
 Definition none := tt.
 Definition hints := tt.
 Definition nohints := tt.
+Definition logic := tt.
 
 Declare ML Module "hammer_tactics".
 
 Tactic Notation "sauto" := unshelve sauto_gen; dsolve.
 Tactic Notation "sauto" int_or_var(i) :=
-  unshelve (sauto_gen i using default unfolding default); dsolve.
+  unshelve (sauto_gen i with shints using default unfolding default inverting default ctrs default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) :=
-  unshelve (sauto_gen using lst unfolding default); dsolve.
+  unshelve (sauto_gen with shints using lst unfolding default inverting default ctrs default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) :=
-  unshelve (sauto_gen i using lst unfolding default); dsolve.
+  unshelve (sauto_gen i with shints using lst unfolding default inverting default ctrs default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen using lst unfolding unfolds); dsolve.
+  unshelve (sauto_gen with shints using lst unfolding unfolds inverting default ctrs default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen i using lst unfolding unfolds); dsolve.
+  unshelve (sauto_gen i with shints using lst unfolding unfolds inverting default ctrs default); dsolve.
 Tactic Notation "sauto" "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen using default unfolding unfolds); dsolve.
+  unshelve (sauto_gen with shints using default unfolding unfolds inverting default ctrs default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen i using default unfolding unfolds); dsolve.
+  unshelve (sauto_gen i with shints using default unfolding unfolds inverting default ctrs default); dsolve.
+Tactic Notation "sauto" "inverting" constr(inverts) :=
+  unshelve (sauto_gen with shints using default unfolding default inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" int_or_var(i) "inverting" constr(inverts) :=
+  unshelve (sauto_gen i with shints using default unfolding default inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" "using" constr(lst) "inverting" constr(inverts) :=
+  unshelve (sauto_gen with shints using lst unfolding default inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "inverting" constr(inverts) :=
+  unshelve (sauto_gen i with shints using lst unfolding default inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (sauto_gen with shints using lst unfolding unfolds inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (sauto_gen i with shints using lst unfolding unfolds inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (sauto_gen with shints using default unfolding unfolds inverting inverts ctrs default); dsolve.
+Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (sauto_gen i with shints using default unfolding unfolds inverting inverts ctrs default); dsolve.
 
 Ltac ssimpl := unshelve ssimpl_gen; dsolve.
 
@@ -579,3 +596,20 @@ Tactic Notation "scrush" "using" constr(lst) :=
   pose proof lst; try strivial; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
   pose proof lst; try strivial; ssimpl; sauto unfolding unfolds.
+Tactic Notation "scrush" "unfolding" constr(unfolds) :=
+  try strivial; ssimpl; sauto unfolding unfolds.
+
+Tactic Notation "hauto" int_or_var(i) :=
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting logic ctrs logic); dsolve.
+Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting logic ctrs logic); dsolve.
+Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting logic ctrs logic); dsolve.
+Tactic Notation "hauto" "using" constr(lst1) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting logic ctrs logic); dsolve.
+Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting logic ctrs logic); dsolve.
+Tactic Notation "hauto" "unfolding" constr(lst2) :=
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting logic ctrs logic); dsolve.
+Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting logic ctrs logic); dsolve.

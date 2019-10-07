@@ -15,7 +15,6 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
-  s_case_splitting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
 }
@@ -28,3 +27,12 @@ val simple_splitting : s_opts -> unit Proofview.tactic
 val sauto : s_opts -> int -> unit Proofview.tactic
 
 val ssimpl : s_opts -> unit Proofview.tactic
+
+val logic_constants : Constant.t list
+val logic_inductives : inductive list
+
+val add_unfold_hint : Constant.t -> unit
+val add_ctrs_hint : inductive -> unit
+val add_simple_split_hint : inductive -> unit
+val add_case_split_hint : inductive -> unit
+val add_inversion_hint : inductive -> unit

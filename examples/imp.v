@@ -202,7 +202,7 @@ Let rel_lems := (@rt_step, @rt_refl, @rt_trans).
 
 Definition small_step_star := clos_refl_trans (cmd * state) small_step.
 
-Hint Unfold small_step_star : shints. (* !!! doesn't work with sauto !!! *)
+Tactics Hint Unfold small_step_star.
 
 Notation "A -->* B" := (small_step_star A B) (at level 80, no associativity).
 
@@ -220,7 +220,7 @@ Proof.
                         forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
                                                (Seq c1 c2, s) -->* (Seq c1' c2, s')) by eauto.
   intros p1 p2 H.
-  induction H; sauto unfolding small_step_star.
+  induction H; sauto.
 Qed.
 
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2) -->* (Skip, s3) ->
@@ -267,10 +267,10 @@ Proof.
   intros p p' H.
   induction H; ssimpl.
   - sauto.
-  - sauto using (@lem_small_to_big_aux_2) unfolding (@small_step_star).
+  - hauto using (@lem_small_to_big_aux_2) unfolding (@small_step_star).
 Qed.
 
 Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
-  sauto using (@lem_small_to_big, @lem_big_to_small).
+  hauto using (@lem_small_to_big, @lem_big_to_small).
 Qed.
