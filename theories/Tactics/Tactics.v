@@ -549,6 +549,13 @@ Ltac forwarding :=
          | [ H : forall x : _,_ |- _ ] => forward H
          end.
 
+Tactic Notation "rewriting" "by" tactic(tac) :=
+  repeat match goal with
+         | [ H : _ |- _ ] => repeat (erewrite H by tac); clear H
+         | [ H : _ |- _ ] => repeat (erewrite <- H by tac); clear H
+         | [ |- _ ] => tac
+         end.
+
 Definition default := tt.
 Definition none := tt.
 Definition hints := tt.
@@ -559,57 +566,67 @@ Declare ML Module "hammer_tactics".
 
 Tactic Notation "sauto" := unshelve sauto_gen; dsolve.
 Tactic Notation "sauto" int_or_var(i) :=
-  unshelve (sauto_gen i with shints using default unfolding default inverting default ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using default unfolding default inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) :=
-  unshelve (sauto_gen with shints using lst unfolding default inverting default ctrs default); dsolve.
+  unshelve (sauto_gen with shints using lst unfolding default inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) :=
-  unshelve (sauto_gen i with shints using lst unfolding default inverting default ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using lst unfolding default inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen with shints using lst unfolding unfolds inverting default ctrs default); dsolve.
+  unshelve (sauto_gen with shints using lst unfolding unfolds inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen i with shints using lst unfolding unfolds inverting default ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using lst unfolding unfolds inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen with shints using default unfolding unfolds inverting default ctrs default); dsolve.
+  unshelve (sauto_gen with shints using default unfolding unfolds inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen i with shints using default unfolding unfolds inverting default ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using default unfolding unfolds inverting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "inverting" constr(inverts) :=
-  unshelve (sauto_gen with shints using default unfolding default inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen with shints using default unfolding default inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "inverting" constr(inverts) :=
-  unshelve (sauto_gen i with shints using default unfolding default inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using default unfolding default inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (sauto_gen with shints using lst unfolding default inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen with shints using lst unfolding default inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (sauto_gen i with shints using lst unfolding default inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using lst unfolding default inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (sauto_gen with shints using lst unfolding unfolds inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen with shints using lst unfolding unfolds inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (sauto_gen i with shints using lst unfolding unfolds inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using lst unfolding unfolds inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (sauto_gen with shints using default unfolding unfolds inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen with shints using default unfolding unfolds inverting inverts ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (sauto_gen i with shints using default unfolding unfolds inverting inverts ctrs default); dsolve.
+  unshelve (sauto_gen i with shints using default unfolding unfolds inverting inverts ctrs default opts default); dsolve.
 
-Ltac ssimpl := unshelve ssimpl_gen; dsolve.
+Tactic Notation "ssimpl" := unshelve ssimpl_gen; dsolve.
+Tactic Notation "ssimpl" "unfolding" constr(unfolds) := unshelve ssimpl_gen unfolding unfolds; dsolve.
 
 Tactic Notation "scrush" := try strivial; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
   pose proof lst; try strivial; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
-  pose proof lst; try strivial; ssimpl; sauto unfolding unfolds.
+  pose proof lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
 Tactic Notation "scrush" "unfolding" constr(unfolds) :=
-  try strivial; ssimpl; sauto unfolding unfolds.
+  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
 
+Tactic Notation "hauto" :=
+  unshelve (sauto_gen with nohints using default unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) :=
-  unshelve (sauto_gen i with nohints using default unfolding logic inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) :=
-  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) :=
-  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" "unfolding" constr(lst2) :=
-  unshelve (sauto_gen with nohints using default unfolding lst2 inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
-  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting logic ctrs logic); dsolve.
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
+
+Tactic Notation "srewriting" := ssimpl; rewriting by sauto.
+Tactic Notation "srewriting" "by" tactic(tac) := ssimpl; rewriting by tac.
+Tactic Notation "srewriting" "using" constr(lems) := pose proof lems; ssimpl; rewriting by sauto.
+Tactic Notation "srewriting" "using" constr(lems) "by" tactic(tac) := pose proof lems; ssimpl; rewriting by tac.
+Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) := pose proof lems; ssimpl unfolding unfolds; rewriting by sauto unfolding unfolds.
+Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) "by" tactic(tac) := pose proof lems; ssimpl unfolding unfolds; rewriting by tac.

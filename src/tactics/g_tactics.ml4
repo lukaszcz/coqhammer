@@ -30,26 +30,26 @@ let rec destruct_constr t =
      end
   | _ -> [t]
 
-let get_s_opts bases unfoldings inverting ctrs =
+let to_const t =
+  let open Constr in
+  let open EConstr in
+  match kind Evd.empty t with
+  | Const(c, _) -> c
+  | _ -> failwith "sauto: not a constant"
+
+let to_inductive t =
+  let open Constr in
+  let open EConstr in
+  match kind Evd.empty t with
+  | Ind(ind, _) -> ind
+  | _ -> failwith "sauto: not an inductive type"
+
+let get_s_opts ropts bases unfoldings inverting ctrs =
   let cdefault = Utils.get_constr "Tactics.default" in
   let chints = Utils.get_constr "Tactics.hints" in
   let cnone = Utils.get_constr "Tactics.none" in
   let cnohints = Utils.get_constr "Tactics.nohints" in
   let clogic = Utils.get_constr "Tactics.logic" in
-  let to_const t =
-    let open Constr in
-    let open EConstr in
-    match kind Evd.empty t with
-    | Const(c, _) -> c
-    | _ -> failwith "sauto: not a constant"
-  in
-  let to_inductive t =
-    let open Constr in
-    let open EConstr in
-    match kind Evd.empty t with
-    | Ind(ind, _) -> ind
-    | _ -> failwith "sauto: not an inductive type"
-  in
   let get_s_opts_field logic_lst conv opts lst default =
     match lst with
     | [h] when h = cdefault -> default
@@ -90,31 +90,41 @@ let get_s_opts bases unfoldings inverting ctrs =
   let get_bases opts =
     { opts with s_rew_bases = bases }
   in
-  get_bases (get_unfoldings (get_invertings (get_ctrs default_s_opts)))
+  let get_ropt opts ropt =
+    match ropt with
+    | "noforward" -> { opts with s_forwarding = false }
+    | "noinvert" -> { opts with s_simple_inverting = false }
+    | "noreflect" -> { opts with s_bnat_reflect = false }
+    | "exhaustive" -> { opts with s_exhaustive = true }
+    | "default" -> opts
+    | _ -> failwith ("sauto: unknown option `" ^ ropt ^ "'")
+  in
+  List.fold_left get_ropt (get_bases (get_unfoldings (get_invertings (get_ctrs default_s_opts)))) ropts
 
 TACTIC EXTEND Hammer_simple_splitting
 | [ "simple_splitting" ] -> [ simple_splitting default_s_opts ]
-END
-
-TACTIC EXTEND Hammer_sauto_gen_1
-| [ "sauto_gen" int_or_var_opt(n) ] -> [ sauto default_s_opts (get_opt n default_sauto_depth) ]
 END
 
 TACTIC EXTEND Hammer_ssimpl_gen
 | [ "ssimpl_gen" ] -> [
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
 ]
+| [ "ssimpl_gen" "unfolding" constr(unfolds) ] -> [
+  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_unfolding = SSome (List.map to_const (destruct_constr unfolds)) }
+]
 END
 
-TACTIC EXTEND Hammer_sauto_gen_2
+TACTIC EXTEND Hammer_sauto_gen
+| [ "sauto_gen" int_or_var_opt(n) ] -> [ sauto default_s_opts (get_opt n default_sauto_depth) ]
 | [ "sauto_gen" int_or_var_opt(n) "with" ne_preident_list(bases) "using" constr(lemmas) "unfolding" constr(unfoldings)
-      "inverting" constr(inverting) "ctrs" constr(ctrs) ] -> [
+      "inverting" constr(inverting) "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> [
   if lemmas = Utils.get_constr "Tactics.default" then
-    sauto (get_s_opts bases unfoldings inverting ctrs) (get_opt n default_sauto_depth)
+    sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_depth)
   else
     Proofview.tclTHEN
       (Tactics.generalize (destruct_constr lemmas))
-      (sauto (get_s_opts bases unfoldings inverting ctrs) (get_opt n default_sauto_depth))
+      (sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_depth))
 ]
 END
 

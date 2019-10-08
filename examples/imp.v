@@ -51,7 +51,7 @@ Fixpoint asimp (e : aexpr) :=
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
   induction e; ssimpl.
-  sauto using lem_aval_plus.
+  hauto using lem_aval_plus.
 Qed.
 
 Inductive bexpr :=
@@ -116,10 +116,10 @@ Qed.
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
   induction e; ssimpl.
-  - sauto using lem_bval_not.
-  - sauto using lem_bval_and.
-  - sauto unfolding less.
-  - sauto unfolding less.
+  - hauto using lem_bval_not.
+  - hauto using lem_bval_and.
+  - hauto unfolding less.
+  - hauto unfolding less.
 Qed.
 
 Inductive cmd :=
@@ -173,7 +173,7 @@ Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b c ~~ While b c'.
 Proof.
-  sauto using lem_while_cong_aux unfolding equiv_cmd.
+  hauto using lem_while_cong_aux unfolding equiv_cmd.
 Qed.
 
 Lemma lem_big_step_deterministic :
@@ -251,14 +251,14 @@ Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==
 Proof.
   intros p p' H.
   induction H; ssimpl.
-  sauto using lem_unfold_loop unfolding equiv_cmd.
+  hauto using lem_unfold_loop unfolding equiv_cmd.
 Qed.
 
 Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
   induction H; ssimpl.
-  sauto using (@lem_small_to_big_aux).
+  hauto using (@lem_small_to_big_aux).
 Qed.
 
 Lemma lem_small_to_big : forall p s, p -->* (Skip, s) -> p ==> s.

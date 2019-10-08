@@ -22,7 +22,7 @@ Set Hammer CrushLimit 0.
 
 Lemma lem_1 : le 1 2.
   hammer. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.lt_0_2) (@Coq.Init.Peano.lt).
+  Reconstr.reasy (@Arith.PeanoNat.Nat.lt_0_2) (@Init.Peano.lt).
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
