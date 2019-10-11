@@ -84,3 +84,5 @@ val is_ind_atom : Evd.evar_map -> EConstr.t -> bool
 val is_product : Evd.evar_map -> EConstr.t -> bool
 
 val get_head : Evd.evar_map -> EConstr.t -> EConstr.t
+
+val print_constr : Evd.evar_map -> EConstr.t -> unit

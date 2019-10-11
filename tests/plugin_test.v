@@ -1,4 +1,4 @@
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
 
 Hammer_version.
 Hammer_objects.
@@ -23,5 +23,5 @@ Proof.
   hammer_features.
   hammer_transl.
   predict 16.
-  reasy (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm) Reconstr.Empty.
+  hauto using (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm).
 Qed.

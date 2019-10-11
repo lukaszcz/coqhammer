@@ -23,7 +23,7 @@ val default_s_opts : s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 
-(* sauto opts depth_limit *)
+(* sauto opts cost_limit *)
 val sauto : s_opts -> int -> unit Proofview.tactic
 
 val ssimpl : s_opts -> unit Proofview.tactic

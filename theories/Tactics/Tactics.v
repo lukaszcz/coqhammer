@@ -405,7 +405,7 @@ Ltac isolve :=
 
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
-Ltac ssolve := intuition (auto with yhints); try solve [ isolve ]; try congruence 32; try seasy;
+Ltac ssolve := (intuition (auto with yhints)); try solve [ isolve ]; try congruence 32; try seasy;
                try solve [ econstructor; isolve ].
 
 Ltac sintuition := cbn; intros; simp_hyps; ssolve; repeat (progress (intros; simp_hyps); ssolve).
@@ -448,7 +448,7 @@ Ltac subst_simpl := ssubst; cbn in *.
 
 Ltac invert_one_subgoal H :=
   let ty := type of H in
-  inversion H; [idtac]; clear H; notHyp ty; try subst; cbn.
+  inversion H; [idtac]; clear H; notHyp ty; subst_simpl.
 
 Ltac simple_invert H := solve [ inversion H ] || invert_one_subgoal H.
 Ltac simple_inverting :=
@@ -469,7 +469,7 @@ Ltac generalizing :=
            | [ H : _ |- _ ] => generalize H; clear H
          end.
 
-Ltac fsolve := solve [ eassumption | econstructor | symmetry; eassumption ].
+Ltac fsolve := solve [ eassumption | symmetry; eassumption | econstructor ].
 
 Ltac finst e :=
   let tpe := type of e
@@ -483,7 +483,10 @@ Ltac finst e :=
       evar (v : T);
       let v2 := eval unfold v in v in
       clear v;
-      finst (e v2)
+      finst (e v2);
+      try match goal with
+          | [ y : T |- _ ] => unify y v2
+          end
     | _ =>
       generalize e
   end.
@@ -516,31 +519,41 @@ Ltac einster e tac :=
       evar (v : T);
       let v2 := eval unfold v in v in
       clear v;
-      einster (e v2) tac
+      einster (e v2) tac;
+      try match goal with
+          | [ y : T |- _ ] => unify y v2
+          end
     | _ =>
       generalize e
   end.
 
-Ltac forward H :=
-  einst H;
-  match goal with
-  | [ |- (?P -> ?Q) -> _ ] =>
-    let H1 := fresh "H" in
-    intro H1;
-    let H2 := fresh "H" in
-    assert (H2 : P) by fsolve;
-    generalize (H1 H2);
-    clear H1; clear H2;
-    intro H1;
-    einster H1 fsolve;
-    clear H1;
+Ltac forward e :=
+  lazymatch type of e with
+  | ?P -> ?Q => fail
+  | _ =>
+    let rec fwd e :=
+        lazymatch type of e with
+        | ?P -> ?Q =>
+          let H := fresh "H" in
+          assert (H : P) by fsolve;
+          einster (e H) fsolve;
+          clear H
+        | forall x : ?T, _ =>
+          let v := fresh "v" in
+          evar (v : T);
+          let v2 := (eval unfold v in v) in
+          clear v;
+          fwd (e v2);
+          try match goal with
+              | [ y : T |- _ ] => unify y v2
+              end
+        end
+    in
+    fwd e; cbn;
     match goal with
     | [ |- ?P -> _ ] =>
       noEvars P; notHyp P;
-      lazymatch type of P with
-      | Type => fail
-      | _ => let H := fresh "H" in intro H; move H at top
-      end
+      let H := fresh "H" in intro H; move H at top
     end
   end.
 
@@ -624,9 +637,17 @@ Tactic Notation "hauto" "unfolding" constr(lst2) :=
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
 
-Tactic Notation "srewriting" := ssimpl; rewriting by sauto.
-Tactic Notation "srewriting" "by" tactic(tac) := ssimpl; rewriting by tac.
-Tactic Notation "srewriting" "using" constr(lems) := pose proof lems; ssimpl; rewriting by sauto.
-Tactic Notation "srewriting" "using" constr(lems) "by" tactic(tac) := pose proof lems; ssimpl; rewriting by tac.
-Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) := pose proof lems; ssimpl unfolding unfolds; rewriting by sauto unfolding unfolds.
-Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) "by" tactic(tac) := pose proof lems; ssimpl unfolding unfolds; rewriting by tac.
+Tactic Notation "srewriting" := solve [ ssimpl; rewriting by sauto ].
+Tactic Notation "srewriting" "by" tactic(tac) := solve [ ssimpl; rewriting by tac ].
+Tactic Notation "srewriting" "using" constr(lems) := solve [ pose proof lems; ssimpl; rewriting by sauto ].
+Tactic Notation "srewriting" "using" constr(lems) "by" tactic(tac) := solve [ pose proof lems; ssimpl; rewriting by tac ].
+Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) := solve [ pose proof lems; ssimpl unfolding unfolds; rewriting by sauto unfolding unfolds ].
+Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) "by" tactic(tac) := solve [ pose proof lems; ssimpl unfolding unfolds; rewriting by tac ].
+
+Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
+Ltac rscrush lems unfolds := scrush using lems unfolding unfolds.
+Ltac rhauto8 lems unfolds := hauto 8 using lems unfolding unfolds.
+Ltac rsrewriting lems unfolds := srewriting using lems unfolding unfolds.
+Ltac rsauto lems unfolds := sauto using lems unfolding unfolds.
+
+Ltac rcrush := scrush.

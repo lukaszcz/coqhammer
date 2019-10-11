@@ -285,17 +285,17 @@ let mk_pair x y =
 
 let rec mk_lst lst =
   match lst with
-  | [] -> get_constr "Reconstr.Empty"
+  | [] -> get_constr "Tactics.default"
   | [h] -> h
   | h :: t -> mk_pair (mk_lst t) h
 
-let mk_lst_str lst =
+let mk_lst_str pref lst =
   let get_name x =
-    "@" ^ (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.")
+    "@" ^ (Hhlib.drop_prefix (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.") "Coq.")
   in
   match lst with
-  | [] -> "Reconstr.Empty"
-  | h :: t -> "(" ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h) ^ ")"
+  | [] -> ""
+  | h :: t -> pref ^ " (" ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h) ^ ")"
 
 let get_tac_args deps defs =
   let map_locate =
@@ -327,36 +327,24 @@ let check_goal_prop gl =
 (***************************************************************************************)
 
 let run_tactics deps defs args msg_success msg_fail =
-  let tactics1 =
-    [ "Reconstr.reasy"; "Reconstr.rsimple"; "Reconstr.rcrush" ]
-  and tactics2 =
-    ["Reconstr.ryelles4"; "Reconstr.rblast"; "Reconstr.ryreconstr"; "Reconstr.rreconstr4";
-     "Reconstr.ryelles6"; "Reconstr.rexhaustive1"; "Reconstr.rscrush"]
+  let tactics =
+    [ ("rhauto", "hauto"); ("rscrush", "scrush"); ("rhauto8", "hauto 8");
+      ("rsrewriting", "srewriting"); ("rsauto", "sauto") ]
   in
-  let tacs1 = List.map (fun tac -> Utils.ltac_eval tac args) tactics1
-  and tacs2 = List.map (fun tac -> Utils.ltac_eval tac args) tactics2
+  let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
   in
-  Partac.partac (3 * !Opt.reconstr_timelimit / 10) tacs1
+  Partac.partac !Opt.reconstr_timelimit tacs
     begin fun k tac ->
       if k >= 0 then
         begin
-          msg_success (List.nth tactics1 k) deps defs;
+          msg_success (snd (List.nth tactics k)) deps defs;
           tac
         end
       else
-        Partac.partac !Opt.reconstr_timelimit tacs2
-          begin fun k tac ->
-            if k >= 0 then
-              begin
-                msg_success (List.nth tactics2 k) deps defs;
-                tac
-              end
-            else
-              begin
-                msg_fail ();
-                Tacticals.New.tclIDTAC
-              end
-          end
+        begin
+          msg_fail ();
+          Tacticals.New.tclIDTAC
+        end
     end
 
 let do_predict hyps deps goal =
@@ -453,9 +441,9 @@ let try_scrush () =
     Proofview.tclZERO (Failure "timeout")
   else
     Proofview.tclBIND
-      (ltac_timeout !Opt.scrush_timelimit "Reconstr.scrush" [])
+      (ltac_timeout !Opt.scrush_timelimit "Tactics.rcrush" [])
       (fun _ ->
-        Msg.info "Replace the hammer tactic with: Reconstr.scrush";
+        Msg.info "Replace the hammer tactic with: scrush";
         Tacticals.New.tclIDTAC)
 
 (***************************************************************************************)
@@ -514,7 +502,7 @@ let hammer_tac () =
                 begin fun tac deps defs ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ " " ^ mk_lst_str deps ^ " " ^ mk_lst_str defs ^ ".")
+                               tac ^ " " ^ mk_lst_str "using" deps ^ " " ^ mk_lst_str "unfolding" defs ^ ".")
                 end
                 begin fun () ->
                   Msg.error ("Hammer failed: proof reconstruction failed")

@@ -8,7 +8,7 @@ open Sauto
 
 module Utils = Hhutils
 
-let default_sauto_depth = 5
+let default_sauto_limit = 1000
 
 let get_opt opt def = match opt with Some x -> x | None -> def
 
@@ -19,7 +19,7 @@ let rec destruct_constr t =
   | App(i, args) ->
      begin
        match kind Evd.empty i with
-       | Ind(ind, _) when ind = Utils.get_inductive "pair" ->
+       | Construct((ind, 1), _) when ind = Utils.get_inductive "prod" ->
           begin
             match Array.to_list args with
             | [_; _; t1; t2] ->
@@ -116,15 +116,15 @@ TACTIC EXTEND Hammer_ssimpl_gen
 END
 
 TACTIC EXTEND Hammer_sauto_gen
-| [ "sauto_gen" int_or_var_opt(n) ] -> [ sauto default_s_opts (get_opt n default_sauto_depth) ]
+| [ "sauto_gen" int_or_var_opt(n) ] -> [ sauto default_s_opts (get_opt n default_sauto_limit) ]
 | [ "sauto_gen" int_or_var_opt(n) "with" ne_preident_list(bases) "using" constr(lemmas) "unfolding" constr(unfoldings)
       "inverting" constr(inverting) "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> [
   if lemmas = Utils.get_constr "Tactics.default" then
-    sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_depth)
+    sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_limit)
   else
     Proofview.tclTHEN
       (Tactics.generalize (destruct_constr lemmas))
-      (sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_depth))
+      (sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_limit))
 ]
 END
 

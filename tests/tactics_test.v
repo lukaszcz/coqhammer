@@ -1,8 +1,11 @@
 From Hammer Require Import Tactics.
-From Hammer Require Reconstr.
 
 Lemma lem_test_1 : (forall x y, x + y = y + x -> False) -> forall x, x > x.
   ssimpl.
+Qed.
+
+Lemma lem_test_1_1 : (forall x, x >= x /\ x < x + x) -> forall x, x >= x /\ x < x + x.
+  strivial.
 Qed.
 
 Lemma lem_test_2 : (forall x, x > x) -> (forall x, x + x > x) -> exists x, x > x \/ x + x > x.
@@ -17,9 +20,21 @@ Lemma lem_test_4 : (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
   hauto.
 Qed.
 
-Lemma lem_test_5 : (forall P : nat -> Prop, P 0 -> (forall x, P x -> P (S x)) -> P 4).
+Lemma lem_test_5 : (forall P : nat -> Prop, P 0 -> (forall x, P x -> P (S x)) -> P 60).
   hauto.
 Qed.
+
+Require Import Arith.
+
+Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
+  sauto 100 using (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
+Qed.
+
+(*Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
+  sauto 500 using (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd).
+Qed. *)
+
+From Hammer Require Reconstr.
 
 Section Sets.
 
@@ -165,8 +180,8 @@ Qed.
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
 Proof.
   induction t; ssimpl.
-  - sauto using vars_abstr.
-  - sauto using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
+  - hauto using vars_abstr.
+  - hauto 200 using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
 Qed.
 
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
@@ -186,7 +201,7 @@ Notation "X =w Y" := (WeakEqual X Y) (at level 80).
 Lemma abstr_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr v t @ s =w csubst t v s.
 Proof.
-  induction t; scrush.
+  induction t; sauto.
 Qed.
 
 Lemma abstr_size :
@@ -211,13 +226,13 @@ Proof.
   eauto using PeanoNat.Nat.add_le_mono.
   assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
   auto with zarith.
-  hauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
+  sauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
   assert (size (abstr n (transl t)) <= 3 * size (transl t)).
   eauto using abstr_size with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
   eauto using Nat.le_trans with zarith.
   assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
-  scrush using (@Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.shiftl_1_l, @Coq.Arith.PeanoNat.Nat.pow_1_r, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r).
+  intros; rewrite Nat.add_1_r; strivial.
   scrush.
 Qed.
 
@@ -333,7 +348,7 @@ Qed.
 Lemma csubst_novar :
   forall (t s : Term) (v : nat), NoLambdas t -> ~(HasVar v t) -> csubst t v s = t.
 Proof.
-  intros; induction t; srewriting.
+  intros; induction t; ssimpl; [ clear Heqb; sauto | srewriting ].
 Qed.
 
 Lemma abstr2_correct :
@@ -344,9 +359,9 @@ Proof.
   - assert (HH: forall b1 b2, (b1 || b2)%bool = false -> b1 = false /\ b2 = false) by
         sauto unfolding orb.
     pose proof occurs_spec.
-    rewrite csubst_novar by sauto.
-    rewrite csubst_novar by sauto.
-    sauto.
+    rewrite csubst_novar by scrush.
+    rewrite csubst_novar by scrush.
+    strivial.
 Qed.
 
 Lemma abstr2_size_ub :

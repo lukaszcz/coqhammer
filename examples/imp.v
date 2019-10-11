@@ -180,7 +180,7 @@ Lemma lem_big_step_deterministic :
   forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
   intros c s s1 s2 H; revert s2.
-  induction H; sauto.
+  induction H; scrush.
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
@@ -197,8 +197,6 @@ Inductive small_step : cmd * state -> cmd * state -> Prop :=
 Notation "A --> B" := (small_step A B) (at level 80, no associativity).
 
 Require Import Relations.
-
-Let rel_lems := (@rt_step, @rt_refl, @rt_trans).
 
 Definition small_step_star := clos_refl_trans (cmd * state) small_step.
 
@@ -228,8 +226,8 @@ Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2)
 Proof.
   intros c1 c2 s1 s2 s3 H1 H2.
   assert ((Seq c1 c2, s1) -->* (Seq Skip c2, s2)) by sauto using lem_star_seq2.
-  assert ((Seq Skip c2, s2) -->* (c2, s2)) by (scrush using rel_lems).
-  scrush using rel_lems.
+  assert ((Seq Skip c2, s2) -->* (c2, s2)) by scrush.
+  scrush.
 Qed.
 
 Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').

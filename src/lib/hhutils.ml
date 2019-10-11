@@ -374,3 +374,5 @@ let is_product evd t =
   | _ -> false
 
 let get_head evd t = match destruct_prod evd t with (_, h, _) -> h
+
+let print_constr evd t = Feedback.msg_notice (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))

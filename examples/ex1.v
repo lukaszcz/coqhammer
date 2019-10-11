@@ -11,7 +11,8 @@ reproducible, in the final scripts "hammer" should be replaced with an
 appropriate reconstruction tactic.
 *)
 
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
+From Hammer Require Reconstr.
 
 (************************************************************************************************)
 
@@ -22,12 +23,55 @@ Set Hammer CrushLimit 0.
 
 Lemma lem_1 : le 1 2.
   hammer. Restart.
-  Reconstr.reasy (@Arith.PeanoNat.Nat.lt_0_2) (@Init.Peano.lt).
+  hauto using (@Arith.PeanoNat.Nat.lt_0_2) unfolding (@Init.Peano.lt).
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
+  pose proof (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
+  ssimpl.
+  sauto 2.
+  sauto_gen with shints using default unfolding default inverting default ctrs none opts default.
+                   sauto ctrs none.
+  sinvert H3.
+  sauto.
+  ssimpl.
+  hauto.
+  ssimpl.
+  hauto.
+  simple_inverting.
+
+  hauto.
+  simpl_solve.
+  bnat_reflect.
+  simp_hyps.
+  autorewrite with shints.
+  ssimpl.
+  forwarding.
+  sforward H.
+  sauto 0.
+  sauto.
+  einst H.
+  intro HH1.
+  assert (HH2 : Nat
+  forwarding.
+  sauto 1.
+  sauto 0.
+  Reconstr.isolve.
+  simp_hyps.
+  intros.
+  isplit; intros.
+  admit.
+  isolve.
+  trysolve.
+  simp_hyps.
+  isolve.
+  Reconstr.isolve.
+  isplit; try isolve.
+  Reconstr.isolve.
+  Reconstr.yelles 1.
+  ssimpl.
+  unshelve (intuition Reconstr.isolve; eauto 10 with nocore yhints); dsolve.
   hammer. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r) Reconstr.Empty.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
