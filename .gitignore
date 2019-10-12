@@ -3,6 +3,7 @@
 *.glob
 *.vo
 *~
+.lia.cache
 predict
 htimeout
 Makefile.coq
