@@ -27,14 +27,12 @@ Qed.
 Require Import Arith.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
-  sauto 100 using (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
+  hauto using (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
 Qed.
 
-(*Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
-  sauto 500 using (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd).
-Qed. *)
-
-From Hammer Require Reconstr.
+Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
+  hauto using (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd).
+Qed.
 
 Section Sets.
 
@@ -226,13 +224,13 @@ Proof.
   eauto using PeanoNat.Nat.add_le_mono.
   assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
   auto with zarith.
-  sauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
+  hauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
   assert (size (abstr n (transl t)) <= 3 * size (transl t)).
   eauto using abstr_size with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
   eauto using Nat.le_trans with zarith.
   assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
-  intros; rewrite Nat.add_1_r; strivial.
+  intros; rewrite Nat.add_1_r; strivial. (* test sapply here! *)
   scrush.
 Qed.
 
@@ -266,7 +264,7 @@ Proof.
   induction n; ssimpl.
   scrush using (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg).
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
-  sauto using (@abstr_size_lb, @no_lams_transl).
+  hauto using (@abstr_size_lb, @no_lams_transl).
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
   pose proof (IHn m); eauto with zarith.
   scrush.
@@ -348,7 +346,9 @@ Qed.
 Lemma csubst_novar :
   forall (t s : Term) (v : nat), NoLambdas t -> ~(HasVar v t) -> csubst t v s = t.
 Proof.
-  intros; induction t; ssimpl; [ clear Heqb; sauto | srewriting ].
+  intros; induction t; ssimpl.
+  clear Heqb; sauto.
+  sauto.
 Qed.
 
 Lemma abstr2_correct :

@@ -145,7 +145,7 @@ Ltac xintro x :=
     let x1 := fresh x in
     intro x1.
 
-Ltac yintro :=
+Ltac sintro :=
   lazymatch goal with
   | [ |- ?T -> ?Q ] =>
       let H := fresh "H" in
@@ -161,14 +161,14 @@ with simp_hyp H :=
   let tp := type of H in
   lazymatch tp with
     | True => clear H
-    | (exists x, _) => elim H; clear H; xintro x; yintro
-    | { x & _ } => elim H; clear H; xintro x; yintro
-    | { x | _ } => elim H; clear H; xintro x; yintro
+    | (exists x, _) => elim H; clear H; xintro x; sintro
+    | { x & _ } => elim H; clear H; xintro x; sintro
+    | { x | _ } => elim H; clear H; xintro x; sintro
     | ?A = ?A => clear H
     | ?A -> ?A => clear H
     | ?A -> ?B = ?B => clear H
-    | ?A /\ ?A => cut A; [ clear H; yintro | destruct H; assumption ]
-    | ?A /\ ?B => elim H; clear H; yintro; yintro
+    | ?A /\ ?A => cut A; [ clear H; sintro | destruct H; assumption ]
+    | ?A /\ ?B => elim H; clear H; sintro; sintro
     | prod ?A ?B =>
       let H1 := fresh H in
       let H2 := fresh H in
@@ -176,13 +176,13 @@ with simp_hyp H :=
       try simp_hyp H1;
       try simp_hyp H2
     | ?A /\ ?B -> ?C => cut (A -> B -> C);
-                                    [ clear H; yintro
+                                    [ clear H; sintro
                                     | intro; intro; apply H; split; assumption ]
-    | ?A = ?A -> ?B => cut B; [ clear H; yintro | apply H; reflexivity ]
-    | ?A -> ?A -> ?B => cut (A -> B); [ clear H; yintro | intro; apply H; assumption ]
-    | ?A \/ ?A => cut A; [ clear H; yintro | elim H; intro; assumption ]
+    | ?A = ?A -> ?B => cut B; [ clear H; sintro | apply H; reflexivity ]
+    | ?A -> ?A -> ?B => cut (A -> B); [ clear H; sintro | intro; apply H; assumption ]
+    | ?A \/ ?A => cut A; [ clear H; sintro | elim H; intro; assumption ]
     | ?A \/ ?B -> ?C =>
-      cut (A -> C); [ cut (B -> C); [ clear H; yintro; yintro |
+      cut (A -> C); [ cut (B -> C); [ clear H; sintro; sintro |
                                       intro; apply H; right; assumption ] |
                       intro; apply H; left; assumption ]
     | Some _ = Some _ => injection H; try clear H
@@ -191,7 +191,7 @@ with simp_hyp H :=
       || (injection H; try clear H;
           match goal with
           | [ |- _ = _ -> _ ] =>
-            yintro; try subst
+            sintro; try subst
           end)
     | ?F ?X ?U = ?F ?Y ?V =>
       (assert (X = Y); [ assumption
@@ -199,7 +199,7 @@ with simp_hyp H :=
       || (injection H; try clear H;
           repeat match goal with
                  | [ |- _ = _ -> _ ] =>
-                   yintro; try subst
+                   sintro; try subst
                  end)
     | ?F ?X ?U ?A = ?F ?Y ?V ?B =>
       (assert (X = Y); [ assumption
@@ -208,43 +208,43 @@ with simp_hyp H :=
       || (injection H; try clear H;
           repeat match goal with
                  | [ |- _ = _ -> _ ] =>
-                   yintro; try subst
+                   sintro; try subst
                  end)
     | existT _ _ _ = existT _ _ _ => inversion_clear H
     | forall x : ?T1, ?A /\ ?B =>
       cut (forall x : T1, A);
         [ cut (forall x : T1, B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2), ?A /\ ?B =>
       cut (forall (x : T1) (y : T2), A);
         [ cut (forall (x : T1) (y : T2), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3), ?A /\ ?B =>
       cut (forall (x : T1) (y : T2) (z : T3), A);
         [ cut (forall (x : T1) (y : T2) (z : T3), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4), ?A /\ ?B =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4), A);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5), ?A /\ ?B =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5), A);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5) (w : ?T6), ?A /\ ?B =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5) (w : T6), A);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5) (w : T6), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5) (w : ?T6) (w1 : ?T7), ?A /\ ?B =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5) (w : T6) (w1 : T7), A);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5) (w : T6) (w1 : T7), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5) (w : ?T6)
              (w1 : ?T7) (w2 : ?T8), ?A /\ ?B =>
@@ -252,62 +252,62 @@ with simp_hyp H :=
                   (w1 : T7) (w2 : T8), A);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5) (w : T6)
                       (w1 : T7) (w2 : T8), B);
-          [ clear H; yintro; yintro | apply H ]
+          [ clear H; sintro; sintro | apply H ]
         | apply H ]
     | forall x : ?T1, ?A /\ ?B -> ?C =>
       cut (forall x : T1, A -> B -> C);
-        [ clear H; yintro | do 3 intro; apply H; try assumption; split; assumption ]
+        [ clear H; sintro | do 3 intro; apply H; try assumption; split; assumption ]
     | forall (x : ?T1) (y : ?T2), ?A /\ ?B -> ?C =>
       cut (forall (x : T1) (y : T2), A -> B -> C);
-        [ clear H; yintro | do 4 intro; apply H; try assumption; split; assumption ]
+        [ clear H; sintro | do 4 intro; apply H; try assumption; split; assumption ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3), ?A /\ ?B -> ?C =>
       cut (forall (x : T1) (y : T2) (z : T3), A -> B -> C);
-        [ clear H; yintro | do 5 intro; apply H; try assumption; split; assumption ]
+        [ clear H; sintro | do 5 intro; apply H; try assumption; split; assumption ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4), ?A /\ ?B -> ?C =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4), A -> B -> C);
-        [ clear H; yintro | do 6 intro; apply H; try assumption; split; assumption ]
+        [ clear H; sintro | do 6 intro; apply H; try assumption; split; assumption ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5), ?A /\ ?B -> ?C =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5), A -> B -> C);
-        [ clear H; yintro | do 7 intro; apply H; try assumption; split; assumption ]
+        [ clear H; sintro | do 7 intro; apply H; try assumption; split; assumption ]
     | forall (x : ?T1), ?A \/ ?B -> ?C =>
       cut (forall (x : T1), A -> C); [ cut (forall (x : T1), B -> C);
-                                       [ clear H; yintro; yintro |
+                                       [ clear H; sintro; sintro |
                                          do 2 intro; apply H with (x := x); right; assumption ] |
                                        do 2 intro; apply H with (x := x); left; assumption ]
     | forall (x : ?T1) (y : ?T2), ?A \/ ?B -> ?C =>
       cut (forall (x : T1) (y : T2), A -> C);
         [ cut (forall (x : T1) (y : T2), B -> C);
-          [ clear H; yintro; yintro |
+          [ clear H; sintro; sintro |
             do 3 intro; apply H with (x := x) (y := y); right; assumption ] |
           do 3 intro; apply H with (x := x) (y := y); left; assumption ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3), ?A \/ ?B -> ?C =>
       cut (forall (x : T1) (y : T2) (z : T3), A -> C);
         [ cut (forall (x : T1) (y : T2) (z : T3), B -> C);
-          [ clear H; yintro; yintro |
+          [ clear H; sintro; sintro |
             do 4 intro; apply H with (x := x) (y := y) (z := z); right; assumption ] |
           do 4 intro; apply H with (x := x) (y := y) (z := z); left; assumption ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4), ?A \/ ?B -> ?C =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4), A -> C);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4), B -> C);
-          [ clear H; yintro; yintro |
+          [ clear H; sintro; sintro |
             do 5 intro; apply H with (x := x) (y := y) (z := z) (u := u); right; assumption ] |
           do 5 intro; apply H with (x := x) (y := y) (z := z) (u := u); left; assumption ]
     | forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5), ?A \/ ?B -> ?C =>
       cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5), A -> C);
         [ cut (forall (x : T1) (y : T2) (z : T3) (u : T4) (v : T5), B -> C);
-          [ clear H; yintro; yintro |
+          [ clear H; sintro; sintro |
             do 6 intro; apply H with (x := x) (y := y) (z := z) (u := u) (v := v);
             right; assumption ] |
           do 6 intro; apply H with (x := x) (y := y) (z := z) (u := u) (v := v);
           left; assumption ]
     | ?A -> ?B =>
       lazymatch goal with
-        | [ H1 : A |- _ ] => cut B; [ clear H; yintro | apply H; exact H1 ]
+        | [ H1 : A |- _ ] => cut B; [ clear H; sintro | apply H; exact H1 ]
       end
   end.
 
-Ltac yintros :=
-  repeat match goal with [ |- ?G ] => isAtom G; fail 1 | [ |- _ ] => yintro end.
+Ltac sintros :=
+  repeat match goal with [ |- ?G ] => isAtom G; fail 1 | [ |- _ ] => sintro end.
 
 Ltac intros_until_atom :=
   repeat match goal with [ |- ?G ] => isAtom G; fail 1 | [ |- _ ] => intro end.
@@ -405,7 +405,7 @@ Ltac isolve :=
 
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
-Ltac ssolve := (intuition (auto with yhints)); try solve [ isolve ]; try congruence 32; try seasy;
+Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 32; try seasy;
                try solve [ econstructor; isolve ].
 
 Ltac sintuition := cbn; intros; simp_hyps; ssolve; repeat (progress (intros; simp_hyps); ssolve).
@@ -471,19 +471,19 @@ Ltac generalizing :=
 
 Ltac fsolve := solve [ eassumption | symmetry; eassumption | econstructor ].
 
-Ltac finst e :=
+Ltac full_inst e :=
   let tpe := type of e
   in
   lazymatch tpe with
     | ?T -> ?Q =>
       let H := fresh "H" in
-      assert (H : T); [ try fsolve | finst (e H); clear H ]
+      assert (H : T); [ try fsolve | full_inst (e H); clear H ]
     | forall x : ?T, _ =>
       let v := fresh "v" in
       evar (v : T);
       let v2 := eval unfold v in v in
       clear v;
-      finst (e v2);
+      full_inst (e v2);
       try match goal with
           | [ y : T |- _ ] => unify y v2
           end
@@ -494,7 +494,7 @@ Ltac finst e :=
 Ltac sinvert H :=
   lazymatch type of H with
   | _ -> _ =>
-    finst H;
+    full_inst H;
     let H1 := fresh "H" in
     intro H1; inversion H1; try subst; try clear H1
   | _ =>
@@ -560,13 +560,6 @@ Ltac forward e :=
 Ltac forwarding :=
   repeat match goal with
          | [ H : forall x : _,_ |- _ ] => forward H
-         end.
-
-Tactic Notation "rewriting" "by" tactic(tac) :=
-  repeat match goal with
-         | [ H : _ |- _ ] => repeat (erewrite H by tac); clear H
-         | [ H : _ |- _ ] => repeat (erewrite <- H by tac); clear H
-         | [ |- _ ] => tac
          end.
 
 Definition default := tt.
@@ -637,17 +630,10 @@ Tactic Notation "hauto" "unfolding" constr(lst2) :=
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
 
-Tactic Notation "srewriting" := solve [ ssimpl; rewriting by sauto ].
-Tactic Notation "srewriting" "by" tactic(tac) := solve [ ssimpl; rewriting by tac ].
-Tactic Notation "srewriting" "using" constr(lems) := solve [ pose proof lems; ssimpl; rewriting by sauto ].
-Tactic Notation "srewriting" "using" constr(lems) "by" tactic(tac) := solve [ pose proof lems; ssimpl; rewriting by tac ].
-Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) := solve [ pose proof lems; ssimpl unfolding unfolds; rewriting by sauto unfolding unfolds ].
-Tactic Notation "srewriting" "using" constr(lems) "unfolding" constr(unfolds) "by" tactic(tac) := solve [ pose proof lems; ssimpl unfolding unfolds; rewriting by tac ].
-
 Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
-Ltac rscrush lems unfolds := scrush using lems unfolding unfolds.
-Ltac rhauto8 lems unfolds := hauto 8 using lems unfolding unfolds.
-Ltac rsrewriting lems unfolds := srewriting using lems unfolding unfolds.
+Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.
+Ltac rhauto2000 lems unfolds := hauto 2000 using lems unfolding unfolds.
 Ltac rsauto lems unfolds := sauto using lems unfolding unfolds.
+Ltac rscrush lems unfolds := scrush using lems unfolding unfolds.
 
 Ltac rcrush := scrush.

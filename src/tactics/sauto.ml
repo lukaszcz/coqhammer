@@ -23,6 +23,7 @@ type s_opts = {
   s_bnat_reflect : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
+  s_rewriting : bool;
 }
 
 let default_s_opts = {
@@ -38,6 +39,7 @@ let default_s_opts = {
   s_bnat_reflect = true;
   s_simple_inverting = true;
   s_forwarding = true;
+  s_rewriting = true;
 }
 
 (*****************************************************************************************)
@@ -64,12 +66,14 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 (*****************************************************************************************)
 
 type action =
-    ActApply of Id.t | ActInvert of Id.t | ActUnfold of Constant.t | ActCaseUnfold of Constant.t |
-        ActConstructor | ActIntro
+    ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActInvert of Id.t |
+        ActUnfold of Constant.t | ActCaseUnfold of Constant.t | ActConstructor | ActIntro
 
 let action_to_string act =
   match act with
   | ActApply id -> "apply " ^ Id.to_string id
+  | ActRewriteLR id -> "rewrite -> " ^ Id.to_string id
+  | ActRewriteRL id -> "rewrite <- " ^ Id.to_string id
   | ActInvert id -> "invert " ^ Id.to_string id
   | ActUnfold c -> "unfold " ^ Constant.to_string c
   | ActCaseUnfold c -> "case-unfold " ^ Constant.to_string c
@@ -88,8 +92,13 @@ let print_search_actions n actions =
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
+let erewrite l2r v =
+  Equality.general_rewrite_bindings true Locus.AllOccurrences true true (v,NoBindings) true
+
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
+let rewrite_lr_tac id = Tacticals.New.tclPROGRESS (erewrite true (EConstr.mkVar id))
+let rewrite_rl_tac id = Tacticals.New.tclPROGRESS (erewrite false (EConstr.mkVar id))
 let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
@@ -229,6 +238,15 @@ let is_inversion opts evd ind = in_sopt_list !inversion_hints ind opts.s_inversi
 
 (*****************************************************************************************)
 
+let is_equality evd t =
+  let open Constr in
+  let open EConstr in
+  match kind evd t with
+  | Ind(ind, _) when ind = Utils.get_inductive "eq" -> true
+  | _ -> false
+
+(*****************************************************************************************)
+
 let repeat2 tac1 tac2 =
   Tacticals.New.tclTHEN tac1
     (Tacticals.New.tclREPEAT
@@ -314,19 +332,36 @@ let constrs_nsubgoals ind =
   let cstrs = Utils.get_ind_constrs ind in
   List.fold_left (fun acc x -> max acc (hyp_nsubgoals evd (EConstr.of_constr x))) 0 cstrs
 
-let create_hyp_actions evd ghead (id, hyp, cost, num_subgoals, (prods, head, args)) =
-  if Utils.is_False evd head && prods = [] then
-    [(0, 1, ActInvert id)]
-  else if head = ghead then
-    [(cost, num_subgoals, ActApply id)]
+let create_hyp_actions opts evd ghead (id, hyp, cost, num_subgoals, (prods, head, args)) =
+  let acts =
+    if Utils.is_False evd head && prods = [] then
+      [(0, 1, ActInvert id)]
+    else if head = ghead then
+      [(cost, num_subgoals, ActApply id)]
+    else
+      let open Constr in
+      let open EConstr in
+      match kind evd head with
+      | Rel _ ->
+         [(cost + 40, num_subgoals, ActApply id)]
+      | _ ->
+         []
+  in
+  if opts.s_rewriting && is_equality evd head then
+    begin
+      match Hhlib.drop (List.length args - 2) args with
+      | [t1; t2] ->
+         if Lpo.lpo evd t1 t2 then
+           (cost + 5, num_subgoals, ActRewriteLR id) :: acts
+         else if Lpo.lpo evd t2 t1 then
+           (cost + 5, num_subgoals, ActRewriteRL id) :: acts
+         else
+           acts
+      | _ ->
+         acts
+    end
   else
-    let open Constr in
-    let open EConstr in
-    match kind evd head with
-    | Rel _ ->
-       [(cost + 40, num_subgoals, ActApply id)]
-    | _ ->
-       []
+    acts
 
 let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head, args)) =
   let open Constr in
@@ -416,7 +451,7 @@ let create_actions extra opts evd goal hyps =
        actions
   in
   let actions =
-    List.concat (List.map (create_hyp_actions evd ghead) hyps) @ actions
+    List.concat (List.map (create_hyp_actions opts evd ghead) hyps) @ actions
   in
   List.stable_sort (fun (x, _, _) (y, _, _) -> Pervasives.compare x y) actions
 
@@ -448,6 +483,7 @@ let rec search extra opts n hyps visited =
                  hyps
              in
              let actions = create_actions extra opts evd goal hyps in
+             (* print_search_actions n actions; *)
              match actions with
              | [] -> opts.s_leaf_tac
              | (cost, _, _) :: _ when cost > n -> opts.s_leaf_tac
@@ -482,6 +518,10 @@ and apply_actions opts n actions hyps visited =
          match act with
          | ActApply id ->
             continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
+         | ActRewriteLR id ->
+            continue n' (rewrite_lr_tac id) acts
+         | ActRewriteRL id ->
+            continue n' (rewrite_rl_tac id) acts
          | ActInvert id ->
             cont (sinvert_tac id <*> start_search opts n') acts
          | ActUnfold c ->

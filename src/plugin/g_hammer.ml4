@@ -328,8 +328,8 @@ let check_goal_prop gl =
 
 let run_tactics deps defs args msg_success msg_fail =
   let tactics =
-    [ ("rhauto", "hauto"); ("rscrush", "scrush"); ("rhauto8", "hauto 8");
-      ("rsrewriting", "srewriting"); ("rsauto", "sauto") ]
+    [ ("rhauto", "hauto"); ("rhauto200", "hauto 200"); ("rhauto2000", "hauto 2000");
+      ("rsauto", "sauto"); ("rscrush", "scrush") ]
   in
   let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
   in

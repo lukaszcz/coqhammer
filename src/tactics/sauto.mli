@@ -17,6 +17,7 @@ type s_opts = {
   s_bnat_reflect : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
+  s_rewriting : bool;
 }
 
 val default_s_opts : s_opts
