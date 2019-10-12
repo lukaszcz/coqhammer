@@ -346,21 +346,19 @@ Qed.
 Lemma csubst_novar :
   forall (t s : Term) (v : nat), NoLambdas t -> ~(HasVar v t) -> csubst t v s = t.
 Proof.
-  intros; induction t; ssimpl.
-  clear Heqb; sauto.
-  sauto.
+  intros; induction t; sauto.
 Qed.
 
 Lemma abstr2_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr2 v t @ s =w csubst t v s.
 Proof.
-  induction t; ssimpl; eauto.
+  induction t; ssimpl.
   - scrush.
   - assert (HH: forall b1 b2, (b1 || b2)%bool = false -> b1 = false /\ b2 = false) by
         sauto unfolding orb.
     pose proof occurs_spec.
-    rewrite csubst_novar by scrush.
-    rewrite csubst_novar by scrush.
+    rewrite csubst_novar by ssimpl.
+    rewrite csubst_novar by ssimpl.
     strivial.
 Qed.
 

@@ -234,7 +234,21 @@ let is_case_split opts evd t =
     with Exit ->
       true
 
-let is_inversion opts evd ind = in_sopt_list !inversion_hints ind opts.s_inversions
+let is_inversion opts evd ind args =
+  in_sopt_list !inversion_hints ind opts.s_inversions &&
+    if ind = Utils.get_inductive "eq" then
+      match args with
+      | [_; t1; t2] ->
+         begin
+           let open Constr in
+           let open EConstr in
+           match (kind evd (Utils.get_app_head evd t1), kind evd (Utils.get_app_head evd t2)) with
+           | (Construct _, Construct _) -> true
+           | _ -> false
+         end
+      | _ -> false
+    else
+      true
 
 (*****************************************************************************************)
 
@@ -378,7 +392,7 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
   in
   (* TODO: count in (recursive) constructors with no non-trivial argument dependencies? *)
   match kind evd head with
-  | Ind (ind, _) when is_inversion opts evd ind ->
+  | Ind (ind, _) when is_inversion opts evd ind args ->
      let num_ctrs = Utils.get_ind_nconstrs ind in
      let b_arg_dep = has_arg_dep args in
      [(cost + if b_arg_dep then 40 else num_ctrs * 10 + 120),

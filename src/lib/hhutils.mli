@@ -50,6 +50,8 @@ val drop_all_prods : Evd.evar_map -> EConstr.t -> EConstr.t
 
 val take_all_prods : Evd.evar_map -> EConstr.t -> (Name.t * EConstr.t) list
 
+val destruct_app : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t list (* args *)
+
 val destruct_prod : Evd.evar_map -> EConstr.t ->
   (Name.t * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t list (* args *)
 
@@ -82,6 +84,8 @@ val is_atom : Evd.evar_map -> EConstr.t -> bool
 val is_ind_atom : Evd.evar_map -> EConstr.t -> bool
 
 val is_product : Evd.evar_map -> EConstr.t -> bool
+
+val get_app_head : Evd.evar_map -> EConstr.t -> EConstr.t
 
 val get_head : Evd.evar_map -> EConstr.t -> EConstr.t
 

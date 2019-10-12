@@ -1,7 +1,6 @@
 (* Coq v8.9 required *)
 (* author: Lukasz Czajka *)
 (* This file contains reconstruction tactics for CoqHammer. *)
-(* Copyright (c) 2017-2019, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 
 Declare ML Module "hammer_lib".
@@ -381,6 +380,8 @@ Ltac trysolve :=
                                   match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
   | [ |- ?t <> ?u ] => try solve [ cbn in *; congruence 8 |
                                    match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
+  | [ |- (?t = ?u) -> False ] => try solve [ intro; cbn in *; congruence 8 |
+                                             match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
   | [ |- False ] => try solve [ cbn in *; congruence 8 ]
   | [ |- ?t >= ?u ] => try solve [ Psatz.lia ]
   | [ |- ?t <= ?u ] => try solve [ Psatz.lia ]
@@ -399,6 +400,7 @@ Ltac isolve :=
         | _ =>
           solve [ trysolve | left; msolve | right; msolve |
                   eexists; msolve ]
+                (* TODO: move to plugin, generalize to applying non-recursive constructors *)
       end
   in
   msolve.
@@ -500,7 +502,9 @@ Ltac sinvert H :=
   | _ =>
     lazymatch goal with
     | [ |- context[H] ] => destruct H
-    | [ |- _ ] => inversion H; try subst; try clear H
+    | [ |- _ ] =>
+      let ty := type of H in
+      inversion H; try subst; tryif clear H then notHyp ty else idtac
     end
   end; cbn.
 

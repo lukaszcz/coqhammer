@@ -159,15 +159,18 @@ let rec take_all_prods evd t =
   | Prod (na, ty, body) -> (na, ty) :: take_all_prods evd body
   | _ -> []
 
-let destruct_prod evd t =
-  let prods = take_all_prods evd t
-  and concl = drop_all_prods evd t
-  in
+let destruct_app evd t =
   let open Constr in
   let open EConstr in
-  match kind evd concl with
-  | App (h, args) -> (prods, h, Array.to_list args)
-  | _ -> (prods, concl, [])
+  match kind evd t with
+  | App (h, args) -> (h, Array.to_list args)
+  | _ -> (t, [])
+
+let destruct_prod evd t =
+  let prods = take_all_prods evd t
+  and (h, args) = destruct_app evd (drop_all_prods evd t)
+  in
+  (prods, h, args)
 
 (***************************************************************************************)
 
@@ -372,6 +375,8 @@ let is_product evd t =
   match kind evd t with
   | Prod _ when not (is_atom evd t) -> true
   | _ -> false
+
+let get_app_head evd t = match destruct_app evd t with (h, _) -> h
 
 let get_head evd t = match destruct_prod evd t with (_, h, _) -> h
 
