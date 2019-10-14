@@ -316,14 +316,31 @@ let simplify opts =
     opt (opts.s_case_splits = SAll) case_splitting_tac <~>
     opt opts.s_simple_inverting simple_inverting_tac <~>
     opt opts.s_forwarding forwarding_tac
+(* NOTE: it is important that forwarding is at the end, otherwise the
+   tactic may loop: "repeat (progress simple_inverting; forwarding)"
+   may loop *)
 
 (*****************************************************************************************)
 
 let eval_hyp evd (id, hyp) =
   let (prods, head, args) = Utils.destruct_prod evd hyp in
-  let num_subgoals = List.length (List.filter (fun (name, _) -> name = Name.Anonymous) prods) in
+  let app = EConstr.mkApp (head, Array.of_list args) in
   let n = List.length prods in
-  (id, hyp, n + num_subgoals * 10, num_subgoals, (prods, head, args))
+  let (num_subgoals, num_dangling_evars, _) =
+    List.fold_left
+      begin fun (m, m', k) (name, _) ->
+        if name = Name.Anonymous then
+          (m + 1, m', k - 1)
+        else
+          if Utils.rel_occurs evd app [k] then
+            (m, m', k - 1)
+          else
+            (m, m' + 1, k - 1)
+      end
+      (0, 0, n)
+      prods
+  in
+  (id, hyp, n + num_subgoals * 10 + num_dangling_evars * 10, num_subgoals, (prods, head, args))
 
 let hyp_cost evd hyp =
   match eval_hyp evd (None, hyp) with
@@ -390,13 +407,21 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
          | _ -> has_arg_dep t
        end
   in
-  (* TODO: count in (recursive) constructors with no non-trivial argument dependencies? *)
   match kind evd head with
   | Ind (ind, _) when is_inversion opts evd ind args ->
-     let num_ctrs = Utils.get_ind_nconstrs ind in
-     let b_arg_dep = has_arg_dep args in
-     [(cost + if b_arg_dep then 40 else num_ctrs * 10 + 120),
-      (if b_arg_dep then num_subgoals + 1 else num_subgoals + num_ctrs),
+     let ctrs = Utils.get_ind_constrs ind in
+     let num_ctrs = List.length ctrs in
+     let b_arg_dep = num_ctrs <= 1 || has_arg_dep args in
+     let deps =
+       List.length (List.filter
+                      begin fun t ->
+                        match Utils.destruct_prod evd (EConstr.of_constr t) with
+                        | (_, _, args) -> not (has_arg_dep args)
+                      end
+                      ctrs)
+     in
+     [(cost + if b_arg_dep then deps * 10 + 40 else num_ctrs * 10 + 120),
+      (if b_arg_dep then num_subgoals + max deps 1 else num_subgoals + num_ctrs),
       ActInvert id]
   | _ ->
      []
