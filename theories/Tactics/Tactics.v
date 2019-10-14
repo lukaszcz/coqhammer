@@ -618,21 +618,21 @@ Tactic Notation "scrush" "unfolding" constr(unfolds) :=
   try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
 
 Tactic Notation "hauto" :=
-  unshelve (sauto_gen with nohints using default unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) :=
-  unshelve (sauto_gen i with nohints using default unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) :=
-  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) :=
-  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" "unfolding" constr(lst2) :=
-  unshelve (sauto_gen with nohints using default unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
-  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting logic ctrs logic opts noinvert); dsolve.
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts noinvert); dsolve.
 
 Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
 Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.

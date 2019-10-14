@@ -60,8 +60,10 @@ let get_s_opts ropts bases unfoldings inverting ctrs =
        begin
          let b_nohints = List.mem cnohints lst in
          let b_hints = List.mem chints lst in
-         let lst = List.filter (fun c -> c <> cnohints && c <> chints) lst in
+         let b_logic = List.mem clogic lst in
+         let lst = List.filter (fun c -> c <> cnohints && c <> chints && c <> cdefault && c <> clogic) lst in
          let lst = List.map conv lst in
+         let lst = if b_logic then logic_lst @ lst else lst in
          if b_nohints then
            SNoHints lst
          else if b_hints then

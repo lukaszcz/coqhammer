@@ -92,13 +92,12 @@ let print_search_actions n actions =
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
-let erewrite l2r v =
-  Equality.general_rewrite_bindings true Locus.AllOccurrences true true (v,NoBindings) true
+let erewrite l2r id =
+  Equality.general_rewrite_clause l2r true (EConstr.mkVar id, NoBindings)
+    Locus.({ onhyps = None; concl_occs = AllOccurrences})
 
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
-let rewrite_lr_tac id = Tacticals.New.tclPROGRESS (erewrite true (EConstr.mkVar id))
-let rewrite_rl_tac id = Tacticals.New.tclPROGRESS (erewrite false (EConstr.mkVar id))
 let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
@@ -153,7 +152,7 @@ let case_unfold_cost c =
      end
   | None -> -1
 
-let unfold c = Tactics.unfold_constr (GlobRef.ConstRef c) <*> Tactics.simpl_in_concl
+let unfold c = Tactics.unfold_constr (GlobRef.ConstRef c)
 
 let fullunfold c = fullunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c, None)), None)
 
@@ -313,12 +312,16 @@ let simplify opts =
     (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl_tac) <~>
     simple_splitting opts <~>
     autorewriting opts <~>
-    opt (opts.s_case_splits = SAll) case_splitting_tac <~>
+    case_splitting opts <~>
     opt opts.s_simple_inverting simple_inverting_tac <~>
     opt opts.s_forwarding forwarding_tac
 (* NOTE: it is important that forwarding is at the end, otherwise the
    tactic may loop: "repeat (progress simple_inverting; forwarding)"
    may loop *)
+
+let simplify_concl opts =
+  (Tactics.simpl_in_concl <~> autorewriting opts) <*>
+    Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting opts) <*> simplify opts)
 
 (*****************************************************************************************)
 
@@ -558,19 +561,19 @@ and apply_actions opts n actions hyps visited =
          | ActApply id ->
             continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
          | ActRewriteLR id ->
-            continue n' (rewrite_lr_tac id) acts
+            continue n' (erewrite true id <*> simplify_concl opts) acts
          | ActRewriteRL id ->
-            continue n' (rewrite_rl_tac id) acts
+            continue n' (erewrite false id <*> simplify_concl opts) acts
          | ActInvert id ->
             cont (sinvert_tac id <*> start_search opts n') acts
          | ActUnfold c ->
-            continue n' (unfold c) acts
+            continue n' (Tacticals.New.tclPROGRESS (unfold c) <*> simplify_concl opts) acts
          | ActCaseUnfold c ->
             cont (Tacticals.New.tclPROGRESS (fullunfold c) <*> start_search opts n') acts
          | ActConstructor ->
             cont
               (Tactics.any_constructor true
-                 (Some (Tactics.simpl_in_concl <*> search false opts n' hyps visited)))
+                 (Some (simplify_concl opts <*> search false opts n' hyps visited)))
               acts
          | ActIntro ->
             cont (Tactics.intros <*> subst_simpl_tac <*> start_search opts n') acts

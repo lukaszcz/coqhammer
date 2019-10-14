@@ -27,115 +27,53 @@ Lemma lem_1 : le 1 2.
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
-  pose proof (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
-  ssimpl.
-  sauto 2.
-  sauto_gen with shints using default unfolding default inverting default ctrs none opts default.
-                   sauto ctrs none.
-  sinvert H3.
-  sauto.
-  ssimpl.
-  hauto.
-  ssimpl.
-  hauto.
-  simple_inverting.
-
-  hauto.
-  simpl_solve.
-  bnat_reflect.
-  simp_hyps.
-  autorewrite with shints.
-  ssimpl.
-  forwarding.
-  sforward H.
-  sauto 0.
-  sauto.
-  einst H.
-  intro HH1.
-  assert (HH2 : Nat
-  forwarding.
-  sauto 1.
-  sauto 0.
-  Reconstr.isolve.
-  simp_hyps.
-  intros.
-  isplit; intros.
-  admit.
-  isolve.
-  trysolve.
-  simp_hyps.
-  isolve.
-  Reconstr.isolve.
-  isplit; try isolve.
-  Reconstr.isolve.
-  Reconstr.yelles 1.
-  ssimpl.
-  unshelve (intuition Reconstr.isolve; eauto 10 with nocore yhints); dsolve.
   hammer. Restart.
+  hauto 200 using (@Arith.PeanoNat.Nat.add_1_r, @Arith.PeanoNat.Nat.Odd_succ, @Arith.PeanoNat.Nat.Even_or_Odd).
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
   hammer. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd) Reconstr.Empty.
+  hauto 200 using (@Arith.PeanoNat.Nat.Even_or_Odd, @Arith.PeanoNat.Nat.Even_succ, @Arith.PeanoNat.Nat.add_1_r).
 Qed.
 
 Lemma lem_3 : le 2 3.
   hammer. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r) Reconstr.Empty. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.succ_le_mono, @lem_1) Reconstr.Empty.
+  hauto using (@Arith.PeanoNat.Nat.le_le_succ_r, @Arith.PeanoNat.Nat.lt_1_2) unfolding (@Init.Peano.lt).
 Qed.
 
 Lemma lem_4 : le 3 10.
   time hammer. Restart.
-  time Reconstr.rcrush (@Coq.Arith.PeanoNat.Nat.succ_le_mono, @lem_3, @Coq.Arith.PeanoNat.Nat.le_le_succ_r) Reconstr.Empty.
-  Restart.
-  time Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_succ_diag_r, @Coq.Arith.PeanoNat.Nat.succ_le_mono, @Coq.Arith.PeanoNat.Nat.le_0_2, @Coq.Init.Peano.le_S) Reconstr.Empty.
-  Restart.
-  time Reconstr.reasy (@Coq.Init.Peano.le_S, @lem_3, @Coq.Arith.PeanoNat.Nat.succ_le_mono) Reconstr.Empty.
-  Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.succ_le_mono, @Coq.Arith.PeanoNat.Nat.le_0_l)
-        Reconstr.Empty.
-  Restart.
-  Reconstr.htrivial Reconstr.Empty
-        (@Coq.Arith.Le.le_n_S, @Coq.Init.Peano.le_S, @Coq.Arith.PeanoNat.Nat.lt_0_succ)
-        (@Coq.Init.Peano.lt).
-  Restart.
-  Reconstr.heasy Reconstr.Empty
-        (@Coq.Init.Peano.le_S, @Coq.Arith.PeanoNat.Nat.succ_le_mono, @Coq.Arith.PeanoNat.Nat.lt_succ_r, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.le_1_r, @Coq.Arith.PeanoNat.Nat.le_succ_diag_r, @Coq.Arith.PeanoNat.Nat.lt_0_1, @Coq.Arith.PeanoNat.Nat.lt_succ_pred, @lem_3)
-        (@Coq.Init.Peano.lt).
+  hauto 200 using (@Arith.PeanoNat.Nat.le_1_r, @Arith.PeanoNat.Nat.le_gt_cases, @Arith.PeanoNat.Nat.succ_inj_wd, @Arith.PeanoNat.Nat.succ_le_mono) unfolding (@Init.Peano.lt).
 Qed.
 
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
   hammer. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.mul_comm) Reconstr.Empty.
+  hauto using (@Arith.PeanoNat.Nat.add_comm, @Arith.PeanoNat.Nat.mul_comm).
 Qed.
 
 Lemma lem_rew : forall m n : nat, 1 + n + m + 1 = m + 2 + n.
 Proof.
   time hammer. Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_assoc) Reconstr.Empty.
-  Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Init.Peano.plus_n_Sm, @Coq.Arith.PeanoNat.Nat.add_comm) (@Coq.Arith.PeanoNat.Nat.b2n).
-  Restart.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Arith.PeanoNat.Nat.add_succ_l) Reconstr.Empty.
-  Restart.
-  Reconstr.hobvious Reconstr.Empty
-                    (@Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_l, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_assoc, @Coq.Arith.PeanoNat.Nat.add_succ_l)
-                    Reconstr.Empty.
-  Restart.
-  Reconstr.heasy Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.add_comm, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_shuffle2, @Coq.Arith.Plus.plus_assoc_reverse)
-        Reconstr.Empty.
-  Restart.
-  Reconstr.heasy Reconstr.Empty
-        (@Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.add_succ_r, @Coq.Arith.PeanoNat.Nat.add_0_l, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_l, @Coq.Arith.PeanoNat.Nat.add_comm)
-        Reconstr.Empty.
+  hauto using (@Arith.PeanoNat.Nat.add_assoc, @Arith.PeanoNat.Nat.add_comm, @Arith.PeanoNat.Nat.add_1_r, @Arith.PeanoNat.Nat.add_shuffle1).
 Qed.
 
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
 Proof.
+  pose proof (Coq.Arith.PeanoNat.Nat.pow_succ_r, Coq.Arith.PeanoNat.Nat.add_1_r, Coq.Arith.PeanoNat.Nat.le_0_l).
+  simp_hyps.
+  intro n.
+  rewrite <- H2.
+  -
+    erewrite H3.
+    sauto 0.
+    econstructor.
+  - sauto.
+  rewrite H3.
+  constructor.
+  isolve.
+  congruence.
+  hauto.
   hammer. Restart.
   Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.add_1_r) Reconstr.Empty.
   Restart.

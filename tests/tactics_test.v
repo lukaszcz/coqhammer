@@ -34,6 +34,10 @@ Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
   hauto using (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd).
 Qed.
 
+Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
+  hauto using (Coq.Arith.PeanoNat.Nat.pow_succ_r, Coq.Arith.PeanoNat.Nat.add_1_r, Coq.Arith.PeanoNat.Nat.le_0_l).
+Qed.
+
 Section Sets.
 
 Variable U : Type.
@@ -199,7 +203,7 @@ Notation "X =w Y" := (WeakEqual X Y) (at level 80).
 Lemma abstr_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr v t @ s =w csubst t v s.
 Proof.
-  induction t; sauto.
+  induction t; scrush.
 Qed.
 
 Lemma abstr_size :
@@ -229,8 +233,7 @@ Proof.
   eauto using abstr_size with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
   eauto using Nat.le_trans with zarith.
-  assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
-  intros; rewrite Nat.add_1_r; strivial. (* test sapply here! *)
+  assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto using Nat.add_1_r.
   scrush.
 Qed.
 
@@ -284,7 +287,7 @@ Proof.
   induction t; ssimpl; unfold orb; ssimpl.
   assert (occurs v t1 = true \/ occurs v t2 = true).
   hauto using (@Coq.Bool.Bool.orb_prop).
-  sauto.
+  ssimpl.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=

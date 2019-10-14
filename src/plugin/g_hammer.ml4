@@ -502,7 +502,7 @@ let hammer_tac () =
                 begin fun tac deps defs ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ " " ^ mk_lst_str "using" deps ^ " " ^ mk_lst_str "unfolding" defs ^ ".")
+                               tac ^ mk_lst_str " using" deps ^ mk_lst_str " unfolding" defs ^ ".")
                 end
                 begin fun () ->
                   Msg.error ("Hammer failed: proof reconstruction failed")
