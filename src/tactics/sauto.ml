@@ -102,6 +102,7 @@ let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinver
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
+let simple_invert_tac id = Utils.ltac_apply "Tactics.simple_invert" [mk_tac_arg_id id]
 let case_splitting_tac = Utils.ltac_apply "Tactics.case_splitting" []
 let forwarding_tac = Utils.ltac_apply "Tactics.forwarding" []
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
@@ -285,7 +286,8 @@ let rec simple_splitting opts =
 let case_splitting opts =
   match opts.s_case_splits with
   | SAll -> case_splitting_tac
-  | SSome lst ->
+  | SNone -> Tacticals.New.tclIDTAC
+  | _ ->
      let introp =
        Some (CAst.make (IntroAndPattern [CAst.make (IntroAction IntroWildcard)]))
      in
@@ -302,7 +304,28 @@ let case_splitting opts =
          (Proofview.Goal.sigma gl)
          (Proofview.Goal.concl gl)
      end
-  | _ -> Tacticals.New.tclIDTAC
+
+let simple_inverting opts =
+  match opts.s_inversions with
+  | SAll -> simple_inverting_tac
+  | SNone -> Tacticals.New.tclIDTAC
+  | _ ->
+     Proofview.Goal.nf_enter begin fun gl ->
+        let evd = Proofview.Goal.sigma gl in
+        let hyps = Utils.get_hyps gl in
+        List.fold_left
+          begin fun tac (id, hyp) ->
+            let (head, args) = Utils.destruct_app evd hyp in
+            let open Constr in
+            let open EConstr in
+            match kind evd head with
+            | Ind(ind, _) when is_inversion opts evd ind args ->
+               Proofview.tclTHEN (simple_invert_tac id) tac
+            | _ -> tac
+          end
+          (Proofview.tclUNIT ())
+          hyps
+     end
 
 let simplify opts =
   simp_hyps_tac <~>
@@ -313,7 +336,7 @@ let simplify opts =
     simple_splitting opts <~>
     autorewriting opts <~>
     case_splitting opts <~>
-    opt opts.s_simple_inverting simple_inverting_tac <~>
+    opt opts.s_simple_inverting (simple_inverting opts) <~>
     opt opts.s_forwarding forwarding_tac
 (* NOTE: it is important that forwarding is at the end, otherwise the
    tactic may loop: "repeat (progress simple_inverting; forwarding)"
