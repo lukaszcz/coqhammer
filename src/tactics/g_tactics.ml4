@@ -108,6 +108,10 @@ TACTIC EXTEND Hammer_simple_splitting
 | [ "simple_splitting" ] -> [ simple_splitting default_s_opts ]
 END
 
+TACTIC EXTEND Hammer_eager_inverting
+| [ "eager_inverting" ] -> [ eager_inverting default_s_opts ]
+END
+
 TACTIC EXTEND Hammer_ssimpl_gen
 | [ "ssimpl_gen" ] -> [
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }

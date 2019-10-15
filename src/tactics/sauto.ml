@@ -291,6 +291,21 @@ let repeat2 tac1 tac2 =
 
 let (<~>) = repeat2
 
+let rec repeat_when p f =
+  Proofview.Goal.nf_enter begin fun gl ->
+    let evd = Proofview.Goal.sigma gl in
+    let rec go hyps =
+      match hyps with
+      | [] -> Tacticals.New.tclIDTAC
+      | (id, hyp) :: hyps' ->
+         if p evd hyp then
+           f id <*> repeat_when p f
+         else
+           go hyps'
+    in
+    go (Utils.get_hyps gl)
+  end
+
 let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 
 let autorewriting opts = autorewrite opts.s_rew_bases
@@ -321,7 +336,7 @@ let case_splitting opts =
          let open EConstr in
          match kind evd t with
          | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
-            Proofview.tclTHEN (Tacticals.New.tclTRY (Tactics.destruct false None c introp None <*> subst_simpl_tac)) acc
+            Proofview.tclTHEN (Tactics.destruct false None c introp None <*> subst_simpl_tac) acc
          | _ -> acc
        end (Proofview.tclUNIT ())
          (Proofview.Goal.sigma gl)
@@ -332,44 +347,32 @@ let eager_inverting opts =
   match opts.s_inversions with
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
-     Proofview.Goal.nf_enter begin fun gl ->
-        let evd = Proofview.Goal.sigma gl in
-        let hyps = Utils.get_hyps gl in
-        List.fold_left
-          begin fun tac (id, hyp) ->
-            let (head, args) = Utils.destruct_app evd hyp in
-            let open Constr in
-            let open EConstr in
-            match kind evd head with
-            | Ind(ind, _) when is_eager_inversion opts evd hyp ->
-               Proofview.tclTHEN (Tacticals.New.tclTRY (sinvert_tac id <*> subst_simpl_tac)) tac
-            | _ -> tac
-          end
-          (Proofview.tclUNIT ())
-          hyps
-     end
+     repeat_when
+       begin fun evd hyp ->
+         let (head, args) = Utils.destruct_app evd hyp in
+         let open Constr in
+         let open EConstr in
+         match kind evd head with
+         | Ind(ind, _) when is_eager_inversion opts evd hyp -> true
+         | _ -> false
+       end
+       (fun id -> sinvert_tac id <*> subst_simpl_tac)
 
 let simple_inverting opts =
   match opts.s_inversions with
   | SAll -> simple_inverting_tac
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
-     Proofview.Goal.nf_enter begin fun gl ->
-        let evd = Proofview.Goal.sigma gl in
-        let hyps = Utils.get_hyps gl in
-        List.fold_left
-          begin fun tac (id, hyp) ->
-            let (head, args) = Utils.destruct_app evd hyp in
-            let open Constr in
-            let open EConstr in
-            match kind evd head with
-            | Ind(ind, _) when is_inversion opts evd ind args ->
-               Proofview.tclTHEN (Tacticals.New.tclTRY (simple_invert_tac id)) tac
-            | _ -> tac
-          end
-          (Proofview.tclUNIT ())
-          hyps
-     end
+     repeat_when
+       begin fun evd hyp ->
+         let (head, args) = Utils.destruct_app evd hyp in
+         let open Constr in
+         let open EConstr in
+         match kind evd head with
+         | Ind(ind, _) when is_inversion opts evd ind args -> true
+         | _ -> false
+       end
+       simple_invert_tac
 
 let simplify opts =
   simp_hyps_tac <~>
