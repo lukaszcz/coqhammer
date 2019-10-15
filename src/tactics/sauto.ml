@@ -21,6 +21,7 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
+  s_eager_inverting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
   s_rewriting : bool;
@@ -37,6 +38,7 @@ let default_s_opts = {
   s_inversions = SAll;
   s_rew_bases = [];
   s_bnat_reflect = true;
+  s_eager_inverting = true;
   s_simple_inverting = true;
   s_forwarding = true;
   s_rewriting = true;
@@ -185,29 +187,41 @@ let in_sopt_list hints x opt =
   | SNoHints lst when List.mem x lst -> true
   | _ -> false
 
+let is_constr_non_recursive ind t =
+  let (prods, _, _) = Utils.destruct_prod Evd.empty (EConstr.of_constr t) in
+  let t2 =
+    List.fold_right (fun (name, types) acc -> EConstr.mkLambda (name, types, acc))
+      prods (EConstr.mkRel 0)
+  in
+  Utils.fold_constr
+    begin fun k acc x ->
+      let open Constr in
+      let open EConstr in
+      match kind Evd.empty x with
+      | Ind (ind2, _) when ind2 = ind -> false
+      | Rel n when n > k -> false
+      | _ -> acc
+    end
+    true
+    Evd.empty
+    t2
+
+(* check if the inductive type is non-recursive with at most two
+   constructors *)
+let is_eager_ind ind =
+  let cstrs = Utils.get_ind_constrs ind in
+  match cstrs with
+  | [] -> true
+  | [ t ] -> is_constr_non_recursive ind t
+  | [ t1; t2 ] -> is_constr_non_recursive ind t1 && is_constr_non_recursive ind t2
+  | _ -> false
+
 (* check if the inductive type is non-recursive with exactly one
    constructor *)
 let is_simple_ind ind =
   let cstrs = Utils.get_ind_constrs ind in
   match cstrs with
-  | [ t ] ->
-     let (prods, _, _) = Utils.destruct_prod Evd.empty (EConstr.of_constr t) in
-     let t2 =
-       List.fold_right (fun (name, types) acc -> EConstr.mkLambda (name, types, acc))
-         prods (EConstr.mkRel 0)
-     in
-     Utils.fold_constr
-       begin fun k acc x ->
-         let open Constr in
-         let open EConstr in
-         match kind Evd.empty x with
-         | Ind (ind2, _) when ind2 = ind -> false
-         | Rel n when n > k -> false
-         | _ -> acc
-       end
-       true
-       Evd.empty
-       t2
+  | [ t ] -> is_constr_non_recursive ind t
   | _ -> false
 
 let is_simple_split opts evd t =
@@ -249,6 +263,15 @@ let is_inversion opts evd ind args =
       | _ -> false
     else
       true
+
+let is_eager_inversion opts evd t =
+  let open Constr in
+  let open EConstr in
+  let (head, args) = Utils.destruct_app evd t in
+  match kind evd head with
+  | Ind (ind, _) when is_eager_ind ind ->
+     is_inversion opts evd ind args
+  | _ -> false
 
 (*****************************************************************************************)
 
@@ -297,12 +320,33 @@ let case_splitting opts =
          let open Constr in
          let open EConstr in
          match kind evd t with
-         | Case (ci, _, _, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
-            Proofview.tclTHEN (Tactics.destruct false None t introp None) acc
+         | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
+            Proofview.tclTHEN (Tacticals.New.tclTRY (Tactics.destruct false None c introp None <*> subst_simpl_tac)) acc
          | _ -> acc
        end (Proofview.tclUNIT ())
          (Proofview.Goal.sigma gl)
          (Proofview.Goal.concl gl)
+     end
+
+let eager_inverting opts =
+  match opts.s_inversions with
+  | SNone -> Tacticals.New.tclIDTAC
+  | _ ->
+     Proofview.Goal.nf_enter begin fun gl ->
+        let evd = Proofview.Goal.sigma gl in
+        let hyps = Utils.get_hyps gl in
+        List.fold_left
+          begin fun tac (id, hyp) ->
+            let (head, args) = Utils.destruct_app evd hyp in
+            let open Constr in
+            let open EConstr in
+            match kind evd head with
+            | Ind(ind, _) when is_eager_inversion opts evd hyp ->
+               Proofview.tclTHEN (Tacticals.New.tclTRY (sinvert_tac id <*> subst_simpl_tac)) tac
+            | _ -> tac
+          end
+          (Proofview.tclUNIT ())
+          hyps
      end
 
 let simple_inverting opts =
@@ -320,7 +364,7 @@ let simple_inverting opts =
             let open EConstr in
             match kind evd head with
             | Ind(ind, _) when is_inversion opts evd ind args ->
-               Proofview.tclTHEN (simple_invert_tac id) tac
+               Proofview.tclTHEN (Tacticals.New.tclTRY (simple_invert_tac id)) tac
             | _ -> tac
           end
           (Proofview.tclUNIT ())
@@ -336,6 +380,7 @@ let simplify opts =
     simple_splitting opts <~>
     autorewriting opts <~>
     case_splitting opts <~>
+    opt opts.s_eager_inverting (eager_inverting opts) <~>
     opt opts.s_simple_inverting (simple_inverting opts) <~>
     opt opts.s_forwarding forwarding_tac
 (* NOTE: it is important that forwarding is at the end, otherwise the
@@ -446,6 +491,7 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
                       end
                       ctrs)
      in
+     let deps = if deps = num_ctrs then deps - 1 else deps in
      [(cost + if b_arg_dep then deps * 10 + 40 else num_ctrs * 10 + 120),
       (if b_arg_dep then num_subgoals + max deps 1 else num_subgoals + num_ctrs),
       ActInvert id]
