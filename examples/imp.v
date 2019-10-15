@@ -9,7 +9,7 @@
    and our reconstruction tactics compares to the automation available
    in Isabelle/HOL. *)
 
-From Hammer Require Import Hammer Tactics.
+From Hammer Require Import Tactics.
 
 Require Import String.
 Require Import Arith.PeanoNat.
@@ -151,7 +151,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  sauto. (* 0.4s *)
+  sauto. (* 0.65s *)
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -160,7 +160,7 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  sauto unfolding equiv_cmd. (* 0.4s *)
+  sauto unfolding equiv_cmd. (* 0.75s *)
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
@@ -180,7 +180,7 @@ Lemma lem_big_step_deterministic :
   forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
   intros c s s1 s2 H; revert s2.
-  induction H; scrush.
+  induction H; scrush. (* 3.7s *)
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
@@ -235,14 +235,14 @@ Proof.
   intros p s' H.
   induction H as [ | | | | | | b c s1 s2 ]; ssimpl.
   - sauto using (@lem_seq_comp).
-  - eapply rt_trans; [ do 2 constructor | idtac ]; assumption.
-  - eapply rt_trans; [ do 2 constructor | idtac ]; assumption.
-  - eapply rt_trans; sauto.
+  - sauto using rt_trans.
+  - sauto using rt_trans.
+  - sauto using rt_trans.
   - assert ((While b c, s1) -->* (Seq c (While b c), s1)) by
         (eapply rt_trans; scrush).
     assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)) by
         sauto using lem_star_seq2.
-    eapply rt_trans; sauto.
+    sauto using rt_trans.
 Qed.
 
 Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==> s.

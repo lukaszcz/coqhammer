@@ -1,4 +1,4 @@
-CoqHammer (dev-sauto) for Coq 8.9
+CoqHammer (dev) for Coq 8.9
 
 [![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=sauto)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
