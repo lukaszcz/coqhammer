@@ -113,10 +113,10 @@ TACTIC EXTEND Hammer_eager_inverting
 END
 
 TACTIC EXTEND Hammer_ssimpl_gen
-| [ "ssimpl_gen" ] -> [
+| [ "ssimpl" ] -> [
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
 ]
-| [ "ssimpl_gen" "unfolding" constr(unfolds) ] -> [
+| [ "ssimpl" "unfolding" constr(unfolds) ] -> [
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
     s_unfolding = SSome (List.map to_const (destruct_constr unfolds)) }
 ]

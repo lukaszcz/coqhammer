@@ -606,9 +606,6 @@ Tactic Notation "sauto" "unfolding" constr(unfolds) "inverting" constr(inverts) 
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   unshelve (sauto_gen i with shints using default unfolding unfolds inverting inverts ctrs default opts default); dsolve.
 
-Tactic Notation "ssimpl" := unshelve ssimpl_gen; dsolve.
-Tactic Notation "ssimpl" "unfolding" constr(unfolds) := unshelve ssimpl_gen unfolding unfolds; dsolve.
-
 Tactic Notation "scrush" := try strivial; ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
   pose proof lst; try strivial; ssimpl; sauto.
