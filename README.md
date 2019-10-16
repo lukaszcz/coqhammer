@@ -122,16 +122,17 @@ The most useful tactics are:
   tries applying constructors, inverting the hypotheses, ordered
   rewriting, rewriting with hints from the `shints` database,
   arithmetic solving with `lia`, case splitting, intelligent
-  unfolding, forward reasoning and hypotheses simplification.
+  unfolding, loop checking, forward reasoning and hypotheses
+  simplification.
 
 * `hauto`
 
   The same as `sauto` but by default does not use constructors of or
   do inversion on inductive types other than logical connectives and
   equality. Also does not use the hints from the `shints`
-  database. This tactic is faster than `sauto` if you can provide
-  precise dependencies, and it is thus used most often as the
-  reconstruction tactic suggested by `hammer`.
+  database. This tactic is faster than `sauto` if you provide precise
+  dependencies, and it is thus used most often as the reconstruction
+  tactic suggested by `hammer`.
 
 * `ssimpl`
 
@@ -176,8 +177,8 @@ Tactic options
 
   Limit the cost of the entire proof tree by `n`. The default
   is 1000. Note that this does not directly limit the depth of proof
-  search, but only the cost of the whole proof tree, according to the
-  cost model built into `sauto`. Example: `sauto 200`, `hauto 2000`.
+  search, but only the cost (and thus size) of the final proof tree,
+  according to the cost model built into `sauto`.
 
 * `using (lem1,...,lemn)`
 

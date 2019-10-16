@@ -218,7 +218,7 @@ Proof.
   semi-manually. *)
   assert (forall c : Datatypes.comparison, c = Eq \/ c = Lt \/ c = Gt) by sauto.
   time scrush using (Coq.Arith.Compare_dec.leb_correct, Coq.Arith.PeanoNat.Nat.leb_refl, Coq.Arith.PeanoNat.Nat.compare_nge_iff, Coq.Arith.PeanoNat.Nat.lt_eq_cases, Coq.Init.Peano.le_n, Coq.Arith.Compare_dec.leb_compare, Coq.Arith.PeanoNat.Nat.compare_lt_iff).
-  (* TODO: exhaustion axioms *)
+  (* TODO: inversion axioms giving hints for reconstruction *)
 Qed.
 
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.
