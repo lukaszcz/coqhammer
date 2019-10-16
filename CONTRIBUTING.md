@@ -15,11 +15,11 @@ later. Please, read all points and try to follow.
    general parameterised function.
 
 5. Try to make commits which include only things directly relevant to
-   what you're changing. Do not make changes which do nothing (don't
-   change the behaviour of the code), unless your commit is explicitly
-   about refactoring (cleaning up) code. Avoid including outcommented
-   code, changes of parameters you just used for debugging, hardcoded
-   paths, etc.
+   what you're changing. Do not make changes which do nothing (which
+   don't change the behaviour of the code), unless your commit is
+   explicitly about refactoring (cleaning up) code. Avoid including
+   outcommented code, changes of parameters you just used for
+   debugging, hardcoded paths, etc.
 
    **Hint**: use `git diff` to review your changes before committing.
 
