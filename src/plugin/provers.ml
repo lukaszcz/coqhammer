@@ -333,7 +333,6 @@ let write_atp_file fname deps1 hyps deps goal =
   Coq_transl.reinit (goal :: hyps @ deps);
   if !Opt.debug_mode || !Opt.gs_mode = 0 then
     Msg.info ("Translating the problem to FOL...");
-
   Coq_transl.retranslate (name :: depnames);
   if !Opt.debug_mode then
     Msg.info ("Writing translated problem to file '" ^ fname ^ "'...");

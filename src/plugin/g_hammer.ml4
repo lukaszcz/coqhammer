@@ -597,7 +597,7 @@ let hammer_transl name0 =
     let (_, def) = hhdef_of_global glob in
     let name = Hh_term.get_hhdef_name def in
     Coq_transl.remove_def name;
-    Coq_transl.reinit (def :: get_defs ());
+    Coq_transl.reinit (get_defs ());
     List.iter
       begin fun (n, a) ->
         if not (Hhlib.string_begins_with n "_HAMMER_") then
