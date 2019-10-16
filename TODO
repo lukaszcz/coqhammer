@@ -1,9 +1,9 @@
 1. Make boolean reflection work. Make CoqHammer usable with MathComp.
 
 2. Omit (some) type arguments (inductive type parameters? implicit
-   type arguemnts?) to polymorphic functions/constructors
+   type arguments?) to polymorphic functions/constructors
    (e.g. cons). Is it possible to determine which arguments are
-   implicit at the kernel level?
+   implicit at the kernel level? Yes.
 
 3. Omit (some) type guards when the type may be inferred (e.g. forall
    x : nat, Even(x) -> phi probably may be translated to forall x,
@@ -11,14 +11,27 @@
 
 4. For reconstruction: look at the discrimination (also injection?)
    axioms used in the ATP proofs and add them to the context before
-   invoking a reconstruction tactic.
+   invoking a reconstruction tactic. Use the inversion axioms to
+   specify the "inverting" option of the reconstruction tactics. Make
+   some intelligent use of other information contained in the atp_info
+   data structure (src/plugin/provers.mli).
 
-5. Explicitly state the types of non-trivial terms. E.g. if f:nat->nat
+5. Heuristic monomorphisation (instantiation of polymorphic
+   definitions with types). It is important to do this on the
+   translation level and not leave it to the ATPs, because then the
+   translation output may be further optimised. For example, forall (A
+   : Type) (x : A), phi is translated to forall A, t(A, Type) ->
+   forall x, t(x, A) -> phi', but in an instantiated version the type
+   guards may be optimised, e.g.: forall x, nat(x) -> phi'.
+
+6. Optimise type guards for closed parameterised types. For instance,
+   forall x : list nat, phi is translated to forall x, t(x, list nat)
+   -> phi', but should be to forall x, list_nat(x) -> phi'. This will
+   work well only in combination with heuristic monomorphisation.
+
+7. Explicitly state the types of non-trivial terms. E.g. if f:nat->nat
    and 0:nat and (f 0) occurs (in the goal or hypothesis?) then state
    (f 0):nat as an axiom. More general: consider non-trivial terms as
    possible dependencies.
 
-6. Heuristic monomorphisation (instantiation of polymorphic
-   definitions with types).
-
-7. Remove dependence on "grep".
+8. Remove dependence on "grep".
