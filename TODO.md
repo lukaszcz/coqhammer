@@ -113,7 +113,7 @@ forall x y z : nat, x = y /\ y = z -> {u : nat | x = u}
 
 12. Translation to HOL. Factor the translation, including a HOL
 	intermediate stage: Coq -> CIC_0 -> HOL -> applicative FOL ->
-	FOL. Try using integrating higher-order ATPs.
+	FOL. Try using higher-order ATPs.
 
 Technical improvements
 ----------------------
