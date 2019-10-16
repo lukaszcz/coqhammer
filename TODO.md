@@ -118,5 +118,7 @@ forall x y z : nat, x = y /\ y = z -> {u : nat | x = u}
 Technical improvements
 ----------------------
 
-1. Remove dependence on "grep".
-2. Properly handle argument parsing in the tactics.
+1. The `predict` program sometimes returns many more predictions than
+   asked for. Investigate and fix this.
+2. Remove dependence on "grep".
+3. Properly handle argument parsing in the tactics.
