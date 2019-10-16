@@ -407,10 +407,11 @@ Ltac isolve :=
 
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
-Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 32; try seasy;
-               try solve [ econstructor; isolve ].
+Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 32;
+               try seasy; try solve [ econstructor; isolve ].
 
-Ltac sintuition := cbn; intros; simp_hyps; ssolve; repeat (progress (intros; simp_hyps); ssolve).
+Ltac sintuition := cbn; intros; simp_hyps; ssolve;
+                   repeat (progress (intros; simp_hyps); ssolve).
 
 Ltac strivial := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
 

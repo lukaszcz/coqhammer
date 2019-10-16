@@ -109,62 +109,90 @@ TPTP frontend located in `examples/tptp` in the Z3 source package.
 Tactics
 -------
 
-The `Reconstr` module contains the reconstruction tactics which may
+The `Tactics` module contains the reconstruction tactics which may
 also be used directly in your proof scripts. In contrast to the
-`hammer` tactic they do not invoke external ATPs, they do not know
-anything about accessible lemmas (you need to add any necessary lemmas
-to the context with `generalize` or `pose`), and they never unfold any
-constants except basic logical operators (if necessary you need to
-unfold constants manually beforehand). To be able to directly use
-these tactics type:
-
-```coq
-From Hammer Require Import Reconstr.
-```
+`hammer` tactic they do not invoke external ATPs and they do not use
+any lemmas except explicitly provided ones.
 
 The most useful tactics are:
 
 * `sauto`
 
-  A "super" version of `intuition`/`auto`. Tries to simplify the goal and
-  possibly solve it. Does not perform much of actual proof search
-  (beyond what `intuition` already does). It is designed in such a way
-  as to terminate in a short time in most circumstances. It is
-  possible to customize this tactic by adding rewrite hints to the
-  yhints database.
+  A "super" version of `auto`. In addition to applying hypotheses, it
+  tries applying constructors, inverting the hypotheses, ordered
+  rewriting, rewriting with hints from the `shints` database,
+  arithmetic solving with `lia`, case splitting, intelligent
+  unfolding, forward reasoning and hypotheses simplification.
+
+* `hauto`
+
+  The same as `sauto` but by default does not use constructors of or
+  do inversion on inductive types other than logical connectives and
+  equality. Also does not use the hints from the `shints`
+  database. This tactic is faster than `sauto` if you can provide
+  precise dependencies, and it is thus used most often as the
+  reconstruction tactic suggested by `hammer`.
+
+* `ssimpl`
+
+  Tries to simplify the goal and possibly solve it. Does not perform
+  much of actual proof search (beyond what `intuition` and `auto`
+  already do). It is designed in such a way as to terminate in a short
+  time in most circumstances. It uses the rewrite hints from the
+  `shints` database.
 
   **WARNING**: This tactic may change the proof state unpredictably and
   introduce randomly named hypotheses into the context.
 
-  It is nonetheless useful to sometimes use `sauto` before a call to
+  It is nonetheless useful to sometimes use `ssimpl` before a call to
   `hammer`. Examples of this are provided in
   [`examples/imp.v`](examples/imp.v) and
   [`examples/combs.v`](examples/combs.v).
 
-* `ycrush`
-
-  Tries various heuristics and performs some limited proof
-  search. Usually stronger than `sauto`, but may take a long time if
-  it cannot find a proof. In contrast to `sauto`, `ycrush` does not
-  perform rewriting with rewrite hints in the yhints database. One
-  commonly uses `ycrush` (or `scrush`) after `sauto` for goals which
-  `sauto` could not solve.
-
 * `scrush`
 
-  Essentially, a combination of `sauto` and `ycrush`.
+  Essentially, a combination of `ssimpl` and `sauto`.
 
-* `yelles n`
+* `strivial`
 
-  Performs proof search up to depth `n`. May be very slow for `n`
-  larger than 3-4.
+  A simple and quick goal solving tactic. A bit stronger than
+  `auto`. Incorporates `lia` and `congruence`.
 
-* `blast`
+* `sintuition`
 
-  This tactic instantiates some universally quantified hypotheses,
-  calls `sauto`, performs shallow proof search, and repeats the whole
-  process with new instantiations. The tactic will loop if it cannot
-  solve the goal.
+  A "super" version of `intuition`. Essentially, may be seen as a more
+  conservative version of `ssimpl`. Useful when `ssimpl` performs too
+  much simplification.
+
+* `simp_hyps`
+
+  A basic hypotheses simplification tactic. Used as a component of
+  most other tactics.
+
+Tactic options
+--------------
+
+* `tactic n`
+
+  Limit the cost of the entire proof tree by `n`. The default
+  is 1000. Note that this does not directly limit the depth of proof
+  search, but only the cost of the whole proof tree, according to the
+  cost model built into `sauto`. Example: `sauto 200`, `hauto 2000`.
+
+* `using (lem1,...,lemn)`
+
+  Add lemmas to the hypotheses.
+
+* `unfolding (def1,...,defn)`
+
+  Unfold given definitions. Use `logic` for all logical constants.
+
+* `inverting (ind1,...,indn)`
+
+  Invert values of given inductive types. Use `logic` for all
+  inductive types representing logical connectives and quantifiers.
+
+Example: `sauto 500 using Nat.add_1_r unfolding (Nat.Even, Nat.Odd) inverting List.Forall`
 
 Papers about CoqHammer
 ----------------------
@@ -243,6 +271,6 @@ command                          | description
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University
-of Innsbruck. Distributed under the terms of LGPL 2.1, see the file
-[LICENSE](LICENSE).
+Copyright (c) 2017-2019, Lukasz Czajka, TU Dortmund University, and
+Cezary Kaliszyk, University of Innsbruck. Distributed under the terms
+of LGPL 2.1, see the file [LICENSE](LICENSE).
