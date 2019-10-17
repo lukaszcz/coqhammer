@@ -105,13 +105,13 @@ Research problems
 	 end.
    ```
 
-   the function `h` has type
+   the function h has type
 
    ```coq
    forall x y z : nat, x = y /\ y = z -> {u : nat | x = u}
    ```
 
-   It should be translated to a definition of a function `h`
+   It should be translated to a definition of a function h
 
    * forall x y z, h(x, y, z) = z
 
@@ -119,8 +119,8 @@ Research problems
 
    * forall x y z, x = y /\ y = z -> x = g(x, y, z)
 
-   Currently, no function definition for `h` is generated. Neither is
-   the second derived axiom. Only an unusable typing axiom for `h` is
+   Currently, no function definition for h is generated. Neither is
+   the second derived axiom. Only an unusable typing axiom for h is
    generated.
 
    A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
