@@ -72,7 +72,7 @@ Research problems
 
    to:
 
-   * forall x, nat(x) -> (x = 0 /\ F x = t1') \/
+   * forall x, nat(x) -> (x = 0 /\ F x = t1') \\/
 						 (exists y, nat(y) /\ x = S y /\ F x = t2')
 
    use two axioms:
