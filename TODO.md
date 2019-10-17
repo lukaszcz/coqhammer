@@ -34,12 +34,18 @@ Research problems
    definitions with types). It is important to do this on the
    translation level and not leave it to the ATPs, because then the
    translation output may be further optimised. For example,
+
    * forall (A : Type) (x : A), phi
+
    is translated to
+
    * forall A, T(A, Type) -> forall x, T(x, A) -> phi',
+
    but in an instantiated version the type guards may be optimised,
    e.g. for instantiation with nat to:
+
    * forall x, nat(x) -> phi'.
+
    Maybe guards of the form T(A,Type) may be omitted in general? In
    fact, T(x,A) implies T(A,Type): see point 3 above.
 
@@ -50,20 +56,30 @@ Research problems
 
 6. Optimise type guards for closed parameterised types. For instance,
    forall x : list nat, phi is translated to
+
    * forall x, t(x, list nat) -> phi',
+
    but should be to
+
    * forall x, list_nat(x) -> phi'.
+
    This will work well in combination with heuristic monomorphisation.
 
 7. Try breaking up the axiom for matches (on variables?) into one
    axiom for each constructor. E.g. instead of translating
+
    * match x with 0 => t1 | S y => t2 end
+
    to:
+
    * forall x, nat(x) -> (x = 0 /\ F x = t1') \/
 						 (exists y, nat(y) /\ x = S y /\ F x = t2')
+
    use two axioms:
+
    1. F 0 = t1'[0/x]
    2. forall y, nat(y) -> F (S(y)) = t2'[S(y)/x]
+
    This is not always possible if x is a more complex term, but most
    often x is a variable. Note that in point 2 the guard nat(y) should
    be omitted if `opt_closure_guards` is true (this is analogous to
@@ -81,22 +97,26 @@ Research problems
    types. This will also require properly handling sig, sigT, etc.,
    and prod, sum, etc. with propositional arguments. For example, given
 
-```coq
-Definition h (x y z : nat) (p : x = y /\ y = z) : {u : nat | x = u} :=
-  match p with
-  | conj p1 p2 =>
-	exist (fun u => x = u) z (eq_trans p1 p2)
-  end.
-```
+   ```coq
+   Definition h (x y z : nat) (p : x = y /\ y = z) : {u : nat | x = u} :=
+	 match p with
+	 | conj p1 p2 =>
+	   exist (fun u => x = u) z (eq_trans p1 p2)
+	 end.
+   ```
+
    the function `h` has type
 
-```coq
-forall x y z : nat, x = y /\ y = z -> {u : nat | x = u}
-```
+   ```coq
+   forall x y z : nat, x = y /\ y = z -> {u : nat | x = u}
+   ```
 
    It should be translated to a definition of a function `h`
+
    * forall x y z, h(x, y, z) = z
+
    and an axiom derived from the type
+
    * forall x y z, x = y /\ y = z -> x = g(x, y, z)
 
    Currently, no function definition for `h` is generated. Neither is
