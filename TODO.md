@@ -11,9 +11,13 @@ Research problems
    implicit at the Coq kernel level? Yes.
 
 3. Omit (some) type guards when the type may be inferred. For example,
+
    * forall x : nat, Even(x) -> phi
+
    probably may be translated to
+
    * forall x, Even(x) -> phi',
+
    because Even(x) implies nat(x).
 
 4. For reconstruction: look at the inversion (also discrimination,
