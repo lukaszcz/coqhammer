@@ -84,24 +84,24 @@ Definition h (x y z : nat) (p : x = y /\ y = z) : {u : nat | x = u} :=
 	exist (fun u => x = u) z (eq_trans p1 p2)
   end.
 ```
-  the function `h` has type
+   the function `h` has type
 
 ```coq
 forall x y z : nat, x = y /\ y = z -> {u : nat | x = u}
 ```
 
-  It should be translated to a definition of a function `h`
-  * forall x y z, h(x, y, z) = z
-  and an axiom derived from the type
-  * forall x y z, x = y /\ y = z -> x = g(x, y, z)
+   It should be translated to a definition of a function `h`
+   * forall x y z, h(x, y, z) = z
+   and an axiom derived from the type
+   * forall x y z, x = y /\ y = z -> x = g(x, y, z)
 
-  Currently, no function definition for `h` is generated. Neither is
-  the second derived axiom. Only an unusable typing axiom for `h` is
-  generated.
+   Currently, no function definition for `h` is generated. Neither is
+   the second derived axiom. Only an unusable typing axiom for `h` is
+   generated.
 
-  A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
-  but there the goal is only code extraction, so there is no need to
-  generate the axioms derived from types.
+   A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
+   but there the goal is only code extraction, so there is no need to
+   generate the axioms derived from types.
 
 10. Explicitly state the types of non-trivial terms. E.g. if
 	f:nat->nat and 0:nat and (f 0) occurs (in the goal or hypothesis?)
