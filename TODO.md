@@ -117,7 +117,7 @@ Research problems
 
    and an axiom derived from the type
 
-   * forall x y z, x = y /\ y = z -> x = g(x, y, z)
+   * forall x y z, x = y /\ y = z -> x = h(x, y, z)
 
    Currently, no function definition for h is generated. Neither is
    the second derived axiom. Only an unusable typing axiom for h is
