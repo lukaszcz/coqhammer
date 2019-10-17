@@ -8,7 +8,7 @@ Research problems
 2. Omit (some) type arguments (inductive type parameters? implicit
    type arguments?) to polymorphic functions/constructors
    (e.g. cons). Is it possible to determine which arguments are
-   implicit at the Coq kernel level? Yes.
+   implicit at the Coq kernel level? Yes: `Impargs.implicits_of_global`.
 
 3. Omit (some) type guards when the type may be inferred. For example,
 
