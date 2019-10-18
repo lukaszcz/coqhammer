@@ -5,10 +5,20 @@ Research problems
    this will probably require much more than just making boolean
    reflection work, probably including most of the points below.
 
+   Reconstruction with boolean reflection for quantified hypotheses
+   probably requires writing a custom version of the `eapply`
+   tactic. If we're at it, we can include other stuff there. See the
+   smart matching of Matita.
+
 2. Omit (some) type arguments (inductive type parameters? implicit
    type arguments?) to polymorphic functions/constructors
    (e.g. cons). Is it possible to determine which arguments are
-   implicit at the Coq kernel level? Yes: `Impargs.implicits_of_global`.
+   implicit at the Coq kernel level? Yes:
+   `Impargs.implicits_of_global`.
+
+	The easy thing to do first is to just omit the arguments declared
+	as implicit. Then try inductive type parameters? Think about other
+	possibilities.
 
 3. Omit (some) type guards when the type may be inferred. For example,
 
@@ -20,6 +30,9 @@ Research problems
 
    because Even(x) implies nat(x).
 
+   A non-trivial problem is to precisely formulate a general
+   criterion, and prove it correct for a reasonable subset of CIC.
+
 4. For reconstruction: look at the inversion (also discrimination,
    injection -- less useful?) axioms used in the ATP proofs and add
    them to the context before invoking a reconstruction tactic. Or use
@@ -29,6 +42,9 @@ Research problems
    (src/plugin/provers.mli). Also look at the axioms for matches,
    which may sometimes be used by the ATPs to do inversion (see point
    7).
+
+   Try to use even more information from ATP runs. Dig deeper into ATP
+   proofs.
 
 5. Heuristic monomorphisation (instantiation of polymorphic
    definitions with types). It is important to do this on the
@@ -46,9 +62,6 @@ Research problems
 
    * forall x, nat(x) -> phi'.
 
-   Maybe guards of the form T(A,Type) may be omitted in general? In
-   fact, T(x,A) implies T(A,Type): see point 3 above.
-
    The monomorphisation is especially important for higher-order
    statements, whose translations are now not very usable by the
    ATPs. See e.g. the inversion axiom for List.Forall (Hammer_transl
@@ -64,6 +77,13 @@ Research problems
    * forall x, list_nat(x) -> phi'.
 
    This will work well in combination with heuristic monomorphisation.
+
+   The above example of list with nat parameter is simple, but types
+   in Coq can be complicated. Can we do something when some of the
+   type parameters contain occurrences of variables bound externally?
+   For example:
+
+   * forall x y, T(x, A) -> T(y, list (Q x)) -> phi.
 
 7. Try breaking up the axiom for matches (on variables?) into one
    axiom for each constructor. E.g. instead of translating
@@ -86,16 +106,24 @@ Research problems
    omitting type guards for free variables of lambda-lifted
    expressions).
 
+   The above example with nat is simple, but types in Coq can be
+   complicated. Precisely formulate a general criterion together with
+   an algorithm for types satisfying the criterion. Prove that this
+   works for a reasonable subset of CIC.
+
 8. Try giving symbol ordering hints to ATPs. There is a natural order
    on constants: c1 > c2 if transitive-closure(c2 occurs in the
    definition of c1). This ordering, lifted to lexicographic path
    order, seems to work well in the reconstruction tactics. See
    src/lib/lpo.ml and the implementation of rewriting actions in
-   src/tactics/sauto.ml.
+   src/tactics/sauto.ml. Extend this idea, try to make the ordering
+   total, try different orderings.
 
-9. Properly handle case analysis for small propositional inductive
-   types. This will also require properly handling sig, sigT, etc.,
-   and prod, sum, etc. with propositional arguments. For example, given
+9. Properly handle functions which use dependent types in a
+   non-trivial way. Properly handle case analysis for small
+   propositional inductive types. This will also require properly
+   handling sig, sigT, etc., and prod, sum, etc. with propositional
+   arguments. For example, given
 
    ```coq
    Definition h (x y z : nat) (p : x = y /\ y = z) : {u : nat | x = u} :=
@@ -125,15 +153,19 @@ Research problems
 
    A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
    but there the goal is only code extraction, so there is no need to
-   generate the axioms derived from types.
+   generate the axioms derived from types. In other words, in addition
+   to program extraction we need to do specification extraction.
 
 10. Explicitly state the types of non-trivial terms. E.g. if
 	f:nat->nat and 0:nat and (f 0) occurs (in the goal or hypothesis?)
 	then state (f 0):nat as an axiom. More general: consider
-	non-trivial terms as possible dependencies.
+	non-trivial terms as possible premises. This ties in with
+	monomorphisation. What types to choose for instantiating
+	e.g. list? Do machine-learning premise selection with (list nat),
+	(list Z), etc. among premises.
 
 11. Improvements in premise selection: better features, other
-	algorithms? Consider head constants as more important?
+	algorithms? Special status for head constants?
 
 12. Translation to HOL. Factor the translation, including a HOL
 	intermediate stage: Coq -> CIC_0 -> HOL -> applicative FOL ->

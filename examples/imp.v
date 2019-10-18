@@ -50,8 +50,7 @@ Fixpoint asimp (e : aexpr) :=
 
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
-  induction e; ssimpl.
-  hauto using lem_aval_plus.
+  induction e; sauto using lem_aval_plus.
 Qed.
 
 Inductive bexpr :=
@@ -115,11 +114,7 @@ Qed.
 
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
-  induction e; ssimpl.
-  - hauto using lem_bval_not.
-  - hauto using lem_bval_and.
-  - hauto unfolding less.
-  - hauto unfolding less.
+  induction e; sauto using (lem_bval_not, lem_bval_and) unfolding less.
 Qed.
 
 Inductive cmd :=
@@ -151,7 +146,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  sauto. (* 0.65s *)
+  sauto.
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -160,7 +155,7 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  sauto unfolding equiv_cmd. (* 0.75s *)
+  sauto unfolding equiv_cmd.
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
