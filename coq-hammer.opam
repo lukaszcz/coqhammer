@@ -14,7 +14,7 @@ learning from previous proofs with the translation of problems to the
 logics of automated systems and the reconstruction of successfully found proofs.
 """
 
-build: [make "-j%{jobs}%" "plugin"]
+build: [make "plugin"]
 install: [
   [make "install-plugin"]
   [make "test-plugin"] {with-test}
