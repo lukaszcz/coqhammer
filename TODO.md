@@ -57,7 +57,7 @@ Research problems
 6. Optimise type guards for closed parameterised types. For instance,
    forall x : list nat, phi is translated to
 
-   * forall x, t(x, list nat) -> phi',
+   * forall x, T(x, list nat) -> phi',
 
    but should be to
 
