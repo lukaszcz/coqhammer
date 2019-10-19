@@ -5,11 +5,6 @@ Research problems
    this will probably require much more than just making boolean
    reflection work, probably including most of the points below.
 
-   Reconstruction with boolean reflection for quantified hypotheses
-   probably requires writing a custom version of the `eapply`
-   tactic. If we're at it, we can include other stuff there. See the
-   smart matching of Matita.
-
 2. Omit (some) type arguments (inductive type parameters? implicit
    type arguments?) to polymorphic functions/constructors
    (e.g. cons). Is it possible to determine which arguments are
@@ -67,7 +62,7 @@ Research problems
    ATPs. See e.g. the inversion axiom for List.Forall (Hammer_transl
    "List.Forall").
 
-6. Optimise type guards for closed parameterised types. For instance,
+6. Optimise type guards for parameterised types. For instance,
    forall x : list nat, phi is translated to
 
    * forall x, T(x, list nat) -> phi',
@@ -84,6 +79,12 @@ Research problems
    For example:
 
    * forall x y, T(x, A) -> T(y, list (Q x)) -> phi.
+
+   We can, e.g., have an optimised type guard list(Q x, y) or
+   list\_Q(x,y). What are other possibilities? What if T(y, list (Q
+   nat)), maybe then list\_Q\_nat(y)? This problem probably involves
+   much experimentation trying to figure out the right way of doing
+   this.
 
 7. Try breaking up the axiom for matches (on variables?) into one
    axiom for each constructor. E.g. instead of translating
@@ -121,9 +122,8 @@ Research problems
 
 9. Properly handle functions which use dependent types in a
    non-trivial way. Properly handle case analysis for small
-   propositional inductive types. This will also require properly
-   handling sig, sigT, etc., and prod, sum, etc. with propositional
-   arguments. For example, given
+   propositional inductive types. Properly handle sig, sigT, etc., and
+   prod, sum, etc. with propositional arguments. For example, given
 
    ```coq
    Definition h (x y z : nat) (p : x = y /\ y = z) : {u : nat | x = u} :=
@@ -143,18 +143,18 @@ Research problems
 
    * forall x y z, h(x, y, z) = z
 
-   and an axiom derived from the type
+   and a specification axiom derived from the type
 
    * forall x y z, x = y /\ y = z -> x = h(x, y, z)
 
    Currently, no function definition for h is generated. Neither is
-   the second derived axiom. Only an unusable typing axiom for h is
+   the specification axiom. Only an unusable typing axiom for h is
    generated.
 
    A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
    but there the goal is only code extraction, so there is no need to
-   generate the axioms derived from types. In other words, in addition
-   to program extraction we need to do specification extraction.
+   generate the specification axioms derived from types. In addition
+   to program extraction, we need to do *specification extraction*.
 
 10. Explicitly state the types of non-trivial terms. E.g. if
 	f:nat->nat and 0:nat and (f 0) occurs (in the goal or hypothesis?)
@@ -170,6 +170,10 @@ Research problems
 12. Translation to HOL. Factor the translation, including a HOL
 	intermediate stage: Coq -> CIC_0 -> HOL -> applicative FOL ->
 	FOL. Try using higher-order ATPs.
+
+13. Write a custom version of the `eapply` tactic which does
+	unification modulo "simple" (equational?) reasoning. See the smart
+	matching of Matita.
 
 Technical improvements
 ----------------------
