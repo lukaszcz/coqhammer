@@ -34,8 +34,23 @@ Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
   hauto using (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd).
 Qed.
 
+Lemma lem_mult_1 : forall m n k : nat, m * n + k = k + n * m.
+Proof.
+  hauto using (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm).
+Qed.
+
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
   hauto using (Coq.Arith.PeanoNat.Nat.pow_succ_r, Coq.Arith.PeanoNat.Nat.add_1_r, Coq.Arith.PeanoNat.Nat.le_0_l).
+Qed.
+
+Lemma lem_even_or_odd :
+  forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
+Proof.
+  induction n.
+  - sauto.
+  - sintuition.
+    + sauto.
+    + hauto 100 using (@Arith.PeanoNat.Nat.add_succ_l, @Arith.PeanoNat.Nat.add_succ_r, @Arith.PeanoNat.Nat.mul_1_l, @Arith.PeanoNat.Nat.mul_succ_l, @Arith.PeanoNat.Nat.add_0_r) unfolding (@Arith.PeanoNat.Nat.b2n).
 Qed.
 
 Section Sets.
@@ -97,11 +112,6 @@ Proof.
 Qed.
 
 End Lists.
-
-Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
-Proof.
-  hauto using (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm).
-Qed.
 
 Require Import PeanoNat.
 Require Import Psatz.

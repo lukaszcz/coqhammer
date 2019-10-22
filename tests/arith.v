@@ -56,16 +56,10 @@ Lemma even_odd_cor :
   forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
 Proof.
   induction n.
-  ssimpl.
-  simp_hyps.
-  sinvert H.
-  ssimpl.
-  exists (S p).
-  ssimpl.
-(*  Restart.
-  induction n.
-  ssimpl.
-  hammer. *)
+  - sauto.
+  - sintuition.
+    + sauto.
+    + hammer.
 Qed.
 
 Lemma le_double : forall m n:nat, 2 * m <= 2 * n -> m <= n.
