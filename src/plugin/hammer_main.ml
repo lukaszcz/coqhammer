@@ -251,25 +251,19 @@ let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
 let to_constr r =
   match r with
   | VarRef(v) -> Constr.mkVar v
-  | ConstRef(c) ->Constr.mkConst c
+  | ConstRef(c) -> Constr.mkConst c
   | IndRef(i) -> Constr.mkInd i
   | ConstructRef(cr) -> Constr.mkConstruct cr
 
-let get_global s =
-  Nametab.locate (Libnames.qualid_of_string s)
-
-let get_constr s =
-  to_constr (get_global s)
-
 let mk_pair env evmap x y =
-  let pr = get_constr "pair" in
+  let pr = to_constr (Utils.get_global "pair") in
   let tx = get_type_of env evmap x in
   let ty = get_type_of env evmap y in
   Constr.mkApp (pr, [| tx; ty; x; y |])
 
 let rec mk_lst env sigma lst =
   match lst with
-  | [] -> get_constr "Tactics.default"
+  | [] -> to_constr (Utils.get_global "Tactics.default")
   | [h] -> h
   | h :: t -> mk_pair env sigma (mk_lst env sigma t) h
 
@@ -544,7 +538,7 @@ let hammer_features_tac () =
 let hammer_print name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try
-    let glob = get_global name in
+    let glob = Utils.get_global name in
     let (_, (const, opaque, kind, ty, trm)) = hhdef_of_global env sigma glob in
     Msg.notice (Hh_term.string_of_hhterm const ^ " = ");
     Msg.notice (Hh_term.string_of_hhterm (Lazy.force trm));
@@ -557,7 +551,7 @@ let hammer_print name =
 let hammer_transl name0 =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try
-    let glob = get_global name0 in
+    let glob = Utils.get_global name0 in
     let (_, def) = hhdef_of_global env sigma glob in
     let name = Hh_term.get_hhdef_name def in
     Coq_transl.remove_def name;
@@ -594,7 +588,7 @@ let hammer_transl_tac () =
 let hammer_features name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try
-    let glob = get_global name in
+    let glob = Utils.get_global name in
     let (_, def) = hhdef_of_global env sigma glob in
     Msg.notice (Hhlib.sfold (fun x -> x) ", " (Features.get_def_features def))
   with Not_found ->
@@ -603,7 +597,7 @@ let hammer_features name =
 let hammer_features_cached name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try
-    let glob = get_global name in
+    let glob = Utils.get_global name in
     let (_, def) = hhdef_of_global env sigma glob in
     Msg.notice (Hhlib.sfold (fun x -> x) ", " (Features.get_def_features_cached def))
   with Not_found ->
