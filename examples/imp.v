@@ -50,8 +50,7 @@ Fixpoint asimp (e : aexpr) :=
 
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
-  induction e; ssimpl.
-  hauto using lem_aval_plus.
+  induction e; sauto using lem_aval_plus.
 Qed.
 
 Inductive bexpr :=
@@ -115,11 +114,7 @@ Qed.
 
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
-  induction e; ssimpl.
-  - hauto using lem_bval_not.
-  - hauto using lem_bval_and.
-  - hauto unfolding less.
-  - hauto unfolding less.
+  induction e; sauto using (lem_bval_not, lem_bval_and) unfolding less.
 Qed.
 
 Inductive cmd :=
