@@ -3,7 +3,6 @@ open Hammer_errors
 open Util
 open Names
 open Term
-open Globnames
 open Constr
 open Context
 
@@ -36,17 +35,18 @@ let hhterm_of_sort s = match Sorts.family s with
   | InType -> mk_id "$Type"
 
 let hhterm_of_constant c =
-  tuple [mk_id "$Const"; hhterm_of_global (ConstRef c)]
+  tuple [mk_id "$Const"; hhterm_of_global (Names.GlobRef.ConstRef c)]
 
 let hhterm_of_inductive i =
-  tuple [mk_id "$Ind"; hhterm_of_global (IndRef i);
+  tuple [mk_id "$Ind"; hhterm_of_global (Names.GlobRef.IndRef i);
          mk_id (string_of_int (Inductiveops.inductive_nparams (Global.env()) i))]
 
 let hhterm_of_construct cstr =
-  tuple [mk_id "$Construct"; hhterm_of_inductive (fst cstr); hhterm_of_global (ConstructRef cstr)]
+  tuple [mk_id "$Construct"; hhterm_of_inductive (fst cstr);
+         hhterm_of_global (Names.GlobRef.ConstructRef cstr)]
 
 let hhterm_of_var v =
-  tuple [mk_id "$Var"; hhterm_of_global (VarRef v)]
+  tuple [mk_id "$Var"; hhterm_of_global (Names.GlobRef.VarRef v)]
 
 let hhterm_of_intarray a =
   tuple ((mk_id "$IntArray") :: (List.map mk_id (List.map string_of_int (Array.to_list a))))
@@ -129,23 +129,23 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
   let ty = fst (Typeops.type_of_global_in_context env glob_ref) in
   let kind = get_type_of env sigma ty in
   let const = match glob_ref with
-    | ConstRef c -> hhterm_of_constant c
-    | IndRef i   -> hhterm_of_inductive i
-    | ConstructRef cstr -> hhterm_of_construct cstr
-    | VarRef v -> hhterm_of_var v
+    | Names.GlobRef.ConstRef c -> hhterm_of_constant c
+    | Names.GlobRef.IndRef i   -> hhterm_of_inductive i
+    | Names.GlobRef.ConstructRef cstr -> hhterm_of_construct cstr
+    | Names.GlobRef.VarRef v -> hhterm_of_var v
   in
   let filename_aux = match glob_ref with
-    | ConstRef c -> Constant.to_string c
-    | IndRef i   -> MutInd.to_string (fst i)
-    | ConstructRef cstr -> MutInd.to_string ((fst ++ fst) cstr)
-    | VarRef v -> Id.to_string v
+    | Names.GlobRef.ConstRef c -> Constant.to_string c
+    | Names.GlobRef.IndRef i   -> MutInd.to_string (fst i)
+    | Names.GlobRef.ConstructRef cstr -> MutInd.to_string ((fst ++ fst) cstr)
+    | Names.GlobRef.VarRef v -> Id.to_string v
   in
   let term = match glob_ref with
-    | ConstRef c -> lazy (hhproof_of c)
+    | Names.GlobRef.ConstRef c -> lazy (hhproof_of c)
     | _ -> lazy (mk_id "$Axiom")
   in
   let opaque = match glob_ref with
-    | ConstRef c -> Declareops.is_opaque (Global.lookup_constant c)
+    | Names.GlobRef.ConstRef c -> Declareops.is_opaque (Global.lookup_constant c)
     | _ -> true
   in
   let filename =
@@ -250,10 +250,10 @@ let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
 
 let to_constr r =
   match r with
-  | VarRef(v) -> Constr.mkVar v
-  | ConstRef(c) ->Constr.mkConst c
-  | IndRef(i) -> Constr.mkInd i
-  | ConstructRef(cr) -> Constr.mkConstruct cr
+  | Names.GlobRef.VarRef(v) -> Constr.mkVar v
+  | Names.GlobRef.ConstRef(c) -> Constr.mkConst c
+  | Names.GlobRef.IndRef(i) -> Constr.mkInd i
+  | Names.GlobRef.ConstructRef(cr) -> Constr.mkConstruct cr
 
 let get_global s =
   Nametab.locate (Libnames.qualid_of_string s)
@@ -288,13 +288,13 @@ let get_tac_args env sigma deps defs =
         try
           Nametab.locate (Libnames.qualid_of_string s)
         with Not_found ->
-          VarRef(Id.of_string s)
+          Names.GlobRef.VarRef(Id.of_string s)
       end
   in
   let mk_lst = mk_lst env sigma in
   let (deps, defs) = (map_locate deps, map_locate defs) in
-  let filter_vars = List.filter (fun r -> match r with VarRef(_) -> true | _ -> false) in
-  let filter_nonvars = List.filter (fun r -> match r with VarRef(_) -> false | _ -> true) in
+  let filter_vars = List.filter (fun r -> match r with Names.GlobRef.VarRef(_) -> true | _ -> false) in
+  let filter_nonvars = List.filter (fun r -> match r with Names.GlobRef.VarRef(_) -> false | _ -> true) in
   let (vars, deps, defs) = (filter_vars deps, filter_nonvars deps, defs) in
   let map_to_constr = List.map to_constr in
   let (vars, deps, defs) = (map_to_constr vars, map_to_constr deps, map_to_constr defs) in

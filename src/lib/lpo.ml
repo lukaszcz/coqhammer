@@ -36,8 +36,8 @@ let const_gt =
     if not (Hashtbl.mem cache (c1, c2)) then
       begin
         let b =
-          match Global.body_of_constant c1 with
-          | Some b ->
+          match Global.body_of_constant Library.indirect_accessor c1 with
+          | Some (b, _, _) ->
              let consts =
                Utils.fold_constr_ker
                  begin fun _ acc t ->
@@ -47,7 +47,7 @@ let const_gt =
                    | _ -> acc
                  end
                  []
-                 (fst b)
+                 b
              in
              let rec go2 lst =
                match lst with

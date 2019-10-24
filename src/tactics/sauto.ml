@@ -125,8 +125,8 @@ let autorewrite bases =
 (*****************************************************************************************)
 
 let is_simple_unfold c =
-  match Global.body_of_constant c with
-  | Some (b, _) ->
+  match Global.body_of_constant Library.indirect_accessor c with
+  | Some (b, _, _) ->
      begin
        let t = EConstr.of_constr b in
        let body = Utils.drop_all_lambdas Evd.empty t in
@@ -140,8 +140,8 @@ let is_simple_unfold c =
 
 (* -1 if not a case unfold *)
 let case_unfold_cost c =
-  match Global.body_of_constant c with
-  | Some (b, _) ->
+  match Global.body_of_constant Library.indirect_accessor c with
+  | Some (b, _, _) ->
      begin
        let t = EConstr.of_constr b in
        let lambdas = Utils.take_all_lambdas Evd.empty t in

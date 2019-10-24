@@ -1,6 +1,5 @@
 open Util
 open Names
-open Globnames
 open Ltac_plugin
 
 let intern_constr env evd cexpr =
@@ -10,10 +9,10 @@ let intern_constr env evd cexpr =
 
 let to_constr r =
   match r with
-  | VarRef(v) -> EConstr.mkVar v
-  | ConstRef(c) -> EConstr.mkConst c
-  | IndRef(i) -> EConstr.mkInd i
-  | ConstructRef(cr) -> EConstr.mkConstruct cr
+  | Names.GlobRef.VarRef(v) -> EConstr.mkVar v
+  | Names.GlobRef.ConstRef(c) -> EConstr.mkConst c
+  | Names.GlobRef.IndRef(i) -> EConstr.mkInd i
+  | Names.GlobRef.ConstructRef(cr) -> EConstr.mkConstruct cr
 
 let get_global s =
   Nametab.locate (Libnames.qualid_of_string s)
@@ -29,16 +28,16 @@ let get_constr s =
 
 let get_inductive s =
   match get_global s with
-  | IndRef(i) -> i
+  | Names.GlobRef.IndRef(i) -> i
   | _ -> failwith "get_inductive: not an inductive type"
 
 let get_const s =
   match get_global s with
-  | ConstRef(c) -> c
+  | Names.GlobRef.ConstRef(c) -> c
   | _ -> failwith "get_const: not a constant"
 
 let get_ind_name ind =
-  Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr (IndRef ind)))
+  Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr (Names.GlobRef.IndRef ind)))
 
 let get_ind_nparams ind =
   let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
