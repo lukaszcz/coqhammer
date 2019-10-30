@@ -101,16 +101,12 @@ Research problems
    1. F 0 = t1'[0/x]
    2. forall y, nat(y) -> F (S(y)) = t2'[S(y)/x]
 
-   This is not always possible if x is a more complex term, but most
-   often x is a variable. Note that in point 2 the guard nat(y) should
-   be omitted if `opt_closure_guards` is true (this is analogous to
-   omitting type guards for free variables of lambda-lifted
-   expressions).
+   Note that in point 2 the guard nat(y) should be omitted if
+   `opt_closure_guards` is true (this is analogous to omitting type
+   guards for free variables of lambda-lifted expressions).
 
-   The above example with nat is simple, but types in Coq can be
-   complicated. Precisely formulate a general criterion together with
-   an algorithm for types satisfying the criterion. Prove that this
-   works for a reasonable subset of CIC.
+   This is related to program extraction. See Pierre Letouzey’s
+   Ph.D. thesis.
 
 8. Try giving symbol ordering hints to ATPs. There is a natural order
    on constants: c1 > c2 if transitive-closure(c2 occurs in the
