@@ -1,4 +1,4 @@
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
 Require Import List.
 
 Hammer_version.
@@ -66,11 +66,9 @@ Lemma lem_forall_conj {A : Type} (l : list A) (f g : A -> A) (P : A -> Prop) :
   Forall (fun x => P (f x)) l -> Forall (fun x => P (g x)) l -> Forall (fun x => P (g x) /\ P (f x)) l.
 Proof.
   induction l.
-  ycrush.
+  strivial.
   intros H1 H2.
   inversion_clear H1.
   inversion_clear H2.
-  apply Forall_cons.
-  eauto.
-  hammer.
+  apply Forall_cons; hammer.
 Qed.

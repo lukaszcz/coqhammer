@@ -1,4 +1,4 @@
-From Hammer Require Import Hammer Reconstr.
+From Hammer Require Import Hammer.
 
 Hammer_version.
 Hammer_objects.
@@ -45,7 +45,7 @@ Lemma lem_sets_2 :
   (forall A B, Subset A B <-> forall X, In X A -> In X B) ->
   (forall A, Seteq (Sum A A) A).
 Proof.
-  yelles 3.
+  hammer.
 Qed.
 
 End Sets.
