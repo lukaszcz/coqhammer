@@ -2,6 +2,7 @@
 *.d
 *.glob
 *.vo
+*.vos
 *~
 .lia.cache
 predict
