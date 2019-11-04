@@ -187,7 +187,7 @@ let map_fold_constr f acc evd t =
       (ac1, Array.of_list (List.rev lst))
     in
     match kind evd t with
-    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ ->
+    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
     | Cast (ty1,ck,ty2) ->
        let (acc1, ty1') = hlp m acc ty1 in
@@ -251,7 +251,7 @@ let map_fold_constr_ker f acc t =
       (ac1, Array.of_list (List.rev lst))
     in
     match kind t with
-    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ ->
+    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
     | Cast (ty1,ck,ty2) ->
        let (acc1, ty1') = hlp m acc ty1 in
