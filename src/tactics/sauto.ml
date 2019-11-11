@@ -374,20 +374,25 @@ let simple_inverting opts =
        simple_invert_tac
 
 let simplify opts =
-  simp_hyps_tac <~>
-    opt opts.s_bnat_reflect bnat_reflect_tac <~>
-    opts.s_simpl_tac <~>
-    Tactics.simpl_in_concl <~>
-    (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl_tac) <~>
-    opt opts.s_eager_inverting (eager_inverting opts) <~>
-    simple_splitting opts <~>
-    autorewriting opts <~>
-    case_splitting opts <~>
-    opt opts.s_simple_inverting (simple_inverting opts) <~>
-    opt opts.s_forwarding forwarding_tac
-(* NOTE: it is important that forwarding is at the end, otherwise the
-   tactic may loop: "repeat (progress simple_inverting; forwarding)"
-   may loop *)
+  let simpl1 =
+    simp_hyps_tac <~>
+      opt opts.s_bnat_reflect bnat_reflect_tac <~>
+      opts.s_simpl_tac <~>
+      Tactics.simpl_in_concl <~>
+      (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl_tac) <~>
+      simple_splitting opts <~>
+      autorewriting opts <~>
+      case_splitting opts <~>
+      opt opts.s_simple_inverting (simple_inverting opts) <~>
+      opt opts.s_forwarding forwarding_tac
+  (* NOTE: it is important that forwarding is at the end, otherwise the
+     tactic may loop: "repeat (progress simple_inverting; forwarding)"
+     may loop; it may also loop now, but that's less common *)
+  in
+  if opts.s_eager_inverting then
+    eager_inverting opts <*> simpl1
+  else
+    simpl1
 
 let simplify_concl opts =
   (Tactics.simpl_in_concl <~> autorewriting opts) <*>

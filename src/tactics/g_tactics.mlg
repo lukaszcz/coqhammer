@@ -30,8 +30,9 @@ END
 
 TACTIC EXTEND Hammer_sauto_gen
 | [ "sauto_gen" int_or_var_opt(n) ] -> { sauto default_s_opts (get_opt n default_sauto_limit) }
-| [ "sauto_gen" int_or_var_opt(n) "with" ne_preident_list(bases) "using" constr(lemmas) "unfolding" constr(unfoldings)
-      "inverting" constr(inverting) "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> {
+| [ "sauto_gen" int_or_var_opt(n) "with" ne_preident_list(bases) "using" constr(lemmas)
+      "unfolding" constr(unfoldings) "inverting" constr(inverting) "ctrs" constr(ctrs)
+      "opts" ne_preident_list(ropts) ] -> {
   if lemmas = Utils.get_constr "Tactics.default" then
     sauto (get_s_opts ropts bases unfoldings inverting ctrs) (get_opt n default_sauto_limit)
   else
