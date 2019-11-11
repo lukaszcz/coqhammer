@@ -111,20 +111,22 @@ Ltac tryunfold x :=
 
 Ltac fullunfold h := unfold h in *.
 
-Ltac einst e :=
+Ltac fsolve := solve [ eassumption | symmetry; eassumption | econstructor ].
+
+Ltac vinst e :=
   let tpe := type of e
   in
   lazymatch tpe with
-    | ?T -> ?Q =>
-      generalize e
-    | forall x : ?T, _ =>
-      let v := fresh "v" in
-      evar (v : T);
-      let v2 := eval unfold v in v in
-      clear v;
-      einst (e v2)
-    | _ =>
-      generalize e
+  | ?T -> ?Q =>
+    fail
+  | forall x : ?T, _ =>
+    let v := fresh "v" in
+    evar (v : T);
+    let v2 := eval unfold v in v in
+    clear v;
+    vinst (e v2)
+  | _ =>
+    generalize e
   end.
 
 Ltac sdestruct t :=
@@ -337,15 +339,15 @@ Ltac esimp_hyps :=
 Ltac exsimpl := (* TODO: move to plugin *)
   match goal with
     | [ H : forall (x : ?T1), exists a, _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H; intro; intro
+      vinst H; clear H; intro H; elim H; clear H; intro; intro
     | [ H : forall (x : ?T1) (y : ?T2), exists a, _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H; intro; intro
+      vinst H; clear H; intro H; elim H; clear H; intro; intro
     | [ H : forall (x : ?T1) (y : ?T2) (z : ?T3), exists a, _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H; intro; intro
+      vinst H; clear H; intro H; elim H; clear H; intro; intro
     | [ H : forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4), exists a, _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H; intro; intro
+      vinst H; clear H; intro H; elim H; clear H; intro; intro
     | [ H : forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5), exists a, _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H; intro; intro
+      vinst H; clear H; intro H; elim H; clear H; intro; intro
   end.
 
 Ltac isplit :=
@@ -362,15 +364,15 @@ Ltac isplit :=
     | [ |- context[match ?X with _ => _ end] ] => sdestruct X
     | [ H : context[match ?X with _ => _ end] |- _ ] => sdestruct X
     | [ H : forall (x : ?T1), _ \/ _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H
+      vinst H; clear H; intro H; elim H; clear H
     | [ H : forall (x : ?T1) (y : ?T2), _ \/ _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H
+      vinst H; clear H; intro H; elim H; clear H
     | [ H : forall (x : ?T1) (y : ?T2) (z : ?T3), _ \/ _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H
+      vinst H; clear H; intro H; elim H; clear H
     | [ H : forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4), _ \/ _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H
+      vinst H; clear H; intro H; elim H; clear H
     | [ H : forall (x : ?T1) (y : ?T2) (z : ?T3) (u : ?T4) (v : ?T5), _ \/ _ |- _ ] =>
-      einst H; clear H; intro H; elim H; clear H
+      vinst H; clear H; intro H; elim H; clear H
   end.
 
 Ltac trysolve :=
@@ -393,17 +395,17 @@ Ltac trysolve :=
 Ltac isolve :=
   let simp := intros; simp_hyps; repeat exsimpl
   in
-  let rec msolve :=
-      simp; repeat (progress isplit; simp);
+  let rec msolve tt :=
+      simp; repeat (progress isplit; guard numgoals < 20; simp);
       lazymatch goal with
         | [ H : False |- _ ] => elim H
         | _ =>
-          solve [ trysolve | left; msolve | right; msolve |
-                  eexists; msolve ]
+          solve [ trysolve | left; msolve tt | right; msolve tt |
+                  eexists; msolve tt ]
                 (* TODO: move to plugin, generalize to applying non-recursive constructors *)
       end
   in
-  msolve.
+  msolve tt.
 
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
@@ -471,8 +473,6 @@ Ltac generalizing :=
   repeat match goal with
            | [ H : _ |- _ ] => generalize H; clear H
          end.
-
-Ltac fsolve := solve [ eassumption | symmetry; eassumption | econstructor ].
 
 Ltac full_inst e :=
   let tpe := type of e
@@ -631,6 +631,12 @@ Tactic Notation "hauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts default); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts default); dsolve.
+
+Tactic Notation "hprover" :=
+  unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert); dsolve.
+Tactic Notation "hprover" int_or_var(i) :=
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert); dsolve.
+
 
 Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
 Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.
