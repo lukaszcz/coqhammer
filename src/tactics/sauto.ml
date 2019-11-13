@@ -283,9 +283,22 @@ let is_equality evd t =
 
 (*****************************************************************************************)
 
+let rec brepeat n t =
+  if n = 0 then
+    Proofview.tclUNIT ()
+  else
+    Proofview.tclINDEPENDENT begin
+      Proofview.tclIFCATCH t
+        (fun () -> Proofview.tclCHECKINTERRUPT <*> brepeat (n - 1) t)
+        (fun e -> Tacticals.New.catch_failerror e <*> Proofview.tclUNIT ())
+    end
+
+let repeat t =
+  brepeat 8 (Tacticals.New.tclPROGRESS t)
+
 let repeat2 tac1 tac2 =
   Tacticals.New.tclTHEN tac1
-    (Tacticals.New.tclREPEAT
+    (repeat
        (Tacticals.New.tclTHEN (Tacticals.New.tclPROGRESS tac2) tac1))
 
 let (<~>) = repeat2
@@ -304,6 +317,23 @@ let rec repeat_when p f =
     in
     go (Utils.get_hyps gl)
   end
+
+let rec do_when p f forbidden_ids =
+  Proofview.Goal.enter begin fun gl ->
+    let evd = Proofview.Goal.sigma gl in
+    let rec go hyps =
+      match hyps with
+      | [] -> Tacticals.New.tclIDTAC
+      | (id, hyp) :: hyps' ->
+         if not (List.mem id forbidden_ids) && p evd hyp then
+           f id <*> do_when p f (id :: forbidden_ids)
+         else
+           go hyps'
+    in
+    go (Utils.get_hyps gl)
+  end
+
+let do_when p f = do_when p f []
 
 let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 
@@ -346,7 +376,7 @@ let eager_inverting opts =
   match opts.s_inversions with
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
-     repeat_when
+     do_when
        begin fun evd hyp ->
          let (head, args) = Utils.destruct_app evd hyp in
          let open Constr in
