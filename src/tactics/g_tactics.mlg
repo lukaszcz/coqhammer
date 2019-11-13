@@ -42,6 +42,12 @@ TACTIC EXTEND Hammer_sauto_gen
 }
 END
 
+TACTIC EXTEND Hammer_sauto_actions
+| [ "sauto_actions" ] -> {
+  print_actions default_s_opts
+}
+END
+
 VERNAC COMMAND EXTEND Hammer_shint_unfold CLASSIFIED AS SIDEFF
 | [ "Tactics" "Hint" "Unfold" ident(id) ] -> {
   add_unfold_hint (Utils.get_const (Id.to_string id))
