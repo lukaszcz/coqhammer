@@ -25,7 +25,6 @@ src/plugin/features.mli
 src/plugin/features.ml
 src/plugin/provers.mli
 src/plugin/provers.ml
-src/plugin/partac.ml
 src/plugin/hammer_main.ml
 src/plugin/g_hammer.mlg
 src/plugin/hammer_plugin.mlpack
