@@ -347,14 +347,17 @@ let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 let autorewriting opts = autorewrite opts.s_rew_bases
 
 let rec simple_splitting opts =
-  Proofview.Goal.enter begin fun gl ->
-    let goal = Proofview.Goal.concl gl in
-    let evd = Proofview.Goal.sigma gl in
-    if is_simple_split opts evd goal then
-      Tactics.constructor_tac true None 1 NoBindings <*>
-        Tactics.simpl_in_concl <*> simple_splitting opts
-    else
-      Tacticals.New.tclIDTAC
+  if opts.s_simple_splits = SNone then
+    Proofview.tclUNIT ()
+  else
+    Proofview.Goal.enter begin fun gl ->
+      let goal = Proofview.Goal.concl gl in
+      let evd = Proofview.Goal.sigma gl in
+      if is_simple_split opts evd goal then
+        Tactics.constructor_tac true None 1 NoBindings <*>
+          Tactics.simpl_in_concl <*> simple_splitting opts
+      else
+        Tacticals.New.tclIDTAC
   end
 
 let case_splitting opts =
@@ -420,14 +423,11 @@ let simplify opts =
       simple_splitting opts <~>
       autorewriting opts <~>
       case_splitting opts <~>
-      opt opts.s_simple_inverting (simple_inverting opts) <~>
-      opt opts.s_forwarding forwarding_tac
-  (* NOTE: it is important that forwarding is at the end, otherwise the
-     tactic may loop: "repeat (progress simple_inverting; forwarding)"
-     may loop; it may also loop now, but that's less common *)
+      opt opts.s_eager_inverting (eager_inverting opts) <~>
+      opt opts.s_simple_inverting (simple_inverting opts)
   in
-  if opts.s_eager_inverting then
-    eager_inverting opts <*> simpl1
+  if opts.s_forwarding then
+    simpl1 <*> Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS forwarding_tac <*> simpl1)
   else
     simpl1
 
