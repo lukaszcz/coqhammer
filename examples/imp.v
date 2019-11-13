@@ -175,7 +175,7 @@ Lemma lem_big_step_deterministic :
   forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
   intros c s s1 s2 H; revert s2.
-  induction H; scrush. (* 3.7s *)
+  induction H; scrush. (* 2s *)
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=
