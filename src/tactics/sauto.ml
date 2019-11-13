@@ -441,20 +441,21 @@ let eval_hyp evd (id, hyp) =
   let (prods, head, args) = Utils.destruct_prod evd hyp in
   let app = EConstr.mkApp (head, Array.of_list args) in
   let n = List.length prods in
-  let (num_subgoals, num_dangling_evars, _) =
-    List.fold_left
-      begin fun (m, m', k) (name, _) ->
-        if Context.(name.binder_name) = Name.Anonymous then
-          (m + 1, m', k - 1)
-        else
-          if Utils.rel_occurs evd app [k] then
-            (m, m', k - 1)
-          else
-            (m, m' + 1, k - 1)
-      end
-      (0, 0, n)
-      prods
+  let rec go t m m' k =
+    let open Constr in
+    let open EConstr in
+    match kind evd t with
+    | Prod (na, ty, body) ->
+       if not (Utils.rel_occurs evd body [1]) then
+         go body (m + 1) m' (k - 1)
+       else
+         if Utils.rel_occurs evd app [k] then
+           go body m m' (k - 1)
+         else
+           go body m (m' + 1) (k - 1)
+    | _ -> (m, m')
   in
+  let (num_subgoals, num_dangling_evars) = go hyp 0 0 n in
   (id, hyp, n + num_subgoals * 10 + num_dangling_evars * 10, num_subgoals, (prods, head, args))
 
 let hyp_cost evd hyp =
