@@ -8,6 +8,7 @@ src/lib/hhutils.ml
 src/lib/hhlib.ml
 src/lib/lpo.mli
 src/lib/lpo.ml
+src/lib/partac.ml
 src/lib/g_hammer_lib.mlg
 src/lib/hammer_lib.mllib
 src/tactics/sauto.mli

@@ -653,7 +653,7 @@ Tactic Notation "lauto" "unfolding" constr(lst2) :=
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 
-Tactic Notation "hprover" := lauto.
+Tactic Notation "hprover" := partac [ lauto | hauto | lauto 4000 | lauto 16000 ].
 
 Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
 Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.
