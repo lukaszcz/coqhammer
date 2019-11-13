@@ -89,6 +89,7 @@ let get_s_opts ropts bases unfoldings inverting ctrs =
   let get_ropt opts ropt =
     match ropt with
     | "no_forward" -> { opts with s_forwarding = false }
+    | "no_simple_split" -> { opts with s_simple_splits = SNone }
     | "no_simple_invert" -> { opts with s_simple_inverting = false }
     | "no_eager_invert" -> { opts with s_eager_inverting = false }
     | "no_reflect" -> { opts with s_bnat_reflect = false }
