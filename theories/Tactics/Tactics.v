@@ -1,4 +1,4 @@
-(* Coq v8.9 required *)
+(* Coq >= 8.9 required *)
 (* author: Lukasz Czajka *)
 (* This file contains reconstruction tactics for CoqHammer. *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
@@ -50,9 +50,12 @@ Ltac notHyp P :=
     | _ => idtac
   end.
 
-Ltac noteHyp P :=
-  match goal with
-    | [ H : ?P1 |- _ ] => unify P P1; fail 1
+Ltac notTrivial P :=
+  lazymatch P with
+    | True => fail
+    | ?A = ?A => fail
+    | ?A -> ?A => fail
+    | ?A -> ?B = ?B => fail
     | _ => idtac
   end.
 
@@ -177,8 +180,8 @@ with simp_hyp H :=
       try simp_hyp H1;
       try simp_hyp H2
     | ?A /\ ?B -> ?C => cut (A -> B -> C);
-                                    [ clear H; sintro
-                                    | intro; intro; apply H; split; assumption ]
+                        [ clear H; sintro
+                        | intro; intro; apply H; split; assumption ]
     | ?A = ?A -> ?B => cut B; [ clear H; sintro | apply H; reflexivity ]
     | ?A -> ?A -> ?B => cut (A -> B); [ clear H; sintro | intro; apply H; assumption ]
     | ?A \/ ?A => cut A; [ clear H; sintro | elim H; intro; assumption ]
@@ -557,8 +560,9 @@ Ltac forward e :=
     fwd e; cbn;
     match goal with
     | [ |- ?P -> _ ] =>
-      noEvars P; notHyp P;
-      let H := fresh "H" in intro H; move H at top
+      notTrivial P; noEvars P; notHyp P;
+      let H := fresh "H" in
+      intro H; move H at top
     end
   end.
 
