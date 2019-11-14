@@ -49,7 +49,7 @@ let default_s_opts = {
 let logic_constants = [ Utils.get_const "iff"; Utils.get_const "not" ]
 let logic_inductives = [ Utils.get_inductive "and"; Utils.get_inductive "or"; Utils.get_inductive "ex";
                          Utils.get_inductive "prod"; Utils.get_inductive "sumbool"; Utils.get_inductive "sig";
-                         Utils.get_inductive "sum"; Utils.get_inductive "sigT" ]
+                         Utils.get_inductive "sum"; Utils.get_inductive "sigT"; Utils.get_inductive "False" ]
 
 let unfolding_hints = ref logic_constants
 let constructor_hints = ref logic_inductives
