@@ -114,8 +114,6 @@ Ltac tryunfold x :=
 
 Ltac fullunfold h := unfold h in *.
 
-Ltac fsolve := solve [ eassumption | symmetry; eassumption | econstructor ].
-
 Ltac vinst e :=
   let tpe := type of e
   in
@@ -477,32 +475,38 @@ Ltac generalizing :=
            | [ H : _ |- _ ] => generalize H; clear H
          end.
 
-Ltac full_inst e :=
+Ltac fsolve := solve [ eassumption | symmetry; eassumption | econstructor ].
+
+Ltac full_inst e tac :=
   let tpe := type of e
   in
   lazymatch tpe with
-    | ?T -> ?Q =>
+  | ?T -> ?Q =>
+    cut T; [
       let H := fresh "H" in
-      assert (H : T); [ try fsolve | full_inst (e H); clear H ]
-    | forall x : ?T, _ =>
-      let v := fresh "v" in
-      evar (v : T);
-      let v2 := eval unfold v in v in
-      clear v;
-      full_inst (e v2);
-      try match goal with
-          | [ y : T |- _ ] => unify y v2
-          end
-    | _ =>
-      generalize e
+      intro H; full_inst (e H) tac; clear H
+    | try fsolve ]
+  | forall x : ?T, _ =>
+    let v := fresh "v" in
+    evar (v : T);
+    let v2 := (eval unfold v in v) in
+    clear v;
+    full_inst (e v2) tac;
+    try match goal with
+        | [ y : T |- _ ] => unify y v2
+        end
+  | _ =>
+    generalize e; tac tt; try fsolve
   end.
 
 Ltac sinvert H :=
-  lazymatch type of H with
-  | _ -> _ =>
-    full_inst H;
+  let intro_invert tt :=
     let H1 := fresh "H" in
     intro H1; inversion H1; try subst; try clear H1
+  in
+  lazymatch type of H with
+  | _ -> _ =>
+    full_inst H intro_invert
   | _ =>
     lazymatch goal with
     | [ |- context[H] ] => destruct H
@@ -653,7 +657,9 @@ Tactic Notation "lauto" "unfolding" constr(lst2) :=
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 
-Tactic Notation "hprover" := partac [ lauto | hauto | lauto 4000 | lauto 16000 ].
+Tactic Notation "hprover" := time solve [ lauto ].
+
+(* Tactic Notation "hprover" := partac [ lauto | hauto | lauto 4000 | lauto 16000 ]. *)
 
 Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
 Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.
