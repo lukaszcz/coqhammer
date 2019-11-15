@@ -50,6 +50,11 @@ Ltac notHyp P :=
     | _ => idtac
   end.
 
+Ltac isProp t :=
+  lazymatch type of t with
+    | Prop => idtac
+  end.
+
 Ltac notTrivial P :=
   lazymatch P with
     | True => fail
@@ -320,7 +325,7 @@ Ltac simp_hyps :=
            | [ H2 : ?A -> ?B, H1 : ?A |- _ ] =>
              assert B by (apply H2; exact H1); clear H2
            | [ H1 : ?P, H2 : ?P |- _ ] =>
-             clear H2 || clear H1
+             isProp P; clear H2 || clear H1
            | [ H : _ |- _ ] =>
              simp_hyp H
          end.
