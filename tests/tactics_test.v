@@ -83,6 +83,39 @@ Qed.
 
 End Sets.
 
+Section FOFProblem1.
+
+Variable Universe : Set.
+
+Variable r : Universe -> Prop.
+Variable q : Universe -> Universe -> Prop.
+Variable p : Universe -> Prop.
+
+Variable axiom1_1 : (forall X : Universe, (p X -> (r X \/ (exists Y : Universe, q X Y)))).
+Variable axiom2_2 : (forall X : Universe, (r X -> ~((exists X : Universe, p X)))).
+Variable axiom3_3 : (exists X : Universe, p X).
+
+Theorem con_4 : (exists X : Universe, (exists Y : Universe, q X Y)).
+Proof.
+  lauto.
+Qed.
+
+End FOFProblem1.
+
+Section FOFProblem2.
+
+Variable Universe : Set.
+Variable UniverseElement : Universe.
+
+Variable a_ : Universe -> Universe -> Prop.
+
+Theorem prove_this_1 : (forall X : Universe, (exists Y : Universe, (a_ X Y /\ a_ Y Y))) -> (exists Z : Universe, a_ Z Z).
+Proof.
+  sauto.
+Qed.
+
+End FOFProblem2.
+
 Require Import List.
 
 Section Lists.
