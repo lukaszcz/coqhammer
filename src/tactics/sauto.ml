@@ -69,7 +69,8 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActInvert of Id.t |
-        ActUnfold of Constant.t | ActCaseUnfold of Constant.t | ActConstructor | ActIntro
+        ActInvertClear of Id.t | ActUnfold of Constant.t | ActCaseUnfold of Constant.t |
+            ActConstructor | ActIntro
 
 let action_to_string act =
   match act with
@@ -77,6 +78,7 @@ let action_to_string act =
   | ActRewriteLR id -> "rewrite -> " ^ Id.to_string id
   | ActRewriteRL id -> "rewrite <- " ^ Id.to_string id
   | ActInvert id -> "invert " ^ Id.to_string id
+  | ActInvertClear id -> "invert & clear " ^ Id.to_string id
   | ActUnfold c -> "unfold " ^ Constant.to_string c
   | ActCaseUnfold c -> "case-unfold " ^ Constant.to_string c
   | ActConstructor -> "constructor"
@@ -557,9 +559,10 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
                         ctrs)
        in
        let deps = if deps = num_ctrs then deps - 1 else deps in
+       let b_has_fvars = List.fold_left (fun acc x -> acc || Utils.has_fvars evd x) false args in
        [(cost + 40 + if b_arg_dep then deps * 10 else num_ctrs * 10),
         (if b_arg_dep then num_subgoals + max deps 1 else num_subgoals + num_ctrs),
-        ActInvert id]
+        if b_has_fvars then ActInvert id else ActInvertClear id]
      else
        []
   | _ ->
@@ -701,6 +704,8 @@ and apply_actions opts n actions hyps visited =
             continue n' (erewrite false id <*> simplify_concl opts) acts
          | ActInvert id ->
             cont (sinvert_tac id <*> start_search opts n') acts
+         | ActInvertClear id ->
+            cont (sinvert_tac id <*> Tacticals.New.tclTRY (Tactics.clear [id]) <*> start_search opts n') acts
          | ActUnfold c ->
             continue n' (Tacticals.New.tclPROGRESS (unfold c) <*> simplify_concl opts) acts
          | ActCaseUnfold c ->
