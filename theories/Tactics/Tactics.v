@@ -663,7 +663,8 @@ Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 
 Tactic Notation "hprover" :=
-  time solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 ].
+  time solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 |
+               lauto 4000000 | lauto 12000000 ].
 
 (* Tactic Notation "hprover" := partac [ lauto | hauto | lauto 4000 | lauto 16000 ]. *)
 
