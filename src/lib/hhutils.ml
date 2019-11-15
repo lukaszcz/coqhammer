@@ -315,6 +315,22 @@ let rel_occurs evd t lst =
     evd
     t
 
+let has_fvars evd t =
+  let open Constr in
+  let open EConstr in
+  try
+    fold_constr
+      begin fun n b x ->
+        match kind evd x with
+        | Rel j when j > n -> raise Exit
+        | _ -> b
+      end
+      false
+      evd
+      t
+  with Exit ->
+    true
+
 let do_shift evd k t =
   let open Constr in
   let open EConstr in

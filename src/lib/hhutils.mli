@@ -74,6 +74,8 @@ val fold_constr_ker : (int -> 'a -> Constr.t -> 'a) -> 'a -> Constr.t -> 'a
 (* De Bruijn indices in Rel are 1-based *)
 val rel_occurs : Evd.evar_map -> EConstr.t -> int list -> bool
 
+val has_fvars : Evd.evar_map -> EConstr.t -> bool
+
 val shift_binders_down : Evd.evar_map -> int -> EConstr.t -> EConstr.t
 
 val shift_binders_up : Evd.evar_map -> int -> EConstr.t -> EConstr.t
