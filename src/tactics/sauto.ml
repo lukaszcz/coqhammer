@@ -212,6 +212,25 @@ let is_constr_non_recursive ind t =
     Evd.empty
     t2
 
+let has_dangling_evars evd t =
+  let (prods, head, args) = Utils.destruct_prod evd t in
+  let app = EConstr.mkApp (head, Array.of_list args) in
+  let rec go t k =
+    let open Constr in
+    let open EConstr in
+    match kind evd t with
+    | Prod (na, ty, body) ->
+       if not (Utils.rel_occurs evd body [1]) then
+         go body (k - 1)
+       else if Utils.rel_occurs evd app [k] then
+         go body (k - 1)
+       else
+         true
+    | _ ->
+       false
+  in
+  go t (List.length prods)
+
 (* check if the inductive type is non-recursive with at most two
    constructors *)
 let is_eager_ind ind =
@@ -223,11 +242,11 @@ let is_eager_ind ind =
   | _ -> false
 
 (* check if the inductive type is non-recursive with exactly one
-   constructor *)
+   constructor and no dangling evars *)
 let is_simple_ind ind =
   let cstrs = Utils.get_ind_constrs ind in
   match cstrs with
-  | [ t ] -> is_constr_non_recursive ind t
+  | [ t ] -> is_constr_non_recursive ind t && not (has_dangling_evars Evd.empty (EConstr.of_constr t))
   | _ -> false
 
 let is_simple_split opts evd t =
