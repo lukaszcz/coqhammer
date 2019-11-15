@@ -47,7 +47,7 @@ Lemma lem_even_or_odd :
   forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
 Proof.
   induction n.
-  - sauto.
+  - ssolve.
   - sintuition.
     + sauto.
     + hauto 100 using (@Arith.PeanoNat.Nat.add_succ_l, @Arith.PeanoNat.Nat.add_succ_r, @Arith.PeanoNat.Nat.mul_1_l, @Arith.PeanoNat.Nat.mul_succ_l, @Arith.PeanoNat.Nat.add_0_r) unfolding (@Arith.PeanoNat.Nat.b2n).
@@ -97,7 +97,7 @@ Variable axiom3_3 : (exists X : Universe, p X).
 
 Theorem con_4 : (exists X : Universe, (exists Y : Universe, q X Y)).
 Proof.
-  lauto.
+  hauto.
 Qed.
 
 End FOFProblem1.
