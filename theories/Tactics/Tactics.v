@@ -337,7 +337,7 @@ Ltac esimp_hyps :=
            unify A1 A2; notHyp B;
            assert B by (apply H2; exact H1); clear H2
          | [ H1 : ?P, H2 : ?P |- _ ] =>
-           clear H2 || clear H1
+           isProp P; clear H2 || clear H1
          | [ H : _ |- _ ] =>
            simp_hyp H
          end.
