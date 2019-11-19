@@ -50,6 +50,12 @@ Ltac notHyp P :=
     | _ => idtac
   end.
 
+Ltac noteHyp P :=
+  match goal with
+    | [ H : ?P1 |- _ ] => unify P P1; fail 1
+    | _ => idtac
+  end.
+
 Ltac isProp t :=
   lazymatch type of t with
     | Prop => idtac
@@ -521,6 +527,42 @@ Ltac sinvert H :=
     end
   end; cbn.
 
+Ltac full_einst e tac :=
+  let tpe := type of e
+  in
+  lazymatch tpe with
+  | ?T -> ?Q =>
+    cut T; [
+      let H := fresh "H" in
+      intro H; full_einst (e H) tac; clear H
+    | try fsolve ]
+  | forall x : ?T, _ =>
+    let v := fresh "v" in
+    evar (v : T);
+    let v2 := (eval unfold v in v) in
+    clear v;
+    full_einst (e v2) tac
+  | _ =>
+    generalize e; tac tt; try fsolve
+  end.
+
+Ltac seinvert H :=
+  let intro_invert tt :=
+    let H1 := fresh "H" in
+    intro H1; inversion H1; try subst; try clear H1
+  in
+  lazymatch type of H with
+  | _ -> _ =>
+    full_einst H intro_invert
+  | _ =>
+    lazymatch goal with
+    | [ |- context[H] ] => destruct H
+    | [ |- _ ] =>
+      let ty := type of H in
+      inversion H; try subst; tryif clear H then noteHyp ty else idtac
+    end
+  end; cbn.
+
 Ltac einster e tac :=
   let tpe := type of e
   in
@@ -662,9 +704,16 @@ Tactic Notation "lauto" "unfolding" constr(lst2) :=
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 
-Tactic Notation "hprover" :=
+Tactic Notation "leauto" int_or_var(i) :=
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+
+(* Tactic Notation "hprover" :=
   time solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 |
-               lauto 4000000 | lauto 12000000 ].
+               lauto 400000 | lauto 1200000 | lauto 4000000 | lauto 12000000 ]. *)
+
+Tactic Notation "hprover" :=
+  time solve [ leauto 200 | leauto 1000 | leauto 4000 | leauto 12000 | leauto 40000 | leauto 120000 |
+               leauto 400000 | leauto 1200000 | leauto 4000000 | leauto 12000000 ].
 
 (* Tactic Notation "hprover" := partac [ lauto | hauto | lauto 4000 | lauto 16000 ]. *)
 
