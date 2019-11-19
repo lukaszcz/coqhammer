@@ -100,6 +100,7 @@ let erewrite l2r id =
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
 let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
+let seinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
@@ -121,6 +122,12 @@ let autorewrite bases =
   Autorewrite.auto_multi_rewrite
     bases
     { onhyps = None; concl_occs = AllOccurrences }
+
+let sinvert opts id =
+  if opts.s_exhaustive then
+    seinvert_tac id
+  else
+    sinvert_tac id
 
 (*****************************************************************************************)
 
@@ -414,7 +421,7 @@ let eager_inverting opts =
          | Ind(ind, _) when is_eager_inversion opts evd hyp -> true
          | _ -> false
        end
-       (fun id -> sinvert_tac id <*> subst_simpl_tac)
+       (fun id -> sinvert opts id <*> subst_simpl_tac)
 
 let simple_inverting opts =
   match opts.s_inversions with
@@ -700,7 +707,7 @@ and apply_actions opts n actions hyps visited =
          | ActRewriteRL id ->
             continue n' (erewrite false id <*> simplify_concl opts) acts
          | ActInvert id ->
-            cont (sinvert_tac id <*> start_search opts n') acts
+            cont (sinvert opts id <*> start_search opts n') acts
          | ActUnfold c ->
             continue n' (Tacticals.New.tclPROGRESS (unfold c) <*> simplify_concl opts) acts
          | ActCaseUnfold c ->
