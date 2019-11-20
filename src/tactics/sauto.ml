@@ -100,7 +100,7 @@ let erewrite l2r id =
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
 let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
-(*let seinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id]) *)
+let seinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
@@ -124,9 +124,9 @@ let autorewrite bases =
     { onhyps = None; concl_occs = AllOccurrences }
 
 let sinvert opts id =
-(*  if opts.s_exhaustive then
+  if opts.s_exhaustive then
     seinvert_tac id
-    else *)
+  else
     sinvert_tac id
 
 (*****************************************************************************************)
