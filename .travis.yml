@@ -41,17 +41,17 @@ matrix:
 
   # Test supported versions of Coq via Nix
   - env:
-    - COQ=https://github.com/coq/coq-on-cachix/tarball/master
+    - COQ=https://github.com/coq/coq-on-cachix/tarball/v8.11
     <<: *NIX
 
   # Test supported versions of Coq via OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:dev
+    - COQ_IMAGE=coqorg/coq:8.11
     - CONTRIB_NAME=coq-hammer
     - NJOBS=2
     <<: *OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:dev
+    - COQ_IMAGE=coqorg/coq:8.11
     - CONTRIB_NAME=coq-hammer-tactics
     - NJOBS=2
     <<: *OPAM
