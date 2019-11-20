@@ -704,18 +704,30 @@ Tactic Notation "lauto" "unfolding" constr(lst2) :=
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 
+Tactic Notation "leauto" :=
+  unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) :=
   unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "using" constr(lst1) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "using" constr(lst1) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "unfolding" constr(lst2) :=
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
 
-(* Tactic Notation "hprover" :=
-  time solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 |
-               lauto 400000 | lauto 1200000 | lauto 4000000 | lauto 12000000 ]. *)
+(*Tactic Notation "hprover" :=
+  solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 |
+          lauto 400000 | lauto 1200000 | lauto 4000000 | lauto 12000000 ].*)
 
 Tactic Notation "hprover" :=
-  time solve [ leauto 200 | leauto 1000 | leauto 4000 | leauto 12000 | leauto 40000 | leauto 120000 |
-               leauto 400000 | leauto 1200000 | leauto 4000000 | leauto 12000000 ].
-
-(* Tactic Notation "hprover" := partac [ lauto | hauto | lauto 4000 | lauto 16000 ]. *)
+  solve [ leauto 200 | leauto 1000 | leauto 4000 | leauto 12000 | leauto 40000 | leauto 120000 |
+          leauto 400000 | leauto 1200000 | leauto 4000000 | leauto 12000000 ].
 
 Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
 Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.
