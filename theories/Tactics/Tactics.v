@@ -721,9 +721,9 @@ Tactic Notation "leauto" "unfolding" constr(lst2) :=
 Tactic Notation "leauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
 
-(*Tactic Notation "hprover" :=
+Tactic Notation "sprover" :=
   solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 |
-          lauto 400000 | lauto 1200000 | lauto 4000000 | lauto 12000000 ].*)
+          lauto 400000 | lauto 1200000 | lauto 4000000 | lauto 12000000 ].
 
 Tactic Notation "hprover" :=
   solve [ leauto 200 | leauto 1000 | leauto 4000 | leauto 12000 | leauto 40000 | leauto 120000 |
