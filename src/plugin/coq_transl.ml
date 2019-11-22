@@ -1,14 +1,5 @@
 (* Translation from Coq to FOL *)
 
-(* TODO: *)
-(* 1. Omit (some) type arguments (inductive type parameters?) to
-   polymorphic functions/constructors (e.g. cons). *)
-(* 2. Omit (some) type guards when the type may be inferred (e.g.
-   forall x : nat, Even(x) -> phi probably may be translated to
-   forall x, Even(x) -> phi', because Even(x) implies nat(x)). *)
-(* 3. Heuristic monomorphisation (instantiation of polymorphic
-   definitions with types). *)
-
 open Coqterms
 open Coq_transl_opts
 open Hh_term
@@ -439,7 +430,7 @@ and case_lifting axname0 name0 fvars lvars tm =
     pom (n - params_num) rt
   in
   let generic_match () =
-    let name = "$_case_" ^ unique_id ()
+    let name = "$_generic_case_" ^ unique_id ()
     in
     let def = (name, Const(name), Const("$Any"), SortType)
     in
@@ -461,7 +452,7 @@ and case_lifting axname0 name0 fvars lvars tm =
              if Coq_typing.check_type_target_is_prop indty then
                return (generic_match ())
              else
-               let fname = if name0 = "" then "$_case_" ^ indname ^ "_" ^ unique_id () else name0
+               let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
                in
                let axname = if name0 = "" then fname else axname0
                in

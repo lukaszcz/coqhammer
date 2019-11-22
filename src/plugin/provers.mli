@@ -5,6 +5,7 @@ type atp_info = {
   deps : string list; (* dependencies: lemmas, theorems *)
   defs : string list; (* definitions (non-propositional) *)
   typings : string list;
+  cases : string list;
   inversions : string list;
   injections : string list;
   discrims : (string * string) list;
