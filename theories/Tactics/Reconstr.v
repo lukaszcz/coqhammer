@@ -1260,3 +1260,7 @@ Ltac ryelles6 lems defs := solve [ unshelve hyelles 6 AllHyps lems defs; dsolve 
 Ltac rrauto4 lems defs := solve [ unshelve hrauto 4 AllHyps lems defs; dsolve ].
 Ltac rexhaustive1 lems defs := solve [ unshelve hexhaustive 1 AllHyps lems defs; dsolve ].
 Ltac ryreconstr lems defs := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
+
+Ltac rprover := solve [ yelles 2 | yelles 3 | yelles 4 | yelles 5 | yelles 6 |
+                        yelles 7 | yelles 8 | yelles 9 | yelles 10 | yelles 12 |
+                        yelles 15 | yelles 20 ].
