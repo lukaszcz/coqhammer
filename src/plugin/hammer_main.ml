@@ -276,7 +276,10 @@ let mk_lst_str pref lst =
   | [] -> ""
   | h :: t -> pref ^ " (" ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h) ^ ")"
 
-let get_tac_args env sigma deps defs =
+let get_tac_args env sigma info =
+  let deps = info.Provers.deps in
+  let defs = info.Provers.defs in
+  let inverts = info.Provers.inversions @ info.Provers.cases in
   let map_locate =
     List.map
       begin fun s ->
@@ -287,14 +290,18 @@ let get_tac_args env sigma deps defs =
       end
   in
   let mk_lst = mk_lst env sigma in
-  let (deps, defs) = (map_locate deps, map_locate defs) in
+  let (deps, defs, inverts) = (map_locate deps, map_locate defs, map_locate inverts) in
   let filter_vars = List.filter (fun r -> match r with Names.GlobRef.VarRef(_) -> true | _ -> false) in
   let filter_nonvars = List.filter (fun r -> match r with Names.GlobRef.VarRef(_) -> false | _ -> true) in
-  let (vars, deps, defs) = (filter_vars deps, filter_nonvars deps, defs) in
+  let (vars, deps) = (filter_vars deps, filter_nonvars deps) in
   let map_to_constr = List.map to_constr in
-  let (vars, deps, defs) = (map_to_constr vars, map_to_constr deps, map_to_constr defs) in
-  let (tvars, tdeps, tdefs) = (mk_lst vars, mk_lst deps, mk_lst defs) in
-  let args = [to_ltac_val tdeps; to_ltac_val tdefs] in
+  let (vars, deps, defs, inverts) =
+    (map_to_constr vars, map_to_constr deps, map_to_constr defs, map_to_constr inverts)
+  in
+  let (tvars, tdeps, tdefs, tinverts) =
+    (mk_lst vars, mk_lst deps, mk_lst defs, mk_lst inverts)
+  in
+  let args = [to_ltac_val tdeps; to_ltac_val tdefs; to_ltac_val tinverts] in
   (deps, defs, args)
 
 let check_goal_prop gl =
@@ -309,8 +316,8 @@ let check_goal_prop gl =
 
 let run_tactics deps defs args msg_success msg_fail =
   let tactics =
-    [ ("rhauto", "hauto"); ("rhauto200", "hauto 200"); ("rhauto2000", "hauto 2000");
-      ("rsauto", "sauto"); ("rscrush", "scrush") ]
+    [ ("rhauto", "hauto"); ("rhauto4000", "hauto 4000"); ("rscrush", "scrush");
+      ("rsprover", "sprover"); ("rhprover", "hprover"); ]
   in
   let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
   in
@@ -479,7 +486,7 @@ let hammer_tac () =
               if !Opt.debug_mode then
                 Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
               let info = do_predict hyps defs goal in
-              let (deps, defs, args) = get_tac_args env sigma info.Provers.deps info.Provers.defs in
+              let (deps, defs, args) = get_tac_args env sigma info in
               Msg.info ("Reconstructing the proof...");
               run_tactics deps defs args
                 begin fun tac deps defs ->
@@ -679,9 +686,7 @@ let hammer_hook_tac prefix name =
                                begin fun () ->
                                  Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
                                  let info = extract fname in
-                                 let (deps, defs, args) =
-                                   get_tac_args env sigma info.Provers.deps info.Provers.defs
-                                 in
+                                 let (deps, defs, args) = get_tac_args env sigma info in
                                  run_tactics deps defs args
                                    begin fun tac deps defs ->
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in

@@ -67,6 +67,13 @@ Proof.
   hauto.
 Qed.
 
+Lemma lem_sets_1_1 :
+  (forall x, P x \/ Q x) /\ (forall x y, x = y /\ P x -> R y) /\
+  (forall x y, x = y /\ Q x -> R y) -> forall x, R x.
+Proof.
+  sauto inverting list.
+Qed.
+
 Variable Sum : U -> U -> U.
 Variable Subset : U -> U -> Prop.
 Variable In : U -> U -> Prop.
