@@ -151,6 +151,15 @@ Ltac sdestruct t :=
         (is_var t; destruct t)
   end.
 
+Ltac ssubst :=
+  try subst;
+  repeat match goal with
+         | [ H : ?A = ?B |- _ ] => is_var A; rewrite H in *; clear H
+         | [ H : ?A = ?B |- _ ] => is_var B; rewrite <- H in *; clear H
+         end.
+
+Ltac subst_simpl := ssubst; cbn in *.
+
 Ltac xintro x :=
   tryif intro x then
     idtac
@@ -204,7 +213,7 @@ with simp_hyp H :=
       || (injection H; try clear H;
           match goal with
           | [ |- _ = _ -> _ ] =>
-            sintro; try subst
+            sintro; ssubst
           end)
     | ?F ?X ?U = ?F ?Y ?V =>
       (assert (X = Y); [ assumption
@@ -212,7 +221,7 @@ with simp_hyp H :=
       || (injection H; try clear H;
           repeat match goal with
                  | [ |- _ = _ -> _ ] =>
-                   sintro; try subst
+                   sintro; ssubst
                  end)
     | ?F ?X ?U ?A = ?F ?Y ?V ?B =>
       (assert (X = Y); [ assumption
@@ -221,7 +230,7 @@ with simp_hyp H :=
       || (injection H; try clear H;
           repeat match goal with
                  | [ |- _ = _ -> _ ] =>
-                   sintro; try subst
+                   sintro; ssubst
                  end)
     | existT _ _ _ = existT _ _ _ => inversion_clear H
     | forall x : ?T1, ?A /\ ?B =>
@@ -388,7 +397,7 @@ Ltac isplit :=
   end.
 
 Ltac trysolve :=
-  eauto 2 with shints; try solve [ constructor ]; try subst;
+  eauto 2 with shints; try solve [ constructor ]; ssubst;
   match goal with
   | [ |- ?t = ?u ] => try solve [ cbn in *; congruence 8 |
                                   match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
@@ -437,7 +446,7 @@ Ltac bnat_reflect :=
          | [ H : (Nat.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
            assert (A = B) by (pose Arith.PeanoNat.Nat.eqb_eq; strivial);
-           try subst
+           ssubst
          | [ H : (Nat.eqb ?A ?B) = false |- _ ] =>
            notHyp (A = B -> False);
            assert (A = B -> False) by (pose Arith.PeanoNat.Nat.eqb_neq; strivial)
@@ -454,14 +463,6 @@ Ltac bnat_reflect :=
            notHyp (B <= A);
            assert (B <= A) by (pose Arith.PeanoNat.Nat.ltb_ge; strivial)
          end.
-
-Ltac ssubst :=
-  try subst;
-  repeat match goal with
-         | [ H : ?A = ?B |- _ ] => is_var A; rewrite H in *; clear H
-         end.
-
-Ltac subst_simpl := ssubst; cbn in *.
 
 Ltac invert_one_subgoal H :=
   let ty := type of H in
@@ -513,7 +514,7 @@ Ltac full_inst e tac :=
 Ltac sinvert H :=
   let intro_invert tt :=
     let H1 := fresh "H" in
-    intro H1; inversion H1; try subst; try clear H1
+    intro H1; inversion H1; ssubst; try clear H1
   in
   lazymatch type of H with
   | _ -> _ =>
@@ -523,7 +524,7 @@ Ltac sinvert H :=
     | [ |- context[H] ] => destruct H
     | [ |- _ ] =>
       let ty := type of H in
-      inversion H; try subst; tryif clear H then notHyp ty else idtac
+      inversion H; ssubst; tryif clear H then notHyp ty else idtac
     end
   end; cbn.
 
@@ -549,7 +550,7 @@ Ltac full_einst e tac :=
 Ltac seinvert H :=
   let intro_invert tt :=
     let H1 := fresh "H" in
-    intro H1; inversion H1; try subst; try clear H1
+    intro H1; inversion H1; ssubst; try clear H1
   in
   lazymatch type of H with
   | _ -> _ =>
@@ -559,7 +560,7 @@ Ltac seinvert H :=
     | [ |- context[H] ] => destruct H
     | [ |- _ ] =>
       let ty := type of H in
-      inversion H; try subst; tryif clear H then noteHyp ty else idtac
+      inversion H; ssubst; tryif clear H then noteHyp ty else idtac
     end
   end; cbn.
 
