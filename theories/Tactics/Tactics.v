@@ -670,6 +670,14 @@ Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
   pose proof lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
 Tactic Notation "scrush" "unfolding" constr(unfolds) :=
   try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
+Tactic Notation "scrush" "inverting" constr(inverts) :=
+  try strivial; ssimpl; sauto inverting inverts.
+Tactic Notation "scrush" "using" constr(lst) "inverting" constr(inverts) :=
+  pose proof lst; try strivial; ssimpl; sauto inverting inverts.
+Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  pose proof lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+Tactic Notation "scrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
 
 Tactic Notation "hauto" :=
   unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts default); dsolve.
@@ -687,6 +695,22 @@ Tactic Notation "hauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts default); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" int_or_var(i) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
+Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts default); dsolve.
 
 Tactic Notation "lauto" :=
   unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
@@ -704,6 +728,22 @@ Tactic Notation "lauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" int_or_var(i) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
+Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split); dsolve.
 
 Tactic Notation "leauto" :=
   unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
@@ -721,19 +761,163 @@ Tactic Notation "leauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using default unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using default unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using lst1 unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using lst1 unfolding logic inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with nohints using default unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
+Tactic Notation "leauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with nohints using default unfolding lst2 inverting (logic, @eq, lst3) ctrs (logic, @eq) opts no_eager_invert no_simple_split exhaustive); dsolve.
 
 Tactic Notation "sprover" :=
   solve [ lauto 200 | lauto 1000 | lauto 4000 | lauto 12000 | lauto 40000 | lauto 120000 |
           lauto 400000 | lauto 1200000 | lauto 4000000 | lauto 12000000 ].
+Tactic Notation "sprover" "using" constr(lst1) :=
+  solve [ lauto 200 using lst1 | lauto 1000 using lst1 | lauto 4000 using lst1 | lauto 12000 using lst1 |
+          lauto 40000 using lst1 | lauto 120000 using lst1 | lauto 400000 using lst1 |
+          lauto 1200000 using lst1 | lauto 4000000 using lst1 | lauto 12000000 using lst1 ].
+Tactic Notation "sprover" "unfolding" constr(lst2) :=
+  solve [ lauto 200 unfolding lst2 | lauto 1000 unfolding lst2 | lauto 4000 unfolding lst2 |
+          lauto 12000 unfolding lst2 | lauto 40000 unfolding lst2 | lauto 120000 unfolding lst2 |
+          lauto 400000 unfolding lst2 | lauto 1200000 unfolding lst2 | lauto 4000000 unfolding lst2 |
+          lauto 12000000 unfolding lst2 ].
+Tactic Notation "sprover" "inverting" constr(lst3) :=
+  solve [ lauto 200 inverting lst3 |
+          lauto 1000 inverting lst3 |
+          lauto 4000 inverting lst3 |
+          lauto 12000 inverting lst3 |
+          lauto 40000 inverting lst3 |
+          lauto 120000 inverting lst3 |
+          lauto 400000 inverting lst3 |
+          lauto 1200000 inverting lst3 |
+          lauto 4000000 inverting lst3 |
+          lauto 12000000 inverting lst3 ].
+Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2):=
+  solve [ lauto 200 using lst1 unfolding lst2 |
+          lauto 1000 using lst1 unfolding lst2 |
+          lauto 4000 using lst1 unfolding lst2 |
+          lauto 12000 using lst1 unfolding lst2 |
+          lauto 40000 using lst1 unfolding lst2 |
+          lauto 120000 using lst1 unfolding lst2 |
+          lauto 400000 using lst1 unfolding lst2 |
+          lauto 1200000 using lst1 unfolding lst2 |
+          lauto 4000000 using lst1 unfolding lst2 |
+          lauto 12000000 using lst1 unfolding lst2 ].
+Tactic Notation "sprover" "using" constr(lst1) "inverting" constr(lst3) :=
+  solve [ lauto 200 using lst1 inverting lst3 |
+          lauto 1000 using lst1 inverting lst3 |
+          lauto 4000 using lst1 inverting lst3 |
+          lauto 12000 using lst1 inverting lst3 |
+          lauto 40000 using lst1 inverting lst3 |
+          lauto 120000 using lst1 inverting lst3 |
+          lauto 400000 using lst1 inverting lst3 |
+          lauto 1200000 using lst1 inverting lst3 |
+          lauto 4000000 using lst1 inverting lst3 |
+          lauto 12000000 using lst1 inverting lst3 ].
+Tactic Notation "sprover" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  solve [ lauto 200 unfolding lst2 inverting lst3 |
+          lauto 1000 unfolding lst2 inverting lst3 |
+          lauto 4000 unfolding lst2 inverting lst3 |
+          lauto 12000 unfolding lst2 inverting lst3 |
+          lauto 40000 unfolding lst2 inverting lst3 |
+          lauto 120000 unfolding lst2 inverting lst3 |
+          lauto 400000 unfolding lst2 inverting lst3 |
+          lauto 1200000 unfolding lst2 inverting lst3 |
+          lauto 4000000 unfolding lst2 inverting lst3 |
+          lauto 12000000 unfolding lst2 inverting lst3 ].
+Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  solve [ lauto 200 using lst1 unfolding lst2 inverting lst3 |
+          lauto 1000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 4000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 12000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 40000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 120000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 400000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 1200000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 4000000 using lst1 unfolding lst2 inverting lst3 |
+          lauto 12000000 using lst1 unfolding lst2 inverting lst3 ].
 
 Tactic Notation "hprover" :=
   solve [ leauto 200 | leauto 1000 | leauto 4000 | leauto 12000 | leauto 40000 | leauto 120000 |
           leauto 400000 | leauto 1200000 | leauto 4000000 | leauto 12000000 ].
+Tactic Notation "hprover" "using" constr(lst1) :=
+  solve [ leauto 200 using lst1 | leauto 1000 using lst1 | leauto 4000 using lst1 | leauto 12000 using lst1 |
+          leauto 40000 using lst1 | leauto 120000 using lst1 | leauto 400000 using lst1 |
+          leauto 1200000 using lst1 | leauto 4000000 using lst1 | leauto 12000000 using lst1 ].
+Tactic Notation "hprover" "unfolding" constr(lst2) :=
+  solve [ leauto 200 unfolding lst2 | leauto 1000 unfolding lst2 | leauto 4000 unfolding lst2 |
+          leauto 12000 unfolding lst2 | leauto 40000 unfolding lst2 | leauto 120000 unfolding lst2 |
+          leauto 400000 unfolding lst2 | leauto 1200000 unfolding lst2 | leauto 4000000 unfolding lst2 |
+          leauto 12000000 unfolding lst2 ].
+Tactic Notation "hprover" "inverting" constr(lst3) :=
+  solve [ leauto 200 inverting lst3 |
+          leauto 1000 inverting lst3 |
+          leauto 4000 inverting lst3 |
+          leauto 12000 inverting lst3 |
+          leauto 40000 inverting lst3 |
+          leauto 120000 inverting lst3 |
+          leauto 400000 inverting lst3 |
+          leauto 1200000 inverting lst3 |
+          leauto 4000000 inverting lst3 |
+          leauto 12000000 inverting lst3 ].
+Tactic Notation "hprover" "using" constr(lst1) "unfolding" constr(lst2):=
+  solve [ leauto 200 using lst1 unfolding lst2 |
+          leauto 1000 using lst1 unfolding lst2 |
+          leauto 4000 using lst1 unfolding lst2 |
+          leauto 12000 using lst1 unfolding lst2 |
+          leauto 40000 using lst1 unfolding lst2 |
+          leauto 120000 using lst1 unfolding lst2 |
+          leauto 400000 using lst1 unfolding lst2 |
+          leauto 1200000 using lst1 unfolding lst2 |
+          leauto 4000000 using lst1 unfolding lst2 |
+          leauto 12000000 using lst1 unfolding lst2 ].
+Tactic Notation "hprover" "using" constr(lst1) "inverting" constr(lst3) :=
+  solve [ leauto 200 using lst1 inverting lst3 |
+          leauto 1000 using lst1 inverting lst3 |
+          leauto 4000 using lst1 inverting lst3 |
+          leauto 12000 using lst1 inverting lst3 |
+          leauto 40000 using lst1 inverting lst3 |
+          leauto 120000 using lst1 inverting lst3 |
+          leauto 400000 using lst1 inverting lst3 |
+          leauto 1200000 using lst1 inverting lst3 |
+          leauto 4000000 using lst1 inverting lst3 |
+          leauto 12000000 using lst1 inverting lst3 ].
+Tactic Notation "hprover" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  solve [ leauto 200 unfolding lst2 inverting lst3 |
+          leauto 1000 unfolding lst2 inverting lst3 |
+          leauto 4000 unfolding lst2 inverting lst3 |
+          leauto 12000 unfolding lst2 inverting lst3 |
+          leauto 40000 unfolding lst2 inverting lst3 |
+          leauto 120000 unfolding lst2 inverting lst3 |
+          leauto 400000 unfolding lst2 inverting lst3 |
+          leauto 1200000 unfolding lst2 inverting lst3 |
+          leauto 4000000 unfolding lst2 inverting lst3 |
+          leauto 12000000 unfolding lst2 inverting lst3 ].
+Tactic Notation "hprover" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  solve [ leauto 200 using lst1 unfolding lst2 inverting lst3 |
+          leauto 1000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 4000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 12000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 40000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 120000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 400000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 1200000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 4000000 using lst1 unfolding lst2 inverting lst3 |
+          leauto 12000000 using lst1 unfolding lst2 inverting lst3 ].
 
-Ltac rhauto lems unfolds := hauto using lems unfolding unfolds.
-Ltac rhauto200 lems unfolds := hauto 200 using lems unfolding unfolds.
-Ltac rhauto2000 lems unfolds := hauto 2000 using lems unfolding unfolds.
-Ltac rsauto lems unfolds := sauto using lems unfolding unfolds.
-Ltac rscrush lems unfolds := scrush using lems unfolding unfolds.
+Ltac rhauto lems unfolds inverts := hauto using lems unfolding unfolds inverting inverts.
+Ltac rhauto4000 lems unfolds inverts := hauto 4000 using lems unfolding unfolds inverting inverts.
+Ltac rscrush lems unfolds inverts := scrush using lems unfolding unfolds inverting inverts.
+Ltac rsprover lems unfolds inverts := sprover using lems unfolding unfolds inverting inverts.
+Ltac rhprover lems unfolds inverts := hprover using lems unfolding unfolds inverting inverts.
 
 Ltac rcrush := scrush.

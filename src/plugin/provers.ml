@@ -6,6 +6,7 @@ type atp_info = {
   deps : string list; (* dependencies: lemmas, theorems *)
   defs : string list; (* definitions (non-propositional) *)
   typings : string list;
+  cases : string list;
   inversions : string list;
   injections : string list;
   discrims : (string * string) list;
@@ -31,6 +32,19 @@ let get_typings lst =
   List.filter is_good_dep
     (List.map (fun s -> String.sub s 9 (String.length s - 9))
        (List.filter (fun s -> Hhlib.string_begins_with s "$_typeof_") lst))
+
+let get_cases lst =
+  List.filter is_good_dep
+    (List.map
+       begin fun s ->
+         try
+           let i = String.index s '$' in
+           String.sub s 0 i
+         with Not_found ->
+           "$none"
+       end
+       (List.map (fun s -> String.sub s 7 (String.length s - 7))
+          (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst)))
 
 let get_inversions lst =
   List.filter is_good_dep
@@ -69,6 +83,10 @@ let get_types lst =
                let s = String.sub s 10 (String.length s - 10) in
                let i = String.index s '$' in
                String.sub s 0 i
+             else if Hhlib.string_begins_with s "$_case_" then
+               let s = String.sub s 7 (String.length s - 7) in
+               let i = String.index s '$' in
+               String.sub s 0 i
              else
                "$none"
            in
@@ -82,20 +100,26 @@ let get_types lst =
        lst)
 
 let get_atp_info names =
-  { deps = get_deps names; defs = get_defs names; typings = get_typings names;
+  { deps = get_deps names; defs = get_defs names; typings = get_typings names; cases = get_cases names;
     inversions = get_inversions names; injections = get_injections names; discrims = get_discrims names;
     types = get_types names }
 
 let prn_atp_info info =
-  let prn_lst lst =
+  let drop_prefixes x =
+    Hhlib.drop_prefix (Hhlib.drop_prefix x "Top.") "Coq."
+  in
+  let prn_lst prompt lst =
     match lst with
     | [] -> ""
     | h :: t ->
-       List.fold_right (fun x a -> (Hhlib.drop_prefix x "Top.") ^ ", " ^ a) t
-         (Hhlib.drop_prefix h "Top.")
+       prompt ^
+       List.fold_right (fun x a -> drop_prefixes x ^ ", " ^ a) t
+         (drop_prefixes h)
   in
-  "- dependencies: " ^ prn_lst info.deps ^
-    "\n- definitions: " ^ prn_lst info.defs
+  prn_lst "- dependencies: " info.deps ^
+    prn_lst "\n- definitions: " info.defs ^
+    prn_lst "\n- inversions: " info.inversions ^
+    prn_lst "\n- cases: " info.cases
 
 module StringMap = Map.Make(String)
 

@@ -117,7 +117,7 @@ Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
                                                    In z (y1 :: y2 :: l ++ y3 :: l').
 Proof.
   hammer. Restart.
-  sauto using (@Lists.List.in_cons, @Lists.List.not_in_cons, @Lists.List.in_or_app).
+  scrush using (@Lists.List.in_cons, @Lists.List.not_in_cons, @Lists.List.in_or_app).
   (* `firstorder with datatypes' does not work *)
 Qed.
 
@@ -216,9 +216,9 @@ Proof.
   (* Sometimes the tactics cannot reconstruct the goal, but the
   returned dependencies may still be used to create the proof
   semi-manually. *)
-  assert (forall c : Datatypes.comparison, c = Eq \/ c = Lt \/ c = Gt) by sauto.
-  time scrush using (Coq.Arith.Compare_dec.leb_correct, Coq.Arith.PeanoNat.Nat.leb_refl, Coq.Arith.PeanoNat.Nat.compare_nge_iff, Coq.Arith.PeanoNat.Nat.lt_eq_cases, Coq.Init.Peano.le_n, Coq.Arith.Compare_dec.leb_compare, Coq.Arith.PeanoNat.Nat.compare_lt_iff).
-  (* TODO: exhaustion axioms *)
+  assert (forall c : Datatypes.comparison, c = Eq \/ c = Lt \/ c = Gt) by sauto inverting Datatypes.comparison.
+  hammer. Undo.
+  hauto 100 using (@Arith.PeanoNat.Nat.compare_eq, @Arith.PeanoNat.Nat.compare_le_iff, @Arith.PeanoNat.Nat.leb_le, @Init.Peano.le_0_n, @Init.Peano.le_n, @Arith.Compare_dec.leb_compare).
 Qed.
 
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.
@@ -260,7 +260,7 @@ Proof.
   induction l.
   - hammer. Undo.
     hauto using (@Lists.List.app_nil_l, @Lists.List.Forall_cons).
-  - (* hammer. Undo. *)
+  - hammer. Undo.
     sauto using (@Coq.Lists.List.Forall_cons).
   Restart.
   induction l; ssimpl.
@@ -274,6 +274,6 @@ Proof.
   induction l.
   hammer. Undo.
   hauto using (@Lists.List.app_nil_end).
-  hammer. Restart.
-  scrush using (@Lists.List.app_cons_not_nil, @Lists.List.app_nil_r, @Forall_1).
+  hammer. Undo.
+  hauto using (@Lists.List.Forall_inv_tail, @Lists.List.Forall_inv, @Forall_1).
 Qed.

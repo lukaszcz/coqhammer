@@ -28,12 +28,12 @@ Research problems
    A non-trivial problem is to precisely formulate a general
    criterion, and prove it correct for a reasonable subset of CIC.
 
-4. For reconstruction: look at the inversion (also discrimination,
-   injection -- less useful?) axioms used in the ATP proofs and add
-   them to the context before invoking a reconstruction tactic. Or use
-   the inversion axioms to specify the "inverting" option of the
-   reconstruction tactics. Make some intelligent use of other
-   information contained in the atp_info data structure
+4. (partly done) For reconstruction: look at the inversion (also
+   discrimination, injection -- less useful?) axioms used in the ATP
+   proofs and add them to the context before invoking a reconstruction
+   tactic. Or use the inversion axioms to specify the "inverting"
+   option of the reconstruction tactics. Make some intelligent use of
+   other information contained in the atp_info data structure
    (src/plugin/provers.mli). Also look at the axioms for matches,
    which may sometimes be used by the ATPs to do inversion (see point
    7).
@@ -178,3 +178,4 @@ Technical improvements
    asked for. Investigate and fix this.
 2. Remove dependence on "grep".
 3. Properly handle argument parsing in the tactics.
+4. Make the plugin work on Windows.
