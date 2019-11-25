@@ -260,7 +260,7 @@ The following commands are useful for debugging.
 command                          | description
 -------------------------------- | ---------------------------------------------------------
 `Hammer_print "name"`            |  Prints object `name` in hhterm format.
-`Hammer_transl "name"`           |  Prints all axioms resulting from the translation of `name` in the intermediate coqterm format accepted by the [`tptp_out.ml`](src/tptp_out.ml) module.
+`Hammer_transl "name"`           |  Prints all axioms resulting from the translation of `name` in the intermediate coqterm format accepted by the [`tptp_out.ml`](src/plugin/tptp_out.ml) module.
 `hammer_transl`                  |  Prints all axioms resulting from the translation of the current goal.
 `Hammer_features "name"`         |  Prints the features of `name`, bypassing the cache.
 `Hammer_features_cached "name"`  |  Prints the features of `name`, using and possibly modifying the cache.
