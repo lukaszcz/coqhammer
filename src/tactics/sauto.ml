@@ -21,11 +21,11 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
+  s_eager_reducing : bool;
   s_eager_inverting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
   s_rewriting : bool;
-  s_reducing : bool;
 }
 
 let default_s_opts = {
@@ -39,11 +39,11 @@ let default_s_opts = {
   s_inversions = SAll;
   s_rew_bases = [];
   s_bnat_reflect = true;
+  s_eager_reducing = true;
   s_eager_inverting = true;
   s_simple_inverting = true;
   s_forwarding = true;
   s_rewriting = true;
-  s_reducing = true;
 }
 
 (*****************************************************************************************)
@@ -71,7 +71,8 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActInvert of Id.t |
-        ActUnfold of Constant.t | ActCaseUnfold of Constant.t | ActConstructor | ActIntro
+        ActUnfold of Constant.t | ActCaseUnfold of Constant.t | ActConstructor |
+            ActIntro | ActReduce
 
 let action_to_string act =
   match act with
@@ -83,6 +84,7 @@ let action_to_string act =
   | ActCaseUnfold c -> "case-unfold " ^ Constant.to_string c
   | ActConstructor -> "constructor"
   | ActIntro -> "intro"
+  | ActReduce -> "reduce"
 
 let print_search_actions actions =
   Hhlib.oiter print_string (fun (cost, br, act) ->
@@ -115,7 +117,7 @@ let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr 
 
 let tacarg_cbn b_hyps opts =
   Tacexpr.Tacexp begin
-    if opts.s_reducing then
+    if opts.s_eager_reducing then
       Tacexpr.TacAtom(
         CAst.(make
                 (Tacexpr.TacReduce(
@@ -140,7 +142,7 @@ let autorewrite bases =
     { onhyps = None; concl_occs = AllOccurrences }
 
 let subst_simpl opts =
-  if opts.s_reducing then
+  if opts.s_eager_reducing then
     subst_simpl_tac
   else
     ssubst_tac
@@ -152,7 +154,7 @@ let sinvert opts id =
     sinvert_tac id <*> subst_simpl opts
 
 let reduce_concl opts =
-  if opts.s_reducing then
+  if opts.s_eager_reducing then
     Tactics.simpl_in_concl
   else
     Proofview.tclUNIT ()
@@ -641,6 +643,12 @@ let create_extra_actions opts evd goal hyps =
   let actions =
     create_case_unfolding_actions opts evd goal hyps @ actions
   in
+  let actions =
+    if opts.s_eager_reducing then
+      actions
+    else
+      (80, 1, ActReduce) :: actions
+  in
   actions
 
 let create_actions extra opts evd goal hyps =
@@ -750,6 +758,8 @@ and apply_actions opts n actions hyps visited =
               acts
          | ActIntro ->
             cont (Tactics.intros <*> subst_simpl opts <*> start_search opts n') acts
+         | ActReduce ->
+            cont (Tacticals.New.tclPROGRESS subst_simpl_tac <*> start_search opts n') acts
        end
   | [] ->
      fail_tac
