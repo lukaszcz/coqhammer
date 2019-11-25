@@ -302,7 +302,7 @@ let get_tac_args env sigma info =
     (mk_lst vars, mk_lst deps, mk_lst defs, mk_lst inverts)
   in
   let args = [to_ltac_val tdeps; to_ltac_val tdefs; to_ltac_val tinverts] in
-  (deps, defs, args)
+  (deps, defs, inverts, args)
 
 let check_goal_prop gl =
   let env = Proofview.Goal.env gl in
@@ -314,7 +314,7 @@ let check_goal_prop gl =
 
 (***************************************************************************************)
 
-let run_tactics deps defs args msg_success msg_fail =
+let run_tactics args msg_success msg_fail =
   let tactics =
     [ ("rhauto", "hauto"); ("rhauto4000", "hauto 4000"); ("rscrush", "scrush");
       ("rsprover", "sprover"); ("rhprover", "hprover"); ]
@@ -325,7 +325,7 @@ let run_tactics deps defs args msg_success msg_fail =
     begin fun k tac ->
       if k >= 0 then
         begin
-          msg_success (snd (List.nth tactics k)) deps defs;
+          msg_success (snd (List.nth tactics k));
           tac
         end
       else
@@ -392,7 +392,7 @@ let do_predict hyps deps goal =
     in
     let time = (float_of_int !Opt.atp_timelimit) *. 1.5
     in
-    Msg.info ("Running provers (using " ^ string_of_int !Opt.gs_mode ^ " threads)...");
+    Msg.info ("Running provers (" ^ string_of_int !Opt.gs_mode ^ " threads)...");
     let clean () =
       Features.clean fname;
       if not !Opt.debug_mode then
@@ -486,13 +486,15 @@ let hammer_tac () =
               if !Opt.debug_mode then
                 Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
               let info = do_predict hyps defs goal in
-              let (deps, defs, args) = get_tac_args env sigma info in
+              let (deps, defs, inverts, args) = get_tac_args env sigma info in
               Msg.info ("Reconstructing the proof...");
-              run_tactics deps defs args
-                begin fun tac deps defs ->
+              run_tactics args
+                begin fun tac ->
                   Msg.info ("Tactic " ^ tac ^ " succeeded.");
                   Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ mk_lst_str " using" deps ^ mk_lst_str " unfolding" defs ^ ".")
+                               tac ^ mk_lst_str " using" deps ^
+                               mk_lst_str " unfolding" defs ^
+                               mk_lst_str " inverting" inverts ^ ".")
                 end
                 begin fun () ->
                   Msg.error ("Hammer failed: proof reconstruction failed")
@@ -686,9 +688,9 @@ let hammer_hook_tac prefix name =
                                begin fun () ->
                                  Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
                                  let info = extract fname in
-                                 let (deps, defs, args) = get_tac_args env sigma info in
-                                 run_tactics deps defs args
-                                   begin fun tac deps defs ->
+                                 let (_, _, _, args) = get_tac_args env sigma info in
+                                 run_tactics args
+                                   begin fun tac ->
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                      Msg.info msg;
