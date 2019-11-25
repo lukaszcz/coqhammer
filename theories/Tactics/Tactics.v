@@ -482,6 +482,13 @@ Ltac case_split :=
 
 Ltac case_splitting tac := repeat (case_split; ssubst; tac).
 
+Ltac case_split_concl :=
+  match goal with
+  | [ |- context[match ?X with _ => _ end] ] => sdestruct X
+  end.
+
+Ltac case_splitting_concl tac := repeat (case_split_concl; ssubst; tac).
+
 Ltac generalizing :=
   repeat match goal with
            | [ H : _ |- _ ] => generalize H; clear H
