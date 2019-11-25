@@ -1261,6 +1261,17 @@ Ltac rrauto4 lems defs := solve [ unshelve hrauto 4 AllHyps lems defs; dsolve ].
 Ltac rexhaustive1 lems defs := solve [ unshelve hexhaustive 1 AllHyps lems defs; dsolve ].
 Ltac ryreconstr lems defs := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
 
-Ltac rprover := solve [ yelles 2 | yelles 3 | yelles 4 | yelles 5 | yelles 6 |
-                        yelles 7 | yelles 8 | yelles 9 | yelles 10 | yelles 12 |
-                        yelles 15 | yelles 20 ].
+Ltac hyelles2 hyps lems defs :=
+  hobvious hyps lems defs;
+  gunfolding defs;
+  simp_hyps;
+  try yellesd defs 4;
+  try yellesd defs 6;
+  try yellesd defs 8;
+  try yellesd defs 12.
+
+Ltac rreasy lems defs inverts := solve [ unshelve heasy AllHyps lems defs; dsolve ].
+Ltac rryreconstr lems defs inverts := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
+Ltac rrcrush lems defs inverts := solve [ unshelve hcrush AllHyps lems defs; dsolve ].
+Ltac rryelles lems defs inverts := solve [ unshelve hyelles2 AllHyps lems defs; dsolve ].
+Ltac rrscrush lems defs inverts := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
