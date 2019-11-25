@@ -19,6 +19,7 @@ type s_opts = {
   s_simple_inverting : bool;
   s_forwarding : bool;
   s_rewriting : bool;
+  s_reducing : bool;
 }
 
 val default_s_opts : s_opts
