@@ -49,3 +49,8 @@ Proof.
 Qed.
 
 End Sets.
+
+Lemma lem_inv_1 : forall n, n = 0 \/ exists m, n = S m.
+Proof.
+  hammer.
+Qed.

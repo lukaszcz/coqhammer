@@ -25,6 +25,7 @@ type s_opts = {
   s_simple_inverting : bool;
   s_forwarding : bool;
   s_rewriting : bool;
+  s_reducing : bool;
 }
 
 let default_s_opts = {
@@ -42,6 +43,7 @@ let default_s_opts = {
   s_simple_inverting = true;
   s_forwarding = true;
   s_rewriting = true;
+  s_reducing = true;
 }
 
 (*****************************************************************************************)
@@ -101,14 +103,28 @@ let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
 let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
 let seinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
+let ssubst_tac = Utils.ltac_apply "Tactics.ssubst" []
 let subst_simpl_tac = Utils.ltac_apply "Tactics.subst_simpl" []
 let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
-let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
-let simple_invert_tac id = Utils.ltac_apply "Tactics.simple_invert" [mk_tac_arg_id id]
-let case_splitting_tac = Utils.ltac_apply "Tactics.case_splitting" []
-let forwarding_tac = Utils.ltac_apply "Tactics.forwarding" []
+let simple_inverting_tac tacarg = Utils.ltac_apply "Tactics.simple_inverting" [tacarg]
+let simple_invert_tac tacarg id = Utils.ltac_apply "Tactics.simple_invert" [tacarg; mk_tac_arg_id id]
+let case_splitting_tac tacarg = Utils.ltac_apply "Tactics.case_splitting" [tacarg]
+let forwarding_tac tacarg = Utils.ltac_apply "Tactics.forwarding" [tacarg]
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
 let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr t]
+
+let tacarg_cbn b_hyps opts =
+  Tacexpr.Tacexp begin
+    if opts.s_reducing then
+      Tacexpr.TacAtom(
+        CAst.(make
+                (Tacexpr.TacReduce(
+                  Genredexpr.(Cbn
+                                (Redops.make_red_flag [FBeta; FMatch; FZeta; FDeltaBut []])),
+                  {onhyps = if b_hyps then None else Some []; concl_occs = AllOccurrences}))))
+    else
+      Tacexpr.TacId []
+  end
 
 (*****************************************************************************************)
 
@@ -123,11 +139,23 @@ let autorewrite bases =
     bases
     { onhyps = None; concl_occs = AllOccurrences }
 
+let subst_simpl opts =
+  if opts.s_reducing then
+    subst_simpl_tac
+  else
+    ssubst_tac
+
 let sinvert opts id =
   if opts.s_exhaustive then
-    seinvert_tac id
+    seinvert_tac id <*> subst_simpl opts
   else
-    sinvert_tac id
+    sinvert_tac id <*> subst_simpl opts
+
+let reduce_concl opts =
+  if opts.s_reducing then
+    Tactics.simpl_in_concl
+  else
+    Proofview.tclUNIT ()
 
 (*****************************************************************************************)
 
@@ -381,14 +409,14 @@ let rec simple_splitting opts =
       let evd = Proofview.Goal.sigma gl in
       if is_simple_split opts evd goal then
         Tactics.constructor_tac true None 1 NoBindings <*>
-          Tactics.simpl_in_concl <*> simple_splitting opts
+          reduce_concl opts <*> simple_splitting opts
       else
         Tacticals.New.tclIDTAC
   end
 
 let case_splitting opts =
   match opts.s_case_splits with
-  | SAll -> case_splitting_tac
+  | SAll -> case_splitting_tac (tacarg_cbn true opts)
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
      let introp =
@@ -401,7 +429,7 @@ let case_splitting opts =
          let open EConstr in
          match kind evd t with
          | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
-            Proofview.tclTHEN (Tactics.destruct false None c introp None <*> subst_simpl_tac) acc
+            Proofview.tclTHEN (Tactics.destruct false None c introp None <*> subst_simpl opts) acc
          | _ -> acc
        end (Proofview.tclUNIT ())
          (Proofview.Goal.sigma gl)
@@ -421,11 +449,11 @@ let eager_inverting opts =
          | Ind(ind, _) when is_eager_inversion opts evd hyp -> true
          | _ -> false
        end
-       (fun id -> sinvert opts id <*> subst_simpl_tac)
+       (fun id -> sinvert opts id <*> subst_simpl opts)
 
 let simple_inverting opts =
   match opts.s_inversions with
-  | SAll -> simple_inverting_tac
+  | SAll -> simple_inverting_tac (tacarg_cbn true opts)
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
      repeat_when
@@ -437,15 +465,15 @@ let simple_inverting opts =
          | Ind(ind, _) when is_inversion opts evd ind args -> true
          | _ -> false
        end
-       simple_invert_tac
+       (simple_invert_tac (tacarg_cbn true opts))
 
 let simplify opts =
   let simpl1 =
     simp_hyps_tac <~>
       opt opts.s_bnat_reflect bnat_reflect_tac <~>
       opts.s_simpl_tac <~>
-      Tactics.simpl_in_concl <~>
-      (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl_tac) <~>
+      reduce_concl opts <~>
+      (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl opts) <~>
       simple_splitting opts <~>
       autorewriting opts <~>
       case_splitting opts <~>
@@ -453,12 +481,15 @@ let simplify opts =
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   if opts.s_forwarding then
-    simpl1 <*> Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS forwarding_tac <*> simpl1)
+    simpl1 <*>
+      (Tacticals.New.tclTRY
+         (Tacticals.New.tclPROGRESS (forwarding_tac (tacarg_cbn false opts)) <*>
+            simpl1))
   else
     simpl1
 
 let simplify_concl opts =
-  (Tactics.simpl_in_concl <~> autorewriting opts) <*>
+  (reduce_concl opts <~> autorewriting opts) <*>
     Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting opts) <*> simplify opts)
 
 (*****************************************************************************************)
@@ -678,7 +709,7 @@ and start_search opts n =
   unfolding opts <*> simplify opts <*> search true opts n [] []
 
 and intros opts n =
-  Tactics.simpl_in_concl <*>
+  reduce_concl opts <*>
     intros_until_atom_tac <*>
     start_search opts n
 
@@ -718,17 +749,17 @@ and apply_actions opts n actions hyps visited =
                  (Some (simplify_concl opts <*> search false opts n' hyps visited)))
               acts
          | ActIntro ->
-            cont (Tactics.intros <*> subst_simpl_tac <*> start_search opts n') acts
+            cont (Tactics.intros <*> subst_simpl opts <*> start_search opts n') acts
        end
   | [] ->
      fail_tac
 
 (*****************************************************************************************)
 
-let sauto opts n = unfolding opts <*> subst_simpl_tac <*> intros opts n
+let sauto opts n = unfolding opts <*> subst_simpl opts <*> intros opts n
 
 let ssimpl opts =
-  Tactics.intros <*> unfolding opts <*> subst_simpl_tac <*>
+  Tactics.intros <*> unfolding opts <*> subst_simpl opts <*>
     (simplify opts <~> (Tactics.intros <*> unfolding opts))
 
 let print_actions opts =
