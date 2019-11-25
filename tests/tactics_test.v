@@ -46,11 +46,8 @@ Qed.
 Lemma lem_even_or_odd :
   forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
 Proof.
-  induction n.
-  - ssolve.
-  - sintuition.
-    + sauto.
-    + hauto 100 using (@Arith.PeanoNat.Nat.add_succ_l, @Arith.PeanoNat.Nat.add_succ_r, @Arith.PeanoNat.Nat.mul_1_l, @Arith.PeanoNat.Nat.mul_succ_l, @Arith.PeanoNat.Nat.add_0_r) unfolding (@Arith.PeanoNat.Nat.b2n).
+  induction n; sintuition.
+  exists (S p); strivial.
 Qed.
 
 Section Sets.
@@ -116,7 +113,8 @@ Variable UniverseElement : Universe.
 
 Variable a_ : Universe -> Universe -> Prop.
 
-Theorem prove_this_1 : (forall X : Universe, (exists Y : Universe, (a_ X Y /\ a_ Y Y))) -> (exists Z : Universe, a_ Z Z).
+Theorem prove_this_1 : (forall X : Universe, (exists Y : Universe, (a_ X Y /\ a_ Y Y))) ->
+                       (exists Z : Universe, a_ Z Z).
 Proof.
   sauto.
 Qed.
