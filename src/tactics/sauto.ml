@@ -97,9 +97,9 @@ let print_search_actions actions =
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
-let erewrite l2r id =
+let erewrite b_all l2r id =
   Equality.general_rewrite_clause l2r true (EConstr.mkVar id, NoBindings)
-    Locus.({onhyps = None; concl_occs = AllOccurrences})
+    Locus.({onhyps = if b_all then None else Some []; concl_occs = AllOccurrences})
 
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
@@ -111,6 +111,7 @@ let intros_until_atom_tac = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac tacarg = Utils.ltac_apply "Tactics.simple_inverting" [tacarg]
 let simple_invert_tac tacarg id = Utils.ltac_apply "Tactics.simple_invert" [tacarg; mk_tac_arg_id id]
 let case_splitting_tac tacarg = Utils.ltac_apply "Tactics.case_splitting" [tacarg]
+let case_splitting_concl_tac tacarg = Utils.ltac_apply "Tactics.case_splitting_concl" [tacarg]
 let forwarding_tac tacarg = Utils.ltac_apply "Tactics.forwarding" [tacarg]
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
 let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr t]
@@ -130,16 +131,19 @@ let tacarg_cbn b_hyps opts =
 
 (*****************************************************************************************)
 
-let autorewrite bases =
+let autorewrite b_all bases =
   let bases =
     if List.mem "nohints" bases then
       List.filter (fun s -> s <> "nohints") bases
     else
       ["shints"; "list"] @ (List.filter (fun s -> s <> "shints" && s <> "list") bases)
   in
-  Autorewrite.auto_multi_rewrite
-    bases
-    { onhyps = None; concl_occs = AllOccurrences }
+  if bases = [] then
+    Proofview.tclUNIT ()
+  else
+    Autorewrite.auto_multi_rewrite
+      bases
+      { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let subst_simpl opts =
   if opts.s_eager_reducing then
@@ -400,7 +404,7 @@ let do_when p f = do_when p f []
 
 let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 
-let autorewriting opts = autorewrite opts.s_rew_bases
+let autorewriting b_all opts = autorewrite b_all opts.s_rew_bases
 
 let rec simple_splitting opts =
   if opts.s_simple_splits = SNone then
@@ -416,9 +420,9 @@ let rec simple_splitting opts =
         Tacticals.New.tclIDTAC
   end
 
-let case_splitting opts =
+let case_splitting b_all opts =
   match opts.s_case_splits with
-  | SAll -> case_splitting_tac (tacarg_cbn true opts)
+  | SAll -> (if b_all then case_splitting_tac else case_splitting_concl_tac) (tacarg_cbn true opts)
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
      let introp =
@@ -477,8 +481,8 @@ let simplify opts =
       reduce_concl opts <~>
       (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl opts) <~>
       simple_splitting opts <~>
-      autorewriting opts <~>
-      case_splitting opts <~>
+      autorewriting true opts <~>
+      case_splitting true opts <~>
       opt opts.s_eager_inverting (eager_inverting opts) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
@@ -491,8 +495,8 @@ let simplify opts =
     simpl1
 
 let simplify_concl opts =
-  (reduce_concl opts <~> autorewriting opts) <*>
-    Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting opts) <*> simplify opts)
+  (reduce_concl opts <~> autorewriting false opts) <*>
+    Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting false opts) <*> simplify opts)
 
 (*****************************************************************************************)
 
@@ -698,7 +702,7 @@ let rec search extra opts n hyps visited =
            if is_simple_split opts evd goal then
              simple_splitting opts <*> search extra opts n hyps (goal :: visited)
            else if is_case_split opts evd goal then
-             case_splitting opts <*> start_search opts n
+             case_splitting false opts <*> start_search opts n
            else
              let hyps =
                if hyps = [] then
@@ -742,9 +746,9 @@ and apply_actions opts n actions hyps visited =
          | ActApply id ->
             continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
          | ActRewriteLR id ->
-            continue n' (erewrite true id <*> simplify_concl opts) acts
+            continue n' (erewrite false true id <*> simplify_concl opts) acts
          | ActRewriteRL id ->
-            continue n' (erewrite false id <*> simplify_concl opts) acts
+            continue n' (erewrite false false id <*> simplify_concl opts) acts
          | ActInvert id ->
             cont (sinvert opts id <*> start_search opts n') acts
          | ActUnfold c ->
