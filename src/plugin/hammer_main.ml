@@ -315,10 +315,15 @@ let check_goal_prop gl =
 (***************************************************************************************)
 
 let run_tactics args msg_success msg_fail =
-  let tactics =
+  let old_tactics =
+    [ ("Reconstr.rreasy", "rreasy"); ("Reconstr.rryreconstr", "rryreconstr"); ("Reconstr.rrcrush", "rrcrush");
+      ("Reconstr.rryelles", "rryelles"); ("Reconstr.rrscrush", "rrscrush"); ]
+  in
+  let new_tactics =
     [ ("rhauto", "hauto"); ("rhauto4000", "hauto 4000"); ("rscrush", "scrush");
       ("rsprover", "sprover"); ("rhprover", "hprover"); ]
   in
+  let tactics = if !Opt.reconstr_old_tactics then old_tactics else new_tactics in
   let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
   in
   Partac.partac !Opt.reconstr_timelimit tacs

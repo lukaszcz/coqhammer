@@ -12,7 +12,6 @@ appropriate reconstruction tactic.
 *)
 
 From Hammer Require Import Hammer.
-From Hammer Require Reconstr.
 
 (************************************************************************************************)
 
@@ -194,7 +193,7 @@ Proof.
   proof, then one needs to start the induction manually. *)
   induction l'.
   - hammer. Undo.
-    scrush using (@Lists.List.app_nil_end).
+    sauto using (@Lists.List.app_nil_end).
   - hammer. Undo.
     hauto using (@Lists.List.NoDup_remove_1).
 Qed.

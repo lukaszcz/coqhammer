@@ -99,7 +99,7 @@ let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
 let erewrite l2r id =
   Equality.general_rewrite_clause l2r true (EConstr.mkVar id, NoBindings)
-    Locus.({ onhyps = None; concl_occs = AllOccurrences})
+    Locus.({onhyps = None; concl_occs = AllOccurrences})
 
 let simp_hyps_tac = Utils.ltac_apply "Tactics.simp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
