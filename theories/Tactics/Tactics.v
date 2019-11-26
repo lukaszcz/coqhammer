@@ -630,6 +630,12 @@ Ltac forwarding tac :=
          | [ H : forall x : _,_ |- _ ] => forward tac H
          end.
 
+Ltac srewriting :=
+  repeat match goal with
+         | [ H : ?T |- _ ] => checkTargetLPO T; rewrite H in * by isolve
+         | [ H : ?T |- _ ] => checkTargetRevLPO T; rewrite <- H in * by isolve
+         end.
+
 Definition default := tt.
 Definition none := tt.
 Definition hints := tt.

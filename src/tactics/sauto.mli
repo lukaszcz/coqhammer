@@ -16,6 +16,7 @@ type s_opts = {
   s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_eager_reducing : bool;
+  s_eager_rewriting : bool;
   s_eager_inverting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
