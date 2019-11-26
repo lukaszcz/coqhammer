@@ -13,7 +13,7 @@ let rec destruct_constr t =
   | App(i, args) ->
      begin
        match kind Evd.empty i with
-       | Construct((ind, 1), _) when ind = Utils.get_inductive "prod" ->
+       | Construct((ind, 1), _) when ind = Utils.get_inductive "Init.Datatypes.prod" ->
           begin
             match Array.to_list args with
             | [_; _; t1; t2] ->

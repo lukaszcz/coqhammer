@@ -11,19 +11,62 @@ module Utils = Hhutils
 
 TACTIC EXTEND Hammer_isAtom
 | [ "isAtom" lconstr(t) ] -> {
-  if Utils.is_atom Evd.empty t then
-    Tacticals.New.tclIDTAC
-  else
-    Tacticals.New.tclFAIL 0 Pp.(str "not an atom")
+  Proofview.Goal.enter begin fun gl ->
+    if Utils.is_atom (Proofview.Goal.sigma gl) t then
+      Tacticals.New.tclIDTAC
+    else
+      Tacticals.New.tclFAIL 0 Pp.(str "not an atom")
+  end
 }
 END
 
 TACTIC EXTEND Hammer_isIndAtom
 | [ "isIndAtom" lconstr(t) ] -> {
-  if Utils.is_ind_atom Evd.empty t then
-    Tacticals.New.tclIDTAC
-  else
-    Tacticals.New.tclFAIL 0 Pp.(str "not an inductive atom")
+  Proofview.Goal.enter begin fun gl ->
+    if Utils.is_ind_atom (Proofview.Goal.sigma gl) t then
+      Tacticals.New.tclIDTAC
+    else
+      Tacticals.New.tclFAIL 0 Pp.(str "not an inductive atom")
+  end
+}
+END
+
+TACTIC EXTEND Hammer_checkLPO
+| [ "checkLPO" lconstr(t1) lconstr(t2) ] -> {
+  Proofview.Goal.enter begin fun gl ->
+    if Lpo.lpo (Proofview.Goal.sigma gl) t1 t2 then
+      Tacticals.New.tclIDTAC
+    else
+      Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
+  end
+}
+END
+
+TACTIC EXTEND Hammer_checkTargetLPO
+| [ "checkTargetLPO" lconstr(t) ] -> {
+  Proofview.Goal.enter begin fun gl ->
+    let evd = Proofview.Goal.sigma gl in
+    let (_, _, args) = Utils.destruct_prod evd t in
+    match Hhlib.drop (List.length args - 2) args with
+    | [t1; t2] when Lpo.lpo evd t1 t2 ->
+       Tacticals.New.tclIDTAC
+    | _ ->
+       Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
+  end
+}
+END
+
+TACTIC EXTEND Hammer_checkTargetRevLPO
+| [ "checkTargetRevLPO" lconstr(t) ] -> {
+  Proofview.Goal.enter begin fun gl ->
+    let evd = Proofview.Goal.sigma gl in
+    let (_, _, args) = Utils.destruct_prod evd t in
+    match Hhlib.drop (List.length args - 2) args with
+    | [t1; t2] when Lpo.lpo evd t2 t1 ->
+       Tacticals.New.tclIDTAC
+    | _ ->
+       Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
+  end
 }
 END
 
