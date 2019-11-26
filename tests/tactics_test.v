@@ -153,6 +153,13 @@ Proof.
   sauto inverting list.
 Qed.
 
+Lemma lem_lst5 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
+Proof.
+  induction l'.
+  - hauto using (@Lists.List.app_nil_end).
+  - hauto using (@Lists.List.NoDup_remove_1).
+Qed.
+
 End Lists.
 
 Require Import PeanoNat.

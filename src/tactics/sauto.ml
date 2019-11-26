@@ -22,6 +22,7 @@ type s_opts = {
   s_rew_bases : string list;
   s_bnat_reflect : bool;
   s_eager_reducing : bool;
+  s_eager_rewriting : bool;
   s_eager_inverting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
@@ -40,6 +41,7 @@ let default_s_opts = {
   s_rew_bases = [];
   s_bnat_reflect = true;
   s_eager_reducing = true;
+  s_eager_rewriting = true;
   s_eager_inverting = true;
   s_simple_inverting = true;
   s_forwarding = true;
@@ -113,6 +115,7 @@ let simple_invert_tac tacarg id = Utils.ltac_apply "Tactics.simple_invert" [taca
 let case_splitting_tac tacarg = Utils.ltac_apply "Tactics.case_splitting" [tacarg]
 let case_splitting_concl_tac tacarg = Utils.ltac_apply "Tactics.case_splitting_concl" [tacarg]
 let forwarding_tac tacarg = Utils.ltac_apply "Tactics.forwarding" [tacarg]
+let srewriting_tac = Utils.ltac_apply "Tactics.srewriting" []
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
 let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr t]
 
@@ -482,6 +485,7 @@ let simplify opts =
       (Tacticals.New.tclPROGRESS intros_until_atom_tac <*> subst_simpl opts) <~>
       simple_splitting opts <~>
       autorewriting true opts <~>
+      opt opts.s_eager_rewriting srewriting_tac <~>
       case_splitting true opts <~>
       opt opts.s_eager_inverting (eager_inverting opts) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
