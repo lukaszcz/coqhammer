@@ -750,9 +750,9 @@ and apply_actions opts n actions hyps visited =
          | ActApply id ->
             continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
          | ActRewriteLR id ->
-            continue n' (erewrite false true id <*> simplify_concl opts) acts
+            continue n' (erewrite opts.s_exhaustive true id <*> simplify_concl opts) acts
          | ActRewriteRL id ->
-            continue n' (erewrite false false id <*> simplify_concl opts) acts
+            continue n' (erewrite opts.s_exhaustive false id <*> simplify_concl opts) acts
          | ActInvert id ->
             cont (sinvert opts id <*> start_search opts n') acts
          | ActUnfold c ->
