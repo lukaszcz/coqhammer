@@ -257,7 +257,7 @@ let to_constr r =
   | Names.GlobRef.ConstructRef(cr) -> Constr.mkConstruct cr
 
 let mk_pair env evmap x y =
-  let pr = to_constr (Utils.get_global "pair") in
+  let pr = to_constr (Utils.get_global "Init.Datatypes.pair") in
   let tx = get_type_of env evmap x in
   let ty = get_type_of env evmap y in
   Constr.mkApp (pr, [| tx; ty; x; y |])
