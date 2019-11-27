@@ -20,6 +20,7 @@ type s_opts = {
   s_eager_inverting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
+  s_reducing : bool;
   s_rewriting : bool;
 }
 
