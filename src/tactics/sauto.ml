@@ -26,6 +26,7 @@ type s_opts = {
   s_eager_inverting : bool;
   s_simple_inverting : bool;
   s_forwarding : bool;
+  s_reducing : bool;
   s_rewriting : bool;
 }
 
@@ -45,6 +46,7 @@ let default_s_opts = {
   s_eager_inverting = true;
   s_simple_inverting = true;
   s_forwarding = true;
+  s_reducing = true;
   s_rewriting = true;
 }
 
@@ -121,7 +123,7 @@ let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr 
 
 let tacarg_cbn b_hyps opts =
   Tacexpr.Tacexp begin
-    if opts.s_eager_reducing then
+    if opts.s_eager_reducing && opts.s_reducing then
       Tacexpr.TacAtom(
         CAst.(make
                 (Tacexpr.TacReduce(
@@ -149,7 +151,7 @@ let autorewrite b_all bases =
       { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let subst_simpl opts =
-  if opts.s_eager_reducing then
+  if opts.s_eager_reducing && opts.s_reducing then
     subst_simpl_tac
   else
     ssubst_tac
@@ -161,7 +163,7 @@ let sinvert opts id =
     sinvert_tac id <*> subst_simpl opts
 
 let reduce_concl opts =
-  if opts.s_eager_reducing then
+  if opts.s_eager_reducing && opts.s_reducing then
     Tactics.simpl_in_concl
   else
     Proofview.tclUNIT ()
@@ -652,7 +654,7 @@ let create_extra_actions opts evd goal hyps =
     create_case_unfolding_actions opts evd goal hyps @ actions
   in
   let actions =
-    if opts.s_eager_reducing then
+    if opts.s_eager_reducing || not opts.s_reducing then
       actions
     else
       (80, 1, ActReduce) :: actions
