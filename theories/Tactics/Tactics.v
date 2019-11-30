@@ -930,10 +930,32 @@ Tactic Notation "hprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           leauto 4000000 using lst1 unfolding lst2 inverting lst3 |
           leauto 12000000 using lst1 unfolding lst2 inverting lst3 ].
 
-Ltac rhauto lems unfolds inverts := hauto using lems unfolding unfolds inverting inverts.
-Ltac rhauto4000 lems unfolds inverts := hauto 4000 using lems unfolding unfolds inverting inverts.
-Ltac rscrush lems unfolds inverts := scrush using lems unfolding unfolds inverting inverts.
-Ltac rsprover lems unfolds inverts := sprover using lems unfolding unfolds inverting inverts.
-Ltac rhprover lems unfolds inverts := hprover using lems unfolding unfolds inverting inverts.
+Tactic Notation "xeauto" := try congruence; unshelve (eauto 10; intuition isolve; eauto 10); dsolve.
+
+Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
+Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding unfolds inverting inverts ].
+Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
+Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfolds inverting inverts ].
+Ltac rhprover lems unfolds inverts := solve [ hprover using lems unfolding unfolds inverting inverts ].
+Ltac reauto lems unfolds inverts := solve [ use lems; xeauto ].
 
 Ltac rcrush := scrush.
+
+Tactic Notation "xeauto" "using" constr(lst1) := use lst1; xeauto.
+Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := use lst1; xeauto.
+Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) := use lst1; xeauto.
+Tactic Notation "xeauto" "using" constr(lst1) "inverting" constr(lst3) := use lst1; xeauto.
+Tactic Notation "xeauto" "unfolding" constr(lst2) := xeauto.
+Tactic Notation "xeauto" "unfolding" constr(lst2) "inverting" constr(lst3) := xeauto.
+Tactic Notation "xeauto" "inverting" constr(lst3) := xeauto.
+
+From Hammer Require Tactics.Reconstr.
+
+Tactic Notation "syelles" := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
+Tactic Notation "syelles" "using" constr(lst1) := Reconstr.hyelles2 Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "syelles" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps lst1 lst2.
+Tactic Notation "syelles" "using" constr(lst1) "unfolding" constr(lst2) := Reconstr.hyelles2 Reconstr.AllHyps lst1 lst2.
+Tactic Notation "syelles" "using" constr(lst1) "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "syelles" "unfolding" constr(lst2) := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "syelles" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "syelles" "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
