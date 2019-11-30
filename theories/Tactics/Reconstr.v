@@ -1268,7 +1268,11 @@ Ltac hyelles2 hyps lems defs :=
   try yellesd defs 4;
   try yellesd defs 6;
   try yellesd defs 8;
-  try yellesd defs 12.
+  try yellesd defs 12;
+  try yellesd defs 14;
+  try yellesd defs 16;
+  try yellesd defs 18;
+  try yellesd defs 20.
 
 Ltac rreasy lems defs inverts := solve [ unshelve heasy AllHyps lems defs; dsolve ].
 Ltac rryreconstr lems defs inverts := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].

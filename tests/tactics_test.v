@@ -145,12 +145,12 @@ Qed.
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
 Proof.
-  sauto inverting list.
+  hauto inverting list.
 Qed.
 
 Lemma lem_lst4 : forall {A} (l : list A), l <> nil -> length (tl l) < length l.
 Proof.
-  sauto inverting list.
+  hauto inverting list.
 Qed.
 
 Lemma lem_lst5 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
