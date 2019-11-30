@@ -9,7 +9,7 @@ cd ..
 tools/stat -r , y,p , , false
 
 echo "<table>" >> statistics.html
-echo "<tr><th>hauto</th><th>hauto 4000</th><th>scrush</th><th>sprover</th><th>hprover</th></tr>" >> statistics.html
+echo "<tr><th>hauto</th><th>hauto 4000</th><th>scrush</th><th>xeauto</th><th>syelles</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'hauto$' {} + | wc -l` >> statistics.html
@@ -21,10 +21,10 @@ echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep scrush {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep sprover {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep xeauto {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep hprover {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep syelles {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
