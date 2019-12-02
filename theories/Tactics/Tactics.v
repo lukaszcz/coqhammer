@@ -875,7 +875,8 @@ Tactic Notation "dauto" int_or_var(i) :=
 
 Tactic Notation "hprover" :=
   solve [ dauto 2 | dauto 4 | dauto 6 | dauto 8 | dauto 10 | dauto 12 |
-          dauto 14 | dauto 16 | dauto 18 | dauto 20 | dauto 22 ].
+          dauto 14 | dauto 16 | dauto 18 | dauto 20 | dauto 22 | dauto 24 |
+          dauto 26 ].
 
 Tactic Notation "hprover" "using" constr(lst1) :=
   solve [ leauto 200 using lst1 | leauto 1000 using lst1 | leauto 4000 using lst1 | leauto 12000 using lst1 |
