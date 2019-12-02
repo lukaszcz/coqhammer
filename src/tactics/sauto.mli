@@ -22,6 +22,7 @@ type s_opts = {
   s_forwarding : bool;
   s_reducing : bool;
   s_rewriting : bool;
+  s_depth_cost_model : bool;
 }
 
 val default_s_opts : s_opts
