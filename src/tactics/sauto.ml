@@ -28,6 +28,7 @@ type s_opts = {
   s_forwarding : bool;
   s_reducing : bool;
   s_rewriting : bool;
+  s_depth_cost_model : bool;
 }
 
 let default_s_opts = {
@@ -48,6 +49,7 @@ let default_s_opts = {
   s_forwarding = true;
   s_reducing = true;
   s_rewriting = true;
+  s_depth_cost_model = false;
 }
 
 (*****************************************************************************************)
@@ -719,7 +721,7 @@ let rec search extra opts n hyps visited =
              let actions = create_actions extra opts evd goal hyps in
              match actions with
              | [] -> opts.s_leaf_tac
-             | (cost, _, _) :: _ when cost > n -> opts.s_leaf_tac
+             | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> opts.s_leaf_tac
              | _ -> apply_actions opts n actions hyps (goal :: visited)
     end
 
@@ -743,18 +745,23 @@ and apply_actions opts n actions hyps visited =
   in
   match actions with
   | (cost, branching, act) :: acts ->
-     if cost > n then
+     if not opts.s_depth_cost_model && cost > n then
        fail_tac
      else
        begin
-         let n' = (n - cost) / max branching 1 in
+         let n' =
+           if opts.s_depth_cost_model then
+             n - 1
+           else
+             (n - cost) / max branching 1
+         in
          match act with
          | ActApply id ->
             continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
          | ActRewriteLR id ->
-            continue n' (erewrite opts.s_exhaustive true id <*> simplify_concl opts) acts
+            continue n' (erewrite (not opts.s_eager_rewriting) true id <*> simplify_concl opts) acts
          | ActRewriteRL id ->
-            continue n' (erewrite opts.s_exhaustive false id <*> simplify_concl opts) acts
+            continue n' (erewrite (not opts.s_eager_rewriting) false id <*> simplify_concl opts) acts
          | ActInvert id ->
             cont (sinvert opts id <*> start_search opts n') acts
          | ActUnfold c ->
