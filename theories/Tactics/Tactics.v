@@ -630,10 +630,15 @@ Ltac forwarding tac :=
          | [ H : forall x : _,_ |- _ ] => forward tac H
          end.
 
+Ltac srewrite H := erewrite H by isolve.
+Ltac srewrite_rev H := erewrite <- H by isolve.
+Ltac srewrite_all H := erewrite H in * by isolve.
+Ltac srewrite_all_rev H := erewrite <- H in * by isolve.
+
 Ltac srewriting :=
   repeat match goal with
-         | [ H : ?T |- _ ] => checkTargetLPO T; rewrite H in * by isolve
-         | [ H : ?T |- _ ] => checkTargetRevLPO T; rewrite <- H in * by isolve
+         | [ H : ?T |- _ ] => checkTargetLPO T; erewrite H in * by isolve
+         | [ H : ?T |- _ ] => checkTargetRevLPO T; erewrite <- H in * by isolve
          end.
 
 Definition default := tt.
@@ -861,10 +866,17 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           lauto 4000000 using lst1 unfolding lst2 inverting lst3 |
           lauto 12000000 using lst1 unfolding lst2 inverting lst3 ].
 
+Tactic Notation "deauto" int_or_var(i) :=
+  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_case_split no_simple_split no_reduction no_eager_rewrite no_reflect depth_cost_model exhaustive); dsolve.
+
+Tactic Notation "dauto" int_or_var(i) :=
+  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_case_split no_simple_split no_reduction no_eager_rewrite no_reflect depth_cost_model); dsolve.
+
+
 Tactic Notation "hprover" :=
-  solve [ leauto 200 | leauto 1000 | leauto 4000 | leauto 12000 | leauto 40000 |
-          leauto 120000 | leauto 400000 | leauto 1200000 |
-          leauto 4000000 | leauto 12000000 ].
+  solve [ dauto 2 | dauto 4 | dauto 6 | dauto 8 | dauto 10 | dauto 12 |
+          dauto 14 | dauto 16 | dauto 18 | dauto 20 | dauto 22 ].
+
 Tactic Notation "hprover" "using" constr(lst1) :=
   solve [ leauto 200 using lst1 | leauto 1000 using lst1 | leauto 4000 using lst1 | leauto 12000 using lst1 |
           leauto 40000 using lst1 | leauto 120000 using lst1 | leauto 400000 using lst1 |
