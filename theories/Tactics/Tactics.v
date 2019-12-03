@@ -972,7 +972,7 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
 Tactic Notation "xeauto" :=
-  try congruence; unshelve (eauto 10; intuition isolve; try congruence; eauto 10); dsolve.
+  try congruence; unshelve (eauto; intuition isolve; try congruence; eauto 10; firstorder); dsolve.
 
 Tactic Notation "xeauto" "using" constr(lst1) := use lst1; xeauto.
 Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := use lst1; xeauto.
@@ -999,6 +999,8 @@ Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfol
 Ltac reauto lems unfolds inverts := solve [ use lems; xeauto ].
 Ltac rsyelles lems unfolds inverts :=
   solve [ syelles using lems unfolding unfolds inverting inverts ].
+Ltac rfirstorder lems unfolds inverts :=
+  solve [ use lems; Reconstr.unfolding unfolds; firstorder ].
 
 Ltac rcrush := scrush.
 Ltac rprover := Reconstr.sauto; syelles.
