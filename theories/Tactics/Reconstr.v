@@ -3,7 +3,8 @@
 (* NOTE: This file is for backward compatibility only. It should not
    be used in new developments. *)
 (* This file contains backward compatibility reconstruction tactics for CoqHammer. *)
-(* Copyright (c) 2017-2018, Lukasz Czajka and Cezary Kaliszyk, University of Innsbruck *)
+(* Copyright (c) 2017-2019, Lukasz Czajka, TU Dortmund, and Cezary
+   Kaliszyk, University of Innsbruck *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 (* Fragments of this file are based on the "crush" tactic of Adam Chlipala. *)
 
@@ -1272,7 +1273,10 @@ Ltac hyelles2 hyps lems defs :=
   try yellesd defs 14;
   try yellesd defs 16;
   try yellesd defs 18;
-  try yellesd defs 20.
+  try yellesd defs 20;
+  try yellesd defs 22;
+  try yellesd defs 24;
+  try yellesd defs 26.
 
 Ltac rreasy lems defs inverts := solve [ unshelve heasy AllHyps lems defs; dsolve ].
 Ltac rryreconstr lems defs inverts := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
