@@ -148,14 +148,14 @@ The most useful tactics are:
   [`examples/imp.v`](examples/imp.v) and
   [`examples/combs.v`](examples/combs.v).
 
-* `scrush`
-
-  Essentially, a combination of `ssimpl` and `sauto`.
-
 * `strivial`
 
   A simple and quick goal solving tactic. A bit stronger than
   `auto`. Incorporates `lia` and `congruence`.
+
+* `scrush`
+
+  The definition of `scrush` is: `try strivial; ssimpl; sauto`.
 
 * `sintuition`
 

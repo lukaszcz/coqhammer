@@ -319,8 +319,8 @@ let run_tactics args msg_success msg_fail =
       ("Reconstr.rryelles", "rryelles"); ("Reconstr.rrscrush", "rrscrush"); ]
   in
   let new_tactics =
-    [ ("rhauto", "hauto"); ("rhauto4000", "hauto 4000"); ("rscrush", "scrush");
-      ("reauto", "xeauto"); ("Reconstr.rryelles", "syelles"); ]
+    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush");
+      ("rsprover", "sprover") ]
   in
   let tactics = if !Opt.reconstr_old_tactics then old_tactics else new_tactics in
   let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
