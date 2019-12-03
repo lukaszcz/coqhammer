@@ -2,7 +2,8 @@ open Sauto
 
 module Utils = Hhutils
 
-let default_sauto_limit = 1000
+let default_sauto_tree_limit = 1000
+let default_sauto_depth_limit = 4
 
 let get_opt opt def = match opt with Some x -> x | None -> def
 
@@ -98,6 +99,7 @@ let get_s_opts ropts bases unfoldings inverting ctrs =
     | "no_reflect" -> { opts with s_bnat_reflect = false }
     | "no_reduction" -> { opts with s_reducing = false; s_eager_reducing = false }
     | "depth_cost_model" -> { opts with s_depth_cost_model = true }
+    | "tree_cost_model" -> { opts with s_depth_cost_model = false }
     | "exhaustive" -> { opts with s_exhaustive = true }
     | "default" -> opts
     | _ -> failwith ("sauto: unknown option `" ^ ropt ^ "'")
