@@ -60,19 +60,6 @@ let _ =
   in
   declare_int_option gdopt
 
-let reconstr_old_tactics = ref false
-
-let _ =
-  let gdopt=
-    { optdepr=false;
-      optname="Hammer ReconstrOldTactics";
-      optkey=["Hammer";"ReconstrOldTactics"];
-      optread=(fun ()-> !reconstr_old_tactics);
-      optwrite=
-   (function b -> reconstr_old_tactics := b)}
-  in
-  declare_bool_option gdopt
-
 let minimize_threshold = ref 6
 
 let _ =

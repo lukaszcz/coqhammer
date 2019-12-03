@@ -26,6 +26,11 @@ logs/reconstr/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
 	$(COQC) "$<" > "$@" 2>&1
 
+prove: $(patsubst problems/%.v,logs/prove/%.log,$(FFILES))
+logs/prove/%.log: problems/%.v
+	@mkdir -p `dirname "$@"`
+	$(COQC) "$<" > "$@" 2>&1
+
 clean-vo:
 	rm -f $(OFILES)
 
@@ -39,4 +44,4 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
-.PHONY: clean
+.PHONY: clean clean-vo clean-problems check atp reconstr init all
