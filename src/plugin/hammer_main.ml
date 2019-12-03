@@ -314,15 +314,17 @@ let check_goal_prop gl =
 (***************************************************************************************)
 
 let run_tactics args msg_success msg_fail =
-  let old_tactics =
+(*  let tactics =
     [ ("Reconstr.rreasy", "rreasy"); ("Reconstr.rryreconstr", "rryreconstr"); ("Reconstr.rrcrush", "rrcrush");
       ("Reconstr.rryelles", "rryelles"); ("Reconstr.rrscrush", "rrscrush"); ]
+    in *)
+  let tactics =
+    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rsprover", "sprover");
+      ("rsyelles", "syelles") ]
   in
-  let new_tactics =
-    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush");
-      ("rsprover", "sprover") ]
-  in
-  let tactics = if !Opt.reconstr_old_tactics then old_tactics else new_tactics in
+(*  let tactics =
+    [ ("rfirstorder", "firstorder"); ("reauto", "xeauto") ]
+    in *)
   let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
   in
   Partac.partac !Opt.reconstr_timelimit tacs
@@ -480,31 +482,31 @@ let hammer_tac () =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-        Proofview.tclOR
-          (try_scrush ())
-          begin fun _ ->
-            try_tactic begin fun () ->
-              let goal = get_goal gl in
-              let hyps = get_hyps gl in
-              let defs = get_defs env sigma in
-              if !Opt.debug_mode then
-                Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
-              let info = do_predict hyps defs goal in
-              let (deps, defs, inverts, args) = get_tac_args env sigma info in
-              Msg.info ("Reconstructing the proof...");
-              run_tactics args
-                begin fun tac ->
-                  Msg.info ("Tactic " ^ tac ^ " succeeded.");
-                  Msg.info ("Replace the hammer tactic with:\n\t" ^
-                               tac ^ mk_lst_str " using" deps ^
-                               mk_lst_str " unfolding" defs ^
-                               mk_lst_str " inverting" inverts ^ ".")
-                end
-                begin fun () ->
-                  Msg.error ("Hammer failed: proof reconstruction failed")
-                end
-            end
+      Proofview.tclORELSE
+        (try_scrush ())
+        begin fun _ ->
+          try_tactic begin fun () ->
+            let goal = get_goal gl in
+            let hyps = get_hyps gl in
+            let defs = get_defs env sigma in
+            if !Opt.debug_mode then
+              Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
+            let info = do_predict hyps defs goal in
+            let (deps, defs, inverts, args) = get_tac_args env sigma info in
+            Msg.info ("Reconstructing the proof...");
+            run_tactics args
+              begin fun tac ->
+                Msg.info ("Tactic " ^ tac ^ " succeeded.");
+                Msg.info ("Replace the hammer tactic with:\n\t" ^
+                             tac ^ mk_lst_str " using" deps ^
+                             mk_lst_str " unfolding" defs ^
+                             mk_lst_str " inverting" inverts ^ ".")
+              end
+              begin fun () ->
+                Msg.error ("Hammer failed: proof reconstruction failed")
+              end
           end
+        end
     end
 
 let predict_tac n pred_method =
@@ -621,12 +623,13 @@ let hammer_objects () =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   Msg.info ("Found " ^ string_of_int (List.length (get_defs env sigma)) ^ " accessible Coq objects.")
 
-
 let hammer_hook_tac prefix name =
   let premises = [("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
                   ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
   and provers = [("vampire", Provers.extract_vampire_data); ("eprover", Provers.extract_eprover_data);
                  ("z3", Provers.extract_z3_data); ("cvc4", Provers.extract_cvc4_data)]
+  in
+  let premise_prover_lst = Hhlib.mk_all_pairs premises provers
   in
   try_goal_tactic begin fun gl ->
     Msg.info ("Processing theorem " ^ name ^ "...");
@@ -722,7 +725,44 @@ let hammer_hook_tac prefix name =
                 | [] ->
                    Tacticals.New.tclIDTAC
               in
-              hlp (Hhlib.mk_all_pairs premises provers)
+              hlp premise_prover_lst
+            end
+          else if str = "prove" then
+            begin
+              let odir = "out/" in
+              let ofname =  odir ^ "/" ^ name ^ ".out" in
+              ignore (Sys.command ("mkdir -p " ^ odir));
+              if not (Sys.file_exists ofname) then
+                let pid = Unix.fork () in
+                if pid = 0 then
+                  try
+                    try_fun
+                      begin fun () ->
+                        Msg.info ("Proving theorem " ^ name ^ "...");
+                        Proofview.tclORELSE
+                          (Proofview.tclBIND (Utils.ltac_apply "Tactics.rcrush" [])
+                             (fun _ ->
+                               let msg = "Success " ^ name in
+                               ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                               Msg.info msg;
+                               exit 0))
+                          begin fun _ ->
+                            let msg = "Failure " ^ name in
+                            ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
+                            Msg.info msg;
+                            exit 1
+                          end
+                      end
+                      (fun () -> exit 1)
+                  with _ ->
+                    exit 1
+                else
+                  begin
+                    ignore (Unix.waitpid [] pid);
+                    Tacticals.New.tclIDTAC
+                  end
+              else
+                Tacticals.New.tclIDTAC
             end
           else
             failwith ("Unknown option in coqhammer.opt: " ^ str)
