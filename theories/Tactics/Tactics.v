@@ -972,7 +972,8 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
 Tactic Notation "xeauto" :=
-  try congruence; unshelve (eauto; intuition isolve; try congruence; eauto 10; firstorder); dsolve.
+  try congruence; unshelve (eauto; intuition isolve; try congruence;
+                            eauto 10; try typeclasses eauto; firstorder); dsolve.
 
 Tactic Notation "xeauto" "using" constr(lst1) := use lst1; xeauto.
 Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := use lst1; xeauto.
