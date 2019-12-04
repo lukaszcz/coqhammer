@@ -104,17 +104,17 @@ Qed.
 
 Lemma lem_bval_and : forall s e1 e2, bval s (and e1 e2) = bval s e1 && bval s e2.
 Proof.
-  induction e1; sauto.
+  induction e1; scrush.
 Qed.
 
 Lemma lem_bval_less : forall s a1 a2, bval s (less a1 a2) = (aval s a1 <? aval s a2).
 Proof.
-  induction a1; sauto.
+  induction a1; scrush.
 Qed.
 
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
-  induction e; sauto using (lem_bval_not, lem_bval_and) unfolding less.
+  induction e; sauto using (lem_bval_not, lem_bval_and, lem_bval_less).
 Qed.
 
 Inductive cmd :=
@@ -146,7 +146,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  sauto. (* 0.65s *)
+  sauto. (* 0.45s *)
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -155,7 +155,7 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  sauto unfolding equiv_cmd. (* 0.75s *)
+  sauto unfolding equiv_cmd. (* 0.46s *)
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
