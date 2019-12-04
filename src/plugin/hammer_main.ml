@@ -737,6 +737,7 @@ let hammer_hook_tac prefix name =
                 let pid = Unix.fork () in
                 if pid = 0 then
                   try
+                    ignore (Sys.command ("echo \"Failure " ^ name ^ "\" > \"" ^ ofname ^ "\""));
                     try_fun
                       begin fun () ->
                         Msg.info ("Proving theorem " ^ name ^ "...");
