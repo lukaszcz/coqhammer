@@ -104,12 +104,12 @@ Qed.
 
 Lemma lem_bval_and : forall s e1 e2, bval s (and e1 e2) = bval s e1 && bval s e2.
 Proof.
-  induction e1; scrush.
+  induction e1; sauto.
 Qed.
 
 Lemma lem_bval_less : forall s a1 a2, bval s (less a1 a2) = (aval s a1 <? aval s a2).
 Proof.
-  induction a1; scrush.
+  induction a1; sauto.
 Qed.
 
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
@@ -221,7 +221,6 @@ Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2)
 Proof.
   intros c1 c2 s1 s2 s3 H1 H2.
   assert ((Seq c1 c2, s1) -->* (Seq Skip c2, s2)) by sauto using lem_star_seq2.
-  assert ((Seq Skip c2, s2) -->* (c2, s2)) by scrush.
   scrush.
 Qed.
 

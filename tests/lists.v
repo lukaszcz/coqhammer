@@ -43,3 +43,36 @@ Lemma incl_appl
 Proof.
   hammer.
 Qed.
+
+Lemma Forall_1
+     : forall (A : Type) (P : A -> Prop) (a : A),
+       forall (l l' : list A), List.Forall P l /\ List.Forall P l' /\ P a -> List.Forall P (l ++ a :: l').
+Proof.
+  induction l.
+  hammer.
+  hammer.
+Qed.
+
+Lemma Forall_impl
+     : forall (A : Type) (P : A -> Prop),
+       forall l : list A, List.Forall P l -> List.Forall P (l ++ l).
+Proof.
+  induction l.
+  hammer.
+  hammer.
+Qed.
+
+Lemma lem_lst_1 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
+Proof.
+  induction l'.
+  hammer.
+  hammer.
+Qed.
+
+Lemma NoDup_remove_1
+     : forall (A : Type) (a : A) (l' l : list A),
+       List.NoDup (l ++ a :: l') ->
+       ~ List.In a (l ++ l') /\ List.NoDup (l ++ l') /\ List.NoDup l.
+Proof.
+  hammer.
+Qed.

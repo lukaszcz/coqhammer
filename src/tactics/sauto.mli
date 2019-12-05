@@ -32,7 +32,7 @@ val eager_inverting : s_opts -> unit Proofview.tactic
 
 (* sauto opts cost_limit *)
 val sauto : s_opts -> int -> unit Proofview.tactic
-
+val sintuition : s_opts -> unit Proofview.tactic
 val ssimpl : s_opts -> unit Proofview.tactic
 
 val logic_constants : Constant.t list
