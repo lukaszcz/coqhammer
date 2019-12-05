@@ -142,7 +142,7 @@ Lemma setbit_iff : forall m a n : BinNums.N,
                      BinNat.N.testbit (BinNat.N.setbit a n) m = true.
 Proof.
   hammer. Restart.
-  hauto using (@NArith.BinNat.N.setbit_iff).
+  leauto using (@NArith.BinNat.N.setbit_iff).
 Qed.
 
 Lemma in_int_p_Sq : forall r p q a : nat, a >= 0 ->

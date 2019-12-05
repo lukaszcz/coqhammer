@@ -58,6 +58,16 @@ TACTIC EXTEND Hammer_ssimpl_gen
 }
 END
 
+TACTIC EXTEND Hammer_sintuition_gen
+| [ "sintuition" ] -> {
+  sintuition { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "sintuition" "with" tactic3(tac) ] -> {
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  sintuition { default_s_opts with s_simpl_tac = itac }
+}
+END
+
 TACTIC EXTEND Hammer_sauto_gen
 | [ "sauto_gen" int_or_var_opt(n) ] -> { sauto default_s_opts
                                            (get_opt n
