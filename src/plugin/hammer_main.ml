@@ -320,7 +320,7 @@ let run_tactics args msg_success msg_fail =
       ("Reconstr.rryelles", "rryelles"); ("Reconstr.rrscrush", "rrscrush"); ]
     in *)
   let tactics =
-    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rsprover", "sprover");
+    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rleauto", "leauto");
       ("rsyelles", "syelles") ]
   in
 (*  let tactics =
