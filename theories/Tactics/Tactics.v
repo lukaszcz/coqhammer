@@ -397,19 +397,19 @@ Ltac isplit :=
   end.
 
 Ltac trysolve :=
-  eauto 2 with shints; try solve [ constructor ]; ssubst;
+  eauto 2 with shints; try solve [ constructor ];
   match goal with
-  | [ |- ?t = ?u ] => try solve [ congruence 8 |
+  | [ |- ?t = ?u ] => try solve [ try subst; congruence 8 |
                                   match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
-  | [ |- ?t <> ?u ] => try solve [ congruence 8 |
+  | [ |- ?t <> ?u ] => try solve [ try subst; congruence 8 |
                                    match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
-  | [ |- (?t = ?u) -> False ] => try solve [ intro; congruence 8 |
+  | [ |- (?t = ?u) -> False ] => try solve [ intro; try subst; congruence 8 |
                                              match type of t with nat => Psatz.lia | ZArith.BinInt.Z => Psatz.lia end ]
-  | [ |- False ] => try solve [ congruence 8 ]
-  | [ |- ?t >= ?u ] => try solve [ Psatz.lia ]
-  | [ |- ?t <= ?u ] => try solve [ Psatz.lia ]
-  | [ |- ?t > ?u ] => try solve [ Psatz.lia ]
-  | [ |- ?t < ?u ] => try solve [ Psatz.lia ]
+  | [ |- False ] => try solve [ try subst; congruence 8 ]
+  | [ |- ?t >= ?u ] => try solve [ try subst; Psatz.lia ]
+  | [ |- ?t <= ?u ] => try solve [ try subst; Psatz.lia ]
+  | [ |- ?t > ?u ] => try solve [ try subst; Psatz.lia ]
+  | [ |- ?t < ?u ] => try solve [ try subst; Psatz.lia ]
   | _ => idtac
   end.
 
@@ -443,7 +443,7 @@ Ltac bnat_reflect :=
          | [ H : (Nat.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
            assert (A = B) by (pose Arith.PeanoNat.Nat.eqb_eq; strivial);
-           ssubst
+           try subst
          | [ H : (Nat.eqb ?A ?B) = false |- _ ] =>
            notHyp (A = B -> False);
            assert (A = B -> False) by (pose Arith.PeanoNat.Nat.eqb_neq; strivial)
@@ -917,7 +917,7 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
 Tactic Notation "xeauto" :=
-  try congruence; unshelve (eauto 10; intuition (try isolve); try congruence; eauto; firstorder); dsolve.
+  try congruence; unshelve (eauto 10; (intuition auto); try congruence; eauto; firstorder auto); dsolve.
 
 Tactic Notation "xeauto" "using" constr(lst1) := use lst1; xeauto.
 Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := use lst1; xeauto.
