@@ -958,3 +958,11 @@ Ltac hprover :=
           hprove 10 | hprove 12 | hprove 14 | hprove 16 |
           hprove 18 | hprove 20 | hprove 22 | hprove 24 |
           hprove 26 ].
+
+Tactic Notation "tprove" int_or_var(i) :=
+  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @eq) ctrs (logic, @eq) opts no_eager_invert no_case_split no_simple_split no_reduction no_eager_rewrite no_reflect tree_cost_model exhaustive); dsolve.
+
+Ltac tprover :=
+  solve [ tprove 200 | tprove 1000 | tprove 4000 | tprove 12000 |
+          tprove 40000 | tprove 120000 | tprove 400000 | tprove 1200000 |
+          tprove 4000000 | tprove 12000000 | tprove 40000000 | tprove 120000000 ].
