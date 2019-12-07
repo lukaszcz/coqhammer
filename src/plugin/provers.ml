@@ -106,7 +106,7 @@ let get_atp_info names =
 
 let prn_atp_info info =
   let drop_prefixes x =
-    Hhlib.drop_prefix (Hhlib.drop_prefix x "Top.") "Coq."
+    Hhlib.drop_prefix x "Top."
   in
   let prn_lst prompt lst =
     match lst with
