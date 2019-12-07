@@ -46,10 +46,7 @@ opam install coq-hammer-tactics
 To instead build and install the tactics manually, use `make tactics`
 followed by `make install-tactics`.
 
-The plugin has been tested on Linux and MacOS X. On MacOS X you need
-`grep` available in the path. You also need the GNU C and C++
-compilers (`gcc` and `g++`) available in the path for installation to
-succeed.
+The plugin has been tested on Linux.
 
 The command `make install` will try to install the `predict` and
 `htimeout` programs into the directory specified by the `COQBIN`

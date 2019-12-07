@@ -116,10 +116,16 @@ let prn_atp_info info =
        List.fold_right (fun x a -> drop_prefixes x ^ ", " ^ a) t
          (drop_prefixes h)
   in
+  let nl b =
+    if b then "\n" else ""
+  in
+  let b1 = info.deps <> [] in
+  let b2 = b1 || info.defs <> [] in
+  let b3 = b2 || info.inversions <> [] in
   prn_lst "- dependencies: " info.deps ^
-    prn_lst "\n- definitions: " info.defs ^
-    prn_lst "\n- inversions: " info.inversions ^
-    prn_lst "\n- cases: " info.cases
+    prn_lst (nl b1 ^ "- definitions: ") info.defs ^
+    prn_lst (nl b2 ^ "- inversions: ") info.inversions ^
+    prn_lst (nl b3 ^ "- cases: ") info.cases
 
 module StringMap = Map.Make(String)
 
