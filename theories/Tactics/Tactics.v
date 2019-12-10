@@ -976,40 +976,40 @@ Ltac sinduction t :=
   induction t.
 
 Ltac icrush :=
-  eauto; try congruence; try strivial; ssimpl; try sauto; try sauto 4000;
-  repeat match goal with
-         | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; sauto
-         end;
-  repeat match goal with
-         | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; sauto
-         end;
-  repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; ssimpl; sauto unfolding f
-         end;
-  repeat match goal with
+  eauto; try congruence; try strivial; ssimpl; try sauto;
+  try match goal with
+      | [ |- context[?f] ] => progress unfold f; ssimpl; sauto unfolding f
+      end;
+  try match goal with
+      | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; sauto unfolding f
+      end;
+  try match goal with
+      | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; sauto
+      end;
+  try match goal with
+      | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; sauto
+      end;
+  try match goal with
       | [ H : _ |- _ ] =>
         progress rewrite H in * by ssolve; ssimpl; sauto
       end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; sauto unfolding f
-         end;
-  sauto 12000.
+  sauto 4000.
 
 Ltac mauto := solve [ xeauto ].
 
 Ltac ecrush :=
   eauto 10; try congruence; (intuition auto); eauto;
-  repeat match goal with
-         | [ H : _ |- _ ] => sinduction H; try subst; solve [ cbn in *; (intuition auto); eauto ]
-         end;
-  repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; solve [ cbn in *; (intuition auto); eauto ]
-         end;
-  repeat match goal with
+  try match goal with
+      | [ H : _ |- _ ] => sinduction H; try subst; solve [ cbn in *; (intuition auto); eauto ]
+      end;
+  try match goal with
+      | [ |- context[?f] ] => progress unfold f; solve [ cbn in *; (intuition auto); eauto ]
+      end;
+  try match goal with
       | [ H : _ |- _ ] =>
         progress rewrite H in * by eauto; solve [ cbn in *; (intuition auto); eauto ]
       end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; solve [ cbn in *; (intuition auto); eauto ]
-         end;
+  try match goal with
+      | [ H : context[?f] |- _ ] => progress unfold f in H; solve [ cbn in *; (intuition auto); eauto ]
+      end;
   solve [ firstorder auto ].
