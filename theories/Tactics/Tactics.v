@@ -978,20 +978,20 @@ Ltac sinduction t :=
 Ltac icrush :=
   eauto; try congruence; try strivial; ssimpl; try sauto;
   try match goal with
+      | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; try sauto
+      end;
+  try match goal with
+      | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; try sauto
+      end;
+  try match goal with
+      | [ |- context[?f] ] => progress unfold f; ssimpl; try sauto unfolding f
+      end;
+  try match goal with
       | [ H : _ |- _ ] =>
-        progress rewrite H in * by ssolve; ssimpl; sauto
+        progress rewrite H in * by ssolve; ssimpl; try sauto
       end;
   try match goal with
-      | [ |- context[?f] ] => progress unfold f; ssimpl; sauto unfolding f
-      end;
-  try match goal with
-      | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; sauto unfolding f
-      end;
-  try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; sauto
-      end;
-  try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; sauto
+      | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; try sauto unfolding f
       end;
   sauto 4000.
 
