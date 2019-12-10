@@ -978,6 +978,10 @@ Ltac sinduction t :=
 Ltac icrush :=
   eauto; try congruence; try strivial; ssimpl; try sauto;
   try match goal with
+      | [ H : _ |- _ ] =>
+        progress rewrite H in * by ssolve; ssimpl; sauto
+      end;
+  try match goal with
       | [ |- context[?f] ] => progress unfold f; ssimpl; sauto unfolding f
       end;
   try match goal with
@@ -988,10 +992,6 @@ Ltac icrush :=
       end;
   try match goal with
       | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; sauto
-      end;
-  try match goal with
-      | [ H : _ |- _ ] =>
-        progress rewrite H in * by ssolve; ssimpl; sauto
       end;
   sauto 4000.
 
