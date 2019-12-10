@@ -56,3 +56,13 @@ Lemma le_double : forall m n:nat, 2 * m <= 2 * n -> m <= n.
 Proof.
   hammer.
 Qed.
+
+Lemma le_plus : forall x, x + x >= x.
+Proof.
+  hammer.
+Qed.
+
+Lemma le_plus_2 : forall x, x > 0 -> x < x + x.
+Proof.
+  hammer.
+Qed.
