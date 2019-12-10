@@ -315,12 +315,11 @@ let check_goal_prop gl =
 
 let run_tactics args msg_success msg_fail =
 (*  let tactics =
-    [ ("Reconstr.rreasy", "rreasy"); ("Reconstr.rryreconstr", "rryreconstr"); ("Reconstr.rrcrush", "rrcrush");
+    [ ("Reconstr.rreasy", "rreasy"); ("Reconstr.rryreconstr", "rryreconstr");
       ("Reconstr.rryelles", "rryelles"); ("Reconstr.rrscrush", "rrscrush"); ]
     in *)
   let tactics =
-    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rleauto", "leauto");
-      ("rsyelles", "syelles") ]
+    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rsyelles", "syelles") ]
   in
 (*  let tactics =
     [ ("rfirstorder", "firstorder"); ("reauto", "xeauto") ]
