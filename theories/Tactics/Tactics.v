@@ -945,7 +945,7 @@ Ltac reauto lems unfolds inverts := solve [ use lems; xeauto ].
 Ltac rsyelles lems unfolds inverts :=
   solve [ syelles using lems unfolding unfolds inverting inverts ].
 Ltac rfirstorder lems unfolds inverts :=
-  solve [ use lems; Reconstr.unfolding unfolds; firstorder ].
+  solve [ use lems; Reconstr.unfolding unfolds; firstorder auto ].
 
 Ltac rcrush := scrush.
 Ltac rprover := Reconstr.sauto; syelles.
