@@ -61,6 +61,8 @@ Ltac isProp t :=
     | Prop => idtac
   end.
 
+Ltac notProp t := tryif isProp t then fail else idtac.
+
 Ltac notTrivial P :=
   lazymatch P with
     | True => fail
@@ -965,3 +967,19 @@ Tactic Notation "tprove" int_or_var(i) :=
 Ltac tprover :=
   solve [ tprove 400 | tprove 4000 | tprove 12000 | tprove 40000 | tprove 120000 | tprove 400000 |
           tprove 1200000 | tprove 4000000 | tprove 12000000 | tprove 40000000 | tprove 120000000 ].
+
+Ltac sinduction t :=
+  repeat match goal with
+           | [ x : ?T |- _ ] =>
+             notProp T; tryif constr_eq x t then fail else (generalize x; clear x)
+         end;
+  induction t.
+
+Ltac icrush :=
+  eauto; try strivial; ssimpl; sauto;
+  repeat match goal with
+         | [ x : ?T |- _ ] => notProp T; induction x; ssimpl; sauto
+         end;
+  repeat match goal with
+         | [ H : ?T |- _ ] => isProp T; induction H; ssimpl; sauto
+         end.
