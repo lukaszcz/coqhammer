@@ -1003,17 +1003,21 @@ Ltac mauto := solve [ xeauto ].
 
 Ltac ecrush :=
   eauto 10; try congruence; (intuition auto); eauto;
+  repeat match goal with
+         | [ |- context[?f] ] => progress unfold f; cbn in *; intuition auto
+         end;
+  repeat match goal with
+         | [ H : _ |- _ ] =>
+           progress rewrite H in * by ssolve; cbn in *; intuition auto
+         end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] => progress unfold f in H; cbn in *; intuition auto
+         end;
+  eauto 10;
   try match goal with
-      | [ H : _ |- _ ] => sinduction H; try subst; solve [ cbn in *; (intuition auto); eauto ]
+      | [ x : ?T |- _ ] => notProp T; sinduction x; cbn in *; intuition eauto
       end;
   try match goal with
-      | [ |- context[?f] ] => progress unfold f; solve [ cbn in *; (intuition auto); eauto ]
-      end;
-  try match goal with
-      | [ H : _ |- _ ] =>
-        progress rewrite H in * by eauto; solve [ cbn in *; (intuition auto); eauto ]
-      end;
-  try match goal with
-      | [ H : context[?f] |- _ ] => progress unfold f in H; solve [ cbn in *; (intuition auto); eauto ]
+      | [ H : ?T |- _ ] => isProp T; sinduction H; cbn in *; intuition eauto
       end;
   solve [ firstorder auto ].
