@@ -942,7 +942,10 @@ Tactic Notation "syelles" "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr
 
 Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
+Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfolds inverting inverts ].
+Ltac rsauto lems unfolds inverts := solve [ sauto using lems unfolding unfolds inverting inverts ].
 Ltac rleauto lems unfolds inverts := solve [ leauto using lems unfolding unfolds inverting inverts ].
+Ltac rlauto lems unfolds inverts := solve [ lauto using lems unfolding unfolds inverting inverts ].
 Ltac reauto lems unfolds inverts := solve [ use lems; xeauto ].
 Ltac rsyelles lems unfolds inverts :=
   solve [ syelles using lems unfolding unfolds inverting inverts ].
@@ -977,23 +980,24 @@ Ltac sinduction t :=
 
 Ltac icrush :=
   eauto; try congruence; try strivial; ssimpl; try sauto;
+  repeat match goal with
+         | [ |- context[?f] ] => progress unfold f; ssimpl unfolding f
+         end;
+  repeat match goal with
+         | [ H : _ |- _ ] =>
+           progress rewrite H in * by ssolve; ssimpl
+         end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl unfolding f
+         end;
+  try sauto 4000;
   try match goal with
       | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; sauto
       end;
   try match goal with
       | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; sauto
       end;
-  repeat match goal with
-      | [ |- context[?f] ] => progress unfold f; ssimpl; try sauto unfolding f
-      end;
-  repeat match goal with
-      | [ H : _ |- _ ] =>
-        progress rewrite H in * by ssolve; ssimpl; try sauto
-      end;
-  repeat match goal with
-      | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; try sauto unfolding f
-      end;
-  sauto 4000.
+  sauto 12000.
 
 Ltac mauto := solve [ xeauto ].
 

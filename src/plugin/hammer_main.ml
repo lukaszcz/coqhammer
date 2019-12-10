@@ -315,31 +315,33 @@ let check_goal_prop gl =
 (***************************************************************************************)
 
 let run_tactics args msg_success msg_fail =
-(*  let tactics =
-    [ ("Reconstr.rreasy", "rreasy"); ("Reconstr.rryreconstr", "rryreconstr");
-      ("Reconstr.rryelles", "rryelles"); ("Reconstr.rrscrush", "rrscrush"); ]
-    in *)
-  let tactics =
-    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rsyelles", "syelles") ]
+  let tactics = [
+    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rsyelles", "syelles") ];
+    [ ("rleauto", "leauto"); ("rlauto", "lauto"); ("rsprover", "sprover"); ("rsauto", "sauto") ]
+  ]
   in
-(*  let tactics =
-    [ ("rfirstorder", "firstorder"); ("reauto", "xeauto") ]
-    in *)
-  let tacs = List.map (fun tac -> Utils.ltac_eval (fst tac) args) tactics
+  let ltacs = List.map (List.map (fun tac -> (Utils.ltac_eval (fst tac) args, snd tac))) tactics
   in
-  Partac.partac !Opt.reconstr_timelimit tacs
-    begin fun k tac ->
-      if k >= 0 then
-        begin
-          msg_success (snd (List.nth tactics k));
-          tac
-        end
-      else
-        begin
-          msg_fail ();
-          Tacticals.New.tclIDTAC
-        end
-    end
+  let rec hlp lst =
+    match lst with
+    | [] ->
+       begin
+         msg_fail ();
+         Tacticals.New.tclIDTAC
+       end
+    | tacs :: ts ->
+       Partac.partac !Opt.reconstr_timelimit (List.map fst tacs)
+         begin fun k tac ->
+           if k >= 0 then
+             begin
+               msg_success (snd (List.nth tacs k));
+               tac
+             end
+           else
+             hlp ts
+         end
+  in
+  hlp ltacs
 
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
