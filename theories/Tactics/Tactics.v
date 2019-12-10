@@ -982,4 +982,15 @@ Ltac icrush :=
          end;
   repeat match goal with
          | [ H : ?T |- _ ] => isProp T; induction H; ssimpl; sauto
-         end.
+         end;
+  repeat match goal with
+         | [ |- context[?f] ] => progress unfold f; ssimpl; sauto unfolding f
+         end;
+  repeat match goal with
+      | [ H : _ |- _ ] =>
+        progress rewrite H in * by ssolve; ssimpl; sauto
+      end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; sauto unfolding f
+         end;
+  sauto 4000.
