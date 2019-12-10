@@ -978,21 +978,38 @@ Ltac sinduction t :=
 Ltac icrush :=
   eauto; try congruence; try strivial; ssimpl; try sauto;
   repeat match goal with
-         | [ x : ?T |- _ ] => notProp T; induction x; ssimpl; try sauto
+         | [ x : ?T |- _ ] => notProp T; induction x; ssimpl; sauto
          end;
   repeat match goal with
-         | [ H : ?T |- _ ] => isProp T; induction H; ssimpl; try sauto
+         | [ H : ?T |- _ ] => isProp T; induction H; ssimpl; sauto
          end;
   repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; ssimpl; try sauto unfolding f
+         | [ |- context[?f] ] => progress unfold f; ssimpl; sauto unfolding f
          end;
   repeat match goal with
       | [ H : _ |- _ ] =>
-        progress rewrite H in * by ssolve; ssimpl; try sauto
+        progress rewrite H in * by ssolve; ssimpl; sauto
       end;
   repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; try sauto unfolding f
+         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl; sauto unfolding f
          end;
   sauto 4000.
 
 Ltac mauto := solve [ xeauto ].
+
+Ltac ecrush :=
+  eauto 10; try congruence; intuition auto; eauto;
+  repeat match goal with
+         | [ H : _ |- _ ] => induction H; try subst; solve [ cbn in *; intuition auto; eauto ]
+         end;
+  repeat match goal with
+         | [ |- context[?f] ] => progress unfold f; solve [ cbn in *; intuition auto; eauto ]
+         end;
+  repeat match goal with
+      | [ H : _ |- _ ] =>
+        progress rewrite H in * by eauto; solve [ cbn in *; intuition auto; eauto ]
+      end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] => progress unfold f in H; solve [ cbn in *; intuition auto; eauto ]
+         end;
+  solve [ firstorder auto ].
