@@ -236,7 +236,60 @@ let map_fold_constr f acc evd t =
 
 let map_constr f evd x = snd (map_fold_constr (fun m () t -> ((), f m t)) () evd x)
 
-let fold_constr f acc evd x = fst (map_fold_constr (fun m acc t -> (f m acc t, t)) acc evd x)
+let fold_constr f acc evd t =
+  let open Constr in
+  let open EConstr in
+  let rec hlp m acc t =
+    let fold_arr k ac ar =
+      List.fold_left (hlp k) ac (Array.to_list ar)
+    in
+    match kind evd t with
+    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ ->
+       f m acc t
+    | Cast (ty1,ck,ty2) ->
+       let acc1 = hlp m acc ty1 in
+       let acc2 = hlp m acc1 ty2 in
+       f m acc2 t
+    | Prod (na,ty,c) ->
+       let acc1 = hlp m acc ty in
+       let acc2 = hlp (m+1) acc1 c in
+       f m acc2 t
+    | Lambda (na,ty,c)  ->
+       let acc1 = hlp m acc ty in
+       let acc2 = hlp (m+1) acc1 c in
+       f m acc2 t
+    | LetIn (na,b,ty,c) ->
+       let acc1 = hlp m acc ty in
+       let acc2 = hlp m acc1 b in
+       let acc3 = hlp (m+1) acc2 c in
+       f m acc3 t
+    | App (a,args) ->
+       let acc1 = hlp m acc a in
+       let acc2 = fold_arr m acc1 args in
+       f m acc2 t
+    | Proj (p,c) ->
+       let acc1 = hlp m acc c in
+       f m acc1 t
+    | Evar (evk,cl) ->
+       let acc1 = fold_arr m acc cl in
+       f m acc1 t
+    | Case (ci,p,c,bl) ->
+       let acc1 = hlp m acc p in
+       let acc2 = hlp m acc1 c in
+       let acc3 = fold_arr m acc2 bl in
+       f m acc3 t
+    | Fix (nvn,recdef) ->
+       let (fnames,typs,bodies) = recdef in
+       let acc1 = fold_arr m acc typs in
+       let acc2 = fold_arr (m + Array.length typs) acc1 bodies in
+       f m acc2 t
+    | CoFix (n,recdef) ->
+       let (fnames,typs,bodies) = recdef in
+       let acc1 = fold_arr m acc typs in
+       let acc2 = fold_arr (m + Array.length typs) acc1 bodies in
+       f m acc2 t
+  in
+  hlp 0 acc t
 
 let fold_constr_shallow f acc evd t =
   let open Constr in
