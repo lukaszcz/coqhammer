@@ -1283,3 +1283,20 @@ Ltac rryreconstr lems defs inverts := solve [ unshelve hyreconstr AllHyps lems d
 Ltac rrcrush lems defs inverts := solve [ unshelve hcrush AllHyps lems defs; dsolve ].
 Ltac rryelles lems defs inverts := solve [ unshelve hyelles2 AllHyps lems defs; dsolve ].
 Ltac rrscrush lems defs inverts := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
+
+Ltac ucrush :=
+  eauto; try congruence; yisolve; sauto; try yelles 2;
+  repeat match goal with
+         | [ |- context[?f] ] => progress unfold f in *; sauto
+         end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] => progress unfold f in H; sauto
+         end;
+  try match goal with
+      | [ x : ?T |- _ ] => notProp T; yinduction x; sauto; yelles 2
+      end;
+  try match goal with
+      | [ H : ?T |- _ ] => isProp T; yinduction H; sauto; yelles 2
+      end;
+  try yelles 4;
+  yelles 6.
