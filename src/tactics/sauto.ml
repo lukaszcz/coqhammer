@@ -438,7 +438,7 @@ let case_splitting b_all opts =
      in
      Proofview.Goal.enter begin fun gl ->
        let evd = Proofview.Goal.sigma gl in
-       Utils.fold_constr begin fun n acc t ->
+       Utils.fold_constr_shallow begin fun acc t ->
          let open Constr in
          let open EConstr in
          match kind evd t with
