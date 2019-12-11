@@ -63,6 +63,8 @@ val map_constr : (int -> EConstr.t -> EConstr.t) -> Evd.evar_map -> EConstr.t ->
 
 val fold_constr : (int -> 'a -> EConstr.t -> 'a) -> 'a -> Evd.evar_map -> EConstr.t -> 'a
 
+val fold_constr_shallow : ('a -> EConstr.t -> 'a) -> 'a -> Evd.evar_map -> EConstr.t -> 'a
+
 val map_fold_constr_ker : (int -> 'a -> Constr.t -> 'a * Constr.t) ->
                           'a -> Constr.t ->
                           'a * Constr.t
