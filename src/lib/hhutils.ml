@@ -238,6 +238,56 @@ let map_constr f evd x = snd (map_fold_constr (fun m () t -> ((), f m t)) () evd
 
 let fold_constr f acc evd x = fst (map_fold_constr (fun m acc t -> (f m acc t, t)) acc evd x)
 
+let fold_constr_shallow f acc evd t =
+  let open Constr in
+  let open EConstr in
+  let rec hlp acc t =
+    let fold_arr ac ar =
+      List.fold_left hlp ac (Array.to_list ar)
+    in
+    match kind evd t with
+    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ ->
+       f acc t
+    | Cast (ty1,ck,ty2) ->
+       let acc1 = hlp acc ty1 in
+       let acc2 = hlp acc1 ty2 in
+       f acc2 t
+    | Prod (na,ty,c) ->
+       let acc1 = hlp acc ty in
+       f acc1 t
+    | Lambda (na,ty,c) ->
+       let acc1 = hlp acc ty in
+       f acc1 t
+    | LetIn (na,b,ty,c) ->
+       let acc1 = hlp acc ty in
+       let acc2 = hlp acc1 b in
+       f acc2 t
+    | App (a,args) ->
+       let acc1 = hlp acc a in
+       let acc2 = fold_arr acc1 args in
+       f acc2 t
+    | Proj (p,c) ->
+       let acc1 = hlp acc c in
+       f acc1 t
+    | Evar (evk,cl) ->
+       let acc1 = fold_arr acc cl in
+       f acc1 t
+    | Case (ci,p,c,bl) ->
+       let acc1 = hlp acc p in
+       let acc2 = hlp acc1 c in
+       let acc3 = fold_arr acc2 bl in
+       f acc3 t
+    | Fix (nvn,recdef) ->
+       let (fnames,typs,bodies) = recdef in
+       let acc1 = fold_arr acc typs in
+       f acc1 t
+    | CoFix (n,recdef) ->
+       let (fnames,typs,bodies) = recdef in
+       let acc1 = fold_arr acc typs in
+       f acc1 t
+  in
+  hlp acc t
+
 let map_fold_constr_ker f acc t =
   let open Constr in
   let rec hlp m acc t =
