@@ -692,7 +692,31 @@ let create_actions extra opts evd goal hyps =
   in
   List.stable_sort (fun (x, _, _) (y, _, _) -> Pervasives.compare x y) actions
 
-let rec search extra opts n hyps visited =
+(*****************************************************************************************)
+
+type tactics = {
+  t_simplify : unit Proofview.tactic;
+  t_simplify_concl : unit Proofview.tactic;
+  t_simple_splitting : unit Proofview.tactic;
+  t_case_splitting : unit Proofview.tactic;
+  t_unfolding : unit Proofview.tactic;
+  t_reduce_concl : unit Proofview.tactic;
+  t_subst_simpl : unit Proofview.tactic;
+}
+
+let create_tactics opts = {
+  t_simplify = simplify opts;
+  t_simplify_concl = simplify_concl opts;
+  t_simple_splitting = simple_splitting opts;
+  t_case_splitting = case_splitting false opts;
+  t_unfolding = unfolding opts;
+  t_reduce_concl = reduce_concl opts;
+  t_subst_simpl = subst_simpl opts;
+}
+
+(*****************************************************************************************)
+
+let rec search extra tacs opts n hyps visited =
   if n = 0 then
     opts.s_leaf_tac
   else
@@ -706,12 +730,12 @@ let rec search extra opts n hyps visited =
         let open EConstr in
         match kind evd goal with
         | Prod (_, h, f) when not (Utils.is_atom evd h) || not (Utils.is_False evd f) ->
-           intros opts n
+           intros tacs opts n
         | _ ->
            if is_simple_split opts evd goal then
-             simple_splitting opts <*> search extra opts n hyps (goal :: visited)
+             tacs.t_simple_splitting <*> search extra tacs opts n hyps (goal :: visited)
            else if is_case_split opts evd goal then
-             case_splitting false opts <*> start_search opts n
+             tacs.t_case_splitting <*> start_search tacs opts n
            else
              let hyps =
                if hyps = [] then
@@ -723,26 +747,26 @@ let rec search extra opts n hyps visited =
              match actions with
              | [] -> opts.s_leaf_tac
              | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> opts.s_leaf_tac
-             | _ -> apply_actions opts n actions hyps (goal :: visited)
+             | _ -> apply_actions tacs opts n actions hyps (goal :: visited)
     end
 
-and start_search opts n =
-  unfolding opts <*> simplify opts <*> search true opts n [] []
+and start_search tacs opts n =
+  tacs.t_unfolding <*> tacs.t_simplify <*> search true tacs opts n [] []
 
-and intros opts n =
-  reduce_concl opts <*>
+and intros tacs opts n =
+  tacs.t_reduce_concl <*>
     intros_until_atom_tac <*>
-    start_search opts n
+    start_search tacs opts n
 
-and apply_actions opts n actions hyps visited =
+and apply_actions tacs opts n actions hyps visited =
   let branch =
     if opts.s_exhaustive then Proofview.tclOR else Proofview.tclORELSE
   in
   let cont tac acts =
-    branch tac (fun _ -> apply_actions opts n acts hyps visited)
+    branch tac (fun _ -> apply_actions tacs opts n acts hyps visited)
   in
   let continue n tac acts =
-    cont (Proofview.tclBIND tac (fun _ -> search false opts n hyps visited)) acts
+    cont (Proofview.tclBIND tac (fun _ -> search false tacs opts n hyps visited)) acts
   in
   match actions with
   | (cost, branching, act) :: acts ->
@@ -760,31 +784,33 @@ and apply_actions opts n actions hyps visited =
          | ActApply id ->
             continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
          | ActRewriteLR id ->
-            continue n' (erewrite (not opts.s_eager_rewriting) true id <*> simplify_concl opts) acts
+            continue n' (erewrite (not opts.s_eager_rewriting) true id <*> tacs.t_simplify_concl) acts
          | ActRewriteRL id ->
-            continue n' (erewrite (not opts.s_eager_rewriting) false id <*> simplify_concl opts) acts
+            continue n' (erewrite (not opts.s_eager_rewriting) false id <*> tacs.t_simplify_concl) acts
          | ActInvert id ->
-            cont (sinvert opts id <*> start_search opts n') acts
+            cont (sinvert opts id <*> start_search tacs opts n') acts
          | ActUnfold c ->
-            continue n' (Tacticals.New.tclPROGRESS (unfold c) <*> simplify_concl opts) acts
+            continue n' (Tacticals.New.tclPROGRESS (unfold c) <*> tacs.t_simplify_concl) acts
          | ActCaseUnfold c ->
-            cont (Tacticals.New.tclPROGRESS (fullunfold c) <*> start_search opts n') acts
+            cont (Tacticals.New.tclPROGRESS (fullunfold c) <*> start_search tacs opts n') acts
          | ActConstructor ->
             cont
               (Tactics.any_constructor true
-                 (Some (simplify_concl opts <*> search false opts n' hyps visited)))
+                 (Some (tacs.t_simplify_concl <*> search false tacs opts n' hyps visited)))
               acts
          | ActIntro ->
-            cont (Tactics.intros <*> subst_simpl opts <*> start_search opts n') acts
+            cont (Tactics.intros <*> tacs.t_subst_simpl <*> start_search tacs opts n') acts
          | ActReduce ->
-            cont (Tacticals.New.tclPROGRESS cbn_in_all_tac <*> start_search opts n') acts
+            cont (Tacticals.New.tclPROGRESS cbn_in_all_tac <*> start_search tacs opts n') acts
        end
   | [] ->
      fail_tac
 
 (*****************************************************************************************)
 
-let sauto opts n = unfolding opts <*> subst_simpl opts <*> intros opts n
+let sauto opts n =
+  unfolding opts <*> subst_simpl opts <*>
+    intros (create_tactics opts) opts n
 
 let sintuition opts =
   Tactics.intros <*> simp_hyps_tac <*> ssubst_tac <*> opts.s_simpl_tac <*>
