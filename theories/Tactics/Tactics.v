@@ -646,10 +646,7 @@ Ltac forwarding_nocbn :=
          | [ H : forall x : _,_ |- _ ] => forward_nocbn H
          end.
 
-Ltac srewrite H := erewrite H by isolve.
-Ltac srewrite_rev H := erewrite <- H by isolve.
-Ltac srewrite_all H := erewrite H in * by isolve.
-Ltac srewrite_all_rev H := erewrite <- H in * by isolve.
+Ltac srewrite H := (erewrite H by isolve) || (erewrite <- H by isolve).
 
 Ltac srewriting :=
   repeat match goal with
