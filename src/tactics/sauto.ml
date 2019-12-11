@@ -305,7 +305,7 @@ let is_case_split opts evd t =
     false
   else
     try
-      Utils.fold_constr begin fun n acc t ->
+      Utils.fold_constr_shallow begin fun acc t ->
         let open Constr in
         let open EConstr in
         match kind evd t with
@@ -742,7 +742,7 @@ and apply_actions opts n actions hyps visited =
     branch tac (fun _ -> apply_actions opts n acts hyps visited)
   in
   let continue n tac acts =
-    cont (tac <*> search false opts n hyps visited) acts
+    cont (Proofview.tclBIND tac (fun _ -> search false opts n hyps visited)) acts
   in
   match actions with
   | (cost, branching, act) :: acts ->
