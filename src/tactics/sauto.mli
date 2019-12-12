@@ -23,6 +23,7 @@ type s_opts = {
   s_reducing : bool;
   s_rewriting : bool;
   s_heuristic_rewriting : bool;
+  s_aggressive_unfolding : bool;
   s_depth_cost_model : bool;
 }
 
@@ -30,6 +31,9 @@ val default_s_opts : s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic
+
+val sunfold : bool (* aggressive? *) -> Constant.t -> unit Proofview.tactic
+val sunfolding : bool (* aggressive? *) -> unit Proofview.tactic
 
 (* sauto opts cost_limit *)
 val sauto : s_opts -> int -> unit Proofview.tactic
