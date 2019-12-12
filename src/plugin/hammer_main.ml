@@ -10,8 +10,6 @@ open Ltac_plugin
 
 module Utils = Hhutils
 
-let (++) f g x = f(g(x))
-
 (***************************************************************************************)
 
 let mk_id x = Hh_term.Id x
@@ -138,7 +136,7 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
   let filename_aux = match glob_ref with
     | Names.GlobRef.ConstRef c -> Constant.to_string c
     | Names.GlobRef.IndRef i   -> MutInd.to_string (fst i)
-    | Names.GlobRef.ConstructRef cstr -> MutInd.to_string ((fst ++ fst) cstr)
+    | Names.GlobRef.ConstructRef cstr -> MutInd.to_string ((Hhlib.comp fst fst) cstr)
     | Names.GlobRef.VarRef v -> Id.to_string v
   in
   let term = match glob_ref with
@@ -181,7 +179,7 @@ let make_good =
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
   let sigma = Proofview.Goal.sigma gl in
-  List.map (hhdef_of_hyp env sigma ++ make_good) (Proofview.Goal.hyps gl)
+  List.map (Hhlib.comp (hhdef_of_hyp env sigma) make_good) (Proofview.Goal.hyps gl)
 
 let get_goal gl =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
