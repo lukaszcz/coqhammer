@@ -1287,7 +1287,7 @@ Ltac rrscrush lems defs inverts := solve [ unshelve hscrush AllHyps lems defs; d
 Ltac ucrush :=
   eauto; try congruence; yisolve; sauto; try yelles 2;
   repeat match goal with
-         | [ |- context[?f] ] => progress unfold f in *; sauto
+         | [ |- context[?f] ] => progress unfold f; sauto
          end;
   repeat match goal with
          | [ H : context[?f] |- _ ] => progress unfold f in H; sauto
