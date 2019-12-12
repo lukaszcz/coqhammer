@@ -105,26 +105,6 @@ Ltac seasy :=
   solve [ do_atom | use_hyps; do_ccl 16 ] ||
   fail "Cannot solve this goal".
 
-Ltac tryunfold x :=
-  let t := eval unfold x in x in
-  lazymatch t with
-    | _ _ => unfold x in *
-    | (fun x => _ _) => unfold x in *
-    | (fun x y => _ _) => unfold x in *
-    | (fun x y z => _ _) => unfold x in *
-    | (fun x y z u => _ _) => unfold x in *
-    | (fun x y z u w => _ _) => unfold x in *
-    | (fun x y z u w v => _ _) => unfold x in *
-    | (forall s, _) => unfold x in *
-    | (fun x => forall s, _) => unfold x in *
-    | (fun x y => forall s, _) => unfold x in *
-    | (fun x y z => forall s, _) => unfold x in *
-    | (fun x y z u => forall s, _) => unfold x in *
-    | (fun x y z u w => forall s, _) => unfold x in *
-    | (fun x y z u w v => forall s, _) => unfold x in *
-    | _ => idtac
-  end.
-
 Ltac fullunfold h := unfold h in *.
 
 Ltac vinst e :=
@@ -976,13 +956,7 @@ Ltac sinduction t :=
   induction t.
 
 Ltac ucrush :=
-  eauto; try congruence; try strivial; ssimpl; try sauto;
-  repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; ssimpl unfolding f
-         end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl unfolding f
-         end;
+  eauto; try congruence; try strivial; ssimpl; try sauto; sunfolding; ssimpl;
   try match goal with
       | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; sauto
       end;

@@ -19,6 +19,16 @@ TACTIC EXTEND Hammer_eager_inverting
 | [ "eager_inverting" ] -> { eager_inverting default_s_opts }
 END
 
+TACTIC EXTEND Hammer_sunfold
+| [ "sunfold" constr(c) ] -> { sunfold true (to_const c) }
+| [ "sunfold" "weak" constr(c) ] -> { sunfold false (to_const c) }
+END
+
+TACTIC EXTEND Hammer_sunfolding
+| [ "sunfolding" ] -> { sunfolding true }
+| [ "sunfolding" "weak" ] -> { sunfolding false }
+END
+
 TACTIC EXTEND Hammer_ssimpl_gen
 | [ "ssimpl" ] -> {
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }

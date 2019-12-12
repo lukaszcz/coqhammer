@@ -29,6 +29,7 @@ type s_opts = {
   s_reducing : bool;
   s_rewriting : bool;
   s_heuristic_rewriting : bool;
+  s_aggressive_unfolding : bool;
   s_depth_cost_model : bool;
 }
 
@@ -51,6 +52,7 @@ let default_s_opts = {
   s_reducing = true;
   s_rewriting = true;
   s_heuristic_rewriting = true;
+  s_aggressive_unfolding = false;
   s_depth_cost_model = false;
 }
 
@@ -170,7 +172,22 @@ let reduce_concl opts =
 
 (*****************************************************************************************)
 
-let is_simple_unfold c =
+let get_consts evd lst =
+  Hhlib.sort_uniq Pervasives.compare
+    (List.concat
+       (List.map
+          begin fun t ->
+            Utils.fold_constr begin fun n acc t ->
+              let open Constr in
+              let open EConstr in
+              match kind evd t with
+              | Const (c, _) -> c :: acc
+              | _ -> acc
+            end [] evd t
+          end
+          lst))
+
+let is_simple_unfold b_aggressive c =
   match Global.body_of_constant c with
   | Some (b, _) ->
      begin
@@ -179,7 +196,8 @@ let is_simple_unfold c =
        let open Constr in
        let open EConstr in
        match kind Evd.empty body with
-       | Prod _  | App _ | Const _ | Ind _ | Sort _ | Var _ | Rel _ -> true
+       | Prod _  | App _ | Const _ | Ind _ | Sort _ | Var _ | Rel _ | Construct _ | Int _ -> true
+       | Case _ | LetIn _ | Cast _ -> b_aggressive
        | _ -> false
      end
   | None -> false
@@ -204,8 +222,8 @@ let unfold c = Tactics.unfold_constr (GlobRef.ConstRef c)
 
 let fullunfold c = fullunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c, None)), None)
 
-let tryunfold c =
-  if is_simple_unfold c then
+let sunfold b_aggressive c =
+  if is_simple_unfold b_aggressive c then
     fullunfold c
   else
     Tacticals.New.tclIDTAC
@@ -214,14 +232,23 @@ let unfolding opts =
   let do_unfolding lst =
     Tacticals.New.tclREPEAT
       (List.fold_left
-         (fun acc c -> tryunfold c <*> acc)
+         (fun acc c -> sunfold opts.s_aggressive_unfolding c <*> acc)
          Tacticals.New.tclIDTAC
          lst)
   in
   match opts.s_unfolding with
   | SSome lst -> do_unfolding (!unfolding_hints @ lst)
   | SNoHints lst -> do_unfolding lst
-  | _ -> Tacticals.New.tclIDTAC
+  | SAll ->
+     Proofview.Goal.enter begin fun gl ->
+       do_unfolding
+         (get_consts (Proofview.Goal.sigma gl)
+            (Proofview.Goal.concl gl :: List.map snd (Utils.get_hyps gl)))
+     end
+  | SNone -> Tacticals.New.tclIDTAC
+
+let sunfolding b_aggressive =
+  unfolding { default_s_opts with s_unfolding = SAll; s_aggressive_unfolding = b_aggressive }
 
 (*****************************************************************************************)
 
@@ -625,35 +652,23 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
      []
 
 let create_case_unfolding_actions opts evd goal hyps =
-  let create lst =
-    List.fold_left begin fun acc c ->
-      let cost = case_unfold_cost c in
-      if cost >= 0 then
-        (cost, 1, ActCaseUnfold c) :: acc
-      else
-        acc
-    end [] lst
-  in
-  let get_consts lst =
-    Hhlib.sort_uniq Pervasives.compare
-      (List.concat
-         (List.map
-            begin fun t ->
-              Utils.fold_constr begin fun n acc t ->
-                let open Constr in
-                let open EConstr in
-                match kind evd t with
-                | Const (c, _) -> c :: acc
-                | _ -> acc
-              end [] evd t
-            end
-            lst))
-  in
-  match opts.s_unfolding with
-  | SSome lst -> create (!unfolding_hints @ lst)
-  | SNoHints lst -> create lst
-  | SAll -> create (get_consts (goal :: List.map (fun (_, x, _, _, _) -> x) hyps))
-  | SNone -> []
+  if opts.s_aggressive_unfolding then
+    []
+  else
+    let create lst =
+      List.fold_left begin fun acc c ->
+        let cost = case_unfold_cost c in
+        if cost >= 0 then
+          (cost, 1, ActCaseUnfold c) :: acc
+        else
+          acc
+      end [] lst
+    in
+    match opts.s_unfolding with
+    | SSome lst -> create (!unfolding_hints @ lst)
+    | SNoHints lst -> create lst
+    | SAll -> create (get_consts evd (goal :: List.map (fun (_, x, _, _, _) -> x) hyps))
+    | SNone -> []
 
 let create_extra_actions opts evd goal hyps =
   let actions =
