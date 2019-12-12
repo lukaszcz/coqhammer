@@ -626,7 +626,8 @@ Ltac forwarding_nocbn :=
          | [ H : forall x : _,_ |- _ ] => forward_nocbn H
          end.
 
-Ltac srewrite H := (erewrite H by isolve) || (erewrite <- H by isolve).
+Ltac srewrite H := (erewrite H in * by isolve) || (erewrite <- H in * by isolve).
+Ltac srewrite_in_concl H := (erewrite H by isolve) || (erewrite <- H by isolve).
 
 Ltac srewriting :=
   repeat match goal with
@@ -918,6 +919,7 @@ Tactic Notation "syelles" "unfolding" constr(lst2) "inverting" constr(lst3) := R
 Tactic Notation "syelles" "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
 
 Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
+Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding unfolds inverting inverts ].
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
 Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfolds inverting inverts ].
 Ltac rsauto lems unfolds inverts := solve [ sauto using lems unfolding unfolds inverting inverts ].
