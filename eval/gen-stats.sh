@@ -9,7 +9,7 @@ cd ..
 tools/stat -r , y,p , , false
 
 echo "<table>" >> statistics.html
-echo "<tr><th>hauto</th><th>xeauto</th><th>scrush</th><th>syelles</th><th>sprover</th></tr>" >> statistics.html
+echo "<tr><th>hauto</th><th>xeauto</th><th>scrush</th><th>leauto</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'hauto$' {} + | wc -l` >> statistics.html
@@ -21,7 +21,22 @@ echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep scrush {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep syelles {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep leauto {} + | wc -l` >> statistics.html
+echo "</td>" >> statistics.html
+echo "</tr>" >> statistics.html
+echo "</table>" >> statistics.html
+
+echo "<table>" >> statistics.html
+echo "<tr><th>sauto</th><th>lauto</th><th>hauto 400</th><th>sprover</th></tr>" >> statistics.html
+echo "<tr>" >> statistics.html
+echo "<td>" >> statistics.html
+echo `find out -name "*.out" -exec grep 'sauto$' {} + | wc -l` >> statistics.html
+echo "</td>" >> statistics.html
+echo "<td>" >> statistics.html
+echo `find out -name "*.out" -exec grep lauto {} + | wc -l` >> statistics.html
+echo "</td>" >> statistics.html
+echo "<td>" >> statistics.html
+echo `find out -name "*.out" -exec grep 'hauto 4000' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep sprover {} + | wc -l` >> statistics.html
@@ -30,43 +45,37 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>rreasy</th><th>rryreconstr</th><th>rrcrush</th><th>rryelles</th><th>rrscrush</th></tr>" >> statistics.html
+echo "<tr><th>rreasy</th><th>rryelles</th><th>rrcrush</th><th>rryreconstr</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep rreasy {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rryreconstr {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep rryelles {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep rrcrush {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rryelles {} + | wc -l` >> statistics.html
-echo "</td>" >> statistics.html
-echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rrscrush {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep rryreconstr {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>rfirstorder</th><th>rryreconstr</th><th>rrcrush</th><th>rryelles</th><th>rrscrush</th></tr>" >> statistics.html
+echo "<tr><th>rfirstorder</th><th>xeauto</th><th>rtauto</th><th>reasy</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep rfirstorder {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rryreconstr {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep xeauto {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rrcrush {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep rtauto {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rryelles {} + | wc -l` >> statistics.html
-echo "</td>" >> statistics.html
-echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rrscrush {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep reasy {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
