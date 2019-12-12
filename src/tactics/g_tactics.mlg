@@ -87,9 +87,10 @@ TACTIC EXTEND Hammer_sauto_gen
                                                   default_sauto_tree_limit)) }
 | [ "sauto_gen" int_or_var_opt(n) "with" "(" ne_preident_list(bases) ")" "unfolding" constr(unfoldings)
       "inverting" constr(inverting) "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> {
-  sauto (get_s_opts ropts bases unfoldings inverting ctrs)
+  let opts = get_s_opts ropts bases unfoldings inverting ctrs in
+  sauto opts
   (get_opt n
-     (if default_s_opts.s_depth_cost_model then
+     (if opts.s_depth_cost_model then
          default_sauto_depth_limit
       else
          default_sauto_tree_limit))
