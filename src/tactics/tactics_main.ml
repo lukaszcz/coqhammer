@@ -101,6 +101,7 @@ let get_s_opts ropts bases unfoldings inverting ctrs =
        { opts with s_rewriting = false; s_eager_rewriting = false; s_heuristic_rewriting = false }
     | "no_reflect" -> { opts with s_bnat_reflect = false }
     | "no_reduction" -> { opts with s_reducing = false; s_eager_reducing = false }
+    | "presimplify" -> { opts with s_presimplify = true }
     | "depth_cost_model" -> { opts with s_depth_cost_model = true }
     | "tree_cost_model" -> { opts with s_depth_cost_model = false }
     | "exhaustive" -> { opts with s_exhaustive = true }
