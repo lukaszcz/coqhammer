@@ -24,6 +24,7 @@ type s_opts = {
   s_rewriting : bool;
   s_heuristic_rewriting : bool;
   s_aggressive_unfolding : bool;
+  s_presimplify : bool;
   s_depth_cost_model : bool;
 }
 

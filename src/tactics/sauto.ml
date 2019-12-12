@@ -30,6 +30,7 @@ type s_opts = {
   s_rewriting : bool;
   s_heuristic_rewriting : bool;
   s_aggressive_unfolding : bool;
+  s_presimplify : bool;
   s_depth_cost_model : bool;
 }
 
@@ -53,6 +54,7 @@ let default_s_opts = {
   s_rewriting = true;
   s_heuristic_rewriting = true;
   s_aggressive_unfolding = false;
+  s_presimplify = false;
   s_depth_cost_model = false;
 }
 
@@ -841,14 +843,11 @@ and apply_actions tacs opts n actions hyps rtrace visited =
 
 (*****************************************************************************************)
 
-let sauto opts n =
-  unfolding opts <*> subst_simpl opts <*>
-    intros (create_tactics opts) opts n
-
 let sintuition opts =
-  Tactics.intros <*> simp_hyps_tac <*> ssubst_tac <*> opts.s_simpl_tac <*>
+  Tactics.intros <*> simp_hyps_tac <*> ssubst_tac <*> Tacticals.New.tclTRY opts.s_simpl_tac <*>
     Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
-                               (Tactics.intros <*> simp_hyps_tac <*> ssubst_tac) <*> opts.s_simpl_tac)
+                               (Tactics.intros <*> simp_hyps_tac <*> ssubst_tac) <*>
+                               Tacticals.New.tclTRY opts.s_simpl_tac)
 
 let ssimpl opts =
   let tac1 =
@@ -861,6 +860,16 @@ let ssimpl opts =
       subst_simpl opts
   in
   tac1 <*> (simplify opts <~> tac2)
+
+let sauto opts n =
+  let simp =
+    if opts.s_presimplify then
+      ssimpl opts
+    else
+      Proofview.tclUNIT ()
+  in
+  simp <*> unfolding opts <*> subst_simpl opts <*>
+    intros (create_tactics opts) opts n
 
 let print_actions opts =
   Proofview.Goal.enter begin fun gl ->
