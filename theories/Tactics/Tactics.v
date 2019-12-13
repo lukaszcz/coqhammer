@@ -123,6 +123,22 @@ Ltac vinst e :=
     generalize e
   end.
 
+Ltac einst e :=
+  let tpe := type of e
+  in
+  lazymatch tpe with
+  | ?T -> ?Q =>
+    generalize e
+  | forall x : ?T, _ =>
+    let v := fresh "v" in
+    evar (v : T);
+    let v2 := eval unfold v in v in
+    clear v;
+    einst (e v2)
+  | _ =>
+    generalize e
+  end.
+
 Ltac sdestruct t :=
   lazymatch t with
     | _ _ => destruct t eqn:?
@@ -412,7 +428,7 @@ Ltac isolve :=
 
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
-Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 32;
+Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 24;
                try seasy; try solve [ econstructor; isolve ].
 
 Ltac strivial := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
@@ -559,27 +575,19 @@ Ltac seinvert H :=
     end
   end.
 
-Ltac einster e tac :=
-  let tpe := type of e
-  in
-  lazymatch tpe with
-    | ?T -> ?Q =>
-      let H := fresh "H" in
-      tryif (assert (H : T) by tac) then
-        einster (e H) tac; clear H
-      else
-        generalize e
-    | forall x : ?T, _ =>
-      let v := fresh "v" in
-      evar (v : T);
-      let v2 := eval unfold v in v in
-      clear v;
-      einster (e v2) tac;
-      try match goal with
-          | [ y : T |- _ ] => unify y v2
-          end
-    | _ =>
-      generalize e
+Definition rdone {T : Type} (x : T) := True.
+
+Ltac un_done :=
+  repeat match goal with
+         | [ H : rdone _ |- _ ] => clear H
+         end.
+
+Ltac impl_fwd e :=
+  match type of e with
+  | ?T -> ?Q =>
+    impl_fwd (e ltac:(fsolve))
+  | _ =>
+    generalize e
   end.
 
 Ltac forward_base tac e :=
@@ -589,10 +597,7 @@ Ltac forward_base tac e :=
     let rec fwd e :=
         lazymatch type of e with
         | ?P -> ?Q =>
-          let H := fresh "H" in
-          assert (H : P) by fsolve;
-          einster (e H) fsolve;
-          clear H
+          impl_fwd (e (ltac:(fsolve)))
         | forall x : ?T, _ =>
           let v := fresh "v" in
           evar (v : T);
@@ -624,6 +629,140 @@ Ltac forwarding :=
 Ltac forwarding_nocbn :=
   repeat match goal with
          | [ H : forall x : _,_ |- _ ] => forward_nocbn H
+         end.
+
+Ltac inList x lst :=
+  lazymatch lst with
+    | (?t, ?y) => tryif constr_eq x y then idtac else inList x t
+    | x => idtac
+    | _ => fail
+  end.
+
+Ltac notInList x lst := tryif inList x lst then fail else idtac.
+
+Ltac all f ls :=
+  match ls with
+    | (?LS, ?X) => f X; all f LS
+    | (_, _) => fail 1
+    | _ => f ls
+  end.
+
+Ltac lst_rev lst :=
+  let rec hlp lst acc :=
+      match lst with
+        | tt => acc
+        | (?t, ?h) => hlp t (acc, h)
+        | ?x => constr:((acc, x))
+      end
+  in
+  hlp lst tt.
+
+Ltac with_hyps p f :=
+  let rec hlp acc :=
+      match goal with
+        | [ H : ?P |- _ ] =>
+          p P; notInList H acc; hlp (acc, H)
+        | _ =>
+          f ltac:(lst_rev acc)
+      end
+  in
+  hlp tt.
+
+Ltac with_prop_hyps := with_hyps isProp.
+Ltac all_hyps f := with_hyps ltac:(fun _ => idtac) ltac:(all f).
+Ltac all_prop_hyps f := with_prop_hyps ltac:(all f).
+
+Ltac sforward H :=
+  lazymatch type of H with
+  | ?P -> ?Q => fail
+  | _ =>
+    einst H;
+    progress repeat match goal with
+                    | [ H0 : ?P |- (?Q -> _) -> _ ] =>
+                      unify P Q;
+                      let H1 := fresh "H" in
+                      intro H1; generalize (H1 H0); clear H1
+                    end;
+    match goal with
+    | [ |- ?P -> _ ] => notTrivial P; noEvars P; notHyp P
+    end;
+    intro
+  end.
+
+Ltac sforwarding :=
+  all_hyps ltac:(fun H => try sforward H).
+
+Tactic Notation "forward_reasoning" int_or_var(n) := do n sforwarding.
+
+Ltac inster0 e trace :=
+  match type of e with
+  | forall x : ?T, _ =>
+    match goal with
+    | [ H : _ |- _ ] =>
+      inster0 (e H) (trace, H)
+    | _ =>
+      isProp T;
+      let H := fresh "H" in
+      assert (H: T) by isolve;
+      inster0 (e H) (trace, H)
+    | _ => fail 2
+    end
+  | _ =>
+    match trace with
+    | (_, _) =>
+      match goal with
+      | [ H : rdone (trace, _) |- _ ] =>
+        fail 1
+      | _ =>
+        let T := type of e in
+        lazymatch type of T with
+        | Prop =>
+          notHyp T; generalize e; intro;
+          assert (rdone (trace, tt)) by constructor
+        | _ =>
+          all ltac:(fun X =>
+                      match goal with
+                      | [ H : rdone (_, X) |- _ ] => fail 1
+                      | _ => idtac
+                      end) trace;
+          let i := fresh "i" in
+          pose (i := e); assert (rdone (trace, i)) by constructor
+        end
+      end
+    end
+  end.
+
+Ltac inster H := inster0 H H.
+
+Ltac instering :=
+  repeat match goal with
+         | [ H : ?T |- _ ] => isProp T; inster H
+         end;
+  un_done.
+
+Ltac einster e :=
+  let tpe := type of e
+  in
+  lazymatch tpe with
+  | ?T -> ?Q =>
+    let H := fresh "H" in
+    tryif (assert (H : T) by isolve) then
+      einster (e H); clear H
+    else
+      noteHyp tpe; generalize e; intro
+  | forall x : ?T, _ =>
+    let v := fresh "v" in
+    evar (v : T);
+    let v2 := (eval unfold v in v) in
+    clear v;
+    einster (e v2)
+  | _ =>
+    noteHyp tpe; generalize e; intro
+  end.
+
+Ltac einstering :=
+  repeat match goal with
+         | [ H : ?P |- _ ] => isProp P; einster H
          end.
 
 Ltac srewrite H := (erewrite H in * by isolve) || (erewrite <- H in * by isolve).
@@ -680,22 +819,6 @@ Tactic Notation "sauto" "unfolding" constr(unfolds) "inverting" constr(inverts) 
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   unshelve (sauto_gen i with (shints) unfolding unfolds inverting inverts ctrs default opts default); dsolve.
 
-Tactic Notation "scrush" := try strivial; ssimpl; sauto.
-Tactic Notation "scrush" "using" constr(lst) :=
-  use lst; try strivial; ssimpl; sauto.
-Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
-  use lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
-Tactic Notation "scrush" "unfolding" constr(unfolds) :=
-  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
-Tactic Notation "scrush" "inverting" constr(inverts) :=
-  try strivial; ssimpl; sauto inverting inverts.
-Tactic Notation "scrush" "using" constr(lst) "inverting" constr(inverts) :=
-  use lst; try strivial; ssimpl; sauto inverting inverts.
-Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  use lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
-Tactic Notation "scrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
-
 Tactic Notation "hauto" :=
   unshelve (sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) :=
@@ -728,6 +851,93 @@ Tactic Notation "hauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_eager_reduction); dsolve.
+
+Tactic Notation "scrush" := try strivial; ssimpl; sauto.
+Tactic Notation "scrush" "using" constr(lst) :=
+  use lst; try strivial; ssimpl; sauto.
+Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
+Tactic Notation "scrush" "unfolding" constr(unfolds) :=
+  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
+Tactic Notation "scrush" "inverting" constr(inverts) :=
+  try strivial; ssimpl; sauto inverting inverts.
+Tactic Notation "scrush" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; try strivial; ssimpl; sauto inverting inverts.
+Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+Tactic Notation "scrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+
+Ltac qcrush_base unfolds inverts :=
+  qsimpl; sforwarding; qsimpl; instering; qsimpl;
+  sauto unfolding unfolds inverting inverts.
+
+Tactic Notation "qcrush" := qcrush_base default default.
+Tactic Notation "qcrush" "using" constr(lst) :=
+  use lst; qcrush_base default default.
+Tactic Notation "qcrush" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; qcrush_base unfolds default.
+Tactic Notation "qcrush" "unfolding" constr(unfolds) :=
+  qcrush_base unfolds default.
+Tactic Notation "qcrush" "inverting" constr(inverts) :=
+  qcrush_base default inverts.
+Tactic Notation "qcrush" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; qcrush_base default inverts.
+Tactic Notation "qcrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; qcrush_base unfolds inverts.
+Tactic Notation "qcrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  qcrush_base unfolds inverts.
+
+Ltac qcrush2_base unfolds inverts :=
+  qsimpl; sforwarding; einstering; esimp_hyps; sauto unfolding unfolds inverting inverts.
+
+Tactic Notation "qcrush2" := qcrush2_base default default.
+Tactic Notation "qcrush2" "using" constr(lst) :=
+  use lst; qcrush2_base default default.
+Tactic Notation "qcrush2" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; qcrush2_base unfolds default.
+Tactic Notation "qcrush2" "unfolding" constr(unfolds) :=
+  qcrush2_base unfolds default.
+Tactic Notation "qcrush2" "inverting" constr(inverts) :=
+  qcrush2_base default inverts.
+Tactic Notation "qcrush2" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; qcrush2_base default inverts.
+Tactic Notation "qcrush2" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; qcrush2_base unfolds inverts.
+Tactic Notation "qcrush2" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  qcrush2_base unfolds inverts.
+
+Tactic Notation "sblast" := repeat (ssimpl; instering).
+Tactic Notation "sblast" "using" constr(lst) :=
+  use lst; repeat (ssimpl; instering).
+Tactic Notation "sblast" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; repeat (ssimpl unfolding unfolds; instering).
+Tactic Notation "sblast" "unfolding" constr(unfolds) :=
+  repeat (ssimpl unfolding unfolds; instering).
+Tactic Notation "sblast" "inverting" constr(inverts) :=
+  repeat (ssimpl inverting inverts; instering).
+Tactic Notation "sblast" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; repeat (ssimpl inverting inverts; instering).
+Tactic Notation "sblast" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; repeat (ssimpl unfolding unfolds inverting inverts; instering).
+Tactic Notation "sblast" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  repeat (ssimpl unfolding unfolds inverting inverts; instering).
+
+Tactic Notation "qblast" := repeat (qsimpl; sforwarding; instering).
+Tactic Notation "qblast" "using" constr(lst) :=
+  use lst; repeat (qsimpl; sforwarding; instering).
+Tactic Notation "qblast" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; repeat (qsimpl unfolding unfolds; sforwarding; instering).
+Tactic Notation "qblast" "unfolding" constr(unfolds) :=
+  repeat (qsimpl unfolding unfolds; sforwarding; instering).
+Tactic Notation "qblast" "inverting" constr(inverts) :=
+  repeat (qsimpl inverting inverts; sforwarding; instering).
+Tactic Notation "qblast" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; repeat (qsimpl inverting inverts; sforwarding; instering).
+Tactic Notation "qblast" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; repeat (qsimpl unfolding unfolds inverting inverts; sforwarding; instering).
+Tactic Notation "qblast" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  repeat (qsimpl unfolding unfolds inverting inverts; sforwarding; instering).
 
 Tactic Notation "lauto" :=
   unshelve (sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_eager_invert no_simple_split no_eager_reduction); dsolve.
@@ -896,6 +1106,76 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           try sdauto 18 using lst1 unfolding lst2 inverting lst3;
           try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
+Tactic Notation "qprover" :=
+  solve [ unshelve qsimpl; try sdauto 2; try sdauto 4; try sdauto 6; try sdauto 8; try sdauto 10;
+          try sdauto 12; try sdauto 14; try sdauto 16; try sdauto 18; try sdauto 20 ].
+Tactic Notation "qprover" "using" constr(lst1) :=
+  solve [ unshelve qsimpl; try sdauto 2 using lst1; try sdauto 4 using lst1; try sdauto 6 using lst1; try sdauto 8 using lst1;
+          try sdauto 10 using lst1; try sdauto 12 using lst1; try sdauto 14 using lst1;
+          try sdauto 16 using lst1; try sdauto 18 using lst1; try sdauto 20 using lst1 ].
+Tactic Notation "qprover" "unfolding" constr(lst2) :=
+  solve [ unshelve qsimpl; try sdauto 2 unfolding lst2;
+          try sdauto 4 unfolding lst2; try sdauto 6 unfolding lst2;
+          try sdauto 8 unfolding lst2; try sdauto 10 unfolding lst2; try sdauto 12 unfolding lst2;
+          try sdauto 14 unfolding lst2; try sdauto 16 unfolding lst2; try sdauto 18 unfolding lst2;
+          try sdauto 20 unfolding lst2 ].
+Tactic Notation "qprover" "inverting" constr(lst3) :=
+  solve [ unshelve qsimpl; try sdauto 2 inverting lst3;
+          try sdauto 4 inverting lst3;
+          try sdauto 6 inverting lst3;
+          try sdauto 8 inverting lst3;
+          try sdauto 10 inverting lst3;
+          try sdauto 12 inverting lst3;
+          try sdauto 14 inverting lst3;
+          try sdauto 16 inverting lst3;
+          try sdauto 18 inverting lst3;
+          try sdauto 20 inverting lst3 ].
+Tactic Notation "qprover" "using" constr(lst1) "unfolding" constr(lst2):=
+  solve [ unshelve qsimpl; try sdauto 2 using lst1 unfolding lst2;
+          try sdauto 4 using lst1 unfolding lst2;
+          try sdauto 6 using lst1 unfolding lst2;
+          try sdauto 8 using lst1 unfolding lst2;
+          try sdauto 10 using lst1 unfolding lst2;
+          try sdauto 12 using lst1 unfolding lst2;
+          try sdauto 14 using lst1 unfolding lst2;
+          try sdauto 16 using lst1 unfolding lst2;
+          try sdauto 18 using lst1 unfolding lst2;
+          try sdauto 20 using lst1 unfolding lst2 ].
+Tactic Notation "qprover" "using" constr(lst1) "inverting" constr(lst3) :=
+  solve [ unshelve qsimpl; try sdauto 2 using lst1 inverting lst3;
+          try sdauto 4 using lst1 inverting lst3;
+          try sdauto 6 using lst1 inverting lst3;
+          try sdauto 8 using lst1 inverting lst3;
+          try sdauto 10 using lst1 inverting lst3;
+          try sdauto 12 using lst1 inverting lst3;
+          try sdauto 14 using lst1 inverting lst3;
+          try sdauto 16 using lst1 inverting lst3;
+          try sdauto 18 using lst1 inverting lst3;
+          try sdauto 20 using lst1 inverting lst3 ].
+Tactic Notation "qprover" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  solve [ unshelve qsimpl; try sdauto 2 unfolding lst2 inverting lst3;
+          try sdauto 4 unfolding lst2 inverting lst3;
+          try sdauto 6 unfolding lst2 inverting lst3;
+          try sdauto 8 unfolding lst2 inverting lst3;
+          try sdauto 10 unfolding lst2 inverting lst3;
+          try sdauto 12 unfolding lst2 inverting lst3;
+          try sdauto 14 unfolding lst2 inverting lst3;
+          try sdauto 16 unfolding lst2 inverting lst3;
+          try sdauto 18 unfolding lst2 inverting lst3;
+          try sdauto 20 unfolding lst2 inverting lst3 ].
+Tactic Notation "qprover" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  solve [ unshelve qsimpl; try sdauto 2 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 4 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 6 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 8 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 10 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 12 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 14 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 16 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 18 using lst1 unfolding lst2 inverting lst3;
+          try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
+
+
 Tactic Notation "xeauto" :=
   try congruence; unshelve (eauto 10; (intuition auto); try congruence; eauto; firstorder auto); dsolve.
 
@@ -906,6 +1186,7 @@ Tactic Notation "xeauto" "using" constr(lst1) "inverting" constr(lst3) := use ls
 Tactic Notation "xeauto" "unfolding" constr(lst2) := xeauto.
 Tactic Notation "xeauto" "unfolding" constr(lst2) "inverting" constr(lst3) := xeauto.
 Tactic Notation "xeauto" "inverting" constr(lst3) := xeauto.
+
 
 From Hammer Require Tactics.Reconstr.
 
@@ -921,7 +1202,12 @@ Tactic Notation "syelles" "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr
 Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
 Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding unfolds inverting inverts ].
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
+Ltac rqcrush lems unfolds inverts := solve [ qcrush using lems unfolding unfolds inverting inverts ].
+Ltac rqcrush2 lems unfolds inverts := solve [ qcrush2 using lems unfolding unfolds inverting inverts ].
+Ltac rsblast lems unfolds inverts := solve [ sblast using lems unfolding unfolds inverting inverts ].
+Ltac rqblast lems unfolds inverts := solve [ qblast using lems unfolding unfolds inverting inverts ].
 Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfolds inverting inverts ].
+Ltac rqprover lems unfolds inverts := solve [ qprover using lems unfolding unfolds inverting inverts ].
 Ltac rsauto lems unfolds inverts := solve [ sauto using lems unfolding unfolds inverting inverts ].
 Ltac rleauto lems unfolds inverts := solve [ leauto using lems unfolding unfolds inverting inverts ].
 Ltac rlauto lems unfolds inverts := solve [ lauto using lems unfolding unfolds inverting inverts ].

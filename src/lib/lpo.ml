@@ -30,43 +30,43 @@ let gt cgt evd =
   in
   gt
 
-let const_gt =
-  let cache = Hashtbl.create 128 in
-  let rec go c1 c2 =
-    if not (Hashtbl.mem cache (c1, c2)) then
-      begin
-        let b =
-          match Global.body_of_constant Library.indirect_accessor c1 with
-          | Some (b, _, _) ->
-             let consts =
-               Utils.fold_constr_ker
-                 begin fun _ acc t ->
-                   let open Constr in
-                   match kind t with
-                   | Const(c, _) when c <> c1 -> c :: acc
-                   | _ -> acc
-                 end
-                 []
-                 b
-             in
-             let rec go2 lst =
-               match lst with
-               | c :: lst' ->
-                  if c = c2 || go c c2 then
-                    true
-                  else
-                    go2 lst'
-               | [] ->
-                  false
-             in
-             go2 consts
-          | None ->
-             false
-        in
-        Hashtbl.add cache (c1, c2) b
-      end;
-    Hashtbl.find cache (c1, c2)
-  in
-  go
+let lpo_cache = Hashtbl.create 128
+
+let rec const_gt c1 c2 =
+  if not (Hashtbl.mem lpo_cache (c1, c2)) then
+    begin
+      let b =
+        match Global.body_of_constant Library.indirect_accessor c1 with
+        | Some b ->
+           let consts =
+             Utils.fold_constr_ker
+               begin fun _ acc t ->
+                 let open Constr in
+                 match kind t with
+                 | Const(c, _) when c <> c1 -> c :: acc
+                 | _ -> acc
+               end
+               []
+               (fst b)
+           in
+           let rec go lst =
+             match lst with
+             | c :: lst' ->
+                if c = c2 || const_gt c c2 then
+                  true
+                else
+                  go lst'
+             | [] ->
+                false
+           in
+           go consts
+        | None ->
+           false
+      in
+      Hashtbl.add lpo_cache (c1, c2) b
+    end;
+  Hashtbl.find lpo_cache (c1, c2)
 
 let lpo = gt const_gt
+
+let clear_cache () = Hashtbl.clear lpo_cache

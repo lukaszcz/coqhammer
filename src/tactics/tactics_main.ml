@@ -39,6 +39,10 @@ let to_inductive t =
   | Ind(ind, _) -> ind
   | _ -> failwith "sauto: not an inductive type"
 
+let filter_default =
+  let cdefault = Utils.get_constr "Tactics.default" in
+  List.filter (fun c -> c <> cdefault)
+
 let get_s_opts ropts bases unfoldings inverting ctrs =
   let cdefault = Utils.get_constr "Tactics.default" in
   let chints = Utils.get_constr "Tactics.hints" in
