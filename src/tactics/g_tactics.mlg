@@ -35,16 +35,16 @@ TACTIC EXTEND Hammer_ssimpl_gen
 }
 | [ "ssimpl" "unfolding" constr(unfolds) ] -> {
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_unfolding = SSome (List.map to_const (destruct_constr unfolds)) }
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
 }
 | [ "ssimpl" "inverting" constr(inverts) ] -> {
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_inversions = SSome (List.map to_inductive (destruct_constr inverts)) }
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
 }
 | [ "ssimpl" "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_unfolding = SSome (List.map to_const (destruct_constr unfolds));
-    s_inversions = SSome (List.map to_inductive (destruct_constr inverts)) }
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
 }
 | [ "ssimpl" "with" tactic3(tac) ] -> {
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
@@ -53,18 +53,57 @@ TACTIC EXTEND Hammer_ssimpl_gen
 | [ "ssimpl" "with" tactic3(tac) "unfolding" constr(unfolds) ] -> {
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
   ssimpl { default_s_opts with s_simpl_tac = itac;
-    s_unfolding = SSome (List.map to_const (destruct_constr unfolds)) }
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
 }
 | [ "ssimpl" "with" tactic3(tac) "inverting" constr(inverts) ] -> {
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
   ssimpl { default_s_opts with s_simpl_tac = itac;
-    s_inversions = SSome (List.map to_inductive (destruct_constr inverts)) }
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
 }
 | [ "ssimpl" "with" tactic3(tac)  "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
   ssimpl { default_s_opts with s_simpl_tac = itac;
-    s_unfolding = SSome (List.map to_const (destruct_constr unfolds));
-    s_inversions = SSome (List.map to_inductive (destruct_constr inverts)) }
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+}
+END
+
+TACTIC EXTEND Hammer_qsimpl_gen
+| [ "qsimpl" ] -> {
+  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "qsimpl" "unfolding" constr(unfolds) ] -> {
+  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
+}
+| [ "qsimpl" "inverting" constr(inverts) ] -> {
+  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+}
+| [ "qsimpl" "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+}
+| [ "qsimpl" "with" tactic3(tac) ] -> {
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  qsimpl { default_s_opts with s_simpl_tac = itac }
+}
+| [ "qsimpl" "with" tactic3(tac) "unfolding" constr(unfolds) ] -> {
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  qsimpl { default_s_opts with s_simpl_tac = itac;
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
+}
+| [ "qsimpl" "with" tactic3(tac) "inverting" constr(inverts) ] -> {
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  qsimpl { default_s_opts with s_simpl_tac = itac;
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+}
+| [ "qsimpl" "with" tactic3(tac)  "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  qsimpl { default_s_opts with s_simpl_tac = itac;
+    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
+    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
 }
 END
 

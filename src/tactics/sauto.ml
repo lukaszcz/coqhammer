@@ -856,14 +856,24 @@ let sintuition opts =
 let ssimpl opts =
   let tac1 =
     Tactics.intros <*> unfolding opts <*> sintuition opts <*> subst_simpl opts <*>
-      simp_hyps_tac <*> repeat (with_reduction opts forwarding_tac forwarding_nocbn_tac) <*>
+      simp_hyps_tac <*> with_reduction opts forwarding_tac forwarding_nocbn_tac <*>
       subst_simpl opts
   and tac2 =
     Tactics.intros <*> unfolding opts <*>
-      opt opts.s_forwarding (repeat (with_reduction opts forwarding_tac forwarding_nocbn_tac)) <*>
+      opt opts.s_forwarding (with_reduction opts forwarding_tac forwarding_nocbn_tac) <*>
       subst_simpl opts
   in
   tac1 <*> (simplify opts <~> tac2)
+
+let qsimpl opts =
+  let tac =
+    (sintuition opts <*> subst_simpl opts) <~>
+      opt opts.s_bnat_reflect bnat_reflect_tac <~>
+      autorewriting true opts <~>
+      (simple_splitting opts <*> case_splitting true opts) <~>
+      opt opts.s_simple_inverting (simple_inverting opts)
+  in
+  Tactics.intros <*> unfolding opts <*> tac
 
 let sauto opts n =
   let simp =
