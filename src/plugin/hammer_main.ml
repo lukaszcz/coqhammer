@@ -313,8 +313,9 @@ let check_goal_prop gl =
 
 let run_tactics args msg_success msg_fail =
   let tactics = [
-    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rleauto", "leauto") ];
-    [ ("rsauto", "sauto"); ("rlauto", "lauto"); ("rhauto4000", "hauto 4000"); ("rsprover", "sprover"); ]
+    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rqcrush", "qcrush") ];
+    [ ("rleauto", "leauto"); ("rsprover", "sprover"); ("rqblast", "qblast"); ("rsblast", "sblast") ];
+    [ ("rqcrush2", "qcrush2"); ("rsauto", "sauto"); ("rlauto", "rlauto"); ("rqprover", "qprover") ]
   ]
   in
   let ltacs = List.map (List.map (fun tac -> (Utils.ltac_eval (fst tac) args, snd tac))) tactics

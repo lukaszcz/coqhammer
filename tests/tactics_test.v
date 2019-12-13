@@ -24,6 +24,11 @@ Lemma lem_test_5 : (forall P : nat -> Prop, P 0 -> (forall x, P x -> P (S x)) ->
   hauto.
 Qed.
 
+Lemma lem_test_6 : (forall P : nat -> Prop, P 0 -> P (S 0) ->
+                                            (forall x, P x -> P (S x) -> P (S (S x))) -> P 20).
+  qblast.
+Qed.
+
 Require Import Arith.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
