@@ -60,16 +60,20 @@ let default_s_opts = {
 
 (*****************************************************************************************)
 
-let logic_constants = [ Utils.get_const "iff"; Utils.get_const "not" ]
-let logic_inductives = [ Utils.get_inductive "and"; Utils.get_inductive "or"; Utils.get_inductive "ex";
-                         Utils.get_inductive "prod"; Utils.get_inductive "sumbool"; Utils.get_inductive "sig";
-                         Utils.get_inductive "sum"; Utils.get_inductive "sigT"; Utils.get_inductive "False" ]
+let logic_constants = [ Utils.get_const "Init.Logic.iff"; Utils.get_const "Init.Logic.not" ]
+let logic_inductives = [ Utils.get_inductive "Init.Logic.and"; Utils.get_inductive "Init.Logic.or";
+                         Utils.get_inductive "Init.Logic.ex"; Utils.get_inductive "Init.Datatypes.prod";
+                         Utils.get_inductive "Init.Specif.sumbool"; Utils.get_inductive "Init.Specif.sig";
+                         Utils.get_inductive "Init.Datatypes.sum"; Utils.get_inductive "Init.Specif.sigT";
+                         Utils.get_inductive "Init.Logic.False" ]
 
 let unfolding_hints = ref logic_constants
 let constructor_hints = ref logic_inductives
-let simple_split_hints = ref [ Utils.get_inductive "and"; Utils.get_inductive "ex";
-                               Utils.get_inductive "prod"; Utils.get_inductive "sig";
-                               Utils.get_inductive "sigT" ]
+let simple_split_hints = ref [ Utils.get_inductive "Init.Logic.and";
+                               Utils.get_inductive "Init.Logic.ex";
+                               Utils.get_inductive "Init.Datatypes.prod";
+                               Utils.get_inductive "Init.Specif.sig";
+                               Utils.get_inductive "Init.Specif.sigT" ]
 let case_split_hints = ref []
 let inversion_hints = ref logic_inductives
 
@@ -350,7 +354,7 @@ let is_case_split opts evd t =
 
 let is_inversion opts evd ind args =
   in_sopt_list !inversion_hints ind opts.s_inversions &&
-    if ind = Utils.get_inductive "eq" then
+    if ind = Utils.get_inductive "Init.Logic.eq" then
       match args with
       | [_; t1; t2] ->
          begin
