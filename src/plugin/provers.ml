@@ -21,6 +21,8 @@ let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
 
 let is_good_dep s = is_alpha (String.get s 0) && not (Hhlib.string_begins_with s "_HAMMER_")
 
+let remove_duplicates = Hhlib.sort_uniq Pervasives.compare
+
 let get_deps lst = List.filter is_good_dep lst
 
 let get_defs lst =
@@ -34,17 +36,18 @@ let get_typings lst =
        (List.filter (fun s -> Hhlib.string_begins_with s "$_typeof_") lst))
 
 let get_cases lst =
-  List.filter is_good_dep
-    (List.map
-       begin fun s ->
-         try
-           let i = String.index s '$' in
-           String.sub s 0 i
-         with Not_found ->
-           "$none"
-       end
-       (List.map (fun s -> String.sub s 7 (String.length s - 7))
-          (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst)))
+  remove_duplicates
+    (List.filter is_good_dep
+       (List.map
+          begin fun s ->
+            try
+              let i = String.index s '$' in
+              String.sub s 0 i
+            with Not_found ->
+              "$none"
+          end
+          (List.map (fun s -> String.sub s 7 (String.length s - 7))
+             (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst))))
 
 let get_inversions lst =
   List.filter is_good_dep
@@ -70,34 +73,35 @@ let get_discrims lst =
        (List.filter (fun s -> Hhlib.string_begins_with s "$_discrim_") lst))
 
 let get_types lst =
-  List.filter is_good_dep
-    (List.map
-       begin fun s ->
-         try
-           let s =
-             if Hhlib.string_begins_with s "$_inversion_" then
-               String.sub s 12 (String.length s - 12)
-             else if Hhlib.string_begins_with s "$_inj_" then
-               String.sub s 6 (String.length s - 6)
-             else if Hhlib.string_begins_with s "$_discrim_" then
-               let s = String.sub s 10 (String.length s - 10) in
-               let i = String.index s '$' in
-               String.sub s 0 i
-             else if Hhlib.string_begins_with s "$_case_" then
-               let s = String.sub s 7 (String.length s - 7) in
-               let i = String.index s '$' in
-               String.sub s 0 i
-             else
-               "$none"
-           in
-           let tgt = Coq_typing.get_type_app_target (Coqterms.coqdef_type (Defhash.find s)) in
-           match tgt with
-           | Coqterms.Const(x) -> x
-           | _ -> "$none"
-         with _ ->
-           "$none"
-       end
-       lst)
+  remove_duplicates
+    (List.filter is_good_dep
+       (List.map
+          begin fun s ->
+            try
+              let s =
+                if Hhlib.string_begins_with s "$_inversion_" then
+                  String.sub s 12 (String.length s - 12)
+                else if Hhlib.string_begins_with s "$_inj_" then
+                  String.sub s 6 (String.length s - 6)
+                else if Hhlib.string_begins_with s "$_discrim_" then
+                  let s = String.sub s 10 (String.length s - 10) in
+                  let i = String.index s '$' in
+                  String.sub s 0 i
+                else if Hhlib.string_begins_with s "$_case_" then
+                  let s = String.sub s 7 (String.length s - 7) in
+                  let i = String.index s '$' in
+                  String.sub s 0 i
+                else
+                  "$none"
+              in
+              let tgt = Coq_typing.get_type_app_target (Coqterms.coqdef_type (Defhash.find s)) in
+              match tgt with
+              | Coqterms.Const(x) -> x
+              | _ -> "$none"
+            with _ ->
+              "$none"
+          end
+          lst))
 
 let get_atp_info names =
   { deps = get_deps names; defs = get_defs names; typings = get_typings names; cases = get_cases names;
