@@ -743,7 +743,7 @@ let create_tactics opts = {
 
 (*****************************************************************************************)
 
-let rec search extra tacs opts n hyps rtrace visited =
+let rec search extra tacs opts n rtrace visited =
   if n = 0 then
     opts.s_leaf_tac
   else
@@ -760,40 +760,35 @@ let rec search extra tacs opts n hyps rtrace visited =
            intros tacs opts n
         | _ ->
            if is_simple_split opts evd goal then
-             tacs.t_simple_splitting <*> search extra tacs opts n hyps rtrace (goal :: visited)
+             tacs.t_simple_splitting <*> search extra tacs opts n rtrace (goal :: visited)
            else if is_case_split opts evd goal then
              tacs.t_case_splitting <*> start_search tacs opts n
            else
-             let hyps =
-               if hyps = [] then
-                 List.map (eval_hyp evd) (Utils.get_hyps gl)
-               else
-                 hyps
-             in
+             let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
              let actions = create_actions extra opts evd goal hyps in
              match actions with
              | [] -> opts.s_leaf_tac
              | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> opts.s_leaf_tac
-             | _ -> apply_actions tacs opts n actions hyps rtrace (goal :: visited)
+             | _ -> apply_actions tacs opts n actions rtrace (goal :: visited)
     end
 
 and start_search tacs opts n =
-  tacs.t_unfolding <*> tacs.t_simplify <*> search true tacs opts n [] [] []
+  tacs.t_unfolding <*> tacs.t_simplify <*> search true tacs opts n [] []
 
 and intros tacs opts n =
   tacs.t_reduce_concl <*>
     intros_until_atom_tac <*>
     start_search tacs opts n
 
-and apply_actions tacs opts n actions hyps rtrace visited =
+and apply_actions tacs opts n actions rtrace visited =
   let branch =
     if opts.s_exhaustive then Proofview.tclOR else Proofview.tclORELSE
   in
   let cont tac acts =
-    branch tac (fun _ -> apply_actions tacs opts n acts hyps rtrace visited)
+    branch tac (fun _ -> apply_actions tacs opts n acts rtrace visited)
   in
   let continue n tac acts =
-    cont (Proofview.tclBIND tac (fun _ -> search false tacs opts n hyps rtrace visited)) acts
+    cont (Proofview.tclBIND tac (fun _ -> search false tacs opts n rtrace visited)) acts
   in
   match actions with
   | (cost, branching, act) :: acts ->
@@ -816,11 +811,11 @@ and apply_actions tacs opts n actions hyps rtrace visited =
             continue n' (erewrite (not opts.s_eager_rewriting) false id <*> tacs.t_simplify_concl) acts
          | ActRewrite id ->
             if List.memq id rtrace then
-              apply_actions tacs opts n acts hyps rtrace visited
+              apply_actions tacs opts n acts rtrace visited
             else
               cont (Proofview.tclBIND (srewrite_tac id)
                       (fun _ ->
-                        tacs.t_simplify_concl <*> search false tacs opts n hyps (id :: rtrace) visited))
+                        tacs.t_simplify_concl <*> search false tacs opts n (id :: rtrace) visited))
                 acts
          | ActInvert id ->
             cont (sinvert opts id <*> start_search tacs opts n') acts
@@ -833,7 +828,7 @@ and apply_actions tacs opts n actions hyps rtrace visited =
          | ActConstructor ->
             cont
               (Tactics.any_constructor true
-                 (Some (tacs.t_simplify_concl <*> search false tacs opts n' hyps rtrace visited)))
+                 (Some (tacs.t_simplify_concl <*> search false tacs opts n' rtrace visited)))
               acts
          | ActIntro ->
             cont (Tactics.intros <*> tacs.t_subst_simpl <*> start_search tacs opts n') acts

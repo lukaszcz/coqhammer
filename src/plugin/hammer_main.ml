@@ -267,7 +267,7 @@ let rec mk_lst env sigma lst =
 
 let mk_lst_str pref lst =
   let get_name x =
-    "@" ^ (Hhlib.drop_prefix (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.") "Coq.")
+    "@" ^ (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.")
   in
   match lst with
   | [] -> ""
@@ -276,7 +276,9 @@ let mk_lst_str pref lst =
 let get_tac_args env sigma info =
   let deps = info.Provers.deps in
   let defs = info.Provers.defs in
-  let inverts = info.Provers.inversions @ info.Provers.cases in
+  let inverts =
+    Hhlib.sort_uniq Pervasives.compare (info.Provers.inversions @ info.Provers.cases)
+  in
   let map_locate =
     List.map
       begin fun s ->
@@ -314,8 +316,8 @@ let check_goal_prop gl =
 let run_tactics args msg_success msg_fail =
   let tactics = [
     [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rqcrush", "qcrush") ];
-    [ ("rleauto", "leauto"); ("rsprover", "sprover"); ("rqblast", "qblast"); ("rsblast", "sblast") ];
-    [ ("rqcrush2", "qcrush2"); ("rsauto", "sauto"); ("rlauto", "rlauto"); ("rqprover", "qprover") ]
+    [ ("rleauto", "leauto"); ("rsprover", "sprover"); ("rqblast", "qblast"); ("rqcrush2", "qcrush2") ];
+    [ ("rsblast", "sblast"); ("rsauto", "sauto"); ("rlauto", "rlauto"); ("rqprover", "qprover") ]
   ]
   in
   let ltacs = List.map (List.map (fun tac -> (Utils.ltac_eval (fst tac) args, snd tac))) tactics
