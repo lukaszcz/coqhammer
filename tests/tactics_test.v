@@ -59,7 +59,63 @@ Proof.
   exists (S p); strivial.
 Qed.
 
+Lemma lem_bnat_test_1 : forall x y, Nat.eqb x y = true -> y = x.
+Proof.
+  intros.
+  bnat_reflect.
+  assumption.
+Qed.
+
+Lemma lem_bnat_test_2 : forall x y, Nat.eqb x y = false -> x = y -> False.
+Proof.
+  intros x y H.
+  bnat_reflect.
+  assumption.
+Qed.
+
+Lemma lem_bnat_test_3 : forall x y, Nat.leb x y = true -> x <= y.
+Proof.
+  intros x y H.
+  bnat_reflect.
+  assumption.
+Qed.
+
+Lemma lem_bnat_test_4 : forall x y, Nat.leb x y = false -> y < x.
+Proof.
+  intros x y H.
+  bnat_reflect.
+  assumption.
+Qed.
+
+Lemma lem_bnat_test_5 : forall x y, Nat.ltb x y = true -> x < y.
+Proof.
+  intros x y H.
+  bnat_reflect.
+  assumption.
+Qed.
+
+Lemma lem_bnat_test_6 : forall x y, Nat.ltb x y = false -> y <= x.
+Proof.
+  intros x y H.
+  bnat_reflect.
+  assumption.
+Qed.
+
 Require NArith.BinNat.
+
+Lemma lem_nbnat_test_1 : forall x y, BinNat.N.eqb x y = true -> x = y.
+Proof.
+  intros.
+  bnat_reflect.
+  assumption.
+Qed.
+
+Lemma lem_nbnat_test_2 : forall x y, BinNat.N.eqb x y = false -> x = y -> False.
+Proof.
+  intros x y H.
+  bnat_reflect.
+  assumption.
+Qed.
 
 Lemma setbit_iff : forall m a n : BinNums.N,
                      n = m \/ true = BinNat.N.testbit a m <->
