@@ -791,7 +791,7 @@ and apply_actions tacs opts n actions rtrace visited =
     cont (Proofview.tclBIND tac (fun _ -> search false tacs opts n rtrace visited)) acts
   in
   let final_tac =
-    if n < 40 then opts.s_leaf_tac else fail_tac
+    if not opts.s_depth_cost_model && n < 40 then opts.s_leaf_tac else fail_tac
   in
   match actions with
   | (cost, branching, act) :: acts ->
