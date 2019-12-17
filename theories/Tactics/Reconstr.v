@@ -1284,7 +1284,7 @@ Ltac rrcrush lems defs inverts := solve [ unshelve hcrush AllHyps lems defs; dso
 Ltac rryelles lems defs inverts := solve [ unshelve hyelles2 AllHyps lems defs; dsolve ].
 Ltac rrscrush lems defs inverts := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
 
-Ltac ucrush :=
+Ltac fcrush :=
   eauto; try congruence; yisolve; sauto; try yelles 2;
   repeat match goal with
          | [ |- context[?f] ] => progress unfold f; sauto

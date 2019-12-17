@@ -426,6 +426,85 @@ Ltac isolve :=
   in
   msolve tt.
 
+Ltac tryrsolve :=
+  let solver tac :=
+      lazymatch goal with
+      | [ |- ?A = ?A ] => reflexivity
+      | [ |- ?A = ?B ] => solve [ unify A B; reflexivity | tac ]
+      end
+  in
+  auto 2 with nocore shints; try subst; try congruence 16;
+  match goal with
+    | [ |- ?A _ = ?A _ ] => apply f_equal; try solver tryrsolve
+    | [ |- ?A _ _ = ?A _ _ ] => apply f_equal2; try solver tryrsolve
+    | [ |- ?A _ _ _ = ?A _ _ _ ] => apply f_equal3; try solver tryrsolve
+    | [ |- ?A _ _ _ _ = ?A _ _ _ _ ] => apply f_equal4; try solver tryrsolve
+    | [ |- ?A _ _ _ _ _ = ?A _ _ _ _ _ ] => apply f_equal5; try solver tryrsolve
+  end.
+
+Ltac rsolve :=
+  let simp := intros; simp_hyps; repeat exsimpl
+  in
+  simp; repeat (progress isplit; guard numgoals < 10; simp);
+  tryrsolve.
+
+Ltac eqsolve :=
+  match goal with
+    | [ |- ?A = ?A ] => reflexivity
+    | [ |- ?A = ?B ] => unify A B; reflexivity
+    | [ |- ?A _ = ?A _ ] => apply f_equal; eqsolve
+    | [ |- ?A _ _ = ?A _ _ ] => apply f_equal2; eqsolve
+    | [ |- ?A _ _ _ = ?A _ _ _ ] => apply f_equal3; eqsolve
+    | [ |- ?A _ _ _ _ = ?A _ _ _ _ ] => apply f_equal4; eqsolve
+    | [ |- ?A _ _ _ _ _ = ?A _ _ _ _ _ ] => apply f_equal5; eqsolve
+    | [ |- ?A = ?B ] => solve [ rsolve ]
+  end.
+(* TODO: move eqsolve and rsolve to plugin *)
+
+Ltac rchange tp :=
+  lazymatch goal with
+  | [ |- tp ] => idtac
+  | [ |- ?G1 = ?G2 ] =>
+    match tp with
+    | ?tp1 = ?tp2 =>
+      let H1 := fresh "H" in
+      let H2 := fresh "H" in
+      assert (H1 : G1 = tp1) by eqsolve;
+      assert (H2 : G2 = tp2) by eqsolve;
+      try rewrite H1; clear H1;
+      try rewrite H2; clear H2
+    | ?tp1 = ?tp2 =>
+      symmetry;
+      let H1 := fresh "H" in
+      let H2 := fresh "H" in
+      assert (H1 : G1 = tp2) by eqsolve;
+      assert (H2 : G2 = tp1) by eqsolve;
+      try rewrite H1; clear H1;
+      try rewrite H2; clear H2
+    end
+  | [ |- ?G ] =>
+    let H := fresh "H" in
+    assert (H : G = tp) by eqsolve;
+    try rewrite H; clear H
+  end.
+
+Ltac sapply e :=
+  let tpe := type of e
+  in
+  lazymatch tpe with
+  | ?T -> ?Q =>
+    let H := fresh "H" in
+    assert (H : T); [ idtac | sapply (e H) ]
+  | forall x : ?T, _ =>
+    let v := fresh "v" in
+    evar (v : T);
+    let v2 := (eval unfold v in v) in
+    clear v;
+    sapply (e v2)
+  | _ =>
+    rchange tpe; exact e
+  end.
+
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
 Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 24;
@@ -642,26 +721,26 @@ Ltac forwarding_nocbn :=
 
 Ltac inList x lst :=
   lazymatch lst with
-    | (?t, ?y) => tryif constr_eq x y then idtac else inList x t
-    | x => idtac
-    | _ => fail
+  | (?t, ?y) => tryif constr_eq x y then idtac else inList x t
+  | x => idtac
+  | _ => fail
   end.
 
 Ltac notInList x lst := tryif inList x lst then fail else idtac.
 
 Ltac all f ls :=
   match ls with
-    | (?LS, ?X) => f X; all f LS
-    | (_, _) => fail 1
-    | _ => f ls
+  | (?LS, ?X) => f X; all f LS
+  | (_, _) => fail 1
+  | _ => f ls
   end.
 
 Ltac lst_rev lst :=
   let rec hlp lst acc :=
       match lst with
-        | tt => acc
-        | (?t, ?h) => hlp t (acc, h)
-        | ?x => constr:((acc, x))
+      | tt => acc
+      | (?t, ?h) => hlp t (acc, h)
+      | ?x => constr:((acc, x))
       end
   in
   hlp lst tt.
@@ -669,10 +748,10 @@ Ltac lst_rev lst :=
 Ltac with_hyps p f :=
   let rec hlp acc :=
       match goal with
-        | [ H : ?P |- _ ] =>
-          p P; notInList H acc; hlp (acc, H)
-        | _ =>
-          f ltac:(lst_rev acc)
+      | [ H : ?P |- _ ] =>
+        p P; notInList H acc; hlp (acc, H)
+      | _ =>
+        f ltac:(lst_rev acc)
       end
   in
   hlp tt.
@@ -916,6 +995,37 @@ Tactic Notation "qcrush2" "using" constr(lst) "unfolding" constr(unfolds) "inver
   use lst; qcrush2_base unfolds inverts.
 Tactic Notation "qcrush2" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   qcrush2_base unfolds inverts.
+
+Ltac usimpl_base unfolds :=
+  ssimpl;
+  repeat match goal with
+         | [ |- context[?f] ] =>
+           progress unfold f; (constr_eq unfolds default || inList f unfolds); ssimpl unfolding f
+         end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] =>
+           progress unfold f in H; (constr_eq unfolds default || inList f unfolds); ssimpl unfolding f
+         end.
+
+Tactic Notation "usimpl" := usimpl_base default default.
+Tactic Notation "usimpl" "unfolding" constr(unfolds) :=
+  usimpl_base unfolds default.
+
+Tactic Notation "ucrush" := usimpl; sauto.
+Tactic Notation "ucrush" "using" constr(lst) :=
+  use lst; usimpl; sauto.
+Tactic Notation "ucrush" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; usimpl unfolding unfolds; sauto unfolding unfolds.
+Tactic Notation "ucrush" "unfolding" constr(unfolds) :=
+  usimpl unfolding unfolds; sauto unfolding unfolds.
+Tactic Notation "ucrush" "inverting" constr(inverts) :=
+  try strivial; usimpl; sauto inverting inverts.
+Tactic Notation "ucrush" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; usimpl; sauto inverting inverts.
+Tactic Notation "ucrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; usimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+Tactic Notation "ucrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  usimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
 
 Tactic Notation "sblast" := repeat (ssimpl; instering).
 Tactic Notation "sblast" "using" constr(lst) :=
@@ -1214,6 +1324,7 @@ Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding 
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
 Ltac rqcrush lems unfolds inverts := solve [ qcrush using lems unfolding unfolds inverting inverts ].
 Ltac rqcrush2 lems unfolds inverts := solve [ qcrush2 using lems unfolding unfolds inverting inverts ].
+Ltac rucrush lems unfolds inverts := solve [ ucrush using lems unfolding unfolds inverting inverts ].
 Ltac rsblast lems unfolds inverts := solve [ sblast using lems unfolding unfolds inverting inverts ].
 Ltac rqblast lems unfolds inverts := solve [ qblast using lems unfolding unfolds inverting inverts ].
 Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfolds inverting inverts ].
@@ -1253,7 +1364,7 @@ Ltac sinduction t :=
          end;
   induction t.
 
-Ltac ucrush :=
+Ltac fcrush :=
   eauto; try congruence; try strivial; ssimpl; try sauto;
   repeat match goal with
          | [ |- context[?f] ] => progress unfold f; ssimpl unfolding f
