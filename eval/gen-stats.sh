@@ -27,13 +27,13 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>leauto</th><th>sprover</th><th>qblast</th><th>qcrush2</th></tr>" >> statistics.html
+echo "<tr><th>leauto</th><th>qprover</th><th>qblast</th><th>qcrush2</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'leauto' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep sprover {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep qprover {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'qblast' {} + | wc -l` >> statistics.html
@@ -45,7 +45,7 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>sblast</th><th>sauto</th><th>lauto</th><th>qprover</th></tr>" >> statistics.html
+echo "<tr><th>sblast</th><th>sauto</th><th>ucrush</th><th>sprover</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'sblast' {} + | wc -l` >> statistics.html
@@ -54,10 +54,10 @@ echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'sauto$' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep 'lauto' {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep 'ucrush' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep qprover {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep sprover {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html

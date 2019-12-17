@@ -316,8 +316,8 @@ let check_goal_prop gl =
 let run_tactics args msg_success msg_fail =
   let tactics = [
     [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rqcrush", "qcrush") ];
-    [ ("rleauto", "leauto"); ("rsprover", "sprover"); ("rqblast", "qblast"); ("rqcrush2", "qcrush2") ];
-    [ ("rsblast", "sblast"); ("rsauto", "sauto"); ("rlauto", "lauto"); ("rqprover", "qprover") ]
+    [ ("rleauto", "leauto"); ("rqprover", "qprover"); ("rqblast", "qblast"); ("rqcrush2", "qcrush2") ];
+    [ ("rsblast", "sblast"); ("rucrush", "ucrush"); ("rsauto", "sauto"); ("rsprover", "sprover") ]
   ]
   in
   let ltacs = List.map (List.map (fun tac -> (Utils.ltac_eval (fst tac) args, snd tac))) tactics
@@ -744,7 +744,7 @@ let hammer_hook_tac prefix name =
                         Msg.info ("Proving theorem " ^ name ^ "...");
                         Proofview.tclORELSE
                           (Proofview.tclBIND
-                             (ltac_timeout !Opt.reconstr_timelimit "Tactics.ucrush" [])
+                             (ltac_timeout !Opt.reconstr_timelimit "Tactics.fcrush" [])
                              (fun _ ->
                                let msg = "Success " ^ name in
                                ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
