@@ -59,6 +59,13 @@ Proof.
   exists (S p); strivial.
 Qed.
 
+Require Import ZArith.
+
+Lemma le_mul : forall m n k : Z, (k > 0 -> k * m <= k * n -> m <= n)%Z.
+Proof.
+  hauto using (Coq.ZArith.BinInt.Z.mul_comm, Coq.ZArith.BinInt.Z.mul_le_mono_pos_r, Coq.ZArith.BinInt.Z.gt_lt_iff).
+Qed.
+
 Lemma lem_bnat_test_1 : forall x y, Nat.eqb x y = true -> y = x.
 Proof.
   intros.
@@ -459,7 +466,7 @@ Proof.
   pose (u := t).
   induction t; destruct (occurs v u) eqn:?; ssimpl.
   - hauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) unfolding orb.
-  - hauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) unfolding orb.
+  - hauto using (@occurs_spec, @Coq.Bool.Bool.orb_true_r) unfolding (@abstr2).
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).

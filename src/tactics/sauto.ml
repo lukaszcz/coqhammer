@@ -31,6 +31,7 @@ type s_opts = {
   s_heuristic_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_presimplify : bool;
+  s_sapply : bool;
   s_depth_cost_model : bool;
 }
 
@@ -55,6 +56,7 @@ let default_s_opts = {
   s_heuristic_rewriting = true;
   s_aggressive_unfolding = false;
   s_presimplify = false;
+  s_sapply = true;
   s_depth_cost_model = false;
 }
 
@@ -130,6 +132,7 @@ let simple_inverting_tac = Utils.ltac_apply "Tactics.simple_inverting" []
 let simple_inverting_nocbn_tac = Utils.ltac_apply "Tactics.simple_inverting_nocbn" []
 let simple_invert_tac id = Utils.ltac_apply "Tactics.simple_invert" [mk_tac_arg_id id]
 let simple_invert_nocbn_tac id = Utils.ltac_apply "Tactics.simple_invert_nocbn" [mk_tac_arg_id id]
+let sapply_tac id = Utils.ltac_apply "Tactics.sapply" [mk_tac_arg_id id]
 let case_splitting_tac = Utils.ltac_apply "Tactics.case_splitting" []
 let case_splitting_nocbn_tac = Utils.ltac_apply "Tactics.case_splitting_nocbn" []
 let case_splitting_concl_tac = Utils.ltac_apply "Tactics.case_splitting_concl" []
@@ -383,8 +386,14 @@ let is_equality evd t =
   let open Constr in
   let open EConstr in
   match kind evd t with
-  | Ind(ind, _) when ind = Utils.get_inductive "eq" -> true
+  | Ind(ind, _) when ind = Utils.get_inductive "Init.Logic.eq" -> true
   | _ -> false
+
+let is_unorientable_equality evd head args =
+  is_equality evd head &&
+    match Hhlib.drop (List.length args - 2) args with
+    | [t1; t2] -> not (Lpo.lpo evd t1 t2 || Lpo.lpo evd t2 t1)
+    | _ -> false
 
 (*****************************************************************************************)
 
@@ -729,6 +738,7 @@ type tactics = {
   t_unfolding : unit Proofview.tactic;
   t_reduce_concl : unit Proofview.tactic;
   t_subst_simpl : unit Proofview.tactic;
+  b_sapply_initialised : bool;
 }
 
 let create_tactics opts = {
@@ -739,6 +749,7 @@ let create_tactics opts = {
   t_unfolding = unfolding opts;
   t_reduce_concl = reduce_concl opts;
   t_subst_simpl = subst_simpl opts;
+  b_sapply_initialised = false;
 }
 
 (*****************************************************************************************)
@@ -773,7 +784,22 @@ let rec search extra tacs opts n rtrace visited =
     end
 
 and start_search tacs opts n =
-  tacs.t_unfolding <*> tacs.t_simplify <*> search true tacs opts n [] []
+  tacs.t_unfolding <*> tacs.t_simplify <*>
+    if opts.s_sapply && not tacs.b_sapply_initialised then
+      Proofview.Goal.enter begin fun gl ->
+        let evd = Proofview.Goal.sigma gl in
+        let sapp =
+          List.exists
+            begin fun (_, hyp) ->
+              let (_, head, args) = Utils.destruct_prod evd hyp in
+              is_unorientable_equality evd head args
+            end
+            (Utils.get_hyps gl)
+        in
+        search true tacs { opts with s_sapply = sapp } n [] []
+      end
+    else
+      search true tacs opts n [] []
 
 and intros tacs opts n =
   tacs.t_reduce_concl <*>
@@ -793,6 +819,12 @@ and apply_actions tacs opts n actions rtrace visited =
   let final_tac =
     if not opts.s_depth_cost_model && n < 40 then opts.s_leaf_tac else fail_tac
   in
+  let apply id =
+    if opts.s_sapply then
+      sapply_tac id
+    else
+      Tactics.Simple.eapply (EConstr.mkVar id)
+  in
   match actions with
   | (cost, branching, act) :: acts ->
      if not opts.s_depth_cost_model && cost > n then
@@ -807,7 +839,7 @@ and apply_actions tacs opts n actions rtrace visited =
          in
          match act with
          | ActApply id ->
-            continue n' (Tactics.Simple.eapply (EConstr.mkVar id)) acts
+            continue n' (apply id) acts
          | ActRewriteLR id ->
             continue n' (erewrite (not opts.s_eager_rewriting) true id <*> tacs.t_simplify_concl) acts
          | ActRewriteRL id ->
