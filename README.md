@@ -46,7 +46,8 @@ opam install coq-hammer-tactics
 To instead build and install the tactics manually, use `make tactics`
 followed by `make install-tactics`.
 
-The plugin has been tested on Linux.
+The plugin has been tested on Linux. On Mac OS X there may be some
+problems with the operation of the plugin.
 
 The command `make install` will try to install the `predict` and
 `htimeout` programs into the directory specified by the `COQBIN`
@@ -75,7 +76,7 @@ command                          | description
 `Hammer_version`                 |  Prints the version of CoqHammer.
 `Hammer_cleanup`                 |  Resets the hammer cache.
 
-More actual examples are given in the [`examples`](examples) directory.
+Some examples are given in the [`examples`](examples) directory.
 
 The intended use of the `hammer` tactic is to replace it upon success
 with the reconstruction tactic shown in the response window. This
@@ -99,8 +100,8 @@ recommended to have the better-performing GPL version of CVC4 instead
 of the BSD version.
 - Eprover: http://www.eprover.org.
 - Z3: https://github.com/Z3Prover/z3/releases. Note that the default
-version of Z3 does not support the TPTP format. You need to compile a
-TPTP frontend located in `examples/tptp` in the Z3 source package.
+version of Z3 does not support the TPTP format. You need to compile
+the TPTP frontend located in `examples/tptp` in the Z3 source package.
 
 Tactics
 -------
@@ -131,11 +132,10 @@ The most useful tactics are:
 
 * `ssimpl`
 
-  Tries to simplify the goal and possibly solve it. Does not perform
-  much of actual proof search (beyond what `intuition` and `auto`
-  already do). It is designed in such a way as to terminate in a short
-  time in most circumstances. It uses the rewrite hints from the
-  `shints` database.
+  A goal simplification tactic. It does not perform much of actual
+  proof search (beyond what `intuition` and `auto` already do). It is
+  designed in such a way as to terminate in a short time in most
+  circumstances. It uses the rewrite hints from the `shints` database.
 
   **WARNING**: This tactic may change the proof state unpredictably and
   introduce randomly named hypotheses into the context.
@@ -154,11 +154,14 @@ The most useful tactics are:
 
   The definition of `scrush` is: `try strivial; ssimpl; sauto`.
 
+* `qsimpl`
+
+  A more conservative version of `ssimpl`. Useful when `ssimpl`
+  performs too much simplification or takes too much time.
+
 * `sintuition`
 
-  A "super" version of `intuition`. Essentially, may be seen as a more
-  conservative version of `ssimpl`. Useful when `ssimpl` performs too
-  much simplification.
+  An even more conservative and quicker simplification tactic.
 
 * `simp_hyps`
 
