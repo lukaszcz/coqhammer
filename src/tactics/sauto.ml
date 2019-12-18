@@ -198,7 +198,7 @@ let get_consts evd lst =
 
 let is_simple_unfold b_aggressive c =
   match Global.body_of_constant Library.indirect_accessor c with
-  | Some (b, _) ->
+  | Some (b, _, _) ->
      begin
        let t = EConstr.of_constr b in
        let body = Utils.drop_all_lambdas Evd.empty t in

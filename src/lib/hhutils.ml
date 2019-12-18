@@ -244,7 +244,7 @@ let fold_constr f acc evd t =
       List.fold_left (hlp k) ac (Array.to_list ar)
     in
     match kind evd t with
-    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ ->
+    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
     | Cast (ty1,ck,ty2) ->
        let acc1 = hlp m acc ty1 in
@@ -299,7 +299,7 @@ let fold_constr_shallow f acc evd t =
       List.fold_left hlp ac (Array.to_list ar)
     in
     match kind evd t with
-    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ ->
+    | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f acc t
     | Cast (ty1,ck,ty2) ->
        let acc1 = hlp acc ty1 in

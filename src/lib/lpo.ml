@@ -37,7 +37,7 @@ let rec const_gt c1 c2 =
     begin
       let b =
         match Global.body_of_constant Library.indirect_accessor c1 with
-        | Some b ->
+        | Some (b, _, _) ->
            let consts =
              Utils.fold_constr_ker
                begin fun _ acc t ->
@@ -47,7 +47,7 @@ let rec const_gt c1 c2 =
                  | _ -> acc
                end
                []
-               (fst b)
+               b
            in
            let rec go lst =
              match lst with
