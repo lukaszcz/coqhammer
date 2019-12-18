@@ -150,7 +150,7 @@ let process_file fname =
             let pref = Queue.pop (Hashtbl.find nametab last2) in
             let path = pref ^ "." ^ last2 in
             let p = String.sub s 6 (String.length s - 7) in
-            output_string oc ("Proof. hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\"." ^
+            output_string oc ("Proof. hammer_hook \"" ^ prefix ^ "\" \"" ^ path ^ "\". " ^
                                  "exact (" ^ p ^ "). Qed.\n");
             print_endline path
           end
