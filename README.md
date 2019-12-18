@@ -117,9 +117,10 @@ The most useful tactics are:
 
   A "super" version of `auto`. In addition to applying hypotheses, it
   tries applying constructors, inverting the hypotheses, ordered
-  rewriting, rewriting with hints from the `shints` database,
-  arithmetic solving with `lia`, case splitting, intelligent
-  unfolding, forward reasoning and hypotheses simplification.
+  rewriting, heuristic rewriting, rewriting with hints from the
+  `shints` database, arithmetic solving with `lia`, case splitting,
+  intelligent unfolding, forward reasoning and hypotheses
+  simplification.
 
 * `hauto`
 
