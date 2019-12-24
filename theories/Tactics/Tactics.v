@@ -1158,6 +1158,39 @@ Tactic Notation "sdauto" "unfolding" constr(unfolds) "inverting" constr(inverts)
 Tactic Notation "sdauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   unshelve (sauto_gen i with (shints) unfolding unfolds inverting inverts ctrs default opts presimplify depth_cost_model); dsolve.
 
+Tactic Notation "hdauto" :=
+  unshelve (sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) :=
+  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "using" constr(lst1) "unfolding" constr(lst2) :=
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "using" constr(lst1) :=
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) :=
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "unfolding" constr(lst2) :=
+  unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "unfolding" constr(lst2) :=
+  unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "inverting" constr(lst3) :=
+  unshelve (sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+Tactic Notation "hdauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
+  unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+
 Tactic Notation "sprover" :=
   solve [ unshelve ssimpl; try sdauto 4; try sdauto 6; try sdauto 8; try sdauto 10; try sdauto 12;
           try sdauto 14; try sdauto 16; try sdauto 18; try sdauto 20 ].
@@ -1227,77 +1260,77 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
 Tactic Notation "qprover" :=
-  solve [ unshelve qsimpl; try sdauto 2; try sdauto 4; try sdauto 6; try sdauto 8; try sdauto 10;
-          try sdauto 12; try sdauto 14; try sdauto 16; try sdauto 18; try sdauto 20 ].
+  solve [ unshelve qsimpl; try hdauto 2; try hdauto 4; try hdauto 6; try hdauto 8; try hdauto 10;
+          try hdauto 12; try hdauto 14; try hdauto 16; try hdauto 18; try hdauto 20 ].
 Tactic Notation "qprover" "using" constr(lst1) :=
-  solve [ unshelve qsimpl; try sdauto 2 using lst1; try sdauto 4 using lst1; try sdauto 6 using lst1; try sdauto 8 using lst1;
-          try sdauto 10 using lst1; try sdauto 12 using lst1; try sdauto 14 using lst1;
-          try sdauto 16 using lst1; try sdauto 18 using lst1; try sdauto 20 using lst1 ].
+  solve [ unshelve qsimpl; try hdauto 2 using lst1; try hdauto 4 using lst1; try hdauto 6 using lst1; try hdauto 8 using lst1;
+          try hdauto 10 using lst1; try hdauto 12 using lst1; try hdauto 14 using lst1;
+          try hdauto 16 using lst1; try hdauto 18 using lst1; try hdauto 20 using lst1 ].
 Tactic Notation "qprover" "unfolding" constr(lst2) :=
-  solve [ unshelve qsimpl; try sdauto 2 unfolding lst2;
-          try sdauto 4 unfolding lst2; try sdauto 6 unfolding lst2;
-          try sdauto 8 unfolding lst2; try sdauto 10 unfolding lst2; try sdauto 12 unfolding lst2;
-          try sdauto 14 unfolding lst2; try sdauto 16 unfolding lst2; try sdauto 18 unfolding lst2;
-          try sdauto 20 unfolding lst2 ].
+  solve [ unshelve qsimpl; try hdauto 2 unfolding lst2;
+          try hdauto 4 unfolding lst2; try hdauto 6 unfolding lst2;
+          try hdauto 8 unfolding lst2; try hdauto 10 unfolding lst2; try hdauto 12 unfolding lst2;
+          try hdauto 14 unfolding lst2; try hdauto 16 unfolding lst2; try hdauto 18 unfolding lst2;
+          try hdauto 20 unfolding lst2 ].
 Tactic Notation "qprover" "inverting" constr(lst3) :=
-  solve [ unshelve qsimpl; try sdauto 2 inverting lst3;
-          try sdauto 4 inverting lst3;
-          try sdauto 6 inverting lst3;
-          try sdauto 8 inverting lst3;
-          try sdauto 10 inverting lst3;
-          try sdauto 12 inverting lst3;
-          try sdauto 14 inverting lst3;
-          try sdauto 16 inverting lst3;
-          try sdauto 18 inverting lst3;
-          try sdauto 20 inverting lst3 ].
+  solve [ unshelve qsimpl; try hdauto 2 inverting lst3;
+          try hdauto 4 inverting lst3;
+          try hdauto 6 inverting lst3;
+          try hdauto 8 inverting lst3;
+          try hdauto 10 inverting lst3;
+          try hdauto 12 inverting lst3;
+          try hdauto 14 inverting lst3;
+          try hdauto 16 inverting lst3;
+          try hdauto 18 inverting lst3;
+          try hdauto 20 inverting lst3 ].
 Tactic Notation "qprover" "using" constr(lst1) "unfolding" constr(lst2):=
-  solve [ unshelve qsimpl; try sdauto 2 using lst1 unfolding lst2;
-          try sdauto 4 using lst1 unfolding lst2;
-          try sdauto 6 using lst1 unfolding lst2;
-          try sdauto 8 using lst1 unfolding lst2;
-          try sdauto 10 using lst1 unfolding lst2;
-          try sdauto 12 using lst1 unfolding lst2;
-          try sdauto 14 using lst1 unfolding lst2;
-          try sdauto 16 using lst1 unfolding lst2;
-          try sdauto 18 using lst1 unfolding lst2;
-          try sdauto 20 using lst1 unfolding lst2 ].
+  solve [ unshelve qsimpl; try hdauto 2 using lst1 unfolding lst2;
+          try hdauto 4 using lst1 unfolding lst2;
+          try hdauto 6 using lst1 unfolding lst2;
+          try hdauto 8 using lst1 unfolding lst2;
+          try hdauto 10 using lst1 unfolding lst2;
+          try hdauto 12 using lst1 unfolding lst2;
+          try hdauto 14 using lst1 unfolding lst2;
+          try hdauto 16 using lst1 unfolding lst2;
+          try hdauto 18 using lst1 unfolding lst2;
+          try hdauto 20 using lst1 unfolding lst2 ].
 Tactic Notation "qprover" "using" constr(lst1) "inverting" constr(lst3) :=
-  solve [ unshelve qsimpl; try sdauto 2 using lst1 inverting lst3;
-          try sdauto 4 using lst1 inverting lst3;
-          try sdauto 6 using lst1 inverting lst3;
-          try sdauto 8 using lst1 inverting lst3;
-          try sdauto 10 using lst1 inverting lst3;
-          try sdauto 12 using lst1 inverting lst3;
-          try sdauto 14 using lst1 inverting lst3;
-          try sdauto 16 using lst1 inverting lst3;
-          try sdauto 18 using lst1 inverting lst3;
-          try sdauto 20 using lst1 inverting lst3 ].
+  solve [ unshelve qsimpl; try hdauto 2 using lst1 inverting lst3;
+          try hdauto 4 using lst1 inverting lst3;
+          try hdauto 6 using lst1 inverting lst3;
+          try hdauto 8 using lst1 inverting lst3;
+          try hdauto 10 using lst1 inverting lst3;
+          try hdauto 12 using lst1 inverting lst3;
+          try hdauto 14 using lst1 inverting lst3;
+          try hdauto 16 using lst1 inverting lst3;
+          try hdauto 18 using lst1 inverting lst3;
+          try hdauto 20 using lst1 inverting lst3 ].
 Tactic Notation "qprover" "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  solve [ unshelve qsimpl; try sdauto 2 unfolding lst2 inverting lst3;
-          try sdauto 4 unfolding lst2 inverting lst3;
-          try sdauto 6 unfolding lst2 inverting lst3;
-          try sdauto 8 unfolding lst2 inverting lst3;
-          try sdauto 10 unfolding lst2 inverting lst3;
-          try sdauto 12 unfolding lst2 inverting lst3;
-          try sdauto 14 unfolding lst2 inverting lst3;
-          try sdauto 16 unfolding lst2 inverting lst3;
-          try sdauto 18 unfolding lst2 inverting lst3;
-          try sdauto 20 unfolding lst2 inverting lst3 ].
+  solve [ unshelve qsimpl; try hdauto 2 unfolding lst2 inverting lst3;
+          try hdauto 4 unfolding lst2 inverting lst3;
+          try hdauto 6 unfolding lst2 inverting lst3;
+          try hdauto 8 unfolding lst2 inverting lst3;
+          try hdauto 10 unfolding lst2 inverting lst3;
+          try hdauto 12 unfolding lst2 inverting lst3;
+          try hdauto 14 unfolding lst2 inverting lst3;
+          try hdauto 16 unfolding lst2 inverting lst3;
+          try hdauto 18 unfolding lst2 inverting lst3;
+          try hdauto 20 unfolding lst2 inverting lst3 ].
 Tactic Notation "qprover" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  solve [ unshelve qsimpl; try sdauto 2 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 4 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 6 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 8 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 10 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 12 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 14 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 16 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 18 using lst1 unfolding lst2 inverting lst3;
-          try sdauto 20 using lst1 unfolding lst2 inverting lst3 ].
+  solve [ unshelve qsimpl; try hdauto 2 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 4 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 6 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 8 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 10 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 12 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 14 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 16 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 18 using lst1 unfolding lst2 inverting lst3;
+          try hdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
 
 Tactic Notation "xeauto" :=
-  try congruence; unshelve (eauto 10; (intuition auto); try congruence; eauto; firstorder auto); dsolve.
+  intros; try congruence; try Psatz.lia; try easy; unshelve (eauto 10; (intuition auto); try congruence; try Psatz.lia; try easy; eauto; firstorder auto); dsolve.
 
 Tactic Notation "xeauto" "using" constr(lst1) := use lst1; xeauto.
 Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := use lst1; xeauto.
