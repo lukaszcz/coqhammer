@@ -30,7 +30,7 @@ let to_const t =
   let open EConstr in
   match kind Evd.empty t with
   | Const(c, _) -> c
-  | _ -> failwith "sauto: not a constant"
+  | _ -> Utils.get_const "Tactics.default" (* a hack; may happen with Let's *)
 
 let to_inductive t =
   let open Constr in
