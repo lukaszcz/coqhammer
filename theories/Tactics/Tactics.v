@@ -996,37 +996,6 @@ Tactic Notation "qcrush2" "using" constr(lst) "unfolding" constr(unfolds) "inver
 Tactic Notation "qcrush2" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   qcrush2_base unfolds inverts.
 
-Ltac usimpl_base unfolds :=
-  ssimpl;
-  repeat match goal with
-         | [ |- context[?f] ] =>
-           progress unfold f; (constr_eq unfolds default || inList f unfolds); ssimpl unfolding f
-         end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] =>
-           progress unfold f in H; (constr_eq unfolds default || inList f unfolds); ssimpl unfolding f
-         end.
-
-Tactic Notation "usimpl" := usimpl_base default default.
-Tactic Notation "usimpl" "unfolding" constr(unfolds) :=
-  usimpl_base unfolds default.
-
-Tactic Notation "ucrush" := usimpl; sauto.
-Tactic Notation "ucrush" "using" constr(lst) :=
-  use lst; usimpl; sauto.
-Tactic Notation "ucrush" "using" constr(lst) "unfolding" constr(unfolds) :=
-  use lst; usimpl unfolding unfolds; sauto unfolding unfolds.
-Tactic Notation "ucrush" "unfolding" constr(unfolds) :=
-  usimpl unfolding unfolds; sauto unfolding unfolds.
-Tactic Notation "ucrush" "inverting" constr(inverts) :=
-  try strivial; usimpl; sauto inverting inverts.
-Tactic Notation "ucrush" "using" constr(lst) "inverting" constr(inverts) :=
-  use lst; usimpl; sauto inverting inverts.
-Tactic Notation "ucrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  use lst; usimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
-Tactic Notation "ucrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  usimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
-
 Tactic Notation "sblast" := repeat (ssimpl; instering).
 Tactic Notation "sblast" "using" constr(lst) :=
   use lst; repeat (ssimpl; instering).
@@ -1357,7 +1326,6 @@ Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding 
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
 Ltac rqcrush lems unfolds inverts := solve [ qcrush using lems unfolding unfolds inverting inverts ].
 Ltac rqcrush2 lems unfolds inverts := solve [ qcrush2 using lems unfolding unfolds inverting inverts ].
-Ltac rucrush lems unfolds inverts := solve [ ucrush using lems unfolding unfolds inverting inverts ].
 Ltac rsblast lems unfolds inverts := solve [ sblast using lems unfolding unfolds inverting inverts ].
 Ltac rqblast lems unfolds inverts := solve [ qblast using lems unfolding unfolds inverting inverts ].
 Ltac rsprover lems unfolds inverts := solve [ sprover using lems unfolding unfolds inverting inverts ].
