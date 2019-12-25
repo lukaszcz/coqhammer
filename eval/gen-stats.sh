@@ -45,7 +45,7 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>sblast</th><th>sauto</th><th>ucrush</th><th>sprover</th></tr>" >> statistics.html
+echo "<tr><th>sblast</th><th>sauto</th><th>syelles</th><th>sprover</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'sblast' {} + | wc -l` >> statistics.html
@@ -54,7 +54,7 @@ echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'sauto$' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep 'ucrush' {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep 'syelles' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep sprover {} + | wc -l` >> statistics.html
@@ -63,11 +63,8 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>rreasy</th><th>rryelles</th><th>rrcrush</th><th>rryreconstr</th></tr>" >> statistics.html
+echo "<tr><th>rryelles</th><th>rrcrush</th><th>rryreconstr</th><th>rrblast</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
-echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep rreasy {} + | wc -l` >> statistics.html
-echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep rryelles {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
@@ -76,6 +73,9 @@ echo `find out -name "*.out" -exec grep rrcrush {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep rryreconstr {} + | wc -l` >> statistics.html
+echo "</td>" >> statistics.html
+echo "<td>" >> statistics.html
+echo `find out -name "*.out" -exec grep rrblast {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html

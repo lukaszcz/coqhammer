@@ -1280,9 +1280,9 @@ Ltac hyelles2 hyps lems defs :=
 
 Ltac rreasy lems defs inverts := solve [ unshelve heasy AllHyps lems defs; dsolve ].
 Ltac rryreconstr lems defs inverts := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
-Ltac rrcrush lems defs inverts := solve [ unshelve hcrush AllHyps lems defs; dsolve ].
+Ltac rrcrush lems defs inverts := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
 Ltac rryelles lems defs inverts := solve [ unshelve hyelles2 AllHyps lems defs; dsolve ].
-Ltac rrscrush lems defs inverts := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
+Ltac rrblast lems defs inverts := solve [ unshelve hblast AllHyps lems defs; dsolve ].
 
 Ltac fcrush :=
   eauto; try congruence; yisolve; sauto; try yelles 2;
