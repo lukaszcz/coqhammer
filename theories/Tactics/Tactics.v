@@ -1321,6 +1321,15 @@ Tactic Notation "syelles" "unfolding" constr(lst2) := Reconstr.hyelles2 Reconstr
 Tactic Notation "syelles" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty lst2.
 Tactic Notation "syelles" "inverting" constr(lst3) := Reconstr.hyelles2 Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
 
+Tactic Notation "sreconstr" := Reconstr.hyreconstr Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
+Tactic Notation "sreconstr" "using" constr(lst1) := Reconstr.hyreconstr Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "sreconstr" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hyreconstr Reconstr.AllHyps lst1 lst2.
+Tactic Notation "sreconstr" "using" constr(lst1) "unfolding" constr(lst2) := Reconstr.hyreconstr Reconstr.AllHyps lst1 lst2.
+Tactic Notation "sreconstr" "using" constr(lst1) "inverting" constr(lst3) := Reconstr.hyreconstr Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "sreconstr" "unfolding" constr(lst2) := Reconstr.hyreconstr Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "sreconstr" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hyreconstr Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "sreconstr" "inverting" constr(lst3) := Reconstr.hyreconstr Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
+
 Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
 Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding unfolds inverting inverts ].
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
@@ -1336,6 +1345,8 @@ Ltac rlauto lems unfolds inverts := solve [ lauto using lems unfolding unfolds i
 Ltac reauto lems unfolds inverts := solve [ use lems; xeauto ].
 Ltac rsyelles lems unfolds inverts :=
   solve [ syelles using lems unfolding unfolds inverting inverts ].
+Ltac rsreconstr lems unfolds inverts :=
+  solve [ sreconstr using lems unfolding unfolds inverting inverts ].
 Ltac rfirstorder lems unfolds inverts :=
   solve [ use lems; Reconstr.unfolding unfolds; firstorder auto ].
 
