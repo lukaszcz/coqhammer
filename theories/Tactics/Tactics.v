@@ -1330,6 +1330,16 @@ Tactic Notation "sreconstr" "unfolding" constr(lst2) := Reconstr.hyreconstr Reco
 Tactic Notation "sreconstr" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hyreconstr Reconstr.AllHyps Reconstr.Empty lst2.
 Tactic Notation "sreconstr" "inverting" constr(lst3) := Reconstr.hyreconstr Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
 
+Tactic Notation "hcrush" := Reconstr.hcrush Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
+Tactic Notation "hcrush" "using" constr(lst1) := Reconstr.hcrush Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "hcrush" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hcrush Reconstr.AllHyps lst1 lst2.
+Tactic Notation "hcrush" "using" constr(lst1) "unfolding" constr(lst2) := Reconstr.hcrush Reconstr.AllHyps lst1 lst2.
+Tactic Notation "hcrush" "using" constr(lst1) "inverting" constr(lst3) := Reconstr.hcrush Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "hcrush" "unfolding" constr(lst2) := Reconstr.hcrush Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "hcrush" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hcrush Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "hcrush" "inverting" constr(lst3) := Reconstr.hcrush Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
+
+
 Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
 Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding unfolds inverting inverts ].
 Ltac rscrush lems unfolds inverts := solve [ scrush using lems unfolding unfolds inverting inverts ].
@@ -1347,6 +1357,8 @@ Ltac rsyelles lems unfolds inverts :=
   solve [ syelles using lems unfolding unfolds inverting inverts ].
 Ltac rsreconstr lems unfolds inverts :=
   solve [ sreconstr using lems unfolding unfolds inverting inverts ].
+Ltac rhcrush lems unfolds inverts :=
+  solve [ hcrush using lems unfolding unfolds inverting inverts ].
 Ltac rfirstorder lems unfolds inverts :=
   solve [ use lems; Reconstr.unfolding unfolds; firstorder auto ].
 

@@ -27,7 +27,7 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>leauto</th><th>qprover</th><th>syelles</th><th>qcrush2</th></tr>" >> statistics.html
+echo "<tr><th>leauto</th><th>qprover</th><th>syelles</th><th>sreconstr</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'leauto' {} + | wc -l` >> statistics.html
@@ -39,13 +39,13 @@ echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'syelles' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep qcrush2 {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep sreconstr {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>qblast</th><th>sblast</th><th>sreconstr</th><th>sprover</th></tr>" >> statistics.html
+echo "<tr><th>qblast</th><th>sblast</th><th>qcrush2</th><th>hcrush</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'qblast' {} + | wc -l` >> statistics.html
@@ -54,10 +54,10 @@ echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'sblast' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep 'sreconstr' {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep 'qcrush2' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep sprover {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep hcrush {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
