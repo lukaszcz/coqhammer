@@ -237,6 +237,7 @@ let sunfold b_aggressive c =
   else
     Tacticals.New.tclIDTAC
 
+(* TODO: port gunfolding from Reconstr.v *)
 let unfolding opts =
   let do_unfolding lst =
     Tacticals.New.tclREPEAT

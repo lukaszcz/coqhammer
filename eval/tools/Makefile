@@ -14,4 +14,4 @@ rmcomments: rmcomments.c
 	gcc $^ -o $@
 
 clean:
-	-rm -f rmcomments coqnames fxreqs stat *.cmo *.cmi *.cmx *.o
+	-rm -f rmcomments coqnames fixreqs stat *.cmo *.cmi *.cmx *.o
