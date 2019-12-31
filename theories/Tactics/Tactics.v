@@ -1339,6 +1339,14 @@ Tactic Notation "hcrush" "unfolding" constr(lst2) := Reconstr.hcrush Reconstr.Al
 Tactic Notation "hcrush" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.hcrush Reconstr.AllHyps Reconstr.Empty lst2.
 Tactic Notation "hcrush" "inverting" constr(lst3) := Reconstr.hcrush Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
 
+Tactic Notation "heasy" := Reconstr.heasy Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
+Tactic Notation "heasy" "using" constr(lst1) := Reconstr.heasy Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "heasy" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.heasy Reconstr.AllHyps lst1 lst2.
+Tactic Notation "heasy" "using" constr(lst1) "unfolding" constr(lst2) := Reconstr.heasy Reconstr.AllHyps lst1 lst2.
+Tactic Notation "heasy" "using" constr(lst1) "inverting" constr(lst3) := Reconstr.heasy Reconstr.AllHyps lst1 Reconstr.Empty.
+Tactic Notation "heasy" "unfolding" constr(lst2) := Reconstr.heasy Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "heasy" "unfolding" constr(lst2) "inverting" constr(lst3) := Reconstr.heasy Reconstr.AllHyps Reconstr.Empty lst2.
+Tactic Notation "heasy" "inverting" constr(lst3) := Reconstr.heasy Reconstr.AllHyps Reconstr.Empty Reconstr.Empty.
 
 Ltac rhauto lems unfolds inverts := solve [ hauto using lems unfolding unfolds inverting inverts ].
 Ltac rhauto4000 lems unfolds inverts := solve [ hauto 4000 using lems unfolding unfolds inverting inverts ].
