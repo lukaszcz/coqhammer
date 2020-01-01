@@ -1367,6 +1367,8 @@ Ltac rsreconstr lems unfolds inverts :=
   solve [ sreconstr using lems unfolding unfolds inverting inverts ].
 Ltac rhcrush lems unfolds inverts :=
   solve [ hcrush using lems unfolding unfolds inverting inverts ].
+Ltac rheasy lems unfolds inverts :=
+  solve [ heasy using lems unfolding unfolds inverting inverts ].
 Ltac rfirstorder lems unfolds inverts :=
   solve [ use lems; Reconstr.unfolding unfolds; firstorder auto ].
 
