@@ -318,7 +318,7 @@ let run_tactics args msg_success msg_fail =
   let tactics = [
     [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rqcrush", "qcrush") ];
     [ ("rleauto", "leauto"); ("rqprover", "qprover"); ("rsyelles", "syelles"); ("rsreconstr", "sreconstr") ];
-    [ ("rqblast", "qblast"); ("rqcrush2", "qcrush2"); ("rheasy", "heasy"); ("rhcrush", "hcrush") ]
+    [ ("rqblast", "qblast"); ("rqcrush2", "qcrush2"); ("rsblast", "sblast"); ("rhcrush", "hcrush") ]
   ]
   in
   let ltacs = List.map (List.map (fun tac -> (Utils.ltac_eval (fst tac) args, snd tac))) tactics
