@@ -966,8 +966,6 @@ Ltac yelles0 defs n rtrace gtrace :=
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ |- _ ] =>
           solve [ isolve ]
-        | [ |- _ ] =>
-          solve [ econstructor; cbn; yelles0 defs k rtrace (gtrace, G) ]
         | [ H : forall x y z u v, _ _ |- _ _ ] =>
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ H : forall x y z u v w, _ _ |- _ _ ] =>
