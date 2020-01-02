@@ -86,11 +86,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | App (f,args)      ->
      tuple [mk_id "$App"; hhterm_of f; hhterm_of_constrarray args]
   | Const (c,u)       -> hhterm_of_constant c
-  | Proj (p,c)        -> tuple [mk_id "$Proj";
-                                tuple [hhterm_of_constant (Projection.constant p);
-                                       hhterm_of_bool (Projection.unfolded p)];
-                                hhterm_of c]
-                         (* TODO: projections not really supported *)
+  | Proj (p,c)        -> raise (HammerError "Primitive projections not supported.")
   | Evar (evk,cl)     -> raise (HammerError "Existential variables not supported.")
   | Ind (ind,u)       -> hhterm_of_inductive ind
   | Construct (ctr,u) -> hhterm_of_construct ctr
@@ -477,6 +473,12 @@ let try_goal_tactic f =
       try_tactic (fun () -> f gl)
     end
 
+let try_goal_tactic_nofail f =
+  Proofview.Goal.enter
+    begin fun gl ->
+      try_fun (fun () -> f gl) (fun () -> Proofview.tclUNIT ())
+    end
+
 (***************************************************************************************)
 
 let hammer_tac () =
@@ -633,7 +635,7 @@ let hammer_hook_tac prefix name =
   in
   let premise_prover_lst = Hhlib.mk_all_pairs premises provers
   in
-  try_goal_tactic begin fun gl ->
+  try_goal_tactic_nofail begin fun gl ->
     Msg.info ("Processing theorem " ^ name ^ "...");
     try
       if check_goal_prop gl then
