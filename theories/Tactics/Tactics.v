@@ -1409,7 +1409,8 @@ Ltac fcrush :=
   sauto 12000.
 
 Ltac ecrush :=
-  eauto 10; try congruence; (intuition auto); eauto;
+  eauto 10; try congruence; try Psatz.lia; (intuition auto); eauto;
+  try congruence; try Psatz.lia;
   repeat match goal with
          | [ |- context[?f] ] => progress unfold f; cbn in *; intuition auto
          end;
@@ -1422,5 +1423,6 @@ Ltac ecrush :=
   try match goal with
       | [ H : ?T |- _ ] => isProp T; sinduction H; cbn in *; intuition eauto
       end;
+  try congruence; try Psatz.lia;
   eauto 10;
   solve [ firstorder auto ].
