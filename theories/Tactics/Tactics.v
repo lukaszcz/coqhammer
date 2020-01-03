@@ -1360,6 +1360,10 @@ Ltac rhcrush lems unfolds inverts :=
   solve [ hcrush using lems unfolding unfolds inverting inverts ].
 Ltac rfirstorder lems unfolds inverts :=
   solve [ use lems; Reconstr.unfolding unfolds; firstorder auto ].
+Ltac rtauto lems unfolds inverts :=
+  solve [ use lems; Reconstr.unfolding unfolds; tauto ].
+Ltac reasy lems unfolds inverts :=
+  solve [ use lems; Reconstr.unfolding unfolds; easy ].
 
 Ltac rcrush := scrush.
 Ltac rprover := Reconstr.sauto; syelles.
