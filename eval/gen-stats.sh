@@ -45,13 +45,13 @@ echo "</tr>" >> statistics.html
 echo "</table>" >> statistics.html
 
 echo "<table>" >> statistics.html
-echo "<tr><th>qblast</th><th>heasy</th><th>qcrush2</th><th>hcrush</th></tr>" >> statistics.html
+echo "<tr><th>qblast</th><th>sblast</th><th>qcrush2</th><th>hcrush</th></tr>" >> statistics.html
 echo "<tr>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'qblast' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
-echo `find out -name "*.out" -exec grep 'heasy' {} + | wc -l` >> statistics.html
+echo `find out -name "*.out" -exec grep 'sblast' {} + | wc -l` >> statistics.html
 echo "</td>" >> statistics.html
 echo "<td>" >> statistics.html
 echo `find out -name "*.out" -exec grep 'qcrush2' {} + | wc -l` >> statistics.html
