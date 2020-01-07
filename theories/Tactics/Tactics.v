@@ -940,24 +940,24 @@ Tactic Notation "hauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) ctrs (logic, @Init.Logic.eq) opts no_bnat_reflection no_eager_reduction); dsolve.
 
-Tactic Notation "scrush" := try strivial; ssimpl; sauto.
+Tactic Notation "scrush" := try strivial; unshelve ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
-  use lst; try strivial; ssimpl; sauto.
+  use lst; try strivial; unshelve ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) :=
-  use lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
+  use lst; try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds.
 Tactic Notation "scrush" "unfolding" constr(unfolds) :=
-  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds.
+  try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds.
 Tactic Notation "scrush" "inverting" constr(inverts) :=
-  try strivial; ssimpl; sauto inverting inverts.
+  try strivial; unshelve ssimpl; sauto inverting inverts.
 Tactic Notation "scrush" "using" constr(lst) "inverting" constr(inverts) :=
-  use lst; try strivial; ssimpl; sauto inverting inverts.
+  use lst; try strivial; unshelve ssimpl; sauto inverting inverts.
 Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  use lst; try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+  use lst; try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
 Tactic Notation "scrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  try strivial; ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+  try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
 
 Ltac qcrush_base unfolds inverts :=
-  qsimpl; qforwarding; qsimpl; instering; qsimpl;
+  unshelve qsimpl; qforwarding; unshelve qsimpl; instering; unshelve qsimpl;
   try hauto 400 unfolding unfolds inverting inverts;
   sauto unfolding unfolds inverting inverts.
 
@@ -978,7 +978,7 @@ Tactic Notation "qcrush" "unfolding" constr(unfolds) "inverting" constr(inverts)
   qcrush_base unfolds inverts.
 
 Ltac qcrush2_base unfolds inverts :=
-  qsimpl; qforwarding; einstering; esimp_hyps; sauto unfolding unfolds inverting inverts.
+  unshelve qsimpl; qforwarding; einstering; esimp_hyps; sauto unfolding unfolds inverting inverts.
 
 Tactic Notation "qcrush2" := qcrush2_base default default.
 Tactic Notation "qcrush2" "using" constr(lst) :=
@@ -1392,7 +1392,7 @@ Ltac sinduction t :=
   induction t.
 
 Ltac fcrush :=
-  eauto; try congruence; try strivial; ssimpl; try sauto;
+  eauto; try congruence; try strivial; unshelve ssimpl; try sauto;
   repeat match goal with
          | [ |- context[?f] ] => progress unfold f; ssimpl unfolding f
          end;
@@ -1400,10 +1400,10 @@ Ltac fcrush :=
          | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl unfolding f
          end;
   try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; ssimpl; sauto
+      | [ x : ?T |- _ ] => notProp T; sinduction x; unshelve ssimpl; sauto
       end;
   try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; ssimpl; sauto
+      | [ H : ?T |- _ ] => isProp T; sinduction H; unshelve ssimpl; sauto
       end;
   try sauto 4000;
   sauto 12000.
