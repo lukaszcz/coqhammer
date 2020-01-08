@@ -43,7 +43,7 @@ let filter_default =
   let cdefault = Utils.get_constr "Tactics.default" in
   List.filter (fun c -> c <> cdefault)
 
-let get_s_opts ropts bases unfoldings inverting ctrs =
+let get_s_opts ropts bases unfoldings inverting splits ctrs =
   let cdefault = Utils.get_constr "Tactics.default" in
   let chints = Utils.get_constr "Tactics.hints" in
   let cnone = Utils.get_constr "Tactics.none" in
@@ -56,45 +56,67 @@ let get_s_opts ropts bases unfoldings inverting ctrs =
     | [h] when h = cnone -> SNone
     | [h] when h = clogic -> SNoHints logic_lst
     | _ ->
-       begin
-         let b_nohints = List.mem cnohints lst in
-         let b_hints = List.mem chints lst in
-         let b_logic = List.mem clogic lst in
-         let lst = List.filter (fun c -> c <> cnohints && c <> chints && c <> cdefault && c <> clogic) lst in
-         let lst = List.map conv lst in
-         let lst = if b_logic then logic_lst @ lst else lst in
-         if b_nohints then
-           SNoHints lst
-         else if b_hints then
-           SSome lst
-         else
-           match default with
-           | SNoHints _ | SNone -> SNoHints lst
-           | _ -> SSome lst
-       end
+       if List.mem cnone lst then
+         SNone
+       else
+         begin
+           let b_nohints = List.mem cnohints lst in
+           let b_hints = List.mem chints lst in
+           let b_logic = List.mem clogic lst in
+           let lst = List.filter (fun c -> c <> cnohints && c <> chints && c <> cdefault && c <> clogic) lst in
+           let lst = List.map conv lst in
+           let lst = if b_logic then logic_lst @ lst else lst in
+           if b_nohints then
+             SNoHints lst
+           else if b_hints then
+             SSome lst
+           else
+             match default with
+             | SNoHints _ | SNone -> SNoHints lst
+             | _ -> SSome lst
+         end
   in
   let get_unfoldings opts =
-    { opts with s_unfolding =
-        get_s_opts_field logic_constants to_const opts
-          (destruct_constr unfoldings) default_s_opts.s_unfolding }
+    match unfoldings with
+    | None -> opts
+    | Some t ->
+       { opts with s_unfolding =
+           get_s_opts_field logic_constants to_const opts
+             (destruct_constr t) default_s_opts.s_unfolding }
   in
   let get_invertings opts =
-    { opts with s_inversions =
-        get_s_opts_field logic_inductives to_inductive opts
-          (destruct_constr inverting) default_s_opts.s_inversions }
+    match inverting with
+    | None -> opts
+    | Some t ->
+       { opts with s_inversions =
+           get_s_opts_field logic_inductives to_inductive opts
+             (destruct_constr t) default_s_opts.s_inversions }
+  in
+  let get_splittings opts =
+    match splits with
+    | None -> opts
+    | Some t ->
+       { opts with s_case_splits =
+           get_s_opts_field logic_inductives to_inductive opts
+             (destruct_constr t) default_s_opts.s_case_splits }
   in
   let get_ctrs opts =
-    { opts with s_constructors =
-        get_s_opts_field logic_inductives to_inductive opts
-          (destruct_constr ctrs) default_s_opts.s_constructors }
+    match ctrs with
+    | None -> opts
+    | Some t ->
+       { opts with s_constructors =
+           get_s_opts_field logic_inductives to_inductive opts
+             (destruct_constr t) default_s_opts.s_constructors }
   in
   let get_bases opts =
-    { opts with s_rew_bases = bases }
+    match bases with
+    | None -> opts
+    | Some b -> { opts with s_rew_bases = b }
   in
   let get_ropt opts ropt =
     match ropt with
     | "no_forward" -> { opts with s_forwarding = false }
-    | "no_case_split" -> { opts with s_case_splits = SNone }
+    | "no_eager_case_split" -> { opts with s_eager_case_splitting = false }
     | "no_simple_split" -> { opts with s_simple_splits = SNone }
     | "no_simple_invert" -> { opts with s_simple_inverting = false }
     | "no_eager_invert" -> { opts with s_eager_inverting = false }
@@ -113,4 +135,7 @@ let get_s_opts ropts bases unfoldings inverting ctrs =
     | "default" -> opts
     | _ -> failwith ("sauto: unknown option `" ^ ropt ^ "'")
   in
-  List.fold_left get_ropt (get_bases (get_unfoldings (get_invertings (get_ctrs default_s_opts)))) ropts
+  List.fold_left
+    get_ropt
+    (get_bases (get_unfoldings (get_invertings (get_splittings (get_ctrs default_s_opts)))))
+    ropts

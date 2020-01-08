@@ -21,6 +21,7 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
+  s_eager_case_splitting : bool;
   s_eager_reducing : bool;
   s_eager_rewriting : bool;
   s_eager_inverting : bool;
@@ -46,6 +47,7 @@ let default_s_opts = {
   s_inversions = SAll;
   s_rew_bases = [];
   s_bnat_reflect = true;
+  s_eager_case_splitting = true;
   s_eager_reducing = true;
   s_eager_rewriting = true;
   s_eager_inverting = true;
@@ -67,7 +69,7 @@ let logic_inductives = [ Utils.get_inductive "Init.Logic.and"; Utils.get_inducti
                          Utils.get_inductive "Init.Logic.ex"; Utils.get_inductive "Init.Datatypes.prod";
                          Utils.get_inductive "Init.Specif.sumbool"; Utils.get_inductive "Init.Specif.sig";
                          Utils.get_inductive "Init.Datatypes.sum"; Utils.get_inductive "Init.Specif.sigT";
-                         Utils.get_inductive "Init.Logic.False" ]
+                         Utils.get_inductive "Init.Logic.False"; Utils.get_inductive "Init.Logic.eq" ]
 
 let unfolding_hints = ref logic_constants
 let constructor_hints = ref logic_inductives
@@ -90,7 +92,7 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActRewrite of Id.t |
         ActInvert of Id.t | ActUnfold of Constant.t | ActCaseUnfold of Constant.t |
-            ActConstructor | ActIntro | ActReduce
+            ActDestruct of EConstr.t | ActConstructor | ActIntro | ActReduce
 
 let action_to_string act =
   match act with
@@ -101,6 +103,7 @@ let action_to_string act =
   | ActInvert id -> "invert " ^ Id.to_string id
   | ActUnfold c -> "unfold " ^ Constant.to_string c
   | ActCaseUnfold c -> "case-unfold " ^ Constant.to_string c
+  | ActDestruct t -> "destruct " ^ Utils.constr_to_string Evd.empty t
   | ActConstructor -> "constructor"
   | ActIntro -> "intro"
   | ActReduce -> "reduce"
@@ -236,6 +239,9 @@ let sunfold b_aggressive c =
     fullunfold c
   else
     Tacticals.New.tclIDTAC
+
+(* TODO: use sdestruct from Tactics.v *)
+let sdestruct t = Tactics.destruct false None t None None
 
 (* TODO: port gunfolding from Reconstr.v *)
 let unfolding opts =
@@ -480,9 +486,6 @@ let case_splitting b_all opts =
        with_reduction opts case_splitting_concl_tac case_splitting_concl_nocbn_tac
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
-     let introp =
-       Some (CAst.make (IntroAndPattern [CAst.make (IntroAction IntroWildcard)]))
-     in
      Proofview.Goal.enter begin fun gl ->
        let evd = Proofview.Goal.sigma gl in
        Utils.fold_constr_shallow begin fun acc t ->
@@ -490,11 +493,9 @@ let case_splitting b_all opts =
          let open EConstr in
          match kind evd t with
          | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
-            Proofview.tclTHEN (Tactics.destruct false None c introp None <*> subst_simpl opts) acc
+            Proofview.tclTHEN (sdestruct c <*> subst_simpl opts) acc
          | _ -> acc
-       end (Proofview.tclUNIT ())
-         (Proofview.Goal.sigma gl)
-         (Proofview.Goal.concl gl)
+       end (Proofview.tclUNIT ()) evd (Proofview.Goal.concl gl)
      end
 
 let eager_inverting opts =
@@ -538,7 +539,7 @@ let simplify opts =
       simple_splitting opts <~>
       autorewriting true opts <~>
       opt opts.s_eager_rewriting srewriting_tac <~>
-      case_splitting true opts <~>
+      opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       opt opts.s_eager_inverting (eager_inverting opts) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
@@ -552,7 +553,10 @@ let simplify opts =
 
 let simplify_concl opts =
   (reduce_concl opts <~> autorewriting false opts) <*>
-    Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting false opts) <*> simplify opts)
+    if opts.s_eager_case_splitting then
+      Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting false opts) <*> simplify opts)
+    else
+      Proofview.tclUNIT ()
 
 (*****************************************************************************************)
 
@@ -598,6 +602,49 @@ let constrs_nsubgoals ind =
   let cstrs = Utils.get_ind_constrs ind in
   List.fold_left (fun acc x -> max acc (hyp_nsubgoals evd (EConstr.of_constr x))) 0 cstrs
 
+let rec has_arg_dep evd lst =
+  let open Constr in
+  let open EConstr in
+  match lst with
+  | [] -> false
+  | h :: t ->
+     begin
+       match kind evd h with
+       | App _ | Const _ | Construct _ -> true
+       | _ -> has_arg_dep evd t
+     end
+
+let eval_ind_inversion =
+  let cache = Hashtbl.create 128 in
+  fun evd ind ->
+    try
+      Hashtbl.find cache ind
+    with Not_found ->
+      let ctrs = Utils.get_ind_constrs ind in
+      let num_ctrs = List.length ctrs in
+      let num_deps =
+        List.length (List.filter
+                       begin fun t ->
+                         match Utils.destruct_prod evd (EConstr.of_constr t) with
+                         | (_, _, args) -> not (has_arg_dep evd args)
+                       end
+                       ctrs)
+      in
+      let num_deps = if num_deps = num_ctrs then num_deps - 1 else num_deps in
+      Hashtbl.add cache ind (num_ctrs, num_deps);
+      (num_ctrs, num_deps)
+
+let create_case_actions opts evd t acc =
+  Utils.fold_constr_shallow begin fun acc t ->
+    let open Constr in
+    let open EConstr in
+    match kind evd t with
+    | Case (ci, _, c, _) when in_sopt_list !case_split_hints ci.ci_ind opts.s_case_splits ->
+       let num_ctrs = Utils.get_ind_nconstrs ci.ci_ind in
+       (40 + num_ctrs * 5, num_ctrs, ActDestruct c) :: acc
+    | _ -> acc
+  end acc evd t
+
 let create_hyp_actions opts evd ghead (id, hyp, cost, num_subgoals, (prods, head, args)) =
   let acts =
     if Utils.is_False evd head && prods = [] then
@@ -632,40 +679,26 @@ let create_hyp_actions opts evd ghead (id, hyp, cost, num_subgoals, (prods, head
     acts
 
 let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head, args)) =
-  let open Constr in
-  let open EConstr in
-  let rec has_arg_dep lst =
-    match lst with
-    | [] -> false
-    | h :: t ->
-       begin
-         match kind evd h with
-         | App _ | Const _ | Construct _ -> true
-         | _ -> has_arg_dep t
-       end
-  in
-  match kind evd head with
-  | Ind (ind, _) when is_inversion opts evd ind args ->
-     let ctrs = Utils.get_ind_constrs ind in
-     let num_ctrs = List.length ctrs in
-     let b_arg_dep = num_ctrs <= 1 || has_arg_dep args in
-     if b_arg_dep || in_sopt_list_explicitly !inversion_hints ind opts.s_inversions then
-       let deps =
-         List.length (List.filter
-                        begin fun t ->
-                          match Utils.destruct_prod evd (EConstr.of_constr t) with
-                          | (_, _, args) -> not (has_arg_dep args)
-                        end
-                        ctrs)
-       in
-       let deps = if deps = num_ctrs then deps - 1 else deps in
-       [(cost + 40 + if b_arg_dep then deps * 10 else num_ctrs * 10),
-        (if b_arg_dep then num_subgoals + max deps 1 else num_subgoals + num_ctrs),
-        ActInvert id]
-     else
+  let acts =
+    let open Constr in
+    let open EConstr in
+    match kind evd head with
+    | Ind (ind, _) when is_inversion opts evd ind args ->
+       let (num_ctrs, num_deps) = eval_ind_inversion evd ind in
+       let b_arg_dep = num_ctrs <= 1 || has_arg_dep evd args in
+       if b_arg_dep || in_sopt_list_explicitly !inversion_hints ind opts.s_inversions then
+         [(cost + 40 + if b_arg_dep then num_deps * 10 else num_ctrs * 10),
+          (if b_arg_dep then num_subgoals + max num_deps 1 else num_subgoals + num_ctrs),
+          ActInvert id]
+       else
+         []
+    | _ ->
        []
-  | _ ->
-     []
+  in
+  if not opts.s_eager_case_splitting && opts.s_case_splits <> SNone then
+    create_case_actions opts evd hyp acts
+  else
+    acts
 
 let create_case_unfolding_actions opts evd goal hyps =
   if opts.s_aggressive_unfolding then
@@ -692,6 +725,12 @@ let create_extra_actions opts evd goal hyps =
   in
   let actions =
     create_case_unfolding_actions opts evd goal hyps @ actions
+  in
+  let actions =
+    if not opts.s_eager_case_splitting && opts.s_case_splits <> SNone then
+      create_case_actions opts evd goal actions
+    else
+      actions
   in
   let actions =
     if opts.s_eager_reducing || not opts.s_reducing then
@@ -773,7 +812,7 @@ let rec search extra tacs opts n rtrace visited =
         | _ ->
            if is_simple_split opts evd goal then
              tacs.t_simple_splitting <*> search extra tacs opts n rtrace (goal :: visited)
-           else if is_case_split opts evd goal then
+           else if opts.s_eager_case_splitting && is_case_split opts evd goal then
              tacs.t_case_splitting <*> start_search tacs opts n
            else
              let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
@@ -861,6 +900,8 @@ and apply_actions tacs opts n actions rtrace visited =
             cont (Proofview.tclBIND
                     (Tacticals.New.tclPROGRESS (fullunfold c))
                     (fun _ -> start_search tacs opts n')) acts
+         | ActDestruct t ->
+            cont (sdestruct t <*> start_search tacs opts n') acts
          | ActConstructor ->
             cont
               (Tactics.any_constructor true
@@ -901,7 +942,8 @@ let qsimpl opts =
     (sintuition opts <*> subst_simpl opts) <~>
       opt opts.s_bnat_reflect bnat_reflect_tac <~>
       autorewriting true opts <~>
-      (simple_splitting opts <*> case_splitting true opts) <~>
+      (simple_splitting opts <*>
+         opt opts.s_eager_case_splitting (case_splitting true opts)) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   Tactics.intros <*> unfolding opts <*> tac

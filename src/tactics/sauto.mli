@@ -15,6 +15,7 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
+  s_eager_case_splitting : bool;
   s_eager_reducing : bool;
   s_eager_rewriting : bool;
   s_eager_inverting : bool;

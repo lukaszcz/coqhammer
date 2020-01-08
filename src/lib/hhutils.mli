@@ -93,3 +93,5 @@ val get_app_head : Evd.evar_map -> EConstr.t -> EConstr.t
 val get_head : Evd.evar_map -> EConstr.t -> EConstr.t
 
 val print_constr : Evd.evar_map -> EConstr.t -> unit
+
+val constr_to_string : Evd.evar_map -> EConstr.t -> string
