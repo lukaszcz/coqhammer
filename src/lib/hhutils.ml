@@ -50,7 +50,9 @@ let get_ind_constrs ind =
   Array.to_list mind.mind_packets.(snd ind).mind_user_lc
 
 let get_ind_nconstrs ind =
-  List.length (get_ind_constrs ind)
+  let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
+  let open Declarations in
+  Array.length mind.mind_packets.(snd ind).mind_user_lc
 
 let rec close f ctx t =
   match ctx with
@@ -482,4 +484,8 @@ let get_app_head evd t = match destruct_app evd t with (h, _) -> h
 
 let get_head evd t = match destruct_prod evd t with (_, h, _) -> h
 
-let print_constr evd t = Feedback.msg_notice (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))
+let print_constr evd t =
+  Feedback.msg_notice (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))
+
+let constr_to_string evd t =
+  Pp.string_of_ppcmds (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))

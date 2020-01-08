@@ -34,37 +34,35 @@ TACTIC EXTEND Hammer_ssimpl_gen
   ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
 }
 | [ "ssimpl" "unfolding" constr(unfolds) ] -> {
-  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
+  let opts = get_s_opts [] None (Some unfolds) None None None in
+  ssimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
 }
 | [ "ssimpl" "inverting" constr(inverts) ] -> {
-  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  let opts = get_s_opts [] None None (Some inverts) None None in
+  ssimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
 }
 | [ "ssimpl" "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
-  ssimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  let opts = get_s_opts [] None (Some unfolds) (Some inverts) None None in
+  ssimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
 }
 | [ "ssimpl" "with" tactic3(tac) ] -> {
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
   ssimpl { default_s_opts with s_simpl_tac = itac }
 }
 | [ "ssimpl" "with" tactic3(tac) "unfolding" constr(unfolds) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) None None None in
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
-  ssimpl { default_s_opts with s_simpl_tac = itac;
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
+  ssimpl { opts with s_simpl_tac = itac }
 }
 | [ "ssimpl" "with" tactic3(tac) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None None (Some inverts) None None in
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
-  ssimpl { default_s_opts with s_simpl_tac = itac;
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  ssimpl { opts with s_simpl_tac = itac }
 }
-| [ "ssimpl" "with" tactic3(tac)  "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+| [ "ssimpl" "with" tactic3(tac) "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) (Some inverts) None None in
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
-  ssimpl { default_s_opts with s_simpl_tac = itac;
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  ssimpl { opts with s_simpl_tac = itac }
 }
 END
 
@@ -74,43 +72,38 @@ TACTIC EXTEND Hammer_qsimpl_gen
     s_bnat_reflect = false }
 }
 | [ "qsimpl" "unfolding" constr(unfolds) ] -> {
-  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_bnat_reflect = false;
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
+  let opts = get_s_opts [] None (Some unfolds) None None None in
+  qsimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_bnat_reflect = false }
 }
 | [ "qsimpl" "inverting" constr(inverts) ] -> {
-  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_bnat_reflect = false;
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  let opts = get_s_opts [] None None (Some inverts) None None in
+  qsimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_bnat_reflect = false }
 }
 | [ "qsimpl" "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
-  qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
-    s_bnat_reflect = false;
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  let opts = get_s_opts [] None (Some unfolds) (Some inverts) None None in
+  qsimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];
+    s_bnat_reflect = false }
 }
 | [ "qsimpl" "with" tactic3(tac) ] -> {
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
   qsimpl { default_s_opts with s_simpl_tac = itac; s_bnat_reflect = false }
 }
 | [ "qsimpl" "with" tactic3(tac) "unfolding" constr(unfolds) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) None None None in
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
-  qsimpl { default_s_opts with s_simpl_tac = itac;
-    s_bnat_reflect = false;
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds))) }
+  qsimpl { opts with s_simpl_tac = itac; s_bnat_reflect = false }
 }
 | [ "qsimpl" "with" tactic3(tac) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None None (Some inverts) None None in
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
-  qsimpl { default_s_opts with s_simpl_tac = itac;
-    s_bnat_reflect = false;
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  qsimpl { opts with s_simpl_tac = itac; s_bnat_reflect = false }
 }
 | [ "qsimpl" "with" tactic3(tac)  "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) (Some inverts) None None in
   let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
-  qsimpl { default_s_opts with s_simpl_tac = itac;
-    s_bnat_reflect = false;
-    s_unfolding = SSome (List.map to_const (filter_default (destruct_constr unfolds)));
-    s_inversions = SSome (List.map to_inductive (filter_default (destruct_constr inverts))) }
+  qsimpl { opts with s_simpl_tac = itac; s_bnat_reflect = false }
 }
 END
 
@@ -132,8 +125,9 @@ TACTIC EXTEND Hammer_sauto_gen
                                                else
                                                   default_sauto_tree_limit)) }
 | [ "sauto_gen" int_or_var_opt(n) "with" "(" ne_preident_list(bases) ")" "unfolding" constr(unfoldings)
-      "inverting" constr(inverting) "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> {
-  let opts = get_s_opts ropts bases unfoldings inverting ctrs in
+      "inverting" constr(inverting) "splitting" constr(splits)
+      "ctrs" constr(ctrs) "opts" ne_preident_list(ropts) ] -> {
+  let opts = get_s_opts ropts (Some bases) (Some unfoldings) (Some inverting) (Some splits) (Some ctrs) in
   sauto opts
   (get_opt n
      (if opts.s_depth_cost_model then
