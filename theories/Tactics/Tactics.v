@@ -978,7 +978,7 @@ Tactic Notation "qcrush" "unfolding" constr(unfolds) "inverting" constr(inverts)
   qcrush_base unfolds inverts.
 
 Ltac qcrush2_base unfolds inverts :=
-  unshelve qsimpl; qforwarding; einstering; esimp_hyps; sauto unfolding unfolds inverting inverts.
+  unshelve (qsimpl; qforwarding; einstering; esimp_hyps; sauto unfolding unfolds inverting inverts); dsolve.
 
 Tactic Notation "qcrush2" := qcrush2_base default default.
 Tactic Notation "qcrush2" "using" constr(lst) :=
