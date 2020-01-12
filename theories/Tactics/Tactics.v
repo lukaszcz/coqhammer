@@ -1391,40 +1391,22 @@ Ltac sinduction t :=
   induction t.
 
 Ltac fcrush :=
-  eauto; try congruence; try strivial; unshelve ssimpl; try sauto;
-  repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; ssimpl unfolding f
-         end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; ssimpl unfolding f
-         end;
-  try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; unshelve ssimpl; sauto
-      end;
-  try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; unshelve ssimpl; sauto
-      end;
-  try sauto 4000;
-  sauto 12000.
-
-Ltac fcrush2 :=
-  eauto; try congruence; try strivial; unshelve qsimpl; try hauto 200;
+  eauto; try congruence; try strivial; unshelve qsimpl; try hauto;
   repeat match goal with
          | [ |- context[?f] ] => progress unfold f; qsimpl unfolding f
          end;
   repeat match goal with
          | [ H : context[?f] |- _ ] => progress unfold f in H; qsimpl unfolding f
          end;
-  try sauto 200;
   try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; unshelve qsimpl; sauto
+      | [ x : ?T |- _ ] => notProp T; sinduction x; unshelve qsimpl; hauto
       end;
   try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; unshelve qsimpl; sauto
+      | [ H : ?T |- _ ] => isProp T; sinduction H; unshelve qsimpl; hauto
       end;
+  try sauto;
   try sauto 4000;
   sauto 12000.
-
 
 Ltac ecrush :=
   eauto 10; try congruence; try Psatz.lia; (intuition auto); eauto;
