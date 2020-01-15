@@ -957,7 +957,7 @@ Tactic Notation "scrush" "unfolding" constr(unfolds) "inverting" constr(inverts)
   try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
 
 Ltac qcrush_base unfolds inverts :=
-  unshelve qsimpl; qforwarding; unshelve qsimpl; instering; unshelve qsimpl;
+  unshelve qsimpl; qforwarding; unshelve qsimpl; unshelve instering; unshelve qsimpl;
   try hauto 400 unfolding unfolds inverting inverts;
   sauto unfolding unfolds inverting inverts.
 
@@ -1297,9 +1297,8 @@ Tactic Notation "qprover" "using" constr(lst1) "unfolding" constr(lst2) "inverti
           try hdauto 18 using lst1 unfolding lst2 inverting lst3;
           try hdauto 20 using lst1 unfolding lst2 inverting lst3 ].
 
-
 Tactic Notation "xeauto" :=
-  intros; try congruence; try Psatz.lia; try easy; unshelve (eauto 10; (intuition auto); try congruence; try Psatz.lia; try easy; eauto; firstorder auto); dsolve.
+  intros; try congruence; try Psatz.lia; try easy; unshelve (eauto 10; (intuition auto); try congruence; try Psatz.lia; try easy; eauto; firstorder auto); auto; try easy; try solve [ do 10 constructor ].
 
 Tactic Notation "xeauto" "using" constr(lst1) := use lst1; xeauto.
 Tactic Notation "xeauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) := use lst1; xeauto.
