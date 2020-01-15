@@ -1214,8 +1214,7 @@ Ltac hsimple hyps lems defs :=
   try yellesd defs 2.
 
 Ltac hcrush hyps lems defs :=
-  hinit hyps lems defs;
-  try ycrush.
+  unshelve (hinit hyps lems defs; try ycrush); dsolve.
 
 Ltac hscrush hyps lems defs :=
   hinit hyps lems defs;
