@@ -1425,3 +1425,21 @@ Ltac ecrush :=
   try congruence; try Psatz.lia;
   eauto 10;
   solve [ firstorder auto ].
+
+From Hammer Require Tactics.Crush.
+
+Ltac ccrush :=
+  Crush.crush;
+  repeat match goal with
+         | [ |- context[?f] ] => progress unfold f; Crush.crush
+         end;
+  repeat match goal with
+         | [ H : context[?f] |- _ ] => progress unfold f in H; Crush.crush
+         end;
+  try match goal with
+      | [ x : ?T |- _ ] => notProp T; sinduction x; Crush.crush
+      end;
+  try match goal with
+      | [ H : ?T |- _ ] => isProp T; sinduction H; Crush.crush
+      end;
+  Crush.crush.
