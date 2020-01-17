@@ -1408,22 +1408,26 @@ Ltac fcrush :=
   sauto 12000.
 
 Ltac ecrush :=
-  eauto 10; try congruence; try Psatz.lia; (intuition auto); eauto;
-  try congruence; try Psatz.lia;
+  let solver :=
+      solve [ eauto; try congruence; try Psatz.lia ]
+  in
+  let simpler :=
+      (cbn in *; intuition auto)
+  in
+  solver; simpler; solver;
   repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; cbn in *; intuition auto
+         | [ |- context[?f] ] => progress unfold f; simpler
          end;
   repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; cbn in *; intuition auto
+         | [ H : context[?f] |- _ ] => progress unfold f in H; simpler
          end;
   try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; cbn in *; intuition eauto
+      | [ x : ?T |- _ ] => notProp T; sinduction x; simpler; solver
       end;
   try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; cbn in *; intuition eauto
+      | [ H : ?T |- _ ] => isProp T; sinduction H; simpler; solver
       end;
-  try congruence; try Psatz.lia;
-  eauto 10;
+  try solver;
   solve [ firstorder auto ].
 
 From Hammer Require Tactics.Crush.
@@ -1437,9 +1441,9 @@ Ltac ccrush :=
          | [ H : context[?f] |- _ ] => progress unfold f in H; Crush.crush
          end;
   try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; Crush.crush
+      | [ x : ?T |- _ ] => notProp T; sinduction x; solve [ Crush.crush ]
       end;
   try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; Crush.crush
+      | [ H : ?T |- _ ] => isProp T; sinduction H; solve [ Crush.crush ]
       end;
-  Crush.crush.
+  solve [ Crush.crush ].
