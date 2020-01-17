@@ -115,7 +115,7 @@ Ltac rewriterP := repeat (rewriteHyp; autorewrite with core in *).
 Ltac rewriter := autorewrite with core in *; rewriterP.
 
 (** This one is just so darned useful, let's add it as a hint here. *)
-Hint Rewrite app_ass.
+Hint Rewrite app_ass : chints.
 
 (** Try a new instantiation of a universally quantified fact, proved by [e].
    * [trace] is an accumulator recording which instantiations we choose. *)
@@ -175,14 +175,14 @@ Ltac crush :=
                              repeat (simplHyp; intuition; try subst); try congruence in
 
   (** A fancier version of [rewriter] from above, which uses [crush'] to discharge side conditions *)
-  let rewriter := autorewrite with core in *;
+  let rewriter := autorewrite with chints in *;
     repeat (match goal with
               | [ H : ?P |- _ ] =>
                 match P with
                   | context[JMeq] => fail 1 (** JMeq is too fancy to deal with here. *)
                   | _ => rewrite H by crush
                 end
-            end; autorewrite with core in *) in
+            end; autorewrite with chints in *) in
 
   (** Now the main sequence of heuristics: *)
     (sintuition; rewriter;
