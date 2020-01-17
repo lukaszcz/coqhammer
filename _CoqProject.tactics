@@ -16,5 +16,6 @@ src/tactics/sauto.ml
 src/tactics/tactics_main.ml
 src/tactics/g_tactics.mlg
 src/tactics/hammer_tactics.mlpack
-theories/Tactics/Tactics.v
+theories/Tactics/Crush.v
 theories/Tactics/Reconstr.v
+theories/Tactics/Tactics.v
