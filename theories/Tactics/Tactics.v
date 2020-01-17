@@ -1414,7 +1414,7 @@ Ltac ecrush :=
   let simpler :=
       (cbn in *; intuition auto)
   in
-  solver; simpler; solver;
+  try solver; simpler; try solver;
   repeat match goal with
          | [ |- context[?f] ] => progress unfold f; simpler
          end;
