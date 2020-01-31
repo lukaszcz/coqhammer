@@ -517,6 +517,14 @@ Ltac simpl_solve := solve [ isolve ].
 
 Ltac bnat_reflect :=
   repeat match goal with
+         | [ H : true = ?A |- _ ] =>
+           notHyp (A = true);
+           assert (A = true) by (symmetry; exact H);
+           clear H
+         | [ H : false = ?A |- _ ] =>
+           notHyp (A = false);
+           assert (A = false) by (symmetry; exact H);
+           clear H
          | [ H : (Nat.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
            assert (A = B) by (rewrite Coq.Arith.PeanoNat.Nat.eqb_eq in H; apply H);
