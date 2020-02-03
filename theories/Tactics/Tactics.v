@@ -517,6 +517,7 @@ Ltac simpl_solve := solve [ isolve ].
 
 Ltac bnat_reflect :=
   repeat match goal with
+         | [ H : true = false |- _ ] => inversion H
          | [ H : true = ?A |- _ ] =>
            notHyp (A = true);
            assert (A = true) by (symmetry; exact H);
