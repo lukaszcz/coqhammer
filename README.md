@@ -271,6 +271,6 @@ command                          | description
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2019, Lukasz Czajka, TU Dortmund University, and
+Copyright (c) 2017-2020, Lukasz Czajka, TU Dortmund University, and
 Cezary Kaliszyk, University of Innsbruck. Distributed under the terms
 of LGPL 2.1, see the file [LICENSE](LICENSE).
