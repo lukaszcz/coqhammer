@@ -155,6 +155,9 @@ let rec to_coqterm tm =
     check_name indname;
     Const(indname)
 
+  | Comb(Comb(Comb(Id "$Proj", _), _), _) ->
+     Const("unsupported__" ^ unique_id ())
+  (* TODO: primitive projections not really supported *)
   | _ ->
     print_endline (string_of_hhterm tm);
     failwith ("to_coqterm")
