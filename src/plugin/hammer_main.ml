@@ -86,7 +86,10 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | App (f,args)      ->
      tuple [mk_id "$App"; hhterm_of f; hhterm_of_constrarray args]
   | Const (c,u)       -> hhterm_of_constant c
-  | Proj (p,c)        -> raise (HammerError "Primitive projections not supported.")
+  | Proj (p,c)        -> tuple [mk_id "$Proj";
+                                hhterm_of_constant (Projection.constant p);
+                                hhterm_of_bool (Projection.unfolded p);
+                                hhterm_of c]
   | Evar (evk,cl)     -> raise (HammerError "Existential variables not supported.")
   | Ind (ind,u)       -> hhterm_of_inductive ind
   | Construct (ctr,u) -> hhterm_of_construct ctr
@@ -100,7 +103,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | CoFix (n,recdef) -> tuple [mk_id "$CoFix";
                                mk_id (string_of_int n);
                                hhterm_of_precdeclaration recdef]
-  | Int _ -> assert false
+  | Int _            -> raise (HammerError "Primitive integers not supported.")
 
 and hhterm_of_constrarray a =
   tuple ((mk_id "$ConstrArray") :: List.map hhterm_of (Array.to_list a))
