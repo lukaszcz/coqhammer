@@ -1,6 +1,7 @@
 DECLARE PLUGIN "hammer_tactics"
 
 {
+open Pcoq.Prim
 open Ltac_plugin
 open Stdarg
 open Tacarg
@@ -159,4 +160,23 @@ VERNAC COMMAND EXTEND Hammer_shint_rewrite CLASSIFIED AS SIDEFF
 | [ "Tactics" "Hint" "Inversion" ident(id) ] -> {
   add_inversion_hint (Utils.get_inductive (Id.to_string id))
 }
+END
+
+(* Example ARGUMENT EXTEND. *)
+
+(* TODO: write proper tactic argument parsing for "sauto" using
+   ARGUMENT EXTEND. *)
+
+ARGUMENT EXTEND myarg TYPED AS string
+| [ "A" ] -> { "aa" }
+| [ "B" ] -> { "bb" }
+END
+
+{
+let pr_mlname _ _ _ _ = Pp.pr_comma ()
+}
+
+ARGUMENT EXTEND mlname TYPED AS string PRINTED BY { pr_mlname }
+| [ preident(id) ] -> { id }
+| [ string(s) ] -> { s }
 END
