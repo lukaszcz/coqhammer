@@ -149,12 +149,7 @@ Ltac sdestruct t :=
         (is_var t; destruct t)
   end.
 
-Ltac ssubst :=
-  try subst;
-  repeat match goal with
-         | [ H : ?A = ?B |- _ ] => is_var A; rewrite H in *; clear H
-         | [ H : ?A = ?B |- _ ] => is_var B; rewrite <- H in *; clear H
-         end.
+Ltac ssubst := try subst.
 
 Ltac subst_simpl := ssubst; cbn in *.
 
