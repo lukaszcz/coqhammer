@@ -883,13 +883,13 @@ Tactic Notation "sauto" := unshelve sauto_gen; dsolve.
 Tactic Notation "sauto" int_or_var(i) :=
   unshelve (sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding default inverting default splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding default inverting default splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) :=
   unshelve (use lst; sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" "unfolding" constr(unfolds) :=
   unshelve (sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) :=
@@ -899,13 +899,13 @@ Tactic Notation "sauto" "inverting" constr(inverts) :=
 Tactic Notation "sauto" int_or_var(i) "inverting" constr(inverts) :=
   unshelve (sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts default); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts default); dsolve.
 Tactic Notation "sauto" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   unshelve (sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts default); dsolve.
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
@@ -916,13 +916,13 @@ Tactic Notation "hauto" :=
 Tactic Notation "hauto" int_or_var(i) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
@@ -932,13 +932,13 @@ Tactic Notation "hauto" "inverting" constr(lst3) :=
 Tactic Notation "hauto" int_or_var(i) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
@@ -1037,13 +1037,13 @@ Tactic Notation "lauto" :=
 Tactic Notation "lauto" int_or_var(i) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" int_or_var(i) "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) :=
@@ -1053,13 +1053,13 @@ Tactic Notation "lauto" "inverting" constr(lst3) :=
 Tactic Notation "lauto" int_or_var(i) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_simple_split no_eager_reduction no_sapply); dsolve.
 Tactic Notation "lauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
@@ -1070,13 +1070,13 @@ Tactic Notation "leauto" :=
 Tactic Notation "leauto" int_or_var(i) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting none ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting logic splitting none ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "unfolding" constr(lst2) :=
@@ -1086,13 +1086,13 @@ Tactic Notation "leauto" "inverting" constr(lst3) :=
 Tactic Notation "leauto" int_or_var(i) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs (logic, lst1) opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting lst3 ctrs logic opts no_bnat_reflection no_eager_invert no_eager_case_split no_simple_split no_eager_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply exhaustive); dsolve.
 Tactic Notation "leauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
@@ -1103,13 +1103,13 @@ Tactic Notation "sdauto" :=
 Tactic Notation "sdauto" int_or_var(i) :=
   unshelve (sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" "using" constr(lst) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding default inverting default splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding default inverting default splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" int_or_var(i) "using" constr(lst) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting default splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" "unfolding" constr(unfolds) :=
   unshelve (sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs default opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" int_or_var(i) "unfolding" constr(unfolds) :=
@@ -1119,13 +1119,13 @@ Tactic Notation "sdauto" "inverting" constr(inverts) :=
 Tactic Notation "sdauto" int_or_var(i) "inverting" constr(inverts) :=
   unshelve (sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs default opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" int_or_var(i) "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts presimplify depth_cost_model); dsolve.
+  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   unshelve (sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts presimplify depth_cost_model); dsolve.
 Tactic Notation "sdauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
@@ -1136,13 +1136,13 @@ Tactic Notation "hdauto" :=
 Tactic Notation "hdauto" int_or_var(i) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting logic splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" "unfolding" constr(lst2) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" int_or_var(i) "unfolding" constr(lst2) :=
@@ -1152,13 +1152,13 @@ Tactic Notation "hdauto" "inverting" constr(lst3) :=
 Tactic Notation "hdauto" int_or_var(i) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 Tactic Notation "hdauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=

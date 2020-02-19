@@ -69,7 +69,7 @@ let logic_inductives = [ Utils.get_inductive "Init.Logic.and"; Utils.get_inducti
                          Utils.get_inductive "Init.Logic.ex"; Utils.get_inductive "Init.Datatypes.prod";
                          Utils.get_inductive "Init.Specif.sumbool"; Utils.get_inductive "Init.Specif.sig";
                          Utils.get_inductive "Init.Datatypes.sum"; Utils.get_inductive "Init.Specif.sigT";
-                         Utils.get_inductive "Init.Logic.False"; Utils.get_inductive "Init.Logic.eq" ]
+                         Utils.get_inductive "Init.Logic.False"; (* TODO: add True *) Utils.get_inductive "Init.Logic.eq" ]
 
 let unfolding_hints = ref logic_constants
 let constructor_hints = ref logic_inductives
