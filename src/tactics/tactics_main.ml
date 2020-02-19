@@ -43,6 +43,21 @@ let filter_default =
   let cdefault = Utils.get_constr "Tactics.default" in
   List.filter (fun c -> c <> cdefault)
 
+let filter_noninductive =
+  let cdefault = Utils.get_constr "Tactics.default" in
+  let chints = Utils.get_constr "Tactics.hints" in
+  let cnone = Utils.get_constr "Tactics.none" in
+  let cnohints = Utils.get_constr "Tactics.nohints" in
+  let clogic = Utils.get_constr "Tactics.logic" in
+  List.filter
+    begin fun t ->
+      let open Constr in
+      let open EConstr in
+      match kind Evd.empty t with
+      | Ind(ind, _) -> true
+      | _ -> t = cdefault || t = chints || t = cnone || t = cnohints || t = clogic
+    end
+
 let get_s_opts ropts bases unfoldings inverting splits ctrs =
   let cdefault = Utils.get_constr "Tactics.default" in
   let chints = Utils.get_constr "Tactics.hints" in
@@ -51,6 +66,7 @@ let get_s_opts ropts bases unfoldings inverting splits ctrs =
   let clogic = Utils.get_constr "Tactics.logic" in
   let get_s_opts_field logic_lst conv opts lst default =
     match lst with
+    | [] -> default
     | [h] when h = cdefault -> default
     | [h] when h = chints -> SSome []
     | [h] when h = cnone -> SNone
@@ -106,7 +122,7 @@ let get_s_opts ropts bases unfoldings inverting splits ctrs =
     | Some t ->
        { opts with s_constructors =
            get_s_opts_field logic_inductives to_inductive opts
-             (destruct_constr t) default_s_opts.s_constructors }
+             (filter_noninductive (destruct_constr t)) default_s_opts.s_constructors }
   in
   let get_bases opts =
     match bases with
