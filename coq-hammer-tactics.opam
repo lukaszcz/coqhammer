@@ -15,7 +15,7 @@ has been successfully applied to a project, only this package needs
 to be installed; the hammer plugin is not required.
 """
 
-build: [make "-j%{jobs}%" "tactics"]
+build: [make "-j%{jobs}%" {ocaml:version >= "4.06"} "tactics"]
 install: [
   [make "install-tactics"]
   [make "test-tactics"] {with-test}
