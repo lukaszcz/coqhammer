@@ -179,14 +179,18 @@ let map_fold_constr f acc evd t =
   let open Constr in
   let open EConstr in
   let rec hlp m acc t =
-    let fold_arr k ac ar =
+    let fold_list k ac ar =
       let (ac1, lst) =
         List.fold_left
           (fun (ac,l) x -> let (ac',x') = hlp k ac x in (ac',x'::l))
           (ac, [])
-          (Array.to_list ar)
+          ar
       in
-      (ac1, Array.of_list (List.rev lst))
+      (ac1, List.rev lst)
+    in
+    let fold_arr k ac ar =
+      let (ac, l) = fold_list k ac (Array.to_list ar) in
+      (ac, Array.of_list l)
     in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
@@ -216,7 +220,7 @@ let map_fold_constr f acc evd t =
        let (acc1, c') = hlp m acc c in
        f m acc1 (mkProj(p,c'))
     | Evar (evk,cl) ->
-       let (acc1, cl') = fold_arr m acc cl in
+       let (acc1, cl') = fold_list m acc cl in
        f m acc1 (mkEvar(evk,cl'))
     | Case (ci,p,c,bl) ->
        let (acc1, p') = hlp m acc p in
@@ -346,14 +350,18 @@ let fold_constr_shallow f acc evd t =
 let map_fold_constr_ker f acc t =
   let open Constr in
   let rec hlp m acc t =
-    let fold_arr k ac ar =
+    let fold_list k ac ar =
       let (ac1, lst) =
         List.fold_left
           (fun (ac,l) x -> let (ac',x') = hlp k ac x in (ac',x'::l))
           (ac, [])
-          (Array.to_list ar)
+          ar
       in
-      (ac1, Array.of_list (List.rev lst))
+      (ac1, List.rev lst)
+    in
+    let fold_arr k ac ar =
+      let (ac, l) = fold_list k ac (Array.to_list ar) in
+      (ac, Array.of_list l)
     in
     match kind t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
@@ -383,7 +391,7 @@ let map_fold_constr_ker f acc t =
        let (acc1, c') = hlp m acc c in
        f m acc1 (mkProj(p,c'))
     | Evar (evk,cl) ->
-       let (acc1, cl') = fold_arr m acc cl in
+       let (acc1, cl') = fold_list m acc cl in
        f m acc1 (mkEvar(evk,cl'))
     | Case (ci,p,c,bl) ->
        let (acc1, p') = hlp m acc p in
