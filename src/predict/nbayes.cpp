@@ -34,7 +34,7 @@ NaiveBayes::NaiveBayes(LVecVec deps, LVecVec syms, LVecVec sym_ths, long sym_num
 }
 
 void NaiveBayes::learn(sample_t from, sample_t to) {
-  for (unsigned i = from; i < to; ++i)
+  for (sample_t i = from; i < to; ++i)
     tfidf.add(syms[i]);
 
   for (sample_t i = from; i < to; i++)
