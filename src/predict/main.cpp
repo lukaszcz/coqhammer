@@ -128,7 +128,7 @@ int main(int argc, char* argv[]) {
   double depweight = 1.7;
 
   char c;
-  optind = MIN_ARGS;  // start getopt after obligatory arguments
+  optind = MIN_ARGS + 1;  // start getopt after obligatory arguments
   while ((c = getopt (argc, argv, "he:n:p:k:t:s:f:w:x:y:")) != -1)
     switch (c) {
       case 'h':
