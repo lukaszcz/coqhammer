@@ -83,7 +83,7 @@ void RandomForest::export_data(string dirname) const {
 
 void RandomForest::learn(long from, long to) {
   // update TF-IDF information for labels
-  for (unsigned i = from; i < to; i++)
+  for (long i = from; i < to; i++)
     labels_ti.add(deps[i]);
 
   if (prelearned)
@@ -281,7 +281,7 @@ long RandomForest::best_feature_gini(const LVec& samples, unsigned min_labels,
   // iterate through unique list of features
   for (const auto& f : features_freq) {
     // check if a feature even has a chance to provide a valid split
-    if (feature_minlabels(samples, f.first) >= min_labels) {
+    if (feature_minlabels(samples, f.first) >= (long)min_labels) {
       double gini = gini_index(samples, f.first);
       if (gini < best_gini || best_f == -1) {
         best_f = f.first;
@@ -301,7 +301,7 @@ long RandomForest::best_feature_naive(const LVec& samples) const {
   long best_diff = 0;
 
   for (const auto& f : ff) {
-    long diff = abs(f.second - optimal_n_samples);
+    long diff = abs((long)(f.second - optimal_n_samples));
     if (diff < best_diff || best_f == -1) {
       best_f = f.first;
       best_diff = diff;
@@ -330,7 +330,7 @@ void RandomForest::update_tree(DecisionTree *tree, const LVec& new_samples) {
   // become a good splitting feature, even if it did not appear at all
   // in the new samples
   for (const auto& f : tree->features_freq) {
-    long diff = abs(f.second - optimal_n_samples);
+    long diff = abs((long)(f.second - optimal_n_samples));
     if (diff < best_diff || best_f == -1) {
       best_f = f.first;
       best_diff = diff;
@@ -413,7 +413,7 @@ DecisionTree* RandomForest::grow_tree(const LVec& samples,
 
   // stop growing tree if one of its children would be too small
   if (min(labels_of_samples(left ).second,
-          labels_of_samples(right).second) < min_labels)
+          labels_of_samples(right).second) < (long)min_labels)
     return new DecisionTree(samples);
   else {
     DecisionTree *t_left  = grow_tree(left , min_labels, features_freq);
