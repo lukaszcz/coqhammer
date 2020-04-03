@@ -19,7 +19,7 @@ kNN::kNN(LVecVec deps, LVecVec syms, LVecVec sym_ths, long sym_num)
 }
 
 void kNN::learn(long from, long to) {
-  for (unsigned i = from; i < to; ++i)
+  for (long i = from; i < to; ++i)
     tfidf.add(syms[i]);
 }
 
