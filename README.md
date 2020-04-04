@@ -213,7 +213,13 @@ Papers about CoqHammer
 
 1. Ł. Czajka, C. Kaliszyk, [Hammer for Coq: Automation for Dependent Type Theory](https://link.springer.com/article/10.1007/s10817-018-9458-4)
 
+   This paper is the main reference for CoqHammer. It describes the
+   first version of the system.
+
 2. Ł. Czajka, [A Shallow Embedding of Pure Type Systems into First-order Logic](http://drops.dagstuhl.de/opus/volltexte/2018/9853/)
+
+   This paper proves soundness of a core version of the embedding used
+   by CoqHammer.
 
 3. Ł. Czajka, B. Ekici, C. Kaliszyk, [Concrete Semantics with Coq and CoqHammer](https://arxiv.org/abs/1808.06413)
 
