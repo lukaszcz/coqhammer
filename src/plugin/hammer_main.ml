@@ -424,7 +424,9 @@ let do_predict hyps deps goal =
              info
          in
          clean ();
-         Msg.info(Provers.prn_atp_info info);
+         let msg = Provers.prn_atp_info info in
+         if msg <> "" then
+           Msg.info msg;
          info
        end
   else

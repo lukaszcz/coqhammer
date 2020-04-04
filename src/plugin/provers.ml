@@ -374,7 +374,7 @@ let write_atp_file fname deps1 hyps deps goal =
 
 let minimize info hyps deps goal =
   if !Opt.debug_mode then
-    Msg.info(prn_atp_info info);
+    Msg.info (prn_atp_info info);
   Msg.info "Minimizing dependencies...";
   let get_atp_deps = get_atp_deps deps
   in
@@ -456,7 +456,9 @@ let predict deps1 hyps deps goal =
           else
             info
         in
-        Msg.info (prn_atp_info info);
+        let msg = prn_atp_info info in
+        if msg <> "" then
+          Msg.info msg;
         info
       end
     else
