@@ -46,8 +46,7 @@ opam install coq-hammer-tactics
 To instead build and install the tactics manually, use `make tactics`
 followed by `make install-tactics`.
 
-The plugin has been tested on Linux. On Mac OS X there may be some
-problems with the operation of the plugin.
+The plugin has been tested on Linux and Mac OS X.
 
 The command `make install` will try to install the `predict` and
 `htimeout` programs into the directory specified by the `COQBIN`
@@ -122,6 +121,12 @@ The most useful tactics are:
   intelligent unfolding, forward reasoning and hypotheses
   simplification.
 
+  The underlying proof search procedure of `sauto` is based on a
+  fairly general inhabitation procedure for the Calculus of Inductive
+  Constructions. While it is in theory complete only for a
+  "first-order" fragment of CIC, in practice it can handle a much
+  larger part of the Coq logic.
+
 * `hauto`
 
   The same as `sauto` but by default does not use constructors of or
@@ -148,7 +153,7 @@ The most useful tactics are:
 
 * `strivial`
 
-  A simple and quick goal solving tactic. A bit stronger than
+  A simple and quick goal solving tactic. Usually a bit stronger than
   `auto`. Incorporates `lia` and `congruence`.
 
 * `scrush`
@@ -168,6 +173,15 @@ The most useful tactics are:
 
   A basic hypotheses simplification tactic. Used as a component of
   most other tactics.
+
+* `use (lem1, ..., lemN)`
+
+  Adds lemmas `lem1`, ..., `lemN` to the context and simplifies them.
+
+* `qprover`
+
+  Performs iterative deepening proof search with a depth-bounded
+  version of `sauto`.
 
 Tactic options
 --------------
