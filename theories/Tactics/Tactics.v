@@ -928,21 +928,21 @@ Tactic Notation "hauto" "unfolding" constr(lst2) :=
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) :=
   unshelve (sauto_gen i with (nohints) unfolding lst2 inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "inverting" constr(lst3) :=
-  unshelve (sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (sauto_gen with (nohints) unfolding logic inverting (logic, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "inverting" constr(lst3) :=
-  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (sauto_gen i with (nohints) unfolding logic inverting (logic, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding lst2 inverting (logic, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding lst2 inverting (logic, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen with (nohints) unfolding logic inverting (logic, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "using" constr(lst1) "inverting" constr(lst3) :=
-  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (use lst1; sauto_gen i with (nohints) unfolding logic inverting (logic, lst3) splitting default ctrs (logic, lst1) opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (sauto_gen with (nohints) unfolding lst2 inverting (logic, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
+  unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 
 Tactic Notation "scrush" := try strivial; unshelve ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
@@ -1385,51 +1385,3 @@ Tactic Notation "tprove" int_or_var(i) :=
 Ltac tprover :=
   solve [ tprove 400 | tprove 4000 | tprove 12000 | tprove 40000 | tprove 120000 | tprove 400000 |
           tprove 1200000 | tprove 4000000 | tprove 12000000 | tprove 40000000 | tprove 120000000 ].
-
-Ltac sinduction t :=
-  repeat match goal with
-           | [ x : ?T |- _ ] =>
-             notProp T; tryif constr_eq x t then fail else (generalize x; clear x)
-         end;
-  induction t.
-
-Ltac fcrush :=
-  eauto; try congruence; try strivial; unshelve qsimpl; try hauto;
-  repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; qsimpl unfolding f
-         end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; qsimpl unfolding f
-         end;
-  try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; unshelve qsimpl; hauto
-      end;
-  try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; unshelve qsimpl; hauto
-      end;
-  try sauto;
-  try sauto 4000;
-  sauto 12000.
-
-Ltac ecrush :=
-  let solver :=
-      solve [ eauto; try congruence; try Psatz.lia ]
-  in
-  let simpler :=
-      (cbn in *; intuition auto)
-  in
-  try solver; simpler; try solver;
-  repeat match goal with
-         | [ |- context[?f] ] => progress unfold f; simpler
-         end;
-  repeat match goal with
-         | [ H : context[?f] |- _ ] => progress unfold f in H; simpler
-         end;
-  try match goal with
-      | [ x : ?T |- _ ] => notProp T; sinduction x; simpler; solver
-      end;
-  try match goal with
-      | [ H : ?T |- _ ] => isProp T; sinduction H; simpler; solver
-      end;
-  try solver;
-  solve [ firstorder auto ].
