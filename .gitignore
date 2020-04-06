@@ -2,9 +2,10 @@
 *.d
 *.glob
 *.vo
-*.vos
 *.vok
+*.vos
 *~
+g_*.ml
 .lia.cache
 predict
 htimeout
@@ -17,7 +18,6 @@ Makefile.coq.tactics.conf
 Makefile.coq.plugin
 Makefile.coq.plugin.bak
 Makefile.coq.plugin.conf
-g_*.ml
 
 *.annot
 *.cmo
