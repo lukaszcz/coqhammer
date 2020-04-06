@@ -275,13 +275,6 @@ let in_sopt_list hints x opt =
   | SNoHints lst when List.mem x lst -> true
   | _ -> false
 
-let in_sopt_list_explicitly hints x opt =
-  match opt with
-  | SAll -> false
-  | SSome lst when (List.mem x lst || List.mem x hints) -> true
-  | SNoHints lst when List.mem x lst -> true
-  | _ -> false
-
 let is_constr_non_recursive ind t =
   let (prods, _, _) = Utils.destruct_prod Evd.empty (EConstr.of_constr t) in
   let t2 =
@@ -686,12 +679,9 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
     | Ind (ind, _) when is_inversion opts evd ind args ->
        let (num_ctrs, num_deps) = eval_ind_inversion evd ind in
        let b_arg_dep = num_ctrs <= 1 || has_arg_dep evd args in
-       if b_arg_dep || in_sopt_list_explicitly !inversion_hints ind opts.s_inversions then
-         [(cost + 40 + if b_arg_dep then num_deps * 10 else num_ctrs * 10),
-          (if b_arg_dep then num_subgoals + max num_deps 1 else num_subgoals + num_ctrs),
-          ActInvert id]
-       else
-         []
+       [(cost + 40 + if b_arg_dep then num_deps * 10 else num_ctrs * 10),
+        (if b_arg_dep then num_subgoals + max num_deps 1 else num_subgoals + num_ctrs),
+        ActInvert id]
     | _ ->
        []
   in

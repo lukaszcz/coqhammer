@@ -505,7 +505,7 @@ Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 24;
                try seasy; try solve [ econstructor; isolve ].
 
-Ltac strivial := solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+Ltac strivial := solve [ autounfold with shints; unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
 
 Ltac leaf_solve := solve [ isolve ].
 Ltac simpl_solve := solve [ isolve ].
