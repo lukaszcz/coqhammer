@@ -174,8 +174,6 @@ Research problems
 Technical improvements
 ----------------------
 
-1. The `predict` program sometimes returns many more predictions than
-   asked for. Investigate and fix this.
-2. Remove dependence on "grep".
-3. Properly handle argument parsing in the tactics.
-4. Make the plugin work on Windows.
+1. Remove dependence on "grep".
+2. Properly handle argument parsing in the tactics.
+3. Make the plugin work on Windows.
