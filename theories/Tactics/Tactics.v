@@ -1447,3 +1447,8 @@ Ltac ccrush :=
       | [ H : ?T |- _ ] => isProp T; sinduction H; solve [ Crush.crush ]
       end;
   solve [ Crush.crush ].
+
+Ltac xeauto0 :=
+  intros; try congruence; try Psatz.lia; try easy; unshelve (eauto 10; (intuition auto); try congruence; try Psatz.lia; try easy; eauto); auto; try easy; try solve [ do 10 constructor ].
+
+Ltac mcrush := solve [ xeauto0 ].

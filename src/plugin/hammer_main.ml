@@ -746,7 +746,7 @@ let hammer_hook_tac prefix name =
                         Msg.info ("Proving theorem " ^ name ^ "...");
                         Proofview.tclORELSE
                           (Proofview.tclBIND
-                             (ltac_timeout !Opt.reconstr_timelimit "Tactics.fcrush" [])
+                             (ltac_timeout !Opt.reconstr_timelimit "Tactics.mcrush" [])
                              (fun _ ->
                                let msg = "Success " ^ name in
                                ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
