@@ -14,7 +14,14 @@ requiring configuration by the user. The hammer plugin may use all
 currently accessible lemmas, including those proven earlier in a given
 formalization, not only the lemmas from predefined libraries or hint
 databases. At present, however, best results are achieved for statements
-"close to" first-order logic and lemmas from the standard library or similar.
+"close to" first-order logic and lemmas from the standard library or
+similar.
+
+Since version 1.2 the CoqHammer distribution includes automated
+reasoning tactics based on a general proof search procedure for the
+Calculus of Inductive Constructions. These tactics are used in
+CoqHammer's reconstruction backend, but they may also be installed and
+used separately. See the "Tactics" section below.
 
 Requirements
 ------------
