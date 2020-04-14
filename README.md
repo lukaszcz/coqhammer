@@ -178,7 +178,7 @@ The most useful tactics are:
 
   Adds lemmas `lem1`, ..., `lemN` to the context and simplifies them.
 
-* `qprover`
+* `sprover`
 
   Performs iterative deepening proof search with a depth-bounded
   version of `sauto`.
