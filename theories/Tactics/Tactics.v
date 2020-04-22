@@ -1165,19 +1165,17 @@ Tactic Notation "hdauto" int_or_var(i) "unfolding" constr(lst2) "inverting" cons
   unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction depth_cost_model); dsolve.
 
 Tactic Notation "sprover" :=
-  solve [ unshelve ssimpl; try sdauto 4; try sdauto 6; try sdauto 8; try sdauto 10; try sdauto 12;
-          try sdauto 14; try sdauto 16; try sdauto 18; try sdauto 20 ].
+  solve [ try strivial; try sdauto 4; try sdauto 6; try sdauto 8; try sdauto 10; try sdauto 12; try sdauto 14; try sdauto 16; try sdauto 18; try sdauto 20 ].
 Tactic Notation "sprover" "using" constr(lst1) :=
-  solve [ unshelve ssimpl; try sdauto 4 using lst1; try sdauto 6 using lst1; try sdauto 8 using lst1;
-          try sdauto 10 using lst1; try sdauto 12 using lst1; try sdauto 14 using lst1;
+  solve [ try strivial; try sdauto 4 using lst1; try sdauto 6 using lst1; try sdauto 8 using lst1; try sdauto 10 using lst1; try sdauto 12 using lst1; try sdauto 14 using lst1;
           try sdauto 16 using lst1; try sdauto 18 using lst1; try sdauto 20 using lst1 ].
 Tactic Notation "sprover" "unfolding" constr(lst2) :=
-  solve [ unshelve ssimpl; try sdauto 4 unfolding lst2; try sdauto 6 unfolding lst2;
+  solve [ try strivial; try sdauto 4 unfolding lst2; try sdauto 6 unfolding lst2;
           try sdauto 8 unfolding lst2; try sdauto 10 unfolding lst2; try sdauto 12 unfolding lst2;
           try sdauto 14 unfolding lst2; try sdauto 16 unfolding lst2; try sdauto 18 unfolding lst2;
           try sdauto 20 unfolding lst2 ].
 Tactic Notation "sprover" "inverting" constr(lst3) :=
-  solve [ unshelve ssimpl;
+  solve [ try strivial;
           try sdauto 4 inverting lst3;
           try sdauto 6 inverting lst3;
           try sdauto 8 inverting lst3;
@@ -1188,7 +1186,7 @@ Tactic Notation "sprover" "inverting" constr(lst3) :=
           try sdauto 18 inverting lst3;
           try sdauto 20 inverting lst3 ].
 Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2):=
-  solve [ unshelve ssimpl;
+  solve [ try strivial;
           try sdauto 4 using lst1 unfolding lst2;
           try sdauto 6 using lst1 unfolding lst2;
           try sdauto 8 using lst1 unfolding lst2;
@@ -1199,7 +1197,7 @@ Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2):=
           try sdauto 18 using lst1 unfolding lst2;
           try sdauto 20 using lst1 unfolding lst2 ].
 Tactic Notation "sprover" "using" constr(lst1) "inverting" constr(lst3) :=
-  solve [ unshelve ssimpl;
+  solve [ try strivial;
           try sdauto 4 using lst1 inverting lst3;
           try sdauto 6 using lst1 inverting lst3;
           try sdauto 8 using lst1 inverting lst3;
@@ -1210,7 +1208,7 @@ Tactic Notation "sprover" "using" constr(lst1) "inverting" constr(lst3) :=
           try sdauto 18 using lst1 inverting lst3;
           try sdauto 20 using lst1 inverting lst3 ].
 Tactic Notation "sprover" "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  solve [ unshelve ssimpl;
+  solve [ try strivial;
           try sdauto 4 unfolding lst2 inverting lst3;
           try sdauto 6 unfolding lst2 inverting lst3;
           try sdauto 8 unfolding lst2 inverting lst3;
@@ -1221,7 +1219,7 @@ Tactic Notation "sprover" "unfolding" constr(lst2) "inverting" constr(lst3) :=
           try sdauto 18 unfolding lst2 inverting lst3;
           try sdauto 20 unfolding lst2 inverting lst3 ].
 Tactic Notation "sprover" "using" constr(lst1) "unfolding" constr(lst2) "inverting" constr(lst3) :=
-  solve [ unshelve ssimpl;
+  solve [ try strivial;
           try sdauto 4 using lst1 unfolding lst2 inverting lst3;
           try sdauto 6 using lst1 unfolding lst2 inverting lst3;
           try sdauto 8 using lst1 unfolding lst2 inverting lst3;

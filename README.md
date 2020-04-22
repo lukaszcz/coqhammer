@@ -185,7 +185,7 @@ The most useful tactics are:
 
   Adds lemmas `lem1`, ..., `lemN` to the context and simplifies them.
 
-* `qprover`
+* `sprover`
 
   Performs iterative deepening proof search with a depth-bounded
   version of `sauto`.
@@ -228,7 +228,13 @@ Papers about CoqHammer
    This paper proves soundness of a core version of the embedding used
    by CoqHammer.
 
-3. Ł. Czajka, B. Ekici, C. Kaliszyk, [Concrete Semantics with Coq and CoqHammer](https://arxiv.org/abs/1808.06413)
+3. Ł. Czajka, [Practical proof search for Coq by type inhabitation](http://www.mimuw.edu.pl/~lukaszcz/sauto.pdf)
+
+   This paper describes a general proof search procedure for the
+   Calculus of Inductive Constructions which is used in CoqHammer's
+   reconstruction backend since version 1.2.
+
+4. Ł. Czajka, B. Ekici, C. Kaliszyk, [Concrete Semantics with Coq and CoqHammer](https://arxiv.org/abs/1808.06413)
 
 Further CoqHammer options
 -------------------------
