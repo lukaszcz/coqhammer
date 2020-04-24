@@ -944,6 +944,39 @@ Tactic Notation "hauto" "unfolding" constr(lst2) "inverting" constr(lst3) :=
 Tactic Notation "hauto" int_or_var(i) "unfolding" constr(lst2) "inverting" constr(lst3) :=
   unshelve (sauto_gen i with (nohints) unfolding lst2 inverting (logic, @Init.Logic.eq, lst3) splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 
+Tactic Notation "cauto" :=
+  unshelve (sauto_gen with (shints) unfolding default inverting default splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) :=
+  unshelve (sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" "using" constr(lst) :=
+  unshelve (use lst; sauto_gen with (shints) unfolding default inverting default splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "using" constr(lst) :=
+  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" "using" constr(lst) "unfolding" constr(unfolds) :=
+  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
+  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" "unfolding" constr(unfolds) :=
+  unshelve (sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "unfolding" constr(unfolds) :=
+  unshelve (sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" "inverting" constr(inverts) :=
+  unshelve (sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "inverting" constr(inverts) :=
+  unshelve (sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" "using" constr(lst) "inverting" constr(inverts) :=
+  unshelve (use lst; sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "using" constr(lst) "inverting" constr(inverts) :=
+  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts no_forward); dsolve.
+Tactic Notation "cauto" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts no_forward); dsolve.
+Tactic Notation "cauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  unshelve (sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts no_forward); dsolve.
+
 Tactic Notation "scrush" := try strivial; unshelve ssimpl; sauto.
 Tactic Notation "scrush" "using" constr(lst) :=
   use lst; try strivial; unshelve ssimpl; sauto.
@@ -959,6 +992,22 @@ Tactic Notation "scrush" "using" constr(lst) "unfolding" constr(unfolds) "invert
   use lst; try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
 Tactic Notation "scrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   try strivial; unshelve ssimpl unfolding unfolds; sauto unfolding unfolds inverting inverts.
+
+Tactic Notation "ccrush" := try strivial; unshelve csimpl; cauto.
+Tactic Notation "ccrush" "using" constr(lst) :=
+  use lst; try strivial; unshelve csimpl; cauto.
+Tactic Notation "ccrush" "using" constr(lst) "unfolding" constr(unfolds) :=
+  use lst; try strivial; unshelve csimpl unfolding unfolds; cauto unfolding unfolds.
+Tactic Notation "ccrush" "unfolding" constr(unfolds) :=
+  try strivial; unshelve csimpl unfolding unfolds; cauto unfolding unfolds.
+Tactic Notation "ccrush" "inverting" constr(inverts) :=
+  try strivial; unshelve csimpl; cauto inverting inverts.
+Tactic Notation "ccrush" "using" constr(lst) "inverting" constr(inverts) :=
+  use lst; try strivial; unshelve csimpl; cauto inverting inverts.
+Tactic Notation "ccrush" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  use lst; try strivial; unshelve csimpl unfolding unfolds; cauto unfolding unfolds inverting inverts.
+Tactic Notation "ccrush" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
+  try strivial; unshelve csimpl unfolding unfolds; cauto unfolding unfolds inverting inverts.
 
 Ltac qcrush_base unfolds inverts :=
   unshelve qsimpl; qforwarding; unshelve qsimpl; unshelve instering; unshelve qsimpl;

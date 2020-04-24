@@ -66,6 +66,43 @@ TACTIC EXTEND Hammer_ssimpl_gen
 }
 END
 
+TACTIC EXTEND Hammer_csimpl_gen
+| [ "csimpl" ] -> {
+  csimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "csimpl" "unfolding" constr(unfolds) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) None None None in
+  csimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "csimpl" "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None None (Some inverts) None None in
+  csimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "csimpl" "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) (Some inverts) None None in
+  csimpl { opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+}
+| [ "csimpl" "with" tactic3(tac) ] -> {
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  csimpl { default_s_opts with s_simpl_tac = itac }
+}
+| [ "csimpl" "with" tactic3(tac) "unfolding" constr(unfolds) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) None None None in
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  csimpl { opts with s_simpl_tac = itac }
+}
+| [ "csimpl" "with" tactic3(tac) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None None (Some inverts) None None in
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  csimpl { opts with s_simpl_tac = itac }
+}
+| [ "csimpl" "with" tactic3(tac) "unfolding" constr(unfolds) "inverting" constr(inverts) ] -> {
+  let opts = get_s_opts [] None (Some unfolds) (Some inverts) None None in
+  let itac = Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac in
+  csimpl { opts with s_simpl_tac = itac }
+}
+END
+
 TACTIC EXTEND Hammer_qsimpl_gen
 | [ "qsimpl" ] -> {
   qsimpl { default_s_opts with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [];

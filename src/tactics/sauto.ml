@@ -918,7 +918,8 @@ let sintuition opts =
 let ssimpl opts =
   let tac1 =
     Tactics.intros <*> unfolding opts <*> sintuition opts <*> subst_simpl opts <*>
-      simp_hyps_tac <*> with_reduction opts forwarding_tac forwarding_nocbn_tac <*>
+      simp_hyps_tac <*>
+      opt opts.s_forwarding (with_reduction opts forwarding_tac forwarding_nocbn_tac) <*>
       subst_simpl opts
   and tac2 =
     Tactics.intros <*> unfolding opts <*>

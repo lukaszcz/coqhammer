@@ -155,3 +155,5 @@ let get_s_opts ropts bases unfoldings inverting splits ctrs =
     get_ropt
     (get_bases (get_unfoldings (get_invertings (get_splittings (get_ctrs default_s_opts)))))
     ropts
+
+let csimpl opts = ssimpl { opts with s_forwarding = false }
