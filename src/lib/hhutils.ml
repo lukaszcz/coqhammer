@@ -246,9 +246,10 @@ let fold_constr f acc evd t =
   let open Constr in
   let open EConstr in
   let rec hlp m acc t =
-    let fold_arr k ac ar =
-      List.fold_left (hlp k) ac (Array.to_list ar)
+    let fold_list k ac ar =
+      List.fold_left (hlp k) ac ar
     in
+    let fold_arr k ac ar = fold_list k ac (Array.to_list ar) in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
@@ -277,7 +278,7 @@ let fold_constr f acc evd t =
        let acc1 = hlp m acc c in
        f m acc1 t
     | Evar (evk,cl) ->
-       let acc1 = fold_arr m acc cl in
+       let acc1 = fold_list m acc cl in
        f m acc1 t
     | Case (ci,p,c,bl) ->
        let acc1 = hlp m acc p in
@@ -301,9 +302,10 @@ let fold_constr_shallow f acc evd t =
   let open Constr in
   let open EConstr in
   let rec hlp acc t =
-    let fold_arr ac ar =
-      List.fold_left hlp ac (Array.to_list ar)
+    let fold_list ac ar =
+      List.fold_left hlp ac ar
     in
+    let fold_arr ac ar = fold_list ac (Array.to_list ar) in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f acc t
@@ -329,7 +331,7 @@ let fold_constr_shallow f acc evd t =
        let acc1 = hlp acc c in
        f acc1 t
     | Evar (evk,cl) ->
-       let acc1 = fold_arr acc cl in
+       let acc1 = fold_list acc cl in
        f acc1 t
     | Case (ci,p,c,bl) ->
        let acc1 = hlp acc p in
