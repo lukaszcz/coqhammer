@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "1.2+8.10"
+version: "8.10.dev"
 maintainer: "palmskog@gmail.com"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
