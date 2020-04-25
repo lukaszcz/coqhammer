@@ -1,3 +1,16 @@
+CoqHammer v. 1.2
+================
+
+Coq versions compatibility: 8.10, 8.11.
+
+Overview of changes
+-------------------
+* New reconstruction backend. The reconstruction tactics are now based
+  on a reasonably general proof search procedure for the Calculus of
+  Inductive Constructions and are more useful independently.
+* Bugfixes in the `predict` program: now compiles with recent versions
+  of GCC and works correctly on macOS.
+
 CoqHammer v. 1.1.1
 ==================
 
