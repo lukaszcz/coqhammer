@@ -171,6 +171,8 @@ Research problems
     unification modulo "simple" (equational?) reasoning. See the smart
     matching of Matita.
 
+14. Optional use of classical logic.
+
 Technical improvements
 ----------------------
 
