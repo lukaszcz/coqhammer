@@ -19,6 +19,7 @@ src/tactics/tactics_main.ml
 src/tactics/g_tactics.mlg
 src/tactics/hammer_tactics.mlpack
 theories/Tactics/Reconstr.v
+theories/Tactics/Reflect.v
 theories/Tactics/Tactics.v
 src/plugin/hammer_errors.ml
 src/plugin/hh_term.ml

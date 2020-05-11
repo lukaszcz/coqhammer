@@ -8,9 +8,6 @@ Require Psatz.
 Require Import BinInt BinNat PeanoNat.
 Require Import ssreflect ssrbool.
 
-Infix "-->" := implb (at level 60, right associativity) : bool_scope.
-Infix "<-->" := Bool.eqb (at level 60, right associativity) : bool_scope.
-
 (* bool *)
 
 Lemma andE : forall b1 b2, b1 && b2 <-> b1 /\ b2.
@@ -28,17 +25,17 @@ Proof.
   split; move /negP; done.
 Qed.
 
-Lemma implE : forall b1 b2, b1 --> b2 <-> (b1 -> b2).
+Lemma implE : forall b1 b2, implb b1 b2 <-> (b1 -> b2).
 Proof.
   split; destruct b1, b2; intuition.
 Qed.
 
-Lemma iffE : forall b1 b2, b1 <--> b2 <-> (b1 <-> b2).
+Lemma iffE : forall b1 b2, eqb b1 b2 <-> (b1 <-> b2).
 Proof.
   split; destruct b1, b2; intuition.
 Qed.
 
-Lemma eqE : forall b1 b2, b1 <--> b2 <-> (b1 = b2).
+Lemma eqE : forall b1 b2, eqb b1 b2 <-> (b1 = b2).
 Proof.
   split; destruct b1, b2; intuition.
 Qed.
