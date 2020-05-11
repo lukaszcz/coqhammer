@@ -202,16 +202,17 @@ let save_in_list refl glob_ref env c = refl := glob_ref :: !refl
 
 let my_search env =
   let ans = ref [] in
-  let filter glob_ref env typ =
+  let filter glob_ref kind env typ =
     if !Opt.search_blacklist then
-      Search.blacklist_filter glob_ref env typ
+      Search.blacklist_filter glob_ref kind env (Evd.from_env env) typ
     else
       true
   in
-  let iter glob_ref env typ =
-    if filter glob_ref env typ then save_in_list ans glob_ref env typ
+  let iter glob_ref kind env typ =
+    if filter glob_ref kind env typ then save_in_list ans glob_ref env typ
   in
-  let () = Search.generic_search None iter in
+  let env = Global.env () in
+  let () = Search.generic_search env iter in
   List.filter
     begin fun glob_ref ->
       try
