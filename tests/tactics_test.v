@@ -239,7 +239,10 @@ Qed.
 
 End Lists.
 
+From Hammer Require Import Reflect.
+
 Require Import PeanoNat.
+Require Import Bool.
 Require Import Psatz.
 
 Inductive Term : Set :=
@@ -312,12 +315,12 @@ Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).
 Proof.
-  induction t; ssimpl.
+  induction t; qsimpl.
 Qed.
 
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
 Proof.
-  induction t; ssimpl.
+  induction t; qsimpl.
   - hauto using vars_abstr.
   - hauto using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
 Qed.
@@ -345,7 +348,7 @@ Qed.
 Lemma abstr_size :
   forall (t : Term) (v : nat), size (abstr v t) <= 3 * size t.
 Proof.
-  intros; induction t; ssimpl.
+  intros; induction t; qsimpl.
 Qed.
 
 Lemma lem_pow_3 : (forall x y : nat, 3 ^ x + 3 ^ y + 1 <= 3 ^ (x + y + 1)).
@@ -359,23 +362,23 @@ Qed.
 Lemma transl_size :
   forall (t : Term), size (transl t) <= 3 ^ (size t).
 Proof.
-  induction t; ssimpl.
-  assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
-  eauto using PeanoNat.Nat.add_le_mono.
-  assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
-  auto with zarith.
-  hauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
-  assert (size (abstr n (transl t)) <= 3 * size (transl t)).
-  eauto using abstr_size with zarith.
-  assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
-  eauto using Nat.le_trans with zarith.
-  assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto using Nat.add_1_r.
-  scrush.
+  induction t; qsimpl.
+  - assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
+    { eauto using PeanoNat.Nat.add_le_mono. }
+    assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
+    { auto with zarith. }
+    hauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
+  - assert (size (abstr n (transl t)) <= 3 * size (transl t)).
+    { eauto using abstr_size with zarith. }
+    assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
+    { eauto using Nat.le_trans with zarith. }
+    assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto using Nat.add_1_r.
+    scrush.
 Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
 Proof.
-  intros; induction t; ssimpl.
+  intros; induction t; qsimpl.
 Qed.
 
 Fixpoint long_app (n : nat) : Term :=
@@ -401,29 +404,26 @@ Lemma transl_size_lb : forall (n : nat), size (transl (cex_term n)) >= 2^n.
 Proof.
   assert (forall (n m : nat), size (transl (long_term n m)) >= 2^n).
   induction n; ssimpl.
-  scrush using (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg).
-  assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
-  hauto using (@abstr_size_lb, @no_lams_transl).
-  assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
-  pose proof (IHn m); eauto with zarith.
-  scrush.
-  now unfold cex_term.
+  - scrush using (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg).
+  - assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
+    { hauto using (@abstr_size_lb, @no_lams_transl). }
+    assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
+    { pose proof (IHn m); eauto with zarith. }
+    scrush.
+  - now unfold cex_term.
 Qed.
 
 Fixpoint occurs (v : nat) (t : Term) : bool :=
   match t with
     | LS | LK | LI => false
     | LVar n => if n =? v then true else false
-    | LApp x y => orb (occurs v x) (occurs v y)
+    | LApp x y => occurs v x || occurs v y
     | LLam n b => if n =? v then false else occurs v b
   end.
 
-Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t = true <-> HasVar v t.
+Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t <-> HasVar v t.
 Proof.
-  induction t; ssimpl; unfold orb; ssimpl.
-  assert (occurs v t1 = true \/ occurs v t2 = true).
-  hauto using (@Coq.Bool.Bool.orb_prop).
-  ssimpl.
+  induction t; qsimpl.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
@@ -446,7 +446,7 @@ Fixpoint transl2 (t : Term) : Term :=
 
 Lemma no_lams_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr2 v t).
 Proof.
-  induction t; sauto.
+  induction t; qsimpl; sauto.
 Qed.
 
 Lemma no_lams_transl2 : forall t : Term, NoLambdas (transl2 t).
@@ -457,21 +457,19 @@ Qed.
 Lemma vars_abstr2 :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr2 v t)).
 Proof.
-  induction t; scrush.
+  induction t; scrush. (* 3.5 s *)
 Qed.
 
 Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr2 v t)).
 Proof.
   intros.
   pose (u := t).
-  induction t; destruct (occurs v u) eqn:?; ssimpl.
-  - hauto using (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) unfolding orb.
-  - hauto using (@occurs_spec, @Coq.Bool.Bool.orb_true_r) unfolding (@abstr2).
+  induction t; bdestruct (occurs v u); qsimpl; hauto using (@occurs_spec).
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
 Proof.
-  induction t; ssimpl.
+  induction t; qsimpl.
   - hauto using (@vars_abstr2).
   - hauto using (@no_lams_transl2, @vars_abstr2, @novar_abstr2, @hs_lem).
 Qed.
@@ -491,11 +489,10 @@ Qed.
 Lemma abstr2_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr2 v t @ s =w csubst t v s.
 Proof.
-  induction t; ssimpl.
-  - scrush.
-  - assert (HH: forall b1 b2, (b1 || b2)%bool = false -> b1 = false /\ b2 = false) by
-        sauto unfolding orb.
-    pose proof occurs_spec.
+  induction t; qsimpl.
+  - sauto.
+  - sauto.
+  - pose proof occurs_spec.
     rewrite csubst_novar by ssimpl.
     rewrite csubst_novar by ssimpl.
     strivial.
@@ -504,12 +501,11 @@ Qed.
 Lemma abstr2_size_ub :
   forall (t : Term) (v : nat), size (abstr2 v t) <= 3 * size t.
 Proof.
-  intros; induction t; ssimpl.
+  intros; induction t; qsimpl.
 Qed.
 
 Require Import String.
-Require Import Arith.PeanoNat.
-Require Import Bool.Bool.
+Require Import Nat.
 
 Inductive aexpr :=
 | Nval : nat -> aexpr

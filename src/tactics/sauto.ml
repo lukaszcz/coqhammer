@@ -21,6 +21,7 @@ type s_opts = {
   s_inversions : inductive list soption;
   s_rew_bases : string list;
   s_bnat_reflect : bool;
+  s_reflect : bool;
   s_eager_case_splitting : bool;
   s_eager_reducing : bool;
   s_eager_rewriting : bool;
@@ -47,6 +48,7 @@ let default_s_opts = {
   s_inversions = SAll;
   s_rew_bases = [];
   s_bnat_reflect = true;
+  s_reflect = true;
   s_eager_case_splitting = true;
   s_eager_reducing = true;
   s_eager_rewriting = true;
@@ -144,6 +146,7 @@ let forwarding_tac = Utils.ltac_apply "Tactics.forwarding" []
 let forwarding_nocbn_tac = Utils.ltac_apply "Tactics.forwarding_nocbn" []
 let srewriting_tac = Utils.ltac_apply "Tactics.srewriting" []
 let bnat_reflect_tac = Utils.ltac_apply "Tactics.bnat_reflect" []
+let bool_reflect_tac = Utils.ltac_apply "Tactics.bool_reflect" []
 let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr t]
 let cbn_in_concl_tac = Utils.ltac_apply "Tactics.cbn_in_concl" []
 let cbn_in_all_tac = Utils.ltac_apply "Tactics.cbn_in_all" []
@@ -315,7 +318,7 @@ let has_dangling_evars evd t =
 
 (* check if the inductive type is non-recursive with at most two
    constructors *)
-let is_eager_ind ind =
+let is_eager_ind ind = (* TODO: memoization? *)
   let cstrs = Utils.get_ind_constrs ind in
   match cstrs with
   | [] -> true
@@ -325,7 +328,7 @@ let is_eager_ind ind =
 
 (* check if the inductive type is non-recursive with exactly one
    constructor and no dangling evars *)
-let is_simple_ind ind =
+let is_simple_ind ind = (* TODO: memoization? *)
   let cstrs = Utils.get_ind_constrs ind in
   match cstrs with
   | [ t ] -> is_constr_non_recursive ind t && not (has_dangling_evars Evd.empty (EConstr.of_constr t))
@@ -525,6 +528,7 @@ let simple_inverting opts =
 let simplify opts =
   let simpl1 =
     simp_hyps_tac <~>
+      opt opts.s_reflect bool_reflect_tac <~>
       opt opts.s_bnat_reflect bnat_reflect_tac <~>
       opts.s_simpl_tac <~>
       reduce_concl opts <~>
@@ -931,6 +935,7 @@ let ssimpl opts =
 let qsimpl opts =
   let tac =
     (sintuition opts <*> subst_simpl opts) <~>
+      opt opts.s_reflect bool_reflect_tac <~>
       opt opts.s_bnat_reflect bnat_reflect_tac <~>
       autorewriting true opts <~>
       (simple_splitting opts <*>

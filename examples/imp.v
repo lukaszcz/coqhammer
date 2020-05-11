@@ -9,11 +9,10 @@
    and our reconstruction tactics compares to the automation available
    in Isabelle/HOL. *)
 
-From Hammer Require Import Tactics.
+From Hammer Require Import Tactics Reflect.
 
 Require Import String.
-Require Import Arith.PeanoNat.
-Require Import Bool.Bool.
+Require Import Nat.
 
 Inductive aexpr :=
 | Nval : nat -> aexpr

@@ -6,6 +6,7 @@
 Declare ML Module "hammer_lib".
 
 Require List Arith ZArith Bool Psatz.
+From Hammer Require Import Tactics.Reflect.
 
 Create HintDb shints discriminated.
 
@@ -141,12 +142,19 @@ Ltac einst e :=
 
 Ltac sdestruct t :=
   lazymatch t with
-    | _ _ => destruct t eqn:?
-    | _ =>
-      tryif is_evar t then
-         destruct t eqn:?
-      else
-        (is_var t; destruct t)
+  | _ _ =>
+    lazymatch type of t with
+    | bool => bdestruct t
+    | _ => destruct t eqn:?
+    end
+  | _ =>
+    tryif is_evar t then
+      lazymatch type of t with
+      | bool => bdestruct t
+      | _ => destruct t eqn:?
+      end
+    else
+      (is_var t; destruct t)
   end.
 
 Ltac ssubst := try subst.
@@ -551,6 +559,8 @@ Ltac bnat_reflect :=
                (rewrite <- Coq.NArith.BinNat.N.eqb_eq; rewrite H; discriminate)
          end.
 
+Ltac bool_reflect := breflect in *.
+
 Ltac invert_one_subgoal_nocbn H :=
   let ty := type of H in
   inversion H; [idtac]; clear H; notHyp ty; ssubst.
@@ -559,14 +569,16 @@ Ltac invert_one_subgoal H := invert_one_subgoal_nocbn H; cbn in *.
 
 Ltac simple_invert H := solve [ inversion H ] || invert_one_subgoal H.
 Ltac simple_invert_nocbn H := solve [ inversion H ] || invert_one_subgoal_nocbn H.
-Ltac simple_inverting :=
+Ltac simple_inverting_gen tac :=
   repeat match goal with
-         | [ H : ?P |- _ ] => simple_invert H
+         | [ H : ?P |- _ ] =>
+           lazymatch P with
+           | is_true _ => fail
+           | _ => tac H
+           end
          end.
-Ltac simple_inverting_nocbn :=
-  repeat match goal with
-         | [ H : ?P |- _ ] => simple_invert_nocbn H
-         end.
+Ltac simple_inverting := simple_inverting_gen simple_invert.
+Ltac simple_inverting_nocbn := simple_inverting_gen simple_invert_nocbn.
 
 Ltac case_split :=
   match goal with
@@ -1411,7 +1423,7 @@ Ltac rhcrush lems unfolds inverts :=
 Ltac rcrush := scrush.
 
 Tactic Notation "hprove" int_or_var(i) :=
-  unshelve (sauto_gen i with (nohints) unfolding default inverting logic splitting none ctrs logic opts no_eager_invert no_eager_case_split no_simple_split no_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply depth_cost_model exhaustive); dsolve.
+  unshelve (sauto_gen i with (nohints) unfolding default inverting logic splitting none ctrs logic opts no_eager_invert no_eager_case_split no_simple_split no_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_reflection no_sapply depth_cost_model exhaustive); dsolve.
 
 Ltac hprover :=
   solve [ hprove 2 | hprove 4 | hprove 6 | hprove 8 |
@@ -1420,7 +1432,7 @@ Ltac hprover :=
           hprove 26 ].
 
 Tactic Notation "tprove" int_or_var(i) :=
-  unshelve (sauto_gen i with (nohints) unfolding default inverting logic splitting none ctrs logic opts no_eager_invert no_eager_case_split no_simple_split no_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_sapply tree_cost_model exhaustive); dsolve.
+  unshelve (sauto_gen i with (nohints) unfolding default inverting logic splitting none ctrs logic opts no_eager_invert no_eager_case_split no_simple_split no_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_reflection no_sapply tree_cost_model exhaustive); dsolve.
 
 Ltac tprover :=
   solve [ tprove 400 | tprove 4000 | tprove 12000 | tprove 40000 | tprove 120000 | tprove 400000 |
