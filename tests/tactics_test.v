@@ -241,8 +241,43 @@ End Lists.
 
 From Hammer Require Import Reflect.
 
-Require Import PeanoNat.
-Require Import Bool.
+Lemma lem_breflect_test_1 : forall b1 b2 b3, b1 && b2 || b3 -> b3 || b2 || b1.
+Proof.
+  intros.
+  breflect in *.
+  tauto.
+Qed.
+
+Lemma lem_breflect_test_2 : forall b1 b2 b3, implb (b1 && b2 || b3) (b3 || b2 || b1).
+Proof.
+  intros.
+  breflect.
+  tauto.
+Qed.
+
+Lemma lem_breflect_test_3 : forall b1 b2 b3, eqb (b1 && b2 || b3) (b3 || b2 && b1).
+Proof.
+  intros.
+  breflect.
+  tauto.
+Qed.
+
+Lemma lem_bauto_test_1 : forall b1 b2 b3, b1 && b2 || b3 -> b3 || b2 || b1.
+Proof.
+  bauto.
+Qed.
+
+Lemma lem_bauto_test_2 : forall b1 b2 b3, implb (b1 && b2 || b3) (b3 || b2 || b1).
+Proof.
+  bauto.
+Qed.
+
+Lemma lem_bauto_test_3 : forall b1 b2 b3, eqb (b1 && b2 || b3) (b3 || b2 && b1).
+Proof.
+  bauto.
+Qed.
+
+Require Import Nat.
 Require Import Psatz.
 
 Inductive Term : Set :=
@@ -423,7 +458,7 @@ Fixpoint occurs (v : nat) (t : Term) : bool :=
 
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t <-> HasVar v t.
 Proof.
-  induction t; qsimpl.
+  induction t; ssimpl; breflect in *; ssimpl.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
@@ -446,7 +481,7 @@ Fixpoint transl2 (t : Term) : Term :=
 
 Lemma no_lams_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr2 v t).
 Proof.
-  induction t; qsimpl; sauto.
+  induction t; scrush.
 Qed.
 
 Lemma no_lams_transl2 : forall t : Term, NoLambdas (transl2 t).
@@ -464,7 +499,7 @@ Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abs
 Proof.
   intros.
   pose (u := t).
-  induction t; bdestruct (occurs v u); qsimpl; hauto using (@occurs_spec).
+  induction t; bdestruct (occurs v u); scrush using occurs_spec.
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
@@ -505,7 +540,6 @@ Proof.
 Qed.
 
 Require Import String.
-Require Import Nat.
 
 Inductive aexpr :=
 | Nval : nat -> aexpr

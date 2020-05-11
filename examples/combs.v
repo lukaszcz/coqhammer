@@ -190,7 +190,7 @@ Fixpoint occurs (v : nat) (t : Term) : bool :=
 
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t <-> HasVar v t.
 Proof.
-  induction t; qsimpl.
+  induction t; qsimpl; breflect in *; qsimpl.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
