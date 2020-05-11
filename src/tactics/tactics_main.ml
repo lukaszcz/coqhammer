@@ -144,6 +144,7 @@ let get_s_opts ropts bases unfoldings inverting splits ctrs =
     | "no_bnat_reflection" -> { opts with s_bnat_reflect = false }
     | "no_reflection" -> { opts with s_reflect = false }
     | "no_reduction" -> { opts with s_reducing = false; s_eager_reducing = false }
+    | "reflection" -> { opts with s_reflect = true; s_bnat_reflect = true }
     | "presimplify" -> { opts with s_presimplify = true }
     | "no_sapply" -> { opts with s_sapply = false }
     | "depth_cost_model" -> { opts with s_depth_cost_model = true }
