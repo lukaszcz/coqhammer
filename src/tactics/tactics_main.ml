@@ -142,6 +142,7 @@ let get_s_opts ropts bases unfoldings inverting splits ctrs =
     | "no_rewrite" ->
        { opts with s_rewriting = false; s_eager_rewriting = false; s_heuristic_rewriting = false }
     | "no_bnat_reflection" -> { opts with s_bnat_reflect = false }
+    | "no_reflection" -> { opts with s_reflect = false }
     | "no_reduction" -> { opts with s_reducing = false; s_eager_reducing = false }
     | "presimplify" -> { opts with s_presimplify = true }
     | "no_sapply" -> { opts with s_sapply = false }
