@@ -1,200 +1,271 @@
-Require Import Bool BinInt Nat PeanoNat.
-(*From mathcomp Require Import all_ssreflect.*)
+(* Boolean reflection tactics *)
+(* Authors: Burak Ekici, Lukasz Czajka *)
+
+Coercion is_true : bool >-> Sortclass.
+
+Require Export Bool.
+Require Psatz.
+Require Import BinInt BinNat PeanoNat.
+Require Import ssreflect ssrbool.
 
 Infix "-->" := implb (at level 60, right associativity) : bool_scope.
 Infix "<-->" := Bool.eqb (at level 60, right associativity) : bool_scope.
-Local Coercion is_true : bool >-> Sortclass.
 
-Lemma reflect_iff : forall P b, reflect P b -> (P<->b=true).
+(* bool *)
+
+Lemma andE : forall b1 b2, b1 && b2 <-> b1 /\ b2.
 Proof.
- intros; destruct H; intuition.
- discriminate H.
+  split; move /andP; done.
 Qed.
 
-Lemma iff_reflect : forall P b, (P<->b=true) -> reflect P b.
+Lemma orE : forall b1 b2, b1 || b2 <-> b1 \/ b2.
 Proof.
- intros.
- destr_bool; constructor; try now apply H.
- unfold not. intros. apply H in H0. destruct H. easy.
+  split; move /orP; done.
 Qed.
 
-Lemma reflect_dec : forall P b, reflect P b -> {P} + {~P}.
-Proof. intros; destruct H; [now left | now right]. Qed.
+Lemma negE : forall b, negb b <-> ~b.
+Proof.
+  split; move /negP; done.
+Qed.
 
- Lemma implyP : forall (b1 b2: bool), reflect (b1 -> b2) (b1 --> b2).
- Proof. intros; apply iff_reflect; split;
-        case_eq b1; case_eq b2; intros; try easy; try compute in *; now apply H1.
- Qed.
+Lemma implE : forall b1 b2, b1 --> b2 <-> (b1 -> b2).
+Proof.
+  split; destruct b1, b2; intuition.
+Qed.
 
- Lemma iffP : forall (b1 b2: bool), reflect (b1 <-> b2) (Bool.eqb b1 b2).
- Proof. intros; apply iff_reflect; split;
-        case_eq b1; case_eq b2; intros; try easy; try compute in *; now apply H1.
- Qed.
+Lemma iffE : forall b1 b2, b1 <--> b2 <-> (b1 <-> b2).
+Proof.
+  split; destruct b1, b2; intuition.
+Qed.
 
- Lemma implyP2 : forall (b1 b2 b3: bool), reflect (b1 -> b2 -> b3) (b1 --> b2 --> b3).
- Proof. intros; apply iff_reflect; split;
-        case_eq b1; case_eq b2; intros; try easy; try compute in *; now apply H1.
- Qed.
+Lemma eqE : forall b1 b2, b1 <--> b2 <-> (b1 = b2).
+Proof.
+  split; destruct b1, b2; intuition.
+Qed.
 
- Lemma andP : forall (b1 b2: bool), reflect (b1 /\ b2) (b1 && b2).
- Proof. intros; apply iff_reflect; split;
-        case_eq b1; case_eq b2; intros; try easy; try compute in *; now apply H1.
- Qed.
+Lemma falseE : false <-> False.
+Proof. split; [ congruence | auto ]. Qed.
 
- Lemma orP : forall (b1 b2: bool), reflect (b1 \/ b2) (b1 || b2).
- Proof. intros; apply iff_reflect; split;
-        case_eq b1; case_eq b2; intros; try easy; try compute in *.
-        destruct H1 as [H1a | H1b ]; easy. left. easy. left. easy.
-        right. easy.
- Qed.
-
- Lemma negP : forall (b: bool), reflect (~ b) (negb b).
- Proof. intros; apply iff_reflect; split;
-        case_eq b; intros; try easy; try compute in *.
-        contradict H0. easy.
- Qed.
-
- Lemma eqP : forall (b1 b2: bool), reflect (b1 = b2) (Bool.eqb b1 b2).
- Proof. intros; apply iff_reflect; split;
-        case_eq b1; case_eq b2; intros; try easy; try compute in *; now apply H1.
- Qed.
-
-Lemma FalseB : (false = true) <-> False.
-Proof. split; auto; try congruence. Qed.
-
-Lemma TrueB : (true = true) <-> True.
+Lemma trueE : true <-> True.
 Proof. split; auto. Qed.
 
-Lemma beq_eq: forall b1 b2, b1 <--> b2 <-> b1 = b2.
-Proof. intros; case_eq b1; case_eq b2; intros; subst; try easy. Qed.
+(* Z *)
 
-(** Z *)
+Lemma Z_eqb_eq: forall a b: Z, Z.eqb a b <-> a = b.
+Proof. intros; unfold is_true; now rewrite Z.eqb_eq. Qed.
 
-Lemma Z_eqb_eq: forall a b: Z, Z.eqb a b = true <-> a = b.
-Proof. intros; now rewrite Z.eqb_eq. Qed.
-
-Lemma Z_gtb_gt: forall a b: Z, Z.gtb a b = true <-> Z.gt a b.
-Proof. split; intros. rewrite Z.gtb_lt in H. now apply Z.lt_gt in H.
-       rewrite Z.gtb_lt. now apply Z.gt_lt in H.
+Lemma Z_gtb_gt: forall a b: Z, Z.gtb a b <-> Z.gt a b.
+Proof.
+  split.
+  - rewrite /is_true Z.gtb_lt. now apply Z.lt_gt.
+  - rewrite /is_true Z.gtb_lt. now apply Z.gt_lt.
 Qed.
 
-Lemma Z_geb_ge: forall a b: Z, Z.geb a b = true <-> Z.ge a b.
-Proof. split; intros. rewrite Z.geb_le in H. now apply Z.le_ge in H.
-       rewrite Z.geb_le. now apply Z.ge_le in H.
+Lemma Z_geb_ge: forall a b: Z, Z.geb a b <-> Z.ge a b.
+Proof.
+  split.
+  - rewrite /is_true Z.geb_le. now apply Z.le_ge.
+  - rewrite /is_true Z.geb_le. now apply Z.ge_le.
 Qed.
 
-Lemma Z_ltb_lt: forall a b: Z, Z.ltb a b = true <-> Z.lt a b.
-Proof. split; intros. now rewrite Z.ltb_lt in H. now rewrite Z.ltb_lt.
+Lemma Z_ltb_lt: forall a b: Z, Z.ltb a b <-> Z.lt a b.
+Proof.
+  split; now rewrite /is_true Z.ltb_lt.
 Qed.
 
-Lemma Z_leb_le: forall a b: Z, Z.leb a b = true <-> Z.le a b.
-Proof. split; intros. now rewrite Z.leb_le in H. now rewrite Z.leb_le.
+Lemma Z_leb_le: forall a b: Z, Z.leb a b <-> Z.le a b.
+Proof.
+  split; now rewrite /is_true Z.leb_le.
 Qed.
 
-(** nat *)
+(* N *)
 
-Lemma Nat_eqb_eq: forall a b: nat, Nat.eqb a b = true <-> a = b.
-Proof. intro a;
-       induction a; intros; cbn; case b; try easy;
-         intro n; rewrite IHa;
-         split; intro H; subst; try easy;
-         now inversion H.
+Lemma N_eqb_eq: forall a b, N.eqb a b <-> a = b.
+Proof. intros; unfold is_true; now rewrite N.eqb_eq. Qed.
+
+Lemma N_ltb_lt: forall a b, N.ltb a b <-> N.lt a b.
+Proof.
+  split; now rewrite /is_true N.ltb_lt.
 Qed.
 
-Lemma Nat_leb_le: forall a b: nat, Nat.leb a b = true <-> Nat.le a b.
-Proof. intros; now rewrite Nat.leb_le. Qed.
+Lemma N_leb_le: forall a b, N.leb a b <-> N.le a b.
+Proof.
+  split; now rewrite /is_true N.leb_le.
+Qed.
 
-Lemma Nat_ltb_lt: forall a b: nat, Nat.ltb a b = true <-> Nat.lt a b.
-Proof. intros; now rewrite Nat.ltb_lt. Qed.
+(* nat *)
 
-Ltac prep :=
-  repeat
-    match goal with
-    | [ |- context [ match ?A with _ => _ end ] ] =>
-        match type of A with
-          | bool       => case_eq A; let Ha := fresh "H" in intro Ha
-          | comparison => case_eq A; let Ha := fresh "H" in intro Ha
-          | _ => idtac
-        end
-    | [ |- context [ if ?b then _ else _ ] ] => case_eq b; let Ha := fresh "H" in intro Ha
+Lemma Nat_eqb_eq: forall a b, Nat.eqb a b <-> a = b.
+Proof. intros; unfold is_true; now rewrite Nat.eqb_eq. Qed.
 
-    | [ H: context [ Bool.eqb ?G0 ?G1 ] |- _ ] => let Ha := fresh "H" in
-                                                  let Hb := fresh "H" in unfold is_true in H;
-       specialize (@iffP G0 G1); intro Ha; 
-       apply reflect_iff in Ha; apply Ha in H; clear Ha
-    | [ H: context [ ?G0 && ?G1  ] |- _ ] => let Ha := fresh "H" in
-                                             let Hb := fresh "H" in unfold is_true in H;
-       specialize (@andP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
-       destruct H as (Ha, Hb)
-    | [ H: context [ ?G0 --> ?G1 ] |- _ ] => let Ha := fresh "H" in
-                                             let Hb := fresh "H" in unfold is_true in H;
-       specialize (@implyP G0 G1); intro Ha; apply reflect_iff in Ha;
-       (assert (Hb: G0 -> G1) by now apply Ha); clear Ha; clear H
+Lemma Nat_ltb_lt: forall a b, Nat.ltb a b <-> a < b.
+Proof.
+  split; now rewrite /is_true Nat.ltb_lt.
+Qed.
 
-    | [ H: context [ ?G0 || ?G1  ] |- _ ] => let Ha := fresh "H" in
-                                             let Hb := fresh "H" in unfold is_true in H;
-       specialize (@orP G0 G1); intro Ha; apply reflect_iff in Ha; apply Ha in H; clear Ha;
-       destruct H as [Ha | Hb]
-    | [ H: context [ ?G0 /\ ?G1  ] |- _ ] => let Ha := fresh "H" in
-                                             let Hb := fresh "H" in destruct H as (Ha, Hb)
-    | [ H: context [ ?G0 \/ ?G1  ] |- _ ] => let Ha := fresh "H" in
-                                             let Hb := fresh "H" in destruct H as [Ha | Hb]
-     end.
+Lemma Nat_leb_le: forall a b, Nat.leb a b <-> a <= b.
+Proof.
+  split; now rewrite /is_true Nat.leb_le.
+Qed.
 
-Ltac bool2prop :=
-  repeat
-    match goal with
-    | [ H: context [ Z.eqb _ _]   |- _ ] => unfold is_true in H; rewrite Z_eqb_eq in H
-    | [ H: context [ Z.geb _ _]   |- _ ] => unfold is_true in H; rewrite Z_geb_ge in H
-    | [ H: context [ Z.gtb _ _]   |- _ ] => unfold is_true in H; rewrite Z_gtb_gt in H
-    | [ H: context [ Z.ltb _ _]   |- _ ] => unfold is_true in H; rewrite Z_ltb_lt in H
-    | [ H: context [ Z.leb _ _]   |- _ ] => unfold is_true in H; rewrite Z_leb_le in H
-    | [ |- context[ Z.eqb _ _ ] ]   => unfold is_true; rewrite Z_eqb_eq
-    | [ |- context[ Z.leb _ _ ] ]   => unfold is_true; rewrite Z.leb_le
-    | [ |- context[ Z.ltb _ _ ] ]   => unfold is_true; rewrite Z.ltb_lt
-    | [ |- context[ Z.gtb _ _ ] ]   => unfold is_true; rewrite Z_gtb_gt
-    | [ |- context[ Z.geb _ _ ] ]   => unfold is_true; rewrite Z_geb_ge
-    | [ |- context[ Nat.eqb _ _ ] ] => unfold is_true; rewrite Nat_eqb_eq
-    | [ |- context[ Nat.leb _ _ ] ] => unfold is_true; rewrite Nat.leb_le
-    | [ |- context[ Nat.ltb _ _ ] ] => unfold is_true; rewrite Nat.ltb_lt
-    | [ |- context[?G0 --> ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true -> G1 = true)  (G0 --> G1)); 
-      [ | apply implyP]
-    | [ |- context[?G0 || ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true \/ G1 = true) (G0 || G1)); 
-      [ | apply orP]
-    | [ |- context[?G0 && ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true /\ G1 = true) (G0 && G1)); 
-      [ | apply andP]
-    | [ |- context[?G0 <--> ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true <-> G1 = true) (G0 <--> G1)); 
-      [ | apply iffP]
-    | [ |- context[ negb ?G ] ] =>
-        rewrite <- (@reflect_iff (G <> true) (negb G)); 
-      [ | apply negP]
-    | [ |- context[ false = true ] ] => rewrite FalseB
-    | [ |- context[ true = true ] ] => rewrite TrueB
+(* bool to Prop reflection *)
+
+Create HintDb brefl_hints discriminated.
+
+Hint Rewrite -> andE : brefl_hints.
+Hint Rewrite -> orE : brefl_hints.
+Hint Rewrite -> negE : brefl_hints.
+Hint Rewrite -> implE : brefl_hints.
+Hint Rewrite -> iffE : brefl_hints.
+Hint Rewrite -> falseE : brefl_hints.
+Hint Rewrite -> trueE : brefl_hints.
+
+Hint Rewrite -> Z_eqb_eq : brefl_hints.
+Hint Rewrite -> Z_gtb_gt : brefl_hints.
+Hint Rewrite -> Z_geb_ge : brefl_hints.
+Hint Rewrite -> Z_ltb_lt : brefl_hints.
+Hint Rewrite -> Z_leb_le : brefl_hints.
+
+Hint Rewrite -> N_eqb_eq : brefl_hints.
+Hint Rewrite -> N_ltb_lt : brefl_hints.
+Hint Rewrite -> N_leb_le : brefl_hints.
+
+Hint Rewrite -> Nat_eqb_eq : brefl_hints.
+Hint Rewrite -> Nat_ltb_lt : brefl_hints.
+Hint Rewrite -> Nat_leb_le : brefl_hints.
+
+Tactic Notation "breflect" :=
+  unfold Nat.lt, Nat.le; autorewrite with brefl_hints.
+
+Tactic Notation "breflect" "in" hyp(H) :=
+  unfold Nat.lt, Nat.le in H; autorewrite with brefl_hints in H.
+
+Tactic Notation "breflect" "in" "*" :=
+  unfold Nat.lt, Nat.le in *; autorewrite with brefl_hints in *.
+
+(* Prop to bool reflection *)
+
+Create HintDb prefl_hints discriminated.
+
+Hint Rewrite <- andE : prefl_hints.
+Hint Rewrite <- orE : prefl_hints.
+Hint Rewrite <- negE : prefl_hints.
+Hint Rewrite <- implE : prefl_hints.
+Hint Rewrite <- iffE : prefl_hints.
+Hint Rewrite <- falseE : prefl_hints.
+Hint Rewrite <- trueE : prefl_hints.
+
+Hint Rewrite <- Z_eqb_eq : prefl_hints.
+Hint Rewrite <- Z_gtb_gt : prefl_hints.
+Hint Rewrite <- Z_geb_ge : prefl_hints.
+Hint Rewrite <- Z_ltb_lt : prefl_hints.
+Hint Rewrite <- Z_leb_le : prefl_hints.
+
+Hint Rewrite <- N_eqb_eq : prefl_hints.
+Hint Rewrite <- N_ltb_lt : prefl_hints.
+Hint Rewrite <- N_leb_le : prefl_hints.
+
+Hint Rewrite <- Nat_eqb_eq : prefl_hints.
+Hint Rewrite <- Nat_ltb_lt : prefl_hints.
+Hint Rewrite <- Nat_leb_le : prefl_hints.
+
+Tactic Notation "preflect" :=
+  unfold Nat.lt, Nat.le; autorewrite with prefl_hints.
+
+Tactic Notation "preflect" "in" hyp(H) :=
+  unfold Nat.lt, Nat.le in H; autorewrite with prefl_hints in H.
+
+Tactic Notation "preflect" "in" "*" :=
+  unfold Nat.lt, Nat.le in *; autorewrite with prefl_hints in *.
+
+(* hardcoded one-step reflection *)
+
+Tactic Notation "brefl" :=
+  lazymatch goal with
+  | [ |- is_true (andb _ _) ] => rewrite -> andE
+  | [ |- is_true (orb _ _) ] => rewrite -> orE
+  | [ |- is_true (negb _) ] => rewrite -> negE
+  | [ |- is_true (implb _ _) ] => rewrite -> implE
+  | [ |- is_true (eqb _ _) ] => rewrite -> iffE
+  | [ |- is_true true ] => rewrite -> trueE
+  | [ |- is_true false ] => rewrite -> falseE
   end.
 
-Ltac lc :=
-  repeat
-    match goal with
-    | [ |- context[?G0 --> ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true -> G1 = true)  (G0 --> G1)); 
-      [ | apply implyP]
-    | [ |- context[?G0 || ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true \/ G1 = true) (G0 || G1)); 
-      [ | apply orP]
-    | [ |- context[?G0 && ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true /\ G1 = true) (G0 && G1)); 
-      [ | apply andP]
-    | [ |- context[?G0 <--> ?G1 ] ] =>
-        rewrite <- (@reflect_iff (G0 = true <-> G1 = true) (G0 <--> G1)); 
-      [ | apply iffP]
-    | [ |- context[ negb ?G ] ] =>
-        rewrite <- (@reflect_iff (G <> true) (negb G)); 
-      [ | apply negP]
+Tactic Notation "brefl" "in" hyp(H) :=
+  lazymatch type of H with
+  | is_true (andb _ _) => rewrite -> andE in H
+  | is_true (orb _ _) => rewrite -> orE in H
+  | is_true (negb _) => rewrite -> negE in H
+  | is_true (implb _ _) => rewrite -> implE in H
+  | is_true (eqb _ _) => rewrite -> iffE in H
+  | is_true true => try clear H
+  | is_true false => discriminate H
   end.
 
+Tactic Notation "prefl" :=
+  lazymatch goal with
+  | [ |- _ /\ _ ] => rewrite <- andE
+  | [ |- _ \/ _ ] => rewrite <- orE
+  | [ |- ~ _ ] => rewrite <- negE
+  | [ |- _ -> _ ] => rewrite <- implE
+  | [ |- _ <-> _ ] => rewrite <- iffE
+  | [ |- True ] => rewrite <- trueE
+  | [ |- False ] => rewrite <- falseE
+  end.
 
+Tactic Notation "prefl" "in" hyp(H) :=
+  lazymatch type of H with
+  | _ /\ _ => rewrite <- andE in H
+  | _ \/ _ => rewrite <- orE in H
+  | ~ _ => rewrite <- negE in H
+  | _ -> _ => rewrite <- implE in H
+  | _ <-> _ => rewrite <- iffE in H
+  | True => try clear H
+  | False => destruct H
+  end.
 
+(* boolean tactics *)
+
+Tactic Notation "bdestr" constr(b) "as" ident(H) :=
+  lazymatch type of b with
+  | bool =>
+    destruct b eqn:H;
+    [ replace (b = true) with (is_true b) in H by reflexivity |
+      let H1 := fresh "H" in
+      assert (H1: is_true (negb b)) by (rewrite H; simpl; constructor);
+      clear H; rename H1 into H ]
+  | _ => fail "not a boolean term"
+  end.
+
+Tactic Notation "bdestr" constr(b) :=
+  let H := fresh "H" in bdestr b as H.
+
+Tactic Notation "bdestruct" constr(b) "as" ident(H) :=
+  bdestr b as H; breflect in H.
+
+Tactic Notation "bdestruct" constr(b) :=
+  let H := fresh "H" in bdestruct b as H.
+
+Tactic Notation "binvert" constr(b) :=
+  lazymatch type of b with
+  | is_true (andb _ _) => move /andP: b; let H := fresh "H" in intro H; destruct H
+  | is_true (orb _ _) => move /orP: b; let H := fresh "H" in intro H; destruct H
+  | is_true true => try clear b
+  | is_true false => discriminate b
+  | _ => fail
+  end.
+
+Tactic Notation "binvert" constr(b) "as" simple_intropattern(pat) :=
+  lazymatch type of b with
+  | is_true (andb _ _) => move /andP: b; intros pat
+  | is_true (orb _ _) => move /orP: b; intros pat
+  | is_true true => try clear b
+  | is_true false => discriminate b
+  | _ => fail
+  end.
+
+Ltac bleft := apply /orP; left.
+Ltac bright := apply /orP; right.
+Ltac bsplit := apply /andP; split.
+Ltac blia := breflect in *; Psatz.lia.
+Ltac bcongruence := breflect in *; congruence.
