@@ -238,7 +238,17 @@ Tactic Notation "bdestr" constr(b) :=
   let H := fresh "H" in bdestr b as H.
 
 Tactic Notation "bdestruct" constr(b) "as" ident(H) :=
-  bdestr b as H; breflect in H.
+  lazymatch b with
+  | Z.gtb ?b1 ?b2 => destruct (Z.gtb_spec b1 b2) as [H|H]
+  | Z.geb ?b1 ?b2 => destruct (Z.geb_spec b1 b2) as [H|H]
+  | Z.ltb ?b1 ?b2 => destruct (Z.ltb_spec b1 b2) as [H|H]
+  | Z.leb ?b1 ?b2 => destruct (Z.leb_spec b1 b2) as [H|H]
+  | N.leb ?b1 ?b2 => destruct (N.leb_spec b1 b2) as [H|H]
+  | N.ltb ?b1 ?b2 => destruct (N.ltb_spec b1 b2) as [H|H]
+  | Nat.leb ?b1 ?b2 => destruct (Nat.leb_spec b1 b2) as [H|H]
+  | Nat.ltb ?b1 ?b2 => destruct (Nat.ltb_spec b1 b2) as [H|H]
+  | _ => bdestr b as H; breflect in H
+  end.
 
 Tactic Notation "bdestruct" constr(b) :=
   let H := fresh "H" in bdestruct b as H.
