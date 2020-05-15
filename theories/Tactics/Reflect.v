@@ -4,7 +4,7 @@
 Coercion is_true : bool >-> Sortclass.
 
 Require Export Bool.
-Require Psatz.
+Require Import Psatz.
 Require Import BinInt BinNat PeanoNat.
 Require Import ssreflect ssrbool.
 
@@ -90,6 +90,20 @@ Proof.
   split; now rewrite /is_true N.leb_le.
 Qed.
 
+Lemma N_gt_to_ltb: forall a b, N.gt a b -> N.ltb b a.
+Proof.
+  intros a b.
+  rewrite N_ltb_lt.
+  lia.
+Qed.
+
+Lemma N_ge_to_leb: forall a b, N.ge a b -> N.leb b a.
+Proof.
+  intros a b.
+  rewrite N_leb_le.
+  lia.
+Qed.
+
 (* nat *)
 
 Lemma Nat_eqb_eq: forall a b, Nat.eqb a b <-> a = b.
@@ -103,6 +117,20 @@ Qed.
 Lemma Nat_leb_le: forall a b, Nat.leb a b <-> a <= b.
 Proof.
   split; now rewrite /is_true Nat.leb_le.
+Qed.
+
+Lemma Nat_gt_to_ltb: forall a b, a > b -> Nat.ltb b a.
+Proof.
+  intros a b.
+  rewrite Nat_ltb_lt.
+  auto with arith.
+Qed.
+
+Lemma Nat_ge_to_leb: forall a b, a >= b -> Nat.leb b a.
+Proof.
+  intros a b.
+  rewrite Nat_leb_le.
+  auto with arith.
 Qed.
 
 (* bool to Prop reflection *)
@@ -132,13 +160,13 @@ Hint Rewrite -> Nat_ltb_lt : brefl_hints.
 Hint Rewrite -> Nat_leb_le : brefl_hints.
 
 Tactic Notation "breflect" :=
-  unfold Nat.lt, Nat.le; autorewrite with brefl_hints.
+  autorewrite with brefl_hints.
 
 Tactic Notation "breflect" "in" hyp(H) :=
-  unfold Nat.lt, Nat.le in H; autorewrite with brefl_hints in H.
+  autorewrite with brefl_hints in H.
 
 Tactic Notation "breflect" "in" "*" :=
-  unfold Nat.lt, Nat.le in *; autorewrite with brefl_hints in *.
+  autorewrite with brefl_hints in *.
 
 (* Prop to bool reflection *)
 
@@ -161,10 +189,14 @@ Hint Rewrite <- Z_leb_le : prefl_hints.
 Hint Rewrite <- N_eqb_eq : prefl_hints.
 Hint Rewrite <- N_ltb_lt : prefl_hints.
 Hint Rewrite <- N_leb_le : prefl_hints.
+Hint Rewrite -> N_gt_to_ltb : prefl_hints.
+Hint Rewrite -> N_ge_to_leb : prefl_hints.
 
 Hint Rewrite <- Nat_eqb_eq : prefl_hints.
 Hint Rewrite <- Nat_ltb_lt : prefl_hints.
 Hint Rewrite <- Nat_leb_le : prefl_hints.
+Hint Rewrite -> Nat_gt_to_ltb : prefl_hints.
+Hint Rewrite -> Nat_ge_to_leb : prefl_hints.
 
 Tactic Notation "preflect" :=
   unfold Nat.lt, Nat.le; autorewrite with prefl_hints.
@@ -174,6 +206,32 @@ Tactic Notation "preflect" "in" hyp(H) :=
 
 Tactic Notation "preflect" "in" "*" :=
   unfold Nat.lt, Nat.le in *; autorewrite with prefl_hints in *.
+
+(* Boolean simplification *)
+
+Create HintDb bsimpl_hints discriminated.
+
+Hint Rewrite -> Bool.orb_true_r : bsimpl_hints.
+Hint Rewrite -> Bool.orb_true_l : bsimpl_hints.
+Hint Rewrite -> Bool.orb_false_r : bsimpl_hints.
+Hint Rewrite -> Bool.orb_false_l : bsimpl_hints.
+Hint Rewrite -> Bool.andb_true_r : bsimpl_hints.
+Hint Rewrite -> Bool.andb_true_l : bsimpl_hints.
+Hint Rewrite -> Bool.andb_false_r : bsimpl_hints.
+Hint Rewrite -> Bool.andb_false_l : bsimpl_hints.
+Hint Rewrite <- N.leb_antisym : bsimpl_hints.
+Hint Rewrite <- N.ltb_antisym : bsimpl_hints.
+Hint Rewrite <- Nat.leb_antisym : bsimpl_hints.
+Hint Rewrite <- Nat.ltb_antisym : bsimpl_hints.
+
+Tactic Notation "bsimpl" :=
+  autorewrite with bsimpl_hints.
+
+Tactic Notation "bsimpl" "in" hyp(H) :=
+  autorewrite with bsimpl_hints in H.
+
+Tactic Notation "bsimpl" "in" "*" :=
+  autorewrite with bsimpl_hints in *.
 
 (* hardcoded one-step reflection *)
 
@@ -247,7 +305,7 @@ Tactic Notation "bdestruct" constr(b) "as" ident(H) :=
   | N.ltb ?b1 ?b2 => destruct (N.ltb_spec b1 b2) as [H|H]
   | Nat.leb ?b1 ?b2 => destruct (Nat.leb_spec b1 b2) as [H|H]
   | Nat.ltb ?b1 ?b2 => destruct (Nat.ltb_spec b1 b2) as [H|H]
-  | _ => bdestr b as H; breflect in H
+  | _ => bdestr b as H; bsimpl in H; breflect in H
   end.
 
 Tactic Notation "bdestruct" constr(b) :=
@@ -274,5 +332,5 @@ Tactic Notation "binvert" constr(b) "as" simple_intropattern(pat) :=
 Ltac bleft := apply /orP; left.
 Ltac bright := apply /orP; right.
 Ltac bsplit := apply /andP; split.
-Ltac blia := breflect in *; Psatz.lia.
+Ltac blia := breflect in *; lia.
 Ltac bcongruence := breflect in *; congruence.
