@@ -218,23 +218,28 @@ Example: `sauto 500 using Nat.add_1_r unfolding (Nat.Even, Nat.Odd) inverting Li
 Papers about CoqHammer
 ----------------------
 
-1. Ł. Czajka, C. Kaliszyk, [Hammer for Coq: Automation for Dependent Type Theory](https://link.springer.com/article/10.1007/s10817-018-9458-4)
+1. Ł. Czajka, C. Kaliszyk, [Hammer for Coq: Automation for Dependent Type Theory](https://link.springer.com/article/10.1007/s10817-018-9458-4), Journal of Automated Reasoning, 2018
 
    This paper is the main reference for CoqHammer. It describes the
    first version of the system.
 
-2. Ł. Czajka, [A Shallow Embedding of Pure Type Systems into First-order Logic](http://drops.dagstuhl.de/opus/volltexte/2018/9853/)
+2. Ł. Czajka, [A Shallow Embedding of Pure Type Systems into First-order Logic](http://drops.dagstuhl.de/opus/volltexte/2018/9853/), TYPES 2016
 
    This paper proves soundness of a core version of the embedding used
    by CoqHammer.
 
-3. Ł. Czajka, [Practical proof search for Coq by type inhabitation](http://www.mimuw.edu.pl/~lukaszcz/sauto.pdf)
+3. Ł. Czajka, [Practical proof search for Coq by type inhabitation](http://www.mimuw.edu.pl/~lukaszcz/sauto.pdf), IJCAR 2020
 
    This paper describes a general proof search procedure for the
    Calculus of Inductive Constructions which is used in CoqHammer's
    reconstruction backend since version 1.2.
 
-4. Ł. Czajka, B. Ekici, C. Kaliszyk, [Concrete Semantics with Coq and CoqHammer](https://arxiv.org/abs/1808.06413)
+4. Ł. Czajka, B. Ekici, C. Kaliszyk, [Concrete Semantics with Coq and CoqHammer](https://arxiv.org/abs/1808.06413), CICM 2018
+
+Archival CoqHammer versions
+---------------------------
+
+CoqHammer versions before 1.0.6 are available from: http://cl-informatik.uibk.ac.at/cek/coqhammer.
 
 Further CoqHammer options
 -------------------------
