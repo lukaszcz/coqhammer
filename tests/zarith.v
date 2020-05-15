@@ -6,7 +6,7 @@ Open Scope Z_scope.
 Hammer_version.
 Hammer_objects.
 
-Set Hammer CrushLimit 0.
+Set Hammer SAutoLimit 0.
 
 Lemma lem_1 : Z.le 1 2.
 Proof.

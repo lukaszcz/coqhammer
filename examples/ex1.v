@@ -17,8 +17,8 @@ From Hammer Require Import Hammer.
 
 Require Import Arith.
 
-(* disable the preliminary crush-like tactic *)
-Set Hammer CrushLimit 0.
+(* disable the preliminary sauto tactic *)
+Set Hammer SAutoLimit 0.
 
 Lemma lem_1 : le 1 2.
   hammer. Restart.
@@ -217,7 +217,7 @@ Proof.
   semi-manually. *)
   assert (forall c : Datatypes.comparison, c = Eq \/ c = Lt \/ c = Gt) by sauto inverting Datatypes.comparison.
   hammer. Undo.
-  hauto 100 using (@Arith.PeanoNat.Nat.compare_eq, @Arith.PeanoNat.Nat.compare_le_iff, @Arith.PeanoNat.Nat.leb_le, @Init.Peano.le_0_n, @Init.Peano.le_n, @Arith.Compare_dec.leb_compare).
+  sreconstr using (@Coq.Arith.PeanoNat.Nat.compare_lt_iff, @Coq.Init.Peano.le_n, @Coq.Arith.PeanoNat.Nat.lt_eq_cases, @Coq.Arith.PeanoNat.Nat.leb_refl, @Coq.Arith.Compare_dec.leb_compare, @Coq.Arith.PeanoNat.Nat.compare_nge_iff, @Coq.Arith.Compare_dec.leb_correct) inverting (@Coq.Init.Datatypes.comparison).
 Qed.
 
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.

@@ -3,7 +3,7 @@ From Hammer Require Import Hammer.
 Hammer_version.
 Hammer_objects.
 
-Set Hammer CrushLimit 0.
+Set Hammer SAutoLimit 0.
 
 Require NArith.Ndec.
 

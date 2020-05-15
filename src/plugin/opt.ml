@@ -14,17 +14,17 @@ let _ =
   in
   declare_int_option gdopt
 
-let scrush_timelimit = ref 1
+let sauto_timelimit = ref 1
 
 let _ =
   let gdopt=
     { optdepr=false;
-      optkey=["Hammer";"CrushLimit"];
-      optread=(fun ()->Some !scrush_timelimit);
+      optkey=["Hammer";"SAutoLimit"];
+      optread=(fun ()->Some !sauto_timelimit);
       optwrite=
    (function
-        None -> scrush_timelimit := 1
-      |	Some i -> scrush_timelimit := (max i 0))}
+        None -> sauto_timelimit := 1
+      |	Some i -> sauto_timelimit := (max i 0))}
   in
   declare_int_option gdopt
 

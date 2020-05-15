@@ -1454,7 +1454,7 @@ Ltac rsreconstr lems unfolds inverts :=
 Ltac rhcrush lems unfolds inverts :=
   solve [ hcrush using lems unfolding unfolds inverting inverts ].
 
-Ltac rcrush := scrush.
+Ltac sauto_tac := sauto.
 
 Tactic Notation "hprove" int_or_var(i) :=
   unshelve (sauto_gen i with (nohints) unfolding default inverting logic splitting none ctrs logic opts no_eager_invert no_eager_case_split no_simple_split no_reduction no_eager_rewrite no_heuristic_rewrite no_bnat_reflection no_reflection no_sapply depth_cost_model exhaustive); dsolve.

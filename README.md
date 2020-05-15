@@ -267,9 +267,9 @@ Set Hammer ATPLimit n.
 (* ATP time limit in seconds, default: 10s *)
 Set Hammer ReconstrLimit n.
 (* time limit for proof reconstruction, default: 10s *)
-Set Hammer CrushLimit n.
+Set Hammer SAutoLimit n.
 (* before invoking external ATPs the hammer first tries to solve the
-   goal using the scrush tactic with a time limit of n seconds; default: 1s *)
+   goal using the sauto tactic with a time limit of n seconds; default: 1s *)
 Set/Unset Hammer Vampire/CVC4/Eprover/Z3.
 Set Hammer PredictPath "/path/to/predict". (* default: "predict" *)
 Set/Unset Hammer FilterProgram.

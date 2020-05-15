@@ -3,7 +3,7 @@ From Hammer Require Import Hammer.
 Hammer_version.
 Hammer_objects.
 
-Set Hammer CrushLimit 0.
+Set Hammer SAutoLimit 0.
 
 Lemma lem_1 {A : Type} (P : A -> Prop) : forall x, P x -> P x.
 Proof.

@@ -5,7 +5,7 @@ Require Import List.
 Hammer_version.
 Hammer_objects.
 
-Set Hammer CrushLimit 0.
+Set Hammer SAutoLimit 0.
 
 Lemma lem_lst :
   forall {A} (x : A) l1 l2 (P : A -> Prop),
