@@ -433,14 +433,14 @@ let do_predict hyps deps goal =
     let deps1 = Features.predict hyps deps goal in
     Provers.predict deps1 hyps deps goal
 
-let try_scrush () =
-  if !Opt.scrush_timelimit = 0 then
+let try_sauto () =
+  if !Opt.sauto_timelimit = 0 then
     Proofview.tclZERO (Failure "timeout")
   else
     Proofview.tclBIND
-      (ltac_timeout !Opt.scrush_timelimit "Tactics.rcrush" [])
+      (ltac_timeout !Opt.sauto_timelimit "Tactics.sauto_tac" [])
       (fun _ ->
-        Msg.info "Replace the hammer tactic with: scrush";
+        Msg.info "Replace the hammer tactic with: sauto";
         Tacticals.New.tclIDTAC)
 
 (***************************************************************************************)
@@ -492,7 +492,7 @@ let hammer_tac () =
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
       Proofview.tclORELSE
-        (try_scrush ())
+        (try_sauto ())
         begin fun _ ->
           try_tactic begin fun () ->
             let goal = get_goal gl in
