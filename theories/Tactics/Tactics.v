@@ -21,6 +21,8 @@ Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_l : shints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_r : shints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_l : shints.
 Hint Rewrite -> Arith.PeanoNat.Nat.sub_add_distr : shints.
+Hint Rewrite <- Arith.PeanoNat.Nat.leb_antisym : shints.
+Hint Rewrite <- Arith.PeanoNat.Nat.ltb_antisym : shints.
 Hint Rewrite -> ZArith.BinInt.Z.add_0_r : shints.
 Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : shints.
 Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : shints.
