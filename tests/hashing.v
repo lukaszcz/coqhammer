@@ -4,7 +4,7 @@ Require Import List.
 Hammer_version.
 Hammer_objects.
 
-Set Hammer CrushLimit 0.
+Set Hammer SAutoLimit 0.
 
 Lemma lem_lam_1 {A : Type} (P : (A -> A) -> Prop) : P (fun x => x) -> P (fun x => x).
 Proof.
