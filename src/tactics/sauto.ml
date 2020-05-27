@@ -48,7 +48,7 @@ let default_s_opts = {
   s_inversions = SAll;
   s_rew_bases = [];
   s_bnat_reflect = false;
-  s_reflect = false;
+  s_reflect = true;
   s_eager_case_splitting = true;
   s_eager_reducing = true;
   s_eager_rewriting = true;
@@ -528,7 +528,6 @@ let simple_inverting opts =
 let simplify opts =
   let simpl1 =
     simp_hyps_tac <~>
-      opt opts.s_reflect bool_reflect_tac <~>
       opt opts.s_bnat_reflect bnat_reflect_tac <~>
       opts.s_simpl_tac <~>
       reduce_concl opts <~>
@@ -914,7 +913,9 @@ and apply_actions tacs opts n actions rtrace visited =
 (*****************************************************************************************)
 
 let sintuition opts =
-  Tactics.intros <*> simp_hyps_tac <*> ssubst_tac <*> Tacticals.New.tclTRY opts.s_simpl_tac <*>
+  Tactics.intros <*>
+    opt opts.s_reflect bool_reflect_tac <*>
+    simp_hyps_tac <*> ssubst_tac <*> Tacticals.New.tclTRY opts.s_simpl_tac <*>
     Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
                                (Tactics.intros <*> simp_hyps_tac <*> ssubst_tac) <*>
                                Tacticals.New.tclTRY opts.s_simpl_tac)
@@ -930,6 +931,7 @@ let ssimpl opts =
       opt opts.s_forwarding (with_reduction opts forwarding_tac forwarding_nocbn_tac) <*>
       subst_simpl opts
   in
+  opt opts.s_reflect bool_reflect_tac <*>
   tac1 <*> (simplify opts <~> tac2)
 
 let qsimpl opts =
@@ -942,14 +944,16 @@ let qsimpl opts =
          opt opts.s_eager_case_splitting (case_splitting true opts)) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
-  Tactics.intros <*> unfolding opts <*> tac
+  Tactics.intros <*>
+    opt opts.s_reflect bool_reflect_tac <*>
+    unfolding opts <*> tac
 
 let sauto opts n =
   let simp =
     if opts.s_presimplify then
       ssimpl opts
     else
-      Proofview.tclUNIT ()
+      opt opts.s_reflect bool_reflect_tac
   in
   simp <*> unfolding opts <*> subst_simpl opts <*>
     intros (create_tactics opts) opts n

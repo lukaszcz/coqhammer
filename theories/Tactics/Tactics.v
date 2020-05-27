@@ -925,38 +925,6 @@ Tactic Notation "sauto" "unfolding" constr(unfolds) "inverting" constr(inverts) 
 Tactic Notation "sauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
   unshelve (sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts default); dsolve.
 
-Tactic Notation "bauto" := unshelve sauto_gen; dsolve.
-Tactic Notation "bauto" int_or_var(i) :=
-  unshelve (sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" "using" constr(lst) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding default inverting default splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "using" constr(lst) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting default splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen with (shints) unfolding unfolds inverting default splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "unfolding" constr(unfolds) :=
-  unshelve (sauto_gen i with (shints) unfolding unfolds inverting default splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" "inverting" constr(inverts) :=
-  unshelve (sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "inverting" constr(inverts) :=
-  unshelve (sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding default inverting inverts splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "using" constr(lst) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding default inverting inverts splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "using" constr(lst) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (use lst; sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs lst opts reflection); dsolve.
-Tactic Notation "bauto" "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (sauto_gen with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts reflection); dsolve.
-Tactic Notation "bauto" int_or_var(i) "unfolding" constr(unfolds) "inverting" constr(inverts) :=
-  unshelve (sauto_gen i with (shints) unfolding unfolds inverting inverts splitting default ctrs default opts reflection); dsolve.
-
 Tactic Notation "hauto" :=
   unshelve (sauto_gen with (nohints) unfolding default inverting logic splitting default ctrs logic opts no_bnat_reflection no_eager_reduction); dsolve.
 Tactic Notation "hauto" int_or_var(i) :=

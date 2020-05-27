@@ -4,6 +4,7 @@
 Coercion is_true : bool >-> Sortclass.
 
 Require Export Bool.
+Require Import Setoid.
 Require Import Psatz.
 Require Import BinInt BinNat PeanoNat.
 Require Import ssreflect ssrbool.
@@ -160,52 +161,58 @@ Hint Rewrite -> Nat_ltb_lt : brefl_hints.
 Hint Rewrite -> Nat_leb_le : brefl_hints.
 
 Tactic Notation "breflect" :=
-  autorewrite with brefl_hints.
+  try rewrite_strat topdown hints brefl_hints.
 
 Tactic Notation "breflect" "in" hyp(H) :=
-  autorewrite with brefl_hints in H.
+  try rewrite_strat topdown hints brefl_hints in H.
 
 Tactic Notation "breflect" "in" "*" :=
-  autorewrite with brefl_hints in *.
+  breflect;
+  repeat match goal with
+         | [H : _ |- _ ] => rewrite_strat topdown hints brefl_hints in H
+         end.
 
-(* Prop to bool reflection *)
+(* Prop to bool reification *)
 
-Create HintDb prefl_hints discriminated.
+Create HintDb breif_hints discriminated.
 
-Hint Rewrite <- andE : prefl_hints.
-Hint Rewrite <- orE : prefl_hints.
-Hint Rewrite <- negE : prefl_hints.
-Hint Rewrite <- implE : prefl_hints.
-Hint Rewrite <- iffE : prefl_hints.
-Hint Rewrite <- falseE : prefl_hints.
-Hint Rewrite <- trueE : prefl_hints.
+Hint Rewrite <- andE : breif_hints.
+Hint Rewrite <- orE : breif_hints.
+Hint Rewrite <- negE : breif_hints.
+Hint Rewrite <- implE : breif_hints.
+Hint Rewrite <- iffE : breif_hints.
+Hint Rewrite <- falseE : breif_hints.
+Hint Rewrite <- trueE : breif_hints.
 
-Hint Rewrite <- Z_eqb_eq : prefl_hints.
-Hint Rewrite <- Z_gtb_gt : prefl_hints.
-Hint Rewrite <- Z_geb_ge : prefl_hints.
-Hint Rewrite <- Z_ltb_lt : prefl_hints.
-Hint Rewrite <- Z_leb_le : prefl_hints.
+Hint Rewrite <- Z_eqb_eq : breif_hints.
+Hint Rewrite <- Z_gtb_gt : breif_hints.
+Hint Rewrite <- Z_geb_ge : breif_hints.
+Hint Rewrite <- Z_ltb_lt : breif_hints.
+Hint Rewrite <- Z_leb_le : breif_hints.
 
-Hint Rewrite <- N_eqb_eq : prefl_hints.
-Hint Rewrite <- N_ltb_lt : prefl_hints.
-Hint Rewrite <- N_leb_le : prefl_hints.
-Hint Rewrite -> N_gt_to_ltb : prefl_hints.
-Hint Rewrite -> N_ge_to_leb : prefl_hints.
+Hint Rewrite <- N_eqb_eq : breif_hints.
+Hint Rewrite <- N_ltb_lt : breif_hints.
+Hint Rewrite <- N_leb_le : breif_hints.
+Hint Rewrite -> N_gt_to_ltb : breif_hints.
+Hint Rewrite -> N_ge_to_leb : breif_hints.
 
-Hint Rewrite <- Nat_eqb_eq : prefl_hints.
-Hint Rewrite <- Nat_ltb_lt : prefl_hints.
-Hint Rewrite <- Nat_leb_le : prefl_hints.
-Hint Rewrite -> Nat_gt_to_ltb : prefl_hints.
-Hint Rewrite -> Nat_ge_to_leb : prefl_hints.
+Hint Rewrite <- Nat_eqb_eq : breif_hints.
+Hint Rewrite <- Nat_ltb_lt : breif_hints.
+Hint Rewrite <- Nat_leb_le : breif_hints.
+Hint Rewrite -> Nat_gt_to_ltb : breif_hints.
+Hint Rewrite -> Nat_ge_to_leb : breif_hints.
 
-Tactic Notation "preflect" :=
-  unfold Nat.lt, Nat.le; autorewrite with prefl_hints.
+Tactic Notation "breify" :=
+  try rewrite_strat topdown hints breif_hints.
 
-Tactic Notation "preflect" "in" hyp(H) :=
-  unfold Nat.lt, Nat.le in H; autorewrite with prefl_hints in H.
+Tactic Notation "breify" "in" hyp(H) :=
+  try rewrite_strat topdown hints breif_hints in H.
 
-Tactic Notation "preflect" "in" "*" :=
-  unfold Nat.lt, Nat.le in *; autorewrite with prefl_hints in *.
+Tactic Notation "breify" "in" "*" :=
+  breify;
+  repeat match goal with
+         | [H : _ |- _ ] => breify in H
+         end.
 
 (* Boolean simplification *)
 
@@ -225,13 +232,16 @@ Hint Rewrite <- Nat.leb_antisym : bsimpl_hints.
 Hint Rewrite <- Nat.ltb_antisym : bsimpl_hints.
 
 Tactic Notation "bsimpl" :=
-  autorewrite with bsimpl_hints.
+  try rewrite_strat topdown hints bsimpl_hints.
 
 Tactic Notation "bsimpl" "in" hyp(H) :=
-  autorewrite with bsimpl_hints in H.
+  try rewrite_strat topdown hints bsimpl_hints in H.
 
 Tactic Notation "bsimpl" "in" "*" :=
-  autorewrite with bsimpl_hints in *.
+  bsimpl;
+  repeat match goal with
+         | [H : _ |- _ ] => bsimpl in H
+         end.
 
 (* hardcoded one-step reflection *)
 
@@ -257,7 +267,7 @@ Tactic Notation "brefl" "in" hyp(H) :=
   | is_true false => discriminate H
   end.
 
-Tactic Notation "prefl" :=
+Tactic Notation "breif" :=
   lazymatch goal with
   | [ |- _ /\ _ ] => rewrite <- andE
   | [ |- _ \/ _ ] => rewrite <- orE
@@ -268,7 +278,7 @@ Tactic Notation "prefl" :=
   | [ |- False ] => rewrite <- falseE
   end.
 
-Tactic Notation "prefl" "in" hyp(H) :=
+Tactic Notation "breif" "in" hyp(H) :=
   lazymatch type of H with
   | _ /\ _ => rewrite <- andE in H
   | _ \/ _ => rewrite <- orE in H
@@ -297,12 +307,15 @@ Tactic Notation "bdestr" constr(b) :=
 
 Tactic Notation "bdestruct" constr(b) "as" ident(H) :=
   lazymatch b with
+  | Z.eqb ?b1 ?b2 => destruct (Z.eqb_spec b1 b2) as [H|H]
   | Z.gtb ?b1 ?b2 => destruct (Z.gtb_spec b1 b2) as [H|H]
   | Z.geb ?b1 ?b2 => destruct (Z.geb_spec b1 b2) as [H|H]
   | Z.ltb ?b1 ?b2 => destruct (Z.ltb_spec b1 b2) as [H|H]
   | Z.leb ?b1 ?b2 => destruct (Z.leb_spec b1 b2) as [H|H]
+  | N.eqb ?b1 ?b2 => destruct (N.eqb_spec b1 b2) as [H|H]
   | N.leb ?b1 ?b2 => destruct (N.leb_spec b1 b2) as [H|H]
   | N.ltb ?b1 ?b2 => destruct (N.ltb_spec b1 b2) as [H|H]
+  | Nat.eqb ?b1 ?b2 => destruct (Nat.eqb_spec b1 b2) as [H|H]
   | Nat.leb ?b1 ?b2 => destruct (Nat.leb_spec b1 b2) as [H|H]
   | Nat.ltb ?b1 ?b2 => destruct (Nat.ltb_spec b1 b2) as [H|H]
   | _ => bdestr b as H; bsimpl in H; breflect in H
