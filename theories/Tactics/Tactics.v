@@ -561,7 +561,7 @@ Ltac bnat_reflect :=
                (rewrite <- Coq.NArith.BinNat.N.eqb_eq; rewrite H; discriminate)
          end.
 
-Ltac bool_reflect := breflect in *.
+Ltac bool_reflect := bsimpl in *; breflect in *.
 
 Ltac invert_one_subgoal_nocbn H :=
   let ty := type of H in
