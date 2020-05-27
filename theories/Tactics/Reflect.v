@@ -36,11 +36,6 @@ Proof.
   split; destruct b1, b2; intuition.
 Qed.
 
-Lemma eqE : forall b1 b2, eqb b1 b2 <-> (b1 = b2).
-Proof.
-  split; destruct b1, b2; intuition.
-Qed.
-
 Lemma falseE : false <-> False.
 Proof. split; [ congruence | auto ]. Qed.
 
@@ -240,7 +235,7 @@ Tactic Notation "bsimpl" "in" hyp(H) :=
 Tactic Notation "bsimpl" "in" "*" :=
   bsimpl;
   repeat match goal with
-         | [H : _ |- _ ] => bsimpl in H
+         | [H : _ |- _ ] => rewrite_strat topdown hints bsimpl_hints in H
          end.
 
 (* hardcoded one-step reflection *)
@@ -345,5 +340,5 @@ Tactic Notation "binvert" constr(b) "as" simple_intropattern(pat) :=
 Ltac bleft := apply /orP; left.
 Ltac bright := apply /orP; right.
 Ltac bsplit := apply /andP; split.
-Ltac blia := breflect in *; lia.
+Ltac blia := bsimpl in *; breflect in *; lia.
 Ltac bcongruence := breflect in *; congruence.

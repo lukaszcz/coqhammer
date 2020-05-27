@@ -1,0 +1,2 @@
+-Q theories/Tactics Hammer.Tactics
+theories/Tactics/Mathcomp.v
