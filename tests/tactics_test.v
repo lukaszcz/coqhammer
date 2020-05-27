@@ -262,19 +262,45 @@ Proof.
   tauto.
 Qed.
 
+Lemma lem_breflect_test_1' : forall b1 b2 b3, b1 && b2 || b3 -> b3 || b2 || b1.
+Proof.
+  breflect.
+  tauto.
+Qed.
+
+Lemma lem_breflect_test_2' : forall b1 b2 b3, implb (b1 && b2 || b3) (b3 || b2 || b1).
+Proof.
+  breflect.
+  tauto.
+Qed.
+
+Lemma lem_breflect_test_3' : forall b1 b2 b3, eqb (b1 && b2 || b3) (b3 || b2 && b1).
+Proof.
+  breflect.
+  tauto.
+Qed.
+
+Lemma lem_breflect_test_4 :
+  forall b1 b2 b3, (forall n, Nat.eqb n n) ->
+                   (implb (b1 || b2) (Nat.eqb 0 0 && (b2 || b1 || b3))).
+Proof.
+  breflect.
+  tauto.
+Qed.
+
 Lemma lem_bauto_test_1 : forall b1 b2 b3, b1 && b2 || b3 -> b3 || b2 || b1.
 Proof.
-  bauto.
+  sauto.
 Qed.
 
 Lemma lem_bauto_test_2 : forall b1 b2 b3, implb (b1 && b2 || b3) (b3 || b2 || b1).
 Proof.
-  bauto.
+  sauto.
 Qed.
 
 Lemma lem_bauto_test_3 : forall b1 b2 b3, eqb (b1 && b2 || b3) (b3 || b2 && b1).
 Proof.
-  bauto.
+  sauto.
 Qed.
 
 Require Import Nat.
