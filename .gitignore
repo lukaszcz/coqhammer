@@ -18,6 +18,9 @@ Makefile.coq.tactics.conf
 Makefile.coq.plugin
 Makefile.coq.plugin.bak
 Makefile.coq.plugin.conf
+Makefile.coq.mathcomp
+Makefile.coq.mathcomp.bak
+Makefile.coq.mathcomp.conf
 
 *.annot
 *.cmo

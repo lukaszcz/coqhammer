@@ -9,6 +9,9 @@ tactics: Makefile.coq.tactics
 plugin: Makefile.coq.plugin Makefile.coq.plugin.local
 	$(MAKE) -f Makefile.coq.plugin
 
+mathcomp: Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq.mathcomp
+
 install: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq install
 
@@ -17,6 +20,9 @@ install-tactics: Makefile.coq.tactics
 
 install-plugin: Makefile.coq.plugin Makefile.coq.plugin.local
 	$(MAKE) -f Makefile.coq.plugin install
+
+install-mathcomp: Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq.mathcomp install
 
 uninstall: Makefile.coq Makefile.coq.local
 	$(MAKE) -f Makefile.coq uninstall
@@ -27,6 +33,9 @@ uninstall-tactics: Makefile.coq.tactics
 uninstall-plugin: Makefile.coq.plugin Makefile.coq.plugin.local
 	$(MAKE) -f Makefile.coq.plugin uninstall
 
+uninstall-mathcomp: Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq.mathcomp uninstall
+
 Makefile.coq: _CoqProject
 	coq_makefile -f _CoqProject -o Makefile.coq
 
@@ -35,6 +44,9 @@ Makefile.coq.plugin: _CoqProject.plugin
 
 Makefile.coq.tactics: _CoqProject.tactics
 	coq_makefile -f _CoqProject.tactics -o Makefile.coq.tactics
+
+Makefile.coq.mathcomp: _CoqProject.mathcomp
+	coq_makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
 tests:
 	cd tests && $(MAKE) -B
@@ -47,8 +59,9 @@ test-plugin:
 test-tactics:
 	$(MAKE) -B -C tests tactics_test.vo
 
-clean: Makefile.coq Makefile.coq.local
+clean: Makefile.coq Makefile.coq.local Makefile.coq.mathcomp
 	$(MAKE) -f Makefile.coq cleanall
-	rm -f Makefile.coq Makefile.coq.conf Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf
+	-$(MAKE) -f Makefile.coq.mathcomp cleanall
+	rm -f Makefile.coq Makefile.coq.conf Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf
 
-.PHONY: default all tactics plugin install install-tactics install-plugin uninstall uninstall-tactics uninstall-plugin tests quicktest test-plugin test-tactics clean
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests quicktest test-plugin test-tactics clean
