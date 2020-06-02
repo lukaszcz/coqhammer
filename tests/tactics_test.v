@@ -743,8 +743,6 @@ Require Import Relations.
 
 Definition small_step_star := clos_refl_trans (cmd * state) small_step.
 
-Tactics Hint Unfold small_step_star.
-
 Notation "A -->* B" := (small_step_star A B) (at level 80, no associativity).
 
 Lemma lem_small_step_deterministic :
@@ -761,7 +759,7 @@ Proof.
                         forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
                                                (Seq c1 c2, s) -->* (Seq c1' c2, s')) by eauto.
   intros p1 p2 H.
-  induction H; sauto.
+  induction H; sauto unfold: small_step_star.
 Qed.
 
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2) -->* (Skip, s3) ->
@@ -769,7 +767,7 @@ Lemma lem_seq_comp : forall c1 c2 s1 s2 s3, (c1, s1) -->* (Skip, s2) -> (c2, s2)
 Proof.
   intros c1 c2 s1 s2 s3 H1 H2.
   assert ((Seq c1 c2, s1) -->* (Seq Skip c2, s2)) by sauto using lem_star_seq2.
-  scrush.
+  scrush unfold: small_step_star.
 Qed.
 
 Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').
@@ -777,14 +775,14 @@ Proof.
   intros p s' H.
   induction H as [ | | | | | | b c s1 s2 ]; ssimpl.
   - sauto use: lem_seq_comp.
-  - sauto use: rt_trans.
-  - sauto use: rt_trans.
-  - sauto use: rt_trans.
+  - sauto use: rt_trans unfold: small_step_star.
+  - sauto use: rt_trans unfold: small_step_star.
+  - sauto use: rt_trans unfold: small_step_star.
   - assert ((While b c, s1) -->* (Seq c (While b c), s1)) by
         (eapply rt_trans; scrush).
     assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)) by
         sauto use: lem_star_seq2.
-    sauto use: rt_trans.
+    sauto use: rt_trans unfold: small_step_star.
 Qed.
 
 Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==> s.

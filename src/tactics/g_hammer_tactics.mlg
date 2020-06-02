@@ -59,6 +59,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
 | [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
 | [ "exhaustive:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
+| [ "always_apply:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOAlwaysApply b :: sopts }
 | [ ] -> { [SONop] }
 END
 
