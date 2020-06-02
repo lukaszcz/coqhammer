@@ -204,7 +204,7 @@ let map_fold_constr f acc evd t =
   let rec hlp m acc t =
     let fold_list k ac ar =
       let (ac1, lst) =
-        List.fold_left
+        Array.fold_left
           (fun (ac,l) x -> let (ac',x') = hlp k ac x in (ac',x'::l))
           (ac, [])
           ar
@@ -271,10 +271,9 @@ let fold_constr f acc evd t =
   let open Constr in
   let open EConstr in
   let rec hlp m acc t =
-    let fold_list k ac ar =
-      List.fold_left (hlp k) ac ar
+    let fold_arr k ac ar =
+      Array.fold_left (hlp k) ac ar
     in
-    let fold_arr k ac ar = fold_list k ac (Array.to_list ar) in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
@@ -329,10 +328,9 @@ let fold_constr_shallow f acc evd t =
   let open Constr in
   let open EConstr in
   let rec hlp acc t =
-    let fold_list ac ar =
-      List.fold_left hlp ac ar
+    let fold_arr ac ar =
+      Array.fold_left hlp ac ar
     in
-    let fold_arr ac ar = fold_list ac (Array.to_list ar) in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f acc t
@@ -383,7 +381,7 @@ let map_fold_constr_ker f acc t =
   let rec hlp m acc t =
     let fold_list k ac ar =
       let (ac1, lst) =
-        List.fold_left
+        Array.fold_left
           (fun (ac,l) x -> let (ac',x') = hlp k ac x in (ac',x'::l))
           (ac, [])
           ar

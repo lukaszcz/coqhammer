@@ -37,6 +37,7 @@ type s_opts = {
   s_sapply : bool;
   s_depth_cost_model : bool;
   s_limit : int;
+  s_always_apply : bool;
 }
 
 let default_s_opts = {
@@ -65,6 +66,7 @@ let default_s_opts = {
   s_sapply = true;
   s_depth_cost_model = false;
   s_limit = 1000;
+  s_always_apply = false;
 }
 
 let hauto_s_opts =
@@ -678,6 +680,8 @@ let create_hyp_actions opts evd ghead (id, hyp, cost, num_subgoals, (prods, head
       [(0, 1, ActInvert id)]
     else if head = ghead then
       [(cost, num_subgoals, ActApply id)]
+    else if opts.s_always_apply then
+      [(cost + 20, num_subgoals, ActApply id)]
     else
       let open Constr in
       let open EConstr in

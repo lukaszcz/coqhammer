@@ -30,6 +30,7 @@ type s_opts = {
   s_sapply : bool;
   s_depth_cost_model : bool;
   s_limit : int;
+  s_always_apply : bool;
 }
 
 val default_s_opts : s_opts
