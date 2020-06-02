@@ -1,0 +1,169 @@
+DECLARE PLUGIN "hammer_tactics"
+
+{
+open Ltac_plugin
+(* open Tacarg *)
+open Pcoq.Prim
+open Pcoq.Constr
+open Hammer_errors
+open Sauto
+open Tactics_main
+}
+
+(*****************************************************************************)
+(* Argument parsing *)
+
+ARGUMENT EXTEND sauto_bopt
+| [ "on" ] -> { true }
+| [ "off" ] -> { false }
+END
+
+ARGUMENT EXTEND sauto_opts
+| [ "using" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
+| [ "unfolding" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
+| [ "inverting" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
+| [ "with" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "use:" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
+| [ "gen:" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOGen l :: sopts }
+| [ "unfold:" "*" sauto_opts(sopts) ] -> { SOUnfoldAll :: sopts }
+| [ "unfold:" "-" sauto_opts(sopts) ] -> { SOUnfoldNone :: sopts }
+| [ "unfold:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
+| [ "inv:" "*" sauto_opts(sopts) ] -> { SOInvAll :: sopts }
+| [ "inv:" "-" sauto_opts(sopts) ] -> { SOInv [] :: sopts }
+| [ "inv:" "never" sauto_opts(sopts) ] -> { SOInvNone :: sopts }
+| [ "inv:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
+| [ "ctrs:" "*" sauto_opts(sopts) ] -> { SOCtrsAll :: sopts }
+| [ "ctrs:" "-" sauto_opts(sopts) ] -> { SOCtrs [] :: sopts }
+| [ "ctrs:" "never" sauto_opts(sopts) ] -> { SOCtrsNone :: sopts }
+| [ "ctrs:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCtrs l :: sopts }
+| [ "csplit:" "*" sauto_opts(sopts) ] -> { SOCaseSplitAll :: sopts }
+| [ "csplit:" "-" sauto_opts(sopts) ] -> { SOCaseSplit [] :: sopts }
+| [ "csplit:" "never" sauto_opts(sopts) ] -> { SOCaseSplitNone :: sopts }
+| [ "csplit:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCaseSplit l :: sopts }
+| [ "ssplit:" "*" sauto_opts(sopts) ] -> { SOSimpleSplitAll :: sopts }
+| [ "ssplit:" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
+| [ "ssplit:" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
+| [ "ssplit:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
+| [ "rew_db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "forward:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
+| [ "ecsplit:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
+| [ "sinv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
+| [ "einv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerInvert b :: sopts }
+| [ "ered:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerReduce b :: sopts }
+| [ "erew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerRewrite b :: sopts }
+| [ "hrew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOHeuristicRewrite b :: sopts }
+| [ "rew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
+| [ "brefl:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
+| [ "red:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReduce b :: sopts }
+| [ "sapply:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
+| [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
+| [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
+| [ "exhaustive:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
+| [ ] -> { [SONop] }
+END
+
+(*****************************************************************************)
+(* Tactics *)
+
+TACTIC EXTEND Hammer_simple_splitting
+| [ "simple_splitting" ] -> { simple_splitting default_s_opts }
+END
+
+TACTIC EXTEND Hammer_eager_inverting
+| [ "eager_inverting" ] -> { eager_inverting default_s_opts }
+END
+
+TACTIC EXTEND Hammer_sunfolding
+| [ "sunfolding" ] -> { sunfolding true }
+| [ "sunfolding" "weak" ] -> { sunfolding false }
+END
+
+TACTIC EXTEND Hammer_sauto
+| [ "sauto" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts default_s_opts l sauto))
+}
+END
+
+TACTIC EXTEND Hammer_hauto
+| [ "hauto" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts hauto_s_opts l sauto))
+}
+END
+
+TACTIC EXTEND Hammer_qauto
+| [ "qauto" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts qauto_s_opts l qauto))
+}
+END
+
+TACTIC EXTEND Hammer_cauto
+| [ "cauto" sauto_opts(l) ] -> {
+  let opts =
+    { default_s_opts with s_forwarding = false }
+  in
+  try_tactic (fun () -> usolve (interp_opts opts l sauto))
+}
+END
+
+TACTIC EXTEND Hammer_ssimpl
+| [ "ssimpl" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l ssimpl))
+}
+END
+
+TACTIC EXTEND Hammer_csimpl
+| [ "csimpl" sauto_opts(l) ] -> {
+  let opts =
+    { strong_simpl_s_opts with s_forwarding = false }
+  in
+  try_tactic (fun () -> usolve (interp_opts opts l ssimpl))
+}
+END
+
+TACTIC EXTEND Hammer_qsimpl
+| [ "qsimpl" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l qsimpl))
+}
+END
+
+TACTIC EXTEND Hammer_sintuition
+| [ "sintuition" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l sintuition))
+}
+END
+
+TACTIC EXTEND Hammer_scrush
+| [ "scrush" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l scrush))
+}
+END
+
+TACTIC EXTEND Hammer_qcrush
+| [ "qcrush" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l qcrush))
+}
+END
+
+TACTIC EXTEND Hammer_qecrush
+| [ "qecrush" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l qecrush))
+}
+END
+
+TACTIC EXTEND Hammer_sblast
+| [ "sblast" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l sblast))
+}
+END
+
+TACTIC EXTEND Hammer_qblast
+| [ "qblast" sauto_opts(l) ] -> {
+  try_tactic (fun () -> usolve (interp_opts strong_simpl_s_opts l qblast))
+}
+END
+
+TACTIC EXTEND Hammer_sauto_actions
+| [ "sauto_actions" sauto_opts(l) ] -> {
+  try_tactic (fun () -> interp_opts default_s_opts l print_actions)
+}
+END

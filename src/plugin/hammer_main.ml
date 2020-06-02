@@ -1,10 +1,12 @@
 open Hammer_errors
+open Sauto
 
 open Util
 open Names
 open Term
 open Constr
 open Context
+open Proofview.Notations
 
 open Ltac_plugin
 
@@ -198,9 +200,8 @@ let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
 let string_of_goal gl =
   string_of (econstr_to_constr (Proofview.Goal.concl gl))
 
-let save_in_list refl glob_ref env c = refl := glob_ref :: !refl
-
 let my_search env =
+  let save_in_list refl glob_ref env c = refl := glob_ref :: !refl in
   let ans = ref [] in
   let filter glob_ref env typ =
     if !Opt.search_blacklist then
@@ -246,32 +247,43 @@ let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
 
 let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
 
-let to_constr r =
+let globref_to_econstr r =
   match r with
-  | Names.GlobRef.VarRef(v) -> Constr.mkVar v
-  | Names.GlobRef.ConstRef(c) -> Constr.mkConst c
-  | Names.GlobRef.IndRef(i) -> Constr.mkInd i
-  | Names.GlobRef.ConstructRef(cr) -> Constr.mkConstruct cr
+  | Names.GlobRef.VarRef(v) -> EConstr.mkVar v
+  | Names.GlobRef.ConstRef(c) -> EConstr.mkConst c
+  | Names.GlobRef.IndRef(i) -> EConstr.mkInd i
+  | Names.GlobRef.ConstructRef(cr) -> EConstr.mkConstruct cr
 
-let mk_pair env evmap x y =
-  let pr = to_constr (Utils.get_global "Init.Datatypes.pair") in
-  let tx = get_type_of env evmap x in
-  let ty = get_type_of env evmap y in
-  Constr.mkApp (pr, [| tx; ty; x; y |])
+let globref_to_const r =
+  match r with
+  | Names.GlobRef.ConstRef(c) -> c
+  | _ -> failwith "globref: not a constant"
 
-let rec mk_lst env sigma lst =
-  match lst with
-  | [] -> to_constr (Utils.get_global "Tactics.default")
-  | [h] -> h
-  | h :: t -> mk_pair env sigma (mk_lst env sigma t) h
+let globref_to_inductive r =
+  match r with
+  | Names.GlobRef.IndRef(i) -> i
+  | _ -> failwith "globref: not an inductive type"
 
-let mk_lst_str pref lst =
+let globref_econstr_name sigma x =
+  let glob =
+    let open Constr in
+    let open EConstr in
+    match kind sigma x with
+    | Var v -> Names.GlobRef.VarRef(v)
+    | Const (c, _) -> Names.GlobRef.ConstRef(c)
+    | Ind (i, _) -> Names.GlobRef.IndRef(i)
+    | Construct (cr, _) -> Names.GlobRef.ConstructRef(cr)
+    | _ -> failwith "no globref"
+  in
+  Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob))
+
+let mk_lst_str at pref lst =
   let get_name x =
-    "@" ^ (Hhlib.drop_prefix (Hh_term.get_hhterm_name (hhterm_of x)) "Top.")
+    at ^ Hhlib.drop_prefix x "Top."
   in
   match lst with
   | [] -> ""
-  | h :: t -> pref ^ " (" ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h) ^ ")"
+  | h :: t -> pref ^ " " ^ List.fold_right (fun x a -> get_name x ^ ", " ^ a) t (get_name h)
 
 let get_tac_args env sigma info =
   let deps = info.Provers.deps in
@@ -288,20 +300,16 @@ let get_tac_args env sigma info =
           Names.GlobRef.VarRef(Id.of_string s)
       end
   in
-  let mk_lst = mk_lst env sigma in
   let (deps, defs, inverts) = (map_locate deps, map_locate defs, map_locate inverts) in
   let filter_vars = List.filter (fun r -> match r with Names.GlobRef.VarRef(_) -> true | _ -> false) in
   let filter_nonvars = List.filter (fun r -> match r with Names.GlobRef.VarRef(_) -> false | _ -> true) in
   let (vars, deps) = (filter_vars deps, filter_nonvars deps) in
-  let map_to_constr = List.map to_constr in
-  let (vars, deps, defs, inverts) =
-    (map_to_constr vars, map_to_constr deps, map_to_constr defs, map_to_constr inverts)
+  let (deps, defs, inverts) =
+    (List.map globref_to_econstr deps,
+     List.map globref_to_const defs,
+     List.map globref_to_inductive inverts)
   in
-  let (tvars, tdeps, tdefs, tinverts) =
-    (mk_lst vars, mk_lst deps, mk_lst defs, mk_lst inverts)
-  in
-  let args = [to_ltac_val tdeps; to_ltac_val tdefs; to_ltac_val tinverts] in
-  (deps, defs, inverts, args)
+  (deps, defs, inverts)
 
 let check_goal_prop gl =
   let env = Proofview.Goal.env gl in
@@ -313,14 +321,39 @@ let check_goal_prop gl =
 
 (***************************************************************************************)
 
-let run_tactics args msg_success msg_fail =
-  let tactics = [
-    [ ("rhauto", "hauto"); ("reauto", "xeauto"); ("rscrush", "scrush"); ("rqcrush", "qcrush") ];
-    [ ("rleauto", "leauto"); ("rqprover", "qprover"); ("rsyelles", "syelles"); ("rsreconstr", "sreconstr") ];
-    [ ("rqblast", "qblast"); ("rqcrush2", "qcrush2"); ("rsblast", "sblast"); ("rhcrush", "hcrush") ]
-  ]
+let run_tactics deps defs inverts msg_success msg_fail =
+  let mkopts opts =
+    let opts =
+      if defs <> [] then { opts with s_unfolding = SSome defs } else opts
+    in
+    if inverts <> [] then { opts with s_inversions = SSome inverts } else opts
   in
-  let ltacs = List.map (List.map (fun tac -> (Utils.ltac_eval (fst tac) args, snd tac))) tactics
+  let use_deps =
+    Tactics.generalize deps <*>
+      Tacticals.New.tclDO (List.length deps) (Tactics.intro_move None Logic.MoveFirst)
+  in
+  let rhauto =
+    usolve (use_deps <*> sauto (mkopts hauto_s_opts))
+  and rqauto =
+    usolve (use_deps <*> qauto (mkopts qauto_s_opts))
+  and rbauto =
+    usolve (use_deps <*> sauto (mkopts { hauto_s_opts with s_reflect = true;
+                                                           s_eager_reducing = false}))
+  and rscrush =
+    usolve (use_deps <*> scrush (mkopts strong_simpl_s_opts))
+  and rqcrush =
+    usolve (use_deps <*> qcrush (mkopts strong_simpl_s_opts))
+  and rqblast =
+    usolve (use_deps <*> qblast (mkopts strong_simpl_s_opts))
+  and rqecrush =
+    usolve (use_deps <*> qecrush (mkopts strong_simpl_s_opts))
+  and rsblast =
+    usolve (use_deps <*> sblast (mkopts strong_simpl_s_opts))
+  in
+  let tactics = [
+    [ (rhauto, "hauto"); (rqauto, "qauto"); (rqcrush, "qcrush"); (rscrush, "scrush"); (rbauto, "hauto brefl: on erew: off") ];
+    [ (rqblast, "qblast"); (rqecrush, "qecrush"); (rsblast, "sblast") ]
+  ]
   in
   let rec hlp lst =
     match lst with
@@ -341,7 +374,7 @@ let run_tactics args msg_success msg_fail =
              hlp ts
          end
   in
-  hlp ltacs
+  hlp tactics
 
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
@@ -446,47 +479,6 @@ let try_sauto () =
 
 (***************************************************************************************)
 
-let try_fun (f : unit -> 'a) (g : unit -> 'a) =
-  try
-    f ()
-  with
-  | HammerError(msg) ->
-     Msg.error ("Hammer error: " ^ msg);
-     g ()
-  | HammerFailure(msg) ->
-     Msg.error ("Hammer failed: " ^ msg);
-     g ()
-  | Failure s ->
-     Msg.error ("CoqHammer bug: " ^ s);
-     Msg.error "Please report.";
-     g ()
-  | Sys.Break ->
-     raise Sys.Break
-  | CErrors.UserError(_, p) ->
-     Msg.error ("Coq error:");
-     Feedback.msg_notice p;
-     g ()
-  | e ->
-     Msg.error ("CoqHammer bug: please report: " ^ Printexc.to_string e);
-     g ()
-
-let try_tactic (f : unit -> unit Proofview.tactic) =
-  try_fun f (fun () -> Proofview.tclZERO (Failure "Hammer failed"))
-
-let try_goal_tactic f =
-  Proofview.Goal.enter
-    begin fun gl ->
-      try_tactic (fun () -> f gl)
-    end
-
-let try_goal_tactic_nofail f =
-  Proofview.Goal.enter
-    begin fun gl ->
-      try_fun (fun () -> f gl) (fun () -> Proofview.tclUNIT ())
-    end
-
-(***************************************************************************************)
-
 let hammer_tac () =
   Proofview.Goal.enter
     begin fun gl ->
@@ -502,15 +494,20 @@ let hammer_tac () =
             if !Opt.debug_mode then
               Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
             let info = do_predict hyps defs goal in
-            let (deps, defs, inverts, args) = get_tac_args env sigma info in
+            let (deps, defs, inverts) = get_tac_args env sigma info in
+            (* TODO: user-readable names (without extra qualifiers) *)
+            let sdeps = List.map (globref_econstr_name sigma) deps
+            and sdefs = List.map Constant.to_string defs
+            and sinverts = List.map Utils.get_ind_name inverts
+            in
             Msg.info ("Reconstructing the proof...");
-            run_tactics args
+            run_tactics deps defs inverts
               begin fun tac ->
                 Msg.info ("Tactic " ^ tac ^ " succeeded.");
                 Msg.info ("Replace the hammer tactic with:\n\t" ^
-                             tac ^ mk_lst_str " using" deps ^
-                             mk_lst_str " unfolding" defs ^
-                             mk_lst_str " inverting" inverts ^ ".")
+                             tac ^ mk_lst_str "@" " use:" sdeps ^
+                             mk_lst_str "" " unfold:" sdefs ^
+                             mk_lst_str "" " inv:" sinverts ^ ".")
               end
               begin fun () ->
                 Msg.error ("Hammer failed: proof reconstruction failed")
@@ -705,8 +702,8 @@ let hammer_hook_tac prefix name =
                                begin fun () ->
                                  Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
                                  let info = extract fname in
-                                 let (_, _, _, args) = get_tac_args env sigma info in
-                                 run_tactics args
+                                 let (deps, defs, inverts) = get_tac_args env sigma info in
+                                 run_tactics deps defs inverts
                                    begin fun tac ->
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
@@ -720,7 +717,7 @@ let hammer_hook_tac prefix name =
                                      exit 1
                                    end
                                end
-                               (fun () -> exit 1)
+                               (fun p -> Feedback.msg_notice p; exit 1)
                            with _ ->
                              exit 1
                          end
@@ -765,7 +762,7 @@ let hammer_hook_tac prefix name =
                             exit 1
                           end
                       end
-                      (fun () -> exit 1)
+                      (fun p -> Feedback.msg_notice p; exit 1)
                   with _ ->
                     exit 1
                 else
