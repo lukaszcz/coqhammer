@@ -58,6 +58,7 @@ Lemma leb_compare2 : forall m n : nat,
                       (PeanoNat.Nat.compare n m = Lt \/ PeanoNat.Nat.compare n m = Eq).
 Proof.
   assert (forall c : Datatypes.comparison, c = Eq \/ c = Lt \/ c = Gt) by sauto inverting Datatypes.comparison.
+  (* Reconstr.yelles can do it! Possible reason: no matching on head *)
   hammer.
 Qed.
 

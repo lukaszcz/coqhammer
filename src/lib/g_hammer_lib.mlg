@@ -7,6 +7,7 @@ open Stdarg
 open Tacarg
 
 module Utils = Hhutils
+module Lpo = Hhlpo
 }
 
 TACTIC EXTEND Hammer_isAtom
