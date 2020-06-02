@@ -15,6 +15,9 @@ let to_constr r =
   | IndRef(i) -> EConstr.mkInd i
   | ConstructRef(cr) -> EConstr.mkConstruct cr
 
+let get_global_from_id id =
+  Nametab.locate (Libnames.qualid_of_ident id)
+
 let get_global s =
   Nametab.locate (Libnames.qualid_of_string s)
 
@@ -32,10 +35,30 @@ let get_inductive s =
   | IndRef(i) -> i
   | _ -> failwith "get_inductive: not an inductive type"
 
+let get_inductive_from_id id =
+  match get_global_from_id id with
+  | IndRef(i) -> i
+  | _ -> failwith "not an inductive type"
+
+let get_inductive_from_qualid q =
+  match Nametab.locate q with
+  | IndRef(i) -> i
+  | _ -> failwith "not an inductive type"
+
 let get_const s =
   match get_global s with
   | ConstRef(c) -> c
-  | _ -> failwith "get_const: not a constant"
+  | _ -> failwith "not a constant"
+
+let get_const_from_id id =
+  match get_global_from_id id with
+  | ConstRef(c) -> c
+  | _ -> failwith "not a constant"
+
+let get_const_from_qualid q =
+  match Nametab.locate q with
+  | ConstRef(c) -> c
+  | _ -> failwith "not a constant"
 
 let get_ind_name ind =
   Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr (IndRef ind)))

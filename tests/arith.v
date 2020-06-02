@@ -23,10 +23,6 @@ Lemma lem_3 : le 2 3.
   hammer.
 Qed.
 
-Lemma lem_4 : le 3 10.
-  hammer.
-Qed.
-
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
   hammer.

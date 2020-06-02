@@ -3,19 +3,20 @@
 -Q src/tactics Hammer.Tactics
 -I src/lib
 -I src/tactics
+src/lib/hammer_errors.ml
 src/lib/hhutils.mli
 src/lib/hhutils.ml
 src/lib/hhlib.ml
-src/lib/lpo.mli
-src/lib/lpo.ml
+src/lib/hhlpo.mli
+src/lib/hhlpo.ml
 src/lib/partac.ml
 src/lib/g_hammer_lib.mlg
 src/lib/hammer_lib.mllib
 src/tactics/sauto.mli
 src/tactics/sauto.ml
 src/tactics/tactics_main.ml
-src/tactics/g_tactics.mlg
-src/tactics/hammer_tactics.mlpack
+src/tactics/g_hammer_tactics.mlg
+src/tactics/hammer_tactics.mllib
 theories/Tactics/Reconstr.v
 theories/Tactics/Reflect.v
 theories/Tactics/Tactics.v

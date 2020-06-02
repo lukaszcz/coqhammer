@@ -5,7 +5,7 @@ Coercion is_true : bool >-> Sortclass.
 
 Require Export Bool.
 Require Import Setoid.
-Require Import Psatz.
+Require Import Lia.
 Require Import BinInt BinNat PeanoNat.
 Require Import ssreflect ssrbool.
 
@@ -206,7 +206,7 @@ Tactic Notation "breify" "in" hyp(H) :=
 Tactic Notation "breify" "in" "*" :=
   breify;
   repeat match goal with
-         | [H : _ |- _ ] => breify in H
+         | [H : _ |- _ ] => rewrite_strat topdown hints breif_hints in H
          end.
 
 (* Boolean simplification *)

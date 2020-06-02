@@ -10,9 +10,19 @@ val get_constr : string -> EConstr.t
 
 val get_global : string -> GlobRef.t
 
+val get_global_from_id : Id.t -> GlobRef.t
+
 val get_inductive : string -> inductive
 
+val get_inductive_from_id : Id.t -> inductive
+
+val get_inductive_from_qualid : Libnames.qualid -> inductive
+
 val get_const : string -> Constant.t
+
+val get_const_from_id : Id.t -> Constant.t
+
+val get_const_from_qualid : Libnames.qualid -> Constant.t
 
 val get_ind_name : inductive -> string
 

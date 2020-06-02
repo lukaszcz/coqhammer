@@ -1,161 +1,201 @@
+open Proofview.Notations
+open Hammer_errors
 open Sauto
 
 module Utils = Hhutils
 
-let default_sauto_tree_limit = 1000
-let default_sauto_depth_limit = 4
+type sopt_t =
+  SONop
+| SOUse of Constrexpr.constr_expr list
+| SOGen of Constrexpr.constr_expr list
+| SOUnfold of Libnames.qualid list
+| SOUnfoldAll
+| SOUnfoldNone
+| SOInv of Libnames.qualid list
+| SOInvAll
+| SOInvNone
+| SOCtrs of Libnames.qualid list
+| SOCtrsAll
+| SOCtrsNone
+| SOCaseSplit of Libnames.qualid list
+| SOCaseSplitAll
+| SOCaseSplitNone
+| SOSimpleSplit of Libnames.qualid list
+| SOSimpleSplitAll
+| SOSimpleSplitNone
+| SORewBases of string list
+| SORewBasesAll
+| SORewBasesNone
+| SOForward of bool
+| SOEagerCaseSplit of bool
+| SOSimpleInvert of bool
+| SOEagerInvert of bool
+| SOEagerReduce of bool
+| SOEagerRewrite of bool
+| SOHeuristicRewrite of bool
+| SORewrite of bool
+| SOReflect of bool
+| SOReduce of bool
+| SOSapply of bool
+| SOLimit of int
+| SODepth of int
+| SOExhaustive of bool
 
-let get_opt opt def = match opt with Some x -> x | None -> def
+let const_of_qualid q =
+  catch_errors (fun () -> Utils.get_const_from_qualid q)
+    (fun _ ->
+      raise (HammerTacticError ("not a constant: " ^ Libnames.string_of_qualid q)))
 
-let rec destruct_constr t =
-  let open Constr in
-  let open EConstr in
-  match kind Evd.empty t with
-  | App(i, args) ->
-     begin
-       match kind Evd.empty i with
-       | Construct((ind, 1), _) when ind = Utils.get_inductive "Init.Datatypes.prod" ->
-          begin
-            match Array.to_list args with
-            | [_; _; t1; t2] ->
-               destruct_constr t1 @ destruct_constr t2
-            | _ -> [t]
-          end
-       | _ -> [t]
+let inductive_of_qualid q =
+  catch_errors (fun () -> Utils.get_inductive_from_qualid q)
+    (fun _ ->
+      raise (HammerTacticError ("not an inductive type: " ^ Libnames.string_of_qualid q)))
+
+let sopt_append sc lst2 =
+  match sc with
+  | SSome lst1 -> SSome (lst1 @ lst2)
+  | _ -> SSome lst2
+
+let use_constrs lems =
+  Tactics.generalize lems <*>
+    Tacticals.New.tclDO (List.length lems) (Tactics.intro_move None Logic.MoveFirst)
+
+let gen_constrs lems =
+  Tactics.generalize lems
+
+let interp_use use ret opts lst env sigma =
+  let (sigma, lst) =
+    List.fold_left
+      begin fun (sigma, acc) t ->
+        let (sigma', t') = Utils.intern_constr env sigma t in
+        (sigma', t' :: acc)
+      end
+      (sigma, [])
+      lst
+  in
+  let (lems, ctrs) =
+    List.fold_left
+      begin fun (lems, ctrs) t ->
+        let open Constr in
+        let open EConstr in
+        match kind sigma t with
+        | Ind(ind, _) -> (lems, ind :: ctrs)
+        | _ -> (t :: lems, ctrs)
+      end
+      ([], [])
+      lst
+  in
+  let opts =
+    if ctrs <> [] then
+      { opts with
+        s_constructors = sopt_append opts.s_constructors ctrs }
+    else
+      opts
+  in
+  use lems <*> ret opts
+
+let interp_opt ret opt opts =
+  match opt with
+  | SONop -> ret opts
+  | SOUse lst ->
+     Proofview.Goal.enter begin fun gl ->
+       let sigma = Proofview.Goal.sigma gl in
+       let env = Proofview.Goal.env gl in
+       interp_use use_constrs ret opts lst env sigma
      end
-  | _ -> [t]
+  | SOGen lst ->
+     Proofview.Goal.enter begin fun gl ->
+       let sigma = Proofview.Goal.sigma gl in
+       let env = Proofview.Goal.env gl in
+       interp_use gen_constrs ret opts lst env sigma
+     end
+  | SOUnfold lst ->
+     let lst = List.map const_of_qualid lst in
+     ret { opts with s_unfolding = sopt_append opts.s_unfolding lst }
+  | SOUnfoldAll ->
+     ret { opts with s_unfolding = SAll }
+  | SOUnfoldNone ->
+     ret { opts with s_unfolding = SNone }
+  | SOInv lst ->
+     let lst = List.map inductive_of_qualid lst in
+     ret { opts with s_inversions = sopt_append opts.s_inversions lst }
+  | SOInvAll ->
+     ret { opts with s_inversions = SAll }
+  | SOInvNone ->
+     ret { opts with s_inversions = SNone }
+  | SOCtrs lst ->
+     let lst = List.map inductive_of_qualid lst in
+     ret { opts with s_constructors = sopt_append opts.s_constructors lst }
+  | SOCtrsAll ->
+     ret { opts with s_constructors = SAll }
+  | SOCtrsNone ->
+     ret { opts with s_constructors = SNone }
+  | SOCaseSplit lst ->
+     let lst = List.map inductive_of_qualid lst in
+     ret { opts with s_case_splits = sopt_append opts.s_case_splits lst }
+  | SOCaseSplitAll ->
+     ret { opts with s_case_splits = SAll }
+  | SOCaseSplitNone ->
+     ret { opts with s_case_splits = SNone }
+  | SOSimpleSplit lst ->
+     let lst = List.map inductive_of_qualid lst in
+     ret { opts with s_simple_splits = sopt_append opts.s_simple_splits lst }
+  | SOSimpleSplitAll ->
+     ret { opts with s_simple_splits = SAll }
+  | SOSimpleSplitNone ->
+     ret { opts with s_simple_splits = SNone }
+  | SORewBases lst ->
+     ret { opts with s_rew_bases = opts.s_rew_bases @ lst }
+  | SORewBasesAll -> (* TODO *)
+     ret { opts with s_rew_bases = [] }
+  | SORewBasesNone ->
+     ret { opts with s_rew_bases = ["nohints"] }
+  | SOForward b ->
+     ret { opts with s_forwarding = b }
+  | SOEagerCaseSplit b ->
+     ret { opts with s_eager_case_splitting = b }
+  | SOSimpleInvert b ->
+     ret { opts with s_simple_inverting = b }
+  | SOEagerInvert b ->
+     ret { opts with s_eager_inverting = b }
+  | SOEagerReduce b ->
+     ret { opts with s_eager_reducing = b }
+  | SOEagerRewrite b ->
+     ret { opts with s_eager_rewriting = b }
+  | SOHeuristicRewrite b ->
+     ret { opts with s_heuristic_rewriting = b }
+  | SORewrite b ->
+     if b then
+       ret { opts with s_rewriting = true }
+     else
+       ret { opts with s_rewriting = false;
+                       s_eager_rewriting = false;
+                       s_heuristic_rewriting = false }
+  | SOReflect b ->
+     ret { opts with s_reflect = true }
+  | SOReduce b ->
+     if b then
+       ret { opts with s_reducing = true }
+     else
+       ret { opts with s_reducing = false; s_eager_reducing = false }
+  | SOSapply b ->
+     ret { opts with s_sapply = true }
+  | SOLimit n ->
+     ret { opts with s_limit = n; s_depth_cost_model = false }
+  | SODepth n ->
+     ret { opts with s_limit = n; s_depth_cost_model = true }
+  | SOExhaustive b ->
+     ret { opts with s_exhaustive = b }
 
-let to_const t =
-  let open Constr in
-  let open EConstr in
-  match kind Evd.empty t with
-  | Const(c, _) -> c
-  | _ -> Utils.get_const "Tactics.default" (* a hack; may happen with Let's *)
-
-let to_inductive t =
-  let open Constr in
-  let open EConstr in
-  match kind Evd.empty t with
-  | Ind(ind, _) -> ind
-  | _ -> failwith "sauto: not an inductive type"
-
-let filter_default =
-  let cdefault = Utils.get_constr "Tactics.default" in
-  List.filter (fun c -> c <> cdefault)
-
-let filter_noninductive =
-  let cdefault = Utils.get_constr "Tactics.default" in
-  let chints = Utils.get_constr "Tactics.hints" in
-  let cnone = Utils.get_constr "Tactics.none" in
-  let cnohints = Utils.get_constr "Tactics.nohints" in
-  let clogic = Utils.get_constr "Tactics.logic" in
-  List.filter
-    begin fun t ->
-      let open Constr in
-      let open EConstr in
-      match kind Evd.empty t with
-      | Ind(ind, _) -> true
-      | _ -> t = cdefault || t = chints || t = cnone || t = cnohints || t = clogic
-    end
-
-let get_s_opts ropts bases unfoldings inverting splits ctrs =
-  let cdefault = Utils.get_constr "Tactics.default" in
-  let chints = Utils.get_constr "Tactics.hints" in
-  let cnone = Utils.get_constr "Tactics.none" in
-  let cnohints = Utils.get_constr "Tactics.nohints" in
-  let clogic = Utils.get_constr "Tactics.logic" in
-  let get_s_opts_field logic_lst conv opts lst default =
+let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
+    : unit Proofview.tactic =
+  let rec interp lst (opts : s_opts) : unit Proofview.tactic =
     match lst with
-    | [] -> default
-    | [h] when h = cdefault -> default
-    | [h] when h = chints -> SSome []
-    | [h] when h = cnone -> SNone
-    | [h] when h = clogic -> SNoHints logic_lst
-    | _ ->
-       if List.mem cnone lst then
-         SNone
-       else
-         begin
-           let b_nohints = List.mem cnohints lst in
-           let b_hints = List.mem chints lst in
-           let b_logic = List.mem clogic lst in
-           let lst = List.filter (fun c -> c <> cnohints && c <> chints && c <> cdefault && c <> clogic) lst in
-           let lst = List.map conv lst in
-           let lst = if b_logic then logic_lst @ lst else lst in
-           if b_nohints then
-             SNoHints lst
-           else if b_hints then
-             SSome lst
-           else
-             match default with
-             | SNoHints _ | SNone -> SNoHints lst
-             | _ -> SSome lst
-         end
+    | [] -> ret opts
+    | opt :: lst' ->
+       let ret opts =
+         Proofview.tclUNIT opts >>= try_bind_tactic (interp lst')
+       in
+       interp_opt ret opt opts
   in
-  let get_unfoldings opts =
-    match unfoldings with
-    | None -> opts
-    | Some t ->
-       { opts with s_unfolding =
-           get_s_opts_field logic_constants to_const opts
-             (destruct_constr t) default_s_opts.s_unfolding }
-  in
-  let get_invertings opts =
-    match inverting with
-    | None -> opts
-    | Some t ->
-       { opts with s_inversions =
-           get_s_opts_field logic_inductives to_inductive opts
-             (destruct_constr t) default_s_opts.s_inversions }
-  in
-  let get_splittings opts =
-    match splits with
-    | None -> opts
-    | Some t ->
-       { opts with s_case_splits =
-           get_s_opts_field logic_inductives to_inductive opts
-             (destruct_constr t) default_s_opts.s_case_splits }
-  in
-  let get_ctrs opts =
-    match ctrs with
-    | None -> opts
-    | Some t ->
-       { opts with s_constructors =
-           get_s_opts_field logic_inductives to_inductive opts
-             (filter_noninductive (destruct_constr t)) default_s_opts.s_constructors }
-  in
-  let get_bases opts =
-    match bases with
-    | None -> opts
-    | Some b -> { opts with s_rew_bases = b }
-  in
-  let get_ropt opts ropt =
-    match ropt with
-    | "no_forward" -> { opts with s_forwarding = false }
-    | "no_eager_case_split" -> { opts with s_eager_case_splitting = false }
-    | "no_simple_split" -> { opts with s_simple_splits = SNone }
-    | "no_simple_invert" -> { opts with s_simple_inverting = false }
-    | "no_eager_invert" -> { opts with s_eager_inverting = false }
-    | "no_eager_reduction" -> { opts with s_eager_reducing = false }
-    | "no_eager_rewrite" -> { opts with s_eager_rewriting = false }
-    | "no_heuristic_rewrite" -> { opts with s_heuristic_rewriting = false }
-    | "no_rewrite" ->
-       { opts with s_rewriting = false; s_eager_rewriting = false; s_heuristic_rewriting = false }
-    | "no_bnat_reflection" -> { opts with s_bnat_reflect = false }
-    | "no_reflection" -> { opts with s_reflect = false }
-    | "no_reduction" -> { opts with s_reducing = false; s_eager_reducing = false }
-    | "reflection" -> { opts with s_reflect = true; s_bnat_reflect = true }
-    | "presimplify" -> { opts with s_presimplify = true }
-    | "no_sapply" -> { opts with s_sapply = false }
-    | "depth_cost_model" -> { opts with s_depth_cost_model = true }
-    | "tree_cost_model" -> { opts with s_depth_cost_model = false }
-    | "exhaustive" -> { opts with s_exhaustive = true }
-    | "default" -> opts
-    | _ -> failwith ("sauto: unknown option `" ^ ropt ^ "'")
-  in
-  List.fold_left
-    get_ropt
-    (get_bases (get_unfoldings (get_invertings (get_splittings (get_ctrs default_s_opts)))))
-    ropts
-
-let csimpl opts = ssimpl { opts with s_forwarding = false }
+  interp lst opts

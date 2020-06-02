@@ -2,10 +2,11 @@
 
 open Names
 
-type 'a soption = SNone | SAll | SSome of 'a | SNoHints of 'a
+type 'a soption = SNone | SAll | SSome of 'a
 
 type s_opts = {
   s_exhaustive : bool;
+  s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
@@ -26,12 +27,15 @@ type s_opts = {
   s_rewriting : bool;
   s_heuristic_rewriting : bool;
   s_aggressive_unfolding : bool;
-  s_presimplify : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;
+  s_limit : int;
 }
 
 val default_s_opts : s_opts
+val hauto_s_opts : s_opts
+val qauto_s_opts : s_opts
+val strong_simpl_s_opts : s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic
@@ -39,11 +43,16 @@ val eager_inverting : s_opts -> unit Proofview.tactic
 val sunfold : bool (* aggressive? *) -> Constant.t -> unit Proofview.tactic
 val sunfolding : bool (* aggressive? *) -> unit Proofview.tactic
 
-(* sauto opts cost_limit *)
-val sauto : s_opts -> int -> unit Proofview.tactic
+val sauto : s_opts -> unit Proofview.tactic
+val qauto : s_opts -> unit Proofview.tactic
 val sintuition : s_opts -> unit Proofview.tactic
 val ssimpl : s_opts -> unit Proofview.tactic
 val qsimpl : s_opts -> unit Proofview.tactic
+val scrush : s_opts -> unit Proofview.tactic
+val qcrush : s_opts -> unit Proofview.tactic
+val qecrush : s_opts -> unit Proofview.tactic
+val sblast : s_opts -> unit Proofview.tactic
+val qblast : s_opts -> unit Proofview.tactic
 
 val logic_constants : Constant.t list
 val logic_inductives : inductive list
@@ -55,3 +64,6 @@ val add_case_split_hint : inductive -> unit
 val add_inversion_hint : inductive -> unit
 
 val print_actions : s_opts -> unit Proofview.tactic
+
+val unshelve : 'a Proofview.tactic -> unit Proofview.tactic
+val usolve : 'a Proofview.tactic -> unit Proofview.tactic

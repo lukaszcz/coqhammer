@@ -1,7 +1,5 @@
 module StringSet = Set.Make(String)
 
-let (@$) f x = f x
-
 let comp f g x = f (g x)
 
 let flip f x y = f y x

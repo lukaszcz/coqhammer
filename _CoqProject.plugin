@@ -1,7 +1,6 @@
 -Q theories/Plugin Hammer.Plugin
 -Q src/plugin Hammer.Plugin
 -I src/plugin
-src/plugin/hammer_errors.ml
 src/plugin/hh_term.ml
 src/plugin/msg.ml
 src/plugin/timeout.ml

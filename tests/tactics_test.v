@@ -32,11 +32,7 @@ Qed.
 Require Import Arith.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
-  hauto using (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
-Qed.
-
-Lemma lem_odd_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
-  lauto using (@Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r).
+  hauto use: @Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
@@ -484,7 +480,7 @@ Fixpoint occurs (v : nat) (t : Term) : bool :=
 
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t <-> HasVar v t.
 Proof.
-  induction t; ssimpl; breflect in *; ssimpl.
+  induction t; ssimpl brefl: on.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
@@ -602,7 +598,7 @@ Fixpoint asimp (e : aexpr) :=
 
 Lemma lem_aval_asimp : forall s e, aval s (asimp e) = aval s e.
 Proof.
-  induction e; sauto using lem_aval_plus.
+  induction e; sauto use: lem_aval_plus.
 Qed.
 
 Inductive bexpr :=
@@ -666,7 +662,7 @@ Qed.
 
 Lemma lem_bval_bsimp : forall s e, bval s (bsimp e) = bval s e.
 Proof.
-  induction e; sauto using (lem_bval_not, lem_bval_and, lem_bval_less).
+  induction e; sauto use: lem_bval_not, lem_bval_and, lem_bval_less.
 Qed.
 
 Inductive cmd :=
@@ -707,7 +703,7 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  sauto unfolding equiv_cmd. (* 0.46s *)
+  sauto unfold: equiv_cmd. (* 0.46s *)
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
@@ -715,12 +711,12 @@ Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' 
 Proof.
   enough (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s') by eauto.
   intros p s' H.
-  induction H; sauto unfolding equiv_cmd.
+  induction H; sauto unfold: equiv_cmd.
 Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b c ~~ While b c'.
 Proof.
-  hauto using lem_while_cong_aux unfolding equiv_cmd.
+  hauto use: lem_while_cong_aux unfold: equiv_cmd.
 Qed.
 
 Lemma lem_big_step_deterministic :
@@ -780,29 +776,29 @@ Lemma lem_big_to_small : forall p s', p ==> s' -> p -->* (Skip, s').
 Proof.
   intros p s' H.
   induction H as [ | | | | | | b c s1 s2 ]; ssimpl.
-  - sauto using (@lem_seq_comp).
-  - sauto using rt_trans.
-  - sauto using rt_trans.
-  - sauto using rt_trans.
+  - sauto use: lem_seq_comp.
+  - sauto use: rt_trans.
+  - sauto use: rt_trans.
+  - sauto use: rt_trans.
   - assert ((While b c, s1) -->* (Seq c (While b c), s1)) by
         (eapply rt_trans; scrush).
     assert ((Seq c (While b c), s1) -->* (Seq Skip (While b c), s2)) by
-        sauto using lem_star_seq2.
-    sauto using rt_trans.
+        sauto use: lem_star_seq2.
+    sauto use: rt_trans.
 Qed.
 
 Lemma lem_small_to_big_aux : forall p p', p --> p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
-  induction H; ssimpl.
-  hauto using lem_unfold_loop unfolding equiv_cmd.
+  induction H; qsimpl.
+  hauto use: lem_unfold_loop unfold: equiv_cmd.
 Qed.
 
 Lemma lem_small_to_big_aux_2 : forall p p', p -->* p' -> forall s, p' ==> s -> p ==> s.
 Proof.
   intros p p' H.
   induction H; ssimpl.
-  hauto using (@lem_small_to_big_aux).
+  hauto use: lem_small_to_big_aux.
 Qed.
 
 Lemma lem_small_to_big : forall p s, p -->* (Skip, s) -> p ==> s.
@@ -811,10 +807,10 @@ Proof.
   intros p p' H.
   induction H; ssimpl.
   - sauto.
-  - hauto using (@lem_small_to_big_aux_2) unfolding (@small_step_star).
+  - hauto use: lem_small_to_big_aux_2 unfold: small_step_star.
 Qed.
 
 Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
-  hauto using (@lem_small_to_big, @lem_big_to_small).
+  hauto use: lem_small_to_big, lem_big_to_small.
 Qed.
