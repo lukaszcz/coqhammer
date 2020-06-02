@@ -40,6 +40,7 @@ type sopt_t =
 | SOLimit of int
 | SODepth of int
 | SOExhaustive of bool
+| SOAlwaysApply of bool
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -186,6 +187,8 @@ let interp_opt ret opt opts =
      ret { opts with s_limit = n; s_depth_cost_model = true }
   | SOExhaustive b ->
      ret { opts with s_exhaustive = b }
+  | SOAlwaysApply b ->
+     ret { opts with s_always_apply = b }
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =
