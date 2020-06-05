@@ -17,11 +17,11 @@ databases. At present, however, best results are achieved for statements
 "close to" first-order logic and lemmas from the standard library or
 similar.
 
-Since version 1.2 the CoqHammer distribution includes automated
-reasoning tactics based on a proof search procedure for the Calculus
+Since version 1.2, the CoqHammer distribution includes automated
+reasoning tactics based on a general proof search procedure for the Calculus
 of Inductive Constructions. These tactics are used in CoqHammer's
 reconstruction backend, but they may also be installed and used
-separately. See the "Tactics" section below.
+separately. See the [Tactics](#Tactics) section below.
 
 Requirements
 ------------
