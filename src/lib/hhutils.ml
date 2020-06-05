@@ -183,18 +183,41 @@ let rec take_all_prods evd t =
   | Prod (na, ty, body) -> (na, ty) :: take_all_prods evd body
   | _ -> []
 
-let destruct_app evd t =
-  let open Constr in
-  let open EConstr in
-  match kind evd t with
-  | App (h, args) -> (h, Array.to_list args)
-  | _ -> (t, [])
+let destruct_app = EConstr.decompose_app
 
 let destruct_prod evd t =
   let prods = take_all_prods evd t
   and (h, args) = destruct_app evd (drop_all_prods evd t)
   in
   (prods, h, args)
+
+let destruct_app_red evd t =
+  let open Constr in
+  let open EConstr in
+  let head0 =
+    match kind evd t with
+    | App (h, _) -> h
+    | _ -> t
+  in
+  match kind evd head0 with
+  | Const _ ->
+     let (head, args) =
+       try
+         destruct_app evd (Tacred.try_red_product (Global.env ()) evd t)
+       with Not_found | Tacred.Redelimination ->
+         destruct_app evd t
+     in
+     (head0, head, args)
+  | _ ->
+     let (head, args) = destruct_app evd t in
+     (head0, head, args)
+
+let destruct_prod_red evd t =
+  let t = Termops.strip_outer_cast evd t in
+  let prods = take_all_prods evd t
+  and (h0, h, args) = destruct_app_red evd (drop_all_prods evd t)
+  in
+  (prods, h0, h, args)
 
 (***************************************************************************************)
 
@@ -506,6 +529,10 @@ let is_product evd t =
 let get_app_head evd t = match destruct_app evd t with (h, _) -> h
 
 let get_head evd t = match destruct_prod evd t with (_, h, _) -> h
+
+let get_app_head_red evd t = match destruct_app_red evd t with (_, h, _) -> h
+
+let get_head_red evd t = match destruct_prod_red evd t with (_, _, h, _) -> h
 
 let print_constr evd t =
   Feedback.msg_notice (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))
