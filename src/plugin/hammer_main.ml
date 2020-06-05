@@ -471,7 +471,7 @@ let try_fun (f : unit -> 'a) (g : unit -> 'a) =
      g ()
 
 let try_tactic (f : unit -> unit Proofview.tactic) =
-  try_fun f (fun () -> Proofview.tclZERO (Failure "Hammer failed"))
+  try_fun f (fun () -> Tacticals.New.tclZEROMSG (Pp.str "Hammer failed"))
 
 let try_goal_tactic f =
   Proofview.Goal.enter

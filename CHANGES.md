@@ -1,3 +1,11 @@
+CoqHammer v. 1.2.1
+==================
+
+Coq versions compatibility: 8.10, 8.11.
+
+This minor release fixes the "Anomaly" error upon `hammer` tactic
+failure.
+
 CoqHammer v. 1.2
 ================
 
