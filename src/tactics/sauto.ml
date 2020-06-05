@@ -366,7 +366,7 @@ let is_simple_ind ind = (* TODO: memoization? *)
 let is_simple_split opts evd t =
   let open Constr in
   let open EConstr in
-  let head = Utils.get_head evd t in
+  let head = Utils.get_head_red evd t in
   match kind evd head with
   | Ind (ind, _) when is_simple_ind ind ->
      in_sopt_list opts.s_hints !simple_split_hints ind opts.s_simple_splits
@@ -408,7 +408,7 @@ let is_inversion opts evd ind args =
 let is_eager_inversion opts evd t =
   let open Constr in
   let open EConstr in
-  let (head, args) = Utils.destruct_app evd t in
+  let (_, head, args) = Utils.destruct_app_red evd t in
   match kind evd head with
   | Ind (ind, _) when is_eager_ind ind ->
      is_inversion opts evd ind args
@@ -532,7 +532,7 @@ let eager_inverting opts =
   | _ ->
      do_when
        begin fun evd hyp ->
-         let (head, args) = Utils.destruct_app evd hyp in
+         let (_, head, args) = Utils.destruct_app_red evd hyp in
          let open Constr in
          let open EConstr in
          match kind evd head with
@@ -548,7 +548,7 @@ let simple_inverting opts =
   | _ ->
      repeat_when
        begin fun evd hyp ->
-         let (head, args) = Utils.destruct_app evd hyp in
+         let (_, head, args) = Utils.destruct_app_red evd hyp in
          let open Constr in
          let open EConstr in
          match kind evd head with
@@ -589,7 +589,7 @@ let simplify_concl opts =
 (*****************************************************************************************)
 
 let eval_hyp evd (id, hyp) =
-  let (prods, head, args) = Utils.destruct_prod evd hyp in
+  let (prods, head0, head, args) = Utils.destruct_prod_red evd hyp in
   let app = EConstr.mkApp (head, Array.of_list args) in
   let n = List.length prods in
   let rec go t m m' k =
@@ -607,7 +607,7 @@ let eval_hyp evd (id, hyp) =
     | _ -> (m, m')
   in
   let (num_subgoals, num_dangling_evars) = go hyp 0 0 n in
-  (id, hyp, n + num_subgoals * 10 + num_dangling_evars * 10, num_subgoals, (prods, head, args))
+  (id, hyp, n + num_subgoals * 10 + num_dangling_evars * 10, num_subgoals, (prods, head0, head, args))
 
 let hyp_cost evd hyp =
   match eval_hyp evd (None, hyp) with
@@ -617,7 +617,7 @@ let hyp_nsubgoals evd hyp =
   match eval_hyp evd (None, hyp) with
   | (_, _, _, num_subgoals, _) -> num_subgoals
 
-let constrs_cost ind =
+let constrs_cost ind = (* TODO: memoization? *)
   let evd = Evd.empty in
   let cstrs = Utils.get_ind_constrs ind in
   if cstrs = [] then
@@ -625,7 +625,7 @@ let constrs_cost ind =
   else
     10 + (List.fold_left (fun acc x -> acc + (hyp_cost evd (EConstr.of_constr x))) 0 cstrs) / List.length cstrs
 
-let constrs_nsubgoals ind =
+let constrs_nsubgoals ind = (* TODO: memoization *)
   let evd = Evd.empty in
   let cstrs = Utils.get_ind_constrs ind in
   List.fold_left (fun acc x -> max acc (hyp_nsubgoals evd (EConstr.of_constr x))) 0 cstrs
@@ -674,11 +674,12 @@ let create_case_actions opts evd t acc =
     | _ -> acc
   end acc evd t
 
-let create_hyp_actions opts evd ghead (id, hyp, cost, num_subgoals, (prods, head, args)) =
+let create_hyp_actions opts evd ghead0 ghead
+      (id, hyp, cost, num_subgoals, (prods, head0, head, args)) =
   let acts =
     if Utils.is_False evd head && prods = [] then
       [(0, 1, ActInvert id)]
-    else if head = ghead then
+    else if head = ghead || head0 = ghead0 || head0 = ghead then
       [(cost, num_subgoals, ActApply id)]
     else if opts.s_always_apply then
       [(cost + 20, num_subgoals, ActApply id)]
@@ -709,7 +710,7 @@ let create_hyp_actions opts evd ghead (id, hyp, cost, num_subgoals, (prods, head
   else
     acts
 
-let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head, args)) =
+let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head0, head, args)) =
   let acts =
     let open Constr in
     let open EConstr in
@@ -782,7 +783,7 @@ let create_actions extra opts evd goal hyps =
     | Prod _ -> (30, 1, ActIntro) :: actions
     | _ -> actions
   in
-  let ghead = Utils.get_head evd goal in
+  let (_, ghead0, ghead, _) = Utils.destruct_prod_red evd goal in
   let actions =
     let open Constr in
     let open EConstr in
@@ -790,6 +791,13 @@ let create_actions extra opts evd goal hyps =
     | Ind (ind, _) when
            in_sopt_list opts.s_hints !constructor_hints ind opts.s_constructors ->
        (constrs_cost ind, constrs_nsubgoals ind, ActConstructor) :: actions
+    | _ ->
+       actions
+  in
+  let actions =
+    let open Constr in
+    let open EConstr in
+    match kind evd ghead0 with
     | Const (c, _) when
            in_sopt_list opts.s_hints !unfolding_hints c opts.s_unfolding ->
        (60, 1, ActUnfold c) :: actions
@@ -797,7 +805,7 @@ let create_actions extra opts evd goal hyps =
        actions
   in
   let actions =
-    List.concat (List.map (create_hyp_actions opts evd ghead) hyps) @ actions
+    List.concat (List.map (create_hyp_actions opts evd ghead0 ghead) hyps) @ actions
   in
   List.stable_sort (fun (x, _, _) (y, _, _) -> Pervasives.compare x y) actions
 

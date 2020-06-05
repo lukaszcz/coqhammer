@@ -62,8 +62,13 @@ val take_all_prods : Evd.evar_map -> EConstr.t -> (Name.t Context.binder_annot *
 
 val destruct_app : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t list (* args *)
 
+val destruct_app_red : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t list (* arg after red *)
+
 val destruct_prod : Evd.evar_map -> EConstr.t ->
   (Name.t Context.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t list (* args *)
+
+val destruct_prod_red : Evd.evar_map -> EConstr.t ->
+  (Name.t Context.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t list (* args after red *)
 
 val map_fold_constr : (int -> 'a -> EConstr.t -> 'a * EConstr.t) ->
                       'a -> Evd.evar_map -> EConstr.t ->
@@ -101,6 +106,10 @@ val is_product : Evd.evar_map -> EConstr.t -> bool
 val get_app_head : Evd.evar_map -> EConstr.t -> EConstr.t
 
 val get_head : Evd.evar_map -> EConstr.t -> EConstr.t
+
+val get_app_head_red : Evd.evar_map -> EConstr.t -> EConstr.t
+
+val get_head_red : Evd.evar_map -> EConstr.t -> EConstr.t
 
 val print_constr : Evd.evar_map -> EConstr.t -> unit
 

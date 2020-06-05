@@ -29,6 +29,20 @@ Lemma lem_test_6 : (forall P : nat -> Prop, P 0 -> P (S 0) ->
   qblast.
 Qed.
 
+Definition ff := False.
+
+Lemma lem_test_def : (forall P : Prop, P \/ (P -> ff) -> ((P -> ff) -> False) -> P).
+Proof.
+  hauto.
+Qed.
+
+Definition feq (x y z : nat) : Prop := x + y + z = x * y + z.
+
+Lemma lem_sym_feq : (forall x y z, feq x y z) -> forall x y z, x * y + z = x + y + z.
+Proof.
+  sauto.
+Qed.
+
 Require Import Arith.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
@@ -59,7 +73,7 @@ Require Import ZArith.
 
 Lemma le_mul : forall m n k : Z, (k > 0 -> k * m <= k * n -> m <= n)%Z.
 Proof.
-  hauto using (Coq.ZArith.BinInt.Z.mul_comm, Coq.ZArith.BinInt.Z.mul_le_mono_pos_r, Coq.ZArith.BinInt.Z.gt_lt_iff).
+  hauto use: Coq.ZArith.BinInt.Z.mul_comm, Coq.ZArith.BinInt.Z.mul_le_mono_pos_r, Coq.ZArith.BinInt.Z.gt_lt_iff.
 Qed.
 
 Lemma lem_bnat_test_1 : forall x y, Nat.eqb x y = true -> y = x.
@@ -145,7 +159,7 @@ Lemma lem_sets_1_1 :
   (forall x, P x \/ Q x) /\ (forall x y, x = y /\ P x -> R y) /\
   (forall x y, x = y /\ Q x -> R y) -> forall x, R x.
 Proof.
-  sauto inverting list.
+  sauto inv: list.
 Qed.
 
 Variable Sum : U -> U -> U.
@@ -218,12 +232,12 @@ Qed.
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
 Proof.
-  hauto inverting list.
+  hauto inv: list.
 Qed.
 
 Lemma lem_lst4 : forall {A} (l : list A), l <> nil -> length (tl l) < length l.
 Proof.
-  hauto inverting list.
+  hauto inv: list.
 Qed.
 
 Lemma lem_lst5 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
@@ -514,7 +528,7 @@ Qed.
 Lemma vars_abstr2 :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr2 v t)).
 Proof.
-  induction t; scrush. (* 3.5 s *)
+  induction t; scrush. (* 2.4s *)
 Qed.
 
 Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr2 v t)).
