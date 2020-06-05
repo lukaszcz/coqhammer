@@ -1,6 +1,6 @@
 CoqHammer 1.2.1 for Coq 8.11
 
-[![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=v1.2-coq8.11)](https://travis-ci.org/lukaszcz/coqhammer/builds)
+[![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=v1.2.1-coq8.11)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
 CoqHammer is a general-purpose automated reasoning hammer tool for
 Coq. It combines learning from previous proofs with the translation of
