@@ -17,11 +17,11 @@ databases. At present, however, best results are achieved for statements
 "close to" first-order logic and lemmas from the standard library or
 similar.
 
-Since version 1.2 the CoqHammer distribution includes automated
-reasoning tactics based on a proof search procedure for the Calculus
+Since version 1.2, the CoqHammer distribution includes automated
+reasoning tactics based on a general proof search procedure for the Calculus
 of Inductive Constructions. These tactics are used in CoqHammer's
 reconstruction backend, but they may also be installed and used
-separately. See the "Tactics" section below.
+separately. See the [Tactics](#Tactics) section below.
 
 Requirements
 ------------
@@ -42,7 +42,7 @@ To instead build and install CoqHammer manually, run `make` followed
 by `make install`. Then optionally run `make tests` to check if
 everything works. Some of the tests may fail if your machine is not
 fast enough or you do not have all provers installed. More information
-about provers is provided below.
+about provers is [provided below](#installation-of-first-order-provers).
 
 If you are only interested in the CoqHammer's reconstruction tactics,
 they can be installed standalone (without the hammer plugin) via OPAM
@@ -67,7 +67,8 @@ version obtained directly from https://proofgeneral.github.io.
 Usage
 -----
 
-In `coqtop` or `coqide`, first load the hammer plugin:
+In your Coq file editor or toplevel (e.g., `coqide` or `coqtop`),
+first load the hammer plugin:
 
 ```coq
 From Hammer Require Import Hammer.
@@ -112,10 +113,18 @@ the TPTP frontend located in `examples/tptp` in the Z3 source package.
 Tactics
 -------
 
-The `Tactics` module contains the reconstruction tactics which may
-also be used directly in your proof scripts. In contrast to the
-`hammer` tactic they do not invoke external ATPs and they do not use
-any lemmas except explicitly provided ones.
+The `Tactics` module contains the reconstruction tactics, which may
+also be used directly in your proof scripts by first including:
+
+```coq
+From Hammer Require Import Tactics.
+```
+
+In contrast to the `hammer` tactic, these tactics do not invoke
+external ATPs and do not use any lemmas except explicitly provided
+ones. If all uses of `hammer` in a file have been replaced with
+reconstruction tactics, it is recommended to ensure that only the
+`Tactics` module is loaded and not the hammer plugin.
 
 The most useful tactics are:
 
