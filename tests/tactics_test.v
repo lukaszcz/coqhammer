@@ -45,6 +45,11 @@ Qed.
 
 Require Import Arith.
 
+Lemma lem_test_csplit : forall n, if n =? n then True else False.
+Proof.
+  sauto csplit: bool.
+Qed.
+
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
   hauto use: @Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r.
 Qed.

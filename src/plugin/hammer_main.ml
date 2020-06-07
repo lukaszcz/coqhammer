@@ -244,8 +244,6 @@ let get_defs env sigma : Hh_term.hhdef list =
 let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
   Timeout.ptimeout tm (Utils.ltac_eval tac args)
 
-let to_ltac_val c = Tacinterp.Value.of_constr (EConstr.of_constr c)
-
 let globref_to_econstr r =
   match r with
   | VarRef(v) -> Constr.mkVar v
