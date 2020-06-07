@@ -270,8 +270,7 @@ let sunfold b_aggressive c =
   else
     Tacticals.New.tclIDTAC
 
-(* TODO: use sdestruct from Tactics.v *)
-let sdestruct t = Tactics.destruct false None t None None
+let sdestruct t = Utils.ltac_eval "Tactics.sdestruct" [Tacinterp.Value.of_constr t]
 
 (* TODO: port gunfolding from Reconstr.v *)
 let unfolding opts =
