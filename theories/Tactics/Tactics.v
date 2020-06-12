@@ -893,6 +893,7 @@ Definition logic := tt.
 Ltac use t := let H := fresh "H" in generalize t; intro H; move H at top; try simp_hyp H.
 
 Ltac congr_tac := congruence 400.
+Ltac f_equal_tac := f_equal.
 
 Declare ML Module "hammer_tactics".
 
