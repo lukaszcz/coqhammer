@@ -116,7 +116,7 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActRewrite of Id.t |
         ActInvert of Id.t | ActUnfold of Constant.t | ActCaseUnfold of Constant.t |
-            ActDestruct of EConstr.t | ActConstructor | ActIntro | ActReduce
+            ActDestruct of EConstr.t | ActConstructor | ActIntro | ActReduce | ActFEqual
 
 let action_to_string act =
   match act with
@@ -131,6 +131,7 @@ let action_to_string act =
   | ActConstructor -> "constructor"
   | ActIntro -> "intro"
   | ActReduce -> "reduce"
+  | ActFEqual -> "f_equal"
 
 let print_search_actions actions =
   Hhlib.oiter print_string (fun (cost, br, act) ->
@@ -177,6 +178,7 @@ let dsolve_tac = Utils.ltac_apply "Tactics.dsolve" []
 let qforwarding_tac = Utils.ltac_apply "Tactics.qforwarding" []
 let instering_tac = Utils.ltac_apply "Tactics.instering" []
 let einstering_tac = Utils.ltac_apply "Tactics.einstering" []
+let f_equal_tac = Utils.ltac_apply "Tactics.f_equal_tac" []
 
 (*****************************************************************************************)
 
@@ -422,11 +424,19 @@ let is_equality evd t =
   | Ind(ind, _) when ind = Utils.get_inductive "Init.Logic.eq" -> true
   | _ -> false
 
-let is_unorientable_equality evd head args =
-  is_equality evd head &&
+let with_equality evd head args default f =
+  if is_equality evd head then
     match Hhlib.drop (List.length args - 2) args with
-    | [t1; t2] -> not (Lpo.lpo evd t1 t2 || Lpo.lpo evd t2 t1)
-    | _ -> false
+    | [t1; t2] -> f t1 t2
+    | _ -> default
+  else
+    default
+
+let is_unorientable_equality evd head args =
+  with_equality evd head args false
+    begin fun t1 t2 ->
+      not (Lpo.lpo evd t1 t2 || Lpo.lpo evd t2 t1)
+    end
 
 (*****************************************************************************************)
 
@@ -692,9 +702,9 @@ let create_hyp_actions opts evd ghead0 ghead
          []
   in
   if opts.s_rewriting && is_equality evd head then
-    begin
-      match Hhlib.drop (List.length args - 2) args with
-      | [t1; t2] ->
+    (* using "with_equality" here slows things down considerably *)
+    match Hhlib.drop (List.length args - 2) args with
+    | [t1; t2] ->
          if Lpo.lpo evd t1 t2 then
            (cost + 5, num_subgoals, ActRewriteLR id) :: acts
          else if Lpo.lpo evd t2 t1 then
@@ -703,9 +713,7 @@ let create_hyp_actions opts evd ghead0 ghead
            (cost - num_subgoals * 5, 1, ActRewrite id) :: acts
          else
            acts
-      | _ ->
-         acts
-    end
+    | _ -> acts
   else
     acts
 
@@ -771,6 +779,7 @@ let create_extra_actions opts evd goal hyps =
   in
   actions
 
+(* result: (cost, num_subgoals, action) list *)
 let create_actions extra opts evd goal hyps =
   let actions =
     if extra then create_extra_actions opts evd goal hyps else []
@@ -782,7 +791,7 @@ let create_actions extra opts evd goal hyps =
     | Prod _ -> (30, 1, ActIntro) :: actions
     | _ -> actions
   in
-  let (_, ghead0, ghead, _) = Utils.destruct_prod_red evd goal in
+  let (_, ghead0, ghead, gargs) = Utils.destruct_prod_red evd goal in
   let actions =
     let open Constr in
     let open EConstr in
@@ -792,6 +801,20 @@ let create_actions extra opts evd goal hyps =
        (constrs_cost ind, constrs_nsubgoals ind, ActConstructor) :: actions
     | _ ->
        actions
+  in
+  let actions =
+    with_equality evd ghead0 gargs actions
+      begin fun t1 t2 ->
+        let open Constr in
+        let open EConstr in
+        match kind evd t1, kind evd t2 with
+        | (App (head1, args1), App (head2, args2))
+             when head1 = head2 && Array.length args1 = Array.length args2 ->
+           let len = Array.length args1 in
+           (len * 10, len, ActFEqual) :: actions
+        | _ ->
+           actions
+      end
   in
   let actions =
     let open Constr in
@@ -953,6 +976,8 @@ and apply_actions tacs opts n actions rtrace visited =
             cont (Proofview.tclBIND
                     (Tacticals.New.tclPROGRESS cbn_in_all_tac)
                     (fun _ -> start_search tacs opts n')) acts
+         | ActFEqual ->
+            continue n' f_equal_tac acts
        end
   | [] ->
      final_tac
