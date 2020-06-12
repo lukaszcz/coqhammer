@@ -12,41 +12,20 @@ From Hammer Require Import Tactics.Reflect.
 Create HintDb shints discriminated.
 
 Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : shints.
+Hint Rewrite -> Arith.PeanoNat.Nat.add_1_r : shints.
 Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : shints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : shints.
 Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.add_assoc : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_assoc : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_l : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_l : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.sub_add_distr : shints.
-Hint Rewrite <- Arith.PeanoNat.Nat.leb_antisym : shints.
-Hint Rewrite <- Arith.PeanoNat.Nat.ltb_antisym : shints.
 Hint Rewrite -> ZArith.BinInt.Z.add_0_r : shints.
+Hint Rewrite -> ZArith.BinInt.Z.add_1_r : shints.
 Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : shints.
 Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : shints.
 Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.add_assoc : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_assoc : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_l : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_l : shints.
-Hint Rewrite -> ZArith.BinInt.Z.sub_add_distr : shints.
-Hint Rewrite -> List.in_app_iff : shints.
-Hint Rewrite -> List.in_map_iff : shints.
-Hint Rewrite -> List.in_inv : shints.
 Hint Rewrite <- List.app_assoc : shints.
 Hint Rewrite -> Bool.orb_true_r : shints.
-Hint Rewrite -> Bool.orb_true_l : shints.
 Hint Rewrite -> Bool.orb_false_r : shints.
-Hint Rewrite -> Bool.orb_false_l : shints.
 Hint Rewrite -> Bool.andb_true_r : shints.
-Hint Rewrite -> Bool.andb_true_l : shints.
 Hint Rewrite -> Bool.andb_false_r : shints.
-Hint Rewrite -> Bool.andb_false_l : shints.
 
 Ltac notHyp P :=
   match goal with
@@ -401,7 +380,7 @@ Ltac isplit :=
   end.
 
 Ltac trysolve :=
-  eauto 2 with shints arith; try solve [ constructor ];
+  eauto 2 with shints; try solve [ constructor ];
   match goal with
   | [ |- ?t = ?u ] => try solve [ try subst; congruence 8 |
                                   match type of t with nat => lia | ZArith.BinInt.Z => lia end ]
