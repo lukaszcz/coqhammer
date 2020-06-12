@@ -44,7 +44,8 @@ ARGUMENT EXTEND sauto_opts
 | [ "ssplit:" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
 | [ "ssplit:" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
 | [ "ssplit:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
-| [ "rew_db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "rew" "db:" "-" sauto_opts(sopts) ] -> { SORewBases ["nohints"] :: sopts }
+| [ "rew" "db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
 | [ "forward:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
 | [ "ecsplit:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
 | [ "sinv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
