@@ -59,7 +59,10 @@ let sopt_append sc lst2 =
 
 let use_constrs lems =
   Tactics.generalize lems <*>
-    Tacticals.New.tclDO (List.length lems) (Tactics.intro_move None Logic.MoveFirst)
+    Tacticals.New.tclDO (List.length lems)
+      (Proofview.tclORELSE
+         (Tactics.intro_move None Logic.MoveFirst)
+         (fun _ -> Tactics.intro))
 
 let gen_constrs lems =
   Tactics.generalize lems
