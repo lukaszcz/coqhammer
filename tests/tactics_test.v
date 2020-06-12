@@ -70,7 +70,7 @@ Qed.
 Lemma lem_even_or_odd :
   forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
 Proof.
-  induction n; sintuition.
+  induction n; sintuition ered: off.
   exists (S p); strivial.
 Qed.
 
@@ -226,13 +226,13 @@ Lemma lem_lst :
     In x (l1 ++ l2) -> (forall y, In y l1 -> P y) -> (forall y, In y l2 -> P y) ->
     P x.
 Proof.
-  sauto.
+  sauto use: List.in_app_iff.
 Qed.
 
 Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
                                                    In z (y1 :: y2 :: l ++ y3 :: l').
 Proof.
-  sauto.
+  qauto use: List.in_app_iff.
 Qed.
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
@@ -438,18 +438,18 @@ Qed.
 Lemma transl_size :
   forall (t : Term), size (transl t) <= 3 ^ (size t).
 Proof.
-  induction t; qsimpl.
+  induction t; sintuition.
   - assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
     { eauto using PeanoNat.Nat.add_le_mono. }
     assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
     { auto with zarith. }
-    hauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
+    hauto use: Nat.le_trans, lem_pow_3.
   - assert (size (abstr n (transl t)) <= 3 * size (transl t)).
     { eauto using abstr_size with zarith. }
     assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
     { eauto using Nat.le_trans with zarith. }
     assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto using Nat.add_1_r.
-    scrush.
+    qauto.
 Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
