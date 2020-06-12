@@ -187,7 +187,7 @@ let autorewrite b_all bases =
     if List.mem "nohints" bases then
       List.filter (fun s -> s <> "nohints") bases
     else
-      ["shints"; "list"] @ (List.filter (fun s -> s <> "shints" && s <> "list") bases)
+      ["shints"] @ (List.filter (fun s -> s <> "shints") bases)
   in
   if bases = [] then
     Proofview.tclUNIT ()
@@ -987,9 +987,9 @@ and apply_actions tacs opts n actions rtrace visited =
 let sintuition opts =
   Tactics.intros <*>
     opt opts.s_reflect bool_reflect_tac <*>
-    simp_hyps_tac <*> ssubst_tac <*> Tacticals.New.tclTRY opts.s_simpl_tac <*>
+    simp_hyps_tac <*> subst_simpl opts <*> Tacticals.New.tclTRY opts.s_simpl_tac <*>
     Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
-                               (Tactics.intros <*> simp_hyps_tac <*> ssubst_tac) <*>
+                               (Tactics.intros <*> simp_hyps_tac <*> subst_simpl opts) <*>
                                Tacticals.New.tclTRY opts.s_simpl_tac)
 
 let ssimpl opts =
@@ -1008,7 +1008,7 @@ let ssimpl opts =
 
 let qsimpl opts =
   let tac =
-    (sintuition opts <*> subst_simpl opts) <~>
+    sintuition opts <~>
       opt opts.s_bnat_reflect bnat_reflect_tac <~>
       opt opts.s_reflect bool_reflect_tac <~>
       autorewriting true opts <~>
