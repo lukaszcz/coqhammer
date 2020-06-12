@@ -36,6 +36,9 @@ let rec const_gt c1 c2 =
   if not (Hashtbl.mem lpo_cache (c1, c2)) then
     begin
       let b =
+        if Declareops.is_opaque (Global.lookup_constant c1) then
+          false
+        else
         match Global.body_of_constant c1 with
         | Some b ->
            let consts =
