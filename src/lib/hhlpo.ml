@@ -36,32 +36,35 @@ let rec const_gt c1 c2 =
   if not (Hashtbl.mem lpo_cache (c1, c2)) then
     begin
       let b =
-        match Global.body_of_constant Library.indirect_accessor c1 with
-        | Some (b, _, _) ->
-           let consts =
-             Utils.fold_constr_ker
-               begin fun _ acc t ->
+        if Declareops.is_opaque (Global.lookup_constant c1) then
+          false
+        else
+          match Global.body_of_constant Library.indirect_accessor c1 with
+          | Some (b, _, _) ->
+             let consts =
+               Utils.fold_constr_ker
+                 begin fun _ acc t ->
                  let open Constr in
                  match kind t with
                  | Const(c, _) when c <> c1 -> c :: acc
                  | _ -> acc
-               end
-               []
-               b
-           in
-           let rec go lst =
-             match lst with
-             | c :: lst' ->
-                if c = c2 || const_gt c c2 then
-                  true
-                else
-                  go lst'
-             | [] ->
-                false
-           in
-           go consts
-        | None ->
-           false
+                 end
+                 []
+                 b
+             in
+             let rec go lst =
+               match lst with
+               | c :: lst' ->
+                  if c = c2 || const_gt c c2 then
+                    true
+                  else
+                    go lst'
+               | [] ->
+                  false
+             in
+             go consts
+          | None ->
+             false
       in
       Hashtbl.add lpo_cache (c1, c2) b
     end;
