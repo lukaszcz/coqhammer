@@ -86,8 +86,8 @@ Research problems
    much experimentation trying to figure out the right way of doing
    this.
 
-7. Try breaking up the axiom for matches (on variables?) into one
-   axiom for each constructor. E.g. instead of translating
+7. Try breaking up the axiom for matches into one axiom for each
+   constructor. E.g. instead of translating
 
    * match x with 0 => t1 | S y => t2 end
 
@@ -113,8 +113,7 @@ Research problems
    definition of c1). This ordering, lifted to lexicographic path
    order, seems to work well in the reconstruction tactics. See
    src/lib/lpo.ml and the implementation of rewriting actions in
-   src/tactics/sauto.ml. Extend this idea, try to make the ordering
-   total, try different orderings.
+   src/tactics/sauto.ml. Extend this idea, try different orderings.
 
 9. Properly handle functions which use dependent types in a
    non-trivial way. Properly handle case analysis for small
@@ -177,5 +176,4 @@ Technical improvements
 ----------------------
 
 1. Remove dependence on "grep".
-2. Properly handle argument parsing in the tactics.
-3. Make the plugin work on Windows.
+2. Make the plugin work on Windows.
