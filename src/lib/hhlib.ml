@@ -121,3 +121,19 @@ let rec sfold f sep = function
     [] -> ""
   | [e] -> f e
   | h :: t -> f h ^ sep ^ sfold f sep t
+
+let kmemoize (key : 'a -> 'k) (f : 'a -> 'b) =
+  let cache = Hashtbl.create 128 in
+  begin fun x ->
+    let k = key x in
+    try
+      Hashtbl.find cache k
+    with Not_found ->
+      begin
+        let y = f x in
+        Hashtbl.add cache k y;
+        y
+      end
+  end
+
+let memoize f = kmemoize (fun x -> x) f
