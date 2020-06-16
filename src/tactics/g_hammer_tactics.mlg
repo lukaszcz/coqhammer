@@ -59,6 +59,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "sapply:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
 | [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
 | [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
+| [ "exh:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
 | [ "exhaustive:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
 | [ "always_apply:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOAlwaysApply b :: sopts }
 | [ ] -> { [SONop] }
@@ -82,19 +83,19 @@ END
 
 TACTIC EXTEND Hammer_sauto
 | [ "sauto" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts default_s_opts l sauto))
+  try_tactic_msg (fun () -> usolve (interp_opts default_s_opts l sauto)) "sauto failed"
 }
 END
 
 TACTIC EXTEND Hammer_hauto
 | [ "hauto" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts hauto_s_opts l sauto))
+  try_tactic_msg (fun () -> usolve (interp_opts hauto_s_opts l sauto)) "hauto failed"
 }
 END
 
 TACTIC EXTEND Hammer_qauto
 | [ "qauto" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts qauto_s_opts l qauto))
+  try_tactic_msg (fun () -> usolve (interp_opts qauto_s_opts l qauto)) "qauto failed"
 }
 END
 
@@ -103,7 +104,7 @@ TACTIC EXTEND Hammer_cauto
   let opts =
     { default_s_opts with s_forwarding = false }
   in
-  try_tactic (fun () -> usolve (interp_opts opts l sauto))
+  try_tactic_msg (fun () -> usolve (interp_opts opts l sauto)) "cauto failed"
 }
 END
 
