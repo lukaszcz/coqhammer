@@ -1,3 +1,5 @@
+(* Author: Evan Marzion, modified by Lukasz Czajka *)
+
 open Coqterms
 open Hhlib
 open Coq_transl_opts
