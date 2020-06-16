@@ -182,6 +182,12 @@ let f_equal_tac = Utils.ltac_apply "Tactics.f_equal_tac" []
 
 (*****************************************************************************************)
 
+(* TODO: speed up by using proper hashing/equality functions (see
+   Names.MutInd, Names.KerName, Names.KerPair) *)
+let memoize_ind = Hhlib.memoize
+
+(*****************************************************************************************)
+
 let autorewrite b_all bases =
   let bases =
     if List.mem "nohints" bases then
@@ -348,21 +354,25 @@ let has_dangling_evars evd t =
 
 (* check if the inductive type is non-recursive with at most two
    constructors *)
-let is_eager_ind ind = (* TODO: memoization? *)
-  let cstrs = Utils.get_ind_constrs ind in
-  match cstrs with
-  | [] -> true
-  | [ t ] -> is_constr_non_recursive ind t
-  | [ t1; t2 ] -> is_constr_non_recursive ind t1 && is_constr_non_recursive ind t2
-  | _ -> false
+let is_eager_ind =
+  memoize_ind begin fun ind ->
+    let cstrs = Utils.get_ind_constrs ind in
+    match cstrs with
+    | [] -> true
+    | [ t ] -> is_constr_non_recursive ind t
+    | [ t1; t2 ] -> is_constr_non_recursive ind t1 && is_constr_non_recursive ind t2
+    | _ -> false
+  end
 
 (* check if the inductive type is non-recursive with exactly one
    constructor and no dangling evars *)
-let is_simple_ind ind = (* TODO: memoization? *)
-  let cstrs = Utils.get_ind_constrs ind in
-  match cstrs with
-  | [ t ] -> is_constr_non_recursive ind t && not (has_dangling_evars Evd.empty (EConstr.of_constr t))
-  | _ -> false
+let is_simple_ind =
+  memoize_ind begin fun ind ->
+    let cstrs = Utils.get_ind_constrs ind in
+    match cstrs with
+    | [ t ] -> is_constr_non_recursive ind t && not (has_dangling_evars Evd.empty (EConstr.of_constr t))
+    | _ -> false
+  end
 
 let is_simple_split opts evd t =
   let open Constr in
@@ -626,18 +636,22 @@ let hyp_nsubgoals evd hyp =
   match eval_hyp evd (None, hyp) with
   | (_, _, _, num_subgoals, _) -> num_subgoals
 
-let constrs_cost ind = (* TODO: memoization? *)
-  let evd = Evd.empty in
-  let cstrs = Utils.get_ind_constrs ind in
-  if cstrs = [] then
-    10
-  else
-    10 + (List.fold_left (fun acc x -> acc + (hyp_cost evd (EConstr.of_constr x))) 0 cstrs) / List.length cstrs
+let constrs_cost =
+  memoize_ind begin fun ind ->
+    let evd = Evd.empty in
+    let cstrs = Utils.get_ind_constrs ind in
+    if cstrs = [] then
+      10
+    else
+      10 + (List.fold_left (fun acc x -> acc + (hyp_cost evd (EConstr.of_constr x))) 0 cstrs) / List.length cstrs
+  end
 
-let constrs_nsubgoals ind = (* TODO: memoization *)
-  let evd = Evd.empty in
-  let cstrs = Utils.get_ind_constrs ind in
-  List.fold_left (fun acc x -> max acc (hyp_nsubgoals evd (EConstr.of_constr x))) 0 cstrs
+let constrs_nsubgoals =
+  memoize_ind begin fun ind ->
+    let evd = Evd.empty in
+    let cstrs = Utils.get_ind_constrs ind in
+    List.fold_left (fun acc x -> max acc (hyp_nsubgoals evd (EConstr.of_constr x))) 0 cstrs
+  end
 
 let rec has_arg_dep evd lst =
   let open Constr in
@@ -652,24 +666,21 @@ let rec has_arg_dep evd lst =
      end
 
 let eval_ind_inversion =
-  let cache = Hashtbl.create 128 in
-  fun evd ind ->
-    try
-      Hashtbl.find cache ind
-    with Not_found ->
-      let ctrs = Utils.get_ind_constrs ind in
-      let num_ctrs = List.length ctrs in
-      let num_deps =
-        List.length (List.filter
-                       begin fun t ->
-                         match Utils.destruct_prod evd (EConstr.of_constr t) with
-                         | (_, _, args) -> not (has_arg_dep evd args)
-                       end
-                       ctrs)
-      in
-      let num_deps = if num_deps = num_ctrs then num_deps - 1 else num_deps in
-      Hashtbl.add cache ind (num_ctrs, num_deps);
-      (num_ctrs, num_deps)
+  memoize_ind begin fun ind ->
+    let evd = Evd.empty in
+    let ctrs = Utils.get_ind_constrs ind in
+    let num_ctrs = List.length ctrs in
+    let num_deps =
+      List.length (List.filter
+                     begin fun t ->
+                       match Utils.destruct_prod evd (EConstr.of_constr t) with
+                       | (_, _, args) -> not (has_arg_dep evd args)
+                     end
+                     ctrs)
+    in
+    let num_deps = if num_deps = num_ctrs then num_deps - 1 else num_deps in
+    (num_ctrs, num_deps)
+  end
 
 let create_case_actions opts evd t acc =
   Utils.fold_constr_shallow begin fun acc t ->
@@ -723,7 +734,7 @@ let create_extra_hyp_actions opts evd (id, hyp, cost, num_subgoals, (prods, head
     let open EConstr in
     match kind evd head with
     | Ind (ind, _) when is_inversion opts evd ind args ->
-       let (num_ctrs, num_deps) = eval_ind_inversion evd ind in
+       let (num_ctrs, num_deps) = eval_ind_inversion ind in
        let b_arg_dep = num_ctrs <= 1 || has_arg_dep evd args in
        [(cost + 40 + if b_arg_dep then num_deps * 10 else num_ctrs * 10),
         (if b_arg_dep then num_subgoals + max num_deps 1 else num_subgoals + num_ctrs),
