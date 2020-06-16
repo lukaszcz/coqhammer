@@ -9,7 +9,8 @@ Main authors
 
 * Cezary Kaliszyk
 
-    * Machine-learning component: premise selection.
+    * Machine-learning component: premise selection. Author of the
+      `predict` program.
 
 Other contributors
 ------------------
