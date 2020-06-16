@@ -3,13 +3,13 @@ Main authors
 
 * Lukasz Czajka
 
-    Logic-related components: translation, proof reconstruction,
-    automated reasoning tactics. Author of almost all OCaml/Ltac/Coq
-    code.
+    * Logic-related components: translation, proof reconstruction,
+      automated reasoning tactics. Author of almost all OCaml/Ltac/Coq
+      code.
 
 * Cezary Kaliszyk
 
-    Machine-learning component: premise selection.
+    * Machine-learning component: premise selection.
 
 Other contributors
 ------------------
