@@ -493,12 +493,12 @@ let hammer_tac () =
             let info = do_predict hyps defs goal in
             let (deps, defs, inverts) = get_tac_args env sigma info in
             (* TODO: user-readable names (without extra qualifiers) *)
-            let sdeps = List.map (globref_econstr_name sigma) deps
+            let sdeps = List.map (fun constr -> globref_econstr_name sigma (EConstr.of_constr constr)) deps
             and sdefs = List.map Constant.to_string defs
             and sinverts = List.map Utils.get_ind_name inverts
             in
             Msg.info ("Reconstructing the proof...");
-            run_tactics deps defs inverts
+            run_tactics (List.map EConstr.of_constr deps) defs inverts
               begin fun tac ->
                 Msg.info ("Tactic " ^ tac ^ " succeeded.");
                 Msg.info ("Replace the hammer tactic with:\n\t" ^
@@ -700,7 +700,7 @@ let hammer_hook_tac prefix name =
                                  Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
                                  let info = extract fname in
                                  let (deps, defs, inverts) = get_tac_args env sigma info in
-                                 run_tactics deps defs inverts
+                                 run_tactics (List.map EConstr.of_constr deps) defs inverts
                                    begin fun tac ->
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
