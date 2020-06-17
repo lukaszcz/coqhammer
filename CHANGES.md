@@ -1,3 +1,29 @@
+CoqHammer v. 1.3
+================
+
+Coq versions compatibility: 8.10, 8.11.
+
+Overview of changes
+-------------------
+* Proper argument parsing for the reconstruction tactics.
+* Optional boolean reflection in `sauto`.
+* Improvements of `sauto`: actions modulo head reduction, improved
+  `sdestruct`, `f_equal` action, major speedup by removing superfluous
+  rewrite hints.
+* Better failure messages for the tactics.
+* `sauto` is now the preliminary tactic for `hammer`.
+* Rudimentary MathComp support. New `make` targets: `mathcomp` and
+  `install-mathcomp`.
+
+CoqHammer v. 1.2.1
+==================
+
+Coq versions compatibility: 8.10, 8.11.
+
+Overview of changes
+-------------------
+* Fixed the "Anomaly" error upon `hammer` failure.
+
 CoqHammer v. 1.2
 ================
 
