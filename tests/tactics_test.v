@@ -69,7 +69,7 @@ Qed.
 
 Lemma lem_even_or_odd :
   forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
-Proof.
+Proof. (* something wrong here *)
   induction n; sintuition ered: off.
   exists (S p); strivial.
 Qed.
