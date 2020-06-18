@@ -33,7 +33,9 @@ let gt cgt evd =
 let lpo_cache = Hashtbl.create 128
 
 let rec const_gt c1 c2 =
-  if not (Hashtbl.mem lpo_cache (c1, c2)) then
+  try
+    Hashtbl.find lpo_cache (c1, c2)
+  with Not_found ->
     begin
       let b =
         if Declareops.is_opaque (Global.lookup_constant c1) then
@@ -66,9 +68,9 @@ let rec const_gt c1 c2 =
           | None ->
              false
       in
-      Hashtbl.add lpo_cache (c1, c2) b
-    end;
-  Hashtbl.find lpo_cache (c1, c2)
+      Hashtbl.add lpo_cache (c1, c2) b;
+      b
+    end
 
 let lpo = gt const_gt
 
