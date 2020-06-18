@@ -3,8 +3,6 @@ DECLARE PLUGIN "hammer_lib"
 {
 open Ltac_plugin
 open Extraargs
-open Stdarg
-open Tacarg
 
 module Utils = Hhutils
 module Lpo = Hhlpo
@@ -69,35 +67,4 @@ TACTIC EXTEND Hammer_checkTargetRevLPO
        Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
   end
 }
-END
-
-{
-let pr_taclist _ _ _ lst = Pp.pr_comma () (* TODO: LC: I haven't figured out how to print a tactic *)
-}
-
-ARGUMENT EXTEND taclist TYPED AS tactic list PRINTED BY { pr_taclist }
-| [ tactic3(tac) "|" taclist(l) ] -> { tac :: l }
-| [ tactic3(tac) ] -> { [ tac ] }
-END
-
-{
-let partac_tac n lst =
-  Partac.partac n (List.map (Tacinterp.tactic_of_value (Tacinterp.default_ist ())) lst)
-    begin fun k tac ->
-      if k >= 0 then
-        Feedback.msg_info Pp.(str ("Tactic number " ^ string_of_int (k+1) ^ " succeeded (counting from 1)."))
-      else
-        Feedback.msg_info Pp.(str "All tactics failed");
-      tac
-    end
-}
-
-TACTIC EXTEND Hammer_partac_tac
-| [ "partac" "[" taclist(lst) "]" ] ->
-  { partac_tac max_int lst }
-END
-
-TACTIC EXTEND Hammer_partac1_tac
-| [ "partac" integer(n) "[" taclist(lst) "]" ] ->
-  { partac_tac n lst }
 END
