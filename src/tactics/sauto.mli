@@ -9,6 +9,7 @@ type s_opts = {
   s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
+  s_ssimpl_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
   s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
@@ -31,12 +32,12 @@ type s_opts = {
   s_depth_cost_model : bool;
   s_limit : int;
   s_always_apply : bool;
+  s_prerun : bool;
 }
 
 val default_s_opts : unit -> s_opts
 val hauto_s_opts : unit -> s_opts
 val qauto_s_opts : unit -> s_opts
-val strong_simpl_s_opts : unit -> s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic
@@ -45,13 +46,12 @@ val sunfold : bool (* aggressive? *) -> Constant.t -> unit Proofview.tactic
 val sunfolding : bool (* aggressive? *) -> unit Proofview.tactic
 
 val sauto : s_opts -> unit Proofview.tactic
-val qauto : s_opts -> unit Proofview.tactic
 val sintuition : s_opts -> unit Proofview.tactic
 val ssimpl : s_opts -> unit Proofview.tactic
 val qsimpl : s_opts -> unit Proofview.tactic
 val scrush : s_opts -> unit Proofview.tactic
-val qcrush : s_opts -> unit Proofview.tactic
-val qecrush : s_opts -> unit Proofview.tactic
+val fcrush : s_opts -> unit Proofview.tactic
+val ecrush : s_opts -> unit Proofview.tactic
 val sblast : s_opts -> unit Proofview.tactic
 val qblast : s_opts -> unit Proofview.tactic
 

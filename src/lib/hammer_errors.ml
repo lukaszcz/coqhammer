@@ -43,10 +43,6 @@ let try_bind_tactic (f : 'a -> unit Proofview.tactic) (x : 'a) : unit Proofview.
 let try_tactic (f : unit -> unit Proofview.tactic) : unit Proofview.tactic =
   try_fun f (fun p -> Tacticals.New.tclZEROMSG p)
 
-let try_tactic_msg f msg =
-  try_tactic (fun () -> Proofview.tclORELSE (f ())
-                          (fun _ -> Tacticals.New.tclZEROMSG (Pp.str msg)))
-
 let try_goal_tactic f =
   Proofview.Goal.enter
     begin fun gl ->
