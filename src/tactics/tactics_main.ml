@@ -1,3 +1,4 @@
+open Ltac_plugin
 open Proofview.Notations
 open Hammer_errors
 open Sauto
@@ -26,6 +27,12 @@ type sopt_t =
 | SORewBases of string list
 | SORewBasesAll
 | SORewBasesNone
+| SOSolve of Tacexpr.raw_tactic_expr
+| SOSimp of Tacexpr.raw_tactic_expr
+| SOSSimp of Tacexpr.raw_tactic_expr
+| SOSolveAdd of Tacexpr.raw_tactic_expr
+| SOSimpAdd of Tacexpr.raw_tactic_expr
+| SOSSimpAdd of Tacexpr.raw_tactic_expr
 | SOForward of bool
 | SOEagerCaseSplit of bool
 | SOSimpleInvert of bool
@@ -154,6 +161,21 @@ let interp_opt ret opt opts =
      ret { opts with s_rew_bases = [] }
   | SORewBasesNone ->
      ret { opts with s_rew_bases = ["nohints"] }
+  | SOSolve tac ->
+     ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
+  | SOSimp tac ->
+     ret { opts with s_simpl_tac = Tacinterp.interp tac }
+  | SOSSimp tac ->
+     ret { opts with s_ssimpl_tac = Tacinterp.interp tac }
+  | SOSolveAdd tac ->
+     ret { opts with s_leaf_tac =
+                       Tacticals.New.tclSOLVE [opts.s_leaf_tac; Tacinterp.interp tac] }
+  | SOSimpAdd tac ->
+     ret { opts with s_simpl_tac =
+                       opts.s_simpl_tac <*> Tacticals.New.tclTRY (Tacinterp.interp tac) }
+  | SOSSimpAdd tac ->
+     ret { opts with s_ssimpl_tac =
+                       opts.s_ssimpl_tac <*> Tacticals.New.tclTRY (Tacinterp.interp tac) }
   | SOForward b ->
      ret { opts with s_forwarding = b }
   | SOEagerCaseSplit b ->
@@ -200,8 +222,19 @@ let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofv
     | [] -> ret opts
     | opt :: lst' ->
        let ret opts =
-         Proofview.tclUNIT opts >>= try_bind_tactic (interp lst')
+         Proofview.tclUNIT opts >>= interp lst'
        in
        interp_opt ret opt opts
   in
   interp lst opts
+
+let try_usolve (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
+      (msg : string) : unit Proofview.tactic =
+  try_tactic begin fun () ->
+    usolve @@
+      interp_opts opts lst
+        begin fun opts ->
+          Proofview.tclORELSE (ret opts)
+            (fun _ -> Tacticals.New.tclZEROMSG (Pp.str msg))
+        end
+  end

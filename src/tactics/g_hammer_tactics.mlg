@@ -2,7 +2,6 @@ DECLARE PLUGIN "hammer_tactics"
 
 {
 open Ltac_plugin
-(* open Tacarg *)
 open Pcoq.Prim
 open Pcoq.Constr
 open Hammer_errors
@@ -44,9 +43,15 @@ ARGUMENT EXTEND sauto_opts
 | [ "ssplit:" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
 | [ "ssplit:" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
 | [ "ssplit:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
-| [ "rew" "db:" "-" sauto_opts(sopts) ] -> { SORewBases ["nohints"] :: sopts }
-| [ "rew" "db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
-| [ "forward:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
+| [ "rew:" "db:" "-" sauto_opts(sopts) ] -> { SORewBases ["nohints"] :: sopts }
+| [ "rew:" "db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "solve:" tactic3(tac) sauto_opts(sopts) ] -> { SOSolve tac :: sopts }
+| [ "simp:" tactic3(tac) sauto_opts(sopts) ] -> { SOSimp tac :: sopts }
+| [ "ssimp:" tactic3(tac) sauto_opts(sopts) ] -> { SOSSimp tac :: sopts }
+| [ "solve:" "add:" tactic3(tac) sauto_opts(sopts) ] -> { SOSolveAdd tac :: sopts }
+| [ "simp:" "add:" tactic3(tac) sauto_opts(sopts) ] -> { SOSimpAdd tac :: sopts }
+| [ "ssimp:" "add:" tactic3(tac) sauto_opts(sopts) ] -> { SOSSimpAdd tac :: sopts }
+| [ "fwd:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
 | [ "ecsplit:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
 | [ "sinv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
 | [ "einv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerInvert b :: sopts }
@@ -83,19 +88,19 @@ END
 
 TACTIC EXTEND Hammer_sauto
 | [ "sauto" sauto_opts(l) ] -> {
-  try_tactic_msg (fun () -> usolve (interp_opts (default_s_opts ()) l sauto)) "sauto failed"
+  try_usolve (default_s_opts ()) l sauto "sauto failed"
 }
 END
 
 TACTIC EXTEND Hammer_hauto
 | [ "hauto" sauto_opts(l) ] -> {
-  try_tactic_msg (fun () -> usolve (interp_opts (hauto_s_opts ()) l sauto)) "hauto failed"
+  try_usolve (hauto_s_opts ()) l sauto "hauto failed"
 }
 END
 
 TACTIC EXTEND Hammer_qauto
 | [ "qauto" sauto_opts(l) ] -> {
-  try_tactic_msg (fun () -> usolve (interp_opts (qauto_s_opts ()) l qauto)) "qauto failed"
+  try_usolve (qauto_s_opts ()) l sauto "qauto failed"
 }
 END
 
@@ -104,64 +109,100 @@ TACTIC EXTEND Hammer_cauto
   let opts =
     { (default_s_opts ()) with s_forwarding = false }
   in
-  try_tactic_msg (fun () -> usolve (interp_opts opts l sauto)) "cauto failed"
+  try_usolve opts l sauto "cauto failed"
 }
 END
 
 TACTIC EXTEND Hammer_ssimpl
 | [ "ssimpl" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l ssimpl))
+  try_usolve (default_s_opts ()) l ssimpl "ssimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_csimpl
 | [ "csimpl" sauto_opts(l) ] -> {
   let opts =
-    { (strong_simpl_s_opts ()) with s_forwarding = false }
+    { (default_s_opts ()) with s_forwarding = false }
   in
-  try_tactic (fun () -> usolve (interp_opts opts l ssimpl))
+  try_usolve opts l ssimpl "csimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_qsimpl
 | [ "qsimpl" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l qsimpl))
+  try_usolve (default_s_opts ()) l qsimpl "qsimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_sintuition
 | [ "sintuition" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l sintuition))
+  try_usolve (default_s_opts ()) l sintuition "sintuition failed"
 }
 END
 
 TACTIC EXTEND Hammer_scrush
 | [ "scrush" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l scrush))
+  try_usolve (default_s_opts ()) l scrush "scrush failed"
+}
+END
+
+TACTIC EXTEND Hammer_hcrush
+| [ "hcrush" sauto_opts(l) ] -> {
+  try_usolve (hauto_s_opts ()) l scrush "hcrush failed"
 }
 END
 
 TACTIC EXTEND Hammer_qcrush
 | [ "qcrush" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l qcrush))
+  try_usolve (qauto_s_opts ()) l scrush "qcrush failed"
+}
+END
+
+TACTIC EXTEND Hammer_fcrush
+| [ "fcrush" sauto_opts(l) ] -> {
+  try_usolve (default_s_opts ()) l fcrush "fcrush failed"
+}
+END
+
+TACTIC EXTEND Hammer_hfcrush
+| [ "hfcrush" sauto_opts(l) ] -> {
+  try_usolve (hauto_s_opts ()) l fcrush "hfcrush failed"
+}
+END
+
+TACTIC EXTEND Hammer_qfcrush
+| [ "qfcrush" sauto_opts(l) ] -> {
+  try_usolve (qauto_s_opts ()) l fcrush "qfcrush failed"
+}
+END
+
+TACTIC EXTEND Hammer_ecrush
+| [ "ecrush" sauto_opts(l) ] -> {
+  try_usolve (default_s_opts ()) l ecrush "ecrush failed"
+}
+END
+
+TACTIC EXTEND Hammer_hecrush
+| [ "hecrush" sauto_opts(l) ] -> {
+  try_usolve (hauto_s_opts ()) l ecrush "hecrush failed"
 }
 END
 
 TACTIC EXTEND Hammer_qecrush
 | [ "qecrush" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l qecrush))
+  try_usolve (qauto_s_opts ()) l ecrush "qecrush failed"
 }
 END
 
 TACTIC EXTEND Hammer_sblast
 | [ "sblast" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l sblast))
+  try_usolve (default_s_opts ()) l sblast "sblast failed"
 }
 END
 
 TACTIC EXTEND Hammer_qblast
 | [ "qblast" sauto_opts(l) ] -> {
-  try_tactic (fun () -> usolve (interp_opts (strong_simpl_s_opts ()) l qblast))
+  try_usolve (default_s_opts ()) l qblast "qblast failed"
 }
 END
 

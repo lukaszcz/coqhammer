@@ -16,6 +16,7 @@ type s_opts = {
   s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
+  s_ssimpl_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
   s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
@@ -38,13 +39,15 @@ type s_opts = {
   s_depth_cost_model : bool;
   s_limit : int;
   s_always_apply : bool;
+  s_prerun : bool;
 }
 
 let default_s_opts () = {
   s_exhaustive = false;
   s_hints = true;
   s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
-  s_simpl_tac = Utils.ltac_apply "Tactics.simpl_solve" [];
+  s_simpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.simpl_solve" []);
+  s_ssimpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve" []);
   s_unfolding = SSome [];
   s_constructors = SAll;
   s_simple_splits = SSome [];
@@ -67,12 +70,13 @@ let default_s_opts () = {
   s_depth_cost_model = false;
   s_limit = 1000;
   s_always_apply = false;
+  s_prerun = false;
 }
 
 let hauto_s_opts () =
   { (default_s_opts ()) with s_rew_bases = ["nohints"];
-                           s_inversions = SSome [];
-                           s_constructors = SSome [] }
+                             s_inversions = SSome [];
+                             s_constructors = SSome [] }
 
 let eauto_tac = Eauto.gen_eauto (Eauto.make_dimension None None) [] (Some [])
 let congr_tac () = Utils.ltac_apply "Tactics.congr_tac" []
@@ -81,10 +85,8 @@ let qauto_s_opts () =
   { (hauto_s_opts ()) with s_simpl_tac = Tacticals.New.tclIDTAC;
                            s_leaf_tac = (eauto_tac <*> congr_tac ());
                            s_sapply = false;
-                           s_limit = 100 }
-
-let strong_simpl_s_opts () =
-  { (default_s_opts ()) with s_simpl_tac = Utils.ltac_apply "Tactics.ssolve" [] }
+                           s_limit = 100;
+                           s_prerun = true }
 
 (*****************************************************************************************)
 
@@ -509,7 +511,11 @@ let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 let with_reduction opts tac1 tac2 =
   if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
 
-let autorewriting b_all opts = autorewrite b_all opts.s_rew_bases
+let autorewriting b_all opts =
+  if opts.s_rewriting then
+    autorewrite b_all opts.s_rew_bases
+  else
+    Proofview.tclUNIT ()
 
 let rec simple_splitting opts =
   if opts.s_simple_splits = SNone then
@@ -533,6 +539,7 @@ let case_splitting b_all opts =
      else
        with_reduction opts (case_splitting_concl_tac ()) (case_splitting_concl_nocbn_tac ())
   | SNone -> Tacticals.New.tclIDTAC
+  | SSome [] when !case_split_hints = [] -> Tacticals.New.tclIDTAC
   | _ ->
      Proofview.Goal.enter begin fun gl ->
        let evd = Proofview.Goal.sigma gl in
@@ -1000,10 +1007,10 @@ and apply_actions tacs opts n actions rtrace visited =
 let sintuition opts =
   Tactics.intros <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
-    simp_hyps_tac () <*> subst_simpl opts <*> Tacticals.New.tclTRY opts.s_simpl_tac <*>
+    simp_hyps_tac () <*> subst_simpl opts <*> opts.s_ssimpl_tac <*>
     Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
                                (Tactics.intros <*> simp_hyps_tac () <*> subst_simpl opts) <*>
-                               Tacticals.New.tclTRY opts.s_simpl_tac)
+                               opts.s_ssimpl_tac)
 
 let ssimpl opts =
   let tac1 =
@@ -1019,7 +1026,7 @@ let ssimpl opts =
       subst_simpl opts
   in
   opt opts.s_reflect (bool_reflect_tac ()) <*>
-  tac1 <*> (simplify opts <~> tac2)
+  tac1 <*> (simplify { opts with s_simpl_tac = opts.s_ssimpl_tac } <~> tac2)
 
 let qsimpl opts =
   let tac =
@@ -1037,27 +1044,22 @@ let qsimpl opts =
 
 let sauto opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+    opt opts.s_prerun (Tacticals.New.tclTRY (opts.s_leaf_tac)) <*>
     intros (create_tactics opts) opts opts.s_limit
-
-let qauto opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*>
-    unfolding opts <*> subst_simpl opts <*>
-    eauto_tac <*> Tacticals.New.tclTRY (congr_tac ()) <*>
-    sauto opts
 
 let scrush opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
-    ssimpl opts <*> sauto { opts with s_simpl_tac = (default_s_opts ()).s_simpl_tac }
+    ssimpl opts <*> sauto opts
 
-let qcrush opts =
+let fcrush opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
-    qsimpl opts <*> qforwarding_tac () <*> qsimpl opts <*> instering_tac () <*> qsimpl opts <*>
-    sauto { opts with s_simpl_tac = (default_s_opts ()).s_simpl_tac }
+    qsimpl opts <*> qforwarding_tac () <*> qsimpl opts <*> instering_tac () <*>
+    qsimpl opts <*> sauto opts
 
-let qecrush opts =
+let ecrush opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
     qsimpl opts <*> qforwarding_tac () <*> einstering_tac () <*> esimp_hyps_tac () <*>
-    qsimpl opts <*> sauto { opts with s_simpl_tac = (default_s_opts ()).s_simpl_tac }
+    qsimpl opts <*> sauto opts
 
 let sblast opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
