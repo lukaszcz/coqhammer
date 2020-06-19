@@ -86,7 +86,10 @@ let rec close f ctx t =
 (***************************************************************************************)
 
 let get_tactic (s : string) =
-  (Tacenv.locate_tactic (Libnames.qualid_of_string s))
+  try
+    (Tacenv.locate_tactic (Libnames.qualid_of_string s))
+  with Not_found ->
+    failwith ("tactic not found: " ^ s)
 
 let get_tacexpr tac args =
   Tacexpr.TacArg(CAst.make

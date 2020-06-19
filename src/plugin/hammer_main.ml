@@ -330,22 +330,22 @@ let run_tactics deps defs inverts msg_success msg_fail =
       Tacticals.New.tclDO (List.length deps) (Tactics.intro_move None Logic.MoveFirst)
   in
   let rhauto =
-    usolve (use_deps <*> sauto (mkopts hauto_s_opts))
+    usolve (use_deps <*> sauto (mkopts (hauto_s_opts ())))
   and rqauto =
-    usolve (use_deps <*> qauto (mkopts qauto_s_opts))
+    usolve (use_deps <*> qauto (mkopts (qauto_s_opts ())))
   and rbauto =
-    usolve (use_deps <*> sauto (mkopts { hauto_s_opts with s_reflect = true;
-                                                           s_eager_reducing = false}))
+    usolve (use_deps <*> sauto (mkopts { (hauto_s_opts ()) with s_reflect = true;
+                                                                s_eager_reducing = false}))
   and rscrush =
-    usolve (use_deps <*> scrush (mkopts strong_simpl_s_opts))
+    usolve (use_deps <*> scrush (mkopts (strong_simpl_s_opts ())))
   and rqcrush =
-    usolve (use_deps <*> qcrush (mkopts strong_simpl_s_opts))
+    usolve (use_deps <*> qcrush (mkopts (strong_simpl_s_opts ())))
   and rqblast =
-    usolve (use_deps <*> qblast (mkopts strong_simpl_s_opts))
+    usolve (use_deps <*> qblast (mkopts (strong_simpl_s_opts ())))
   and rqecrush =
-    usolve (use_deps <*> qecrush (mkopts strong_simpl_s_opts))
+    usolve (use_deps <*> qecrush (mkopts (strong_simpl_s_opts ())))
   and rsblast =
-    usolve (use_deps <*> sblast (mkopts strong_simpl_s_opts))
+    usolve (use_deps <*> sblast (mkopts (strong_simpl_s_opts ())))
   in
   let tactics = [
     [ (rhauto, "hauto"); (rqauto, "qauto"); (rqcrush, "qcrush"); (rscrush, "scrush"); (rbauto, "hauto brefl: on erew: off") ];
