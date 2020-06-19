@@ -33,10 +33,10 @@ type s_opts = {
   s_always_apply : bool;
 }
 
-val default_s_opts : s_opts
-val hauto_s_opts : s_opts
-val qauto_s_opts : s_opts
-val strong_simpl_s_opts : s_opts
+val default_s_opts : unit -> s_opts
+val hauto_s_opts : unit -> s_opts
+val qauto_s_opts : unit -> s_opts
+val strong_simpl_s_opts : unit -> s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic
