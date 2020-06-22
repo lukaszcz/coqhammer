@@ -389,14 +389,14 @@ Ltac trysolve :=
   | [ |- (?t = ?u) -> False ] => try solve [ intro; try subst; congruence 8 |
                                              match type of t with nat => lia | ZArith.BinInt.Z => lia end ]
   | [ |- False ] => try solve [ try subst; congruence 8 ]
-  | [ |- ?t >= ?u ] => try solve [ try subst; lia ]
-  | [ |- ?t <= ?u ] => try solve [ try subst; lia ]
-  | [ |- ?t > ?u ] => try solve [ try subst; lia ]
-  | [ |- ?t < ?u ] => try solve [ try subst; lia ]
+  | [ |- ?t >= ?u ] => try solve [ lia ]
+  | [ |- ?t <= ?u ] => try solve [ lia ]
+  | [ |- ?t > ?u ] => try solve [ lia ]
+  | [ |- ?t < ?u ] => try solve [ lia ]
   | _ => idtac
   end.
 
-Ltac isolve :=
+Ltac sfinal tac :=
   let simp := intros; simp_hyps; repeat exsimpl
   in
   let rec msolve tt :=
@@ -404,12 +404,14 @@ Ltac isolve :=
       lazymatch goal with
         | [ H : False |- _ ] => elim H
         | _ =>
-          solve [ trysolve | left; msolve tt | right; msolve tt |
+          solve [ tac | left; msolve tt | right; msolve tt |
                   eexists; msolve tt ]
                 (* TODO: move to plugin, generalize to applying non-recursive constructors *)
       end
   in
   msolve tt.
+
+Ltac isolve := sfinal trysolve.
 
 Ltac tryrsolve :=
   let solver tac :=
