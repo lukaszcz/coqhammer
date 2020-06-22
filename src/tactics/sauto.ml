@@ -15,6 +15,7 @@ type s_opts = {
   s_exhaustive : bool;
   s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
+  s_solve_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
   s_ssimpl_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
@@ -23,7 +24,6 @@ type s_opts = {
   s_case_splits : inductive list soption;
   s_inversions : inductive list soption;
   s_rew_bases : string list;
-  s_bnat_reflect : bool;
   s_reflect : bool;
   s_eager_case_splitting : bool;
   s_eager_reducing : bool;
@@ -46,6 +46,7 @@ let default_s_opts () = {
   s_exhaustive = false;
   s_hints = true;
   s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
+  s_solve_tac = Utils.ltac_apply "fail" [];
   s_simpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.simpl_solve" []);
   s_ssimpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve" []);
   s_unfolding = SSome [];
@@ -54,7 +55,6 @@ let default_s_opts () = {
   s_case_splits = SAll;
   s_inversions = SAll;
   s_rew_bases = [];
-  s_bnat_reflect = false;
   s_reflect = false;
   s_eager_case_splitting = true;
   s_eager_reducing = true;
@@ -588,7 +588,7 @@ let simple_inverting opts =
 let simplify opts =
   let simpl1 =
     simp_hyps_tac () <~>
-      opt opts.s_bnat_reflect (bnat_reflect_tac ()) <~>
+      opt opts.s_reflect (bnat_reflect_tac ()) <~>
       opts.s_simpl_tac <~>
       reduce_concl opts <~>
       (Tacticals.New.tclPROGRESS (intros_until_atom_tac ()) <*> subst_simpl opts) <~>
@@ -600,12 +600,13 @@ let simplify opts =
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   opt opts.s_reflect (bool_reflect_tac ()) <*>
-    if opts.s_forwarding then
-      simpl1 <*>
-        (Tacticals.New.tclTRY
-           (Tacticals.New.tclPROGRESS (with_reduction opts (forwarding_tac ()) (forwarding_nocbn_tac ())) <*> simpl1))
-    else
-      simpl1
+    (if opts.s_forwarding then
+       simpl1 <*>
+         (Tacticals.New.tclTRY
+            (Tacticals.New.tclPROGRESS (with_reduction opts (forwarding_tac ()) (forwarding_nocbn_tac ())) <*> simpl1))
+     else
+       simpl1)
+  <*> Tacticals.New.tclTRY opts.s_solve_tac
 
 let simplify_concl opts =
   (reduce_concl opts <~> autorewriting false opts) <*>
@@ -854,6 +855,7 @@ let create_actions extra opts evd goal hyps =
 (*****************************************************************************************)
 
 type tactics = {
+  t_finish : unit Proofview.tactic;
   t_simplify : unit Proofview.tactic;
   t_simplify_concl : unit Proofview.tactic;
   t_simple_splitting : unit Proofview.tactic;
@@ -865,6 +867,7 @@ type tactics = {
 }
 
 let create_tactics opts = {
+  t_finish = Tacticals.New.tclSOLVE [ opts.s_leaf_tac; opts.s_solve_tac ];
   t_simplify = simplify opts;
   t_simplify_concl = simplify_concl opts;
   t_simple_splitting = simple_splitting opts;
@@ -879,7 +882,7 @@ let create_tactics opts = {
 
 let rec search extra tacs opts n rtrace visited =
   if n = 0 then
-    opts.s_leaf_tac
+    tacs.t_finish
   else
     Proofview.Goal.enter begin fun gl ->
       let goal = Proofview.Goal.concl gl in
@@ -901,8 +904,8 @@ let rec search extra tacs opts n rtrace visited =
              let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
              let actions = create_actions extra opts evd goal hyps in
              match actions with
-             | [] -> opts.s_leaf_tac
-             | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> opts.s_leaf_tac
+             | [] -> tacs.t_finish
+             | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> tacs.t_finish
              | _ -> apply_actions tacs opts n actions rtrace (goal :: visited)
     end
 
@@ -940,7 +943,10 @@ and apply_actions tacs opts n actions rtrace visited =
     cont (Proofview.tclBIND tac (fun _ -> search false tacs opts n rtrace visited)) acts
   in
   let final_tac =
-    if not opts.s_depth_cost_model && n < 25 then opts.s_leaf_tac else fail_tac
+    if not opts.s_depth_cost_model && n < 25 then
+      tacs.t_finish
+    else
+      opts.s_solve_tac
   in
   let apply id =
     if opts.s_sapply then
@@ -1031,7 +1037,7 @@ let ssimpl opts =
 let qsimpl opts =
   let tac =
     sintuition opts <~>
-      opt opts.s_bnat_reflect (bnat_reflect_tac ()) <~>
+      opt opts.s_reflect (bnat_reflect_tac ()) <~>
       opt opts.s_reflect (bool_reflect_tac ()) <~>
       autorewriting true opts <~>
       (simple_splitting opts <*>
@@ -1044,6 +1050,7 @@ let qsimpl opts =
 
 let sauto opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+    Tacticals.New.tclTRY (opts.s_solve_tac) <*>
     opt opts.s_prerun (Tacticals.New.tclTRY (opts.s_leaf_tac)) <*>
     intros (create_tactics opts) opts opts.s_limit
 

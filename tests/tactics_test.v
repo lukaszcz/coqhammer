@@ -69,7 +69,7 @@ Qed.
 
 Lemma lem_even_or_odd :
   forall n:nat, exists p : nat, n = (2 * p) \/ n = S (2 * p).
-Proof. (* something wrong here *)
+Proof.
   induction n; sintuition ered: off.
   exists (S p); strivial.
 Qed.
@@ -253,6 +253,27 @@ Proof.
 Qed.
 
 End Lists.
+
+Require Import Reals.
+Require Import Lra.
+
+Section Real.
+
+Local Open Scope R_scope.
+
+Lemma lem_real_1 : forall x y, x + y = y + x.
+Proof.
+  sauto solve: lra.
+Qed.
+
+Lemma lem_real_2 P : (forall a b, P a -> a = b -> P b) ->
+                     forall x y, P (x + y) -> P (y + x).
+Proof.
+  qauto solve: lra.
+Qed.
+
+End Real.
+
 
 From Hammer Require Import Reflect.
 
@@ -830,4 +851,154 @@ Qed.
 Corollary cor_big_iff_small : forall p s, p ==> s <-> p -->* (Skip, s).
 Proof.
   hauto use: lem_small_to_big, lem_big_to_small.
+Qed.
+
+(************************************************************************************)
+(* Insertion sort *)
+
+Require List.
+Import List.ListNotations.
+Open Scope list_scope.
+
+Require Import Arith.
+Require Import Lia.
+
+Inductive Sorted : list nat -> Prop :=
+| Sorted_0 : Sorted []
+| Sorted_1 : forall x, Sorted [x]
+| Sorted_2 : forall x y, x <= y ->
+                         forall l, Sorted (y :: l) ->
+                                   Sorted (x :: y :: l).
+
+Fixpoint insert (l : list nat) (x : nat) : list nat :=
+  match l with
+  | [] => [x]
+  | h :: t => if x <=? h then x :: l else h :: insert t x
+  end.
+
+Fixpoint isort (l : list nat) : list nat :=
+  match l with
+  | [] => []
+  | h :: t => insert (isort t) h
+  end.
+
+Lemma lem_insert_sorted_hlp :
+  forall l y z, y <= z -> Sorted (y :: l) -> Sorted (y :: insert l z).
+Proof.
+  induction l; qauto use: Sorted, Nat.lt_le_incl inv: Sorted.
+Qed.
+
+Lemma lem_insert_sorted (l : list nat) (x : nat) :
+  Sorted l -> Sorted (insert l x).
+Proof.
+  destruct l; hauto use: Sorted, lem_insert_sorted_hlp, Nat.lt_le_incl.
+Qed.
+
+Lemma lem_isort_sorted : forall l, Sorted (isort l).
+Proof.
+  induction l; sauto use: lem_insert_sorted.
+Qed.
+
+Require Import Sorting.Permutation.
+
+Lemma lem_insert_perm : forall l x, Permutation (insert l x) (x :: l).
+Proof.
+  induction l; sauto.
+Qed.
+
+Lemma lem_isort_perm : forall l, Permutation (isort l) l.
+Proof.
+  induction l; sauto use: lem_insert_perm.
+Qed.
+
+Inductive LeLst : nat -> list nat -> Prop :=
+| LeLst_0 : forall n, LeLst n []
+| LeLst_1 : forall n m l, n <= m -> LeLst n l -> LeLst n (m :: l).
+
+Lemma lem_lelst_insert :
+  forall l n m, n <= m -> LeLst n l -> LeLst n (insert l m).
+Proof.
+  induction l; sauto.
+Qed.
+
+Lemma lem_lelst_sorted :
+  forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
+Proof.
+  induction l; sauto use: Nat.le_trans.
+Qed.
+
+Lemma lem_insert_sorted_2 :
+  forall l x, Sorted l -> Sorted (insert l x).
+Proof.
+  induction l as [|y l IH].
+  - sauto.
+  - intros x H.
+    simpl.
+    destruct (Nat.leb_spec x y) as [H1|H1].
+    + constructor; assumption.
+    + qauto use: lem_lelst_sorted, lem_lelst_insert, Nat.lt_le_incl.
+      (* "sauto" and "hauto" take too long here *)
+Qed.
+
+(* Tail-recursive reverse *)
+
+Fixpoint itrev {A} (lst acc : list A) :=
+  match lst with
+  | [] => acc
+  | h :: t => itrev t (h :: acc)
+  end.
+
+Definition rev {A} (lst : list A) := itrev lst [].
+
+Lemma lem_itrev {A} :
+  forall lst acc : list A, itrev lst acc = itrev lst [] ++ acc.
+Proof.
+  induction lst as [| h t IH].
+  - auto.
+  - assert (H: itrev t [h] = itrev t [] ++ [h]).
+    { rewrite IH; reflexivity. }
+    sauto.
+Qed.
+
+Lemma lem_rev_app {A} :
+  forall l1 l2 : list A, rev (l1 ++ l2) = rev l2 ++ rev l1.
+Proof.
+  unfold rev.
+  induction l1; sauto use: @lem_itrev.
+Qed.
+
+Lemma lem_rev_rev {A} : forall l : list A, rev (rev l) = l.
+Proof.
+  unfold rev.
+  induction l as [| x l IH].
+  - reflexivity.
+  - sauto use: (lem_itrev l [x]), (lem_rev_app (itrev l []) [x]).
+Qed.
+
+Lemma lem_rev_lst {A} : forall l : list A, rev l = List.rev l.
+Proof.
+  unfold rev.
+  induction l; sauto use: @lem_itrev.
+Qed.
+
+(* Permutations *)
+
+Lemma lem_perm_length {A} :
+  forall l1 l2 : list A, Permutation l1 l2 ->
+    List.length l1 = List.length l2.
+Proof.
+  induction 1; sauto.
+Qed.
+
+Lemma lem_perm_sym {A} :
+  forall l1 l2 : list A, Permutation l1 l2 -> Permutation l2 l1.
+Proof.
+  induction 1; sauto.
+Qed.
+
+Lemma lem_perm_forall {A} (P : A -> Prop) :
+  forall l1 l2, Permutation l1 l2 ->
+    List.Forall P l1 -> List.Forall P l2.
+Proof.
+  induction 1; sauto.
 Qed.

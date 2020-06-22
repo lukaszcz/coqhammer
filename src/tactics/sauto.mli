@@ -8,6 +8,7 @@ type s_opts = {
   s_exhaustive : bool;
   s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
+  s_solve_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
   s_ssimpl_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
@@ -16,7 +17,6 @@ type s_opts = {
   s_case_splits : inductive list soption;
   s_inversions : inductive list soption;
   s_rew_bases : string list;
-  s_bnat_reflect : bool;
   s_reflect : bool;
   s_eager_case_splitting : bool;
   s_eager_reducing : bool;
