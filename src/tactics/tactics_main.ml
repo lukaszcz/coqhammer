@@ -27,6 +27,8 @@ type sopt_t =
 | SORewBases of string list
 | SORewBasesAll
 | SORewBasesNone
+| SOFinish of Tacexpr.raw_tactic_expr
+| SOFinal of Tacexpr.raw_tactic_expr
 | SOSolve of Tacexpr.raw_tactic_expr
 | SOSimp of Tacexpr.raw_tactic_expr
 | SOSSimp of Tacexpr.raw_tactic_expr
@@ -48,6 +50,7 @@ type sopt_t =
 | SODepth of int
 | SOExhaustive of bool
 | SOAlwaysApply of bool
+| SOPrerun of bool
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -105,6 +108,14 @@ let interp_use use ret opts lst env sigma =
   in
   use lems <*> ret opts
 
+let mk_final tac =
+  let sfinal =
+    Libnames.qualid_of_string "Tactics.sfinal"
+  in
+  Tacexpr.TacArg(CAst.make
+                   Tacexpr.(TacCall(CAst.make
+                                      (sfinal, [Tacexpr.Tacexp tac]))))
+
 let interp_opt ret opt opts =
   match opt with
   | SONop -> ret opts
@@ -161,14 +172,18 @@ let interp_opt ret opt opts =
      ret { opts with s_rew_bases = [] }
   | SORewBasesNone ->
      ret { opts with s_rew_bases = ["nohints"] }
-  | SOSolve tac ->
+  | SOFinish tac ->
      ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
+  | SOFinal tac ->
+     ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp (mk_final tac)] }
+  | SOSolve tac ->
+     ret { opts with s_solve_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
   | SOSimp tac ->
      ret { opts with s_simpl_tac = Tacinterp.interp tac }
   | SOSSimp tac ->
      ret { opts with s_ssimpl_tac = Tacinterp.interp tac }
   | SOSolveAdd tac ->
-     ret { opts with s_leaf_tac =
+     ret { opts with s_solve_tac =
                        Tacticals.New.tclSOLVE [opts.s_leaf_tac; Tacinterp.interp tac] }
   | SOSimpAdd tac ->
      ret { opts with s_simpl_tac =
@@ -214,6 +229,8 @@ let interp_opt ret opt opts =
      ret { opts with s_exhaustive = b }
   | SOAlwaysApply b ->
      ret { opts with s_always_apply = b }
+  | SOPrerun b ->
+     ret { opts with s_prerun = b }
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =
