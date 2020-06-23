@@ -24,6 +24,7 @@ type s_opts = {
   s_case_splits : inductive list soption;
   s_inversions : inductive list soption;
   s_rew_bases : string list;
+  s_hint_bases : Hints.hint_db list;
   s_reflect : bool;
   s_eager_case_splitting : bool;
   s_eager_reducing : bool;
@@ -55,6 +56,7 @@ let default_s_opts () = {
   s_case_splits = SAll;
   s_inversions = SAll;
   s_rew_bases = [];
+  s_hint_bases = [];
   s_reflect = false;
   s_eager_case_splitting = true;
   s_eager_reducing = true;
@@ -118,7 +120,8 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActRewrite of Id.t |
         ActInvert of Id.t | ActUnfold of Constant.t | ActCaseUnfold of Constant.t |
-            ActDestruct of EConstr.t | ActConstructor | ActIntro | ActReduce | ActFEqual
+        ActDestruct of EConstr.t | ActHint of Utils.hint |
+        ActConstructor | ActIntro | ActReduce | ActFEqual
 
 let action_to_string act =
   match act with
@@ -130,6 +133,7 @@ let action_to_string act =
   | ActUnfold c -> "unfold " ^ Constant.to_string c
   | ActCaseUnfold c -> "case-unfold " ^ Constant.to_string c
   | ActDestruct t -> "destruct " ^ Utils.constr_to_string Evd.empty t
+  | ActHint h -> Utils.hint_to_string h
   | ActConstructor -> "constructor"
   | ActIntro -> "intro"
   | ActReduce -> "reduce"
@@ -800,10 +804,26 @@ let create_extra_actions opts evd goal hyps =
   in
   actions
 
+let create_hint_actions bases evd goal gl =
+  let secvars = Auto.compute_secvars gl in
+  let hints =
+    List.concat (List.map (fun db -> Utils.find_hints db secvars evd goal) bases)
+  in
+  List.map begin fun h ->
+    let p = Utils.hint_priority h in
+    (p * 10 + 10, p, ActHint h)
+  end hints
+
 (* result: (cost, num_subgoals, action) list *)
-let create_actions extra opts evd goal hyps =
+let create_actions extra opts evd goal hyps gl =
   let actions =
     if extra then create_extra_actions opts evd goal hyps else []
+  in
+  let actions =
+    if opts.s_hint_bases <> [] then
+      create_hint_actions opts.s_hint_bases evd goal gl @ actions
+    else
+      actions
   in
   let actions =
     let open Constr in
@@ -902,7 +922,7 @@ let rec search extra tacs opts n rtrace visited =
              tacs.t_case_splitting <*> start_search tacs opts n
            else
              let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
-             let actions = create_actions extra opts evd goal hyps in
+             let actions = create_actions extra opts evd goal hyps gl in
              match actions with
              | [] -> tacs.t_finish
              | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> tacs.t_finish
@@ -991,6 +1011,10 @@ and apply_actions tacs opts n actions rtrace visited =
                     (fun _ -> start_search tacs opts n')) acts
          | ActDestruct t ->
             cont (sdestruct t <*> start_search tacs opts n') acts
+         | ActHint h ->
+            continue n' (Tacticals.New.tclPROGRESS
+                           (Utils.hint_tactic h (List.hd visited))
+                         <*> tacs.t_simplify_concl) acts
          | ActConstructor ->
             cont
               (Tactics.any_constructor true
@@ -1082,7 +1106,7 @@ let print_actions opts =
     let goal = Proofview.Goal.concl gl in
     let evd = Proofview.Goal.sigma gl in
     let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
-    let actions = create_actions true opts evd goal hyps in
+    let actions = create_actions true opts evd goal hyps gl in
     print_search_actions actions;
     Tacticals.New.tclIDTAC
   end

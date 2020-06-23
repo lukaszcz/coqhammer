@@ -543,3 +543,64 @@ let print_constr evd t =
 
 let constr_to_string evd t =
   Pp.string_of_ppcmds (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))
+
+(******************************************************************************************)
+(* Code copied from eauto.ml with minor modifications *)
+
+let unify_e_resolve poly flags (c,clenv) =
+  Proofview.Goal.enter begin fun gl ->
+    let clenv', c = Auto.connect_hint_clenv ~poly c clenv gl in
+    let clenv' = Clenv.clenv_unique_resolver ~flags clenv' gl in
+    Proofview.tclTHEN
+      (Proofview.Unsafe.tclEVARUNIVCONTEXT (Evd.evar_universe_context clenv'.Clenv.evd))
+      (Tactics.Simple.eapply c)
+  end
+
+let e_exact poly flags (c,clenv) =
+  Proofview.Goal.enter begin fun gl ->
+    let clenv', c = Auto.connect_hint_clenv ~poly c clenv gl in
+    Tacticals.New.tclTHEN
+      (Proofview.Unsafe.tclEVARUNIVCONTEXT (Evd.evar_universe_context clenv'.Clenv.evd))
+      (Eauto.e_give_exact c)
+  end
+
+let tac_of_hint db h concl =
+  let open Hints in
+  let st = Auto.auto_flags_of_state (Hint_db.transparent_state db) in
+  match h with
+  | {pri = b; pat = p; code = t; poly = poly} ->
+     let tac = function
+       | Res_pf (term,cl) -> Auto.unify_resolve ~poly st (term,cl)
+       | ERes_pf (term,cl) -> unify_e_resolve poly st (term,cl)
+       | Give_exact (c,cl) -> e_exact poly st (c,cl)
+       | Res_pf_THEN_trivial_fail (term,cl) ->
+          Tacticals.New.tclTHEN (unify_e_resolve poly st (term,cl))
+            (Tacticals.New.tclSOLVE [Eauto.e_assumption;
+                                     Tactics.reflexivity;
+                                     Tactics.any_constructor true None])
+       | Unfold_nth c -> Tactics.reduce
+                           (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
+       | Extern tacast -> Auto.conclPattern concl p tacast
+     in
+     Hints.run_hint t tac
+
+(******************************************************************************************)
+
+type hint = int * Hints.hint_db * Hints.hint Hints.with_metadata
+
+let hint_priority (p, _, _) = p
+
+let hint_tactic (_, db, h) t = tac_of_hint db h t
+
+let hint_to_string (_, _, h) =
+  let open Hints in
+  Pp.string_of_ppcmds @@ Hints.pr_hint (Global.env ()) Evd.empty h.code
+
+let find_hints db secvars evd t =
+  try
+    let open Hints in
+    let hdc = Hints.decompose_app_bound evd t in
+    let hints = Hint_db.map_eauto evd ~secvars hdc t db in
+    List.map (fun h -> (h.pri, db, h)) hints
+  with Hints.Bound ->
+    []

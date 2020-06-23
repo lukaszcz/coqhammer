@@ -114,3 +114,10 @@ val get_head_red : Evd.evar_map -> EConstr.t -> EConstr.t
 val print_constr : Evd.evar_map -> EConstr.t -> unit
 
 val constr_to_string : Evd.evar_map -> EConstr.t -> string
+
+type hint
+
+val hint_priority : hint -> int
+val hint_tactic : hint -> EConstr.t -> unit Proofview.tactic
+val hint_to_string : hint -> string
+val find_hints : Hints.hint_db -> Id.Pred.t -> Evd.evar_map -> EConstr.t -> hint list
