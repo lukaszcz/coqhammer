@@ -209,9 +209,16 @@ let rec mem_const c lst =
 
 (*****************************************************************************************)
 
-(* TODO: speed up by using proper hashing/equality functions (see
-   Names.MutInd, Names.KerName, Names.KerPair) *)
-let memoize_ind = Hhlib.memoize
+module IndHash =
+  struct
+    type t = inductive
+    let equal = eq_ind
+    let hash (mi, _) = MutInd.hash mi
+  end
+
+module IndMemo = Hhlib.MakeMemo(IndHash)
+
+let memoize_ind = IndMemo.memoize
 
 (*****************************************************************************************)
 
