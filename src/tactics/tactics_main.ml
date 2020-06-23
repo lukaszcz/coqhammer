@@ -24,9 +24,14 @@ type sopt_t =
 | SOSimpleSplit of Libnames.qualid list
 | SOSimpleSplitAll
 | SOSimpleSplitNone
+| SOBases of string list
+| SOBasesAdd of string list
+| SOBasesAll
 | SORewBases of string list
-| SORewBasesAll
-| SORewBasesNone
+| SORewBasesAdd of string list
+| SOHintBases of string list
+| SOHintBasesAdd of string list
+| SOHintBasesAll
 | SOFinish of Tacexpr.raw_tactic_expr
 | SOFinal of Tacexpr.raw_tactic_expr
 | SOSolve of Tacexpr.raw_tactic_expr
@@ -61,6 +66,20 @@ let inductive_of_qualid q =
   catch_errors (fun () -> Utils.get_inductive_from_qualid q)
     (fun _ ->
       raise (HammerTacticError ("not an inductive type: " ^ Libnames.string_of_qualid q)))
+
+let exists_rew_db s =
+  catch_errors (fun () -> ignore (Autorewrite.find_rewrites s); true)
+    (fun _ -> false)
+
+let partition_hint_bases bases =
+  let (lst1, lst2) = List.partition exists_rew_db bases in
+  (lst1, Hints.make_db_list lst2)
+
+let check_rew_bases =
+  List.iter begin fun s ->
+    if s <> "nohints" && not (exists_rew_db s) then
+      raise (HammerTacticError ("Rewriting base " ^ s ^ " does not exist"))
+  end
 
 let sopt_append sc lst2 =
   match sc with
@@ -166,12 +185,29 @@ let interp_opt ret opt opts =
      ret { opts with s_simple_splits = SAll }
   | SOSimpleSplitNone ->
      ret { opts with s_simple_splits = SNone }
+  | SOBases lst ->
+     let (lst1, lst2) = partition_hint_bases lst in
+     ret { opts with s_rew_bases = lst1; s_hint_bases = lst2 }
+  | SOBasesAdd lst ->
+     let (lst1, lst2) = partition_hint_bases lst in
+     ret { opts with s_rew_bases = opts.s_rew_bases @ lst1;
+                     s_hint_bases = opts.s_hint_bases @ lst2 }
+  | SOBasesAll ->
+     ret { opts with s_hint_bases = Hints.current_pure_db () }
   | SORewBases lst ->
+     check_rew_bases lst;
+     ret { opts with s_rew_bases = lst }
+  | SORewBasesAdd lst ->
+     check_rew_bases lst;
      ret { opts with s_rew_bases = opts.s_rew_bases @ lst }
-  | SORewBasesAll -> (* TODO *)
-     ret { opts with s_rew_bases = [] }
-  | SORewBasesNone ->
-     ret { opts with s_rew_bases = ["nohints"] }
+  | SOHintBases lst ->
+     let hints = Hints.make_db_list lst in
+     ret { opts with s_hint_bases = hints }
+  | SOHintBasesAdd lst ->
+     let hints = Hints.make_db_list lst in
+     ret { opts with s_hint_bases = opts.s_hint_bases @ hints }
+  | SOHintBasesAll ->
+     ret { opts with s_hint_bases = Hints.current_pure_db () }
   | SOFinish tac ->
      ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
   | SOFinal tac ->

@@ -47,7 +47,7 @@ Require Import Arith.
 
 Lemma lem_test_csplit : forall n, if n =? n then True else False.
 Proof.
-  sauto csplit: bool.
+  sauto cases: bool.
 Qed.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
@@ -218,6 +218,7 @@ Qed.
 End FOFProblem2.
 
 Require Import List.
+Require Import Lia.
 
 Section Lists.
 
@@ -419,7 +420,7 @@ Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl
 Proof.
   induction t; qsimpl.
   - hauto using vars_abstr.
-  - hauto using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
+  - hauto use: @no_lams_transl, @vars_abstr, @novar_abstr, @hs_lem.
 Qed.
 
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
@@ -891,7 +892,7 @@ Qed.
 Lemma lem_insert_sorted (l : list nat) (x : nat) :
   Sorted l -> Sorted (insert l x).
 Proof.
-  destruct l; hauto use: Sorted, lem_insert_sorted_hlp, Nat.lt_le_incl.
+  destruct l; hauto use: Sorted, lem_insert_sorted_hlp db: arith.
 Qed.
 
 Lemma lem_isort_sorted : forall l, Sorted (isort l).

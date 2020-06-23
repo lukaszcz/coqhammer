@@ -21,7 +21,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "using" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
 | [ "unfolding" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
 | [ "inverting" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
-| [ "with" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "with" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
 | [ "use:" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
 | [ "gen:" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOGen l :: sopts }
 | [ "unfold:" "*" sauto_opts(sopts) ] -> { SOUnfoldAll :: sopts }
@@ -35,16 +35,25 @@ ARGUMENT EXTEND sauto_opts
 | [ "ctrs:" "-" sauto_opts(sopts) ] -> { SOCtrs [] :: sopts }
 | [ "ctrs:" "never" sauto_opts(sopts) ] -> { SOCtrsNone :: sopts }
 | [ "ctrs:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCtrs l :: sopts }
-| [ "csplit:" "*" sauto_opts(sopts) ] -> { SOCaseSplitAll :: sopts }
-| [ "csplit:" "-" sauto_opts(sopts) ] -> { SOCaseSplit [] :: sopts }
-| [ "csplit:" "never" sauto_opts(sopts) ] -> { SOCaseSplitNone :: sopts }
-| [ "csplit:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCaseSplit l :: sopts }
-| [ "ssplit:" "*" sauto_opts(sopts) ] -> { SOSimpleSplitAll :: sopts }
-| [ "ssplit:" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
-| [ "ssplit:" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
-| [ "ssplit:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
+| [ "cases:" "*" sauto_opts(sopts) ] -> { SOCaseSplitAll :: sopts }
+| [ "cases:" "-" sauto_opts(sopts) ] -> { SOCaseSplit [] :: sopts }
+| [ "cases:" "never" sauto_opts(sopts) ] -> { SOCaseSplitNone :: sopts }
+| [ "cases:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCaseSplit l :: sopts }
+| [ "split:" "*" sauto_opts(sopts) ] -> { SOSimpleSplitAll :: sopts }
+| [ "split:" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
+| [ "split:" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
+| [ "split:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
+| [ "db:" "*" sauto_opts(sopts) ] -> { SOBasesAll :: sopts }
+| [ "db:" "-" sauto_opts(sopts) ] -> { SOBases [] :: sopts }
+| [ "db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
+| [ "db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBasesAdd l :: sopts }
 | [ "rew:db:" "-" sauto_opts(sopts) ] -> { SORewBases ["nohints"] :: sopts }
 | [ "rew:db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "rew:db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBasesAdd l :: sopts }
+| [ "hint:db:" "*" sauto_opts(sopts) ] -> { SOHintBasesAll :: sopts }
+| [ "hint:db:" "-" sauto_opts(sopts) ] -> { SOHintBases [] :: sopts }
+| [ "hint:db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBases l :: sopts }
+| [ "hint:db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBasesAdd l :: sopts }
 | [ "finish:" tactic3(tac) sauto_opts(sopts) ] -> { SOFinish tac :: sopts }
 | [ "final:" tactic3(tac) sauto_opts(sopts) ] -> { SOFinal tac :: sopts }
 | [ "solve:" tactic3(tac) sauto_opts(sopts) ] -> { SOSolve tac :: sopts }
