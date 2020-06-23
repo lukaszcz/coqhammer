@@ -17,6 +17,7 @@ type s_opts = {
   s_case_splits : inductive list soption;
   s_inversions : inductive list soption;
   s_rew_bases : string list;
+  s_hint_bases : Hints.hint_db list;
   s_reflect : bool;
   s_eager_case_splitting : bool;
   s_eager_reducing : bool;
