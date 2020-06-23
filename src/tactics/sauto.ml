@@ -92,6 +92,7 @@ let qauto_s_opts () =
 
 (*****************************************************************************************)
 
+let coq_equality = Utils.get_inductive "Init.Logic.eq"
 let logic_constants = [ Utils.get_const "Init.Logic.iff"; Utils.get_const "Init.Logic.not" ]
 let logic_inductives = [ Utils.get_inductive "Init.Logic.and"; Utils.get_inductive "Init.Logic.or";
                          Utils.get_inductive "Init.Logic.ex"; Utils.get_inductive "Init.Datatypes.prod";
@@ -186,6 +187,25 @@ let qforwarding_tac () = Utils.ltac_apply "Tactics.qforwarding" []
 let instering_tac () = Utils.ltac_apply "Tactics.instering" []
 let einstering_tac () = Utils.ltac_apply "Tactics.einstering" []
 let f_equal_tac () = Utils.ltac_apply "Tactics.f_equal_tac" []
+
+(*****************************************************************************************)
+
+let eq_ind (mi1, i1) (mi2, i2) = i1 = i2 && MutInd.equal mi1 mi2
+
+let rec mem_constr evd x lst =
+  match lst with
+  | [] -> false
+  | h :: t -> if EConstr.eq_constr evd x h then true else mem_constr evd x t
+
+let rec mem_ind ind lst =
+  match lst with
+  | [] -> false
+  | h :: t -> if eq_ind ind h then true else mem_ind ind t
+
+let rec mem_const c lst =
+  match lst with
+  | [] -> false
+  | h :: t -> if Constant.equal c h then true else mem_const c t
 
 (*****************************************************************************************)
 
@@ -316,11 +336,14 @@ let sunfolding b_aggressive =
 
 (*****************************************************************************************)
 
-let in_sopt_list b_hints hints x opt =
+let in_sopt_list mem b_hints hints x opt =
   match opt with
   | SAll -> true
-  | SSome lst when List.mem x lst || (b_hints && List.mem x hints) -> true
+  | SSome lst when mem x lst || (b_hints && mem x hints) -> true
   | _ -> false
+
+let in_sopt_list_ind = in_sopt_list mem_ind
+let in_sopt_list_const = in_sopt_list mem_const
 
 let is_constr_non_recursive ind t =
   let (prods, _, _) = Utils.destruct_prod Evd.empty (EConstr.of_constr t) in
@@ -333,7 +356,7 @@ let is_constr_non_recursive ind t =
       let open Constr in
       let open EConstr in
       match kind Evd.empty x with
-      | Ind (ind2, _) when ind2 = ind -> false
+      | Ind (ind2, _) when eq_ind ind2 ind -> false
       | Rel n when n > k -> false
       | _ -> acc
     end
@@ -388,7 +411,7 @@ let is_simple_split opts evd t =
   let head = Utils.get_head_red evd t in
   match kind evd head with
   | Ind (ind, _) when is_simple_ind ind ->
-     in_sopt_list opts.s_hints !simple_split_hints ind opts.s_simple_splits
+     in_sopt_list_ind opts.s_hints !simple_split_hints ind opts.s_simple_splits
   | _ -> false
 
 let is_case_split opts evd t =
@@ -401,7 +424,7 @@ let is_case_split opts evd t =
         let open EConstr in
         match kind evd t with
         | Case (ci, _, _, _) when
-               in_sopt_list opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
+               in_sopt_list_ind opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
            raise Exit
         | _ -> acc
       end false evd t
@@ -409,8 +432,8 @@ let is_case_split opts evd t =
       true
 
 let is_inversion opts evd ind args =
-  in_sopt_list opts.s_hints !inversion_hints ind opts.s_inversions &&
-    if ind = Utils.get_inductive "Init.Logic.eq" then
+  in_sopt_list_ind opts.s_hints !inversion_hints ind opts.s_inversions &&
+    if eq_ind ind coq_equality then
       match args with
       | [_; t1; t2] ->
          begin
@@ -439,7 +462,7 @@ let is_equality evd t =
   let open Constr in
   let open EConstr in
   match kind evd t with
-  | Ind(ind, _) when ind = Utils.get_inductive "Init.Logic.eq" -> true
+  | Ind(ind, _) when eq_ind ind coq_equality -> true
   | _ -> false
 
 let with_equality evd head args default f =
@@ -500,7 +523,7 @@ let rec do_when p f forbidden_ids =
       match hyps with
       | [] -> Tacticals.New.tclIDTAC
       | (id, hyp) :: hyps' ->
-         if not (List.mem id forbidden_ids) && p evd hyp then
+         if not (List.memq id forbidden_ids) && p evd hyp then
            f id <*> do_when p f (id :: forbidden_ids)
          else
            go hyps'
@@ -552,7 +575,7 @@ let case_splitting b_all opts =
          let open EConstr in
          match kind evd t with
          | Case (ci, _, c, _) when
-                in_sopt_list opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
+                in_sopt_list_ind opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
             Proofview.tclTHEN (sdestruct c <*> subst_simpl opts) acc
          | _ -> acc
        end (Proofview.tclUNIT ()) evd (Proofview.Goal.concl gl)
@@ -702,7 +725,7 @@ let create_case_actions opts evd t acc =
     let open EConstr in
     match kind evd t with
     | Case (ci, _, c, _) when
-           in_sopt_list opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
+           in_sopt_list_ind opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
        let num_ctrs = Utils.get_ind_nconstrs ci.ci_ind in
        (40 + num_ctrs * 5, num_ctrs, ActDestruct c) :: acc
     | _ -> acc
@@ -713,7 +736,9 @@ let create_hyp_actions opts evd ghead0 ghead
   let acts =
     if Utils.is_False evd head && prods = [] then
       [(0, 1, ActInvert id)]
-    else if head = ghead || head0 = ghead0 || head0 = ghead then
+    else if EConstr.eq_constr evd head ghead ||
+              EConstr.eq_constr evd head0 ghead0 ||
+                EConstr.eq_constr evd head0 ghead then
       [(cost, num_subgoals, ActApply id)]
     else if opts.s_always_apply then
       [(cost + 20, num_subgoals, ActApply id)]
@@ -838,7 +863,7 @@ let create_actions extra opts evd goal hyps gl =
     let open EConstr in
     match kind evd ghead with
     | Ind (ind, _) when
-           in_sopt_list opts.s_hints !constructor_hints ind opts.s_constructors ->
+           in_sopt_list_ind opts.s_hints !constructor_hints ind opts.s_constructors ->
        (constrs_cost ind, constrs_nsubgoals ind, ActConstructor) :: actions
     | _ ->
        actions
@@ -850,7 +875,7 @@ let create_actions extra opts evd goal hyps gl =
         let open EConstr in
         match kind evd t1, kind evd t2 with
         | (App (head1, args1), App (head2, args2))
-             when head1 = head2 && Array.length args1 = Array.length args2 ->
+             when eq_constr evd head1 head2 && Array.length args1 = Array.length args2 ->
            let len = Array.length args1 in
            (len * 10, len, ActFEqual) :: actions
         | _ ->
@@ -862,7 +887,7 @@ let create_actions extra opts evd goal hyps gl =
     let open EConstr in
     match kind evd ghead0 with
     | Const (c, _) when
-           in_sopt_list opts.s_hints !unfolding_hints c opts.s_unfolding ->
+           in_sopt_list_const opts.s_hints !unfolding_hints c opts.s_unfolding ->
        (60, 1, ActUnfold c) :: actions
     | _ ->
        actions
@@ -906,12 +931,12 @@ let rec search extra tacs opts n rtrace visited =
   else
     Proofview.Goal.enter begin fun gl ->
       let goal = Proofview.Goal.concl gl in
-      if List.mem goal visited then
+      let evd = Proofview.Goal.sigma gl in
+      let open Constr in
+      let open EConstr in
+      if mem_constr evd goal visited then
         fail_tac
       else
-        let evd = Proofview.Goal.sigma gl in
-        let open Constr in
-        let open EConstr in
         match kind evd goal with
         | Prod (_, h, f) when not (Utils.is_atom evd h) || not (Utils.is_False evd f) ->
            intros tacs opts n
