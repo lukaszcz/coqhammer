@@ -122,18 +122,28 @@ let rec sfold f sep = function
   | [e] -> f e
   | h :: t -> f h ^ sep ^ sfold f sep t
 
-let kmemoize (key : 'a -> 'k) (f : 'a -> 'b) =
-  let cache = Hashtbl.create 128 in
-  begin fun x ->
-    let k = key x in
-    try
-      Hashtbl.find cache k
-    with Not_found ->
-      begin
-        let y = f x in
-        Hashtbl.add cache k y;
-        y
-      end
+module type Memo =
+  sig
+    type key
+    val memoize : (key -> 'a) -> key -> 'a
   end
 
-let memoize f = kmemoize (fun x -> x) f
+module MakeMemo (H : Hashtbl.HashedType) : Memo with type key = H.t =
+  struct
+    module Htbl = Hashtbl.Make(H)
+
+    type key = H.t
+
+    let memoize (f : key -> 'a) =
+      let cache = Htbl.create 128 in
+      begin fun x ->
+        try
+          Htbl.find cache x
+        with Not_found ->
+          begin
+            let y = f x in
+            Htbl.add cache x y;
+            y
+          end
+      end
+  end
