@@ -275,7 +275,10 @@ let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofv
     | [] -> ret opts
     | opt :: lst' ->
        let ret opts =
-         Proofview.tclUNIT opts >>= interp lst'
+         Proofview.tclUNIT opts >>= fun opts ->
+           try_tactic begin fun () ->
+             interp lst' opts
+           end
        in
        interp_opt ret opt opts
   in
