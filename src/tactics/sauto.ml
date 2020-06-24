@@ -488,6 +488,17 @@ let is_unorientable_equality evd head args =
 
 (*****************************************************************************************)
 
+let is_true_const = Utils.get_const "Init.Datatypes.is_true"
+
+let is_coercion evd t =
+  let open Constr in
+  let open EConstr in
+  match kind evd t with
+  | Const(c, _) when Constant.equal c is_true_const -> true
+  | _ -> false
+
+(*****************************************************************************************)
+
 let rec brepeat n t =
   if n = 0 then
     Proofview.tclUNIT ()
@@ -758,7 +769,7 @@ let create_hyp_actions opts evd ghead0 ghead
       | _ ->
          []
   in
-  if opts.s_rewriting && is_equality evd head then
+  if opts.s_rewriting && is_equality evd head && not (is_coercion evd head0) then
     (* using "with_equality" here slows things down considerably *)
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] ->
