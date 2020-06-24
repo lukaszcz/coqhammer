@@ -72,7 +72,7 @@ let default_s_opts () = {
   s_depth_cost_model = false;
   s_limit = 1000;
   s_always_apply = false;
-  s_prerun = false;
+  s_prerun = false; (* "true" slows things down *)
 }
 
 let hauto_s_opts () =
