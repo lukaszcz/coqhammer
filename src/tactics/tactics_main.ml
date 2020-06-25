@@ -70,9 +70,13 @@ let exists_rew_db s =
   catch_errors (fun () -> ignore (Autorewrite.find_rewrites s); true)
     (fun _ -> false)
 
+let exists_hint_db s =
+  catch_errors (fun () -> ignore (Hints.searchtable_map s); true)
+    (fun _ -> false)
+
 let partition_hint_bases bases =
   let (lst1, lst2) = List.partition exists_rew_db bases in
-  (lst1, Hints.make_db_list lst2)
+  (lst1, Hints.make_db_list (List.filter exists_hint_db lst1 @ lst2))
 
 let check_rew_bases =
   List.iter begin fun s ->
