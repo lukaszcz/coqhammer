@@ -333,7 +333,7 @@ let run_tactics deps defs inverts msg_success msg_fail =
     usolve (use_deps <*> sauto (mkopts (hauto_s_opts ())))
   and rqauto =
     usolve (use_deps <*> sauto (mkopts (qauto_s_opts ())))
-  and rbauto =
+  and rhauto1 =
     usolve (use_deps <*> sauto (mkopts { (hauto_s_opts ()) with s_reflect = true;
                                                                 s_eager_reducing = false}))
   and rscrush =
@@ -348,7 +348,7 @@ let run_tactics deps defs inverts msg_success msg_fail =
     usolve (use_deps <*> sblast (mkopts (default_s_opts ())))
   in
   let tactics = [
-    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "fcrush"); (rbauto, "hauto brefl: on erew: off") ];
+    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "fcrush"); (rhauto1, "hauto erew: off") ];
     [ (rscrush, "scrush"); (rqblast, "qblast"); (rhecrush, "ecrush"); (rsblast, "sblast") ]
   ]
   in

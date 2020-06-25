@@ -5,8 +5,8 @@ Coq versions compatibility: 8.10, 8.11, 8.12.
 
 Overview of changes
 -------------------
-* Proper argument parsing for the reconstruction tactics. Change of
-  tactic interface.
+* Proper argument parsing for the automated reasoning tactics. Change
+  of tactic interface.
 * Optional boolean reflection in `sauto`.
 * Hint databases can now be used with `sauto`.
 * Improvements of the `sauto` proof search procedure.
