@@ -632,13 +632,13 @@ let simplify opts =
   let simpl1 =
     simp_hyps_tac () <~>
       opt opts.s_reflect (bnat_reflect_tac ()) <~>
+      opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       opts.s_simpl_tac <~>
       reduce_concl opts <~>
       (Tacticals.New.tclPROGRESS (intros_until_atom_tac ()) <*> subst_simpl opts) <~>
       simple_splitting opts <~>
       autorewriting true opts <~>
       opt opts.s_eager_rewriting (srewriting_tac ()) <~>
-      opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       opt opts.s_eager_inverting (eager_inverting opts) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
