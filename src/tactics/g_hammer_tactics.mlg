@@ -63,7 +63,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "simp+:" tactic3(tac) sauto_opts(sopts) ] -> { SOSimpAdd tac :: sopts }
 | [ "ssimp+:" tactic3(tac) sauto_opts(sopts) ] -> { SOSSimpAdd tac :: sopts }
 | [ "fwd:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
-| [ "ecsplit:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
+| [ "ecases:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
 | [ "sinv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
 | [ "einv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerInvert b :: sopts }
 | [ "ered:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerReduce b :: sopts }
@@ -78,6 +78,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "exh:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
 | [ "pre:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrerun b :: sopts }
 | [ "esig:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerSig b :: sopts }
+| [ "lia:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOLia b :: sopts }
 | [ ] -> { [SONop] }
 END
 
