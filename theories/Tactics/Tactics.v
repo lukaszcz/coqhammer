@@ -354,7 +354,7 @@ Ltac exsimpl := (* TODO: move to plugin *)
       vinst H; clear H; intro H; elim H; clear H; intro; intro
   end.
 
-Ltac isplit :=
+Ltac isplit := (* TODO: move to plugin *)
   match goal with
     | [ |- ?A /\ _ ] =>
       cut A; [ let H := fresh "H" in
@@ -365,8 +365,7 @@ Ltac isplit :=
     | [ H : _ \/ _ |- _ ] => elim H; clear H; intro
     | [ H : (?a +{ ?b }) |- _ ] => elim H; clear H; intro
     | [ H : ({ ?a }+{ ?b }) |- _ ] => elim H; clear H; intro
-    | [ |- context[match ?X with _ => _ end] ] => sdestruct X
-    | [ H : context[match ?X with _ => _ end] |- _ ] => sdestruct X
+    | [ H : (?a + ?b) |- _ ] => elim H; clear H; intro
     | [ H : forall (x : ?T1), _ \/ _ |- _ ] =>
       vinst H; clear H; intro H; elim H; clear H
     | [ H : forall (x : ?T1) (y : ?T2), _ \/ _ |- _ ] =>
@@ -864,12 +863,6 @@ Ltac srewriting :=
 
 Ltac cbn_in_all := cbn in *.
 Ltac cbn_in_concl := cbn.
-
-Definition default := tt.
-Definition none := tt.
-Definition hints := tt.
-Definition nohints := tt.
-Definition logic := tt.
 
 Ltac use t := let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
 
