@@ -33,6 +33,7 @@ type s_opts = {
   s_depth_cost_model : bool;
   s_limit : int;
   s_prerun : bool;
+  s_destruct_proj1_sigs : bool;
 }
 
 val default_s_opts : unit -> s_opts

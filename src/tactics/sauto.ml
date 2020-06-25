@@ -40,6 +40,7 @@ type s_opts = {
   s_depth_cost_model : bool;
   s_limit : int;
   s_prerun : bool;
+  s_destruct_proj1_sigs : bool;
 }
 
 let default_s_opts () = {
@@ -71,6 +72,7 @@ let default_s_opts () = {
   s_depth_cost_model = false;
   s_limit = 1000;
   s_prerun = false; (* "true" slows things down *)
+  s_destruct_proj1_sigs = true;
 }
 
 let hauto_s_opts () =
@@ -185,6 +187,7 @@ let qforwarding_tac () = Utils.ltac_apply "Tactics.qforwarding" []
 let instering_tac () = Utils.ltac_apply "Tactics.instering" []
 let einstering_tac () = Utils.ltac_apply "Tactics.einstering" []
 let f_equal_tac () = Utils.ltac_apply "Tactics.f_equal_tac" []
+let destruct_proj1_sigs_tac () = Utils.ltac_apply "Tactics.destruct_proj1_sigs" []
 
 (*****************************************************************************************)
 
@@ -633,6 +636,7 @@ let simplify opts =
     simp_hyps_tac () <~>
       opt opts.s_reflect (bnat_reflect_tac ()) <~>
       opt opts.s_eager_case_splitting (case_splitting true opts) <~>
+      opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <~>
       opts.s_simpl_tac <~>
       reduce_concl opts <~>
       (Tacticals.New.tclPROGRESS (intros_until_atom_tac ()) <*> subst_simpl opts) <~>
@@ -1100,11 +1104,12 @@ let ssimpl opts =
 let qsimpl opts =
   let tac =
     sintuition opts <~>
-      opt opts.s_reflect (bnat_reflect_tac ()) <~>
-      opt opts.s_reflect (bool_reflect_tac ()) <~>
+      (opt opts.s_reflect (bnat_reflect_tac ()) <*>
+         opt opts.s_reflect (bool_reflect_tac ())) <~>
       autorewriting true opts <~>
       (simple_splitting opts <*>
          opt opts.s_eager_case_splitting (case_splitting true opts)) <~>
+      opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   Tactics.intros <*>
