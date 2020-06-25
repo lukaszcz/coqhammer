@@ -8,18 +8,20 @@ Overview of changes
 * Proper argument parsing for the reconstruction tactics. Change of
   tactic interface.
 * Optional boolean reflection in `sauto`.
-* Improvements of `sauto`.
+* Hint databases can now be used with `sauto`.
+* Improvements of the `sauto` proof search procedure.
 * Better failure messages for the tactics.
 * `sauto` is now the preliminary tactic for `hammer`.
 * Rudimentary MathComp support. New `make` targets: `mathcomp` and
   `install-mathcomp`.
 
-Details of the improvements to `sauto`
---------------------------------------
+Details of the `sauto` proof search improvements
+------------------------------------------------
 * Actions modulo head reduction.
 * Better `sdestruct` behaviour with boolean comparisons.
 * The `f_equal` action.
 * A major speedup by removing superfluous rewrite hints.
+* Speedup by using proper Coq API functions for term comparisons.
 
 CoqHammer v. 1.2.1
 ==================
