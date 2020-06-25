@@ -54,7 +54,6 @@ type sopt_t =
 | SOLimit of int
 | SODepth of int
 | SOExhaustive of bool
-| SOAlwaysApply of bool
 | SOPrerun of bool
 
 let const_of_qualid q =
@@ -263,8 +262,6 @@ let interp_opt ret opt opts =
      ret { opts with s_limit = n; s_depth_cost_model = true }
   | SOExhaustive b ->
      ret { opts with s_exhaustive = b }
-  | SOAlwaysApply b ->
-     ret { opts with s_always_apply = b }
   | SOPrerun b ->
      ret { opts with s_prerun = b }
 

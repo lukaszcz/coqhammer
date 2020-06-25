@@ -39,7 +39,6 @@ type s_opts = {
   s_sapply : bool;
   s_depth_cost_model : bool;
   s_limit : int;
-  s_always_apply : bool;
   s_prerun : bool;
 }
 
@@ -71,7 +70,6 @@ let default_s_opts () = {
   s_sapply = true;
   s_depth_cost_model = false;
   s_limit = 1000;
-  s_always_apply = false;
   s_prerun = false; (* "true" slows things down *)
 }
 
@@ -758,8 +756,6 @@ let create_hyp_actions opts evd ghead0 ghead
               EConstr.eq_constr evd head0 ghead0 ||
                 EConstr.eq_constr evd head0 ghead then
       [(cost, num_subgoals, ActApply id)]
-    else if opts.s_always_apply then
-      [(cost + 20, num_subgoals, ActApply id)]
     else
       let open Constr in
       let open EConstr in
