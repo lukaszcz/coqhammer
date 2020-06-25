@@ -15,9 +15,12 @@ type s_opts = {
   s_exhaustive : bool;
   s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
+  s_leaf_nolia_tac : unit Proofview.tactic;
   s_solve_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
+  s_simpl_nolia_tac : unit Proofview.tactic;
   s_ssimpl_tac : unit Proofview.tactic;
+  s_ssimpl_nolia_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
   s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
@@ -41,15 +44,19 @@ type s_opts = {
   s_limit : int;
   s_prerun : bool;
   s_destruct_proj1_sigs : bool;
+  s_lia : bool;
 }
 
 let default_s_opts () = {
   s_exhaustive = false;
   s_hints = true;
   s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
+  s_leaf_nolia_tac = Utils.ltac_apply "Tactics.leaf_solve_nolia" [];
   s_solve_tac = Utils.ltac_apply "fail" [];
   s_simpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.simpl_solve" []);
+  s_simpl_nolia_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.simpl_solve_nolia" []);
   s_ssimpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve" []);
+  s_ssimpl_nolia_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve_nolia" []);
   s_unfolding = SSome [];
   s_constructors = SAll;
   s_simple_splits = SSome [];
@@ -73,6 +80,7 @@ let default_s_opts () = {
   s_limit = 1000;
   s_prerun = false; (* "true" slows things down *)
   s_destruct_proj1_sigs = true;
+  s_lia = true;
 }
 
 let hauto_s_opts () =
@@ -82,13 +90,19 @@ let hauto_s_opts () =
 
 let eauto_tac = Eauto.gen_eauto (Eauto.make_dimension None None) [] (Some [])
 let congr_tac () = Utils.ltac_apply "Tactics.congr_tac" []
+let lia_tac () = Utils.ltac_apply "Tactics.lia_tac" []
 
 let qauto_s_opts () =
   { (hauto_s_opts ()) with s_simpl_tac = Tacticals.New.tclIDTAC;
-                           s_leaf_tac = (eauto_tac <*> congr_tac ());
+                           s_simpl_nolia_tac = Tacticals.New.tclIDTAC;
+                           s_leaf_tac = (eauto_tac <*>
+                                           Tacticals.New.tclTRY (congr_tac ()) <*>
+                                           lia_tac ());
+                           s_leaf_nolia_tac = (eauto_tac <*> congr_tac ());
                            s_sapply = false;
                            s_limit = 100;
-                           s_prerun = true }
+                           s_prerun = true;
+                           s_lia = false }
 
 (*****************************************************************************************)
 
@@ -254,6 +268,12 @@ let reduce_concl opts =
     cbn_in_concl_tac ()
   else
     Proofview.tclUNIT ()
+
+(*****************************************************************************************)
+
+let leaf_tac opts = if opts.s_lia then opts.s_leaf_tac else opts.s_leaf_nolia_tac
+let simpl_tac opts = if opts.s_lia then opts.s_simpl_tac else opts.s_simpl_nolia_tac
+let ssimpl_tac opts = if opts.s_lia then opts.s_ssimpl_tac else opts.s_ssimpl_nolia_tac
 
 (*****************************************************************************************)
 
@@ -637,7 +657,7 @@ let simplify opts =
       opt opts.s_reflect (bnat_reflect_tac ()) <~>
       opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <~>
-      opts.s_simpl_tac <~>
+      simpl_tac opts <~>
       reduce_concl opts <~>
       (Tacticals.New.tclPROGRESS (intros_until_atom_tac ()) <*> subst_simpl opts) <~>
       simple_splitting opts <~>
@@ -930,7 +950,7 @@ type tactics = {
 }
 
 let create_tactics opts = {
-  t_finish = Tacticals.New.tclSOLVE [ opts.s_leaf_tac; opts.s_solve_tac ];
+  t_finish = Tacticals.New.tclSOLVE [ leaf_tac opts; opts.s_solve_tac ];
   t_simplify = simplify opts;
   t_simplify_concl = simplify_concl opts;
   t_simple_splitting = simple_splitting opts;
@@ -1080,10 +1100,10 @@ and apply_actions tacs opts n actions rtrace visited =
 let sintuition opts =
   Tactics.intros <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
-    simp_hyps_tac () <*> subst_simpl opts <*> opts.s_ssimpl_tac <*>
+    simp_hyps_tac () <*> subst_simpl opts <*> ssimpl_tac opts <*>
     Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
                                (Tactics.intros <*> simp_hyps_tac () <*> subst_simpl opts) <*>
-                               opts.s_ssimpl_tac)
+                               ssimpl_tac opts)
 
 let ssimpl opts =
   let tac1 =
@@ -1098,8 +1118,12 @@ let ssimpl opts =
                                (forwarding_tac ()) (forwarding_nocbn_tac ())) <*>
       subst_simpl opts
   in
+  let opts2 =
+    { opts with s_simpl_tac = opts.s_ssimpl_tac;
+                s_simpl_nolia_tac = opts.s_ssimpl_nolia_tac }
+  in
   opt opts.s_reflect (bool_reflect_tac ()) <*>
-  tac1 <*> (simplify { opts with s_simpl_tac = opts.s_ssimpl_tac } <~> tac2)
+  tac1 <*> (simplify opts2 <~> tac2)
 
 let qsimpl opts =
   let tac =
@@ -1119,7 +1143,7 @@ let qsimpl opts =
 let sauto opts =
   opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclTRY (opts.s_solve_tac) <*>
-    opt opts.s_prerun (Tacticals.New.tclTRY (opts.s_leaf_tac)) <*>
+    opt opts.s_prerun (Tacticals.New.tclTRY (leaf_tac opts)) <*>
     intros (create_tactics opts) opts opts.s_limit
 
 let scrush opts =

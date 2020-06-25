@@ -56,6 +56,7 @@ type sopt_t =
 | SOExhaustive of bool
 | SOPrerun of bool
 | SOEagerSig of bool
+| SOLia of bool
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -215,22 +216,27 @@ let interp_opt ret opt opts =
   | SOFinish tac ->
      ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
   | SOFinal tac ->
-     ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp (mk_final tac)] }
+     let tac = Tacticals.New.tclSOLVE [Tacinterp.interp (mk_final tac)] in
+     ret { opts with s_leaf_tac = tac; s_leaf_nolia_tac = tac }
   | SOSolve tac ->
      ret { opts with s_solve_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
   | SOSimp tac ->
-     ret { opts with s_simpl_tac = Tacinterp.interp tac }
+     let tac = Tacinterp.interp tac in
+     ret { opts with s_simpl_tac = tac; s_simpl_nolia_tac = tac }
   | SOSSimp tac ->
-     ret { opts with s_ssimpl_tac = Tacinterp.interp tac }
+     let tac = Tacinterp.interp tac in
+     ret { opts with s_ssimpl_tac = tac; s_ssimpl_nolia_tac = tac }
   | SOSolveAdd tac ->
      ret { opts with s_solve_tac =
                        Tacticals.New.tclSOLVE [opts.s_leaf_tac; Tacinterp.interp tac] }
   | SOSimpAdd tac ->
-     ret { opts with s_simpl_tac =
-                       opts.s_simpl_tac <*> Tacticals.New.tclTRY (Tacinterp.interp tac) }
+     let tac = Tacticals.New.tclTRY (Tacinterp.interp tac) in
+     ret { opts with s_simpl_tac = opts.s_simpl_tac <*> tac;
+                     s_simpl_nolia_tac = opts.s_simpl_nolia_tac <*> tac }
   | SOSSimpAdd tac ->
-     ret { opts with s_ssimpl_tac =
-                       opts.s_ssimpl_tac <*> Tacticals.New.tclTRY (Tacinterp.interp tac) }
+     let tac = Tacticals.New.tclTRY (Tacinterp.interp tac) in
+     ret { opts with s_ssimpl_tac = opts.s_ssimpl_tac <*> tac;
+                     s_ssimpl_nolia_tac = opts.s_ssimpl_nolia_tac <*> tac }
   | SOForward b ->
      ret { opts with s_forwarding = b }
   | SOEagerCaseSplit b ->
@@ -271,6 +277,8 @@ let interp_opt ret opt opts =
      ret { opts with s_prerun = b }
   | SOEagerSig b ->
      ret { opts with s_destruct_proj1_sigs = b }
+  | SOLia b ->
+     ret { opts with s_lia = b }
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =
