@@ -72,12 +72,10 @@ ARGUMENT EXTEND sauto_opts
 | [ "rew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
 | [ "brefl:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
 | [ "red:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReduce b :: sopts }
-| [ "sapply:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
+| [ "sapp:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
 | [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
 | [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
 | [ "exh:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
-| [ "exhaustive:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
-| [ "always_apply:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOAlwaysApply b :: sopts }
 | [ "pre:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrerun b :: sopts }
 | [ ] -> { [SONop] }
 END
