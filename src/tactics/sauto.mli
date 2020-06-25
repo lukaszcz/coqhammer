@@ -8,9 +8,12 @@ type s_opts = {
   s_exhaustive : bool;
   s_hints : bool;
   s_leaf_tac : unit Proofview.tactic;
+  s_leaf_nolia_tac : unit Proofview.tactic;
   s_solve_tac : unit Proofview.tactic;
   s_simpl_tac : unit Proofview.tactic;
+  s_simpl_nolia_tac : unit Proofview.tactic;
   s_ssimpl_tac : unit Proofview.tactic;
+  s_ssimpl_nolia_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
   s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
@@ -34,6 +37,7 @@ type s_opts = {
   s_limit : int;
   s_prerun : bool;
   s_destruct_proj1_sigs : bool;
+  s_lia : bool;
 }
 
 val default_s_opts : unit -> s_opts

@@ -395,6 +395,16 @@ Ltac trysolve :=
   | _ => idtac
   end.
 
+Ltac trysolve_nolia :=
+  eauto 2 with shints; try solve [ constructor ];
+  match goal with
+  | [ |- ?t = ?u ] => try solve [ try subst; congruence 8 ]
+  | [ |- ?t <> ?u ] => try solve [ try subst; congruence 8 ]
+  | [ |- (?t = ?u) -> False ] => try solve [ intro; try subst; congruence 8 ]
+  | [ |- False ] => try solve [ try subst; congruence 8 ]
+  | _ => idtac
+  end.
+
 Ltac sfinal tac :=
   let simp := intros; simp_hyps; repeat exsimpl
   in
@@ -411,6 +421,7 @@ Ltac sfinal tac :=
   msolve tt.
 
 Ltac isolve := sfinal trysolve.
+Ltac isolve_nolia := sfinal trysolve_nolia.
 
 Ltac tryrsolve :=
   let solver tac :=
@@ -493,13 +504,19 @@ Ltac sapply e :=
 
 Ltac dsolve := auto with shints; try seasy; try solve [ do 10 constructor ].
 
-Ltac ssolve := (intuition (auto with shints)); try solve [ isolve ]; try congruence 24;
-               try seasy; try solve [ econstructor; isolve ].
+Ltac ssolve_gen tac :=
+  (intuition (auto with shints)); try solve [ tac ]; try congruence 24;
+  try seasy; try solve [ econstructor; tac ].
+Ltac ssolve := ssolve_gen isolve.
+Ltac ssolve_nolia := ssolve_gen isolve_nolia.
 
-Ltac strivial := solve [ autounfold with shints; unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+Ltac strivial := solve [ autounfold with shints; unfold iff in *; unfold not in *;
+                         unshelve isolve; dsolve ].
 
 Ltac leaf_solve := solve [ isolve ].
 Ltac simpl_solve := solve [ isolve ].
+Ltac leaf_solve_nolia := solve [ isolve_nolia ].
+Ltac simpl_solve_nolia := solve [ isolve_nolia ].
 
 Ltac bnat_reflect :=
   repeat match goal with
@@ -852,13 +869,13 @@ Ltac einstering :=
          | [ H : ?P |- _ ] => isProp P; einster H
          end.
 
-Ltac srewrite H := (erewrite H in * by isolve) || (erewrite <- H in * by isolve).
-Ltac srewrite_in_concl H := (erewrite H by isolve) || (erewrite <- H by isolve).
+Ltac srewrite H := (erewrite H in * by isolve_nolia) || (erewrite <- H in * by isolve_nolia).
+Ltac srewrite_in_concl H := (erewrite H by isolve_nolia) || (erewrite <- H by isolve_nolia).
 
 Ltac srewriting :=
   repeat match goal with
-         | [ H : ?T |- _ ] => checkTargetLPO T; erewrite H in * by isolve
-         | [ H : ?T |- _ ] => checkTargetRevLPO T; erewrite <- H in * by isolve
+         | [ H : ?T |- _ ] => checkTargetLPO T; erewrite H in * by isolve_nolia
+         | [ H : ?T |- _ ] => checkTargetRevLPO T; erewrite <- H in * by isolve_nolia
          end.
 
 Ltac cbn_in_all := cbn in *.
@@ -875,6 +892,7 @@ Ltac destruct_proj1_sigs :=
 Ltac use t := let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
 
 Ltac congr_tac := congruence 400.
+Ltac lia_tac := lia.
 Ltac f_equal_tac := f_equal.
 
 Declare ML Module "hammer_tactics".
