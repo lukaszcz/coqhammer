@@ -264,7 +264,9 @@ let interp_opt ret opt opts =
      if b then
        ret { opts with s_reducing = true }
      else
-       ret { opts with s_reducing = false; s_eager_reducing = false }
+       ret { opts with s_reducing = false;
+                       s_eager_reducing = false;
+                       s_destruct_proj1_sigs = false }
   | SOSapply b ->
      ret { opts with s_sapply = true }
   | SOLimit n ->
