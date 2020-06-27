@@ -217,6 +217,17 @@ Qed.
 
 End FOFProblem2.
 
+Inductive R_add : nat -> nat -> nat -> Prop :=
+| R_add_0 : forall m, R_add 0 m m
+| R_add_S : forall p m k, R_add p m k -> R_add (S p) m (S k).
+
+Hint Constructors R_add : R_add_db.
+
+Lemma lem_minus : exists x, R_add x 2 20.
+Proof.
+  hauto db: R_add_db.
+Qed.
+
 Require Import List.
 Require Import Lia.
 
