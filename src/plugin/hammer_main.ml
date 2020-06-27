@@ -351,8 +351,8 @@ let run_tactics deps defs inverts msg_success msg_fail =
     usolve (use_deps <*> sblast (mkopts (default_s_opts ())))
   in
   let tactics = [
-    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "fcrush"); (rhauto1, "hauto erew: off") ];
-    [ (rscrush, "scrush"); (rqblast, "qblast"); (rhecrush, "ecrush"); (rsblast, "sblast") ]
+    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhauto1, "hauto erew: off") ];
+    [ (rscrush, "scrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rsblast, "sblast") ]
   ]
   in
   let rec hlp lst =
