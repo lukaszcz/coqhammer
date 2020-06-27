@@ -884,9 +884,10 @@ Ltac cbn_in_concl := cbn.
 Ltac destruct_proj1_sigs :=
   repeat match goal with
          | [H : context[proj1_sig ?X] |- _] =>
-           destruct X; simpl in H
+           destruct X; simpl in *
          | [ |- context[proj1_sig ?X] ] =>
-           destruct X; simpl
+           destruct X; simpl in *
+
          end.
 
 Ltac use t := let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
