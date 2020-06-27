@@ -338,20 +338,23 @@ let run_tactics deps defs inverts msg_success msg_fail =
     usolve (use_deps <*> sauto (mkopts (qauto_s_opts ())))
   and rhauto1 =
     usolve (use_deps <*> sauto (mkopts { (hauto_s_opts ()) with s_eager_reducing = false}))
-  and rscrush =
-    usolve (use_deps <*> scrush (mkopts (default_s_opts ())))
+  and rhcrush =
+    usolve (use_deps <*> scrush (mkopts (hauto_s_opts ())))
   and rhfcrush =
     usolve (use_deps <*> fcrush (mkopts (hauto_s_opts ())))
   and rqblast =
     usolve (use_deps <*> qblast (mkopts (default_s_opts ())))
   and rhecrush =
     usolve (use_deps <*> ecrush (mkopts (hauto_s_opts ())))
-  and rsblast =
-    usolve (use_deps <*> sblast (mkopts (default_s_opts ())))
+  and rhauto2 =
+    usolve (use_deps <*> sauto (mkopts
+                                  { (hauto_s_opts ()) with s_eager_rewriting = false;
+                                                           s_eager_reducing = false;
+                                                           s_destruct_proj1_sigs = false} ))
   in
   let tactics = [
-    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhauto1, "hauto erew: off") ];
-    [ (rscrush, "scrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rsblast, "sblast") ]
+    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhauto1, "hauto ered: off") ];
+    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rhauto2, "hauto ered: off erew: off esig: off") ]
   ]
   in
   let rec hlp lst =
