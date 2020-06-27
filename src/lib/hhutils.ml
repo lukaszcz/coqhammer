@@ -615,7 +615,12 @@ let find_hints db secvars evd t =
   try
     let open Hints in
     let hdc = Hints.decompose_app_bound evd t in
-    let hints = Hint_db.map_eauto evd ~secvars hdc t db in
+    let hints =
+      if Termops.occur_existential evd t then
+        Hint_db.map_existential evd ~secvars hdc t db
+      else
+        Hint_db.map_auto evd ~secvars hdc t db
+    in
     List.map (fun h -> (h.pri, db, h)) hints
   with Hints.Bound ->
     []
