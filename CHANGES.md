@@ -73,7 +73,7 @@ Overview of changes
 * More reliable timeout mechanism based on `fork` and `wait`.
 * Improvements in the reconstruction tactics, more rewrite hints for `sauto`.
 * Change in reconstruction tactics interface. Tactics no longer need a
-list of hypotheses, and a different set of tactics is used.
+  list of hypotheses, and a different set of tactics is used.
 * Improvements in the translation.
 * Messages now more user-friendly.
 * `predict` tactic.
