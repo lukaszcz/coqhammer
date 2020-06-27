@@ -237,6 +237,8 @@ let memoize_ind = IndMemo.memoize
 
 (*****************************************************************************************)
 
+let opt b tac = if b then tac else Tacticals.New.tclIDTAC
+
 let autorewrite b_all bases =
   let bases =
     if List.mem "nohints" bases then
@@ -252,10 +254,11 @@ let autorewrite b_all bases =
       { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let subst_simpl opts =
-  if opts.s_eager_reducing && opts.s_reducing then
-    subst_simpl_tac ()
-  else
-    ssubst_tac ()
+  opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <*>
+    if opts.s_eager_reducing && opts.s_reducing then
+      subst_simpl_tac ()
+    else
+      ssubst_tac ()
 
 let sinvert opts id =
   if opts.s_exhaustive then
@@ -572,8 +575,6 @@ let rec do_when p f forbidden_ids =
 
 let do_when p f = do_when p f []
 
-let opt b tac = if b then tac else Tacticals.New.tclIDTAC
-
 let with_reduction opts tac1 tac2 =
   if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
 
@@ -656,7 +657,6 @@ let simplify opts =
     simp_hyps_tac () <~>
       opt opts.s_reflect (bnat_reflect_tac ()) <~>
       opt opts.s_eager_case_splitting (case_splitting true opts) <~>
-      opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <~>
       simpl_tac opts <~>
       reduce_concl opts <~>
       (Tacticals.New.tclPROGRESS (intros_until_atom_tac ()) <*> subst_simpl opts) <~>
@@ -1013,6 +1013,7 @@ and start_search tacs opts n =
 and intros tacs opts n =
   tacs.t_reduce_concl <*>
     intros_until_atom_tac () <*>
+    opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <*>
     start_search tacs opts n
 
 and apply_actions tacs opts n actions rtrace visited =
