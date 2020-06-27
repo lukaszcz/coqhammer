@@ -347,11 +347,12 @@ let run_tactics deps defs inverts msg_success msg_fail =
     usolve (use_deps <*> sauto (mkopts
                                   { (hauto_s_opts ()) with s_eager_rewriting = false;
                                                            s_eager_reducing = false;
-                                                           s_destruct_proj1_sigs = false} ))
+                                                           s_destruct_proj1_sigs = false;
+                                                           s_eager_case_splitting = false} ))
   in
   let tactics = [
     [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhauto1, "hauto ered: off") ];
-    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rhauto2, "hauto ered: off erew: off esig: off") ]
+    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rhauto2, "hauto ered: off erew: off esig: off ecases: off") ]
   ]
   in
   let rec hlp lst =
