@@ -408,17 +408,22 @@ Ltac trysolve_nolia :=
 Ltac sfinal tac :=
   let simp := intros; simp_hyps; repeat exsimpl
   in
-  let rec msolve tt :=
+  let rec msolve n :=
       simp; repeat (progress isplit; guard numgoals < 20; simp);
       lazymatch goal with
         | [ H : False |- _ ] => elim H
         | _ =>
-          solve [ tac | left; msolve tt | right; msolve tt |
-                  eexists; msolve tt ]
-                (* TODO: move to plugin, generalize to applying non-recursive constructors *)
+          lazymatch n with
+          | 0 => solve [ tac ]
+          | S ?m =>
+            solve [ tac | left; msolve m | right; msolve m |
+                    eexists; msolve m ]
+                  (* TODO: move to plugin, generalize to applying
+                     non-recursive constructors *)
+          end
       end
   in
-  msolve tt.
+  msolve 6.
 
 Ltac isolve := sfinal trysolve.
 Ltac isolve_nolia := sfinal trysolve_nolia.
