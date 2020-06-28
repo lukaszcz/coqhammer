@@ -602,6 +602,26 @@ Ltac case_split_concl :=
 Ltac case_splitting_concl := repeat (case_split_concl; ssubst; cbn).
 Ltac case_splitting_concl_nocbn := repeat (case_split_concl; ssubst).
 
+Ltac case_split_on ind :=
+  match goal with
+  | [ |- context[match ?X with _ => _ end] ] =>
+    tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
+  | [ H : context[match ?X with _ => _ end] |- _ ] =>
+    tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
+  end.
+
+Ltac case_splitting_on t := repeat (case_split_on t; ssubst; cbn in *).
+Ltac case_splitting_on_nocbn t := repeat (case_split_on t; ssubst).
+
+Ltac case_split_concl_on ind :=
+  match goal with
+  | [ |- context[match ?X with _ => _ end] ] =>
+    tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
+  end.
+
+Ltac case_splitting_concl_on t := repeat (case_split_concl_on t; ssubst; cbn).
+Ltac case_splitting_concl_on_nocbn t := repeat (case_split_concl_on t; ssubst).
+
 Ltac generalizing :=
   repeat match goal with
            | [ H : _ |- _ ] => generalize H; clear H
