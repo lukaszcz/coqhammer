@@ -179,34 +179,34 @@ let subst_simpl_tac () = Utils.ltac_apply "Tactics.subst_simpl" []
 let srewrite_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.srewrite" [mk_tac_arg_id id])
 let intros_until_atom_tac () = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac () = Utils.ltac_apply "Tactics.simple_inverting" []
-let simple_inverting_nocbn_tac () = Utils.ltac_apply "Tactics.simple_inverting_nocbn" []
+let simple_inverting_nored_tac () = Utils.ltac_apply "Tactics.simple_inverting_nored" []
 let simple_invert_tac id = Utils.ltac_apply "Tactics.simple_invert" [mk_tac_arg_id id]
-let simple_invert_nocbn_tac id = Utils.ltac_apply "Tactics.simple_invert_nocbn" [mk_tac_arg_id id]
+let simple_invert_nored_tac id = Utils.ltac_apply "Tactics.simple_invert_nored" [mk_tac_arg_id id]
 let sapply_tac id = Utils.ltac_apply "Tactics.sapply" [mk_tac_arg_id id]
 let case_splitting_tac () = Utils.ltac_apply "Tactics.case_splitting" []
-let case_splitting_nocbn_tac () = Utils.ltac_apply "Tactics.case_splitting_nocbn" []
+let case_splitting_nored_tac () = Utils.ltac_apply "Tactics.case_splitting_nored" []
 let case_splitting_concl_tac () = Utils.ltac_apply "Tactics.case_splitting_concl" []
-let case_splitting_concl_nocbn_tac () =
-  Utils.ltac_apply "Tactics.case_splitting_concl_nocbn" []
-let case_splitting_on_tac ind = print_endline "akuku!";
+let case_splitting_concl_nored_tac () =
+  Utils.ltac_apply "Tactics.case_splitting_concl_nored" []
+let case_splitting_on_tac ind =
   Utils.ltac_eval "Tactics.case_splitting_on" [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
-let case_splitting_on_nocbn_tac ind =
-  Utils.ltac_eval "Tactics.case_splitting_on_nocbn"
+let case_splitting_on_nored_tac ind =
+  Utils.ltac_eval "Tactics.case_splitting_on_nored"
     [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
 let case_splitting_concl_on_tac ind =
   Utils.ltac_eval "Tactics.case_splitting_concl_on"
     [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
-let case_splitting_concl_on_nocbn_tac ind =
-  Utils.ltac_eval "Tactics.case_splitting_concl_on_nocbn"
+let case_splitting_concl_on_nored_tac ind =
+  Utils.ltac_eval "Tactics.case_splitting_concl_on_nored"
     [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
 let forwarding_tac () = Utils.ltac_apply "Tactics.forwarding" []
-let forwarding_nocbn_tac () = Utils.ltac_apply "Tactics.forwarding_nocbn" []
+let forwarding_nored_tac () = Utils.ltac_apply "Tactics.forwarding_nored" []
 let srewriting_tac () = Utils.ltac_apply "Tactics.srewriting" []
 let bnat_reflect_tac () = Utils.ltac_apply "Tactics.bnat_reflect" []
 let bool_reflect_tac () = Utils.ltac_apply "Tactics.bool_reflect" []
 let fullunfold_tac t = Utils.ltac_apply "Tactics.fullunfold" [mk_tac_arg_constr t]
-let cbn_in_concl_tac () = Utils.ltac_apply "Tactics.cbn_in_concl" []
-let cbn_in_all_tac () = Utils.ltac_apply "Tactics.cbn_in_all" []
+let red_in_concl_tac () = Utils.ltac_apply "Tactics.red_in_concl" []
+let red_in_all_tac () = Utils.ltac_apply "Tactics.red_in_all" []
 let dsolve_tac () = Utils.ltac_apply "Tactics.dsolve" []
 let qforwarding_tac () = Utils.ltac_apply "Tactics.qforwarding" []
 let instering_tac () = Utils.ltac_apply "Tactics.instering" []
@@ -279,7 +279,7 @@ let sinvert opts id =
 
 let reduce_concl opts =
   if opts.s_eager_reducing && opts.s_reducing then
-    cbn_in_concl_tac ()
+    red_in_concl_tac ()
   else
     Proofview.tclUNIT ()
 
@@ -613,16 +613,16 @@ let case_splitting b_all opts =
   match opts.s_case_splits with
   | SAll ->
      if b_all then
-       with_reduction opts (case_splitting_tac ()) (case_splitting_nocbn_tac ())
+       with_reduction opts (case_splitting_tac ()) (case_splitting_nored_tac ())
      else
-       with_reduction opts (case_splitting_concl_tac ()) (case_splitting_concl_nocbn_tac ())
+       with_reduction opts (case_splitting_concl_tac ()) (case_splitting_concl_nored_tac ())
   | SNone -> Tacticals.New.tclIDTAC
   | SSome lst ->
      let csplit =
        if b_all then
-         with_reduction opts case_splitting_on_tac case_splitting_on_nocbn_tac
+         with_reduction opts case_splitting_on_tac case_splitting_on_nored_tac
        else
-         with_reduction opts case_splitting_concl_on_tac case_splitting_concl_on_nocbn_tac
+         with_reduction opts case_splitting_concl_on_tac case_splitting_concl_on_nored_tac
      in
      List.fold_left (fun tac ind -> tac <*> csplit ind) Tacticals.New.tclIDTAC
        (!case_split_hints @ lst)
@@ -644,7 +644,7 @@ let eager_inverting opts =
 
 let simple_inverting opts =
   match opts.s_inversions with
-  | SAll -> with_reduction opts (simple_inverting_tac ()) (simple_inverting_nocbn_tac ())
+  | SAll -> with_reduction opts (simple_inverting_tac ()) (simple_inverting_nored_tac ())
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
      repeat_when
@@ -656,7 +656,7 @@ let simple_inverting opts =
          | Ind(ind, _) when is_inversion opts evd ind args -> true
          | _ -> false
        end
-       (with_reduction opts simple_invert_tac simple_invert_nocbn_tac)
+       (with_reduction opts simple_invert_tac simple_invert_nored_tac)
 
 let simplify opts =
   let simpl1 =
@@ -676,7 +676,7 @@ let simplify opts =
     (if opts.s_forwarding then
        simpl1 <*>
          (Tacticals.New.tclTRY
-            (Tacticals.New.tclPROGRESS (with_reduction opts (forwarding_tac ()) (forwarding_nocbn_tac ())) <*> simpl1))
+            (Tacticals.New.tclPROGRESS (with_reduction opts (forwarding_tac ()) (forwarding_nored_tac ())) <*> simpl1))
      else
        simpl1)
   <*> Tacticals.New.tclTRY opts.s_solve_tac
@@ -1094,7 +1094,7 @@ and apply_actions tacs opts n actions rtrace visited =
             cont (Tactics.intros <*> tacs.t_subst_simpl <*> start_search tacs opts n') acts
          | ActReduce ->
             cont (Proofview.tclBIND
-                    (Tacticals.New.tclPROGRESS (cbn_in_all_tac ()))
+                    (Tacticals.New.tclPROGRESS (red_in_all_tac ()))
                     (fun _ -> start_search tacs opts n')) acts
          | ActFEqual ->
             continue n' (f_equal_tac ()) acts
@@ -1117,12 +1117,12 @@ let ssimpl opts =
     Tactics.intros <*> unfolding opts <*> sintuition opts <*> subst_simpl opts <*>
       simp_hyps_tac () <*>
       opt opts.s_forwarding (with_reduction opts
-                               (forwarding_tac ()) (forwarding_nocbn_tac ())) <*>
+                               (forwarding_tac ()) (forwarding_nored_tac ())) <*>
       subst_simpl opts
   and tac2 =
     Tactics.intros <*> unfolding opts <*>
       opt opts.s_forwarding (with_reduction opts
-                               (forwarding_tac ()) (forwarding_nocbn_tac ())) <*>
+                               (forwarding_tac ()) (forwarding_nored_tac ())) <*>
       subst_simpl opts
   in
   let opts2 =
