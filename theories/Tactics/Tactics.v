@@ -141,7 +141,7 @@ Ltac sdestruct t :=
 
 Ltac ssubst := try subst.
 
-Ltac subst_simpl := ssubst; cbn in *.
+Ltac subst_simpl := ssubst; simpl in *.
 
 Ltac xintro x :=
   tryif intro x then
@@ -566,14 +566,14 @@ Ltac bnat_reflect :=
 
 Ltac bool_reflect := bsimpl in *; breflect in *.
 
-Ltac invert_one_subgoal_nocbn H :=
+Ltac invert_one_subgoal_nored H :=
   let ty := type of H in
   inversion H; [idtac]; clear H; notHyp ty; ssubst.
 
-Ltac invert_one_subgoal H := invert_one_subgoal_nocbn H; cbn in *.
+Ltac invert_one_subgoal H := invert_one_subgoal_nored H; simpl in *.
 
 Ltac simple_invert H := solve [ inversion H ] || invert_one_subgoal H.
-Ltac simple_invert_nocbn H := solve [ inversion H ] || invert_one_subgoal_nocbn H.
+Ltac simple_invert_nored H := solve [ inversion H ] || invert_one_subgoal_nored H.
 Ltac simple_inverting_gen tac :=
   repeat match goal with
          | [ H : ?P |- _ ] =>
@@ -583,7 +583,7 @@ Ltac simple_inverting_gen tac :=
            end
          end.
 Ltac simple_inverting := simple_inverting_gen simple_invert.
-Ltac simple_inverting_nocbn := simple_inverting_gen simple_invert_nocbn.
+Ltac simple_inverting_nored := simple_inverting_gen simple_invert_nored.
 
 Ltac case_split :=
   match goal with
@@ -591,16 +591,16 @@ Ltac case_split :=
   | [ H : context[match ?X with _ => _ end] |- _ ] => sdestruct X
   end.
 
-Ltac case_splitting := repeat (case_split; ssubst; cbn in *).
-Ltac case_splitting_nocbn := repeat (case_split; ssubst).
+Ltac case_splitting := repeat (case_split; ssubst; simpl in *).
+Ltac case_splitting_nored := repeat (case_split; ssubst).
 
 Ltac case_split_concl :=
   match goal with
   | [ |- context[match ?X with _ => _ end] ] => sdestruct X
   end.
 
-Ltac case_splitting_concl := repeat (case_split_concl; ssubst; cbn).
-Ltac case_splitting_concl_nocbn := repeat (case_split_concl; ssubst).
+Ltac case_splitting_concl := repeat (case_split_concl; ssubst; simpl).
+Ltac case_splitting_concl_nored := repeat (case_split_concl; ssubst).
 
 Ltac case_split_on ind :=
   match goal with
@@ -610,8 +610,8 @@ Ltac case_split_on ind :=
     tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
   end.
 
-Ltac case_splitting_on t := repeat (case_split_on t; ssubst; cbn in *).
-Ltac case_splitting_on_nocbn t := repeat (case_split_on t; ssubst).
+Ltac case_splitting_on t := repeat (case_split_on t; ssubst; simpl in *).
+Ltac case_splitting_on_nored t := repeat (case_split_on t; ssubst).
 
 Ltac case_split_concl_on ind :=
   match goal with
@@ -619,8 +619,8 @@ Ltac case_split_concl_on ind :=
     tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
   end.
 
-Ltac case_splitting_concl_on t := repeat (case_split_concl_on t; ssubst; cbn).
-Ltac case_splitting_concl_on_nocbn t := repeat (case_split_concl_on t; ssubst).
+Ltac case_splitting_concl_on t := repeat (case_split_concl_on t; ssubst; simpl).
+Ltac case_splitting_concl_on_nored t := repeat (case_split_concl_on t; ssubst).
 
 Ltac generalizing :=
   repeat match goal with
@@ -747,17 +747,17 @@ Ltac forward_base tac e :=
     end
   end.
 
-Ltac forward H := forward_base ltac:(cbn) H.
-Ltac forward_nocbn H := forward_base ltac:(idtac) H.
+Ltac forward H := forward_base ltac:(simpl) H.
+Ltac forward_nored H := forward_base ltac:(idtac) H.
 
 Ltac forwarding :=
   repeat match goal with
          | [ H : forall x : _,_ |- _ ] => forward H
          end.
 
-Ltac forwarding_nocbn :=
+Ltac forwarding_nored :=
   repeat match goal with
-         | [ H : forall x : _,_ |- _ ] => forward_nocbn H
+         | [ H : forall x : _,_ |- _ ] => forward_nored H
          end.
 
 Ltac inList x lst :=
@@ -903,8 +903,8 @@ Ltac srewriting :=
          | [ H : ?T |- _ ] => checkTargetRevLPO T; erewrite <- H in * by isolve_nolia
          end.
 
-Ltac cbn_in_all := cbn in *.
-Ltac cbn_in_concl := cbn.
+Ltac red_in_all := simpl in *.
+Ltac red_in_concl := simpl.
 
 Ltac destruct_proj1_sigs :=
   repeat match goal with
