@@ -188,6 +188,17 @@ let case_splitting_nocbn_tac () = Utils.ltac_apply "Tactics.case_splitting_nocbn
 let case_splitting_concl_tac () = Utils.ltac_apply "Tactics.case_splitting_concl" []
 let case_splitting_concl_nocbn_tac () =
   Utils.ltac_apply "Tactics.case_splitting_concl_nocbn" []
+let case_splitting_on_tac ind = print_endline "akuku!";
+  Utils.ltac_eval "Tactics.case_splitting_on" [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+let case_splitting_on_nocbn_tac ind =
+  Utils.ltac_eval "Tactics.case_splitting_on_nocbn"
+    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+let case_splitting_concl_on_tac ind =
+  Utils.ltac_eval "Tactics.case_splitting_concl_on"
+    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+let case_splitting_concl_on_nocbn_tac ind =
+  Utils.ltac_eval "Tactics.case_splitting_concl_on_nocbn"
+    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
 let forwarding_tac () = Utils.ltac_apply "Tactics.forwarding" []
 let forwarding_nocbn_tac () = Utils.ltac_apply "Tactics.forwarding_nocbn" []
 let srewriting_tac () = Utils.ltac_apply "Tactics.srewriting" []
@@ -606,20 +617,15 @@ let case_splitting b_all opts =
      else
        with_reduction opts (case_splitting_concl_tac ()) (case_splitting_concl_nocbn_tac ())
   | SNone -> Tacticals.New.tclIDTAC
-  | SSome [] when !case_split_hints = [] -> Tacticals.New.tclIDTAC
-  | _ ->
-     Proofview.Goal.enter begin fun gl ->
-       let evd = Proofview.Goal.sigma gl in
-       Utils.fold_constr_shallow begin fun acc t ->
-         let open Constr in
-         let open EConstr in
-         match kind evd t with
-         | Case (ci, _, c, _) when
-                in_sopt_list_ind opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
-            Proofview.tclTHEN (sdestruct c <*> subst_simpl opts) acc
-         | _ -> acc
-       end (Proofview.tclUNIT ()) evd (Proofview.Goal.concl gl)
-     end
+  | SSome lst ->
+     let csplit =
+       if b_all then
+         with_reduction opts case_splitting_on_tac case_splitting_on_nocbn_tac
+       else
+         with_reduction opts case_splitting_concl_on_tac case_splitting_concl_on_nocbn_tac
+     in
+     List.fold_left (fun tac ind -> tac <*> csplit ind) Tacticals.New.tclIDTAC
+       (!case_split_hints @ lst)
 
 let eager_inverting opts =
   match opts.s_inversions with
