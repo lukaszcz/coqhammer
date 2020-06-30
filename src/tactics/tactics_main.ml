@@ -58,7 +58,7 @@ type sopt_t =
 | SODepth of int
 | SOExhaustive of bool
 | SOPrerun of bool
-| SOEagerSig of bool
+| SOSig of bool
 | SOLia of bool
 | SODep of bool
 
@@ -276,8 +276,7 @@ let interp_opt ret opt opts =
        ret { opts with s_reducing = true }
      else
        ret { opts with s_reducing = false;
-                       s_eager_reducing = false;
-                       s_destruct_proj1_sigs = false }
+                       s_eager_reducing = false }
   | SOSapply b ->
      ret { opts with s_sapply = true }
   | SOLimit n ->
@@ -288,8 +287,8 @@ let interp_opt ret opt opts =
      ret { opts with s_exhaustive = b }
   | SOPrerun b ->
      ret { opts with s_prerun = b }
-  | SOEagerSig b ->
-     ret { opts with s_destruct_proj1_sigs = b }
+  | SOSig b ->
+     ret { opts with s_simpl_sigma = b }
   | SOLia b ->
      ret { opts with s_lia = b }
   | SODep b ->
