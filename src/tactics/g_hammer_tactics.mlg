@@ -27,6 +27,9 @@ ARGUMENT EXTEND sauto_opts
 | [ "unfold:" "*" sauto_opts(sopts) ] -> { SOUnfoldAll :: sopts }
 | [ "unfold:" "-" sauto_opts(sopts) ] -> { SOUnfoldNone :: sopts }
 | [ "unfold:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
+| [ "unfold!:" "*" sauto_opts(sopts) ] -> { SOAlwaysUnfoldAll :: sopts }
+| [ "unfold!:" "-" sauto_opts(sopts) ] -> { SOAlwaysUnfoldNone :: sopts }
+| [ "unfold!:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOAlwaysUnfold l :: sopts }
 | [ "inv:" "*" sauto_opts(sopts) ] -> { SOInvAll :: sopts }
 | [ "inv:" "-" sauto_opts(sopts) ] -> { SOInv [] :: sopts }
 | [ "inv:" "never" sauto_opts(sopts) ] -> { SOInvNone :: sopts }
