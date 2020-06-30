@@ -2,6 +2,7 @@ DECLARE PLUGIN "hammer_tactics"
 
 {
 open Ltac_plugin
+open Stdarg
 open Pcoq.Prim
 open Pcoq.Constr
 open Hammer_errors
@@ -225,5 +226,11 @@ END
 TACTIC EXTEND Hammer_sauto_actions
 | [ "sauto_actions" sauto_opts(l) ] -> {
   try_tactic (fun () -> interp_opts (default_s_opts ()) l print_actions)
+}
+END
+
+TACTIC EXTEND Hammer_use
+| [ "use" ne_constr_list_sep(l, ",") ] -> {
+  try_tactic (fun () -> use_lemmas l)
 }
 END
