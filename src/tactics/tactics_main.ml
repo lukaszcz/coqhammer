@@ -57,6 +57,7 @@ type sopt_t =
 | SOPrerun of bool
 | SOEagerSig of bool
 | SOLia of bool
+| SODep of bool
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -281,6 +282,8 @@ let interp_opt ret opt opts =
      ret { opts with s_destruct_proj1_sigs = b }
   | SOLia b ->
      ret { opts with s_lia = b }
+  | SODep b ->
+     ret { opts with s_dep = b }
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =

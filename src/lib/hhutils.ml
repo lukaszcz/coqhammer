@@ -77,6 +77,13 @@ let get_ind_nconstrs ind =
   let open Declarations in
   Array.length mind.mind_packets.(snd ind).mind_user_lc
 
+let is_indexed_ind ind =
+  let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
+  let open Declarations in
+  mind.mind_packets.(snd ind).mind_nrealargs > 0
+
+(***************************************************************************************)
+
 let rec close f ctx t =
   match ctx with
   | [] -> t
@@ -608,3 +615,5 @@ let find_hints db secvars evd t =
     List.map (fun h -> (h.pri, db, h)) hints
   with Hints.Bound ->
     []
+
+(******************************************************************************************)

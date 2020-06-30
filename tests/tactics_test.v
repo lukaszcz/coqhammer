@@ -1014,3 +1014,17 @@ Lemma lem_perm_forall {A} (P : A -> Prop) :
 Proof.
   induction 1; sauto.
 Qed.
+
+(* Dependent types *)
+
+Inductive type := Nat | Bool.
+
+Inductive expr : type -> Type :=
+| Var : nat -> expr Nat
+| Plus : expr Nat -> expr Nat -> expr Nat
+| Equal : expr Nat -> expr Nat -> expr Bool.
+
+Lemma lem_testdep : forall e : expr Nat, match e with Var n => n >= 0 | _ => e = e end.
+Proof.
+  sauto dep: on.
+Qed.

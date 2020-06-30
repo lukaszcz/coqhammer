@@ -32,6 +32,8 @@ val get_ind_constrs : inductive -> Constr.t list
 
 val get_ind_nconstrs : inductive -> int
 
+val is_indexed_ind : inductive -> bool
+
 val close : (Name.t * 'a * 'a -> 'a) -> (Name.t * 'a) list -> 'a -> 'a
 
 val get_tactic : string -> Tacexpr.ltac_constant
@@ -62,7 +64,7 @@ val take_all_prods : Evd.evar_map -> EConstr.t -> (Name.t Context.binder_annot *
 
 val destruct_app : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t list (* args *)
 
-val destruct_app_red : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t list (* arg after red *)
+val destruct_app_red : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t list (* args after red *)
 
 val destruct_prod : Evd.evar_map -> EConstr.t ->
   (Name.t Context.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t list (* args *)

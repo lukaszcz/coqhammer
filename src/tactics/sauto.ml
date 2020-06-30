@@ -45,6 +45,7 @@ type s_opts = {
   s_prerun : bool;
   s_destruct_proj1_sigs : bool;
   s_lia : bool;
+  s_dep : bool;
 }
 
 let default_s_opts () = {
@@ -81,6 +82,7 @@ let default_s_opts () = {
   s_prerun = false; (* "true" slows things down *)
   s_destruct_proj1_sigs = true;
   s_lia = true;
+  s_dep = false;
 }
 
 let hauto_s_opts () =
@@ -103,6 +105,9 @@ let qauto_s_opts () =
                            s_limit = 100;
                            s_prerun = true;
                            s_lia = false }
+
+let with_reduction opts tac1 tac2 =
+  if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
 
 (*****************************************************************************************)
 
@@ -174,6 +179,8 @@ let esimp_hyps_tac () = Utils.ltac_apply "Tactics.esimp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
 let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
 let seinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
+let sdepinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sdepinvert" [mk_tac_arg_id id])
+let sedepinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sedepinvert" [mk_tac_arg_id id])
 let ssubst_tac () = Utils.ltac_apply "Tactics.ssubst" []
 let subst_simpl_tac () = Utils.ltac_apply "Tactics.subst_simpl" []
 let srewrite_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.srewrite" [mk_tac_arg_id id])
@@ -183,21 +190,49 @@ let simple_inverting_nored_tac () = Utils.ltac_apply "Tactics.simple_inverting_n
 let simple_invert_tac id = Utils.ltac_apply "Tactics.simple_invert" [mk_tac_arg_id id]
 let simple_invert_nored_tac id = Utils.ltac_apply "Tactics.simple_invert_nored" [mk_tac_arg_id id]
 let sapply_tac id = Utils.ltac_apply "Tactics.sapply" [mk_tac_arg_id id]
-let case_splitting_tac () = Utils.ltac_apply "Tactics.case_splitting" []
-let case_splitting_nored_tac () = Utils.ltac_apply "Tactics.case_splitting_nored" []
-let case_splitting_concl_tac () = Utils.ltac_apply "Tactics.case_splitting_concl" []
-let case_splitting_concl_nored_tac () =
-  Utils.ltac_apply "Tactics.case_splitting_concl_nored" []
-let case_splitting_on_tac ind =
-  Utils.ltac_eval "Tactics.case_splitting_on" [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
-let case_splitting_on_nored_tac ind =
-  Utils.ltac_eval "Tactics.case_splitting_on_nored"
+let case_splitting_tac opts =
+  Utils.ltac_apply
+    (if opts.s_dep then
+       with_reduction opts
+         "Tactics.case_splitting_dep"
+         "Tactics.case_splitting_dep_nored"
+     else
+       with_reduction opts
+         "Tactics.case_splitting"
+         "Tactics.case_splitting_nored")
+    []
+let case_splitting_concl_tac opts =
+  Utils.ltac_apply
+    (if opts.s_dep then
+       with_reduction opts
+         "Tactics.case_splitting_concl_dep"
+         "Tactics.case_splitting_concl_dep_nored"
+     else
+       with_reduction opts
+         "Tactics.case_splitting_concl"
+         "Tactics.case_splitting_concl_nored")
+    []
+let case_splitting_on_tac opts ind =
+  Utils.ltac_eval
+    (if opts.s_dep then
+       with_reduction opts
+         "Tactics.case_splitting_on_dep"
+         "Tactics.case_splitting_on_dep_nored"
+     else
+       with_reduction opts
+         "Tactics.case_splitting_on"
+         "Tactics.case_splitting_on_nored")
     [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
-let case_splitting_concl_on_tac ind =
-  Utils.ltac_eval "Tactics.case_splitting_concl_on"
-    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
-let case_splitting_concl_on_nored_tac ind =
-  Utils.ltac_eval "Tactics.case_splitting_concl_on_nored"
+let case_splitting_concl_on_tac opts ind =
+  Utils.ltac_eval
+    (if opts.s_dep then
+       with_reduction opts
+         "Tactics.case_splitting_concl_on_dep"
+         "Tactics.case_splitting_concl_on_dep_nored"
+     else
+       with_reduction opts
+         "Tactics.case_splitting_concl_on"
+         "Tactics.case_splitting_concl_on_nored")
     [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
 let forwarding_tac () = Utils.ltac_apply "Tactics.forwarding" []
 let forwarding_nored_tac () = Utils.ltac_apply "Tactics.forwarding_nored" []
@@ -272,10 +307,19 @@ let subst_simpl opts =
       ssubst_tac ()
 
 let sinvert opts id =
-  if opts.s_exhaustive then
-    seinvert_tac id <*> subst_simpl opts
-  else
-    sinvert_tac id <*> subst_simpl opts
+  let sinv =
+    if opts.s_exhaustive then
+      if opts.s_dep then
+        sedepinvert_tac id
+      else
+        seinvert_tac id
+    else
+      if opts.s_dep then
+        sdepinvert_tac id
+      else
+        sinvert_tac id
+  in
+  sinv <*> subst_simpl opts
 
 let reduce_concl opts =
   if opts.s_eager_reducing && opts.s_reducing then
@@ -347,7 +391,11 @@ let sunfold b_aggressive c =
   else
     Tacticals.New.tclIDTAC
 
-let sdestruct t = Utils.ltac_eval "Tactics.sdestruct" [Tacinterp.Value.of_constr t]
+let sdestruct opts t =
+  if opts.s_dep then
+    Utils.ltac_eval "Tactics.sdepdestruct" [Tacinterp.Value.of_constr t]
+  else
+    Utils.ltac_eval "Tactics.sdestruct" [Tacinterp.Value.of_constr t]
 
 (* TODO: port gunfolding from Reconstr.v *)
 let unfolding opts =
@@ -437,8 +485,8 @@ let is_eager_ind =
     | _ -> false
   end
 
-(* check if the inductive type is non-recursive with exactly one
-   constructor and no dangling evars *)
+(* check if the inductive type is (non-indexed?) non-recursive with
+   exactly one constructor and no dangling evars *)
 let is_simple_ind =
   memoize_ind begin fun ind ->
     let cstrs = Utils.get_ind_constrs ind in
@@ -586,9 +634,6 @@ let rec do_when p f forbidden_ids =
 
 let do_when p f = do_when p f []
 
-let with_reduction opts tac1 tac2 =
-  if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
-
 let autorewriting b_all opts =
   if opts.s_rewriting then
     autorewrite b_all opts.s_rew_bases
@@ -613,16 +658,16 @@ let case_splitting b_all opts =
   match opts.s_case_splits with
   | SAll ->
      if b_all then
-       with_reduction opts (case_splitting_tac ()) (case_splitting_nored_tac ())
+       case_splitting_tac opts
      else
-       with_reduction opts (case_splitting_concl_tac ()) (case_splitting_concl_nored_tac ())
+       case_splitting_concl_tac opts
   | SNone -> Tacticals.New.tclIDTAC
   | SSome lst ->
      let csplit =
        if b_all then
-         with_reduction opts case_splitting_on_tac case_splitting_on_nored_tac
+         case_splitting_on_tac opts
        else
-         with_reduction opts case_splitting_concl_on_tac case_splitting_concl_on_nored_tac
+         case_splitting_concl_on_tac opts
      in
      List.fold_left (fun tac ind -> tac <*> csplit ind) Tacticals.New.tclIDTAC
        (!case_split_hints @ lst)
@@ -988,14 +1033,11 @@ let rec search extra tacs opts n rtrace visited =
            if is_simple_split opts evd goal then
              tacs.t_simple_splitting <*> search extra tacs opts n rtrace (goal :: visited)
            else if opts.s_eager_case_splitting && is_case_split opts evd goal then
-             tacs.t_case_splitting <*> start_search tacs opts n
+             Tacticals.New.tclIFCATCH (Tacticals.New.tclPROGRESS tacs.t_case_splitting)
+               (fun () -> start_search tacs opts n)
+               (fun () -> run_actions extra tacs opts n rtrace visited evd goal gl)
            else
-             let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
-             let actions = create_actions extra opts evd goal hyps gl in
-             match actions with
-             | [] -> tacs.t_finish
-             | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> tacs.t_finish
-             | _ -> apply_actions tacs opts n actions rtrace (goal :: visited)
+             run_actions extra tacs opts n rtrace visited evd goal gl
     end
 
 and start_search tacs opts n =
@@ -1021,6 +1063,14 @@ and intros tacs opts n =
     intros_until_atom_tac () <*>
     opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <*>
     start_search tacs opts n
+
+and run_actions extra tacs opts n rtrace visited evd goal gl =
+  let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
+  let actions = create_actions extra opts evd goal hyps gl in
+  match actions with
+  | [] -> tacs.t_finish
+  | (cost, _, _) :: _ when not opts.s_depth_cost_model && cost > n -> tacs.t_finish
+  | _ -> apply_actions tacs opts n actions rtrace (goal :: visited)
 
 and apply_actions tacs opts n actions rtrace visited =
   let branch =
@@ -1080,7 +1130,7 @@ and apply_actions tacs opts n actions rtrace visited =
                     (Tacticals.New.tclPROGRESS (fullunfold c))
                     (fun _ -> start_search tacs opts n')) acts
          | ActDestruct t ->
-            cont (sdestruct t <*> start_search tacs opts n') acts
+            cont (sdestruct opts t <*> start_search tacs opts n') acts
          | ActHint h ->
             continue n' (Tacticals.New.tclPROGRESS
                            (Utils.hint_tactic h (List.hd visited))
