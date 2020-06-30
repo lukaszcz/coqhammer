@@ -12,6 +12,9 @@ type sopt_t =
 | SOUnfold of Libnames.qualid list
 | SOUnfoldAll
 | SOUnfoldNone
+| SOAlwaysUnfold of Libnames.qualid list
+| SOAlwaysUnfoldAll
+| SOAlwaysUnfoldNone
 | SOInv of Libnames.qualid list
 | SOInvAll
 | SOInvNone
@@ -163,6 +166,13 @@ let interp_opt ret opt opts =
      ret { opts with s_unfolding = SAll }
   | SOUnfoldNone ->
      ret { opts with s_unfolding = SNone }
+  | SOAlwaysUnfold lst ->
+     let lst = List.map const_of_qualid lst in
+     ret { opts with s_always_unfold = sopt_append opts.s_always_unfold lst }
+  | SOAlwaysUnfoldAll ->
+     ret { opts with s_always_unfold = SAll }
+  | SOAlwaysUnfoldNone ->
+     ret { opts with s_always_unfold = SNone }
   | SOInv lst ->
      let lst = List.map inductive_of_qualid lst in
      ret { opts with s_inversions = sopt_append opts.s_inversions lst }
