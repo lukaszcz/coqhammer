@@ -979,7 +979,8 @@ Ltac destruct_proj1_sigs :=
            destruct X; simpl in *
          end.
 
-Ltac use t := let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
+Ltac use_tac t :=
+  let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
 
 Ltac congr_tac := congruence 400.
 Ltac lia_tac := lia.
