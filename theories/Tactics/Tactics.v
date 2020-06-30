@@ -90,6 +90,11 @@ Ltac seasy :=
   fail "Cannot solve this goal".
 
 Ltac fullunfold h := unfold h in *.
+Ltac fullunfold_all :=
+  repeat match goal with
+         | [ |- context[?c] ] => unfold c in *
+         | [ H: context[?c] |- _ ] => unfold c in *
+         end.
 
 Ltac vinst e :=
   let tpe := type of e

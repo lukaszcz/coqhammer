@@ -22,6 +22,7 @@ type s_opts = {
   s_ssimpl_tac : unit Proofview.tactic;
   s_ssimpl_nolia_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
+  s_always_unfold : Constant.t list soption;
   s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
   s_case_splits : inductive list soption;
@@ -59,6 +60,7 @@ let default_s_opts () = {
   s_ssimpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve" []);
   s_ssimpl_nolia_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve_nolia" []);
   s_unfolding = SSome [];
+  s_always_unfold = SNone;
   s_constructors = SAll;
   s_simple_splits = SSome [];
   s_case_splits = SAll;
@@ -384,6 +386,13 @@ let case_unfold_cost c =
 let unfold c = Tactics.unfold_constr (GlobRef.ConstRef c)
 
 let fullunfold c = fullunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c, None)), None)
+
+let fullunfolding opts =
+  match opts.s_always_unfold with
+  | SSome lst ->
+     List.fold_left (fun tac c -> tac <*> fullunfold c) Tacticals.New.tclIDTAC lst
+  | SNone -> Tacticals.New.tclIDTAC
+  | SAll -> Utils.ltac_apply "Tactics.fullunfold_all" []
 
 let sunfold b_aggressive c =
   if is_simple_unfold b_aggressive c then
@@ -717,7 +726,8 @@ let simplify opts =
       opt opts.s_eager_inverting (eager_inverting opts) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
-  opt opts.s_reflect (bool_reflect_tac ()) <*>
+  fullunfolding opts <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
     (if opts.s_forwarding then
        simpl1 <*>
          (Tacticals.New.tclTRY
@@ -1155,7 +1165,8 @@ and apply_actions tacs opts n actions rtrace visited =
 (*****************************************************************************************)
 
 let sintuition opts =
-  Tactics.intros <*>
+  fullunfolding opts <*>
+    Tactics.intros <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
     simp_hyps_tac () <*> subst_simpl opts <*> ssimpl_tac opts <*>
     Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
@@ -1179,6 +1190,7 @@ let ssimpl opts =
     { opts with s_simpl_tac = opts.s_ssimpl_tac;
                 s_simpl_nolia_tac = opts.s_ssimpl_nolia_tac }
   in
+  fullunfolding opts <*>
   opt opts.s_reflect (bool_reflect_tac ()) <*>
   tac1 <*> (simplify opts2 <~> tac2)
 
@@ -1194,35 +1206,42 @@ let qsimpl opts =
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   Tactics.intros <*>
+    fullunfolding opts <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
     unfolding opts <*> tac
 
 let sauto opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclTRY (opts.s_solve_tac) <*>
     opt opts.s_prerun (Tacticals.New.tclTRY (leaf_tac opts)) <*>
     intros (create_tactics opts) opts opts.s_limit
 
 let scrush opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts <*>
     ssimpl opts <*> sauto opts
 
 let fcrush opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts <*>
     qsimpl opts <*> qforwarding_tac () <*> qsimpl opts <*> instering_tac () <*>
     qsimpl opts <*> sauto opts
 
 let ecrush opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts <*>
     qsimpl opts <*> qforwarding_tac () <*> einstering_tac () <*> esimp_hyps_tac () <*>
     qsimpl opts <*> sauto opts
 
 let sblast opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT (ssimpl opts <*> instering_tac ())]
 
 let qblast opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> unfolding opts <*> subst_simpl opts <*>
+  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT
                               (qsimpl opts <*> qforwarding_tac () <*> instering_tac ())]
 

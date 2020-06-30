@@ -15,6 +15,7 @@ type s_opts = {
   s_ssimpl_tac : unit Proofview.tactic;
   s_ssimpl_nolia_tac : unit Proofview.tactic;
   s_unfolding : Constant.t list soption;
+  s_always_unfold : Constant.t list soption;
   s_constructors : inductive list soption;
   s_simple_splits : inductive list soption;
   s_case_splits : inductive list soption;
