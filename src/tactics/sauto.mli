@@ -37,7 +37,7 @@ type s_opts = {
   s_depth_cost_model : bool;
   s_limit : int;
   s_prerun : bool;
-  s_destruct_proj1_sigs : bool;
+  s_simpl_sigma : bool;
   s_lia : bool;
   s_dep : bool;
 }
