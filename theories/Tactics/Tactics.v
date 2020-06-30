@@ -980,7 +980,15 @@ Ltac destruct_sigma :=
 
          end.
 
-Ltac simpl_sigma := try inversion_sigma; destruct_sigma.
+Ltac invert_sigma :=
+  repeat match goal with
+         | [ H: exist _ _ _ = exist _ _ _ |- _ ] =>
+           induction H using eq_sig_rect; ssubst; simpl in *
+         | [ H: existT _ _ _ = existT _ _ _ |- _ ] =>
+           induction H using eq_sigT_rect; ssubst; simpl in *
+         end.
+
+Ltac simpl_sigma := invert_sigma; destruct_sigma.
 
 Ltac use_tac t :=
   let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
