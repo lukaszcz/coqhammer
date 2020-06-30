@@ -38,6 +38,7 @@ type s_opts = {
   s_prerun : bool;
   s_destruct_proj1_sigs : bool;
   s_lia : bool;
+  s_dep : bool;
 }
 
 val default_s_opts : unit -> s_opts

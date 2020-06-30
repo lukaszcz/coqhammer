@@ -30,6 +30,25 @@ TACTIC EXTEND Hammer_isIndAtom
 }
 END
 
+TACTIC EXTEND Hammer_isIndexedInd
+| [ "isIndexedInd" lconstr(t) ] -> {
+  Proofview.Goal.enter begin fun gl ->
+    let evd = Proofview.Goal.sigma gl in
+    let (head, _) = Utils.destruct_app evd t in
+    let open Constr in
+    let open EConstr in
+    match kind evd head with
+    | Ind(ind, _) ->
+       if Utils.is_indexed_ind ind then
+         Tacticals.New.tclIDTAC
+       else
+         Tacticals.New.tclFAIL 0 Pp.(str "not an indexed inductive type")
+    | _ ->
+       Tacticals.New.tclFAIL 0 Pp.(str "not an indexed inductive type")
+  end
+}
+END
+
 TACTIC EXTEND Hammer_checkLPO
 | [ "checkLPO" lconstr(t1) lconstr(t2) ] -> {
   Proofview.Goal.enter begin fun gl ->

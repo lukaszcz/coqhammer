@@ -79,6 +79,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "pre:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrerun b :: sopts }
 | [ "esig:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerSig b :: sopts }
 | [ "lia:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOLia b :: sopts }
+| [ "dep:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODep b :: sopts }
 | [ ] -> { [SONop] }
 END
 

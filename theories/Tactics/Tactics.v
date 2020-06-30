@@ -7,6 +7,7 @@ Declare ML Module "hammer_lib".
 
 Require List Arith ZArith Bool.
 Require Import Lia.
+Require Import Program.Equality.
 From Hammer Require Import Tactics.Reflect.
 
 Create HintDb shints discriminated.
@@ -138,6 +139,14 @@ Ltac sdestruct t :=
     else
       (is_var t; destruct t)
   end.
+
+Ltac dep_destruct t :=
+  let x := fresh "x" in
+  let H := fresh "H" in
+  remember t as x eqn:H; simpl in x; dependent destruction x;
+  try rewrite <- H in *; try clear H.
+
+Ltac sdepdestruct t := first [ sdestruct t | dep_destruct t ].
 
 Ltac ssubst := try subst.
 
@@ -591,36 +600,65 @@ Ltac case_split :=
   | [ H : context[match ?X with _ => _ end] |- _ ] => sdestruct X
   end.
 
+Ltac case_split_dep :=
+  match goal with
+  | [ |- context[match ?X with _ => _ end] ] => sdepdestruct X
+  | [ H : context[match ?X with _ => _ end] |- _ ] => sdepdestruct X
+  end.
+
 Ltac case_splitting := repeat (case_split; ssubst; simpl in *).
 Ltac case_splitting_nored := repeat (case_split; ssubst).
+
+Ltac case_splitting_dep := repeat (case_split_dep; ssubst; simpl in *).
+Ltac case_splitting_dep_nored := repeat (case_split_dep; ssubst).
 
 Ltac case_split_concl :=
   match goal with
   | [ |- context[match ?X with _ => _ end] ] => sdestruct X
   end.
 
+Ltac case_split_concl_dep :=
+  match goal with
+  | [ |- context[match ?X with _ => _ end] ] => sdepdestruct X
+  end.
+
 Ltac case_splitting_concl := repeat (case_split_concl; ssubst; simpl).
 Ltac case_splitting_concl_nored := repeat (case_split_concl; ssubst).
 
-Ltac case_split_on ind :=
+Ltac case_splitting_concl_dep := repeat (case_split_concl_dep; ssubst; simpl).
+Ltac case_splitting_concl_dep_nored := repeat (case_split_concl_dep; ssubst).
+
+Ltac case_split_on_gen tac ind :=
   match goal with
   | [ |- context[match ?X with _ => _ end] ] =>
-    tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
+    tryif constr_eq ltac:(type of X) ind then tac X else fail
   | [ H : context[match ?X with _ => _ end] |- _ ] =>
-    tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
+    tryif constr_eq ltac:(type of X) ind then tac X else fail
   end.
+
+Ltac case_split_on ind := case_split_on_gen sdestruct ind.
+Ltac case_split_on_dep ind := case_split_on_gen sdepdestruct ind.
 
 Ltac case_splitting_on t := repeat (case_split_on t; ssubst; simpl in *).
 Ltac case_splitting_on_nored t := repeat (case_split_on t; ssubst).
 
-Ltac case_split_concl_on ind :=
+Ltac case_splitting_on_dep t := repeat (case_split_on_dep t; ssubst; simpl in *).
+Ltac case_splitting_on_dep_nored t := repeat (case_split_on_dep t; ssubst).
+
+Ltac case_split_concl_on_gen tac ind :=
   match goal with
   | [ |- context[match ?X with _ => _ end] ] =>
-    tryif constr_eq ltac:(type of X) ind then sdestruct X else fail
+    tryif constr_eq ltac:(type of X) ind then tac X else fail
   end.
+
+Ltac case_split_concl_on ind := case_split_concl_on_gen sdestruct ind.
+Ltac case_split_concl_on_dep ind := case_split_concl_on_gen sdepdestruct ind.
 
 Ltac case_splitting_concl_on t := repeat (case_split_concl_on t; ssubst; simpl).
 Ltac case_splitting_concl_on_nored t := repeat (case_split_concl_on t; ssubst).
+
+Ltac case_splitting_concl_on_dep t := repeat (case_split_concl_on_dep t; ssubst; simpl).
+Ltac case_splitting_concl_on_dep_nored t := repeat (case_split_concl_on_dep t; ssubst).
 
 Ltac generalizing :=
   repeat match goal with
@@ -651,22 +689,41 @@ Ltac full_inst e tac :=
     generalize e; tac tt; try fsolve
   end.
 
-Ltac sinvert H :=
+Ltac sinv_gen dep H :=
+  lazymatch dep with
+  | true => first [ inversion H | depelim H ]
+  | false => inversion H
+  end; ssubst.
+
+Ltac sdestr_gen dep H :=
+  let ty := type of H in
+  tryif isIndexedInd ty then
+    lazymatch dep with
+    | true => first [ dependent inversion H | depelim H ]
+    | false => dependent inversion H
+    end; ssubst
+  else
+    destruct H.
+
+Ltac sinvert_gen dep H :=
   let intro_invert tt :=
     let H1 := fresh "H" in
-    intro H1; inversion H1; ssubst; try clear H1
+    intro H1; sinv_gen dep H1; try clear H1
   in
   lazymatch type of H with
   | _ -> _ =>
     full_inst H intro_invert
   | _ =>
     lazymatch goal with
-    | [ |- context[H] ] => destruct H
+    | [ |- context[H] ] => sdestr_gen dep H
     | [ |- _ ] =>
       let ty := type of H in
-      inversion H; ssubst; tryif clear H then notHyp ty else idtac
+      sinv_gen dep H; tryif clear H then notHyp ty else idtac
     end
   end.
+
+Ltac sinvert H := sinvert_gen false H.
+Ltac sdepinvert H := sinvert_gen true H.
 
 Ltac full_einst e tac :=
   let tpe := type of e
@@ -687,22 +744,25 @@ Ltac full_einst e tac :=
     generalize e; tac tt; try fsolve
   end.
 
-Ltac seinvert H :=
+Ltac seinvert_gen dep H :=
   let intro_invert tt :=
     let H1 := fresh "H" in
-    intro H1; inversion H1; ssubst; try clear H1
+    intro H1; sinv_gen dep H1; try clear H1
   in
   lazymatch type of H with
   | _ -> _ =>
     full_einst H intro_invert
   | _ =>
     lazymatch goal with
-    | [ |- context[H] ] => destruct H
+    | [ |- context[H] ] => sdestr_gen dep H
     | [ |- _ ] =>
       let ty := type of H in
-      inversion H; ssubst; tryif clear H then noteHyp ty else idtac
+      sinv_gen dep H; tryif clear H then noteHyp ty else idtac
     end
   end.
+
+Ltac seinvert H := seinvert_gen false H.
+Ltac sedepinvert H := seinvert_gen true H.
 
 Definition rdone {T : Type} (x : T) := True.
 
