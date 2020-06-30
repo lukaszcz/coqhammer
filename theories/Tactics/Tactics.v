@@ -971,13 +971,15 @@ Ltac srewriting :=
 Ltac red_in_all := simpl in *.
 Ltac red_in_concl := simpl.
 
-Ltac destruct_proj1_sigs :=
+Ltac destruct_sigma :=
   repeat match goal with
          | [H : context[proj1_sig ?X] |- _] =>
            destruct X; simpl in *
          | [ |- context[proj1_sig ?X] ] =>
            destruct X; simpl in *
          end.
+
+Ltac simpl_sigma := try inversion_sigma; destruct_sigma.
 
 Ltac use_tac t :=
   let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.

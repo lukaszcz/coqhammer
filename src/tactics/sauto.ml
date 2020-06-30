@@ -44,7 +44,7 @@ type s_opts = {
   s_depth_cost_model : bool;
   s_limit : int;
   s_prerun : bool;
-  s_destruct_proj1_sigs : bool;
+  s_simpl_sigma : bool;
   s_lia : bool;
   s_dep : bool;
 }
@@ -82,7 +82,7 @@ let default_s_opts () = {
   s_depth_cost_model = false;
   s_limit = 1000;
   s_prerun = false; (* "true" slows things down *)
-  s_destruct_proj1_sigs = true;
+  s_simpl_sigma = true;
   s_lia = true;
   s_dep = false;
 }
@@ -249,7 +249,7 @@ let qforwarding_tac () = Utils.ltac_apply "Tactics.qforwarding" []
 let instering_tac () = Utils.ltac_apply "Tactics.instering" []
 let einstering_tac () = Utils.ltac_apply "Tactics.einstering" []
 let f_equal_tac () = Utils.ltac_apply "Tactics.f_equal_tac" []
-let destruct_proj1_sigs_tac () = Utils.ltac_apply "Tactics.destruct_proj1_sigs" []
+let simpl_sigma_tac () = Utils.ltac_apply "Tactics.simpl_sigma" []
 
 (*****************************************************************************************)
 
@@ -302,7 +302,7 @@ let autorewrite b_all bases =
       { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let subst_simpl opts =
-  opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <*>
+  opt opts.s_simpl_sigma (simpl_sigma_tac ()) <*>
     if opts.s_eager_reducing && opts.s_reducing then
       subst_simpl_tac ()
     else
@@ -1071,7 +1071,7 @@ and start_search tacs opts n =
 and intros tacs opts n =
   tacs.t_reduce_concl <*>
     intros_until_atom_tac () <*>
-    opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <*>
+    opt opts.s_simpl_sigma (simpl_sigma_tac ()) <*>
     start_search tacs opts n
 
 and run_actions extra tacs opts n rtrace visited evd goal gl =
@@ -1202,7 +1202,7 @@ let qsimpl opts =
       autorewriting true opts <~>
       (simple_splitting opts <*>
          opt opts.s_eager_case_splitting (case_splitting true opts)) <~>
-      opt opts.s_destruct_proj1_sigs (destruct_proj1_sigs_tac ()) <~>
+      opt opts.s_simpl_sigma (simpl_sigma_tac ()) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   Tactics.intros <*>
