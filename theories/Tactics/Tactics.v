@@ -1,6 +1,6 @@
 (* Coq >= 8.9 required *)
 (* author: Lukasz Czajka *)
-(* This file contains reconstruction tactics for CoqHammer. *)
+(* This file contains the Ltac part of the automated reasoning tactics. *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 
 Declare ML Module "hammer_lib".
