@@ -86,7 +86,7 @@ let partition_hint_bases bases =
 
 let check_rew_bases =
   List.iter begin fun s ->
-    if s <> "nohints" && not (exists_rew_db s) then
+    if not (exists_rew_db s) then
       raise (HammerTacticError ("Rewriting base " ^ s ^ " does not exist"))
   end
 

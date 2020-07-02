@@ -288,12 +288,6 @@ let memoize_ind = IndMemo.memoize
 let opt b tac = if b then tac else Tacticals.New.tclIDTAC
 
 let autorewrite b_all bases =
-  let bases =
-    if List.mem "nohints" bases then
-      List.filter (fun s -> s <> "nohints") bases
-    else
-      ["shints"] @ (List.filter (fun s -> s <> "shints") bases)
-  in
   if bases = [] then
     Proofview.tclUNIT ()
   else
