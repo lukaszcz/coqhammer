@@ -62,7 +62,7 @@ Proof.
   (* "ctrs: ind1, .., indn" instructs "sauto" to try using
      constructors of only the given inductive types *)
   (* "-" stands for an empty list *)
-  (* By default "sauto" does inversion on elements of and uses
+  (* By default "sauto" tries inversion on elements of and uses
      constructors of all possible inductive types *)
 Qed.
 
