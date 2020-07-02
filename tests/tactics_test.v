@@ -704,7 +704,7 @@ Qed.
 
 Lemma lem_bval_and : forall s e1 e2, bval s (and e1 e2) = bval s e1 && bval s e2.
 Proof.
-  induction e1; sauto.
+  induction e1; sauto db: shints.
 Qed.
 
 Lemma lem_bval_less : forall s a1 a2, bval s (less a1 a2) = (aval s a1 <? aval s a2).
@@ -969,14 +969,14 @@ Proof.
   - auto.
   - assert (H: itrev t [h] = itrev t [] ++ [h]).
     { rewrite IH; reflexivity. }
-    sauto.
+    sauto db: shints.
 Qed.
 
 Lemma lem_rev_app {A} :
   forall l1 l2 : list A, rev (l1 ++ l2) = rev l2 ++ rev l1.
 Proof.
   unfold rev.
-  induction l1; sauto use: @lem_itrev.
+  induction l1; sauto use: @lem_itrev db: shints.
 Qed.
 
 Lemma lem_rev_rev {A} : forall l : list A, rev (rev l) = l.

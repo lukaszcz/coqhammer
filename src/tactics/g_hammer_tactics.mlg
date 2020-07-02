@@ -51,7 +51,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "db:" "-" sauto_opts(sopts) ] -> { SOBases [] :: sopts }
 | [ "db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
 | [ "db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBasesAdd l :: sopts }
-| [ "rew:db:" "-" sauto_opts(sopts) ] -> { SORewBases ["nohints"] :: sopts }
+| [ "rew:db:" "-" sauto_opts(sopts) ] -> { SORewBases [] :: sopts }
 | [ "rew:db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
 | [ "rew:db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBasesAdd l :: sopts }
 | [ "hint:db:" "*" sauto_opts(sopts) ] -> { SOHintBasesAll :: sopts }
