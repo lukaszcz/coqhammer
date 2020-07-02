@@ -54,6 +54,9 @@ Lemma lem_plus' : forall s e1 e2, eval s (simp_plus e1 e2) = eval s e1 + eval s 
 Proof.
   Fail depind e1; sauto.
   time (depind e1; sauto dep: on). (* ~ 0.4s *)
+  (* "dep: on" instructs "sauto" to use the "depelim" tactic for
+     inversion. This may be slower and it will make your proof depend
+     on axioms (equivalent to Uniqueness of Identity Proofs). *)
 Qed.
 
 Hint Rewrite lem_plus : simp_db.

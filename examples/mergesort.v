@@ -39,8 +39,8 @@ Proof.
 Qed.
 
 (* Defining "LeLst x" as "List.forall (leb x)" would harm the
-   performance of "sauto". It is better to define "LeLst"
-   separately. *)
+   performance of "sauto". It is better to define "LeLst" as separate
+   inductive type. *)
 Inductive LeLst {A} {dto : DecTotalOrder A} : A -> list A -> Prop :=
 | LeLst_0 : forall x, LeLst x []
 | LeLst_1 : forall x y l, leb x y -> LeLst x l -> LeLst x (y :: l).
@@ -215,7 +215,7 @@ Next Obligation.
     Undo.
     time qauto use: Permutation_app, Permutation_sym, perm_trans.
     (* "qauto" is "sauto" with various options which make it much
-       weaker but typically much faster when it can solve the goal *)
+       weaker but typically much faster *)
 Qed.
 Next Obligation.
   sauto.
