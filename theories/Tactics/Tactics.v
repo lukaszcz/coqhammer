@@ -151,7 +151,7 @@ Ltac dep_destruct t :=
   remember t as x eqn:H; simpl in x; dependent destruction x;
   try rewrite <- H in *; try clear H.
 
-Ltac sdepdestruct t := first [ sdestruct t | dep_destruct t ].
+Ltac sdepdestruct t := sdestruct t || dep_destruct t.
 
 Ltac ssubst := try subst.
 
@@ -696,7 +696,7 @@ Ltac full_inst e tac :=
 
 Ltac sinv_gen dep H :=
   lazymatch dep with
-  | true => first [ inversion H | depelim H ]
+  | true => depelim H
   | false => inversion H
   end; ssubst.
 
@@ -704,7 +704,7 @@ Ltac sdestr_gen dep H :=
   let ty := type of H in
   tryif isIndexedInd ty then
     lazymatch dep with
-    | true => first [ dependent inversion H | depelim H ]
+    | true => depelim H
     | false => dependent inversion H
     end; ssubst
   else
