@@ -88,8 +88,7 @@ let default_s_opts () = {
 }
 
 let hauto_s_opts () =
-  { (default_s_opts ()) with s_rew_bases = ["nohints"];
-                             s_inversions = SSome [];
+  { (default_s_opts ()) with s_inversions = SSome [];
                              s_constructors = SSome [] }
 
 let eauto_tac = Eauto.gen_eauto (Eauto.make_dimension None None) [] (Some [])
