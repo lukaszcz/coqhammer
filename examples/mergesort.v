@@ -1,5 +1,6 @@
 From Hammer Require Import Tactics.
-From Hammer Require Import Reflect. (* declares "is_true" as a coercion *)
+From Hammer Require Import Reflect.
+(* declares "is_true" as a coercion *)
 
 Require List.
 Open Scope list_scope.
@@ -35,7 +36,7 @@ Inductive Sorted {A} {dto : DecTotalOrder A} : list A -> Prop :=
 Lemma lem_sorted_tail {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) -> Sorted l.
 Proof.
-  inversion 1; sauto.
+  sauto.
 Qed.
 
 (* Defining "LeLst x" as "List.forall (leb x)" would harm the
@@ -54,7 +55,9 @@ Qed.
 Lemma lem_lelst_sorted {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
 Proof.
-  induction l; sauto use: lem_lelst_trans inv: Sorted, LeLst ctrs: Sorted. (* 0.4s *)
+  induction l;
+    sauto use: lem_lelst_trans inv: Sorted, LeLst ctrs: Sorted.
+    (* ~ 0.4s *)
 Qed.
 
 Lemma lem_lelst_perm {A} {dto : DecTotalOrder A} :
@@ -75,7 +78,8 @@ Proof.
   induction 1; sauto.
 Qed.
 
-Hint Resolve lem_lelst_trans lem_lelst_perm lem_lelst_perm_rev lem_lelst_concat : lelst.
+Hint Resolve lem_lelst_trans lem_lelst_perm
+  lem_lelst_perm_rev lem_lelst_concat : lelst.
 
 Lemma lem_sorted_concat_1 {A} {dto : DecTotalOrder A} :
   forall (l1 : list A) x, Sorted (x :: l1) -> forall l2 y,
@@ -99,9 +103,9 @@ Proof.
   sauto db: lelst inv: -.
 Qed.
 
-Program Fixpoint merge {A} {dto : DecTotalOrder A} (l1 l2 : {l : list A | Sorted l})
-        {measure (List.length l1 + List.length l2)} :
-  {l : list A | Sorted l /\ Permutation l (l1 ++ l2)} :=
+Program Fixpoint merge {A} {dto : DecTotalOrder A}
+  (l1 l2 : {l | Sorted l}) {measure (List.length l1 + List.length l2)} :
+  {l | Sorted l /\ Permutation l (l1 ++ l2)} :=
   match l1 with
   | [] => l2
   | h1 :: t1 =>
@@ -181,7 +185,7 @@ Ltac use_lem_split :=
 Obligation Tactic := idtac.
 
 Program Fixpoint mergesort {A} {dto : DecTotalOrder A} (l : list A)
-        {measure (List.length l)} : {l' : list A | Sorted l' /\ Permutation l' l} :=
+  {measure (List.length l)} : {l' | Sorted l' /\ Permutation l' l} :=
   match l with
   | [] => []
   | [x] => [x]
@@ -211,7 +215,8 @@ Qed.
 Next Obligation.
   split.
   - sauto.
-  - time sauto use: Permutation_app, Permutation_sym, perm_trans inv: - ctrs: -.
+  - time sauto use: Permutation_app, Permutation_sym, perm_trans
+            inv: - ctrs: -.
     Undo.
     time qauto use: Permutation_app, Permutation_sym, perm_trans.
     (* "qauto" is "sauto" with various options which make it much

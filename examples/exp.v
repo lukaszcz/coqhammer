@@ -1,6 +1,7 @@
 (* Dependently typed expressions *)
 
 From Hammer Require Import Tactics.
+
 Require Import Program.Equality.
 Require Import Arith.
 
@@ -45,12 +46,14 @@ Definition simp_plus (e1 e2 : expr Nat) :=
   | _, _ => Plus e1 e2
   end.
 
-Lemma lem_plus : forall s e1 e2, eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
+Lemma lem_plus : forall s e1 e2,
+  eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
 Proof.
   time (depind e1; depelim e2; sauto). (* ~ 0.3s *)
 Qed.
 
-Lemma lem_plus' : forall s e1 e2, eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
+Lemma lem_plus' : forall s e1 e2,
+  eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
 Proof.
   Fail depind e1; sauto.
   time (depind e1; sauto dep: on). (* ~ 0.4s *)
@@ -67,11 +70,13 @@ Definition simp_equal (e1 e2 : expr Nat) :=
   | _, _ => Equal e1 e2
   end.
 
-Lemma lem_equal : forall s e1 e2, eval s (simp_equal e1 e2) = (eval s e1 =? eval s e2).
+Lemma lem_equal : forall s e1 e2,
+  eval s (simp_equal e1 e2) = (eval s e1 =? eval s e2).
 Proof.
   Fail depind e1; sauto.
-  time (depind e1; sauto dep: on). (* ~ 0.1s *)
-  (* depind e1; depelim e2; sauto. (* 0.3s *) *)
+  depind e1; sauto dep: on. (* ~ 0.1s *)
+  Undo.
+  time (depind e1; depelim e2; sauto).
 Qed.
 
 Hint Rewrite lem_equal : simp_db.
@@ -79,7 +84,8 @@ Hint Rewrite lem_equal : simp_db.
 Definition unpair_type (T : type) :=
   option (match T with Prod A B => expr A * expr B | _ => unit end).
 
-Definition unpair {A B : type} (e : expr (Prod A B)) : option (expr A * expr B) :=
+Definition unpair {A B : type} (e : expr (Prod A B)) :
+  option (expr A * expr B) :=
   match e in expr T return unpair_type T with
   | Pair e1 e2 => Some (e1, e2)
   | _ => None
@@ -91,8 +97,8 @@ Definition simp_fst {A B : type} (e : expr (Prod A B)) : expr A :=
   | None => Fst e
   end.
 
-Lemma lem_fst {A B} :
-  forall s (e : expr (Prod A B)), eval s (simp_fst e) = fst (eval s e).
+Lemma lem_fst {A B} : forall s (e : expr (Prod A B)),
+  eval s (simp_fst e) = fst (eval s e).
 Proof.
   depind e; sauto.
 Qed.
@@ -105,8 +111,8 @@ Definition simp_snd {A B : type} (e : expr (Prod A B)) : expr B :=
   | None => Snd e
   end.
 
-Lemma lem_snd {A B} :
-  forall s (e : expr (Prod A B)), eval s (simp_snd e) = snd (eval s e).
+Lemma lem_snd {A B} : forall s (e : expr (Prod A B)),
+  eval s (simp_snd e) = snd (eval s e).
 Proof.
   depind e; sauto.
 Qed.
@@ -121,7 +127,8 @@ Definition simp_ite {A} (e : expr Bool) (e1 e2 : expr A) : expr A :=
   end.
 
 Lemma lem_ite {A} : forall s e (e1 e2 : expr A),
-    eval s (simp_ite e e1 e2) = if eval s e then eval s e1 else eval s e2.
+    eval s (simp_ite e e1 e2) =
+    if eval s e then eval s e1 else eval s e2.
 Proof.
   depind e; sauto.
 Qed.
@@ -140,9 +147,11 @@ Fixpoint simp {A} (e : expr A) : expr A :=
   | Ite e e1 e2 => simp_ite (simp e) (simp e1) (simp e2)
   end.
 
-Lemma lem_simp {A} : forall s (e : expr A), eval s (simp e) = eval s e.
+Lemma lem_simp {A} : forall s (e : expr A),
+  eval s (simp e) = eval s e.
 Proof.
-  time (depind e; sauto use: lem_plus, lem_equal, @lem_fst, @lem_snd, @lem_ite). (* ~ 0.4s *)
+  time (depind e; sauto use: lem_plus, lem_equal, @lem_fst,
+                      @lem_snd, @lem_ite). (* ~ 0.4s *)
   Undo.
   time (depind e; sauto db: simp_db). (* ~ 0.12s *)
   Undo.
