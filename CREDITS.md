@@ -5,7 +5,7 @@ Main authors
 
     * Logic-related components: translation, proof reconstruction,
       automated reasoning tactics. Author of almost all OCaml/Ltac/Coq
-      code.
+      code. Author of the `sauto` tactic.
 
 * Cezary Kaliszyk
 
@@ -17,8 +17,7 @@ Other contributors
 
 * Burak Ekici
 
-    * Preliminary version of boolean reflection in the reconstruction
-      tactics.
+    * Preliminary version of boolean reflection in `sauto`.
 
     * CVC4 integration.
 

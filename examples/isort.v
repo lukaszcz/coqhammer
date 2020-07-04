@@ -1,4 +1,4 @@
-(************************************************************************************)
+(******************************************************************)
 (* Insertion sort *)
 
 From Hammer Require Import Tactics.
@@ -33,13 +33,12 @@ Fixpoint isort (l : list nat) : list nat :=
   end.
 
 Lemma lem_insert_sorted_hlp :
-  forall l y z, y <= z -> Sorted (y :: l) -> Sorted (y :: insert l z).
+  forall l y z, y <= z -> Sorted (y :: l) ->
+    Sorted (y :: insert l z).
 Proof.
   intro l.
   induction l as [|a l IH].
-  - intros x y H1 H2.
-    simpl.
-    auto using Sorted.
+  - intros; simpl; auto using Sorted.
   - intros x y H1 H2.
     simpl.
     destruct (Nat.leb_spec y a) as [H|H].
@@ -50,7 +49,8 @@ Proof.
 Qed.
 
 Lemma lem_insert_sorted_hlp' :
-  forall l y z, y <= z -> Sorted (y :: l) -> Sorted (y :: insert l z).
+  forall l y z, y <= z -> Sorted (y :: l) ->
+    Sorted (y :: insert l z).
 Proof.
   time (induction l; sauto db: arith).
   (* "db: db1, .., dbn" instructs "sauto" to use the given hint or
@@ -84,15 +84,13 @@ Proof.
   (* "use: lem1, .., lemn" adds the given lemmas to the context *)
   time (destruct l; sauto use: lem_insert_sorted_hlp db: arith).
   Undo.
-  time (destruct l; sauto use: lem_insert_sorted_hlp inv: - ctrs: Sorted db: arith).
+  time (destruct l;
+   sauto use: lem_insert_sorted_hlp inv: - ctrs: Sorted db: arith).
 Qed.
 
 Lemma lem_isort_sorted : forall l, Sorted (isort l).
 Proof.
-  induction l as [|x l IH].
-  - auto using Sorted.
-  - simpl.
-    auto using lem_insert_sorted.
+  induction l; simpl; auto using Sorted, lem_insert_sorted.
 Qed.
 
 Lemma lem_isort_sorted' : forall l, Sorted (isort l).
@@ -100,9 +98,10 @@ Proof.
   induction l; sauto use: lem_insert_sorted.
 Qed.
 
-Lemma lem_insert_perm : forall l x, Permutation (insert l x) (x :: l).
+Lemma lem_insert_perm :
+  forall l x, Permutation (insert l x) (x :: l).
 Proof.
-  induction l as [|y l IH].
+  induction l as [|y ? ?].
   - eauto using Permutation.
   - intro x.
     simpl.
@@ -110,17 +109,15 @@ Proof.
       eauto using Permutation.
 Qed.
 
-Lemma lem_insert_perm' : forall l x, Permutation (insert l x) (x :: l).
+Lemma lem_insert_perm' :
+  forall l x, Permutation (insert l x) (x :: l).
 Proof.
   induction l; sauto.
 Qed.
 
 Lemma lem_isort_perm : forall l, Permutation (isort l) l.
 Proof.
-  induction l as [|y l IH].
-  - eauto using Permutation.
-  - simpl.
-    eauto using Permutation, lem_insert_perm.
+  induction l; simpl; eauto using Permutation, lem_insert_perm.
 Qed.
 
 Lemma lem_isort_perm' : forall l, Permutation (isort l) l.
