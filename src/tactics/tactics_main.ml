@@ -225,7 +225,8 @@ let interp_opt ret opt opts =
   | SOHintBasesAll ->
      ret { opts with s_hint_bases = Hints.current_pure_db () }
   | SOFinish tac ->
-     ret { opts with s_leaf_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
+     let tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] in
+     ret { opts with s_leaf_tac = tac; s_leaf_nolia_tac = tac }
   | SOFinal tac ->
      let tac = Tacticals.New.tclSOLVE [Tacinterp.interp (mk_final tac)] in
      ret { opts with s_leaf_tac = tac; s_leaf_nolia_tac = tac }
@@ -270,7 +271,7 @@ let interp_opt ret opt opts =
                        s_eager_rewriting = false;
                        s_heuristic_rewriting = false }
   | SOReflect b ->
-     ret { opts with s_reflect = true }
+     ret { opts with s_reflect = b }
   | SOReduce b ->
      if b then
        ret { opts with s_reducing = true }
@@ -278,7 +279,7 @@ let interp_opt ret opt opts =
        ret { opts with s_reducing = false;
                        s_eager_reducing = false }
   | SOSapply b ->
-     ret { opts with s_sapply = true }
+     ret { opts with s_sapply = b }
   | SOLimit n ->
      ret { opts with s_limit = n; s_depth_cost_model = false }
   | SODepth n ->
