@@ -238,6 +238,7 @@ let map_fold_constr f acc evd t =
        let (acc1, typs') = fold_arr m acc typs in
        let (acc2, bodies') = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 (mkCoFix(n,(fnames,typs',bodies')))
+    | Array _ -> assert false
   in
   hlp 0 acc t
 
@@ -297,6 +298,7 @@ let fold_constr f acc evd t =
        let acc1 = fold_arr m acc typs in
        let acc2 = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 t
+    | Array _ -> assert false
   in
   hlp 0 acc t
 
@@ -349,6 +351,7 @@ let fold_constr_shallow f acc evd t =
        let (fnames,typs,bodies) = recdef in
        let acc1 = fold_arr acc typs in
        f acc1 t
+    | Array _ -> assert false
   in
   hlp acc t
 
@@ -414,6 +417,7 @@ let map_fold_constr_ker f acc t =
        let (acc1, typs') = fold_arr m acc typs in
        let (acc2, bodies') = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 (mkCoFix(n,(fnames,typs',bodies')))
+    | Array _ -> assert false
   in
   hlp 0 acc t
 
