@@ -108,6 +108,7 @@ increasing strength and decreasing speed:
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
 is just
 `sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac finish: (eauto; congruence 400) lia: off`.
+See the next section for an explanation of these options.
 
 Additional variants of the solvers are used in the reconstruction
 backend of the `hammer` tactic. The solvers listed here are the ones
@@ -208,11 +209,11 @@ are for `sauto`.
 * `finish: <tactic>`
 
   Use the given tactic at the leaves of the proof search
-  tree. Default: `finish: sfinal trysolve`.
+  tree. Default: `finish: (sfinal trysolve)`.
 
 * `final: <tactic>`
 
-  Shorthand for `finish: sfinal <tactic>`.
+  Shorthand for `finish: (sfinal <tactic>)`.
 
 * `simp: <tactic>`
 
@@ -220,7 +221,7 @@ are for `sauto`.
   change. This option is for *additional* simplification - it has no
   impact on other simplifications performed by `sauto`. The default
   `simp:` tactic does not actually simplify but tries to fully solve
-  the goal. Default: `simp: sfinal trysolve`.
+  the goal. Default: `simp: (sfinal trysolve)`.
 
 * `simp+: <tactic>`
 
@@ -326,7 +327,9 @@ are for `sauto`.
 * `lia: <bopt>`
 
   Controls whether to try the `lia` tactic for arithmetic
-  subgoals. Default: `on`.
+  subgoals. Note that invoking `lia` is done in the default `simp:`
+  and `finish:` tactics - if these tactics are changed then `lia:` has
+  no effect. To re-enable `lia` use `solve: lia` or `solve+: lia`. Default: `lia: on`.
 
 * `dep: <bopt>`
 
@@ -345,7 +348,7 @@ first load the hammer plugin:
 From Hammer Require Import Hammer.
 ```
 
-Then, the available commands are as follows:
+The available commands are:
 
 command                          | description
 -------------------------------- | ------------------------------------
@@ -388,8 +391,7 @@ Papers about CoqHammer
 
 1. Ł. Czajka, C. Kaliszyk, [Hammer for Coq: Automation for Dependent Type Theory](https://link.springer.com/article/10.1007/s10817-018-9458-4), Journal of Automated Reasoning, 2018
 
-   This paper is the main reference for the `hammer` tactic. It
-   describes the first version of the `hammer` tool.
+   This paper is the main reference for the `hammer` tactic.
 
 2. Ł. Czajka, [Practical proof search for Coq by type inhabitation](http://www.mimuw.edu.pl/~lukaszcz/sauto.pdf), IJCAR 2020
 
