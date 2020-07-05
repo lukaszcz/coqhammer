@@ -17,7 +17,7 @@ components.
    use, `sauto` typically needs some configuration by providing
    appropriate options.
 
-   See the [sauto](#sauto) section below.
+   See the [Sauto](#Sauto) section below.
 
 2. The `hammer` automated reasoning tool which combines learning from
    previous proofs with the translation of problems to the logics of
@@ -82,7 +82,7 @@ Note that some old versions of Proof General encounter problems with
 the plugin. If you use Proof General you might need the most recent
 version obtained directly from https://proofgeneral.github.io.
 
-sauto
+Sauto
 -----
 
 The `Tactics` module contains `sauto` and related tactics. These
