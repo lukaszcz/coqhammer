@@ -58,14 +58,14 @@ ARGUMENT EXTEND sauto_opts
 | [ "hint:db:" "-" sauto_opts(sopts) ] -> { SOHintBases [] :: sopts }
 | [ "hint:db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBases l :: sopts }
 | [ "hint:db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBasesAdd l :: sopts }
-| [ "finish:" tactic3(tac) sauto_opts(sopts) ] -> { SOFinish tac :: sopts }
-| [ "final:" tactic3(tac) sauto_opts(sopts) ] -> { SOFinal tac :: sopts }
-| [ "solve:" tactic3(tac) sauto_opts(sopts) ] -> { SOSolve tac :: sopts }
-| [ "simp:" tactic3(tac) sauto_opts(sopts) ] -> { SOSimp tac :: sopts }
-| [ "ssimp:" tactic3(tac) sauto_opts(sopts) ] -> { SOSSimp tac :: sopts }
-| [ "solve+:" tactic3(tac) sauto_opts(sopts) ] -> { SOSolveAdd tac :: sopts }
-| [ "simp+:" tactic3(tac) sauto_opts(sopts) ] -> { SOSimpAdd tac :: sopts }
-| [ "ssimp+:" tactic3(tac) sauto_opts(sopts) ] -> { SOSSimpAdd tac :: sopts }
+| [ "finish:" tactic4(tac) sauto_opts(sopts) ] -> { SOFinish tac :: sopts }
+| [ "final:" tactic4(tac) sauto_opts(sopts) ] -> { SOFinal tac :: sopts }
+| [ "solve:" tactic4(tac) sauto_opts(sopts) ] -> { SOSolve tac :: sopts }
+| [ "simp:" tactic4(tac) sauto_opts(sopts) ] -> { SOSimp tac :: sopts }
+| [ "ssimp:" tactic4(tac) sauto_opts(sopts) ] -> { SOSSimp tac :: sopts }
+| [ "solve+:" tactic4(tac) sauto_opts(sopts) ] -> { SOSolveAdd tac :: sopts }
+| [ "simp+:" tactic4(tac) sauto_opts(sopts) ] -> { SOSimpAdd tac :: sopts }
+| [ "ssimp+:" tactic4(tac) sauto_opts(sopts) ] -> { SOSSimpAdd tac :: sopts }
 | [ "fwd:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
 | [ "ecases:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
 | [ "sinv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
