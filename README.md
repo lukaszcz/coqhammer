@@ -327,9 +327,11 @@ are for `sauto`.
 * `lia: <bopt>`
 
   Controls whether to try the `lia` tactic for arithmetic
-  subgoals. Note that invoking `lia` is done in the default `simp:`
-  and `finish:` tactics - if these tactics are changed then `lia:` has
-  no effect. To re-enable `lia` use `solve: lia` or `solve+: lia`. Default: `lia: on`.
+  subgoals. Default: `lia: on`.
+
+  Note that invoking `lia` is done via the default `simp:` and
+  `finish:` tactics - if these tactics are changed then `lia:` has no
+  effect. To re-enable `lia` use `solve: lia` or `solve+: lia`.
 
 * `dep: <bopt>`
 
