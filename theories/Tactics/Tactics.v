@@ -580,14 +580,23 @@ Ltac bnat_reflect :=
 
 Ltac bool_reflect := bsimpl in *; breflect in *.
 
-Ltac invert_one_subgoal_nored H :=
+Ltac invert_one_subgoal_nored_gen tac H :=
   let ty := type of H in
-  inversion H; [idtac]; clear H; notHyp ty; ssubst.
+  tac H; [idtac]; clear H; notHyp ty; ssubst.
 
-Ltac invert_one_subgoal H := invert_one_subgoal_nored H; simpl in *.
+Ltac invert_one_subgoal_gen tac H := invert_one_subgoal_nored_gen tac H; simpl in *.
 
-Ltac simple_invert H := solve [ inversion H ] || invert_one_subgoal H.
-Ltac simple_invert_nored H := solve [ inversion H ] || invert_one_subgoal_nored H.
+Ltac invert H := inversion H.
+
+Ltac simple_invert H :=
+  solve [ inversion H ] || invert_one_subgoal_gen invert H.
+Ltac simple_invert_nored H :=
+  solve [ inversion H ] || invert_one_subgoal_nored_gen invert H.
+Ltac simple_invert_dep H :=
+  solve [ depelim H ] || invert_one_subgoal_gen depelim H.
+Ltac simple_invert_dep_nored H :=
+  solve [ depelim H ] || invert_one_subgoal_nored_gen depelim H.
+
 Ltac simple_inverting_gen tac :=
   repeat match goal with
          | [ H : ?P |- _ ] =>
@@ -598,6 +607,8 @@ Ltac simple_inverting_gen tac :=
          end.
 Ltac simple_inverting := simple_inverting_gen simple_invert.
 Ltac simple_inverting_nored := simple_inverting_gen simple_invert_nored.
+Ltac simple_inverting_dep := simple_inverting_gen simple_invert_dep.
+Ltac simple_inverting_dep_nored := simple_inverting_gen simple_invert_dep_nored.
 
 Ltac case_split :=
   match goal with
