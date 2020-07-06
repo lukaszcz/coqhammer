@@ -186,10 +186,28 @@ let ssubst_tac () = Utils.ltac_apply "Tactics.ssubst" []
 let subst_simpl_tac () = Utils.ltac_apply "Tactics.subst_simpl" []
 let srewrite_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.srewrite" [mk_tac_arg_id id])
 let intros_until_atom_tac () = Utils.ltac_apply "Tactics.intros_until_atom" []
-let simple_inverting_tac () = Utils.ltac_apply "Tactics.simple_inverting" []
-let simple_inverting_nored_tac () = Utils.ltac_apply "Tactics.simple_inverting_nored" []
-let simple_invert_tac id = Utils.ltac_apply "Tactics.simple_invert" [mk_tac_arg_id id]
-let simple_invert_nored_tac id = Utils.ltac_apply "Tactics.simple_invert_nored" [mk_tac_arg_id id]
+let simple_inverting_tac opts =
+  Utils.ltac_apply
+    (if opts.s_dep then
+       with_reduction opts
+         "Tactics.simple_inverting_dep"
+         "Tactics.simple_inverting_dep_nored"
+     else
+       with_reduction opts
+         "Tactics.simple_inverting"
+         "Tactics.simple_inverting_nored")
+    []
+let simple_invert_tac opts id =
+  Utils.ltac_apply
+    (if opts.s_dep then
+       with_reduction opts
+         "Tactics.simple_invert_dep"
+         "Tactics.simple_invert_dep_nored"
+     else
+       with_reduction opts
+         "Tactics.simple_invert"
+         "Tactics.simple_invert_nored")
+    [mk_tac_arg_id id]
 let sapply_tac id = Utils.ltac_apply "Tactics.sapply" [mk_tac_arg_id id]
 let case_splitting_tac opts =
   Utils.ltac_apply
@@ -691,7 +709,7 @@ let eager_inverting opts =
 
 let simple_inverting opts =
   match opts.s_inversions with
-  | SAll -> with_reduction opts (simple_inverting_tac ()) (simple_inverting_nored_tac ())
+  | SAll -> simple_inverting_tac opts
   | SNone -> Tacticals.New.tclIDTAC
   | _ ->
      repeat_when
@@ -703,7 +721,7 @@ let simple_inverting opts =
          | Ind(ind, _) when is_inversion opts evd ind args -> true
          | _ -> false
        end
-       (with_reduction opts simple_invert_tac simple_invert_nored_tac)
+       (simple_invert_tac opts)
 
 let simplify opts =
   let simpl1 =
