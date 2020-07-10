@@ -293,7 +293,9 @@ let interp_opt ret opt opts =
   | SOLia b ->
      ret { opts with s_lia = b }
   | SODep b ->
-     ret { opts with s_dep = b }
+     ret { opts with s_dep = b;
+                     s_eager_inverting = false;
+                     s_simple_inverting = false }
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =
