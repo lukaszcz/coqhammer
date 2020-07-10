@@ -28,7 +28,7 @@ let _ =
   in
   declare_int_option gdopt
 
-let atp_timelimit = ref 10
+let atp_timelimit = ref 20
 
 let _ =
   let gdopt=
