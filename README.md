@@ -438,7 +438,7 @@ Set Hammer PredictMethod "knn"/"nbayes".
 Set/Unset Hammer Parallel.
 (* run ATPs in parallel; irrelevant if GSMode > 0; default: on *)
 Set Hammer ATPLimit n.
-(* ATP time limit in seconds, default: 10s *)
+(* ATP time limit in seconds, default: 20s *)
 Set Hammer ReconstrLimit n.
 (* time limit for proof reconstruction, default: 10s *)
 Set Hammer SAutoLimit n.
