@@ -22,22 +22,22 @@ Set Hammer SAutoLimit 0.
 
 Lemma lem_1 : le 1 2.
   hammer. Restart.
-  qauto use: @Arith.PeanoNat.Nat.lt_0_2 unfold: Init.Peano.lt.
+  hauto use: @Nat.lt_0_2 unfold: lt.
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
   hammer. Restart.
-  qauto use: @Arith.PeanoNat.Nat.add_1_r, @Arith.PeanoNat.Nat.Odd_succ, @Arith.PeanoNat.Nat.Even_or_Odd.
+  hauto use: @Nat.Even_or_Odd, @Nat.add_1_r, @Nat.Odd_succ.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
   hammer. Restart.
-  qauto use: (@Arith.PeanoNat.Nat.Even_or_Odd, @Arith.PeanoNat.Nat.Even_succ, @Arith.PeanoNat.Nat.add_1_r).
+  hauto use: @Nat.add_1_r, @Nat.Even_or_Odd, @Nat.Even_succ.
 Qed.
 
 Lemma lem_3 : le 2 3.
   hammer. Restart.
-  qauto use: (@Arith.PeanoNat.Nat.le_le_succ_r, @Arith.PeanoNat.Nat.lt_1_2) unfold: Peano.lt.
+  hfcrush use: @Nat.le_succ_diag_r unfold: Init.Nat.two.
 Qed.
 
 Lemma lem_4 : le 3 10.
@@ -48,19 +48,19 @@ Qed.
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
   hammer. Restart.
-  qauto using (@Arith.PeanoNat.Nat.add_comm, @Arith.PeanoNat.Nat.mul_comm).
+  qauto use: @Nat.mul_comm, @Nat.add_comm.
 Qed.
 
 Lemma lem_rew : forall m n : nat, 1 + n + m + 1 = m + 2 + n.
 Proof.
   time hammer. Restart.
-  hauto using (@Arith.PeanoNat.Nat.add_assoc, @Arith.PeanoNat.Nat.add_comm, @Arith.PeanoNat.Nat.add_1_r, @Arith.PeanoNat.Nat.add_shuffle1).
+  qauto use: @Nat.add_comm, @Nat.add_1_r, @Nat.add_shuffle1, @Nat.add_assoc lia: off.
 Qed.
 
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
 Proof.
   hammer. Restart.
-  qauto using (@Arith.PeanoNat.Nat.pow_succ_r, @Arith.PeanoNat.Nat.add_1_r, @Arith.PeanoNat.Nat.le_0_l).
+  qauto use: @Nat.pow_succ_r, @Nat.le_0_l, @Nat.add_1_r lia: off.
 Qed.
 
 Require Coq.Reals.RIneq.
@@ -86,7 +86,7 @@ Lemma max_lub : forall m p k n : BinNums.Z,
                   BinInt.Z.ge p m -> BinInt.Z.le n p -> BinInt.Z.le (BinInt.Z.max n m) p.
 Proof.
   hammer. Restart.
-  hauto using (@ZArith.BinInt.Z.ge_le, @ZArith.BinInt.Z.max_lub).
+  qauto use: @BinInt.Z.max_lub, @BinInt.Z.ge_le.
 Qed.
 
 Require Reals.
@@ -97,7 +97,7 @@ Lemma lem_iso : forall x1 y1 x2 y2 theta : Rdefinitions.R,
                    (Rgeom.yr x2 y2 theta).
 Proof.
   hammer. Restart.
-  hauto using (@Reals.Rgeom.isometric_rotation).
+  qauto use: @Rgeom.isometric_rotation.
 Qed.
 
 Require Import List.
@@ -108,7 +108,7 @@ Lemma lem_lst :
     P x.
 Proof.
   hammer. Restart.
-  qauto using (@Lists.List.in_app_iff).
+  qauto use: @in_app_iff.
   (* `firstorder with datatypes' does not work *)
 Qed.
 
@@ -116,18 +116,14 @@ Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
                                                    In z (y1 :: y2 :: l ++ y3 :: l').
 Proof.
   hammer. Restart.
-  scrush using (@Lists.List.in_cons, @Lists.List.not_in_cons, @Lists.List.in_or_app).
-  Restart.
-  qcrush use: @Coq.Lists.List.in_app_iff, @Coq.Lists.List.in_or_app, @Coq.Lists.List.not_in_cons, @Coq.Lists.List.in_cons, @Coq.Lists.List.Add_in unfold: Coq.Init.Datatypes.app.
+  qauto use: @in_app_iff, @in_or_app, @not_in_cons, @in_cons, @Add_in unfold: app.
   (* `firstorder with datatypes' does not work *)
 Qed.
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
 Proof.
   hammer. Restart.
-  hauto using (@Arith.PeanoNat.Nat.le_0_l, @Init.Peano.le_S, @Init.Peano.le_n) unfolding Init.Datatypes.length, Lists.List.tl.
-  Restart.
-  qauto use: @Coq.Init.Peano.le_S, @Coq.Arith.PeanoNat.Nat.le_0_l, @Coq.Init.Peano.le_n unfold: Coq.Init.Datatypes.length, Coq.Lists.List.tl.
+  qauto use: @le_S, @Nat.le_0_l, @le_n unfold: tl, length.
 Qed.
 
 Require NArith.Ndec.
@@ -136,7 +132,7 @@ Lemma Nleb_alt :
   forall b a c : BinNums.N, Ndec.Nleb b c = BinNat.N.leb b c /\ Ndec.Nleb a b = BinNat.N.leb a b.
 Proof.
   hammer. Restart.
-  hauto using (@NArith.Ndec.Nleb_alt).
+  qauto use: @Ndec.Nleb_alt.
 Qed.
 
 Require NArith.BinNat.
@@ -146,14 +142,14 @@ Lemma setbit_iff : forall m a n : BinNums.N,
                      BinNat.N.testbit (BinNat.N.setbit a n) m = true.
 Proof.
   hammer. Restart.
-  hauto erew: off exhaustive: on use: (@NArith.BinNat.N.setbit_iff).
+  hfcrush use: @BinNat.N.setbit_iff.
 Qed.
 
 Lemma in_int_p_Sq : forall r p q a : nat, a >= 0 ->
                       Between.in_int p (S q) r -> Between.in_int p q r \/ r = q \/ a = 0.
 Proof.
   hammer. Restart.
-  qauto using (@Arith.Between.in_int_p_Sq).
+  hcrush use: @in_int_p_Sq.
 Qed.
 
 Require Reals.Rminmax.
@@ -163,7 +159,7 @@ Lemma min_spec_1 : forall n m : Rdefinitions.R,
                    (Rdefinitions.Rlt n m /\ Rbasic_fun.Rmin m n = n).
 Proof.
   hammer. Restart.
-  hauto using (@Reals.RIneq.Rnot_le_lt) unfolding Reals.Rbasic_fun.Rmin.
+  hauto use: @RIneq.Rnot_le_lt unfold: Rbasic_fun.Rmin.
 Qed.
 
 Lemma min_spec_2 : forall n m : Rdefinitions.R,
@@ -171,14 +167,14 @@ Lemma min_spec_2 : forall n m : Rdefinitions.R,
                    (Rdefinitions.Rlt n m /\ Rbasic_fun.Rmin m n = n).
 Proof.
   hammer. Restart.
-  hauto using (@Reals.RIneq.Rnot_le_lt) unfolding Reals.Rbasic_fun.Rmin.
+  hauto use: @RIneq.Rnot_le_lt unfold: Rbasic_fun.Rmin.
 Qed.
 
 Lemma incl_app : forall (A : Type) (n l m : list A),
                    List.incl l n /\ List.incl m n -> List.incl (l ++ m) n.
 Proof.
   hammer. Restart.
-  hauto using (@Lists.List.incl_app).
+  hfcrush use: @incl_app.
 Qed.
 
 Require Reals.Rpower.
@@ -188,7 +184,7 @@ Lemma exp_Ropp
        Rdefinitions.Rinv (Rtrigo_def.exp x) = Rtrigo_def.exp (Rdefinitions.Ropp x).
 Proof.
   hammer. Restart.
-  hauto using (@Reals.Rpower.exp_Ropp).
+  hfcrush use: @Rpower.exp_Ropp.
 Qed.
 
 Lemma lem_lst_1 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
@@ -197,9 +193,9 @@ Proof.
   proof, then one needs to start the induction manually. *)
   induction l'.
   - hammer. Undo.
-    qauto using (@Lists.List.app_nil_end).
+    qauto use: @app_nil_end.
   - hammer. Undo.
-    qauto using (@Lists.List.NoDup_remove_1).
+    qauto use: @NoDup_remove_1.
 Qed.
 
 Lemma NoDup_remove_1
@@ -208,7 +204,7 @@ Lemma NoDup_remove_1
        ~ List.In a (l ++ l') /\ List.NoDup (l ++ l') /\ List.NoDup l.
 Proof.
   hammer. Restart.
-  hauto using (@Lists.List.NoDup_remove, @lem_lst_1).
+  hauto use: @lem_lst_1, @NoDup_remove.
 Qed.
 
 Lemma leb_compare2 : forall m n : nat,
@@ -220,19 +216,19 @@ Proof.
   returned dependencies may still be used to create the proof
   semi-manually. *)
   assert (forall c : Datatypes.comparison, c = Eq \/ c = Lt \/ c = Gt) by sauto inverting Datatypes.comparison.
-  hauto rew: off use: Compare_dec.leb_compare.
+  hauto erew: off use: Compare_dec.leb_compare.
 Qed.
 
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.
 Proof.
   hammer. Restart.
-  hauto using (@Arith.PeanoNat.Nat.leb_le).
+  qauto use: @leb_correct, @leb_complete.
 Qed.
 
 Lemma leb_2 : forall m n : nat, PeanoNat.Nat.leb m n = false <-> m > n.
 Proof.
   hammer. Restart.
-  hauto using (@Arith.Compare_dec.leb_correct_conv, @Arith.Compare_dec.leb_iff_conv) unfolding (@Init.Peano.gt).
+  qauto use: @leb_iff_conv, @leb_correct_conv unfold: gt.
 Qed.
 
 Lemma incl_appl
@@ -240,19 +236,19 @@ Lemma incl_appl
        List.incl l n -> List.incl l (n ++ m) /\ List.incl l (m ++ n) /\ List.incl l (l ++ l).
 Proof.
   hammer. Restart.
-  hauto using (@Lists.List.incl_appl, @Lists.List.incl_appr, @Lists.List.incl_refl).
+  hfcrush use: @incl_appl, @incl_refl, @incl_appr.
 Qed.
 
 Lemma in_int_lt2 : forall p q r : nat, Between.in_int p q r -> q >= p /\ r >= p /\ r <= q.
 Proof.
   hammer. Restart.
-  hauto using (@Arith.PeanoNat.Nat.lt_le_incl, @Arith.Between.in_int_lt) unfolding (@Init.Peano.ge, @Arith.Between.in_int).
+  hfcrush use: @in_int_lt, @Nat.lt_le_incl unfold: ge, in_int.
 Qed.
 
 Lemma nat_compare_eq : forall n m : nat, PeanoNat.Nat.compare n m = Eq <-> n = m.
 Proof.
   hammer. Restart.
-  hauto using (@Arith.PeanoNat.Nat.compare_eq_iff).
+  qauto use: @Nat.compare_eq_iff.
 Qed.
 
 Lemma Forall_1
@@ -261,11 +257,11 @@ Lemma Forall_1
 Proof.
   induction l.
   - hammer. Undo.
-    hauto using (@Lists.List.app_nil_l, @Lists.List.Forall_cons).
-  - hammer. Undo.
-    sauto using (@Coq.Lists.List.Forall_cons).
+    hauto ered: off use: @app_nil_l, @Forall_cons.
+  - (* hammer. Undo. *)
+    sauto use: @Forall_cons.
   Restart.
-  induction l; ssimpl.
+  induction l; qsimpl.
 Qed.
 (* Neither the base case nor the inductive step may be solved using 'firstorder with datatypes'. *)
 
@@ -275,7 +271,13 @@ Lemma Forall_impl
 Proof.
   induction l.
   hammer. Undo.
-  hauto using (@Lists.List.app_nil_end).
+  qauto use: @app_nil_end.
   hammer. Undo.
-  hauto using (@Lists.List.Forall_inv_tail, @Lists.List.Forall_inv, @Forall_1).
+  qauto use: @Forall_inv, @Forall_inv_tail, @Forall_1.
+Qed.
+
+Lemma minus_neq_O : forall n i:nat, (i < n) -> (n - i) <> 0.
+Proof.
+  hammer. Undo.
+  qauto use: @Nat.sub_gt lia: off.
 Qed.

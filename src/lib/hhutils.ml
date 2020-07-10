@@ -551,6 +551,12 @@ let print_constr evd t =
 let constr_to_string evd t =
   Pp.string_of_ppcmds (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))
 
+let constant_to_string c =
+  Pp.string_of_ppcmds (Printer.pr_constant (Global.env ()) c)
+
+let inductive_to_string ind =
+  Pp.string_of_ppcmds (Printer.pr_inductive (Global.env ()) ind)
+
 (******************************************************************************************)
 (* Code copied from eauto.ml with minor modifications *)
 

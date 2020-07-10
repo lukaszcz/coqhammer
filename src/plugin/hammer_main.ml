@@ -261,19 +261,6 @@ let globref_to_inductive r =
   | Names.GlobRef.IndRef(i) -> i
   | _ -> failwith "globref: not an inductive type"
 
-let globref_econstr_name sigma x =
-  let glob =
-    let open Constr in
-    let open EConstr in
-    match kind sigma x with
-    | Var v -> Names.GlobRef.VarRef(v)
-    | Const (c, _) -> Names.GlobRef.ConstRef(c)
-    | Ind (i, _) -> Names.GlobRef.IndRef(i)
-    | Construct (cr, _) -> Names.GlobRef.ConstructRef(cr)
-    | _ -> failwith "no globref"
-  in
-  Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob))
-
 let mk_lst_str at pref lst =
   let get_name x =
     at ^ Hhlib.drop_prefix x "Top."
@@ -494,10 +481,9 @@ let hammer_tac () =
               Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
             let info = do_predict hyps defs goal in
             let (deps, defs, inverts) = get_tac_args env sigma info in
-            (* TODO: user-readable names (without extra qualifiers) *)
-            let sdeps = List.map (fun constr -> globref_econstr_name sigma (EConstr.of_constr constr)) deps
-            and sdefs = List.map Constant.to_string defs
-            and sinverts = List.map Utils.get_ind_name inverts
+            let sdeps = List.map (Utils.constr_to_string sigma) deps
+            and sdefs = List.map Utils.constant_to_string defs
+            and sinverts = List.map Utils.inductive_to_string inverts
             in
             Msg.info ("Reconstructing the proof...");
             run_tactics (List.map EConstr.of_constr deps) defs inverts
