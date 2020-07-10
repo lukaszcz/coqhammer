@@ -2,15 +2,13 @@
 
 This file showcases some tactics available in Hammer.Tactics.
 
-Author: Lukasz Czajka
-
 *)
 
 From Hammer Require Import Tactics Reflect.
 
-Require Import PeanoNat.
+Require Import Arith.
 Require Import Bool.
-Require Import Psatz.
+Require Import Lia.
 
 Inductive Term : Set :=
 | LS : Term
@@ -66,7 +64,7 @@ Qed.
 
 Lemma no_lams_transl : forall t : Term, NoLambdas (transl t).
 Proof.
-  induction t; sauto using no_lams_abstr.
+  induction t; sauto use: no_lams_abstr.
 Qed.
 
 Inductive HasVar : nat -> Term -> Prop :=
@@ -77,19 +75,19 @@ Inductive HasVar : nat -> Term -> Prop :=
 Lemma vars_abstr :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr v t)).
 Proof.
-  induction t; scrush.
+  induction t; sauto.
 Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).
 Proof.
-  induction t; qsimpl.
+  induction t; sauto.
 Qed.
 
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
 Proof.
   induction t; qsimpl.
-  - hauto using vars_abstr.
-  - hauto using (@hs_lem, @vars_abstr, @novar_abstr, @no_lams_transl).
+  - hauto use: vars_abstr.
+  - hauto use: hs_lem, vars_abstr, novar_abstr, no_lams_transl.
 Qed.
 
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
@@ -109,21 +107,21 @@ Notation "X =w Y" := (WeakEqual X Y) (at level 80).
 Lemma abstr_correct :
   forall (t s : Term) (v : nat), NoLambdas t -> abstr v t @ s =w csubst t v s.
 Proof.
-  induction t; scrush.
+  induction t; sauto.
 Qed.
 
 Lemma abstr_size :
   forall (t : Term) (v : nat), size (abstr v t) <= 3 * size t.
 Proof.
-  intros; induction t; qsimpl.
+  intros; induction t; sauto.
 Qed.
 
 Lemma lem_pow_3 : (forall x y : nat, 3 ^ x + 3 ^ y + 1 <= 3 ^ (x + y + 1)).
 Proof.
   intros.
   induction x; simpl in *.
-  induction y; simpl in *; lia.
-  lia.
+  - induction y; simpl in *; lia.
+  - lia.
 Qed.
 
 Lemma transl_size :
@@ -134,18 +132,18 @@ Proof.
     { eauto using PeanoNat.Nat.add_le_mono. }
     assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
     { auto with zarith. }
-    hauto using (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r).
+    hauto use: Nat.le_lt_trans, lem_pow_3, Nat.lt_succ_r.
   - assert (size (abstr n (transl t)) <= 3 * size (transl t)).
     { eauto using abstr_size with zarith. }
     assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
     { eauto using Nat.le_trans with zarith. }
-    assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto using Nat.add_1_r.
-    scrush.
+    assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto use: Nat.add_1_r.
+    sauto.
 Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
 Proof.
-  intros; induction t; qsimpl.
+  intros; induction t; sauto.
 Qed.
 
 Fixpoint long_app (n : nat) : Term :=
@@ -171,12 +169,12 @@ Lemma transl_size_lb : forall (n : nat), size (transl (cex_term n)) >= 2^n.
 Proof.
   assert (forall (n m : nat), size (transl (long_term n m)) >= 2^n).
   induction n; ssimpl.
-  - scrush using (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg).
+  - hfcrush use: Nat.nlt_ge, Gt.gt_le_S, Compare_dec.not_ge, size_nonneg.
   - assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
-    { hauto using (@abstr_size_lb, @no_lams_transl). }
+    { hauto use: abstr_size_lb, no_lams_transl. }
     assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
     { pose proof (IHn m); eauto with zarith. }
-    scrush.
+    sauto.
   - now unfold cex_term.
 Qed.
 
@@ -190,7 +188,7 @@ Fixpoint occurs (v : nat) (t : Term) : bool :=
 
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t <-> HasVar v t.
 Proof.
-  induction t; qsimpl; breflect in *; qsimpl.
+  induction t; sauto brefl: on.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
@@ -213,7 +211,7 @@ Fixpoint transl2 (t : Term) : Term :=
 
 Lemma no_lams_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> NoLambdas (abstr2 v t).
 Proof.
-  induction t; qsimpl; sauto.
+  induction t; sauto.
 Qed.
 
 Lemma no_lams_transl2 : forall t : Term, NoLambdas (transl2 t).
@@ -224,21 +222,21 @@ Qed.
 Lemma vars_abstr2 :
   forall (t : Term) (n v : nat), n <> v -> (HasVar n t <-> HasVar n (abstr2 v t)).
 Proof.
-  induction t; scrush. (* 3.5 s *)
+  induction t; sauto. (* 1 s *)
 Qed.
 
 Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr2 v t)).
 Proof.
   intros.
   pose (u := t).
-  induction t; bdestruct (occurs v u); qsimpl; hauto using (@occurs_spec).
+  induction t; bdestruct (occurs v u); sauto use: occurs_spec.
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
 Proof.
   induction t; qsimpl.
-  - hauto using (@vars_abstr2).
-  - hauto using (@no_lams_transl2, @vars_abstr2, @novar_abstr2, @hs_lem).
+  - hauto use: vars_abstr2.
+  - hauto use: no_lams_transl2, vars_abstr2, novar_abstr2, hs_lem.
 Qed.
 
 Lemma hasvar_inv :
@@ -250,7 +248,7 @@ Qed.
 Lemma csubst_novar :
   forall (t s : Term) (v : nat), NoLambdas t -> ~(HasVar v t) -> csubst t v s = t.
 Proof.
-  intros; induction t; sauto.
+  induction t; sauto.
 Qed.
 
 Lemma abstr2_correct :
@@ -268,5 +266,5 @@ Qed.
 Lemma abstr2_size_ub :
   forall (t : Term) (v : nat), size (abstr2 v t) <= 3 * size t.
 Proof.
-  intros; induction t; qsimpl.
+  intros; induction t; sauto.
 Qed.
