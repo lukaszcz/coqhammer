@@ -340,7 +340,9 @@ are for `sauto`.
   Enhanced support for dependent types. When `on`, the `depelim`
   tactic from the `Program` module is used for inversion. This may
   negatively impact speed and introduce dependencies on some axioms
-  equivalent to Uniqueness of Identity Proofs. Default: `dep: off`.
+  equivalent to Uniqueness of Identity Proofs. Setting `dep: on`
+  implies `einv: off` and `sinv: off`. You can re-enable the `einv`
+  and `sinv` options separately. Default: `dep: off`.
 
 Hammer
 ------
