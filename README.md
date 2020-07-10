@@ -27,7 +27,7 @@ components.
    A typical use is to prove relatively simple goals using available
    lemmas. The problem is to find appropriate lemmas in a large
    collection of all accessible lemmas and combine them to prove the
-   goal. The advantage of a hammer is that it is general tool not
+   goal. The advantage of a hammer is that it is a general tool not
    depending on any domain-specific knowledge and not requiring
    configuration by the user. The `hammer` tactic may use all
    currently accessible lemmas, including those proven earlier in a
@@ -35,8 +35,10 @@ components.
    or hint databases. At present, however, best results are achieved
    for statements "close to" first-order logic and lemmas from the
    standard library or similar. In comparison to `sauto`, the current
-   main limitation of `hammer` is its poor effectiveness on
-   non-first-order problems.
+   main limitation of `hammer` is its poor effectiveness on problems
+   heavily dependent on non-first-order features of Coq's logic
+   (e.g.~higher-order functions, boolean reflection or sophisticated
+   uses of dependent types).
 
    See the [Hammer](#Hammer) section below.
 
