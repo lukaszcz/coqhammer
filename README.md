@@ -37,7 +37,7 @@ components.
    standard library or similar. In comparison to `sauto`, the current
    main limitation of `hammer` is its poor effectiveness on problems
    heavily dependent on non-first-order features of Coq's logic
-   (e.g.~higher-order functions, boolean reflection or sophisticated
+   (e.g. higher-order functions, boolean reflection or sophisticated
    uses of dependent types).
 
    See the [Hammer](#Hammer) section below.
