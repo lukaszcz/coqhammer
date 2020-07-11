@@ -472,7 +472,7 @@ Boolean reflection
 ------------------
 
 Importing the `Reflect` module with
-```
+```coq
 From Hammer Require Import Reflect.
 ```
 declares `is_true` as a coercion and makes available the following tactics
