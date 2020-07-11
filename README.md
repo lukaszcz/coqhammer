@@ -109,7 +109,7 @@ increasing strength and decreasing speed:
 
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
 is just
-```coq
+```
 sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac
    finish: (eauto; congruence 400) lia: off
 ```
@@ -153,6 +153,11 @@ are used internally by `sauto`.
   into the context and handling boolean terms correctly (automatically
   performing boolean reflection).
 
+* `dep_destruct t`
+
+  Dependent destruction of `t`. A simple wrapper around the `dependent
+  destruction` tactic from the Program module.
+
 * `bool_reflect`
 
   Boolean reflection in the goal and all hypotheses. See the
@@ -164,7 +169,7 @@ are used internally by `sauto`.
 
 * `sinvert t`
 
-  Inversion of the conclusion of `t`. The argument may be quantified -
+  Inversion of the conclusion of `t`. The term `t` may be quantified -
   then new existential metavariables are introduced or new subgoals
   are generated for the arguments.
 
