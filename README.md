@@ -107,30 +107,35 @@ increasing strength and decreasing speed:
 * solvers: `sdone`, `strivial`, `ssolve`, `qauto`, `hauto`, `sauto`;
 * simplifiers: `simp_hyps`, `sintuition`, `qsimpl`, `ssimpl`.
 
+In addition to the solvers listed above, there is also a "lazy"
+version of `sauto` - the `lauto` tactic which is just
+```
+sauto ered: off erew: off ecases: off einv: off sinv: off
+```
+
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
 is just
 ```
-sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac finish: (eauto; congruence 400) lia: off
+sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac
+   finish: (eauto; congruence 400) lia: off
 ```
-See the next section for an explanation of these options.
+
+See the [Options for sauto](#options-for-sauto) section for an
+explanation of these options.
 
 The `sdone` tactic is used by `sauto` as the final tactic at the
 leaves of the proof search tree (see the `final:` and `finish:`
 options). The `strivial` tactic is just
 ```
-solve [ unshelve (try (sfinal sdone)); auto; try easy; try solve [ do 10 constructor ] ].
+solve [ unshelve (try (sfinal sdone)); auto; try easy;
+         try solve [ do 10 constructor ] ].
 ```
 The `ssolve` tactic is just
 ```
 solve [ (intuition auto); try sfinal sdone; try congruence 24;
          try easy; try solve [ econstructor; sfinal sdone ] ].
 ```
-
-In addition to the solvers listed above, there is also a "lazy"
-version of `sauto` - the `lauto` tactic which is just
-```
-sauto ered: off erew: off ecases: off einv: off sinv: off
-```
+The `sfinal` tactic is described in the next section.
 
 Additional variants of the solvers are used in the reconstruction
 backend of the `hammer` tactic. The solvers listed here are the ones
@@ -159,6 +164,14 @@ are used internally by `sauto`.
 * `use lem1, .., lemn`
 
   Add the listed lemmas at the top of the context and simplify them.
+
+* `sfinal tac`
+
+  Perform "final" simplifications of the goal (simplifying hypotheses,
+  eliminating universally quantified disjunctions and existentials)
+  and solve all the resulting subgoals with `tac`. The `sfinal tac`
+  tactic invocation fails if `tac` does not solve some of the
+  resulting subgoals.
 
 * `sinvert t`
 
@@ -435,8 +448,7 @@ are for `sauto`.
 * `sig: <bopt>`
 
   Controls whether to (eagerly) perform simplifications for
-  sigma-types (using the `destruct_sigma` and `invert_sigma`
-  tactics). Default: `sig: on`.
+  sigma-types (using the `simpl_sigma` tactic). Default: `sig: on`.
 
 * `lia: <bopt>`
 
@@ -472,10 +484,10 @@ related to boolean reflection.
 
   Perform boolean reflection - convert boolean statements into
   propositions in `Prop` and boolean comparisons (on basic types from
-  the standard library) into corresponding inductive types.
+  the standard library) into the corresponding inductive types.
 
-  The `breflect` just performs generalised top-down rewriting
-  (including under binders) with the `brefl_hints` rewriting hint
+  The `breflect` just performs generalised top-down rewrite
+  (including under binders) with the `brefl_hints` rewrite hint
   database. This allows for easy customisation of boolean reflection
   by adding lemmas expressing reflection of user-defined boolean
   predicates. For instance, suppose you have a boolean predicate
@@ -490,20 +502,20 @@ related to boolean reflection.
   ```
   sortedb_to_sorted {A} : forall l : list A, sortedb l -> sorted b
   ```
-  Then adding the rewriting hint
+  Then adding the rewrite hint
   ```
   Hint Rewrite -> sortedb_to_sorted : brefl_hints
   ```
   will result in `breflect` automatically converting `sortedb l` to
-  `sorted l`. This will also be automatically
-  done by `bool_reflect` and by `sauto` with the `brefl: on` option,
-  because they internally use `breflect`.
+  `sorted l`. This will then also be done by `bool_reflect` and by
+  `sauto` with the `brefl: on` option, because they internally use
+  `breflect`.
 
 * `breify`
 * `breify in H`
 * `breify in *`
 
-  The reverse of `breflect`. Uses the `breif_hints` rewriting hint
+  The reverse of `breflect`. Uses the `breif_hints` rewrite hint
   database.
 
 * `bsimp`
@@ -665,7 +677,7 @@ command                          | description
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2020, Lukasz Czajka, TU Dortmund University.
+Copyright (c) 2017-2020, Lukasz Czajka, TU Dortmund University.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file
