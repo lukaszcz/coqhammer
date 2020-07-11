@@ -115,7 +115,7 @@ sauto ered: off erew: off ecases: off einv: off sinv: off
 
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
 is just
-```
+```coq
 sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac
    finish: (eauto; congruence 400) lia: off
 ```
@@ -126,12 +126,12 @@ explanation of these options.
 The `sdone` tactic is used by `sauto` as the final tactic at the
 leaves of the proof search tree (see the `final:` and `finish:`
 options). The `strivial` tactic is just
-```
+```coq
 solve [ unshelve (try (sfinal sdone)); auto; try easy;
          try solve [ do 10 constructor ] ].
 ```
 The `ssolve` tactic is just
-```
+```coq
 solve [ (intuition auto); try sfinal sdone; try congruence 24;
          try easy; try solve [ econstructor; sfinal sdone ] ].
 ```
@@ -491,19 +491,19 @@ related to boolean reflection.
   database. This allows for easy customisation of boolean reflection
   by adding lemmas expressing reflection of user-defined boolean
   predicates. For instance, suppose you have a boolean predicate
-  ```
+  ```coq
   sortedb {A} : list A -> bool
   ```
   and a corresponding inductive predicate
-  ```
+  ```coq
   sorted {A} : list A -> Prop
   ```
   and a lemma
-  ```
+  ```coq
   sortedb_to_sorted {A} : forall l : list A, sortedb l -> sorted b
   ```
   Then adding the rewrite hint
-  ```
+  ```coq
   Hint Rewrite -> sortedb_to_sorted : brefl_hints
   ```
   will result in `breflect` automatically converting `sortedb l` to
