@@ -9,14 +9,17 @@ Overview of changes
   of tactic interface.
 * Optional boolean reflection in `sauto`.
 * Hint databases can now be used with `sauto`.
+* Dependent elimination using `depelim` can now optionally be
+  performed by `sauto` (the `dep:` option).
 * Improvements of the `sauto` proof search procedure.
 * Better failure messages for the tactics.
+* More readable dependency names (without extra qualifiers).
 * `sauto` is now the preliminary tactic for `hammer`.
 * Rudimentary MathComp support. New `make` targets: `mathcomp` and
   `install-mathcomp`.
 
-Details of the `sauto` proof search improvements
-------------------------------------------------
+Details of the sauto proof search improvements
+----------------------------------------------
 * Actions modulo head reduction.
 * Better `sdestruct` behaviour with boolean comparisons.
 * The `f_equal` action.

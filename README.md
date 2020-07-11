@@ -13,9 +13,9 @@ components.
    Calculus of Inductive Constructions. While it is in theory complete
    only for a "first-order" fragment of CIC, in practice it can handle
    a much larger part of the Coq logic. In contrast to the `hammer`
-   tactic, `sauto` uses only explicitly provided lemmas. For effective
-   use, `sauto` typically needs some configuration by providing
-   appropriate options.
+   tactic, `sauto` can use only explicitly provided lemmas and it does
+   not invoke any external ATPs. For effective use, `sauto` typically
+   needs some configuration by providing appropriate options.
 
    See the [Sauto](#Sauto) section below.
 
@@ -116,7 +116,7 @@ Additional variants of the solvers are used in the reconstruction
 backend of the `hammer` tactic. The solvers listed here are the ones
 most suited for standalone use.
 
-Some examples are given in the [`examples`](examples) directory.
+The are some examples in the [`examples`](examples) directory.
 
 Options for sauto
 -----------------
@@ -139,11 +139,11 @@ are for `sauto`.
 
 * `use: <term-list>`
 
-  Add the given lemmas at the top of the context. Default: `use: -`.
+  Add the listed lemmas at the top of the context. Default: `use: -`.
 
 * `inv: <ind-list>`
 
-  Try performing inversion (case reasoning) on values of the given
+  Try performing inversion (case reasoning) on values of the listed
   inductive types. Default: `inv: *`.
 
   This does not affect inversion for the inductive types representing
@@ -152,7 +152,7 @@ are for `sauto`.
 
 * `ctrs: <ind-list>`
 
-  Try using constructors of given inductive types. Default: `ctrs: *`.
+  Try using constructors of listed inductive types. Default: `ctrs: *`.
 
   This does not affect constructors of the inductive types
   representing logical connectives. Use `ctrs: never` to prevent using
@@ -160,38 +160,38 @@ are for `sauto`.
 
 * `unfold: <const-list>`
 
-  Try unfolding the given definitions based on heuristic criteria. Default: `unfold: -`.
+  Try unfolding the listed definitions based on heuristic criteria. Default: `unfold: -`.
 
   This does not affect `iff` and `not` which are treated specially and
   always unfolded. Use `unfold: never` to prevent this behaviour.
 
 * `unfold!: <const-list>`
 
-  Always unfold the given definitions. Default: `unfold!: -`.
+  Always unfold the listed definitions. Default: `unfold!: -`.
 
 * `db: <db-list>`
 
-  Use the given hint databases (accepts both `auto` and `autorewrite`
+  Use the listed hint databases (accepts both `auto` and `autorewrite`
   hint databases). Default: `db: -`.
 
 * `hint:db: <db-list>`
 
-  Use the given `auto` hint databases. Default: `hint:db: -`.
+  Use the listed `auto` hint databases. Default: `hint:db: -`.
 
 * `rew:db: <db-list>`
 
-  Use the given `autorewrite` hint databases. Default: `rew:db: -`.
+  Use the listed `autorewrite` hint databases. Default: `rew:db: -`.
 
 * `cases: <ind-list>`
 
   Eliminate discriminees in case expression when the discriminee has
-  one of the given inductive types. If `ecases: on` then elimination
+  one of the listed inductive types. If `ecases: on` then elimination
   of match disciminees is performed eagerly, otherwise with
   backtracking. Default: `cases: *`, `ecases: on`.
 
 * `split: <sind-list>`
 
-  Eagerly apply constructors of the given "simple" inductive types. An
+  Eagerly apply constructors of the listed "simple" inductive types. An
   inductive type is "simple" if it is non-recursive with one
   constructor whose application does not introduce new existential
   metavariables. Default: `split: *`.
@@ -210,7 +210,7 @@ are for `sauto`.
 
 * `finish: <tactic>`
 
-  Use the given tactic at the leaves of the proof search
+  Set a tactic to use at the leaves of the proof search
   tree. Default: `finish: (sfinal trysolve)`.
 
 * `final: <tactic>`
@@ -227,8 +227,8 @@ are for `sauto`.
 
 * `simp+: <tactic>`
 
-  Add the given tactic for additional simplification after context
-  change, keeping all previously registered `simp:` tactics.
+  Add a tactic for additional simplification after context change,
+  keeping all previously registered `simp:` tactics.
 
 * `ssimp: <tactic>`
 
@@ -237,9 +237,8 @@ are for `sauto`.
 
 * `ssimp+: <tactic>`
 
-  Add the given tactic for additional strong simplification in
-  `ssimpl` and `qsimpl`, keeping all previously registered `ssimp:`
-  tactics.
+  Add a tactic for additional strong simplification in `ssimpl` and
+  `qsimpl`, keeping all previously registered `ssimp:` tactics.
 
 * `solve: <tactic>`
 
@@ -363,7 +362,7 @@ command                          | description
 `Hammer_version`                 |  Prints the version of CoqHammer.
 `Hammer_cleanup`                 |  Resets the hammer cache.
 
-Some examples are given in the [`examples`](examples) directory.
+There are some examples in the [`examples`](examples) directory.
 
 The intended use of the `hammer` tactic is to replace it upon success
 with the reconstruction tactic shown in the response window. This
