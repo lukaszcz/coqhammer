@@ -160,7 +160,7 @@ are used internally by `sauto`.
 
 * `bool_reflect`
 
-  Boolean reflection in the goal and all hypotheses. See the
+  Boolean reflection in the goal and in all hypotheses. See the
   [Boolean reflection](#boolean-reflection) section.
 
 * `use lem1, .., lemn`
@@ -198,7 +198,8 @@ are used internally by `sauto`.
 
 * `sapply t`
 
-  Apply `t` modulo simple heuristic equational reasoning.
+  Apply `t` modulo simple heuristic equational reasoning. See the
+  `sapp:` option.
 
 * `srewriting`
 
@@ -481,8 +482,8 @@ related to boolean reflection.
   propositions in `Prop` and boolean comparisons (on basic types from
   the standard library) into corresponding inductive types.
 
-  The `breflect` just performs generalised top-down rewriting
-  (including under binders) with the `brefl_hints` rewriting hint
+  The `breflect` tactic just performs generalised top-down rewriting
+  (also under binders) with the `brefl_hints` rewrite hint
   database. This allows for easy customisation of boolean reflection
   by adding lemmas expressing reflection of user-defined boolean
   predicates. For instance, suppose you have a boolean predicate
