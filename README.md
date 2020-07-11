@@ -497,7 +497,7 @@ related to boolean reflection.
   ```
   and a lemma
   ```coq
-  sortedb_to_sorted : forall l : list nat, is_true (sortedb l) -> sorted b
+  sortedb_to_sorted : forall l : list nat, is_true (sortedb l) -> sorted l
   ```
   Then adding the rewrite hint
   ```coq
