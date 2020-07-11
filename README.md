@@ -488,9 +488,10 @@ related to boolean reflection.
 * `breflect in H`
 * `breflect in *`
 
-  Perform boolean reflection - convert boolean statements into
-  propositions in `Prop` and boolean comparisons (on basic types from
-  the standard library) into the corresponding inductive types.
+  Perform boolean reflection - convert boolean statements (arguments
+  of `is_true`) into propositions in `Prop`, and boolean comparisons
+  (on basic types from the standard library) into the corresponding
+  inductive types.
 
   The `breflect` tactic just performs generalised top-down rewriting
   (also under binders) with the `brefl_hints` rewrite hint
@@ -498,23 +499,23 @@ related to boolean reflection.
   by adding lemmas expressing reflection of user-defined boolean
   predicates. For instance, suppose you have a boolean predicate
   ```coq
-  sortedb {A} : list A -> bool
+  sortedb : list nat -> bool
   ```
   and a corresponding inductive predicate
   ```coq
-  sorted {A} : list A -> Prop
+  sorted : list nat -> Prop
   ```
   and a lemma
   ```coq
-  sortedb_to_sorted {A} : forall l : list A, sortedb l -> sorted b
+  sortedb_to_sorted : forall l : list nat, is_true (sortedb l) -> sorted b
   ```
   Then adding the rewrite hint
   ```coq
   Hint Rewrite -> sortedb_to_sorted : brefl_hints
   ```
-  will result in `breflect` automatically converting `sortedb l` to
+  will result in `breflect` automatically converting `is_true (sortedb l)` to
   `sorted l`. This will then also be done by `bool_reflect` and by
-  `sauto` with the `brefl: on` option, because they internally use
+  `sauto` with `brefl: on`, because they internally use
   `breflect`.
 
 * `breify`
