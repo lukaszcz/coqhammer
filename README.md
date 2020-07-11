@@ -98,25 +98,130 @@ From Hammer Require Import Tactics.
 The module provides "solvers" which either solve the goal or fail, and
 "simplifiers" which simplify the goal but do not perform backtracking
 proof search. The simplifiers never fail. The solvers are based on
-variants of the `sauto` tactic. The simplifiers are based on variants
-of the heuristics and simplifications performed by `sauto` upon
-context change.
+variants of the `sauto` tactic or its sub-components. The simplifiers
+are based on variants of the heuristics and simplifications performed
+by `sauto` upon context change.
 
 Below we list the solvers and the simplifiers in the order of
 increasing strength and decreasing speed:
-* solvers: `strivial`, `qauto`, `hauto`, `sauto`;
+* solvers: `sdone`, `strivial`, `ssolve`, `qauto`, `hauto`, `sauto`;
 * simplifiers: `simp_hyps`, `sintuition`, `qsimpl`, `ssimpl`.
 
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
 is just
-`sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac finish: (eauto; congruence 400) lia: off`.
+```
+sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac finish: (eauto; congruence 400) lia: off
+```
 See the next section for an explanation of these options.
+
+The `sdone` tactic is used by `sauto` as the final tactic at the
+leaves of the proof search tree (see the `final:` and `finish:`
+options). The `strivial` tactic is just
+```
+solve [ unshelve (try (sfinal sdone)); auto; try easy; try solve [ do 10 constructor ] ].
+```
+The `ssolve` tactic is just
+```
+solve [ (intuition auto); try sfinal sdone; try congruence 24;
+         try easy; try solve [ econstructor; sfinal sdone ] ].
+```
+
+In addition to the solvers listed above, there is also a "lazy"
+version of `sauto` - the `lauto` tactic which is just
+```
+sauto ered: off erew: off ecases: off einv: off sinv: off
+```
 
 Additional variants of the solvers are used in the reconstruction
 backend of the `hammer` tactic. The solvers listed here are the ones
 most suited for standalone use.
 
 The are some examples in the [`examples`](examples) directory.
+
+Other tactics from the Tactics module
+-------------------------------------
+
+In addition to the solvers and the simplifiers listed in the previous
+section, the `Tactics` module contains a number of handy tactics which
+are used internally by `sauto`.
+
+* `sdestruct t`
+
+  Destruct `t` in the "right" way, introducing appropriate hypotheses
+  into the context and handling boolean terms correctly (automatically
+  performing boolean reflection).
+
+* `bool_reflect`
+
+  Boolean reflection in the goal and all hypotheses. See the
+  [Boolean reflection](#boolean-reflection) section.
+
+* `use lem1, .., lemn`
+
+  Add the listed lemmas at the top of the context and simplify them.
+
+* `sinvert t`
+
+  Inversion of the conclusion of `t`. The argument may be quantified -
+  then new existential metavariables are introduced or new subgoals
+  are generated for the arguments.
+
+* `sdepinvert t`
+
+  Dependent inversion of the conclusion of `t`. The same as `sinvert
+  t` but may use the `depelim` tactic for inversion.
+
+* `forwarding`
+
+  Limited forward reasoning corresponding to the `fwd:` option.
+
+* `forward_reasoning n`
+
+  Repeated forward reasoning with repetition limit `n`. This is
+  similar to but not exactly the same as `do n forwarding`.
+
+* `simpl_sigma`
+
+  Simplifications for sigma-types. Composed of two tactics:
+  `destruct_sigma` which eagerly destructs all elements of subset
+  types occurring as arguments to the first projection, and
+  `invert_sigma` which is a faster and weaker version of
+  `inversion_sigma` from the standard library. The `simpl_sigma`
+  tactic corresponds to the `sig:` option.
+
+* `sapply t`
+
+  Apply `t` modulo simple heuristic equational reasoning.
+
+* `srewriting`
+
+  Directed rewriting with the hypotheses which may be oriented using
+  LPO. Corresponds to the `erew:` option.
+
+* `simple_inverting`
+
+  Perform "simple inversion" corresponding to the `sinv:` option.
+
+* `eager_inverting`
+
+  Perform "eager simple elimination" corresponding to the `einv:`
+  option.
+
+* `case_splitting`
+
+  Eagerly eliminate all discriminees of match expressions. This
+  corresponds to the action enabled by setting `cases: *` and `ecases: on`.
+
+* `simple_splitting`
+
+  Eagerly apply constructors of "simple" inductive types -
+  non-recursive inductive types with exactly one constructor such that
+  application of the constructor does not introduce new existential
+  metavariables. This corresponds to `split: *`.
+
+* `simple_splitting logic`
+
+  Simple splitting for logical connectives only.
 
 Options for sauto
 -----------------
@@ -191,10 +296,16 @@ are for `sauto`.
 
 * `split: <sind-list>`
 
-  Eagerly apply constructors of the listed "simple" inductive types. An
-  inductive type is "simple" if it is non-recursive with one
-  constructor whose application does not introduce new existential
-  metavariables. Default: `split: *`.
+  Eagerly apply constructors of the listed "simple" inductive
+  types. An inductive type is "simple" if it is non-recursive with
+  exactly one constructor, and such that the application of the
+  constructor does not introduce new existential
+  metavariables. Default: `split: -`.
+
+  This does not affect inductive types representing logical
+  connectives. Use `split: never` to prevent eager applications of
+  constructors of "simple" inductive types representing logical
+  connectives (i.e., conjunction and existential quantification).
 
 * `limit: <number>`
 
@@ -211,11 +322,11 @@ are for `sauto`.
 * `finish: <tactic>`
 
   Set a tactic to use at the leaves of the proof search
-  tree. Default: `finish: (sfinal trysolve)`.
+  tree. Default: `finish: (sfinal sdone)`.
 
 * `final: <tactic>`
 
-  Shorthand for `finish: (sfinal <tactic>)`.
+  Shorthand for `finish: (sfinal <tactic>)`. Default: `final: sdone`.
 
 * `simp: <tactic>`
 
@@ -223,7 +334,7 @@ are for `sauto`.
   change. This option is for *additional* simplification - it has no
   impact on other simplifications performed by `sauto`. The default
   `simp:` tactic does not actually simplify but tries to fully solve
-  the goal. Default: `simp: (sfinal trysolve)`.
+  the goal. Default: `simp: (sfinal sdone)`.
 
 * `simp+: <tactic>`
 
@@ -307,6 +418,8 @@ are for `sauto`.
   elements of `bool` applied to `is_true` into statements in
   `Prop`. Default: `brefl: off`.
 
+  See also the [Boolean reflection](#boolean-reflection) section.
+
 * `sapp: <bopt>`
 
   Controls whether to use the `sapply` tactic for application. The
@@ -342,6 +455,76 @@ are for `sauto`.
   equivalent to Uniqueness of Identity Proofs. Setting `dep: on`
   implies `einv: off` and `sinv: off`. You can re-enable the `einv`
   and `sinv` options separately. Default: `dep: off`.
+
+Boolean reflection
+------------------
+
+Importing the `Reflect` module with
+```
+From Hammer Require Import Reflect.
+```
+declares `is_true` as a coercion and makes available the following tactics
+related to boolean reflection.
+
+* `breflect`
+* `breflect in H`
+* `breflect in *`
+
+  Perform boolean reflection - convert boolean statements into
+  propositions in `Prop` and boolean comparisons (on basic types from
+  the standard library) into corresponding inductive types.
+
+  The `breflect` just performs generalised top-down rewriting
+  (including under binders) with the `brefl_hints` rewriting hint
+  database. This allows for easy customisation of boolean reflection
+  by adding lemmas expressing reflection of user-defined boolean
+  predicates. For instance, suppose you have a boolean predicate
+  ```
+  sortedb {A} : list A -> bool
+  ```
+  and a corresponding inductive predicate
+  ```
+  sorted {A} : list A -> Prop
+  ```
+  and a lemma
+  ```
+  sortedb_to_sorted {A} : forall l : list A, sortedb l -> sorted b
+  ```
+  Then adding the rewriting hint
+  ```
+  Hint Rewrite -> sortedb_to_sorted : brefl_hints
+  ```
+  will result in `breflect` automatically converting `sortedb l` to
+  `sorted l`. This will also be automatically
+  done by `bool_reflect` and by `sauto` with the `brefl: on` option,
+  because they internally use `breflect`.
+
+* `breify`
+* `breify in H`
+* `breify in *`
+
+  The reverse of `breflect`. Uses the `breif_hints` rewriting hint
+  database.
+
+* `bsimp`
+* `bsimp in H`
+* `bsimp in *`
+
+  Simplify boolean expressions.
+
+* `bdestruct t`
+* `bdestruct t as H`
+
+  Destruct a boolean term `t` in the "right" way, introducing an
+  appropriate hypothesis into the context and automatically performing
+  boolean reflection on it. The second form of the tactic provides an
+  explicit name for the introduced hypothesis. A successful run of
+  `bdestruct` always results in two subgoals with one new hypothesis
+  in each.
+
+* `blia`
+
+  Perform boolean reflection and then run `lia`.
 
 Hammer
 ------
@@ -482,8 +665,10 @@ command                          | description
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2020, Lukasz Czajka, TU Dortmund University, and
-Cezary Kaliszyk, University of Innsbruck. Distributed under the terms
-of LGPL 2.1, see the file [LICENSE](LICENSE).
+Copyright (c) 2017-2020, Lukasz Czajka, TU Dortmund University.
+Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
+
+Distributed under the terms of LGPL 2.1, see the file
+[LICENSE](LICENSE).
 
 See [CREDITS](CREDITS.md) for a full list of contributors.

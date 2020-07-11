@@ -529,9 +529,6 @@ Ltac ssolve_gen tac :=
 Ltac ssolve := ssolve_gen isolve.
 Ltac ssolve_nolia := ssolve_gen isolve_nolia.
 
-Ltac strivial := solve [ autounfold with shints; unfold iff in *; unfold not in *;
-                         unshelve isolve; dsolve ].
-
 Ltac leaf_solve := solve [ isolve ].
 Ltac simpl_solve := solve [ isolve ].
 Ltac leaf_solve_nolia := solve [ isolve_nolia ].
@@ -1011,3 +1008,14 @@ Ltac f_equal_tac := f_equal.
 Declare ML Module "hammer_tactics".
 
 Ltac sauto_tac := sauto.
+
+Tactic Notation "sdone" := solve [ trysolve ].
+Tactic Notation "sdone" "lia:" "on" := solve [ trysolve ].
+Tactic Notation "sdone" "lia:" "off" := solve [ trysolve_nolia ].
+
+Tactic Notation "strivial" :=
+  solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+Tactic Notation "strivial" "lia:" "on" :=
+  solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
+Tactic Notation "strivial" "lia:" "off" :=
+  solve [ unfold iff in *; unfold not in *; unshelve isolve_nolia; dsolve ].

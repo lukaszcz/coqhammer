@@ -91,7 +91,10 @@ END
 (* Tactics *)
 
 TACTIC EXTEND Hammer_simple_splitting
-| [ "simple_splitting" ] -> { simple_splitting (default_s_opts ()) }
+| [ "simple_splitting" ] -> { simple_splitting
+                                { default_s_opts () with
+                                  s_simple_splits = SAll } }
+| [ "simple_splitting" "logic" ] -> { simple_splitting (default_s_opts ()) }
 END
 
 TACTIC EXTEND Hammer_eager_inverting
