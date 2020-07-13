@@ -99,6 +99,9 @@ END
 
 TACTIC EXTEND Hammer_eager_inverting
 | [ "eager_inverting" ] -> { eager_inverting (default_s_opts ()) }
+| [ "eager_inverting_dep" ] -> { eager_inverting
+                                   { (default_s_opts ()) with
+                                     s_dep = true } }
 END
 
 TACTIC EXTEND Hammer_sunfolding
