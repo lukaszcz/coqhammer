@@ -146,9 +146,9 @@ Ltac sdestruct t :=
   end.
 
 Ltac dep_destruct t :=
-  let x := fresh "x" in
+  let X := fresh "X" in
   let H := fresh "H" in
-  remember t as x eqn:H; simpl in x; dependent destruction x;
+  remember t as X eqn:H; simpl in X; dependent destruction X;
   try rewrite <- H in *; try clear H.
 
 Ltac sdepdestruct t := sdestruct t || dep_destruct t.
