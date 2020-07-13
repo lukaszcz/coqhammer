@@ -494,7 +494,7 @@ related to boolean reflection.
   inductive types.
 
   The `breflect` tactic just performs generalised top-down rewriting
-  (also under binders) with the `brefl_hints` rewrite hint
+  (also under binders) with the `brefl` rewrite hint
   database. This allows for easy customisation of boolean reflection
   by adding lemmas expressing reflection of user-defined boolean
   predicates. For instance, suppose you have a boolean predicate
@@ -511,25 +511,26 @@ related to boolean reflection.
   ```
   Then adding the rewrite hint
   ```coq
-  Hint Rewrite -> sortedb_to_sorted : brefl_hints
+  Hint Rewrite -> sortedb_to_sorted : brefl.
   ```
   will result in `breflect` automatically converting `is_true (sortedb l)` to
   `sorted l`. This will then also be done by `bool_reflect` and by
-  `sauto` with `brefl: on`, because they internally use
+  `sauto` with `brefl: on`, because these tactics internally use
   `breflect`.
 
 * `breify`
 * `breify in H`
 * `breify in *`
 
-  The reverse of `breflect`. Uses the `breif_hints` rewrite hint
+  The reverse of `breflect`. Uses the `breif` rewrite hint
   database.
 
-* `bsimp`
-* `bsimp in H`
-* `bsimp in *`
+* `bsimpl`
+* `bsimpl in H`
+* `bsimpl in *`
 
-  Simplify boolean expressions.
+  Simplify boolean expressions. This is just generalised top-down
+  rewriting with the `bsimpl` database.
 
 * `bdestruct t`
 * `bdestruct t as H`
