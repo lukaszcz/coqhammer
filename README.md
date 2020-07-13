@@ -170,8 +170,8 @@ are used internally by `sauto`.
 * `sinvert t`
 
   Inversion of the conclusion of `t`. The term `t` may be quantified -
-  then new existential metavariables are introduced or new subgoals
-  are generated for the arguments.
+  then new existential variables are introduced or new subgoals are
+  generated for the arguments.
 
 * `sdepinvert t`
 
@@ -207,25 +207,30 @@ are used internally by `sauto`.
   LPO. Corresponds to the `erew:` option.
 
 * `simple_inverting`
+* `simple_inverting_dep`
 
-  Perform "simple inversion" corresponding to the `sinv:` option.
+  Perform "simple inversion" corresponding to the `sinv:` option. The
+  `_dep` version may use the `depelim` tactic.
 
 * `eager_inverting`
+* `eager_inverting_dep`
 
   Perform "eager simple elimination" corresponding to the `einv:`
   option.
 
 * `case_splitting`
+* `case_splitting_dep`
 
   Eagerly eliminate all discriminees of match expressions. This
-  corresponds to the action enabled by setting `cases: *` and `ecases: on`.
+  corresponds to the action enabled by setting `cases: *` and `ecases:
+  on`.
 
 * `simple_splitting`
 
   Eagerly apply constructors of "simple" inductive types -
   non-recursive inductive types with exactly one constructor such that
   application of the constructor does not introduce new existential
-  metavariables. This corresponds to `split: *`.
+  variables. This corresponds to `split: *`.
 
 * `simple_splitting logic`
 
@@ -307,8 +312,8 @@ are for `sauto`.
   Eagerly apply constructors of the listed "simple" inductive
   types. An inductive type is "simple" if it is non-recursive with
   exactly one constructor, and such that the application of the
-  constructor does not introduce new existential
-  metavariables. Default: `split: -`.
+  constructor does not introduce new existential variables. Default:
+  `split: -`.
 
   This does not affect inductive types representing logical
   connectives. Use `split: never` to prevent eager applications of
@@ -438,7 +443,7 @@ are for `sauto`.
 * `exh: <bopt>`
 
   Controls whether to perform backtracking on instantiations of
-  existential metavariables. Default: `exh: off`.
+  existential variables. Default: `exh: off`.
 
 * `sig: <bopt>`
 
