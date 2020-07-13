@@ -103,7 +103,7 @@ Qed.
 
 Lemma lem_bval_and : forall s e1 e2, bval s (and e1 e2) = bval s e1 && bval s e2.
 Proof.
-  induction e1; sauto.
+  induction e1; sauto db: shints.
 Qed.
 
 Lemma lem_bval_less : forall s a1 a2, bval s (less a1 a2) = (aval s a1 <? aval s a2).
@@ -145,7 +145,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  sauto. (* 0.45s *)
+  sauto. (* 0.4s *)
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -154,15 +154,14 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  sauto unfolding equiv_cmd. (* 0.46s *)
+  time sauto unfold: equiv_cmd. (* 0.25s *)
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
                                                (While b c', s) ==> s'.
 Proof.
   enough (forall p s', p ==> s' -> forall b c c' s, p = (While b c, s) -> c ~~ c' -> (While b c', s) ==> s') by eauto.
-  intros p s' H.
-  induction H; sauto unfolding equiv_cmd.
+  induction 1; sauto unfold: equiv_cmd.
 Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b c ~~ While b c'.

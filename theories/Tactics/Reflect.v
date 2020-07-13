@@ -131,111 +131,111 @@ Qed.
 
 (* bool to Prop reflection *)
 
-Create HintDb brefl_hints discriminated.
+Create HintDb brefl discriminated.
 
-Hint Rewrite -> andE : brefl_hints.
-Hint Rewrite -> orE : brefl_hints.
-Hint Rewrite -> negE : brefl_hints.
-Hint Rewrite -> implE : brefl_hints.
-Hint Rewrite -> iffE : brefl_hints.
-Hint Rewrite -> falseE : brefl_hints.
-Hint Rewrite -> trueE : brefl_hints.
+Hint Rewrite -> andE : brefl.
+Hint Rewrite -> orE : brefl.
+Hint Rewrite -> negE : brefl.
+Hint Rewrite -> implE : brefl.
+Hint Rewrite -> iffE : brefl.
+Hint Rewrite -> falseE : brefl.
+Hint Rewrite -> trueE : brefl.
 
-Hint Rewrite -> Z_eqb_eq : brefl_hints.
-Hint Rewrite -> Z_gtb_gt : brefl_hints.
-Hint Rewrite -> Z_geb_ge : brefl_hints.
-Hint Rewrite -> Z_ltb_lt : brefl_hints.
-Hint Rewrite -> Z_leb_le : brefl_hints.
+Hint Rewrite -> Z_eqb_eq : brefl.
+Hint Rewrite -> Z_gtb_gt : brefl.
+Hint Rewrite -> Z_geb_ge : brefl.
+Hint Rewrite -> Z_ltb_lt : brefl.
+Hint Rewrite -> Z_leb_le : brefl.
 
-Hint Rewrite -> N_eqb_eq : brefl_hints.
-Hint Rewrite -> N_ltb_lt : brefl_hints.
-Hint Rewrite -> N_leb_le : brefl_hints.
+Hint Rewrite -> N_eqb_eq : brefl.
+Hint Rewrite -> N_ltb_lt : brefl.
+Hint Rewrite -> N_leb_le : brefl.
 
-Hint Rewrite -> Nat_eqb_eq : brefl_hints.
-Hint Rewrite -> Nat_ltb_lt : brefl_hints.
-Hint Rewrite -> Nat_leb_le : brefl_hints.
+Hint Rewrite -> Nat_eqb_eq : brefl.
+Hint Rewrite -> Nat_ltb_lt : brefl.
+Hint Rewrite -> Nat_leb_le : brefl.
 
 Tactic Notation "breflect" :=
-  try rewrite_strat topdown hints brefl_hints.
+  try rewrite_strat topdown hints brefl.
 
 Tactic Notation "breflect" "in" hyp(H) :=
-  try rewrite_strat topdown hints brefl_hints in H.
+  try rewrite_strat topdown hints brefl in H.
 
 Tactic Notation "breflect" "in" "*" :=
   breflect;
   repeat match goal with
-         | [H : _ |- _ ] => rewrite_strat topdown hints brefl_hints in H
+         | [H : _ |- _ ] => rewrite_strat topdown hints brefl in H
          end.
 
 (* Prop to bool reification *)
 
-Create HintDb breif_hints discriminated.
+Create HintDb breif discriminated.
 
-Hint Rewrite <- andE : breif_hints.
-Hint Rewrite <- orE : breif_hints.
-Hint Rewrite <- negE : breif_hints.
-Hint Rewrite <- implE : breif_hints.
-Hint Rewrite <- iffE : breif_hints.
-Hint Rewrite <- falseE : breif_hints.
-Hint Rewrite <- trueE : breif_hints.
+Hint Rewrite <- andE : breif.
+Hint Rewrite <- orE : breif.
+Hint Rewrite <- negE : breif.
+Hint Rewrite <- implE : breif.
+Hint Rewrite <- iffE : breif.
+Hint Rewrite <- falseE : breif.
+Hint Rewrite <- trueE : breif.
 
-Hint Rewrite <- Z_eqb_eq : breif_hints.
-Hint Rewrite <- Z_gtb_gt : breif_hints.
-Hint Rewrite <- Z_geb_ge : breif_hints.
-Hint Rewrite <- Z_ltb_lt : breif_hints.
-Hint Rewrite <- Z_leb_le : breif_hints.
+Hint Rewrite <- Z_eqb_eq : breif.
+Hint Rewrite <- Z_gtb_gt : breif.
+Hint Rewrite <- Z_geb_ge : breif.
+Hint Rewrite <- Z_ltb_lt : breif.
+Hint Rewrite <- Z_leb_le : breif.
 
-Hint Rewrite <- N_eqb_eq : breif_hints.
-Hint Rewrite <- N_ltb_lt : breif_hints.
-Hint Rewrite <- N_leb_le : breif_hints.
-Hint Rewrite -> N_gt_to_ltb : breif_hints.
-Hint Rewrite -> N_ge_to_leb : breif_hints.
+Hint Rewrite <- N_eqb_eq : breif.
+Hint Rewrite <- N_ltb_lt : breif.
+Hint Rewrite <- N_leb_le : breif.
+Hint Rewrite -> N_gt_to_ltb : breif.
+Hint Rewrite -> N_ge_to_leb : breif.
 
-Hint Rewrite <- Nat_eqb_eq : breif_hints.
-Hint Rewrite <- Nat_ltb_lt : breif_hints.
-Hint Rewrite <- Nat_leb_le : breif_hints.
-Hint Rewrite -> Nat_gt_to_ltb : breif_hints.
-Hint Rewrite -> Nat_ge_to_leb : breif_hints.
+Hint Rewrite <- Nat_eqb_eq : breif.
+Hint Rewrite <- Nat_ltb_lt : breif.
+Hint Rewrite <- Nat_leb_le : breif.
+Hint Rewrite -> Nat_gt_to_ltb : breif.
+Hint Rewrite -> Nat_ge_to_leb : breif.
 
 Tactic Notation "breify" :=
-  try rewrite_strat topdown hints breif_hints.
+  try rewrite_strat topdown hints breif.
 
 Tactic Notation "breify" "in" hyp(H) :=
-  try rewrite_strat topdown hints breif_hints in H.
+  try rewrite_strat topdown hints breif in H.
 
 Tactic Notation "breify" "in" "*" :=
   breify;
   repeat match goal with
-         | [H : _ |- _ ] => rewrite_strat topdown hints breif_hints in H
+         | [H : _ |- _ ] => rewrite_strat topdown hints breif in H
          end.
 
 (* Boolean simplification *)
 
-Create HintDb bsimpl_hints discriminated.
+Create HintDb bsimpl discriminated.
 
-Hint Rewrite -> Bool.orb_true_r : bsimpl_hints.
-Hint Rewrite -> Bool.orb_true_l : bsimpl_hints.
-Hint Rewrite -> Bool.orb_false_r : bsimpl_hints.
-Hint Rewrite -> Bool.orb_false_l : bsimpl_hints.
-Hint Rewrite -> Bool.andb_true_r : bsimpl_hints.
-Hint Rewrite -> Bool.andb_true_l : bsimpl_hints.
-Hint Rewrite -> Bool.andb_false_r : bsimpl_hints.
-Hint Rewrite -> Bool.andb_false_l : bsimpl_hints.
-Hint Rewrite <- N.leb_antisym : bsimpl_hints.
-Hint Rewrite <- N.ltb_antisym : bsimpl_hints.
-Hint Rewrite <- Nat.leb_antisym : bsimpl_hints.
-Hint Rewrite <- Nat.ltb_antisym : bsimpl_hints.
+Hint Rewrite -> Bool.orb_true_r : bsimpl.
+Hint Rewrite -> Bool.orb_true_l : bsimpl.
+Hint Rewrite -> Bool.orb_false_r : bsimpl.
+Hint Rewrite -> Bool.orb_false_l : bsimpl.
+Hint Rewrite -> Bool.andb_true_r : bsimpl.
+Hint Rewrite -> Bool.andb_true_l : bsimpl.
+Hint Rewrite -> Bool.andb_false_r : bsimpl.
+Hint Rewrite -> Bool.andb_false_l : bsimpl.
+Hint Rewrite <- N.leb_antisym : bsimpl.
+Hint Rewrite <- N.ltb_antisym : bsimpl.
+Hint Rewrite <- Nat.leb_antisym : bsimpl.
+Hint Rewrite <- Nat.ltb_antisym : bsimpl.
 
 Tactic Notation "bsimpl" :=
-  try rewrite_strat topdown hints bsimpl_hints.
+  try rewrite_strat topdown hints bsimpl.
 
 Tactic Notation "bsimpl" "in" hyp(H) :=
-  try rewrite_strat topdown hints bsimpl_hints in H.
+  try rewrite_strat topdown hints bsimpl in H.
 
 Tactic Notation "bsimpl" "in" "*" :=
   bsimpl;
   repeat match goal with
-         | [H : _ |- _ ] => rewrite_strat topdown hints bsimpl_hints in H
+         | [H : _ |- _ ] => rewrite_strat topdown hints bsimpl in H
          end.
 
 (* hardcoded one-step reflection *)
