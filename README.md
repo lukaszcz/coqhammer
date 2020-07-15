@@ -445,12 +445,6 @@ are for `sauto`.
   Controls whether to perform backtracking on instantiations of
   existential variables. Default: `exh: off`.
 
-* `sig: <bopt>`
-
-  Controls whether to (eagerly) perform simplifications for
-  sigma-types (using the `destruct_sigma` and `invert_sigma`
-  tactics). Default: `sig: on`.
-
 * `lia: <bopt>`
 
   Controls whether to try the `lia` tactic for arithmetic
@@ -460,14 +454,24 @@ are for `sauto`.
   `finish:` tactics - if these tactics are changed then `lia:` has no
   effect. To re-enable `lia` use `solve: lia` or `solve+: lia`.
 
+* `sig: <bopt>`
+
+  Controls whether to (eagerly) perform simplifications for
+  sigma-types (using the `simpl_sigma` tactic). Default: `sig: on`.
+
+* `prf: <bopt>`
+
+  Controls whether to (eagerly) generalize proof terms occurring in
+  the goal or in one of the hypotheses. Default: `prf: off`.
+
 * `dep: <bopt>`
 
   Enhanced support for dependent types. When `on`, the `depelim`
   tactic from the `Program` module is used for inversion. This may
   negatively impact speed and introduce dependencies on some axioms
   equivalent to Uniqueness of Identity Proofs. Setting `dep: on`
-  implies `einv: off` and `sinv: off`. You can re-enable the `einv`
-  and `sinv` options separately. Default: `dep: off`.
+  implies `prf: on`, `einv: off` and `sinv: off`. You can change the
+  `prf`, `einv` and `sinv` options separately. Default: `dep: off`.
 
 Boolean reflection
 ------------------

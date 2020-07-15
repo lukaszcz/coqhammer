@@ -58,8 +58,9 @@ type sopt_t =
 | SODepth of int
 | SOExhaustive of bool
 | SOPrerun of bool
-| SOSig of bool
 | SOLia of bool
+| SOSig of bool
+| SOPrf of bool
 | SODep of bool
 
 let const_of_qualid q =
@@ -288,12 +289,15 @@ let interp_opt ret opt opts =
      ret { opts with s_exhaustive = b }
   | SOPrerun b ->
      ret { opts with s_prerun = b }
-  | SOSig b ->
-     ret { opts with s_simpl_sigma = b }
   | SOLia b ->
      ret { opts with s_lia = b }
+  | SOSig b ->
+     ret { opts with s_simpl_sigma = b }
+  | SOPrf b ->
+     ret { opts with s_genproofs = b }
   | SODep b ->
      ret { opts with s_dep = b;
+                     s_genproofs = true;
                      s_eager_inverting = false;
                      s_simple_inverting = false }
 

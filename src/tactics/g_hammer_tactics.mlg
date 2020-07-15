@@ -81,8 +81,9 @@ ARGUMENT EXTEND sauto_opts
 | [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
 | [ "exh:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
 | [ "pre:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrerun b :: sopts }
-| [ "sig:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSig b :: sopts }
 | [ "lia:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOLia b :: sopts }
+| [ "sig:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSig b :: sopts }
+| [ "prf:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrf b :: sopts }
 | [ "dep:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODep b :: sopts }
 | [ ] -> { [SONop] }
 END
