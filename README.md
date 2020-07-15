@@ -473,6 +473,12 @@ are for `sauto`.
   implies `prf: on`, `einv: off` and `sinv: off`. You can change the
   `prf`, `einv` and `sinv` options separately. Default: `dep: off`.
 
+* `eager: <bopt>`
+
+  This is a compound option which controls multiple other options:
+  `ered`, `erew`, `ecases`, `einv`, `sinv`, `sig`.
+
+
 Boolean reflection
 ------------------
 
