@@ -63,6 +63,7 @@ type sopt_t =
 | SOPrf of bool
 | SODep of bool
 | SOEager of bool
+| SOQuick of bool
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -308,6 +309,18 @@ let interp_opt ret opt opts =
                      s_eager_inverting = b;
                      s_simple_inverting = b;
                      s_simpl_sigma = b }
+  | SOQuick b ->
+     if b then
+       ret { opts with s_inversions = SSome [];
+                       s_constructors = SSome [];
+                       s_simpl_tac = Tacticals.New.tclIDTAC;
+                       s_simpl_nolia_tac = Tacticals.New.tclIDTAC;
+                       s_leaf_tac = Utils.ltac_apply "Tactics.sdone_tac" [];
+                       s_leaf_nolia_tac = Utils.ltac_apply "Tactics.sdone_nolia_tac" [];
+                       s_sapply = false;
+                       s_lia = false }
+     else
+       ret opts
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =

@@ -86,6 +86,9 @@ ARGUMENT EXTEND sauto_opts
 | [ "prf:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrf b :: sopts }
 | [ "dep:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODep b :: sopts }
 | [ "eager:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
+| [ "e:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
+| [ "quick:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
+| [ "q:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
 | [ ] -> { [SONop] }
 END
 
