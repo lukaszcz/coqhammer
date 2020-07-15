@@ -108,12 +108,10 @@ increasing strength and decreasing speed:
 * simplifiers: `simp_hyps`, `sintuition`, `qsimpl`, `ssimpl`.
 
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
-is just
-```
-sauto inv: - ctrs: - limit: 100 sapp: off simp: idtac
-   finish: (eauto; congruence 400) lia: off
-```
-See the next section for an explanation of these options.
+is just `sauto quick: on limit: 100 finish: (eauto; congruence 400)`.
+
+See the [Options for sauto](#options-for-sauto) section for an
+explanation of these options.
 
 The `sdone` tactic is used by `sauto` as the final tactic at the
 leaves of the proof search tree (see the `final:` and `finish:`
@@ -474,10 +472,21 @@ are for `sauto`.
   `prf`, `einv` and `sinv` options separately. Default: `dep: off`.
 
 * `eager: <bopt>`
+* `e: <bopt>`
 
   This is a compound option which controls multiple other options:
-  `ered`, `erew`, `ecases`, `einv`, `sinv`, `sig`.
+  `ered`, `erew`, `ecases`, `einv`, `sinv`, `sig`. Setting `eager: on`
+  (or `e: on`) has the effect of enabling all these options. Setting
+  `eager: off` disables all of the listed options.
 
+* `quick: <bopt>`
+* `q: <bopt>`
+
+  Setting `quick: on` (or `q: on`) has the same effect as setting:
+  ```
+  inv: - ctrs: - sapp: off simp: idtac finish: sdone lia: off
+  ```
+  Setting `quick: off` has no effect.
 
 Boolean reflection
 ------------------

@@ -1034,10 +1034,12 @@ Ltac f_equal_tac := f_equal.
 Declare ML Module "hammer_tactics".
 
 Ltac sauto_tac := sauto.
+Ltac sdone_tac := solve [ trysolve ].
+Ltac sdone_nolia_tac := solve [ trysolve_nolia ].
 
-Tactic Notation "sdone" := solve [ trysolve ].
-Tactic Notation "sdone" "lia:" "on" := solve [ trysolve ].
-Tactic Notation "sdone" "lia:" "off" := solve [ trysolve_nolia ].
+Tactic Notation "sdone" := sdone_tac.
+Tactic Notation "sdone" "lia:" "on" := sdone_tac.
+Tactic Notation "sdone" "lia:" "off" := sdone_nolia_tac.
 
 Tactic Notation "strivial" :=
   solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
