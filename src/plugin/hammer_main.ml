@@ -285,9 +285,15 @@ let get_tac_args env sigma info =
       end
   in
   let (deps, defs, inverts) = (map_locate deps, map_locate defs, map_locate inverts) in
-  let filter_vars = List.filter (fun r -> match r with VarRef(_) -> true | _ -> false) in
-  let filter_nonvars = List.filter (fun r -> match r with VarRef(_) -> false | _ -> true) in
-  let filter_consts = List.filter (fun r -> match r with ConstRef(_) -> true | _ -> false) in
+  let filter_vars =
+    List.filter (fun r -> match r with VarRef(_) -> true | _ -> false)
+  in
+  let filter_nonvars =
+    List.filter (fun r -> match r with VarRef(_) -> false | _ -> true)
+  in
+  let filter_consts =
+    List.filter (fun r -> match r with ConstRef(_) -> true | _ -> false)
+  in
   let (vars, deps) = (filter_vars deps, filter_nonvars deps) in
   let (deps, defs, inverts) =
     (List.map globref_to_econstr deps,
@@ -299,14 +305,16 @@ let get_tac_args env sigma info =
 let check_goal_prop gl =
   let env = Proofview.Goal.env gl in
   let evmap = Proofview.Goal.sigma gl in
-  let tp = EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl)) in
+  let tp =
+    EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl))
+  in
   match Constr.kind tp with
   | Sort s -> Sorts.family s = InProp
   | _ -> false
 
 (***************************************************************************************)
 
-let run_tactics deps defs inverts msg_success msg_fail =
+let run_tactics deps defs inverts msg_success msg_fail msg_batch =
   let mkopts opts =
     let opts =
       if defs <> [] then { opts with s_unfolding = SSome defs } else opts
@@ -331,18 +339,64 @@ let run_tactics deps defs inverts msg_success msg_fail =
     usolve (use_deps <*> qblast (mkopts (default_s_opts ())))
   and rhecrush =
     usolve (use_deps <*> ecrush (mkopts (hauto_s_opts ())))
-  and rhauto2 =
-    usolve (use_deps <*> sauto (mkopts
-                                  { (hauto_s_opts ()) with s_eager_rewriting = false;
-                                                           s_eager_reducing = false;
-                                                           s_eager_case_splitting = false} ))
+  and rlhauto =
+    usolve (use_deps <*> sauto (mkopts (set_eager_opts false (hauto_s_opts ()))))
+  and rhdauto6_q =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_quick_opts true (hauto_s_opts ())) with
+                     s_limit = 6; s_depth_cost_model = true }))
+  and rhdauto4 =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (hauto_s_opts ()) with
+                     s_limit = 4; s_depth_cost_model = true }))
+  and rlqdauto4 =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_eager_opts false (qauto_s_opts ())) with
+                     s_limit = 4; s_depth_cost_model = true }))
+  and rhbauto =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (hauto_s_opts ()) with
+                     s_reflect = true; s_eager_reducing = false }))
+  and reauto =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
+                                         (Some []) ])
+  and rcongruence =
+    usolve (use_deps <*> scongruence (mkopts (hauto_s_opts ())))
+  and rfirstorder =
+    usolve (use_deps <*> sfirstorder (mkopts (hauto_s_opts ())))
+  and rtrivial =
+    usolve (use_deps <*> strivial (mkopts (hauto_s_opts ())))
+  in
+  let pretactics =
+    [ (reauto, "srun eauto"); (rcongruence, "scongruence"); (rtrivial, "strivial");
+      (rfirstorder, "sfirstorder") ]
   in
   let tactics = [
     [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhauto1, "hauto ered: off") ];
-    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rhauto2, "hauto ered: off erew: off sig: off ecases: off") ]
+    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rlhauto, "hauto eager: off") ];
+    [ (rhdauto6_q, "hauto depth: 6 quick: on"); (rhdauto4, "hauto depth: 4"); (rlqdauto4, "qauto depth: 4 eager: off"); (rhbauto, "hauto brefl: on ered: off") ]
   ]
   in
-  let rec hlp lst =
+  let run limit tacs f_success f_failure =
+    Partac.partac limit (List.map fst tacs)
+      begin fun k tac ->
+        if k >= 0 then
+          f_success (snd (List.nth tacs k)) tac
+        else
+          f_failure ()
+      end
+  in
+  let rec hlp k lst =
     match lst with
     | [] ->
        begin
@@ -350,18 +404,24 @@ let run_tactics deps defs inverts msg_success msg_fail =
          Tacticals.New.tclIDTAC
        end
     | tacs :: ts ->
-       Partac.partac !Opt.reconstr_timelimit (List.map fst tacs)
-         begin fun k tac ->
-           if k >= 0 then
-             begin
-               msg_success (snd (List.nth tacs k));
-               tac
-             end
-           else
-             hlp ts
+       msg_batch k;
+       run !Opt.reconstr_timelimit tacs
+         begin fun name tac ->
+           msg_success name;
+           tac
+         end
+         begin fun () ->
+           hlp (k + 1) ts
          end
   in
-  hlp tactics
+  run 1 pretactics
+    begin fun name tac ->
+      msg_success name;
+      tac
+    end
+    begin fun () ->
+      hlp 1 tactics
+    end
 
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
@@ -479,7 +539,8 @@ let hammer_tac () =
             let hyps = get_hyps gl in
             let defs = get_defs env sigma in
             if !Opt.debug_mode then
-              Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
+              Msg.info ("Found " ^ string_of_int (List.length defs) ^
+                          " accessible Coq objects.");
             let info = do_predict hyps defs goal in
             let (deps, defs, inverts) = get_tac_args env sigma info in
             let sdeps = List.map (Utils.constr_to_string sigma) deps
@@ -497,6 +558,9 @@ let hammer_tac () =
               end
               begin fun () ->
                 Msg.error ("Hammer failed: proof reconstruction failed")
+              end
+              begin fun k ->
+                Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
               end
           end
         end
@@ -702,6 +766,7 @@ let hammer_hook_tac prefix name =
                                      Msg.info msg;
                                      exit 1
                                    end
+                                   (fun _ -> ())
                                end
                                (fun p -> Feedback.msg_notice p; exit 1)
                            with _ ->

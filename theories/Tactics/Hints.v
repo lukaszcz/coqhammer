@@ -29,7 +29,6 @@ Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_l : shints.
 Hint Rewrite -> ZArith.BinInt.Z.sub_add_distr : shints.
 Hint Rewrite -> List.in_app_iff : shints.
 Hint Rewrite -> List.in_map_iff : shints.
-Hint Rewrite -> List.in_inv : shints.
 Hint Rewrite <- List.app_assoc : shints.
 Hint Rewrite -> Bool.orb_true_r : shints.
 Hint Rewrite -> Bool.orb_false_r : shints.
@@ -56,7 +55,6 @@ Hint Rewrite -> List.rev_unit : slist.
 Hint Rewrite -> List.rev_involutive : slist.
 Hint Rewrite -> List.in_app_iff : slist.
 Hint Rewrite -> List.in_map_iff : slist.
-Hint Rewrite -> List.in_inv : slist.
 Hint Rewrite <- List.app_assoc : slist.
 
 Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : sarith.

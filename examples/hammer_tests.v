@@ -22,7 +22,7 @@ Set Hammer SAutoLimit 0.
 
 Lemma lem_1 : le 1 2.
   hammer. Restart.
-  hauto use: @Nat.lt_0_2 unfold: lt.
+  scongruence use: @Nat.lt_0_2 unfold: lt.
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
@@ -37,24 +37,24 @@ Qed.
 
 Lemma lem_3 : le 2 3.
   hammer. Restart.
-  hfcrush use: @Nat.le_succ_diag_r unfold: Init.Nat.two.
+  srun eauto use: @Nat.le_succ_diag_r unfold: Init.Nat.two.
 Qed.
 
 Lemma lem_4 : le 3 10.
-  (* time hammer. Restart. *)
-  hauto use: (@Arith.PeanoNat.Nat.le_1_r, @Arith.PeanoNat.Nat.le_gt_cases, @Arith.PeanoNat.Nat.succ_inj_wd, @Arith.PeanoNat.Nat.succ_le_mono) unfold: Init.Peano.lt.
+  hammer. Restart.
+  sfirstorder use: @Nat.nle_succ_0, @Nat.le_gt_cases, @Nat.lt_succ_r, @Nat.succ_le_mono, @Nat.log2_up_2 unfold: Init.Nat.two.
 Qed.
 
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
   hammer. Restart.
-  qauto use: @Nat.mul_comm, @Nat.add_comm.
+  scongruence use: @Nat.mul_comm, @Nat.add_comm.
 Qed.
 
 Lemma lem_rew : forall m n : nat, 1 + n + m + 1 = m + 2 + n.
 Proof.
   time hammer. Restart.
-  qauto use: @Nat.add_comm, @Nat.add_1_r, @Nat.add_shuffle1, @Nat.add_assoc lia: off.
+  strivial use: @Nat.add_comm, @Nat.add_1_r, @Nat.add_shuffle1, @Nat.add_assoc.
 Qed.
 
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
@@ -86,7 +86,7 @@ Lemma max_lub : forall m p k n : BinNums.Z,
                   BinInt.Z.ge p m -> BinInt.Z.le n p -> BinInt.Z.le (BinInt.Z.max n m) p.
 Proof.
   hammer. Restart.
-  qauto use: @BinInt.Z.max_lub, @BinInt.Z.ge_le.
+  srun eauto use: @BinInt.Z.max_lub, @BinInt.Z.ge_le.
 Qed.
 
 Require Reals.
@@ -97,7 +97,7 @@ Lemma lem_iso : forall x1 y1 x2 y2 theta : Rdefinitions.R,
                    (Rgeom.yr x2 y2 theta).
 Proof.
   hammer. Restart.
-  qauto use: @Rgeom.isometric_rotation.
+  scongruence use: @Rgeom.isometric_rotation.
 Qed.
 
 Require Import List.
@@ -132,7 +132,7 @@ Lemma Nleb_alt :
   forall b a c : BinNums.N, Ndec.Nleb b c = BinNat.N.leb b c /\ Ndec.Nleb a b = BinNat.N.leb a b.
 Proof.
   hammer. Restart.
-  qauto use: @Ndec.Nleb_alt.
+  srun eauto use: @Ndec.Nleb_alt.
 Qed.
 
 Require NArith.BinNat.
@@ -174,7 +174,7 @@ Lemma incl_app : forall (A : Type) (n l m : list A),
                    List.incl l n /\ List.incl m n -> List.incl (l ++ m) n.
 Proof.
   hammer. Restart.
-  hfcrush use: @incl_app.
+  strivial use: @incl_app.
 Qed.
 
 Require Reals.Rpower.
@@ -184,7 +184,7 @@ Lemma exp_Ropp
        Rdefinitions.Rinv (Rtrigo_def.exp x) = Rtrigo_def.exp (Rdefinitions.Ropp x).
 Proof.
   hammer. Restart.
-  hfcrush use: @Rpower.exp_Ropp.
+  srun eauto use: @Rpower.exp_Ropp.
 Qed.
 
 Lemma lem_lst_1 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
@@ -193,9 +193,9 @@ Proof.
   proof, then one needs to start the induction manually. *)
   induction l'.
   - hammer. Undo.
-    qauto use: @app_nil_end.
+    scongruence use: @app_nil_end.
   - hammer. Undo.
-    qauto use: @NoDup_remove_1.
+    srun eauto use: @NoDup_remove_1.
 Qed.
 
 Lemma NoDup_remove_1
@@ -204,7 +204,7 @@ Lemma NoDup_remove_1
        ~ List.In a (l ++ l') /\ List.NoDup (l ++ l') /\ List.NoDup l.
 Proof.
   hammer. Restart.
-  hauto use: @lem_lst_1, @NoDup_remove.
+  strivial use: @lem_lst_1, @NoDup_remove.
 Qed.
 
 Lemma leb_compare2 : forall m n : nat,
@@ -222,13 +222,13 @@ Qed.
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.
 Proof.
   hammer. Restart.
-  qauto use: @leb_correct, @leb_complete.
+  srun eauto use: @Nat.leb_le, @Nat.leb_nle, @leb_correct, @leb_complete.
 Qed.
 
 Lemma leb_2 : forall m n : nat, PeanoNat.Nat.leb m n = false <-> m > n.
 Proof.
   hammer. Restart.
-  qauto use: @leb_iff_conv, @leb_correct_conv unfold: gt.
+  srun eauto use: @leb_iff_conv, @leb_correct_conv unfold: gt.
 Qed.
 
 Lemma incl_appl
@@ -236,19 +236,19 @@ Lemma incl_appl
        List.incl l n -> List.incl l (n ++ m) /\ List.incl l (m ++ n) /\ List.incl l (l ++ l).
 Proof.
   hammer. Restart.
-  hfcrush use: @incl_appl, @incl_refl, @incl_appr.
+  strivial use: @incl_appl, @incl_refl, @incl_appr.
 Qed.
 
 Lemma in_int_lt2 : forall p q r : nat, Between.in_int p q r -> q >= p /\ r >= p /\ r <= q.
 Proof.
   hammer. Restart.
-  hfcrush use: @in_int_lt, @Nat.lt_le_incl unfold: ge, in_int.
+  sfirstorder use: @Nat.lt_le_incl, @in_int_lt unfold: ge, in_int.
 Qed.
 
 Lemma nat_compare_eq : forall n m : nat, PeanoNat.Nat.compare n m = Eq <-> n = m.
 Proof.
   hammer. Restart.
-  qauto use: @Nat.compare_eq_iff.
+  srun eauto use: @Nat.compare_eq_iff.
 Qed.
 
 Lemma Forall_1
@@ -257,7 +257,7 @@ Lemma Forall_1
 Proof.
   induction l.
   - hammer. Undo.
-    hauto ered: off use: @app_nil_l, @Forall_cons.
+    strivial use: @app_nil_l, @Forall_cons.
   - (* hammer. Undo. *)
     sauto use: @Forall_cons.
   Restart.
@@ -270,14 +270,14 @@ Lemma Forall_impl
        forall l : list A, List.Forall P l -> List.Forall P (l ++ l).
 Proof.
   induction l.
-  hammer. Undo.
-  qauto use: @app_nil_end.
-  hammer. Undo.
-  qauto use: @Forall_inv, @Forall_inv_tail, @Forall_1.
+  - hammer. Undo.
+    srun eauto use: @app_nil_end.
+  - hammer. Undo.
+    qauto use: @Forall_inv, @Forall_inv_tail, @Forall_1.
 Qed.
 
 Lemma minus_neq_O : forall n i:nat, (i < n) -> (n - i) <> 0.
 Proof.
   hammer. Undo.
-  qauto use: @Nat.sub_gt lia: off.
+  srun eauto use: @Nat.sub_gt.
 Qed.

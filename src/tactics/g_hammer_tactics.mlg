@@ -3,11 +3,14 @@ DECLARE PLUGIN "hammer_tactics"
 {
 open Ltac_plugin
 open Stdarg
+open Tacarg
 open Pcoq.Prim
 open Pcoq.Constr
 open Hammer_errors
 open Sauto
 open Tactics_main
+
+open Proofview.Notations
 }
 
 (*****************************************************************************)
@@ -112,6 +115,33 @@ END
 TACTIC EXTEND Hammer_sunfolding
 | [ "sunfolding" ] -> { sunfolding true }
 | [ "sunfolding" "weak" ] -> { sunfolding false }
+END
+
+TACTIC EXTEND Hammer_srun
+| [ "srun" tactic4(tac) sauto_opts(l) ] -> {
+  try_usolve (default_s_opts ()) l
+    (fun opts -> sinit opts <*>
+                   Tacticals.New.tclSOLVE [ Hhutils.tacinterp tac ])
+    "srun failed"
+}
+END
+
+TACTIC EXTEND Hammer_scongruence
+| [ "scongruence" sauto_opts(l) ] -> {
+  try_usolve (default_s_opts ()) l scongruence "scongruence failed"
+}
+END
+
+TACTIC EXTEND Hammer_sfirstorder
+| [ "sfirstorder" sauto_opts(l) ] -> {
+  try_usolve (default_s_opts ()) l sfirstorder "sfirstorder failed"
+}
+END
+
+TACTIC EXTEND Hammer_strivial
+| [ "strivial" sauto_opts(l) ] -> {
+  try_usolve (default_s_opts ()) l strivial "strivial failed"
+}
 END
 
 TACTIC EXTEND Hammer_sauto

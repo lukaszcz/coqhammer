@@ -109,6 +109,36 @@ let qauto_s_opts () =
                            s_prerun = true;
                            s_lia = false }
 
+let set_dep_opts b opts =
+  if b then
+    { opts with s_dep = true;
+                s_genproofs = true;
+                s_eager_inverting = false;
+                s_simple_inverting = false }
+  else
+    { opts with s_dep = false }
+
+let set_eager_opts b opts =
+  { opts with s_eager_reducing = b;
+              s_eager_rewriting = b;
+              s_eager_case_splitting = b;
+              s_eager_inverting = b;
+              s_simple_inverting = b;
+              s_simpl_sigma = b }
+
+let set_quick_opts b opts =
+  if b then
+    { opts with s_inversions = SSome [];
+                s_constructors = SSome [];
+                s_simpl_tac = Tacticals.New.tclIDTAC;
+                s_simpl_nolia_tac = Tacticals.New.tclIDTAC;
+                s_leaf_tac = Utils.ltac_apply "Tactics.sdone_tac" [];
+                s_leaf_nolia_tac = Utils.ltac_apply "Tactics.sdone_nolia_tac" [];
+                s_sapply = false;
+                s_lia = false }
+  else
+    opts
+
 let with_reduction opts tac1 tac2 =
   if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
 
@@ -1183,6 +1213,12 @@ and apply_actions tacs opts n actions rtrace visited =
 
 (*****************************************************************************************)
 
+let sinit opts =
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
+    unfolding opts <*> subst_simpl opts
+
 let sintuition opts =
   unfold_local_defs_tac () <*>
   fullunfolding opts <*>
@@ -1233,51 +1269,48 @@ let qsimpl opts =
     unfolding opts <*> tac
 
 let sauto opts =
-  unfold_local_defs_tac () <*>
-    opt opts.s_reflect (bool_reflect_tac ()) <*>
-    fullunfolding opts <*>
-    unfolding opts <*> subst_simpl opts <*>
+  sinit opts <*>
     Tacticals.New.tclTRY (opts.s_solve_tac) <*>
-    opt opts.s_prerun (Tacticals.New.tclTRY (leaf_tac opts)) <*>
     intros (create_tactics opts) opts opts.s_limit
 
 let scrush opts =
-  unfold_local_defs_tac () <*>
-    opt opts.s_reflect (bool_reflect_tac ()) <*>
-    fullunfolding opts <*>
-    unfolding opts <*> subst_simpl opts <*>
-    ssimpl opts <*> sauto opts
+  sinit opts <*> ssimpl opts <*> sauto opts
 
 let fcrush opts =
-  unfold_local_defs_tac () <*>
-    opt opts.s_reflect (bool_reflect_tac ()) <*>
-    fullunfolding opts <*>
-    unfolding opts <*> subst_simpl opts <*>
+  sinit opts <*>
     qsimpl opts <*> qforwarding_tac () <*> qsimpl opts <*> instering_tac () <*>
     qsimpl opts <*> sauto opts
 
 let ecrush opts =
-  unfold_local_defs_tac () <*>
-    opt opts.s_reflect (bool_reflect_tac ()) <*>
-    fullunfolding opts <*>
-    unfolding opts <*> subst_simpl opts <*>
+  sinit opts <*>
     qsimpl opts <*> qforwarding_tac () <*> einstering_tac () <*> esimp_hyps_tac () <*>
     qsimpl opts <*> sauto opts
 
 let sblast opts =
-  unfold_local_defs_tac () <*>
-    opt opts.s_reflect (bool_reflect_tac ()) <*>
-    fullunfolding opts <*>
-    unfolding opts <*> subst_simpl opts <*>
+  sinit opts <*>
     Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT (ssimpl opts <*> instering_tac ())]
 
 let qblast opts =
-  unfold_local_defs_tac () <*>
-    opt opts.s_reflect (bool_reflect_tac ()) <*>
-    fullunfolding opts <*>
-    unfolding opts <*> subst_simpl opts <*>
+  sinit opts <*>
     Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT
                               (qsimpl opts <*> qforwarding_tac () <*> instering_tac ())]
+
+let scongruence opts =
+  sinit opts <*> Tactics.intros <*> congr_tac ()
+
+let sfirstorder opts =
+  sinit opts <*>
+    if opts.s_lia then
+      Utils.ltac_apply "Tactics.firstorder_tac" []
+    else
+      Utils.ltac_apply "Tactics.firstorder_nolia_tac" []
+
+let strivial opts =
+  sinit opts <*>
+    if opts.s_lia then
+      Utils.ltac_apply "Tactics.isolve" []
+    else
+      Utils.ltac_apply "Tactics.isolve_nolia" []
 
 let print_actions opts =
   Proofview.Goal.enter begin fun gl ->

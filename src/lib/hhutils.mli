@@ -2,7 +2,9 @@ open Names
 open Ltac_plugin
 
 val intern_constr : Environ.env -> Evd.evar_map -> Constrexpr.constr_expr ->
-  Evd.evar_map * EConstr.t
+                    Evd.evar_map * EConstr.t
+
+val tacinterp : Geninterp.Val.t -> unit Proofview.tactic
 
 val exists_global : string -> bool
 
