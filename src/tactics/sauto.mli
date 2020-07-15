@@ -47,12 +47,17 @@ val default_s_opts : unit -> s_opts
 val hauto_s_opts : unit -> s_opts
 val qauto_s_opts : unit -> s_opts
 
+val set_dep_opts : bool -> s_opts -> s_opts
+val set_eager_opts : bool -> s_opts -> s_opts
+val set_quick_opts : bool -> s_opts -> s_opts
+
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic
 
 val sunfold : bool (* aggressive? *) -> Constant.t -> unit Proofview.tactic
 val sunfolding : bool (* aggressive? *) -> unit Proofview.tactic
 
+val sinit : s_opts -> unit Proofview.tactic
 val sauto : s_opts -> unit Proofview.tactic
 val sintuition : s_opts -> unit Proofview.tactic
 val ssimpl : s_opts -> unit Proofview.tactic
@@ -62,6 +67,9 @@ val fcrush : s_opts -> unit Proofview.tactic
 val ecrush : s_opts -> unit Proofview.tactic
 val sblast : s_opts -> unit Proofview.tactic
 val qblast : s_opts -> unit Proofview.tactic
+val scongruence : s_opts -> unit Proofview.tactic
+val sfirstorder : s_opts -> unit Proofview.tactic
+val strivial : s_opts -> unit Proofview.tactic
 
 val logic_constants : Constant.t list
 val logic_inductives : inductive list

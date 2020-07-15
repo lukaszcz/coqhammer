@@ -7,6 +7,9 @@ let intern_constr env evd cexpr =
   let sigma = Evd.from_ctx uctx in
   Typing.solve_evars env sigma t
 
+let tacinterp tac =
+  Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac
+
 let to_constr r =
   match r with
   | Names.GlobRef.VarRef(v) -> EConstr.mkVar v
