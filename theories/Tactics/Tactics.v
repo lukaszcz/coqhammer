@@ -1029,6 +1029,8 @@ Ltac use_tac t :=
 Ltac congr_tac := congruence 400.
 Ltac lia_tac := lia.
 Ltac f_equal_tac := f_equal.
+Ltac firstorder_tac := solve [ firstorder (trysolve; auto) ].
+Ltac firstorder_nolia_tac := solve [ firstorder (trysolve_nolia; auto) ].
 
 Declare ML Module "hammer_tactics".
 
@@ -1039,10 +1041,3 @@ Ltac sdone_nolia_tac := solve [ trysolve_nolia ].
 Tactic Notation "sdone" := sdone_tac.
 Tactic Notation "sdone" "lia:" "on" := sdone_tac.
 Tactic Notation "sdone" "lia:" "off" := sdone_nolia_tac.
-
-Tactic Notation "strivial" :=
-  solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
-Tactic Notation "strivial" "lia:" "on" :=
-  solve [ unfold iff in *; unfold not in *; unshelve isolve; dsolve ].
-Tactic Notation "strivial" "lia:" "off" :=
-  solve [ unfold iff in *; unfold not in *; unshelve isolve_nolia; dsolve ].

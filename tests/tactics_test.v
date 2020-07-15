@@ -484,7 +484,7 @@ Proof.
     assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
     { eauto using Nat.le_trans with zarith. }
     assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)) by hauto using Nat.add_1_r.
-    qauto.
+    congruence.
 Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
