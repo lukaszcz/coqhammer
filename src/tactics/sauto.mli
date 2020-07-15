@@ -40,6 +40,7 @@ type s_opts = {
   s_simpl_sigma : bool;
   s_lia : bool;
   s_dep : bool;
+  s_genproofs : bool;
 }
 
 val default_s_opts : unit -> s_opts

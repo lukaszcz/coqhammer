@@ -47,6 +47,7 @@ type s_opts = {
   s_simpl_sigma : bool;
   s_lia : bool;
   s_dep : bool;
+  s_genproofs : bool;
 }
 
 let default_s_opts () = {
@@ -85,6 +86,7 @@ let default_s_opts () = {
   s_simpl_sigma = true;
   s_lia = true;
   s_dep = false;
+  s_genproofs = false;
 }
 
 let hauto_s_opts () =
@@ -267,6 +269,8 @@ let instering_tac () = Utils.ltac_apply "Tactics.instering" []
 let einstering_tac () = Utils.ltac_apply "Tactics.einstering" []
 let f_equal_tac () = Utils.ltac_apply "Tactics.f_equal_tac" []
 let simpl_sigma_tac () = Utils.ltac_apply "Tactics.simpl_sigma" []
+let generalize_proofs_tac () = Utils.ltac_apply "Tactics.generalize_proofs" []
+let unfold_local_defs_tac () = Utils.ltac_apply "Tactics.unfold_local_defs" []
 
 (*****************************************************************************************)
 
@@ -730,7 +734,11 @@ let simplify opts =
       opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       simpl_tac opts <~>
       reduce_concl opts <~>
-      (Tacticals.New.tclPROGRESS (intros_until_atom_tac ()) <*> subst_simpl opts) <~>
+      (Tacticals.New.tclPROGRESS
+         begin
+           opt opts.s_genproofs (generalize_proofs_tac ()) <*>
+             intros_until_atom_tac ()
+         end <*> subst_simpl opts) <~>
       simple_splitting opts <~>
       autorewriting true opts <~>
       opt opts.s_eager_rewriting (srewriting_tac ()) <~>
@@ -1176,6 +1184,7 @@ and apply_actions tacs opts n actions rtrace visited =
 (*****************************************************************************************)
 
 let sintuition opts =
+  unfold_local_defs_tac () <*>
   fullunfolding opts <*>
     Tactics.intros <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
@@ -1201,6 +1210,7 @@ let ssimpl opts =
     { opts with s_simpl_tac = opts.s_ssimpl_tac;
                 s_simpl_nolia_tac = opts.s_ssimpl_nolia_tac }
   in
+  unfold_local_defs_tac () <*>
   fullunfolding opts <*>
   opt opts.s_reflect (bool_reflect_tac ()) <*>
   tac1 <*> (simplify opts2 <~> tac2)
@@ -1217,41 +1227,54 @@ let qsimpl opts =
       opt opts.s_simple_inverting (simple_inverting opts)
   in
   Tactics.intros <*>
+    unfold_local_defs_tac () <*>
     fullunfolding opts <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
     unfolding opts <*> tac
 
 let sauto opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
     unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclTRY (opts.s_solve_tac) <*>
     opt opts.s_prerun (Tacticals.New.tclTRY (leaf_tac opts)) <*>
     intros (create_tactics opts) opts opts.s_limit
 
 let scrush opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
     unfolding opts <*> subst_simpl opts <*>
     ssimpl opts <*> sauto opts
 
 let fcrush opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
     unfolding opts <*> subst_simpl opts <*>
     qsimpl opts <*> qforwarding_tac () <*> qsimpl opts <*> instering_tac () <*>
     qsimpl opts <*> sauto opts
 
 let ecrush opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
     unfolding opts <*> subst_simpl opts <*>
     qsimpl opts <*> qforwarding_tac () <*> einstering_tac () <*> esimp_hyps_tac () <*>
     qsimpl opts <*> sauto opts
 
 let sblast opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
     unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT (ssimpl opts <*> instering_tac ())]
 
 let qblast opts =
-  opt opts.s_reflect (bool_reflect_tac ()) <*> fullunfolding opts <*>
+  unfold_local_defs_tac () <*>
+    opt opts.s_reflect (bool_reflect_tac ()) <*>
+    fullunfolding opts <*>
     unfolding opts <*> subst_simpl opts <*>
     Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT
                               (qsimpl opts <*> qforwarding_tac () <*> instering_tac ())]
