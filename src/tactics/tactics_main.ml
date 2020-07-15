@@ -62,6 +62,7 @@ type sopt_t =
 | SOSig of bool
 | SOPrf of bool
 | SODep of bool
+| SOEager of bool
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -300,6 +301,13 @@ let interp_opt ret opt opts =
                      s_genproofs = true;
                      s_eager_inverting = false;
                      s_simple_inverting = false }
+  | SOEager b ->
+     ret { opts with s_eager_reducing = b;
+                     s_eager_rewriting = b;
+                     s_eager_case_splitting = b;
+                     s_eager_inverting = b;
+                     s_simple_inverting = b;
+                     s_simpl_sigma = b }
 
 let interp_opts (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
     : unit Proofview.tactic =
