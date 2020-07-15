@@ -104,7 +104,7 @@ by `sauto` upon context change.
 
 Below we list the solvers and the simplifiers in the order of
 increasing strength and decreasing speed:
-* solvers: `sdone`, `strivial`, `ssolve`, `qauto`, `hauto`, `sauto`;
+* solvers: `sdone`, `strivial`, `qauto`, `hauto`, `sauto`;
 * simplifiers: `simp_hyps`, `sintuition`, `qsimpl`, `ssimpl`.
 
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
@@ -115,17 +115,8 @@ explanation of these options.
 
 The `sdone` tactic is used by `sauto` as the final tactic at the
 leaves of the proof search tree (see the `final:` and `finish:`
-options). The `strivial` tactic is just
-```coq
-solve [ unshelve (try (sfinal sdone)); auto; try easy;
-         try solve [ do 10 constructor ] ].
-```
-The `ssolve` tactic is just
-```coq
-solve [ (intuition auto); try sfinal sdone; try congruence 24;
-         try easy; try solve [ econstructor; sfinal sdone ] ].
-```
-The `sfinal` tactic is described in the next section.
+options). The `strivial` tactic is just `srun (sfinal sdone)`. The
+`srun` and `sfinal` tactics are described in the next section.
 
 Additional variants of the solvers are used in the reconstruction
 backend of the `hammer` tactic. The solvers listed here are the ones
@@ -160,6 +151,17 @@ are used internally by `sauto`.
 
   Add the listed lemmas at the top of the context and simplify them.
 
+* `srun tac <sauto-options>`
+
+  The `srun` tactical first interprets sauto options (see
+  [Options for sauto](#options-for-sauto)), then runs `unshelve solve
+  [ tac ]`, and then tries to solve the unshelved subgoals with
+  `auto`, `easy` and `do 10 constructor`.
+
+  Only the following options are interpreted: `use:`, `unfold:`,
+  `unfold!:`, `brefl:`, `red:`, `ered:`, `sig:`, `lia:`. Other options
+  have no effect.
+
 * `sfinal tac`
 
   Perform "final" simplifications of the goal (simplifying hypotheses,
@@ -193,9 +195,16 @@ are used internally by `sauto`.
   Simplifications for sigma-types. Composed of two tactics:
   `destruct_sigma` which eagerly destructs all elements of subset
   types occurring as arguments to the first projection, and
-  `invert_sigma` which is a faster and weaker version of
+  `invert_sigma` which is a faster but weaker version of
   `inversion_sigma` from the standard library. The `simpl_sigma`
   tactic corresponds to the `sig:` option.
+
+* `generalize proofs`
+* `generalize proofs in H`
+* `generalize proofs in *`
+
+  Generalizes by proof terms occurring in the goal and/or a
+  hypothesis. Corresponds to the `prf:` option.
 
 * `sapply t`
 
@@ -217,14 +226,14 @@ are used internally by `sauto`.
 * `eager_inverting_dep`
 
   Perform "eager simple elimination" corresponding to the `einv:`
-  option.
+  option. The `_dep` version may use the `depelim` tactic.
 
 * `case_splitting`
 * `case_splitting_dep`
 
   Eagerly eliminate all discriminees of match expressions. This
   corresponds to the action enabled by setting `cases: *` and `ecases:
-  on`.
+  on`. The `_dep` version may use the `depelim` tactic.
 
 * `simple_splitting`
 
@@ -236,6 +245,14 @@ are used internally by `sauto`.
 * `simple_splitting logic`
 
   Simple splitting for logical connectives only.
+
+* `ssolve`
+
+  The `ssolve` tactic is just
+  ```coq
+  solve [ (intuition auto); try sfinal sdone; try congruence 24;
+           try easy; try solve [ econstructor; sfinal sdone ] ].
+  ```
 
 Options for sauto
 -----------------
@@ -524,11 +541,11 @@ related to boolean reflection.
   ```
   and a lemma
   ```coq
-  sortedb_to_sorted : forall l : list nat, is_true (sortedb l) -> sorted l
+  sortedb_sorted_iff : forall l : list nat, is_true (sortedb l) <-> sorted l
   ```
   Then adding the rewrite hint
   ```coq
-  Hint Rewrite -> sortedb_to_sorted : brefl.
+  Hint Rewrite -> sortedb_sorted_iff : brefl.
   ```
   will result in `breflect` automatically converting `is_true (sortedb l)` to
   `sorted l`. This will then also be done by `bool_reflect` and by
