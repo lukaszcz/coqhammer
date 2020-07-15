@@ -86,18 +86,14 @@ Proof.
   split; now rewrite /is_true N.leb_le.
 Qed.
 
-Lemma N_gt_to_ltb: forall a b, N.gt a b -> N.ltb b a.
+Lemma N_gt_ltb: forall a b, N.gt a b <-> N.ltb b a.
 Proof.
-  intros a b.
-  rewrite N_ltb_lt.
-  lia.
+  split; rewrite N_ltb_lt; lia.
 Qed.
 
-Lemma N_ge_to_leb: forall a b, N.ge a b -> N.leb b a.
+Lemma N_ge_leb: forall a b, N.ge a b <-> N.leb b a.
 Proof.
-  intros a b.
-  rewrite N_leb_le.
-  lia.
+  split; rewrite N_leb_le; lia.
 Qed.
 
 (* nat *)
@@ -115,18 +111,14 @@ Proof.
   split; now rewrite /is_true Nat.leb_le.
 Qed.
 
-Lemma Nat_gt_to_ltb: forall a b, a > b -> Nat.ltb b a.
+Lemma Nat_gt_ltb: forall a b, a > b <-> Nat.ltb b a.
 Proof.
-  intros a b.
-  rewrite Nat_ltb_lt.
-  auto with arith.
+  split; rewrite Nat_ltb_lt; auto with arith.
 Qed.
 
-Lemma Nat_ge_to_leb: forall a b, a >= b -> Nat.leb b a.
+Lemma Nat_ge_leb: forall a b, a >= b <-> Nat.leb b a.
 Proof.
-  intros a b.
-  rewrite Nat_leb_le.
-  auto with arith.
+  split; rewrite Nat_leb_le; auto with arith.
 Qed.
 
 (* bool to Prop reflection *)
@@ -188,14 +180,14 @@ Hint Rewrite <- Z_leb_le : breif.
 Hint Rewrite <- N_eqb_eq : breif.
 Hint Rewrite <- N_ltb_lt : breif.
 Hint Rewrite <- N_leb_le : breif.
-Hint Rewrite -> N_gt_to_ltb : breif.
-Hint Rewrite -> N_ge_to_leb : breif.
+Hint Rewrite -> N_gt_ltb : breif.
+Hint Rewrite -> N_ge_leb : breif.
 
 Hint Rewrite <- Nat_eqb_eq : breif.
 Hint Rewrite <- Nat_ltb_lt : breif.
 Hint Rewrite <- Nat_leb_le : breif.
-Hint Rewrite -> Nat_gt_to_ltb : breif.
-Hint Rewrite -> Nat_ge_to_leb : breif.
+Hint Rewrite -> Nat_gt_ltb : breif.
+Hint Rewrite -> Nat_ge_leb : breif.
 
 Tactic Notation "breify" :=
   try rewrite_strat topdown hints breif.
@@ -249,6 +241,7 @@ Tactic Notation "brefl" :=
   | [ |- is_true (eqb _ _) ] => rewrite -> iffE
   | [ |- is_true true ] => rewrite -> trueE
   | [ |- is_true false ] => rewrite -> falseE
+  | [ |- _ ] => fail "'brefl' failed. Did you mean 'breflect'?"
   end.
 
 Tactic Notation "brefl" "in" hyp(H) :=
@@ -260,6 +253,7 @@ Tactic Notation "brefl" "in" hyp(H) :=
   | is_true (eqb _ _) => rewrite -> iffE in H
   | is_true true => try clear H
   | is_true false => discriminate H
+  | _ => fail "'brefl' failed. Did you mean 'breflect'?"
   end.
 
 Tactic Notation "breif" :=
@@ -271,6 +265,7 @@ Tactic Notation "breif" :=
   | [ |- _ <-> _ ] => rewrite <- iffE
   | [ |- True ] => rewrite <- trueE
   | [ |- False ] => rewrite <- falseE
+  | [ |- _ ] => fail "'breif' failed. Did you mean 'breify'?"
   end.
 
 Tactic Notation "breif" "in" hyp(H) :=
@@ -282,6 +277,7 @@ Tactic Notation "breif" "in" hyp(H) :=
   | _ <-> _ => rewrite <- iffE in H
   | True => try clear H
   | False => destruct H
+  | _ => fail "'breif' failed. Did you mean 'breify'?"
   end.
 
 (* boolean tactics *)

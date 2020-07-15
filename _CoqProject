@@ -21,6 +21,7 @@ src/tactics/hammer_tactics.mllib
 theories/Tactics/Reconstr.v
 theories/Tactics/Reflect.v
 theories/Tactics/Tactics.v
+theories/Tactics/Hints.v
 src/plugin/hh_term.ml
 src/plugin/msg.ml
 src/plugin/timeout.ml

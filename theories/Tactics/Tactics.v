@@ -5,28 +5,11 @@
 
 Declare ML Module "hammer_lib".
 
-Require List Arith ZArith Bool.
 Require Import Lia.
 Require Import Program.Equality.
 From Hammer Require Import Tactics.Reflect.
 
 Create HintDb shints discriminated.
-
-Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.add_1_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : shints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.add_0_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.add_1_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : shints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : shints.
-Hint Rewrite <- List.app_assoc : shints.
-Hint Rewrite -> Bool.orb_true_r : shints.
-Hint Rewrite -> Bool.orb_false_r : shints.
-Hint Rewrite -> Bool.andb_true_r : shints.
-Hint Rewrite -> Bool.andb_false_r : shints.
 
 Ltac notHyp P :=
   match goal with

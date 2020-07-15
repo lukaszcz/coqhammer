@@ -12,7 +12,7 @@ components.
    is based on a fairly general inhabitation procedure for the
    Calculus of Inductive Constructions. While it is in theory complete
    only for a "first-order" fragment of CIC, in practice it can handle
-   a much larger part of the Coq logic. In contrast to the `hammer`
+   a much larger part of Coq's logic. In contrast to the `hammer`
    tactic, `sauto` can use only explicitly provided lemmas and it does
    not invoke any external ATPs. For effective use, `sauto` typically
    needs some configuration by providing appropriate options.

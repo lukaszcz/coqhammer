@@ -19,3 +19,4 @@ src/tactics/hammer_tactics.mllib
 theories/Tactics/Reconstr.v
 theories/Tactics/Reflect.v
 theories/Tactics/Tactics.v
+theories/Tactics/Hints.v

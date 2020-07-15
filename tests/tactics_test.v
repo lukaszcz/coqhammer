@@ -231,6 +231,8 @@ Qed.
 Require Import List.
 Require Import Lia.
 
+From Hammer Require Import Hints.
+
 Section Lists.
 
 Lemma lem_lst :
@@ -238,13 +240,13 @@ Lemma lem_lst :
     In x (l1 ++ l2) -> (forall y, In y l1 -> P y) -> (forall y, In y l2 -> P y) ->
     P x.
 Proof.
-  sauto use: List.in_app_iff.
+  sauto db: slist.
 Qed.
 
 Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
                                                    In z (y1 :: y2 :: l ++ y3 :: l').
 Proof.
-  qauto use: List.in_app_iff.
+  sauto db: slist.
 Qed.
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
@@ -704,7 +706,7 @@ Qed.
 
 Lemma lem_bval_and : forall s e1 e2, bval s (and e1 e2) = bval s e1 && bval s e2.
 Proof.
-  induction e1; sauto db: shints.
+  induction e1; sauto db: sbool.
 Qed.
 
 Lemma lem_bval_less : forall s a1 a2, bval s (less a1 a2) = (aval s a1 <? aval s a2).
@@ -969,14 +971,14 @@ Proof.
   - auto.
   - assert (H: itrev t [h] = itrev t [] ++ [h]).
     { rewrite IH; reflexivity. }
-    sauto db: shints.
+    sauto db: slist.
 Qed.
 
 Lemma lem_rev_app {A} :
   forall l1 l2 : list A, rev (l1 ++ l2) = rev l2 ++ rev l1.
 Proof.
   unfold rev.
-  induction l1; sauto use: @lem_itrev db: shints.
+  induction l1; sauto use: @lem_itrev db: slist.
 Qed.
 
 Lemma lem_rev_rev {A} : forall l : list A, rev (rev l) = l.
