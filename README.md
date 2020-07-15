@@ -107,12 +107,6 @@ increasing strength and decreasing speed:
 * solvers: `sdone`, `strivial`, `ssolve`, `qauto`, `hauto`, `sauto`;
 * simplifiers: `simp_hyps`, `sintuition`, `qsimpl`, `ssimpl`.
 
-In addition to the solvers listed above, there is also a "lazy"
-version of `sauto` - the `lauto` tactic which is just
-```
-sauto ered: off erew: off ecases: off einv: off sinv: off
-```
-
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
 is just
 ```
@@ -483,6 +477,12 @@ are for `sauto`.
   equivalent to Uniqueness of Identity Proofs. Setting `dep: on`
   implies `prf: on`, `einv: off` and `sinv: off`. You can change the
   `prf`, `einv` and `sinv` options separately. Default: `dep: off`.
+
+* `eager: <bopt>`
+
+  This is a compound option which controls multiple other options:
+  `ered`, `erew`, `ecases`, `einv`, `sinv`, `sig`.
+
 
 Boolean reflection
 ------------------
