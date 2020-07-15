@@ -997,6 +997,49 @@ Ltac invert_sigma :=
 
 Ltac simpl_sigma := invert_sigma; destruct_sigma.
 
+Ltac unfold_local_defs :=
+  repeat match goal with
+         | [f := _ |- _] => unfold f in *; try clear f
+         end.
+
+Ltac generalize_proofs_in t :=
+  lazymatch t with
+  | ?X ?Y =>
+    (tryif is_var Y then
+        idtac
+      else
+        let ty := type of Y in
+        lazymatch type of ty with
+        | Prop => try generalize Y
+        | _ => generalize_proofs_in Y
+        end);
+    generalize_proofs_in X
+  | ?X -> ?Y =>
+    generalize_proofs_in X;
+    generalize_proofs_in Y
+  | _ =>
+    idtac
+  end.
+
+Ltac generalize_proofs_in_goal :=
+  match goal with
+  | [|- ?G] => generalize_proofs_in G
+  end.
+
+Ltac generalize_proofs_in_hyp H :=
+  let T := type of H in
+  try (revert H; progress generalize_proofs_in T).
+
+Ltac generalize_proofs :=
+  generalize_proofs_in_goal;
+  repeat match goal with
+         | [H: ?T |- _] => revert H; progress generalize_proofs_in T
+         end.
+
+Tactic Notation "generalize" "proofs" := generalize_proofs_in_goal.
+Tactic Notation "generalize" "proofs" "in" ident(H) := generalize_proofs_in_hyp H.
+Tactic Notation "generalize" "proofs" "in" "*" := generalize_proofs.
+
 Ltac use_tac t :=
   let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
 
