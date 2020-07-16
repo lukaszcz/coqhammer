@@ -631,7 +631,7 @@ Fixpoint aval (s : state) (e : aexpr) :=
   | Aplus x y => aval s x + aval s y
   end.
 
-Fixpoint plus (e1 e2 : aexpr) :=
+Definition plus (e1 e2 : aexpr) :=
   match e1, e2 with
   | Nval n1, Nval n2 => Nval (n1 + n2)
   | Nval 0, _ => e2
@@ -669,14 +669,14 @@ Fixpoint bval (s : state) (e : bexpr) :=
   | Bless a1 a2 => aval s a1 <? aval s a2
   end.
 
-Fixpoint not (e : bexpr) :=
+Definition not (e : bexpr) :=
   match e with
   | Bval true => Bval false
   | Bval false => Bval true
   | _ => Bnot e
   end.
 
-Fixpoint and (e1 e2 : bexpr) :=
+Definition and (e1 e2 : bexpr) :=
   match e1, e2 with
   | Bval true, _ => e2
   | _, Bval true => e1
