@@ -43,7 +43,6 @@ type s_opts = {
   s_sapply : bool;
   s_depth_cost_model : bool;
   s_limit : int;
-  s_prerun : bool;
   s_simpl_sigma : bool;
   s_lia : bool;
   s_dep : bool;
@@ -82,7 +81,6 @@ let default_s_opts () = {
   s_sapply = true;
   s_depth_cost_model = false;
   s_limit = 1000;
-  s_prerun = false; (* "true" slows things down *)
   s_simpl_sigma = true;
   s_lia = true;
   s_dep = false;
@@ -106,7 +104,6 @@ let qauto_s_opts () =
                            s_leaf_nolia_tac = (eauto_tac <*> congr_tac ());
                            s_sapply = false;
                            s_limit = 100;
-                           s_prerun = true;
                            s_lia = false }
 
 let set_dep_opts b opts =
