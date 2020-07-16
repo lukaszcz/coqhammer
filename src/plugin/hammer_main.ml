@@ -300,7 +300,7 @@ let get_tac_args env sigma info =
   let (vars, deps) = (filter_vars deps, filter_nonvars deps) in
   let (deps, defs, inverts) =
     (List.map globref_to_econstr deps,
-     List.map globref_to_const defs,
+     List.map globref_to_const (filter_consts defs),
      List.map globref_to_inductive inverts)
   in
   (deps, defs, inverts)

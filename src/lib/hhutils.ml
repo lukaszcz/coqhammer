@@ -238,18 +238,18 @@ let map_fold_constr f acc evd t =
   let open Constr in
   let open EConstr in
   let rec hlp m acc t =
-    let fold_list k ac ar =
+    let fold_arr k ac ar =
       let (ac1, lst) =
         Array.fold_left
           (fun (ac,l) x -> let (ac',x') = hlp k ac x in (ac',x'::l))
           (ac, [])
           ar
       in
-      (ac1, List.rev lst)
+      (ac1, Array.of_list (List.rev lst))
     in
-    let fold_arr k ac ar =
-      let (ac, l) = fold_list k ac (Array.to_list ar) in
-      (ac, Array.of_list l)
+    let fold_list k ac lst =
+      let (ac, ar) = fold_arr k ac (Array.of_list lst) in
+      (ac, Array.to_list ar)
     in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
@@ -310,6 +310,9 @@ let fold_constr f acc evd t =
     let fold_arr k ac ar =
       Array.fold_left (hlp k) ac ar
     in
+    let fold_list k ac ar =
+      List.fold_left (hlp k) ac ar
+    in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
@@ -367,6 +370,9 @@ let fold_constr_shallow f acc evd t =
     let fold_arr ac ar =
       Array.fold_left hlp ac ar
     in
+    let fold_list ac ar =
+      List.fold_left hlp ac ar
+    in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f acc t
@@ -415,18 +421,18 @@ let fold_constr_shallow f acc evd t =
 let map_fold_constr_ker f acc t =
   let open Constr in
   let rec hlp m acc t =
-    let fold_list k ac ar =
+    let fold_arr k ac ar =
       let (ac1, lst) =
         Array.fold_left
           (fun (ac,l) x -> let (ac',x') = hlp k ac x in (ac',x'::l))
           (ac, [])
           ar
       in
-      (ac1, List.rev lst)
+      (ac1, Array.of_list (List.rev lst))
     in
-    let fold_arr k ac ar =
-      let (ac, l) = fold_list k ac (Array.to_list ar) in
-      (ac, Array.of_list l)
+    let fold_list k ac lst =
+      let (ac, ar) = fold_arr k ac (Array.of_list lst) in
+      (ac, Array.to_list ar)
     in
     match kind t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
@@ -577,55 +583,51 @@ let inductive_to_string ind =
 
 (******************************************************************************************)
 (* Code copied from eauto.ml with minor modifications *)
-
-let unify_e_resolve poly flags (c,clenv) =
+  
+let unify_e_resolve flags h =
   Proofview.Goal.enter begin fun gl ->
-    let clenv', c = Auto.connect_hint_clenv ~poly c clenv gl in
-    let clenv' = Clenv.clenv_unique_resolver ~flags clenv' gl in
-    Proofview.tclTHEN
-      (Proofview.Unsafe.tclEVARUNIVCONTEXT (Evd.evar_universe_context clenv'.Clenv.evd))
-      (Tactics.Simple.eapply c)
+      let clenv', c = Auto.connect_hint_clenv h gl in
+      Clenv.res_pf ~with_evars:true ~with_classes:true ~flags clenv'
   end
-
-let e_exact poly flags (c,clenv) =
+  
+let e_exact flags h =
   Proofview.Goal.enter begin fun gl ->
-    let clenv', c = Auto.connect_hint_clenv ~poly c clenv gl in
+    let clenv', c = Auto.connect_hint_clenv h gl in
     Tacticals.New.tclTHEN
-      (Proofview.Unsafe.tclEVARUNIVCONTEXT (Evd.evar_universe_context clenv'.Clenv.evd))
+      (Proofview.Unsafe.tclEVARUNIVCONTEXT
+         (Evd.evar_universe_context clenv'.Clenv.evd))
       (Eauto.e_give_exact c)
   end
-
+  
 let tac_of_hint db h concl =
   let open Hints in
   let st = Auto.auto_flags_of_state (Hint_db.transparent_state db) in
-  match h with
-  | {pri = b; pat = p; code = t; poly = poly} ->
-     let tac = function
-       | Res_pf (term,cl) -> Auto.unify_resolve ~poly st (term,cl)
-       | ERes_pf (term,cl) -> unify_e_resolve poly st (term,cl)
-       | Give_exact (c,cl) -> e_exact poly st (c,cl)
-       | Res_pf_THEN_trivial_fail (term,cl) ->
-          Tacticals.New.tclTHEN (unify_e_resolve poly st (term,cl))
+  let tac = function
+    | Res_pf h -> Auto.unify_resolve st h
+    | ERes_pf h -> unify_e_resolve st h
+    | Give_exact h -> e_exact st h
+    | Res_pf_THEN_trivial_fail h ->
+       Tacticals.New.tclTHEN (unify_e_resolve st h)
             (Tacticals.New.tclSOLVE [Eauto.e_assumption;
                                      Tactics.reflexivity;
                                      Tactics.any_constructor true None])
-       | Unfold_nth c -> Tactics.reduce
-                           (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
-       | Extern tacast -> Auto.conclPattern concl p tacast
-     in
-     Hints.run_hint t tac
-
+    | Unfold_nth c ->
+       Tactics.reduce
+         (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
+    | Extern tacast -> Auto.conclPattern concl (FullHint.pattern h) tacast
+  in
+  FullHint.run h tac
+    
 (******************************************************************************************)
 
-type hint = int * Hints.hint_db * Hints.hint Hints.with_metadata
+type hint = int * Hints.hint_db * Hints.FullHint.t
 
 let hint_priority (p, _, _) = p
 
 let hint_tactic (_, db, h) t = tac_of_hint db h t
 
 let hint_to_string (_, _, h) =
-  let open Hints in
-  Pp.string_of_ppcmds @@ Hints.pr_hint (Global.env ()) Evd.empty h.code
+  Pp.string_of_ppcmds @@ Hints.FullHint.print (Global.env ()) Evd.empty h
 
 let find_hints db secvars evd t =
   try
@@ -633,11 +635,13 @@ let find_hints db secvars evd t =
     let hdc = Hints.decompose_app_bound evd t in
     let hints =
       if Termops.occur_existential evd t then
-        Hint_db.map_existential evd ~secvars hdc t db
+        match Hint_db.map_existential evd ~secvars hdc t db with
+        | ModeMatch l -> l
+        | ModeMismatch -> []
       else
         Hint_db.map_auto evd ~secvars hdc t db
     in
-    List.map (fun h -> (h.pri, db, h)) hints
+    List.map (fun h -> (FullHint.priority h, db, h)) hints
   with Hints.Bound ->
     []
 
