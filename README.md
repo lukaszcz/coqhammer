@@ -142,6 +142,22 @@ are used internally by `sauto`.
   Dependent destruction of `t`. A simple wrapper around the `dependent
   destruction` tactic from the Program module.
 
+* `sinvert t`
+
+  Inversion of the conclusion of `t`. The term `t` may be quantified -
+  then new existential variables are introduced or new subgoals are
+  generated for the arguments.
+
+* `sdepinvert t`
+
+  Dependent inversion of the conclusion of `t`. The same as `sinvert
+  t` but may use the `depelim` tactic for inversion.
+
+* `sapply t`
+
+  Apply `t` modulo simple heuristic equational reasoning. See the
+  `sapp:` option.
+
 * `bool_reflect`
 
   Boolean reflection in the goal and in all hypotheses. See the
@@ -170,17 +186,6 @@ are used internally by `sauto`.
   tactic invocation fails if `tac` does not solve some of the
   resulting subgoals.
 
-* `sinvert t`
-
-  Inversion of the conclusion of `t`. The term `t` may be quantified -
-  then new existential variables are introduced or new subgoals are
-  generated for the arguments.
-
-* `sdepinvert t`
-
-  Dependent inversion of the conclusion of `t`. The same as `sinvert
-  t` but may use the `depelim` tactic for inversion.
-
 * `forwarding`
 
   Limited forward reasoning corresponding to the `fwd:` option.
@@ -205,11 +210,6 @@ are used internally by `sauto`.
 
   Generalizes by proof terms occurring in the goal and/or a
   hypothesis. Corresponds to the `prf:` option.
-
-* `sapply t`
-
-  Apply `t` modulo simple heuristic equational reasoning. See the
-  `sapp:` option.
 
 * `srewriting`
 

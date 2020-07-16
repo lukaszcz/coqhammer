@@ -962,6 +962,12 @@ Ltac srewriting :=
 Ltac red_in_all := simpl in *.
 Ltac red_in_concl := simpl.
 
+Ltac destruct_sigma_in_goal :=
+  repeat match goal with
+         | [ |- context[proj1_sig ?X] ] =>
+           destruct X; simpl
+         end.
+
 Ltac destruct_sigma :=
   repeat match goal with
          | [H : context[proj1_sig ?X] |- _] =>
@@ -969,6 +975,20 @@ Ltac destruct_sigma :=
          | [ |- context[proj1_sig ?X] ] =>
            destruct X; simpl in *
 
+         end.
+
+Ltac destruct_sigma_dep_in_goal :=
+  repeat match goal with
+         | [ |- context[proj1_sig ?X] ] =>
+           dep_destruct X; simpl
+         end.
+
+Ltac destruct_sigma_dep :=
+  repeat match goal with
+         | [H : context[proj1_sig ?X] |- _] =>
+           dep_destruct X; simpl in *
+         | [ |- context[proj1_sig ?X] ] =>
+           dep_destruct X; simpl in *
          end.
 
 Ltac invert_sigma :=
