@@ -52,16 +52,17 @@ type sopt_t =
 | SOHeuristicRewrite of bool
 | SORewrite of bool
 | SOReflect of bool
+| SOReflectRaw of bool
 | SOReduce of bool
 | SOSapply of bool
 | SOLimit of int
 | SODepth of int
 | SOExhaustive of bool
-| SOPrerun of bool
 | SOLia of bool
 | SOSig of bool
 | SOPrf of bool
 | SODep of bool
+| SODepRaw of bool
 | SOEager of bool
 | SOQuick of bool
 
@@ -278,6 +279,8 @@ let interp_opt ret opt opts =
        ret { opts with s_reflect = true; s_eager_case_splitting = false }
      else
        ret { opts with s_reflect = false }
+  | SOReflectRaw b ->
+     ret { opts with s_reflect = b }
   | SOReduce b ->
      if b then
        ret { opts with s_reducing = true }
@@ -292,8 +295,6 @@ let interp_opt ret opt opts =
      ret { opts with s_limit = n; s_depth_cost_model = true }
   | SOExhaustive b ->
      ret { opts with s_exhaustive = b }
-  | SOPrerun b ->
-     ret { opts with s_prerun = b }
   | SOLia b ->
      ret { opts with s_lia = b }
   | SOSig b ->
@@ -302,6 +303,8 @@ let interp_opt ret opt opts =
      ret { opts with s_genproofs = b }
   | SODep b ->
      ret (set_dep_opts b opts)
+  | SODepRaw b ->
+     ret { opts with s_dep = b }
   | SOEager b ->
      ret (set_eager_opts b opts)
   | SOQuick b ->

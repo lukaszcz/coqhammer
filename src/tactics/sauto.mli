@@ -36,7 +36,6 @@ type s_opts = {
   s_sapply : bool;
   s_depth_cost_model : bool;
   s_limit : int;
-  s_prerun : bool;
   s_simpl_sigma : bool;
   s_lia : bool;
   s_dep : bool;

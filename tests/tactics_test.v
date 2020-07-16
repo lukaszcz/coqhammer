@@ -527,14 +527,14 @@ Qed.
 Fixpoint occurs (v : nat) (t : Term) : bool :=
   match t with
     | LS | LK | LI => false
-    | LVar n => if n =? v then true else false
+    | LVar n => n =? v
     | LApp x y => occurs v x || occurs v y
-    | LLam n b => if n =? v then false else occurs v b
+    | LLam n b => negb (n =? v) && occurs v b
   end.
 
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t <-> HasVar v t.
 Proof.
-  induction t; ssimpl brefl: on.
+  induction t; sauto brefl: on.
 Qed.
 
 Fixpoint abstr2 (v : nat) (t : Term) : Term :=
@@ -603,7 +603,7 @@ Proof.
   induction t; qsimpl.
   - sauto.
   - sauto.
-  - pose proof occurs_spec.
+  - use occurs_spec.
     rewrite csubst_novar by ssimpl.
     rewrite csubst_novar by ssimpl.
     strivial.
@@ -748,7 +748,7 @@ Notation "A ==> B" := (big_step A B) (at level 80, no associativity).
 Lemma lem_seq_assoc : forall c1 c2 c3 s s', (Seq c1 (Seq c2 c3), s) ==> s' <->
                                             (Seq (Seq c1 c2) c3, s) ==> s'.
 Proof.
-  sauto. (* 0.45s *)
+  sauto.
 Qed.
 
 Definition equiv_cmd (c1 c2 : cmd) := forall s s', (c1, s) ==> s' <-> (c2, s) ==> s'.
@@ -757,7 +757,7 @@ Notation "A ~~ B" := (equiv_cmd A B) (at level 70, no associativity).
 
 Lemma lem_unfold_loop : forall b c, While b c ~~ If b (Seq c (While b c)) Skip.
 Proof.
-  sauto unfold: equiv_cmd. (* 0.46s *)
+  sauto unfold: equiv_cmd.
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', (While b c, s) ==> s' -> c ~~ c' ->
@@ -777,7 +777,7 @@ Lemma lem_big_step_deterministic :
   forall c s s1 s2, (c, s) ==> s1 -> (c, s) ==> s2 -> s1 = s2.
 Proof.
   intros c s s1 s2 H; revert s2.
-  induction H; scrush. (* 2s *)
+  induction H; scrush.
 Qed.
 
 Inductive small_step : cmd * state -> cmd * state -> Prop :=

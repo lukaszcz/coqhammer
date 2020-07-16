@@ -311,7 +311,8 @@ are for `sauto`.
 
 * `unfold!: <const-list>`
 
-  Always unfold the listed definitions. Default: `unfold!: -`.
+  Always unfold the listed definitions. A primitive version of
+  `unfold:` without heuristics. Default: `unfold!: -`.
 
 * `db: <db-list>`
 
@@ -455,10 +456,16 @@ are for `sauto`.
 
   Controls whether to perform boolean reflection, i.e., convert
   elements of `bool` applied to `is_true` into statements in
-  `Prop`. Setting `brefl: on` implies `ecases: off`. You may re-enable
-  `ecases:` separately. Default: `brefl: off`.
+  `Prop`. Setting `brefl: on` implies `ecases: off`. Use `brefl!:` to
+  prevent this behaviour. You may also re-enable `ecases:` by
+  providing `ecases: on` *after* `brefl: on`. Default: `brefl: off`.
 
   See also the [Boolean reflection](#boolean-reflection) section.
+
+* `brefl!: <bopt>`
+
+  A primitive version of `brefl:` which when enabled does not
+  automatically disable `ecases:`.
 
 * `sapp: <bopt>`
 
@@ -497,8 +504,15 @@ are for `sauto`.
   tactic from the `Program` module is used for inversion. This may
   negatively impact speed and introduce dependencies on some axioms
   equivalent to Uniqueness of Identity Proofs. Setting `dep: on`
-  implies `prf: on`, `einv: off` and `sinv: off`. You can change the
-  `prf`, `einv` and `sinv` options separately. Default: `dep: off`.
+  implies `prf: on`, `einv: off` and `sinv: off`. Use `dep!:` to
+  prevent this behaviour. You can also change the `prf:`, `einv:` and
+  `sinv:` options separately by setting them *after* `dep:
+  on`. Default: `dep: off`.
+
+* `dep!: <bopt>`
+
+  A primitive version of `dep:` which when enabled does not affect
+  `prf:`, `einv:` or `sinv:`.
 
 * `eager: <bopt>`
 * `e: <bopt>`
