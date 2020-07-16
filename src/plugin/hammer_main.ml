@@ -543,7 +543,8 @@ let hammer_tac () =
                           " accessible Coq objects.");
             let info = do_predict hyps defs goal in
             let (deps, defs, inverts) = get_tac_args env sigma info in
-            let sdeps = List.map (Utils.constr_to_string sigma) deps
+            let sdeps =
+              List.map (fun x -> Utils.constr_to_string sigma (EConstr.of_constr x)) deps
             and sdefs = List.map Utils.constant_to_string defs
             and sinverts = List.map Utils.inductive_to_string inverts
             in
