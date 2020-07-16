@@ -274,7 +274,10 @@ let interp_opt ret opt opts =
                        s_eager_rewriting = false;
                        s_heuristic_rewriting = false }
   | SOReflect b ->
-     ret { opts with s_reflect = b }
+     if b then
+       ret { opts with s_reflect = true; s_eager_case_splitting = false }
+     else
+       ret { opts with s_reflect = false }
   | SOReduce b ->
      if b then
        ret { opts with s_reducing = true }

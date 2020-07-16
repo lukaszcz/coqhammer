@@ -1,6 +1,6 @@
 From Hammer Require Import Tactics.
 From Hammer Require Import Reflect.
-(* declares "is_true" as a coercion *)
+(* The Reflect module declares "is_true" as a coercion *)
 
 Require List.
 Open Scope list_scope.

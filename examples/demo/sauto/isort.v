@@ -10,9 +10,6 @@ Open Scope list_scope.
 Require Import Arith.
 Require Import Lia.
 
-Require Import Sorting.Permutation.
-Require Import Sorting.Sorted.
-
 Inductive Sorted : list nat -> Prop :=
 | Sorted_0 : Sorted []
 | Sorted_1 : forall x, Sorted [x]
@@ -26,6 +23,7 @@ Fixpoint insert (l : list nat) (x : nat) : list nat :=
   | h :: t => if x <=? h then x :: l else h :: insert t x
   end.
 
+(* insertion sort *)
 Fixpoint isort (l : list nat) : list nat :=
   match l with
   | [] => []
@@ -61,9 +59,11 @@ Proof.
      reasoning) only on elements of the given inductive types *)
   (* "ctrs: ind1, .., indn" instructs "sauto" to try using
      constructors of only the given inductive types *)
-  (* "-" stands for an empty list *)
+  (* "-" stands for an empty list,
+     "*" for a list of all possible inductive types *)
   (* By default "sauto" tries inversion on elements of and uses
      constructors of all possible inductive types *)
+  (* I.e. the defaults are: "inv: *" and "ctrs: *" *)
 Qed.
 
 Lemma lem_insert_sorted (l : list nat) (x : nat) :
@@ -82,10 +82,19 @@ Lemma lem_insert_sorted' (l : list nat) (x : nat) :
 Proof.
   (* sauto use: lem_insert_sorted_hlp db: arith. *)
   (* "use: lem1, .., lemn" adds the given lemmas to the context *)
+  (* The default is "use: -" *)
+  (* "sauto" above does not find a proof in reasonable time *)
+  (* Sometimes it is enough to help "sauto" just by providing a few
+     initial steps (particularly when the first step is "destruct" or
+     "inversion") *)
   time (destruct l; sauto use: lem_insert_sorted_hlp db: arith).
   Undo.
   time (destruct l;
-   sauto use: lem_insert_sorted_hlp inv: - ctrs: Sorted db: arith).
+        sauto use: lem_insert_sorted_hlp inv: - ctrs: Sorted db: arith).
+  (* Providing the "inv:" and "ctrs:" options with only the necessary
+     inductive types often noticeably decreases the running time *)
+  (* There is a shorthand for this common use case:
+     "hauto" is "sauto inv: - ctrs: -" *)
 Qed.
 
 Lemma lem_isort_sorted : forall l, Sorted (isort l).
@@ -97,6 +106,11 @@ Lemma lem_isort_sorted' : forall l, Sorted (isort l).
 Proof.
   induction l; sauto use: lem_insert_sorted.
 Qed.
+
+(* We have proven that the result of "isort" is a sorted list. Now we
+   prove that the result is a permutation of the argument. *)
+
+Require Import Sorting.Permutation.
 
 Lemma lem_insert_perm :
   forall l x, Permutation (insert l x) (x :: l).
