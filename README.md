@@ -231,9 +231,17 @@ are used internally by `sauto`.
 * `case_splitting`
 * `case_splitting_dep`
 
-  Eagerly eliminate all discriminees of match expressions. This
-  corresponds to the action enabled by setting `cases: *` and `ecases:
-  on`. The `_dep` version may use the `depelim` tactic.
+  Eagerly eliminate all discriminees of match expressions occurring in
+  the goal or a hypothesis. This corresponds to the action enabled by
+  setting `cases: *` and `ecases: on`. The `_dep` version may use the
+  `depelim` tactic.
+
+* `case_split`
+* `case_split_dep`
+
+  Eliminate one discriminee of a match expression occurring in the
+  goal or in a hypothesis. The `_dep` version may use the `depelim`
+  tactic.
 
 * `simple_splitting`
 
@@ -447,7 +455,8 @@ are for `sauto`.
 
   Controls whether to perform boolean reflection, i.e., convert
   elements of `bool` applied to `is_true` into statements in
-  `Prop`. Default: `brefl: off`.
+  `Prop`. Setting `brefl: on` implies `ecases: off`. You may re-enable
+  `ecases:` separately. Default: `brefl: off`.
 
   See also the [Boolean reflection](#boolean-reflection) section.
 
