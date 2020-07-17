@@ -29,25 +29,10 @@ Fixpoint sortedb (l : list nat) : bool :=
 
 Lemma lem_sortedb_iff_sorted : forall l, sortedb l <-> Sorted l.
 Proof.
-  induction l; simpl; sauto brefl: on eager: off.
+  induction l; sauto brefl: on.
   (* The "brefl: on" option enables boolean reflection - automatic
      conversion of boolean statements (arguments to the "is_true"
      coercion) into corresponding propositions in Prop. *)
-  (* The option "eager: off" disables all eager heuristics:
-     - eager reduction ("ered: off")
-     - eager elimination of discriminees in match expressions ("ecases: off")
-     - eager directed rewriting ("erew: off")
-     - eager inversion of some hypotheses ("einv: off" and "sinv: off")
-     - others (see README.md at https://github.com/lukaszcz/coqhammer) *)
-  (* The "brelf: on" option often works best in combination with disabling
-     some or all of the eager heuristics. *)
-  (* But after disabling eager reduction ("ered: off" implied by
-     "eager: off") we need to perform "simpl" before invoking
-     "sauto". *)
-  Undo.
-  (* Actually, for this lemma it suffices to disable eager elimination
-     of discriminees in match expressions. *)
-  induction l; sauto brefl: on ecases: off.
 Qed.
 
 Lemma lem_sortedb_to_sorted_step_by_step : forall l, sortedb l -> Sorted l.
@@ -56,14 +41,33 @@ Proof.
   - sauto.
   - simpl.
     case_split; try strivial.
+    (* "case_split" eliminates one discriminee of a match expression
+       occurring in the goal or in a hypothesis *)
     breflect.
     (* "breflect" performs boolean reflection - it implements the
        "brefl:" option *)
     (* sauto. *)
+    (* By default  *)
     (* simpl.
-    case_splitting. (* "case_splitting" implements the "cases:" and
-                       "ecases:" options *) *)
+       case_splitting. *)
+    (* "case_splitting" repeatedly runs "case_split", "subst" and
+       "simpl" - it implements the "cases:" and "ecases:" options *)
     sauto ecases: off.
+    Undo.
+    sauto cases: -.
+    (* One case specify the inductive types whose elements should be
+       eliminated when they appear as a discriminee of a match
+       expression *)
+    Undo.
+    sauto brefl: on.
+    (* Setting "brefl: on" implies "ecases: off" because eager case
+       splitting is often detrimental in combination with boolean
+       reflection. *)
+    (* Setting "brefl!: on" enables boolean reflection only without
+       affecting other options. *)
+    (* Some options by default affect other options. A primitive
+       version "opt!:" of an option "opt:" never affects any other
+       options. *)
 Qed.
 
 (* insert a number into a sorted list preserving the sortedness *)
@@ -83,16 +87,16 @@ Fixpoint isort (l : list nat) : list nat :=
 Lemma lem_insert_sorted_hlp : forall l y z,
     y <= z -> sortedb (y :: l) -> sortedb (y :: insert l z).
 Proof.
-  time (induction l; sauto ecases: off brefl: on db: arith).
+  time (induction l; sauto brefl: on db: arith).
   Undo.
   (* We do not need inversions in this proof: set "inv: -" or use "hauto" *)
-  time (induction l; sauto ecases: off brefl: on inv: - db: arith).
+  time (induction l; sauto brefl: on inv: - db: arith).
 Qed.
 
 Lemma lem_insert_sorted : forall l x,
     sortedb l -> sortedb (insert l x).
 Proof.
-  destruct l; hauto ecases: off brefl: on use: lem_insert_sorted_hlp db: arith.
+  destruct l; hauto brefl: on use: lem_insert_sorted_hlp db: arith.
   (* "hauto" is "sauto inv: - ctrs: -" *)
 Qed.
 
@@ -101,32 +105,28 @@ Proof.
   induction l; sauto use: lem_insert_sorted.
 Qed.
 
-(* We have proven that the result of "isort" is a sorted list. Now we
-   prove that the result is a permutation of the argument. *)
+Hint Rewrite -> lem_sortedb_iff_sorted : brefl.
 
-Lemma lem_insert_perm :
-  forall l x, Permutation (insert l x) (x :: l).
+Lemma lem_insert_sorted_hlp' : forall l y z,
+    y <= z -> sortedb (y :: l) -> sortedb (y :: insert l z).
 Proof.
-  induction l as [|y ? ?].
-  - eauto using Permutation.
-  - intro x.
-    simpl.
-    destruct (Nat.leb_spec x y) as [H|H];
-      eauto using Permutation.
+  breflect.
+  induction l; sauto db: arith.
+  Undo.
+  (* induction l; sauto brefl: on db: arith. *)
+  (* Eager case splitting is usually a good idea for non-boolean goals
+     involving inductive types *)
+  induction l; sauto brefl!: on db: arith.
+  (* "brefl!:" enables boolean reflection without affecting "ecases:" *)
 Qed.
 
-Lemma lem_insert_perm' :
-  forall l x, Permutation (insert l x) (x :: l).
+Lemma lem_insert_sorted' : forall l x,
+    sortedb l -> sortedb (insert l x).
 Proof.
-  induction l; sauto.
+  destruct l; hauto brefl!: on use: lem_insert_sorted_hlp db: arith ctrs: Sorted.
 Qed.
 
-Lemma lem_isort_perm : forall l, Permutation (isort l) l.
+Lemma lem_isort_sorted' : forall l, sortedb (isort l).
 Proof.
-  induction l; simpl; eauto using Permutation, lem_insert_perm.
-Qed.
-
-Lemma lem_isort_perm' : forall l, Permutation (isort l) l.
-Proof.
-  induction l; sauto use: lem_insert_perm.
+  induction l; sauto use: lem_insert_sorted.
 Qed.
