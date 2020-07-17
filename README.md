@@ -170,13 +170,18 @@ are used internally by `sauto`.
 * `srun tac <sauto-options>`
 
   The `srun` tactical first interprets sauto options (see
-  [Options for sauto](#options-for-sauto)), then runs `unshelve solve
-  [ tac ]`, and then tries to solve the unshelved subgoals with
-  `auto`, `easy` and `do 10 constructor`.
+  [Options for sauto](#options-for-sauto)) and performs `sauto`
+  initialisation, then runs `unshelve solve [ tac ]`, and then tries
+  to solve the unshelved subgoals with `auto`, `easy` and `do 10
+  constructor`.
 
-  Only the following options are interpreted: `use:`, `unfold:`,
-  `unfold!:`, `brefl:`, `red:`, `ered:`, `sig:`, `lia:`. Other options
-  have no effect.
+  Only the following options are interpreted by `srun`: `use:`,
+  `unfold:`, `unfold!:`, `brefl:`, `brefl!:`, `red:`, `ered:`,
+  `sig:`. Other options have no effect.
+
+  The `sauto` initialisation performed by `srun` executes the actions
+  corresponding to the options listed here. The default values of the
+  options are like for `sauto`.
 
 * `sfinal tac`
 
@@ -228,20 +233,20 @@ are used internally by `sauto`.
   Perform "eager simple elimination" corresponding to the `einv:`
   option. The `_dep` version may use the `depelim` tactic.
 
-* `case_splitting`
-* `case_splitting_dep`
-
-  Eagerly eliminate all discriminees of match expressions occurring in
-  the goal or a hypothesis. This corresponds to the action enabled by
-  setting `cases: *` and `ecases: on`. The `_dep` version may use the
-  `depelim` tactic.
-
 * `case_split`
 * `case_split_dep`
 
   Eliminate one discriminee of a match expression occurring in the
   goal or in a hypothesis. The `_dep` version may use the `depelim`
   tactic.
+
+* `case_splitting`
+* `case_splitting_dep`
+
+  Eagerly eliminate all discriminees of match expressions occurring in
+  the goal or in a hypothesis. This corresponds to the action enabled by
+  setting `cases: *` and `ecases: on`. The `_dep` version may use the
+  `depelim` tactic.
 
 * `simple_splitting`
 
@@ -329,7 +334,7 @@ are for `sauto`.
 
 * `cases: <ind-list>`
 
-  Eliminate discriminees in case expression when the discriminee has
+  Eliminate discriminees in case expressions when the discriminee has
   one of the listed inductive types. If `ecases: on` then elimination
   of match disciminees is performed eagerly, otherwise with
   backtracking. Default: `cases: *`, `ecases: on`.
@@ -456,7 +461,7 @@ are for `sauto`.
 
   Controls whether to perform boolean reflection, i.e., convert
   elements of `bool` applied to `is_true` into statements in
-  `Prop`. Setting `brefl: on` implies `ecases: off`. Use `brefl!:` to
+  `Prop`. Setting `brefl: on` implies `ecases: off` - use `brefl!:` to
   prevent this behaviour. You may also re-enable `ecases:` by
   providing `ecases: on` *after* `brefl: on`. Default: `brefl: off`.
 
@@ -501,10 +506,10 @@ are for `sauto`.
 * `dep: <bopt>`
 
   Enhanced support for dependent types. When `on`, the `depelim`
-  tactic from the `Program` module is used for inversion. This may
+  tactic from the Program module is used for inversion. This may
   negatively impact speed and introduce dependencies on some axioms
   equivalent to Uniqueness of Identity Proofs. Setting `dep: on`
-  implies `prf: on`, `einv: off` and `sinv: off`. Use `dep!:` to
+  implies `prf: on`, `einv: off` and `sinv: off` - use `dep!:` to
   prevent this behaviour. You can also change the `prf:`, `einv:` and
   `sinv:` options separately by setting them *after* `dep:
   on`. Default: `dep: off`.
@@ -534,7 +539,7 @@ are for `sauto`.
 Boolean reflection
 ------------------
 
-Importing the `Reflect` module with
+Importing the Reflect module with
 ```coq
 From Hammer Require Import Reflect.
 ```
