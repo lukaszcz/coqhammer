@@ -50,6 +50,8 @@ Lemma lem_insert_sorted_hlp' :
   forall l y z, y <= z -> Sorted (y :: l) ->
     Sorted (y :: insert l z).
 Proof.
+  (* "sauto" will *never* try "induction" - one needs to first invoke
+     "induction" manually *)
   time (induction l; sauto db: arith).
   (* "db: db1, .., dbn" instructs "sauto" to use the given hint or
      rewriting databases *)

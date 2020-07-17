@@ -536,8 +536,8 @@ let is_eager_ind =
     | _ -> false
   end
 
-(* check if the inductive type is (non-indexed?) non-recursive with
-   exactly one constructor and no dangling evars *)
+(* check if the inductive type is non-recursive with exactly one
+   constructor and no dangling evars *)
 let is_simple_ind =
   memoize_ind begin fun ind ->
     let cstrs = Utils.get_ind_constrs ind in

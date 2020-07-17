@@ -49,14 +49,14 @@ Definition simp_plus (e1 e2 : expr Nat) :=
 Lemma lem_plus : forall s e1 e2,
   eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
 Proof.
-  time (depind e1; depelim e2; sauto). (* ~ 0.3s *)
+  time (depind e1; depelim e2; sauto).
 Qed.
 
 Lemma lem_plus' : forall s e1 e2,
   eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
 Proof.
   Fail depind e1; sauto.
-  time (depind e1; sauto dep: on). (* ~ 0.4s *)
+  time (depind e1; sauto dep: on).
   (* "dep: on" instructs "sauto" to use the "depelim" tactic for
      inversion. This may be slower and it will make your proof depend
      on axioms (equivalent to Uniqueness of Identity Proofs). *)
@@ -151,9 +151,9 @@ Lemma lem_simp {A} : forall s (e : expr A),
   eval s (simp e) = eval s e.
 Proof.
   time (depind e; sauto use: lem_plus, lem_equal, @lem_fst,
-                      @lem_snd, @lem_ite). (* ~ 0.4s *)
+                      @lem_snd, @lem_ite).
   Undo.
-  time (depind e; sauto db: simp_db). (* ~ 0.12s *)
+  time (depind e; sauto db: simp_db).
   Undo.
-  time (depind e; simpl; autorewrite with simp_db; sauto). (* ~ 0.08s *)
+  time (depind e; simpl; autorewrite with simp_db; sauto).
 Qed.
