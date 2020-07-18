@@ -102,7 +102,7 @@ Lemma lem_rev_rev' {A} : forall l : list A, rev (rev l) = l.
 Proof.
   unfold rev.
   (* induction l; sauto use: @lem_itrev, @lem_rev_app unfold: rev. *)
-  (* induction l; sauto limit: 2000 use: @lem_itrev, @lem_rev_app unfold: rev. *)
+  (* induction l; sauto limit: 2000 use: @lem_itrev, @lem_rev_app unfold: rev.*)
   induction l as [|x l ?].
   - reflexivity.
   - sauto use: (lem_itrev l [x]), (lem_rev_app (itrev l []) [x]).

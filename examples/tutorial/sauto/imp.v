@@ -185,7 +185,8 @@ Proof.
   (* "quick:" may be abbreviated to "q:" *)
 Qed.
 
-Lemma lem_unfold_while : forall b c, While b Do c ~~ If b Then c;; While b Do c Else Nop.
+Lemma lem_unfold_while : forall b c,
+  While b Do c ~~ If b Then c;; While b Do c Else Nop.
 Proof.
   time sauto unfold: equiv_cmd.
   Undo.
@@ -197,15 +198,16 @@ Proof.
   (* "lazy: on" does *)
 Qed.
 
-Lemma lem_while_cong_aux : forall b c c' s s', While b Do c >> s ==> s' -> c ~~ c' ->
-                                               While b Do c' >> s ==> s'.
+Lemma lem_while_cong_aux : forall b c c' s s',
+  While b Do c >> s ==> s' -> c ~~ c' -> While b Do c' >> s ==> s'.
 Proof.
   intros *.
   remember (While b Do c).
   induction 1; sauto lq: on unfold: equiv_cmd.
 Qed.
 
-Lemma lem_while_cong : forall b c c', c ~~ c' -> While b Do c ~~ While b Do c'.
+Lemma lem_while_cong : forall b c c',
+  c ~~ c' -> While b Do c ~~ While b Do c'.
 Proof.
   hauto use: lem_while_cong_aux unfold: equiv_cmd.
 Qed.
@@ -240,12 +242,12 @@ Qed.
 
 (* Equivalence between big-step and small-step operational semantics *)
 
-Lemma lem_star_seq2 : forall c1 c2 s c1' s', (c1, s) -->* (c1', s') ->
-                                             (c1;; c2, s) -->* (c1';; c2, s').
+Lemma lem_star_seq2 : forall c1 c2 s c1' s',
+  (c1, s) -->* (c1', s') -> (c1;; c2, s) -->* (c1';; c2, s').
 Proof.
   enough (forall p1 p2, p1 -->* p2 ->
-                        forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
-                                               (c1;; c2, s) -->* (c1';; c2, s')).
+          forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
+                                 (c1;; c2, s) -->* (c1';; c2, s')).
   { eauto. }
   induction 1; sauto lq: on.
 Qed.
@@ -260,7 +262,8 @@ Proof.
   sauto.
 Qed.
 
-Lemma lem_big_to_small : forall c s s', c >> s ==> s' -> (c, s) -->* (Nop, s').
+Lemma lem_big_to_small : forall c s s',
+  c >> s ==> s' -> (c, s) -->* (Nop, s').
 Proof.
   intros c s s' H.
   induction H as [ | | | | | | b c s1 s2 ].
@@ -296,7 +299,8 @@ Proof.
   induction 1; sauto use: lem_small_to_big_aux.
 Qed.
 
-Lemma lem_small_to_big : forall c s s', (c, s) -->* (Nop, s') -> c >> s ==> s'.
+Lemma lem_small_to_big : forall c s s',
+  (c, s) -->* (Nop, s') -> c >> s ==> s'.
 Proof.
   enough (forall p p', p -->* p' ->
                        forall c s s', p = (c, s) -> p' = (Nop, s') ->
