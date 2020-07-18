@@ -526,12 +526,10 @@ let has_dangling_evars evd t =
    constructors *)
 let is_eager_ind =
   memoize_ind begin fun ind ->
-    let cstrs = Utils.get_ind_constrs ind in
-    match cstrs with
-    | [] -> true
-    | [ t ] -> is_constr_non_recursive ind t
-    | [ t1; t2 ] -> is_constr_non_recursive ind t1 && is_constr_non_recursive ind t2
-    | _ -> false
+    if Utils.get_ind_nargs ind = 0 then
+      false
+    else
+      List.for_all (is_constr_non_recursive ind) (Utils.get_ind_constrs ind)
   end
 
 (* check if the inductive type is non-recursive with exactly one
