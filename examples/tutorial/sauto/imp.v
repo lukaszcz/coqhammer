@@ -75,18 +75,6 @@ Definition state_subst (s : state) (x : string) (a : aexpr) : state :=
 
 Notation "s [ x := a ]" := (state_subst s x a) (at level 5).
 
-Lemma lem_subst_eq : forall s x a, s[x := a] x = aval s a.
-Proof.
-  sauto unfold: state_subst, update.
-Qed.
-
-Lemma lem_subst_neq : forall s x y a, x <> y -> s[x := a] y = s y.
-Proof.
-  sauto unfold!: state_subst, update.
-  (* "unfold:" may unfold or not based on some heuristic criteria;
-     "unfold!:" is a primitive version which always unfolds *)
-Qed.
-
 (* Big-step operational semantics *)
 
 Inductive BigStep : cmd -> state -> state -> Prop :=
@@ -106,28 +94,83 @@ Inductive BigStep : cmd -> state -> state -> Prop :=
 Notation "A >> B ==> C" :=
   (BigStep A B C) (at level 80, no associativity).
 
-Lemma lem_seq_assoc : forall c1 c2 c3 s s', c1;; (c2;; c3) >> s ==> s' <->
-                                            (c1;; c2);; c3 >> s ==> s'.
+Lemma lem_big_step_deterministic :
+  forall c s s1, c >> s ==> s1 -> forall s2, c >> s ==> s2 -> s1 = s2.
 Proof.
-  sauto.
+  induction 1; sauto brefl: on.
 Qed.
+
+(* Program equivalence *)
 
 Definition equiv_cmd (c1 c2 : cmd) :=
   forall s s', c1 >> s ==> s' <-> c2 >> s ==> s'.
 
 Notation "A ~~ B" := (equiv_cmd A B) (at level 75, no associativity).
 
-Lemma lem_unfold_loop : forall b c, While b Do c ~~ If b Then c;; While b Do c Else Nop.
+Lemma lem_sim_refl : forall c, c ~~ c.
+Proof.
+  sauto.
+Qed.
+
+Lemma lem_sim_sym : forall c c', c ~~ c' -> c' ~~ c.
 Proof.
   sauto unfold: equiv_cmd.
+Qed.
+
+Lemma lem_sim_trans : forall c1 c2 c3, c1 ~~ c2 -> c2 ~~ c3 -> c1 ~~ c3.
+Proof.
+  sauto unfold: equiv_cmd.
+Qed.
+
+Lemma lem_seq_assoc : forall c1 c2 c3, c1;; (c2;; c3) ~~ (c1;; c2);; c3.
+Proof.
+  time sauto unfold: equiv_cmd.
+  Undo.
+  time sauto eager: off unfold: equiv_cmd.
+Qed.
+
+Lemma lem_triv_if : forall b c, If b Then c Else c ~~ c.
+Proof.
+  unfold equiv_cmd.
+  intros b c s s'.
+  destruct (bval s b) eqn:?; sauto.
+Qed.
+
+Lemma lem_commute_if :
+  forall b1 b2 c1 c2 c3,
+    If b1 Then (If b2 Then c1 Else c2) Else c3 ~~
+       If b2 Then (If b1 Then c1 Else c3) Else (If b1 Then c2 Else c3).
+Proof.
+  unfold equiv_cmd.
+  intros *.
+  time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
+                 sauto inv: BigStep ctrs: BigStep).
+  Undo.
+  time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
+                 sauto quick: on inv: BigStep ctrs: BigStep).
+  Undo.
+  time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
+                 sauto eager: off inv: BigStep ctrs: BigStep).
+  Undo.
+  time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
+                 sauto eager: off quick: on inv: BigStep ctrs: BigStep).
+Qed.
+
+Lemma lem_unfold_while : forall b c, While b Do c ~~ If b Then c;; While b Do c Else Nop.
+Proof.
+  (* sauto quick: on unfold: equiv_cmd. *)
+  time sauto unfold: equiv_cmd.
+  Undo.
+  Fail sauto quick: on unfold: equiv_cmd.
+  time sauto eager: off unfold: equiv_cmd.
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', While b Do c >> s ==> s' -> c ~~ c' ->
                                                While b Do c' >> s ==> s'.
 Proof.
   intros *.
-  remember (While b Do c) as w.
-  induction 1; sauto unfold: equiv_cmd.
+  remember (While b Do c).
+  induction 1; sauto eager: off unfold: equiv_cmd.
 Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b Do c ~~ While b Do c'.
@@ -135,11 +178,7 @@ Proof.
   hauto use: lem_while_cong_aux unfold: equiv_cmd.
 Qed.
 
-Lemma lem_big_step_deterministic :
-  forall c s s1, c >> s ==> s1 -> forall s2, c >> s ==> s2 -> s1 = s2.
-Proof.
-  induction 1; sauto brefl: on.
-Qed.
+(* Small-step operational semantics *)
 
 Inductive SmallStep : cmd * state -> cmd * state -> Prop :=
 | AssignSemS : forall x a s, SmallStep (x <- a, s) (Nop, s[x := a])
@@ -164,8 +203,10 @@ Notation "A -->* B" := (SmallStepStar A B) (at level 80, no associativity).
 Lemma lem_small_step_deterministic :
   forall p p1, p --> p1 -> forall p2, p --> p2 -> p1 = p2.
 Proof.
-  induction 1; sauto brefl: on.
+  induction 1; sauto eager: off brefl: on.
 Qed.
+
+(* Equivalence between big-step and small-step operational semantics *)
 
 Lemma lem_star_seq2 : forall c1 c2 s c1' s', (c1, s) -->* (c1', s') ->
                                              (c1;; c2, s) -->* (c1';; c2, s').
@@ -208,9 +249,9 @@ Lemma lem_small_to_big_aux : forall p p',
       p = (c1, s1) -> p' = (c2, s2) -> c2 >> s2 ==> s ->
       c1 >> s1 ==> s.
 Proof.
-  (* induction 1; sintuition. *)
-  (* induction 1; qsimpl. *)
-  induction 1; sauto use: lem_unfold_loop.
+  time (induction 1; sauto).
+  Undo.
+  time (induction 1; sauto eager: off).
 Qed.
 
 Lemma lem_small_to_big_aux_2 : forall p p',
