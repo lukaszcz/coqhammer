@@ -91,8 +91,16 @@ ARGUMENT EXTEND sauto_opts
 | [ "dep!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODepRaw b :: sopts }
 | [ "eager:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
 | [ "e:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
+| [ "lazy:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager (not b) :: sopts }
+| [ "l:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager (not b) :: sopts }
 | [ "quick:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
 | [ "q:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
+| [ "lq:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+    if b then
+      SOEager false :: SOQuick true :: sopts
+    else
+      sopts
+}
 | [ ] -> { [SONop] }
 END
 

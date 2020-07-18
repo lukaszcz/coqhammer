@@ -126,7 +126,26 @@ Lemma lem_seq_assoc : forall c1 c2 c3, c1;; (c2;; c3) ~~ (c1;; c2);; c3.
 Proof.
   time sauto unfold: equiv_cmd.
   Undo.
-  time sauto eager: off unfold: equiv_cmd.
+  time sauto lazy: on unfold: equiv_cmd.
+  (* "lazy: on" turns off some eager heuristics *)
+  (* This may sometimes speed up "sauto" noticeably, but sometimes it
+     may prevent "sauto" from solving the goal. *)
+  (* To increase the performance of "sauto" you may need to fiddle
+     with various options. *)
+  (* Things to try which commonly result in speed increase (if "sauto"
+     can still solve the goal):
+     - "lazy: on" ("l: on")
+     - "quick: on" ("q: on") - a combination of various options which
+       typically make "sauto" faster but weaker
+     - "lq: on" - an abbreviation for "l: on q: on"
+     - "erew: off" - turn off eager rewriting
+     - "rew: off" - turn off rewriting entirely
+     - "ered: off" - turn off eager reduction with "simpl"
+     - "red: off" - turn off reduction entirely
+     - "ecases: off" - turn off eager case splitting
+     - "cases: -" - turn off case splitting entirely
+     - "einv: off sinv: off" - turn off eager inversion heuristics
+  *)
 Qed.
 
 Lemma lem_triv_if : forall b c, If b Then c Else c ~~ c.
@@ -148,21 +167,34 @@ Proof.
   Undo.
   time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
                  sauto quick: on inv: BigStep ctrs: BigStep).
+  (* "quick: on" sets various options in a way which typically makes
+     "sauto" weaker but faster. "quato" is "hauto" with "quick: on", a
+     smaller cost limit and a different leaf solver. See
+     https://github.com/lukaszcz/coqhammer#Sauto for details.  *)
   Undo.
   time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
-                 sauto eager: off inv: BigStep ctrs: BigStep).
+                 sauto lazy: on inv: BigStep ctrs: BigStep).
   Undo.
   time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
-                 sauto eager: off quick: on inv: BigStep ctrs: BigStep).
+                 sauto lazy: on quick: on inv: BigStep ctrs: BigStep).
+  Undo.
+  time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
+                 sauto lq: on inv: BigStep ctrs: BigStep).
+  (* "lq: on" is an abbreviation for "lazy: on quick: on" *)
+  (* "lazy:" may be abbreviated to "l:" *)
+  (* "quick:" may be abbreviated to "q:" *)
 Qed.
 
 Lemma lem_unfold_while : forall b c, While b Do c ~~ If b Then c;; While b Do c Else Nop.
 Proof.
-  (* sauto quick: on unfold: equiv_cmd. *)
   time sauto unfold: equiv_cmd.
   Undo.
-  Fail sauto quick: on unfold: equiv_cmd.
-  time sauto eager: off unfold: equiv_cmd.
+  time sauto q: on unfold: equiv_cmd.
+  (* "quick: on" does not result in significant speed increase this
+     time *)
+  Undo.
+  time sauto l: on unfold: equiv_cmd.
+  (* "lazy: on" does *)
 Qed.
 
 Lemma lem_while_cong_aux : forall b c c' s s', While b Do c >> s ==> s' -> c ~~ c' ->
@@ -170,7 +202,7 @@ Lemma lem_while_cong_aux : forall b c c' s s', While b Do c >> s ==> s' -> c ~~ 
 Proof.
   intros *.
   remember (While b Do c).
-  induction 1; sauto eager: off unfold: equiv_cmd.
+  induction 1; sauto lq: on unfold: equiv_cmd.
 Qed.
 
 Lemma lem_while_cong : forall b c c', c ~~ c' -> While b Do c ~~ While b Do c'.
@@ -203,7 +235,7 @@ Notation "A -->* B" := (SmallStepStar A B) (at level 80, no associativity).
 Lemma lem_small_step_deterministic :
   forall p p1, p --> p1 -> forall p2, p --> p2 -> p1 = p2.
 Proof.
-  induction 1; sauto eager: off brefl: on.
+  induction 1; sauto lq: on brefl: on.
 Qed.
 
 (* Equivalence between big-step and small-step operational semantics *)
@@ -215,7 +247,7 @@ Proof.
                         forall c1 c2 s c1' s', p1 = (c1, s) -> p2 = (c1', s') ->
                                                (c1;; c2, s) -->* (c1';; c2, s')).
   { eauto. }
-  induction 1; sauto.
+  induction 1; sauto lq: on.
 Qed.
 
 Lemma lem_seq_comp : forall c1 c2 s1 s2 s3,
@@ -251,7 +283,9 @@ Lemma lem_small_to_big_aux : forall p p',
 Proof.
   time (induction 1; sauto).
   Undo.
-  time (induction 1; sauto eager: off).
+  time (induction 1; sauto l: on).
+  Undo.
+  time (induction 1; sauto lq: on).
 Qed.
 
 Lemma lem_small_to_big_aux_2 : forall p p',
@@ -267,7 +301,12 @@ Proof.
   enough (forall p p', p -->* p' ->
                        forall c s s', p = (c, s) -> p' = (Nop, s') ->
                                       c >> s ==> s') by eauto.
-  induction 1; sauto use: lem_small_to_big_aux_2.
+  time (induction 1; sauto use: lem_small_to_big_aux_2).
+  Undo.
+  time (induction 1; sauto l: on use: lem_small_to_big_aux_2).
+  (* "l: on" slightly improves performance *)
+  (* induction 1; sauto q: on use: lem_small_to_big_aux_2. *)
+  (* But "q: on" prevents "sauto" from solving the goal. *)
 Qed.
 
 Corollary cor_big_iff_small :

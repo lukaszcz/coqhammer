@@ -125,9 +125,7 @@ let set_eager_opts b opts =
 
 let set_quick_opts b opts =
   if b then
-    { opts with s_inversions = SSome [];
-                s_constructors = SSome [];
-                s_simpl_tac = Tacticals.New.tclIDTAC;
+    { opts with s_simpl_tac = Tacticals.New.tclIDTAC;
                 s_simpl_nolia_tac = Tacticals.New.tclIDTAC;
                 s_leaf_tac = Utils.ltac_apply "Tactics.sdone_tac" [];
                 s_leaf_nolia_tac = Utils.ltac_apply "Tactics.sdone_nolia_tac" [];
