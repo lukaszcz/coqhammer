@@ -108,7 +108,7 @@ increasing strength and decreasing speed:
 * simplifiers: `simp_hyps`, `sintuition`, `qsimpl`, `ssimpl`.
 
 The `hauto` tactic is just `sauto inv: - ctrs: -`. The `qauto` tactic
-is just `sauto quick: on limit: 100 finish: (eauto; congruence 400)`.
+is just `hauto quick: on limit: 100 finish: (eauto; congruence 400)`.
 
 See the [Options for sauto](#options-for-sauto) section for an
 explanation of these options.
@@ -527,14 +527,25 @@ are for `sauto`.
   (or `e: on`) has the effect of enabling all these options. Setting
   `eager: off` disables all of the listed options.
 
+* `lazy: <bopt>`
+* `l: <bopt>`
+
+  The exact opposite of `eager:`, i.e., `lazy: on` is just `eager:
+  off`, and `lazy: off` is just `eager: on`.
+
 * `quick: <bopt>`
 * `q: <bopt>`
 
   Setting `quick: on` (or `q: on`) has the same effect as setting:
   ```
-  inv: - ctrs: - sapp: off simp: idtac finish: sdone lia: off
+  sapp: off simp: idtac finish: sdone lia: off
   ```
   Setting `quick: off` has no effect.
+
+* `lq: <bopt>`
+
+  Settting `lq: on` has the same effect as setting `lazy: on` and
+  `quick: on`. Setting `lq: off` has no effect.
 
 Boolean reflection
 ------------------
