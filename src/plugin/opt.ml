@@ -45,7 +45,7 @@ let _ =
   in
   declare_int_option gdopt
 
-let reconstr_timelimit = ref 10
+let reconstr_timelimit = ref 5
 
 let _ =
   let gdopt=

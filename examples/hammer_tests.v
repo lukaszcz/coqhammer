@@ -13,7 +13,13 @@ appropriate reconstruction tactic.
 
 From Hammer Require Import Hammer.
 
-(************************************************************************************************)
+(*********************************************************************************************)
+
+(*
+Lemma lem_classic : forall P : Prop, P \/ ~P.
+Proof.
+  hammer.
+Qed. *)
 
 Require Import Arith.
 
@@ -27,12 +33,12 @@ Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
   hammer. Restart.
-  hauto use: @Nat.Even_or_Odd, @Nat.add_1_r, @Nat.Odd_succ.
+  hauto lq: on use: @Nat.Even_or_Odd, @Nat.add_1_r, @Nat.Odd_succ.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
   hammer. Restart.
-  hauto use: @Nat.add_1_r, @Nat.Even_or_Odd, @Nat.Even_succ.
+  hauto lq: on use: @Nat.add_1_r, @Nat.Even_or_Odd, @Nat.Even_succ.
 Qed.
 
 Lemma lem_3 : le 2 3.
