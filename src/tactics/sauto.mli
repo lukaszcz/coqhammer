@@ -49,6 +49,7 @@ val qauto_s_opts : unit -> s_opts
 val set_dep_opts : bool -> s_opts -> s_opts
 val set_eager_opts : bool -> s_opts -> s_opts
 val set_quick_opts : bool -> s_opts -> s_opts
+val set_brefl_opts : bool -> s_opts -> s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic

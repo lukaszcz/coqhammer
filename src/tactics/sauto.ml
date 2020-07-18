@@ -134,6 +134,12 @@ let set_quick_opts b opts =
   else
     opts
 
+let set_brefl_opts b opts =
+  if b then
+    { opts with s_reflect = true; s_eager_case_splitting = false }
+  else
+    opts
+
 let with_reduction opts tac1 tac2 =
   if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
 
