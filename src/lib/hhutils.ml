@@ -616,7 +616,7 @@ let tac_of_hint db h concl =
     | Unfold_nth c ->
        Tactics.reduce
          (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
-    | Extern tacast -> Auto.conclPattern concl (FullHint.pattern h) tacast
+    | Extern (p, tacast) -> Auto.conclPattern concl p tacast
   in
   FullHint.run h tac
     
