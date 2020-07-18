@@ -106,6 +106,8 @@ Proof.
 Qed.
 
 Hint Rewrite -> lem_sortedb_iff_sorted : brefl.
+(* Boolean reflection can be customised by adding rewrite hints to the
+   "brefl" database. *)
 
 Lemma lem_insert_sorted_hlp' : forall l y z,
     y <= z -> sortedb (y :: l) -> sortedb (y :: insert l z).
