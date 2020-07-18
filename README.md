@@ -428,7 +428,8 @@ are for `sauto`.
 
   Controls whether to use the "eager simple elimination restriction",
   i.e., eagerly invert all hypotheses which have a non-recursive
-  inductive type with at most two constructors. Default: `einv: on`.
+  inductive type with arguments (parameters or indices). Default:
+  `einv: on`.
 
 * `ered: <bopt>`
 
