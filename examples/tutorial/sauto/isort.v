@@ -2,6 +2,14 @@
 (* Insertion sort *)
 
 From Hammer Require Import Tactics.
+(* CoqHammer tactics v1.3 or later *)
+(* Installation:
+     opam repo add coq-released https://coq.inria.fr/opam/released
+     opam install coq-hammer-tactics *)
+(* Alternatively, download the latest release form
+   https://github.com/lukaszcz/coqhammer, and after unpacking run
+   `make tactics` and `make install-tactics` *)
+(* Documentation is available at: https://github.com/lukaszcz/coqhammer. *)
 
 Require List.
 Import List.ListNotations.

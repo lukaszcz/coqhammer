@@ -275,10 +275,7 @@ let interp_opt ret opt opts =
                        s_eager_rewriting = false;
                        s_heuristic_rewriting = false }
   | SOReflect b ->
-     if b then
-       ret { opts with s_reflect = true; s_eager_case_splitting = false }
-     else
-       ret { opts with s_reflect = false }
+     ret (set_brefl_opts b opts)
   | SOReflectRaw b ->
      ret { opts with s_reflect = b }
   | SOReduce b ->

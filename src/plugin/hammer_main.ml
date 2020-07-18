@@ -330,8 +330,10 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     usolve (use_deps <*> sauto (mkopts (hauto_s_opts ())))
   and rqauto =
     usolve (use_deps <*> sauto (mkopts (qauto_s_opts ())))
-  and rhauto1 =
-    usolve (use_deps <*> sauto (mkopts { (hauto_s_opts ()) with s_eager_reducing = false}))
+  and rhlqauto =
+    usolve (use_deps <*> sauto (mkopts
+                                  (set_quick_opts true
+                                     (set_eager_opts false (hauto_s_opts ())))))
   and rhcrush =
     usolve (use_deps <*> scrush (mkopts (hauto_s_opts ())))
   and rhfcrush =
@@ -364,13 +366,34 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     usolve (use_deps <*>
               sauto
                 (mkopts
-                   { (hauto_s_opts ()) with
-                     s_reflect = true; s_eager_reducing = false }))
+                   (set_brefl_opts true (hauto_s_opts ()))))
+  and rhbauto_lq =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_quick_opts true
+                      (set_eager_opts false
+                         (set_brefl_opts true (hauto_s_opts ()))))))
+  and rhbfcrush =
+    usolve (use_deps <*> fcrush (mkopts (set_brefl_opts true (hauto_s_opts ()))))
+  and rheauto =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_quick_opts true
+                        (set_eager_opts false (hauto_s_opts ()))) with
+                     s_exhaustive = true; s_limit = 2; s_depth_cost_model = true }))
   and reauto =
     usolve (use_deps <*>
               sinit (mkopts (hauto_s_opts ())) <*>
               Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
                                          (Some []) ])
+  and rhbauto2 =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_brefl_opts true (hauto_s_opts ())) with
+                     s_limit = 2000 }))
   and rcongruence =
     usolve (use_deps <*> scongruence (mkopts (hauto_s_opts ())))
   and rfirstorder =
@@ -383,9 +406,10 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
       (rfirstorder, "sfirstorder") ]
   in
   let tactics = [
-    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhauto1, "hauto ered: off") ];
-    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rlhauto, "hauto eager: off") ];
-    [ (rhdauto6_q, "hauto depth: 6 quick: on"); (rhdauto4, "hauto depth: 4"); (rlqdauto4, "qauto depth: 4 eager: off"); (rhbauto, "hauto brefl: on ered: off") ]
+    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhlqauto, "hauto lq: on") ];
+    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rlhauto, "hauto l: on") ];
+    [ (rhdauto6_q, "hauto depth: 6 q: on"); (rhdauto4, "hauto depth: 4"); (rlqdauto4, "qauto depth: 4 l: on"); (rhbauto, "hauto brefl: on") ];
+    [ (rhbauto_lq, "hauto brefl: on lq: on"); (rhbfcrush, "hfcrush brefl: on"); (rheauto, "hauto depth: 2 lq: on exh: on"); (rhbauto2, "hauto limit: 2000 brefl: on") ]
   ]
   in
   let run limit tacs f_success f_failure =
@@ -496,7 +520,7 @@ let do_predict hyps deps goal =
         clean (); raise e
     in
     match ret with
-    | None -> clean (); raise (HammerFailure "ATPs failed to find a proof")
+    | None -> clean (); raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
     | Some info ->
        begin
          let info =
@@ -530,41 +554,41 @@ let try_sauto () =
 let hammer_tac () =
   Proofview.Goal.enter
     begin fun gl ->
-      let env = Proofview.Goal.env gl in
-      let sigma = Proofview.Goal.sigma gl in
-      Proofview.tclORELSE
-        (try_sauto ())
-        begin fun _ ->
-          try_tactic begin fun () ->
-            let goal = get_goal gl in
-            let hyps = get_hyps gl in
-            let defs = get_defs env sigma in
-            if !Opt.debug_mode then
-              Msg.info ("Found " ^ string_of_int (List.length defs) ^
-                          " accessible Coq objects.");
-            let info = do_predict hyps defs goal in
-            let (deps, defs, inverts) = get_tac_args env sigma info in
-            let sdeps = List.map (Utils.constr_to_string sigma) deps
-            and sdefs = List.map Utils.constant_to_string defs
-            and sinverts = List.map Utils.inductive_to_string inverts
-            in
-            Msg.info ("Reconstructing the proof...");
-            run_tactics deps defs inverts
-              begin fun tac ->
-                Msg.info ("Tactic " ^ tac ^ " succeeded.");
-                Msg.info ("Replace the hammer tactic with:\n\t" ^
-                             tac ^ mk_lst_str "@" " use:" sdeps ^
-                             mk_lst_str "" " unfold:" sdefs ^
-                             mk_lst_str "" " inv:" sinverts ^ ".")
-              end
-              begin fun () ->
-                Msg.error ("Hammer failed: proof reconstruction failed")
-              end
-              begin fun k ->
-                Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
-              end
+    let env = Proofview.Goal.env gl in
+    let sigma = Proofview.Goal.sigma gl in
+    Proofview.tclORELSE
+      (try_sauto ())
+      begin fun _ ->
+      try_tactic begin fun () ->
+        let goal = get_goal gl in
+        let hyps = get_hyps gl in
+        let defs = get_defs env sigma in
+        if !Opt.debug_mode then
+          Msg.info ("Found " ^ string_of_int (List.length defs) ^
+                      " accessible Coq objects.");
+        let info = do_predict hyps defs goal in
+        let (deps, defs, inverts) = get_tac_args env sigma info in
+        let sdeps = List.map (Utils.constr_to_string sigma) deps
+        and sdefs = List.map Utils.constant_to_string defs
+        and sinverts = List.map Utils.inductive_to_string inverts
+        in
+        Msg.info ("Reconstructing the proof...");
+        run_tactics deps defs inverts
+          begin fun tac ->
+          Msg.info ("Tactic " ^ tac ^ " succeeded.");
+          Msg.info ("Replace the hammer tactic with:\n\t" ^
+                      tac ^ mk_lst_str "@" " use:" sdeps ^
+                        mk_lst_str "" " unfold:" sdefs ^
+                          mk_lst_str "" " inv:" sinverts ^ ".")
+          end
+          begin fun () ->
+            raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies.\nNote that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure.")
+          end
+          begin fun k ->
+            Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
           end
         end
+      end
     end
 
 let predict_tac n pred_method =
