@@ -34,6 +34,8 @@ val get_ind_constrs : inductive -> Constr.t list
 
 val get_ind_nconstrs : inductive -> int
 
+val get_ind_nargs : inductive -> int
+
 val is_indexed_ind : inductive -> bool
 
 val close : (Name.t * 'a * 'a -> 'a) -> (Name.t * 'a) list -> 'a -> 'a
