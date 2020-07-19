@@ -49,7 +49,8 @@ type sopt_t =
 | SOEagerInvert of bool
 | SOEagerReduce of bool
 | SOEagerRewrite of bool
-| SOHeuristicRewrite of bool
+| SODirectedRewrite of bool
+| SOUndirectedRewrite of bool
 | SORewrite of bool
 | SOReflect of bool
 | SOReflectRaw of bool
@@ -265,15 +266,12 @@ let interp_opt ret opt opts =
      ret { opts with s_eager_reducing = b }
   | SOEagerRewrite b ->
      ret { opts with s_eager_rewriting = b }
-  | SOHeuristicRewrite b ->
-     ret { opts with s_heuristic_rewriting = b }
+  | SODirectedRewrite b ->
+     ret { opts with s_directed_rewriting = b }
+  | SOUndirectedRewrite b ->
+     ret { opts with s_undirected_rewriting = b }
   | SORewrite b ->
-     if b then
-       ret { opts with s_rewriting = true }
-     else
-       ret { opts with s_rewriting = false;
-                       s_eager_rewriting = false;
-                       s_heuristic_rewriting = false }
+     ret (set_rew_opts b opts)
   | SOReflect b ->
      ret (set_brefl_opts b opts)
   | SOReflectRaw b ->
