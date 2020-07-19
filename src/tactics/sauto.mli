@@ -31,7 +31,8 @@ type s_opts = {
   s_forwarding : bool;
   s_reducing : bool;
   s_rewriting : bool;
-  s_heuristic_rewriting : bool;
+  s_directed_rewriting : bool;
+  s_undirected_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;
@@ -50,6 +51,7 @@ val set_dep_opts : bool -> s_opts -> s_opts
 val set_eager_opts : bool -> s_opts -> s_opts
 val set_quick_opts : bool -> s_opts -> s_opts
 val set_brefl_opts : bool -> s_opts -> s_opts
+val set_rew_opts : bool -> s_opts -> s_opts
 
 val simple_splitting : s_opts -> unit Proofview.tactic
 val eager_inverting : s_opts -> unit Proofview.tactic
