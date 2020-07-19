@@ -65,7 +65,8 @@ Proof.
         sauto use: lem_lelst_trans inv: Sorted, List.Forall ctrs: Sorted).
   Undo.
   time (induction l;
-        sauto lazy: on use: lem_lelst_trans inv: Sorted, List.Forall ctrs: Sorted).
+        sauto lazy: on use: lem_lelst_trans
+          inv: Sorted, List.Forall ctrs: Sorted).
   (* "lazy: on" turns off all eager heuristics. This may improve
      performance, but may also make "sauto" fail to solve the goal *)
 Qed.
@@ -85,7 +86,8 @@ Qed.
 
 Hint Resolve lem_lelst_trans lem_lelst_perm_rev lem_lelst_app : lelst.
 
-Lemma lem_sorted_concat_1 {A} {dto : DecTotalOrder A} : forall (l l1 l2 : list A) x y,
+Lemma lem_sorted_concat_1 {A} {dto : DecTotalOrder A} :
+  forall (l l1 l2 : list A) x y,
     Permutation l (l1 ++ y :: l2) -> Sorted (x :: l1) -> leb x y ->
     Sorted (y :: l2) -> Sorted l -> Sorted (x :: l).
 Proof.
@@ -130,7 +132,8 @@ Qed.
 
 Hint Resolve lem_lelst_nil lem_lelst_cons : lelst.
 
-Lemma lem_sorted_concat_2 {A} {dto : DecTotalOrder A} : forall (l l1 l2 : list A) x y,
+Lemma lem_sorted_concat_2 {A} {dto : DecTotalOrder A} :
+  forall (l l1 l2 : list A) x y,
     Permutation l (x :: l1 ++ l2) -> Sorted (x :: l1) -> leb y x ->
     Sorted (y :: l2) -> Sorted l -> Sorted (y :: l).
 Proof.

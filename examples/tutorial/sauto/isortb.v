@@ -47,7 +47,9 @@ Proof.
     (* "breflect" performs boolean reflection - it implements the
        "brefl:" option *)
     (* sauto. *)
-    (* By default  *)
+    (* By default "sauto" eagerly eliminates discriminees of all 
+       match expressions. This behaviour is controlled by the
+       "ecases:" option. *)
     (* simpl.
        case_splitting. *)
     (* "case_splitting" repeatedly runs "case_split", "subst" and
@@ -90,7 +92,7 @@ Proof.
   time (induction l; sauto brefl: on db: arith).
   Undo.
   (* We do not need inversions in this proof: set "inv: -" or use "hauto" *)
-  time (induction l; sauto brefl: on inv: - db: arith).
+  time (induction l; sauto brefl: on inv: - ctrs: - db: arith).
 Qed.
 
 Lemma lem_insert_sorted : forall l x,
@@ -114,7 +116,7 @@ Lemma lem_insert_sorted_hlp' : forall l y z,
 Proof.
   breflect.
   induction l; sauto db: arith.
-  Undo.
+  Restart.
   (* induction l; sauto brefl: on db: arith. *)
   (* Eager case splitting is usually a good idea for non-boolean goals
      involving inductive types *)
@@ -125,7 +127,8 @@ Qed.
 Lemma lem_insert_sorted' : forall l x,
     sortedb l -> sortedb (insert l x).
 Proof.
-  destruct l; hauto brefl!: on use: lem_insert_sorted_hlp db: arith ctrs: Sorted.
+  destruct l; hauto brefl!: on use: lem_insert_sorted_hlp
+                db: arith ctrs: Sorted.
 Qed.
 
 Lemma lem_isort_sorted' : forall l, sortedb (isort l).
