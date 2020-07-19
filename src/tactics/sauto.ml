@@ -38,7 +38,8 @@ type s_opts = {
   s_forwarding : bool;
   s_reducing : bool;
   s_rewriting : bool;
-  s_heuristic_rewriting : bool;
+  s_directed_rewriting : bool;
+  s_undirected_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;
@@ -76,7 +77,8 @@ let default_s_opts () = {
   s_forwarding = true;
   s_reducing = true;
   s_rewriting = true;
-  s_heuristic_rewriting = true;
+  s_directed_rewriting = true;
+  s_undirected_rewriting = true;
   s_aggressive_unfolding = false;
   s_sapply = true;
   s_depth_cost_model = false;
@@ -139,6 +141,17 @@ let set_brefl_opts b opts =
     { opts with s_reflect = true; s_eager_case_splitting = false }
   else
     opts
+
+let set_rew_opts b opts =
+  if b then
+    { opts with s_rewriting = true;
+                s_directed_rewriting = true;
+                s_undirected_rewriting = true }
+  else
+    { opts with s_rewriting = false;
+                s_eager_rewriting = false;
+                s_directed_rewriting = false;
+                s_undirected_rewriting = false }
 
 let with_reduction opts tac1 tac2 =
   if opts.s_eager_reducing && opts.s_reducing then tac1 else tac2
@@ -770,7 +783,7 @@ let simplify opts =
          end <*> subst_simpl opts) <~>
       simple_splitting opts <~>
       autorewriting true opts <~>
-      opt opts.s_eager_rewriting (srewriting_tac ()) <~>
+      opt (opts.s_eager_rewriting && opts.s_directed_rewriting) (srewriting_tac ()) <~>
       opt opts.s_eager_inverting (eager_inverting opts) <~>
       opt opts.s_simple_inverting (simple_inverting opts)
   in
@@ -901,15 +914,20 @@ let create_hyp_actions opts evd ghead0 ghead
   if opts.s_rewriting && is_equality evd head && not (is_coercion evd head0) then
     (* using "with_equality" here slows things down considerably *)
     match Hhlib.drop (List.length args - 2) args with
-    | [t1; t2] ->
+    | [t1; t2] -> (* TODO: Always do undirected rewriting? *)
+       if opts.s_directed_rewriting then
          if Lpo.lpo evd t1 t2 then
            (cost + 5, num_subgoals, ActRewriteLR id) :: acts
          else if Lpo.lpo evd t2 t1 then
            (cost + 5, num_subgoals, ActRewriteRL id) :: acts
-         else if opts.s_heuristic_rewriting then
+         else if opts.s_undirected_rewriting then
            (cost - num_subgoals * 5, 1, ActRewrite id) :: acts
          else
            acts
+       else if opts.s_undirected_rewriting then
+         (cost - num_subgoals * 5, 1, ActRewrite id) :: acts
+       else
+         acts
     | _ -> acts
   else
     acts

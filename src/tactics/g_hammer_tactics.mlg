@@ -75,7 +75,8 @@ ARGUMENT EXTEND sauto_opts
 | [ "einv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerInvert b :: sopts }
 | [ "ered:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerReduce b :: sopts }
 | [ "erew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerRewrite b :: sopts }
-| [ "urew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOHeuristicRewrite b :: sopts }
+| [ "drew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODirectedRewrite b :: sopts }
+| [ "urew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOUndirectedRewrite b :: sopts }
 | [ "rew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
 | [ "brefl:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
 | [ "brefl!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
