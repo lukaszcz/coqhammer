@@ -42,6 +42,11 @@ components.
 
    See the [Hammer](#Hammer) section below.
 
+Tutorial
+--------
+
+A tutorial is available in [examples/tutorial](examples/tutorial/README.md).
+
 Requirements
 ------------
 - [Coq 8.11](https://github.com/coq/coq)
