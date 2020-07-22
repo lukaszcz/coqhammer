@@ -584,7 +584,7 @@ let hammer_tac () =
                           mk_lst_str "" " inv:" sinverts ^ ".")
           end
           begin fun () ->
-            raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies.\nNote that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure.")
+            raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3),\nor try to prove the goal manually using the displayed dependencies. Note that if the proof found by\nthe ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof\nsearch procedure.")
           end
           begin fun k ->
             Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
