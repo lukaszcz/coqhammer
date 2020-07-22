@@ -367,6 +367,26 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
               sauto
                 (mkopts
                    (set_brefl_opts true (hauto_s_opts ()))))
+  and rhauto_nodrew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts { (hauto_s_opts ()) with s_directed_rewriting = false }))
+  and rhfcrush_nodrew =
+    usolve (use_deps <*>
+              fcrush
+                (mkopts { (hauto_s_opts ()) with s_directed_rewriting = false }))
+  and rhauto_norew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_rew_opts false (hauto_s_opts ()))))
+  and rhauto_lq_norew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_quick_opts true
+                      (set_eager_opts false
+                         (set_rew_opts false (hauto_s_opts ()))))))
   and rhbauto_lq =
     usolve (use_deps <*>
               sauto
@@ -383,34 +403,108 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
                    { (set_quick_opts true
                         (set_eager_opts false (hauto_s_opts ()))) with
                      s_exhaustive = true; s_limit = 2; s_depth_cost_model = true }))
-  and reauto =
-    usolve (use_deps <*>
-              sinit (mkopts (hauto_s_opts ())) <*>
-              Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
-                                         (Some []) ])
   and rhbauto2 =
     usolve (use_deps <*>
               sauto
                 (mkopts
                    { (set_brefl_opts true (hauto_s_opts ())) with
                      s_limit = 2000 }))
+  and reauto =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
+                                         (Some []) ])
   and rcongruence =
     usolve (use_deps <*> scongruence (mkopts (hauto_s_opts ())))
   and rfirstorder =
     usolve (use_deps <*> sfirstorder (mkopts (hauto_s_opts ())))
   and rtrivial =
     usolve (use_deps <*> strivial (mkopts (hauto_s_opts ())))
+  and rreasy () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrreasy" [])
+  and rrsimple () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrsimple" [])
+  and rrcrush () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrcrush" [])
+  and rryelles4 () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrryelles4" [])
+  and rryelles6 () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrryelles6" [])
+  and rrhreconstr4 () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrhreconstr4" [])
+  and rrhreconstr6 () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrhreconstr6" [])
+  and rryreconstr () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrryreconstr" [])
+  and rrblast () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrblast" [])
+  and rrscrush () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrscrush" [])
+  and rrhrauto4 () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrhrauto4" [])
+  and rrexhaustive1 () =
+    usolve (use_deps <*>
+              sinit (mkopts (hauto_s_opts ())) <*>
+              Utils.ltac_apply "Reconstr.qrrexhaustive1" [])
   in
   let pretactics =
     [ (reauto, "srun eauto"); (rcongruence, "scongruence"); (rtrivial, "strivial");
       (rfirstorder, "sfirstorder") ]
   in
   let tactics = [
-    [ (rhauto, "hauto"); (rqauto, "qauto"); (rhfcrush, "hfcrush"); (rhlqauto, "hauto lq: on") ];
-    [ (rhcrush, "hcrush"); (rqblast, "qblast"); (rhecrush, "hecrush"); (rlhauto, "hauto l: on") ];
-    [ (rhdauto6_q, "hauto depth: 6 q: on"); (rhdauto4, "hauto depth: 4"); (rlqdauto4, "qauto depth: 4 l: on"); (rhbauto, "hauto brefl: on") ];
-    [ (rhbauto_lq, "hauto brefl: on lq: on"); (rhbfcrush, "hfcrush brefl: on"); (rheauto, "hauto depth: 2 lq: on exh: on"); (rhbauto2, "hauto limit: 2000 brefl: on") ]
+      [ (rhauto, "hauto"); (rqauto, "qauto");
+        (rhfcrush, "hfcrush"); (rhlqauto, "hauto lq: on") ];
+      [ (rhcrush, "hcrush"); (rqblast, "qblast");
+        (rhecrush, "hecrush"); (rlhauto, "hauto l: on") ];
+      [ (rhdauto6_q, "hauto depth: 6 q: on"); (rhdauto4, "hauto depth: 4");
+        (rlqdauto4, "qauto depth: 4 l: on"); (rhbauto, "hauto brefl: on") ];
+      [ (rhbauto_lq, "hauto brefl: on lq: on"); (rhbfcrush, "hfcrush brefl: on");
+        (rheauto, "hauto depth: 2 lq: on exh: on");
+        (rhbauto2, "hauto limit: 2000 brefl: on") ];
+      [ (rhauto_nodrew, "hauto drew: off"); (rhfcrush_nodrew, "hfcrush drew: off");
+        (rhauto_lq_norew, "hauto lq: on rew: off"); (rhauto_norew, "hauto rew: off") ]
   ]
+  in
+  let tactics =
+    catch_errors
+      begin fun () ->
+        tactics @
+          [ [ (rreasy (), "srun Reconstr.rreasy");
+              (rrsimple (), "srun Reconstr.rrsimple");
+              (rrcrush (), "srun Reconstr.rrcrush");
+              (rryelles4 (), "srun Reconstr.rryelles4") ];
+            [ (rrblast (), "srun Reconstr.rrblast");
+              (rrscrush (), "srun Reconstr.rrscrush");
+              (rryreconstr (), "srun Reconstr.rryreconstr");
+              (rrhreconstr4 (), "srun Reconstr.rrhreconstr4") ];
+            [ (rryelles6 (), "srun Reconstr.rryelles6");
+              (rrhreconstr6 (), "srun Reconstr.rrhreconstr6");
+              (rrhrauto4 (), "srun Reconstr.rrhrauto4");
+              (rrexhaustive1 (), "srun Reconstr.rrexhaustive1") ] ]
+      end
+      (fun _ -> tactics)
   in
   let run limit tacs f_success f_failure =
     Partac.partac limit (List.map fst tacs)
