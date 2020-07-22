@@ -187,7 +187,7 @@ let add_inversion_hint c = inversion_hints := c :: !inversion_hints
 type action =
     ActApply of Id.t | ActRewriteLR of Id.t | ActRewriteRL of Id.t | ActRewrite of Id.t |
         ActInvert of Id.t | ActUnfold of Constant.t | ActCaseUnfold of Constant.t |
-        ActDestruct of EConstr.t | ActHint of Utils.hint |
+        ActDestruct of EConstr.t | ActHint of Utils.hint | ActSolve |
         ActConstructor | ActIntro | ActReduce | ActFEqual
 
 let action_to_string act =
@@ -201,6 +201,7 @@ let action_to_string act =
   | ActCaseUnfold c -> "case-unfold " ^ Constant.to_string c
   | ActDestruct t -> "destruct " ^ Utils.constr_to_string Evd.empty t
   | ActHint h -> Utils.hint_to_string h
+  | ActSolve -> "solve"
   | ActConstructor -> "constructor"
   | ActIntro -> "intro"
   | ActReduce -> "reduce"
@@ -1016,6 +1017,9 @@ let create_actions extra opts evd goal hyps gl =
       actions
   in
   let actions =
+    (25, 0, ActSolve) :: actions
+  in
+  let actions =
     let open Constr in
     let open EConstr in
     match kind evd goal with
@@ -1092,7 +1096,7 @@ let create_tactics opts = {
 
 let rec search extra tacs opts n rtrace visited =
   if n = 0 then
-    tacs.t_finish
+    Tacticals.New.tclSOLVE [ tacs.t_finish; opts.s_solve_tac ]
   else
     Proofview.Goal.enter begin fun gl ->
       let goal = Proofview.Goal.concl gl in
@@ -1162,7 +1166,7 @@ and apply_actions tacs opts n actions rtrace visited =
     if not opts.s_depth_cost_model && n < 25 then
       tacs.t_finish
     else
-      opts.s_solve_tac
+      fail_tac
   in
   let apply id =
     if opts.s_sapply then
@@ -1211,6 +1215,8 @@ and apply_actions tacs opts n actions rtrace visited =
             continue n' (Tacticals.New.tclPROGRESS
                            (Utils.hint_tactic h (List.hd visited))
                          <*> tacs.t_simplify_concl) acts
+         | ActSolve ->
+            cont opts.s_solve_tac acts
          | ActConstructor ->
             cont
               (Tactics.any_constructor true
