@@ -95,7 +95,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | Evar (evk,cl)     -> raise (HammerError "Existential variables not supported.")
   | Ind (ind,u)       -> hhterm_of_inductive ind
   | Construct (ctr,u) -> hhterm_of_construct ctr
-  | Case (ci,p,_,c,bl)  ->
+  | Case (ci,p,c,bl)  ->
       tuple ([mk_id "$Case"; hhterm_of_caseinfo ci ; hhterm_of p;
         hhterm_of c; hhterm_of_constrarray bl])
   | Fix (nvn,recdef) -> tuple [mk_id "$Fix";
@@ -107,7 +107,6 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
                                hhterm_of_precdeclaration recdef]
   | Int _            -> raise (HammerError "Primitive integers not supported.")
   | Float _          -> raise (HammerError "Primitive floats not supported.")
-  | Array _          -> raise (HammerError "Primitive arrays not supported.")
 
 and hhterm_of_constrarray a =
   tuple ((mk_id "$ConstrArray") :: List.map hhterm_of (Array.to_list a))

@@ -580,7 +580,7 @@ let is_case_split opts evd t =
         let open Constr in
         let open EConstr in
         match kind evd t with
-        | Case (ci, _, _, _, _) when
+        | Case (ci, _, _, _) when
                in_sopt_list_ind opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
            raise Exit
         | _ -> acc
@@ -887,7 +887,7 @@ let create_case_actions opts evd t acc =
     let open Constr in
     let open EConstr in
     match kind evd t with
-    | Case (ci, _, _, c, _) when
+    | Case (ci, _, c, _) when
            in_sopt_list_ind opts.s_hints !case_split_hints ci.ci_ind opts.s_case_splits ->
        let num_ctrs = Utils.get_ind_nconstrs ci.ci_ind in
        (40 + num_ctrs * 5, num_ctrs, ActDestruct c) :: acc

@@ -286,12 +286,11 @@ let map_fold_constr f acc evd t =
     | Evar (evk,cl) ->
        let (acc1, cl') = fold_list m acc cl in
        f m acc1 (mkEvar(evk,cl'))
-    | Case (ci,p,iv,c,bl) ->
+    | Case (ci,p,c,bl) ->
        let (acc, p') = hlp m acc p in
-       let (acc, iv') = Constr.fold_map_invert (hlp m) acc iv in
        let (acc, c') = hlp m acc c in
        let (acc, bl') = fold_arr m acc bl in
-       f m acc (mkCase(ci,p',iv',c',bl'))
+       f m acc (mkCase(ci,p',c',bl'))
     | Fix (nvn,recdef) ->
        let (fnames,typs,bodies) = recdef in
        let (acc1, typs') = fold_arr m acc typs in
@@ -302,7 +301,6 @@ let map_fold_constr f acc evd t =
        let (acc1, typs') = fold_arr m acc typs in
        let (acc2, bodies') = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 (mkCoFix(n,(fnames,typs',bodies')))
-    | Array _ -> assert false
   in
   hlp 0 acc t
 
@@ -348,10 +346,9 @@ let fold_constr f acc evd t =
     | Evar (evk,cl) ->
        let acc1 = fold_list m acc cl in
        f m acc1 t
-    | Case (ci,p,iv,c,bl) ->
+    | Case (ci,p,c,bl) ->
        let acc = hlp m acc p in
        let acc = hlp m acc c in
-       let acc = fold_invert (hlp m) acc iv in
        let acc = fold_arr m acc bl in
        f m acc t
     | Fix (nvn,recdef) ->
@@ -364,7 +361,6 @@ let fold_constr f acc evd t =
        let acc1 = fold_arr m acc typs in
        let acc2 = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 t
-    | Array _ -> assert false
   in
   hlp 0 acc t
 
@@ -405,10 +401,9 @@ let fold_constr_shallow f acc evd t =
     | Evar (evk,cl) ->
        let acc1 = fold_list acc cl in
        f acc1 t
-    | Case (ci,p,iv,c,bl) ->
+    | Case (ci,p,c,bl) ->
        let acc = hlp acc p in
        let acc = hlp acc c in
-       let acc = fold_invert hlp acc iv in
        let acc = fold_arr acc bl in
        f acc t
     | Fix (nvn,recdef) ->
@@ -419,7 +414,6 @@ let fold_constr_shallow f acc evd t =
        let (fnames,typs,bodies) = recdef in
        let acc1 = fold_arr acc typs in
        f acc1 t
-    | Array _ -> assert false
   in
   hlp acc t
 
@@ -469,12 +463,11 @@ let map_fold_constr_ker f acc t =
     | Evar (evk,cl) ->
        let (acc1, cl') = fold_list m acc cl in
        f m acc1 (mkEvar(evk,cl'))
-    | Case (ci,p,iv,c,bl) ->
+    | Case (ci,p,c,bl) ->
        let (acc, p') = hlp m acc p in
-       let (acc, iv') = Constr.fold_map_invert (hlp m) acc iv in
        let (acc, c') = hlp m acc c in
        let (acc, bl') = fold_arr m acc bl in
-       f m acc (mkCase(ci,p',iv',c',bl'))
+       f m acc (mkCase(ci,p',c',bl'))
     | Fix (nvn,recdef) ->
        let (fnames,typs,bodies) = recdef in
        let (acc1, typs') = fold_arr m acc typs in
@@ -485,7 +478,6 @@ let map_fold_constr_ker f acc t =
        let (acc1, typs') = fold_arr m acc typs in
        let (acc2, bodies') = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 (mkCoFix(n,(fnames,typs',bodies')))
-    | Array _ -> assert false
   in
   hlp 0 acc t
 
@@ -588,51 +580,56 @@ let inductive_to_string ind =
 
 (******************************************************************************************)
 (* Code copied from eauto.ml with minor modifications *)
-  
-let unify_e_resolve flags h =
+
+
+let unify_e_resolve poly flags (c,clenv) =
   Proofview.Goal.enter begin fun gl ->
-      let clenv', c = Auto.connect_hint_clenv h gl in
-      Clenv.res_pf ~with_evars:true ~with_classes:true ~flags clenv'
+    let clenv', c = Auto.connect_hint_clenv ~poly c clenv gl in
+    let clenv' = Clenv.clenv_unique_resolver ~flags clenv' gl in
+    Proofview.tclTHEN
+      (Proofview.Unsafe.tclEVARUNIVCONTEXT (Evd.evar_universe_context clenv'.Clenv.evd))
+      (Tactics.Simple.eapply c)
   end
-  
-let e_exact flags h =
+
+let e_exact poly flags (c,clenv) =
   Proofview.Goal.enter begin fun gl ->
-    let clenv', c = Auto.connect_hint_clenv h gl in
+    let clenv', c = Auto.connect_hint_clenv ~poly c clenv gl in
     Tacticals.New.tclTHEN
-      (Proofview.Unsafe.tclEVARUNIVCONTEXT
-         (Evd.evar_universe_context clenv'.Clenv.evd))
+      (Proofview.Unsafe.tclEVARUNIVCONTEXT (Evd.evar_universe_context clenv'.Clenv.evd))
       (Eauto.e_give_exact c)
   end
-  
+
 let tac_of_hint db h concl =
   let open Hints in
   let st = Auto.auto_flags_of_state (Hint_db.transparent_state db) in
-  let tac = function
-    | Res_pf h -> Auto.unify_resolve st h
-    | ERes_pf h -> unify_e_resolve st h
-    | Give_exact h -> e_exact st h
-    | Res_pf_THEN_trivial_fail h ->
-       Tacticals.New.tclTHEN (unify_e_resolve st h)
+  match h with
+  | {pri = b; pat = p; code = t; poly = poly} ->
+     let tac = function
+       | Res_pf (term,cl) -> Auto.unify_resolve ~poly st (term,cl)
+       | ERes_pf (term,cl) -> unify_e_resolve poly st (term,cl)
+       | Give_exact (c,cl) -> e_exact poly st (c,cl)
+       | Res_pf_THEN_trivial_fail (term,cl) ->
+          Tacticals.New.tclTHEN (unify_e_resolve poly st (term,cl))
             (Tacticals.New.tclSOLVE [Eauto.e_assumption;
                                      Tactics.reflexivity;
                                      Tactics.any_constructor true None])
-    | Unfold_nth c ->
-       Tactics.reduce
-         (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
-    | Extern tacast -> Auto.conclPattern concl (FullHint.pattern h) tacast
-  in
-  FullHint.run h tac
-    
+       | Unfold_nth c -> Tactics.reduce
+                           (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
+       | Extern tacast -> Auto.conclPattern concl p tacast
+     in
+     Hints.run_hint t tac
+
 (******************************************************************************************)
 
-type hint = int * Hints.hint_db * Hints.FullHint.t
+type hint = int * Hints.hint_db * Hints.hint Hints.with_metadata
 
 let hint_priority (p, _, _) = p
 
 let hint_tactic (_, db, h) t = tac_of_hint db h t
 
 let hint_to_string (_, _, h) =
-  Pp.string_of_ppcmds @@ Hints.FullHint.print (Global.env ()) Evd.empty h
+  let open Hints in
+  Pp.string_of_ppcmds @@ Hints.pr_hint (Global.env ()) Evd.empty h.code
 
 let find_hints db secvars evd t =
   try
@@ -646,7 +643,7 @@ let find_hints db secvars evd t =
       else
         Hint_db.map_auto evd ~secvars hdc t db
     in
-    List.map (fun h -> (FullHint.priority h, db, h)) hints
+    List.map (fun h -> (h.pri, db, h)) hints
   with Hints.Bound ->
     []
 
