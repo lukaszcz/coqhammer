@@ -449,6 +449,10 @@ are for `sauto`.
   LPO. If `erew: off` but `rew: on`, directed rewriting is still
   performed but with backtracking. Default: `erew: on`.
 
+* `drew: <bopt>`
+
+  Controls whether to perform directed rewriting. Default: `drew: on`.
+
 * `urew: <bopt>`
 
   Controls whether to perform undirected rewriting. Default: `urew: on`.
@@ -456,7 +460,8 @@ are for `sauto`.
 * `rew: <bopt>`
 
   Controls whether to perform rewriting (both directed and
-  undirected). Setting `rew: off` implies `urew: off`. Default: `rew: on`.
+  undirected). Setting `rew: off` implies `drew: off` and `urew:
+  off`. Default: `rew: on`.
 
 * `brefl: <bopt>`
 
