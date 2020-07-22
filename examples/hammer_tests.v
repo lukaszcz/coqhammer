@@ -16,10 +16,16 @@ From Hammer Require Import Hammer.
 (*********************************************************************************************)
 
 (*
+Lemma lem_false : False.
+Proof.
+  hammer.
+Qed.*)
+
+(*
 Lemma lem_classic : forall P : Prop, P \/ ~P.
 Proof.
   hammer.
-Qed. *)
+Qed.*)
 
 Require Import Arith.
 
