@@ -21,5 +21,5 @@ Qed.
 Lemma mult_1 : forall m n k : nat, m * n + k = k + n * m.
 Proof.
   predict 16.
-  hauto using (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm).
+  hammer.
 Qed.
