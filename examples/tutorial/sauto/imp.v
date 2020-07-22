@@ -369,8 +369,7 @@ Qed.
 Lemma hoare_assign : forall (P Q : assn) x a,
     (forall s, P s -> Q s[x := a]) -> |- {{P}} x <- a {{Q}}.
 Proof.
-  intros P Q x a.
-  sauto use: (lem_hoare_strengthen_pre (fun s => Q s[x := a])).
+  sauto use: lem_hoare_strengthen_pre unfold: entails.
 Qed.
 
 Lemma hoare_while : forall b (P Q: assn) c,
@@ -378,11 +377,7 @@ Lemma hoare_while : forall b (P Q: assn) c,
        (forall s, P s /\ negb (bval s b) -> Q s) ->
     |- {{P}} (While b Do c) {{Q}}.
 Proof.
-  intros b P Q c.
-  sauto use:
-    (lem_hoare_weaken_post P
-                           (fun s : state => P s /\ negb (bval s b))
-                           Q (While b Do c)).
+  sauto use: lem_hoare_weaken_post unfold: entails.
 Qed.
 
 (* Soundness of Hoare logic *)
