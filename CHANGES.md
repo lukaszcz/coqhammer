@@ -9,8 +9,9 @@ Overview of changes
   of tactic interface.
 * Optional boolean reflection in `sauto`.
 * Hint databases can now be used with `sauto`.
-* Dependent elimination using `depelim` can now optionally be
+* Dependent elimination with `depelim` can now be optionally
   performed by `sauto` (the `dep:` option).
+* Simplifications for sigma-types in `sauto`.
 * Improvements of the `sauto` proof search procedure.
 * Better failure messages for the tactics.
 * More readable dependency names (without extra qualifiers).
