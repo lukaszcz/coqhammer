@@ -1,6 +1,6 @@
-CoqHammer (dev) for Coq master (use other branches for other versions of Coq)
+CoqHammer (dev) for Coq 8.12
 
-[![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=master)](https://travis-ci.org/lukaszcz/coqhammer/builds)
+[![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=coq8.12)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
 Since version 1.3, the CoqHammer system consists of two major separate
 components.
@@ -49,7 +49,7 @@ A tutorial is available in [examples/tutorial](examples/tutorial/README.md).
 
 Requirements
 ------------
-- [Coq master](https://github.com/coq/coq)
+- [Coq 8.12](https://github.com/coq/coq)
 - for `hammer`: automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
 
 Installation
