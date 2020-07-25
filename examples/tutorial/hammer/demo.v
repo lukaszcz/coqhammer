@@ -21,27 +21,23 @@ Qed.
 
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
 Proof.
-  hammer. Restart.
-  qauto use: Nat.pow_succ_r, Nat.le_0_l, Nat.add_1_r.
-Qed.
-
-Lemma incl_appl_1
-     : forall (A : Type) (l m n : list A),
-       List.incl l n -> List.incl l (n ++ m) /\ List.incl l (m ++ n) /\ List.incl l (l ++ l).
-Proof.
-  hammer. Restart.
-  strivial use: incl_appl, incl_refl, incl_appr.
-Qed.
-
-Lemma minus_neq_O : forall n i:nat, (i < n) -> (n - i) <> 0.
-Proof.
-  hammer. Undo.
-  srun eauto use: Nat.sub_gt.
+  Fail sauto.
+  (* hammer. *)
+  hauto lq: on use: Nat.pow_succ_r, Nat.le_0_l, Nat.add_1_r.
 Qed.
 
 Require List.
 Import List.ListNotations.
 Open Scope list_scope.
+
+Lemma lem_incl_concat
+  : forall (A : Type) (l m n : list A),
+    List.incl l n ->
+    List.incl l (n ++ m) /\ List.incl l (m ++ n) /\ List.incl l (l ++ l).
+Proof.
+  (* hammer. *)
+  strivial use: List.incl_appr, List.incl_refl, List.incl_appl.
+Qed.
 
 Require Import Sorting.Permutation.
 
@@ -104,12 +100,6 @@ Proof.
   - (* hammer. *)
     srun eauto use: List.NoDup_remove_1.
 Qed.
-
-(*
-Lemma lem_false : False.
-Proof.
-  hammer.
-Qed.*)
 
 (*
 Lemma lem_classic : forall P : Prop, P \/ ~P.
