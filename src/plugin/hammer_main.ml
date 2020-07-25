@@ -345,12 +345,25 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     usolve (use_deps <*> ecrush (mkopts (hauto_s_opts ())))
   and rlhauto =
     usolve (use_deps <*> sauto (mkopts (set_eager_opts false (hauto_s_opts ()))))
-  and rhdauto6_q =
+  and rhauto_l_nodrew =
+    usolve (use_deps <*> sauto (mkopts
+                                  { (set_eager_opts false (hauto_s_opts ())) with
+                                    s_directed_rewriting = false}))
+  and rhdauto6_lq =
     usolve (use_deps <*>
               sauto
                 (mkopts
-                   { (set_quick_opts true (hauto_s_opts ())) with
+                   { (set_quick_opts true
+                        (set_eager_opts false (hauto_s_opts ()))) with
                      s_limit = 6; s_depth_cost_model = true }))
+  and rhdauto6_lq_nodrew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_quick_opts true
+                        (set_eager_opts false (hauto_s_opts ()))) with
+                     s_limit = 6; s_depth_cost_model = true;
+                     s_directed_rewriting = false }))
   and rhdauto4 =
     usolve (use_deps <*>
               sauto
@@ -363,11 +376,30 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
                 (mkopts
                    { (set_eager_opts false (qauto_s_opts ())) with
                      s_limit = 4; s_depth_cost_model = true }))
+  and rlqdauto4_nodrew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_eager_opts false (qauto_s_opts ())) with
+                     s_limit = 4; s_depth_cost_model = true;
+                     s_directed_rewriting = false }))
   and rhbauto =
     usolve (use_deps <*>
               sauto
                 (mkopts
                    (set_brefl_opts true (hauto_s_opts ()))))
+  and rhbauto_nodrew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_brefl_opts true (hauto_s_opts ())) with
+                     s_directed_rewriting = false }))
+  and rhbauto_norew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_rew_opts false
+                      (set_brefl_opts true (hauto_s_opts ())))))
   and rhauto_nodrew =
     usolve (use_deps <*>
               sauto
@@ -388,6 +420,14 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
                    (set_quick_opts true
                       (set_eager_opts false
                          (set_rew_opts false (hauto_s_opts ()))))))
+  and rhauto_lq_nodrew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_quick_opts true
+                        (set_eager_opts false
+                           (hauto_s_opts ()))) with
+                     s_directed_rewriting = false}))
   and rhbauto_lq =
     usolve (use_deps <*>
               sauto
@@ -395,8 +435,20 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
                    (set_quick_opts true
                       (set_eager_opts false
                          (set_brefl_opts true (hauto_s_opts ()))))))
+  and rhbauto_lq_nodrew =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   { (set_quick_opts true
+                        (set_eager_opts false
+                           (set_brefl_opts true (hauto_s_opts ())))) with
+                     s_directed_rewriting = false }))
   and rhbfcrush =
     usolve (use_deps <*> fcrush (mkopts (set_brefl_opts true (hauto_s_opts ()))))
+  and rhbfcrush_nodrew =
+    usolve (use_deps <*> fcrush (mkopts
+                                   { (set_brefl_opts true (hauto_s_opts ())) with
+                                     s_directed_rewriting = false }))
   and rheauto =
     usolve (use_deps <*>
               sauto
@@ -404,12 +456,12 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
                    { (set_quick_opts true
                         (set_eager_opts false (hauto_s_opts ()))) with
                      s_exhaustive = true; s_limit = 2; s_depth_cost_model = true }))
-  and rhbauto2 =
+  and rhbauto4000 =
     usolve (use_deps <*>
               sauto
                 (mkopts
                    { (set_brefl_opts true (hauto_s_opts ())) with
-                     s_limit = 2000 }))
+                     s_limit = 4000 }))
   and reauto =
     usolve (use_deps <*>
               sinit (mkopts (hauto_s_opts ())) <*>
@@ -471,21 +523,45 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
               Utils.ltac_apply "Reconstr.qrrexhaustive1" [])
   in
   let pretactics =
-    [ (reauto, "srun eauto"); (rcongruence, "scongruence"); (rtrivial, "strivial");
-      (rfirstorder, "sfirstorder") ]
+    [ (reauto, "srun eauto"); (rcongruence, "scongruence");
+      (rtrivial, "strivial"); (rfirstorder, "sfirstorder") ]
   in
   let tactics = [
-      [ (rhauto, "hauto"); (rqauto, "qauto");
-        (rhfcrush, "hfcrush"); (rhlqauto, "hauto lq: on") ];
-      [ (rhcrush, "hcrush"); (rqblast, "qblast");
-        (rhecrush, "hecrush"); (rlhauto, "hauto l: on") ];
-      [ (rhdauto6_q, "hauto depth: 6 q: on"); (rhdauto4, "hauto depth: 4");
-        (rlqdauto4, "qauto depth: 4 l: on"); (rhbauto, "hauto brefl: on") ];
-      [ (rhbauto_lq, "hauto brefl: on lq: on"); (rhbfcrush, "hfcrush brefl: on");
+      [ (rhauto, "hauto");
+        (rqauto, "qauto");
+        (rhfcrush, "hfcrush");
+        (rhlqauto, "hauto lq: on")
+      ];
+      [ (rhcrush, "hcrush");
+        (rhbauto, "hauto brefl: on");
+        (rhauto_lq_nodrew, "hauto lq: on drew: off");
+        (rhecrush, "hecrush")
+      ];
+      [ (rhdauto6_lq, "hauto depth: 6 lq: on");
+        (rlqdauto4, "qauto depth: 4 l: on");
+        (rqblast, "qblast");
+        (rlhauto, "hauto l: on")
+      ];
+      [ (rhauto_nodrew, "hauto drew: off");
+        (rhfcrush_nodrew, "hfcrush drew: off");
+        (rhdauto4, "hauto depth: 4");
+        (rhauto_l_nodrew, "hauto l: on drew: off")
+      ];
+      [ (rhbauto_lq, "hauto brefl: on lq: on");
+        (rhbfcrush, "hfcrush brefl: on");
         (rheauto, "hauto depth: 2 lq: on exh: on");
-        (rhbauto2, "hauto limit: 2000 brefl: on") ];
-      [ (rhauto_nodrew, "hauto drew: off"); (rhfcrush_nodrew, "hfcrush drew: off");
-        (rhauto_lq_norew, "hauto lq: on rew: off"); (rhauto_norew, "hauto rew: off") ]
+        (rhbauto4000, "hauto limit: 4000 brefl: on")
+      ];
+      [ (rhauto_norew, "hauto rew: off");
+        (rlqdauto4_nodrew, "qauto depth: 4 l: on drew: off");
+        (rhauto_lq_norew, "hauto lq: on rew: off");
+        (rhdauto6_lq_nodrew, "hauto depth: 6 lq: on drew: off")
+      ];
+      [ (rhbauto_lq_nodrew, "hauto brefl: on lq: on drew: off");
+        (rhbfcrush_nodrew, "hfcrush brefl: on drew: off");
+        (rhbauto_nodrew, "hauto brefl: on drew: off");
+        (rhbauto_norew, "hauto brefl: on drew: off")
+      ];
   ]
   in
   let tactics =
