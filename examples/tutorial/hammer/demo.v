@@ -1,6 +1,33 @@
 (* "hammer" demo *)
 
+(* The "hammer" tactic works in three phases: *)
+(* 1. Machine-learning premise selection. *)
+(* 2. Translation to automated theorem provers (ATPs). *)
+(* 3. Proof search in the logic of Coq with the dependencies returned
+   by the ATPs. *)
+
+(* CoqHammer uses classical first-order ATPs just to select the right
+   dependencies. The goal must then be re-proven from scratch in the
+   intuitionistic logic of Coq, using the dependencies returned by the
+   ATPs. *)
+
+(* The target external tools of CoqHammer are general first-order
+   ATPs, not SMT-solvers. CoqHammer can use some SMT-solvers because
+   in practice they may often be used in the same way as general
+   ATPs. But CoqHammer will never use any of the "modulo theory"
+   features of SMT-solvers. Natural numbers, lists, etc., are not
+   translated in any special way and the SMT-solvers will see them as
+   uninterpreted data types. *)
+
 From Hammer Require Import Hammer.
+
+(* To use the Hammer module which contains the "hammer" tactic you
+   need to install the full CoqHammer system:
+
+   opam install coq-hammer
+
+   Or from source: make && make install
+ *)
 
 Hammer_version.
 Hammer_objects.
@@ -53,6 +80,16 @@ Proof.
 Qed.
 
 Require Import Sorting.Permutation.
+
+Lemma lem_perm_0 {A} : forall (x y : A) l1 l2 l3,
+    Permutation l1 (y :: l2) ->
+    Permutation (l1 ++ l3) (y :: l2 ++ l3).
+Proof.
+  (* hammer. *)
+  (* Coq.Lists.List.app_comm_cons, Coq.Sorting.Permutation.Permutation_refl, Coq.Sorting.Permutation.Permutation_app *)
+  intros.
+  hauto lq: on drew: off use: List.app_comm_cons, Permutation_refl, Permutation_app.
+Qed.
 
 Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
     Permutation l1 (y :: l2) ->
