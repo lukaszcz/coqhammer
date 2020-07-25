@@ -39,7 +39,8 @@ Lemma lem_sortedb_to_sorted_step_by_step : forall l, sortedb l -> Sorted l.
 Proof.
   induction l as [| x l IH].
   - sauto.
-  - simpl.
+  - (* sauto. *)
+    simpl.
     case_split; try strivial.
     (* "case_split" eliminates one discriminee of a match expression
        occurring in the goal or in a hypothesis *)
@@ -47,7 +48,7 @@ Proof.
     (* "breflect" performs boolean reflection - it implements the
        "brefl:" option *)
     (* sauto. *)
-    (* By default "sauto" eagerly eliminates discriminees of all 
+    (* By default "sauto" eagerly eliminates discriminees of all
        match expressions. This behaviour is controlled by the
        "ecases:" option. *)
     (* simpl.
@@ -65,6 +66,8 @@ Proof.
     (* Setting "brefl: on" implies "ecases: off" because eager case
        splitting is often detrimental in combination with boolean
        reflection. *)
+    (* Undo.
+    sauto brefl!: on. *)
     (* Setting "brefl!: on" enables boolean reflection only without
        affecting other options. *)
     (* Some options by default affect other options. A primitive

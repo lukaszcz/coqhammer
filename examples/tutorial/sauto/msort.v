@@ -43,7 +43,7 @@ Definition LeLst {A} {dto : DecTotalOrder A} (x : A) :=
   List.Forall (leb x).
 
 Lemma lem_lelst_trans {A} {dto : DecTotalOrder A} :
-  forall l y, LeLst y l -> forall x, leb x y -> LeLst x l.
+  forall l x y, LeLst y l -> leb x y -> LeLst x l.
 Proof.
   induction 1; sauto.
 Qed.
@@ -51,6 +51,7 @@ Qed.
 Lemma lem_lelst_sorted {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
 Proof.
+  (* induction l; sauto. *)
   (* induction l; sintuition. *)
   (* simplification tactics: sintuition, qsimpl, ssimpl *)
   (* induction l; qsimpl. *)
@@ -60,7 +61,9 @@ Proof.
   (* time (induction l; sauto use: lem_lelst_trans). *)
   (* induction l; sauto use: lem_lelst_trans inv: Sorted, List.Forall. *)
   (* induction l; sauto use: lem_lelst_trans inv: Sorted. *)
-  (* induction l; sauto use: lem_lelst_trans inv: List.Forall.*)
+  (* induction l; sauto use: lem_lelst_trans inv: List.Forall. *)
+  (* induction l;
+    sauto use: lem_lelst_trans inv: Sorted, List.Forall ctrs: -. *)
   time (induction l;
         sauto use: lem_lelst_trans inv: Sorted, List.Forall ctrs: Sorted).
   Undo.
@@ -72,10 +75,9 @@ Proof.
 Qed.
 
 Lemma lem_lelst_perm_rev {A} {dto : DecTotalOrder A} :
-  forall l1 l2, Permutation l1 l2 -> forall x, LeLst x l2 -> LeLst x l1.
+  forall l1 l2 x, Permutation l1 l2 -> LeLst x l2 -> LeLst x l1.
 Proof.
-  (* induction 1; sauto. *)
-  induction 1; sauto inv: List.Forall ctrs: List.Forall.
+  induction 1; sauto.
 Qed.
 
 Lemma lem_lelst_app {A} {dto : DecTotalOrder A} :
@@ -259,9 +261,12 @@ Next Obligation.
   sauto.
 Qed.
 Next Obligation.
+  (* simpl. *)
   split.
   - sauto.
-  - time hauto use: Permutation_app, Permutation_sym, perm_trans.
+  - (* simpl_sigma. *)
+    time hauto use: Permutation_app, Permutation_sym, perm_trans.
+    (* "hauto" is just "sauto inv: - ctrs: -" *)
     Undo.
     time qauto use: Permutation_app, Permutation_sym, perm_trans.
     (* "qauto" is "sauto" with various options which make it much
