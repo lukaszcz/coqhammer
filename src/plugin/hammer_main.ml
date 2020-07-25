@@ -262,9 +262,9 @@ let globref_to_inductive r =
   | Names.GlobRef.IndRef(i) -> i
   | _ -> failwith "globref: not an inductive type"
 
-let mk_lst_str at pref lst =
+let mk_lst_str pref lst =
   let get_name x =
-    at ^ Hhlib.drop_prefix x "Top."
+    Hhlib.drop_prefix x "Top."
   in
   match lst with
   | [] -> ""
@@ -671,12 +671,12 @@ let hammer_tac () =
           begin fun tac ->
           Msg.info ("Tactic " ^ tac ^ " succeeded.");
           Msg.info ("Replace the hammer tactic with:\n\t" ^
-                      tac ^ mk_lst_str "@" " use:" sdeps ^
-                        mk_lst_str "" " unfold:" sdefs ^
-                          mk_lst_str "" " inv:" sinverts ^ ".")
+                      tac ^ mk_lst_str " use:" sdeps ^
+                        mk_lst_str " unfold:" sdefs ^
+                          mk_lst_str " inv:" sinverts ^ ".")
           end
           begin fun () ->
-            raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3),\nor try to prove the goal manually using the displayed dependencies. Note that if the proof found by\nthe ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof\nsearch procedure.\nAs a last resort, you may also try enabling legacy reconstruction tactics with\n'From Hammer Require Reconstr'.")
+            raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with\n'From Hammer Require Reconstr'.")
           end
           begin fun k ->
             Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
