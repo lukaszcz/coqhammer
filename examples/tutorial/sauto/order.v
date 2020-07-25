@@ -31,12 +31,17 @@ Definition eq_dec {A} {dto : DecTotalOrder A} : forall x y : A, {x = y}+{x <> y}
       (* right. intro. subst. contradiction. *)
       sauto.
       (* This is a simple proof, but standard Coq automation tactics
-         can't find it because requires a combination of proof search
-         with equality reasoning. *)
+         can't find it because it requires a combination of proof
+         search with equality reasoning. *)
   - sdestruct (leb y x).
     + sauto.
     + destruct (leb_total_dec x y); auto.
 Defined.
+
+(* "sauto" searches for proofs in intuitionistic logic, which can
+   equivalently be seen as program synthesis. "eq_dec" is a certified
+   computable function which decides whether the equality holds or
+   not. *)
 
 Require Import Recdef. (* for Function *)
 

@@ -1,6 +1,9 @@
 (* Tail-recursive reverse *)
 
 From Hammer Require Import Tactics.
+From Hammer Require Import Hints.
+(* The Hints module provides the following rewrite hint databases:
+   shints, slist, sbool, sarith, szarith. *)
 
 Require List.
 Import List.ListNotations.
@@ -27,10 +30,6 @@ Proof.
     rewrite <- List.app_assoc.
     reflexivity.
 Qed.
-
-From Hammer Require Import Hints.
-(* The Hints module provides the following rewrite hint databases:
-   shints, slist, sbool, sarith, szarith. *)
 
 Lemma lem_itrev' {A} :
   forall l acc : list A, itrev l acc = itrev l [] ++ acc.
@@ -78,8 +77,7 @@ Qed.
 Lemma lem_rev_app' {A} :
   forall l1 l2 : list A, rev (l1 ++ l2) = rev l2 ++ rev l1.
 Proof.
-  unfold rev.
-  induction l1; sauto use: @lem_itrev db: slist.
+  induction l1; sauto use: @lem_itrev db: slist unfold: rev.
 Qed.
 
 Lemma lem_rev_rev {A} : forall l : list A, rev (rev l) = l.
@@ -93,19 +91,17 @@ Proof.
     unfold rev.
     intro H.
     rewrite H.
-    clear H.
     rewrite IH.
     reflexivity.
 Qed.
 
 Lemma lem_rev_rev' {A} : forall l : list A, rev (rev l) = l.
 Proof.
-  unfold rev.
   (* induction l; sauto use: @lem_itrev, @lem_rev_app unfold: rev. *)
-  (* induction l; sauto limit: 2000 use: @lem_itrev, @lem_rev_app unfold: rev.*)
+  (* induction l; sauto limit: 2000 use: @lem_itrev, @lem_rev_app unfold: rev. *)
   induction l as [|x l ?].
   - reflexivity.
-  - sauto use: (lem_itrev l [x]), (lem_rev_app (itrev l []) [x]).
+  - sauto use: (lem_itrev l [x]), (lem_rev_app (itrev l []) [x]) unfold: rev.
 Qed.
 
 Lemma lem_rev_lst {A} : forall l : list A, rev l = List.rev l.
@@ -121,8 +117,7 @@ Qed.
 
 Lemma lem_rev_lst' {A} : forall l : list A, rev l = List.rev l.
 Proof.
-  unfold rev.
-  induction l; sauto use: @lem_itrev.
+  induction l; sauto use: @lem_itrev unfold: rev.
 Qed.
 
 Require Import Sorting.Permutation.

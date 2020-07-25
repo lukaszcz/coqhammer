@@ -97,7 +97,11 @@ Notation "A >> B ==> C" :=
 Lemma lem_big_step_deterministic :
   forall c s s1, c >> s ==> s1 -> forall s2, c >> s ==> s2 -> s1 = s2.
 Proof.
-  induction 1; sauto brefl: on.
+  time (induction 1; sauto brefl: on).
+  Undo.
+  time (induction 1; sauto lazy: on brefl: on).
+  Undo.
+  time (induction 1; sauto lazy: on quick: on brefl: on).
 Qed.
 
 (* Program equivalence *)
@@ -127,7 +131,7 @@ Proof.
   time sauto unfold: equiv_cmd.
   Undo.
   time sauto lazy: on unfold: equiv_cmd.
-  (* "lazy: on" turns off some eager heuristics *)
+  (* "lazy: on" turns off all eager heuristics *)
   (* This may sometimes speed up "sauto" noticeably, but sometimes it
      may prevent "sauto" from solving the goal. *)
   (* To increase the performance of "sauto" you may need to fiddle
@@ -136,7 +140,8 @@ Proof.
      can still solve the goal):
      - "lazy: on" ("l: on")
      - "quick: on" ("q: on") - a combination of various options which
-       typically make "sauto" faster but weaker
+       typically make "sauto" faster but weaker; this is more conservative
+       than "qauto" which additionally severely decreases the proof cost limit
      - "lq: on" - an abbreviation for "l: on q: on"
      - "erew: off" - turn off eager rewriting
      - "rew: off" - turn off rewriting entirely
@@ -162,6 +167,9 @@ Lemma lem_commute_if :
 Proof.
   unfold equiv_cmd.
   intros *.
+  time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
+                 sauto).
+  Undo.
   time (destruct (bval s b1) eqn:?; destruct (bval s b2) eqn:?;
                  sauto inv: BigStep ctrs: BigStep).
   Undo.
@@ -309,7 +317,8 @@ Proof.
   Undo.
   time (induction 1; sauto l: on use: lem_small_to_big_aux_2).
   (* "l: on" slightly improves performance *)
-  (* induction 1; sauto q: on use: lem_small_to_big_aux_2. *)
+  (* Undo.
+  induction 1; sauto q: on use: lem_small_to_big_aux_2. *)
   (* But "q: on" prevents "sauto" from solving the goal. *)
 Qed.
 

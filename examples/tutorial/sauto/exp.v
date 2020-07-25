@@ -2,8 +2,9 @@
 
 From Hammer Require Import Tactics.
 
-Require Import Program.Equality.
+Require Import Program.Equality. (* for "depind" and "depelim" *)
 Require Import Arith.
+Require Import String.
 
 Inductive type := Nat | Bool | Prod (ty1 ty2 : type).
 
@@ -15,7 +16,7 @@ Fixpoint tyeval (ty : type) : Type :=
   end.
 
 Inductive expr : type -> Type :=
-| Var : nat -> expr Nat
+| Var : string -> expr Nat
 | Plus : expr Nat -> expr Nat -> expr Nat
 | Equal : expr Nat -> expr Nat -> expr Bool
 | Pair : forall {A B}, expr A -> expr B -> expr (Prod A B)
@@ -24,7 +25,7 @@ Inductive expr : type -> Type :=
 | Const : forall A, tyeval A -> expr A
 | Ite : forall {A}, expr Bool -> expr A -> expr A -> expr A.
 
-Definition store := nat -> nat.
+Definition store := string -> nat.
 
 Fixpoint eval {A} (s : store) (e : expr A) : tyeval A :=
   match e with
@@ -50,6 +51,8 @@ Lemma lem_plus : forall s e1 e2,
   eval s (simp_plus e1 e2) = eval s e1 + eval s e2.
 Proof.
   time (depind e1; depelim e2; sauto).
+  (* Undo.
+    time (depind e1; depelim e2; sauto l: on). *)
 Qed.
 
 Lemma lem_plus' : forall s e1 e2,
@@ -74,7 +77,7 @@ Lemma lem_equal : forall s e1 e2,
   eval s (simp_equal e1 e2) = (eval s e1 =? eval s e2).
 Proof.
   Fail depind e1; sauto.
-  depind e1; sauto dep: on. (* ~ 0.1s *)
+  time (depind e1; sauto dep: on).
   Undo.
   time (depind e1; depelim e2; sauto).
 Qed.
