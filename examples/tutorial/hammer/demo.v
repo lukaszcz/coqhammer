@@ -81,14 +81,19 @@ Qed.
 
 Require Import Sorting.Permutation.
 
+(*
+Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
+    Permutation l1 (y :: l2) ->
+    Permutation (x :: l1 ++ l3) (y :: x :: l2 ++ l3).
+Proof.
+  hammer. *)
+
 Lemma lem_perm_0 {A} : forall (x y : A) l1 l2 l3,
     Permutation l1 (y :: l2) ->
-    Permutation (l1 ++ l3) (y :: l2 ++ l3).
+    Permutation (x :: l1 ++ l3) (x :: y :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  (* Coq.Lists.List.app_comm_cons, Coq.Sorting.Permutation.Permutation_refl, Coq.Sorting.Permutation.Permutation_app *)
-  intros.
-  hauto lq: on drew: off use: List.app_comm_cons, Permutation_refl, Permutation_app.
+  hauto lq: on drew: off use: Permutation_app, List.app_comm_cons, Permutation_refl, perm_skip.
 Qed.
 
 Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
@@ -96,7 +101,9 @@ Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
     Permutation (x :: l1 ++ l3) (y :: x :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  eauto using Permutation, Permutation_app, Permutation_refl.
+  (* Minimizing dependencies *)
+  (* srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, Permutation_trans, Permutation_sym, perm_swap unfold: app. *)
+  srun eauto use: @lem_perm_0, Permutation_trans, perm_swap.
 Qed.
 
 Lemma lem_perm_2 : forall (x : nat) l1 l2 l3,
