@@ -965,6 +965,8 @@ Ltac yelles0 defs n rtrace gtrace :=
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ |- _ ] =>
           solve [ isolve ]
+        | [ |- _ ] =>
+          solve [ econstructor; cbn; yelles0 defs k rtrace (gtrace, G) ]
         | [ H : forall x y z u v, _ _ |- _ _ ] =>
           yapply H; yelles0 defs k rtrace (gtrace, G)
         | [ H : forall x y z u v w, _ _ |- _ _ ] =>
@@ -1064,17 +1066,19 @@ Ltac yelles1 defs n :=
 
 Ltac yellesd defs n := cbn in *; unshelve yelles1 defs n; dsolve.
 
-Ltac yelles n := cbn in *; unshelve yelles1 Empty n; dsolve.
+Ltac yellesx n := cbn in *; unshelve yelles1 Empty n; dsolve.
+
+Ltac yelles n := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ yellesx n ].
 
 Ltac yauto n := generalizing; yelles n.
 
 Ltac yrauto n :=
   lazymatch n with
-  | 0 => yelles 1
+  | 0 => yellesx 1
   | S ?k =>
     match goal with
     | [ H : _ |- _ ] => rewrite H in * by isolve; simp_hyps; cbn in *; try subst; yisolve; yrauto k
-    | _ => yelles 1
+    | _ => yellesx 1
     end
   end.
 
@@ -1088,7 +1092,7 @@ Ltac meauto f :=
 Ltac meauto2 f := meauto ltac:(fun _ => meauto f).
 Ltac meauto3 f := meauto ltac:(fun _ => meauto2 f).
 
-Ltac ymeauto n := once meauto2 ltac:(fun _ => yelles n).
+Ltac ymeauto n := once meauto2 ltac:(fun _ => yellesx n).
 
 Ltac yreconstr1 lems defs :=
   generalizing;
@@ -1138,17 +1142,17 @@ Ltac iauto n :=
   intros; doiauto n.
 
 Ltac docrush :=
-  sintuition; cbn in *; simp_hyps; forward_reasoning 2; simp_hyps; yisolve; try yelles 1;
+  sintuition; cbn in *; simp_hyps; forward_reasoning 2; simp_hyps; yisolve; try yellesx 1;
   try congruence;
   try match goal with
       | [ H : _ |- _ ] =>
-        rewrite H in * by isolve; simp_hyps; cbn in *; try subst; yelles 1
+        rewrite H in * by isolve; simp_hyps; cbn in *; try subst; yellesx 1
       end;
   try match goal with
       | [ H : ?T |- _ ] =>
-        isPropAtom T; yinversion H; cbn in *; try subst; simp_hyps; eauto with yhints; yelles 1
+        isPropAtom T; yinversion H; cbn in *; try subst; simp_hyps; eauto with yhints; yellesx 1
       end;
-  try yelles 2;
+  try yellesx 2;
   try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try ymeauto 0.
 
@@ -1156,17 +1160,17 @@ Ltac ycrush1 := solve [ yisolve | eauto with yhints | docrush ].
 Ltac ycrush := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; ycrush1.
 
 Ltac scrush0 :=
-  sauto1; forward_reasoning 2; sauto1; repeat instering; sauto1; try yelles 1;
+  sauto1; forward_reasoning 2; sauto1; repeat instering; sauto1; try yellesx 1;
   try congruence;
   try match goal with
       | [ H : _ |- _ ] =>
-        rewrite H in * by isolve; simp_hyps; cbn in *; try subst; yelles 1
+        rewrite H in * by isolve; simp_hyps; cbn in *; try subst; yellesx 1
       end;
   try match goal with
       | [ H : ?T |- _ ] =>
-        isPropAtom T; yinversion H; cbn in *; try subst; simp_hyps; eauto with yhints; yelles 1
+        isPropAtom T; yinversion H; cbn in *; try subst; simp_hyps; eauto with yhints; yellesx 1
       end;
-  try yelles 2;
+  try yellesx 2;
   try solve [ unshelve (intuition isolve; eauto 10 with yhints); dsolve ];
   try ymeauto 0.
 
@@ -1247,34 +1251,18 @@ Ltac hyreconstr hyps lems defs :=
   hsimple hyps lems defs;
   yreconstr1 lems defs.
 
-Ltac reasy lems defs := solve [ unshelve heasy AllHyps lems defs; dsolve ].
-Ltac rsimple lems defs := solve [ unshelve hsimple AllHyps lems defs; dsolve ].
-Ltac rcrush lems defs := solve [ unshelve hcrush AllHyps lems defs; dsolve ].
-Ltac rscrush lems defs := solve [ unshelve hscrush AllHyps lems defs; dsolve ].
-Ltac rblast lems defs := solve [ unshelve hblast AllHyps lems defs; dsolve ].
-Ltac rreconstr4 lems defs := solve [ unshelve hreconstr 4 AllHyps lems defs; dsolve ].
-Ltac rreconstr6 lems defs := solve [ unshelve hreconstr 6 AllHyps lems defs; dsolve ].
-Ltac ryelles4 lems defs := solve [ unshelve hyelles 4 AllHyps lems defs; dsolve ].
-Ltac ryelles6 lems defs := solve [ unshelve hyelles 6 AllHyps lems defs; dsolve ].
-Ltac rrauto4 lems defs := solve [ unshelve hrauto 4 AllHyps lems defs; dsolve ].
-Ltac rexhaustive1 lems defs := solve [ unshelve hexhaustive 1 AllHyps lems defs; dsolve ].
-Ltac ryreconstr lems defs := solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
-
-Ltac hyelles2 hyps lems defs :=
-  hobvious hyps lems defs;
-  gunfolding defs;
-  simp_hyps;
-  try yellesd defs 4;
-  try yellesd defs 6;
-  try yellesd defs 8;
-  try yellesd defs 12;
-  try yellesd defs 14;
-  try yellesd defs 16;
-  try yellesd defs 18;
-  try yellesd defs 20;
-  try yellesd defs 22;
-  try yellesd defs 24;
-  try yellesd defs 26.
+Ltac reasy lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve heasy AllHyps lems defs; dsolve ].
+Ltac rsimple lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hsimple AllHyps lems defs; dsolve ].
+Ltac rcrush lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hcrush AllHyps lems defs; dsolve ].
+Ltac rscrush lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hscrush AllHyps lems defs; dsolve ].
+Ltac rblast lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hblast AllHyps lems defs; dsolve ].
+Ltac rreconstr4 lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hreconstr 4 AllHyps lems defs; dsolve ].
+Ltac rreconstr6 lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hreconstr 6 AllHyps lems defs; dsolve ].
+Ltac ryelles4 lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hyelles 4 AllHyps lems defs; dsolve ].
+Ltac ryelles6 lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hyelles 6 AllHyps lems defs; dsolve ].
+Ltac rrauto4 lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hrauto 4 AllHyps lems defs; dsolve ].
+Ltac rexhaustive1 lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hexhaustive 1 AllHyps lems defs; dsolve ].
+Ltac ryreconstr lems defs := idtac "WARNING: legacy tactics from the Reconstr module are deprecated"; solve [ unshelve hyreconstr AllHyps lems defs; dsolve ].
 
 Ltac qrreasy := solve [ heasy AllHyps Empty Empty ].
 Ltac qrrsimple := solve [ hsimple AllHyps Empty Empty ].
