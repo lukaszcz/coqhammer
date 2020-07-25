@@ -60,7 +60,7 @@ let _ =
   in
   declare_int_option gdopt
 
-let minimize_threshold = ref 6
+let minimize_threshold = ref 8
 
 let _ =
   let gdopt=

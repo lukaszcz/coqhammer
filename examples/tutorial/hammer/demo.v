@@ -101,14 +101,9 @@ Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
     Permutation (x :: l1 ++ l3) (y :: x :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  (* If an ATP returns more than 6 dependencies, then "hammer" tries
-     to minimize the number of dependencies by repeatedly running the
-     ATPs with the returned dependencies until the number of
-     dependencies drops down to at most 6. *)
   srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, Permutation_trans, Permutation_sym, perm_swap unfold: app.
   Undo.
-  (* This may still be more than needed -- the user may further
-     minimize the dependencies manually. *)
+  (* Occasionally, some of the returned dependencies are not really necessary. *)
   srun eauto use: @lem_perm_0, Permutation_trans, perm_swap.
 Qed.
 
@@ -116,6 +111,10 @@ Lemma lem_perm_2 : forall (x : nat) l1 l2 l3,
     Permutation (x :: l1) l2 -> Permutation (x :: l3 ++ l1) (l3 ++ l2).
 Proof.
   (* hammer. *)
+  (* If an ATP returns at least 8 dependencies, then "hammer" tries to
+     automatically minimize the number of dependencies by repeatedly
+     running the ATPs with the returned dependencies as long as some
+     ATP returns fewer dependencies. *)
   srun eauto use: Permutation_app_head, Permutation_trans, Permutation_app_comm, Permutation_cons_app.
 Qed.
 
@@ -123,7 +122,7 @@ Lemma lem_perm_3 : forall (x y : nat) l1 l2 l3,
     Permutation (x :: l1) l2 -> Permutation (x :: y :: l1 ++ l3) (y :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  srun eauto use: Permutation_sym, @lem_perm_1.
+  srun eauto use: @lem_perm_1, Permutation_sym.
 Qed.
 
 Lemma lem_perm_4 : forall (x y : nat) l1 l2 l3,
@@ -132,7 +131,7 @@ Proof.
   (* hammer. *)
   intros.
   rewrite List.app_comm_cons.
-  pattern (y :: l3).
+  pattern (y :: l3 ++ l2).
   rewrite List.app_comm_cons.
   apply lem_perm_2; assumption.
 Qed.
