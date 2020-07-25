@@ -94,7 +94,9 @@ let get_types lst =
                 else
                   "$none"
               in
-              let tgt = Coq_typing.get_type_app_target (Coqterms.coqdef_type (Defhash.find s)) in
+              let tgt =
+                Coq_typing.get_type_app_target (Coqterms.coqdef_type (Defhash.find s))
+              in
               match tgt with
               | Coqterms.Const(x) -> x
               | _ -> "$none"
@@ -104,8 +106,9 @@ let get_types lst =
           lst))
 
 let get_atp_info names =
-  { deps = get_deps names; defs = get_defs names; typings = get_typings names; cases = get_cases names;
-    inversions = get_inversions names; injections = get_injections names; discrims = get_discrims names;
+  { deps = get_deps names; defs = get_defs names; typings = get_typings names;
+    cases = get_cases names; inversions = get_inversions names;
+    injections = get_injections names; discrims = get_discrims names;
     types = get_types names }
 
 let prn_atp_info info =
@@ -396,7 +399,8 @@ let minimize info hyps deps goal =
         begin fun ((_, pname, _, _) as h) _ ->
           if pname <> pname1 then
             begin
-              let (pname2, info2) = call_prover h fname (ofname ^ "." ^ pname) (fun () -> exit 1)
+              let (pname2, info2) =
+                call_prover h fname (ofname ^ "." ^ pname) (fun () -> exit 1)
               in
               if List.length info2.deps < List.length info.deps ||
                 List.length info2.defs < List.length info.defs

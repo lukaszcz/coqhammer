@@ -17,11 +17,11 @@ Proof.
   - destruct (Nat.eq_dec d 0) as [Hd|Hd].
     + subst; reflexivity.
     + assert (Hc1: exists c1, b = d * c1).
-      { (* hammer. *) sfirstorder use: @Nat.mod_divides. }
+      { (* hammer. *) sfirstorder use: Nat.mod_divides. }
       assert (Hc2: exists c2, a mod b = d * c2).
-      { (* hammer. *) strivial use: @Nat.mod_divides. }
+      { (* hammer. *) strivial use: Nat.mod_divides. }
       assert (Hc3: exists c3, a = b * c3 + a mod b).
-      { (* hammer. *) srun eauto use: @Nat.div_mod. }
+      { (* hammer. *) srun eauto use: Nat.div_mod. }
       clear -Hc1 Hc2 Hc3 Hd.
       destruct Hc1 as [c1 H1].
       destruct Hc2 as [c2 H2].
@@ -63,19 +63,19 @@ Next Obligation.
   unfold is_gcd, is_cd.
   sintuition.
   - (* hammer. *)
-    (* sfirstorder use: @Nat.mod_same, @gt_irrefl, @Nat.add_0_r. *)
-    sfirstorder use: @Nat.mod_same.
+    (* sfirstorder use: Nat.mod_same, gt_irrefl, Nat.add_0_r. *)
+    sfirstorder use: Nat.mod_same.
   - (* hammer. *)
     (* sauto. *)
     (* Set Hammer SAutoLimit 0.
     hammer. *)
-    sfirstorder use: @Nat.mod_0_l.
+    sfirstorder use: Nat.mod_0_l.
   - (* hammer. *)
-    qauto use: @Nat.add_pos_cases, @Nat.le_gt_cases, @Nat.mod_small, @Nat.neq_0_lt_0.
+    qauto use: Nat.add_pos_cases, Nat.le_gt_cases, Nat.mod_small, Nat.neq_0_lt_0.
 Qed.
 Next Obligation.
   (* hammer. *)
-  srun eauto use: @Nat.mod_upper_bound.
+  srun eauto use: Nat.mod_upper_bound.
 Qed.
 Next Obligation.
   simpl_sigma.
