@@ -101,8 +101,14 @@ Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
     Permutation (x :: l1 ++ l3) (y :: x :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  (* Minimizing dependencies *)
-  (* srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, Permutation_trans, Permutation_sym, perm_swap unfold: app. *)
+  (* If an ATP returns more than 6 dependencies, then "hammer" tries
+     to minimize the number of dependencies by repeatedly running the
+     ATPs with the returned dependencies until the number of
+     dependencies drops down to at most 6. *)
+  srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, Permutation_trans, Permutation_sym, perm_swap unfold: app.
+  Undo.
+  (* This may still be more than needed -- the user may further
+     minimize the dependencies manually. *)
   srun eauto use: @lem_perm_0, Permutation_trans, perm_swap.
 Qed.
 
