@@ -414,7 +414,7 @@ let minimize info hyps deps goal =
         end
         provers
     in
-    let time = float_of_int !Opt.atp_timelimit
+    let time = (float_of_int !Opt.atp_timelimit) /. 2.0
     in
     match Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs with
     | None ->
