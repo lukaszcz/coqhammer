@@ -18,6 +18,7 @@ Overview of changes
 * `sauto` is now the preliminary tactic for `hammer`.
 * Rudimentary MathComp support. New `make` targets: `mathcomp` and
   `install-mathcomp`.
+* Tutorial.
 
 Details of the sauto proof search improvements
 ----------------------------------------------
