@@ -15,6 +15,7 @@ Qed.
 
 Lemma lem_even : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
 Proof.
+  (* predict 16. *)
   (* hammer. *)
   hauto lq: on use: Nat.add_1_r, Nat.Even_or_Odd, Nat.Even_succ.
 Qed.
