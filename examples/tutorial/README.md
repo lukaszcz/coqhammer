@@ -15,3 +15,7 @@ The tutorial files should be read in the following order:
 6. [sauto/imp.v](sauto/imp.v)
 
 7. [sauto/exp.v](sauto/exp.v)
+
+8. [hammer/demo.v](hammer/demo.v)
+
+9. [hammer/gcd.v](hammer/gcd.v)
