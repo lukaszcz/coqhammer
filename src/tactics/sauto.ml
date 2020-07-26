@@ -37,7 +37,6 @@ type s_opts = {
   s_simple_inverting : bool;
   s_forwarding : bool;
   s_reducing : bool;
-  s_rewriting : bool;
   s_directed_rewriting : bool;
   s_undirected_rewriting : bool;
   s_aggressive_unfolding : bool;
@@ -76,7 +75,6 @@ let default_s_opts () = {
   s_simple_inverting = true;
   s_forwarding = true;
   s_reducing = true;
-  s_rewriting = true;
   s_directed_rewriting = true;
   s_undirected_rewriting = true;
   s_aggressive_unfolding = false;
@@ -144,13 +142,10 @@ let set_brefl_opts b opts =
 
 let set_rew_opts b opts =
   if b then
-    { opts with s_rewriting = true;
-                s_directed_rewriting = true;
+    { opts with s_directed_rewriting = true;
                 s_undirected_rewriting = true }
   else
-    { opts with s_rewriting = false;
-                s_eager_rewriting = false;
-                s_directed_rewriting = false;
+    { opts with s_directed_rewriting = false;
                 s_undirected_rewriting = false }
 
 let with_reduction opts tac1 tac2 =
@@ -701,11 +696,7 @@ let rec do_when p f forbidden_ids =
 
 let do_when p f = do_when p f []
 
-let autorewriting b_all opts =
-  if opts.s_rewriting then
-    autorewrite b_all opts.s_rew_bases
-  else
-    Proofview.tclUNIT ()
+let autorewriting b_all opts = autorewrite b_all opts.s_rew_bases
 
 let rec simple_splitting opts =
   if opts.s_simple_splits = SNone then
@@ -912,7 +903,8 @@ let create_hyp_actions opts evd ghead0 ghead
       | _ ->
          []
   in
-  if opts.s_rewriting && is_equality evd head && not (is_coercion evd head0) then
+  if (opts.s_directed_rewriting || opts.s_undirected_rewriting) &&
+       is_equality evd head && not (is_coercion evd head0) then
     (* using "with_equality" here slows things down considerably *)
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] -> (* TODO: Always do undirected rewriting? *)

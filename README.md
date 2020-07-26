@@ -451,7 +451,7 @@ are for `sauto`.
 
   Controls whether directed rewriting is performed eagerly. Directed
   rewriting means rewriting with hypotheses orientable with
-  LPO. If `erew: off` but `rew: on`, directed rewriting is still
+  LPO. If `erew: off` but `drew: on`, directed rewriting is still
   performed but with backtracking. Default: `erew: on`.
 
 * `drew: <bopt>`
@@ -464,8 +464,9 @@ are for `sauto`.
 
 * `rew: <bopt>`
 
-  Controls whether to perform rewriting (both directed and
-  undirected). Setting `rew: off` implies `drew: off` and `urew:
+  This is a compound option which controls the `drew` and `urew`
+  options. Setting `drew: on` implies `drew: on` and `urew:
+  on`. Setting `rew: off` implies `drew: off` and `urew:
   off`. Default: `rew: on`.
 
 * `brefl: <bopt>`
