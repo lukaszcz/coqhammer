@@ -30,7 +30,6 @@ type s_opts = {
   s_simple_inverting : bool;
   s_forwarding : bool;
   s_reducing : bool;
-  s_rewriting : bool;
   s_directed_rewriting : bool;
   s_undirected_rewriting : bool;
   s_aggressive_unfolding : bool;

@@ -277,11 +277,7 @@ let interp_opt ret opt opts =
   | SOReflectRaw b ->
      ret { opts with s_reflect = b }
   | SOReduce b ->
-     if b then
-       ret { opts with s_reducing = true }
-     else
-       ret { opts with s_reducing = false;
-                       s_eager_reducing = false }
+     ret { opts with s_reducing = b }
   | SOSapply b ->
      ret { opts with s_sapply = b }
   | SOLimit n ->
