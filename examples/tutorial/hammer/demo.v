@@ -103,9 +103,19 @@ Proof.
   (* hammer. *)
   srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, Permutation_trans, Permutation_sym, perm_swap unfold: app.
   Undo.
-  (* Occasionally, some of the returned dependencies are not really necessary. *)
+  (* Occasionally, some of the returned dependencies are not necessary. *)
   srun eauto use: @lem_perm_0, Permutation_trans, perm_swap.
+  (*
+  Undo.
+  Set Hammer MinimizationThreshold 0.
+  hammer. *)
 Qed.
+
+(* A general advice: use "hammer" to prove entire lemmas which are
+   stated separately. Using "hammer" to prove subgoals in a larger
+   proof is less effective. One reason is that the machine-learning
+   premise selection can get confused by the presence of unnecessary
+   hypotheses in the context. *)
 
 Lemma lem_perm_2 : forall (x : nat) l1 l2 l3,
     Permutation (x :: l1) l2 -> Permutation (x :: l3 ++ l1) (l3 ++ l2).
