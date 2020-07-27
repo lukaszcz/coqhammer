@@ -67,7 +67,8 @@ Proof.
   strivial use: List.incl_appr, List.incl_refl, List.incl_appl.
 Qed.
 
-Lemma lem_lst_1 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
+Lemma lem_lst_1 : forall (A : Type) (l l' : list A),
+  List.NoDup (l ++ l') -> List.NoDup l.
 Proof.
   (* The "hammer" tactic can't do induction. If induction is necessary
   to carry out the proof, then one needs to start the induction
@@ -93,7 +94,8 @@ Lemma lem_perm_0 {A} : forall (x y : A) l1 l2 l3,
     Permutation (x :: l1 ++ l3) (x :: y :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  hauto lq: on drew: off use: Permutation_app, List.app_comm_cons, Permutation_refl, perm_skip.
+  hauto lq: on drew: off
+    use: Permutation_app, List.app_comm_cons, Permutation_refl, perm_skip.
 Qed.
 
 Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
@@ -101,7 +103,8 @@ Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
     Permutation (x :: l1 ++ l3) (y :: x :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, Permutation_trans, Permutation_sym, perm_swap unfold: app.
+  srun eauto use: @lem_perm_0, perm_skip, Permutation_Add, 
+    Permutation_trans, Permutation_sym, perm_swap unfold: app.
   Undo.
   (* Occasionally, some of the returned dependencies are not necessary. *)
   srun eauto use: @lem_perm_0, Permutation_trans, perm_swap.
@@ -125,18 +128,21 @@ Proof.
      automatically minimize the number of dependencies by repeatedly
      running the ATPs with the returned dependencies as long as some
      ATP returns fewer dependencies. *)
-  srun eauto use: Permutation_app_head, Permutation_trans, Permutation_app_comm, Permutation_cons_app.
+  srun eauto use: Permutation_app_head, Permutation_trans, 
+    Permutation_app_comm, Permutation_cons_app.
 Qed.
 
 Lemma lem_perm_3 : forall (x y : nat) l1 l2 l3,
-    Permutation (x :: l1) l2 -> Permutation (x :: y :: l1 ++ l3) (y :: l2 ++ l3).
+    Permutation (x :: l1) l2 ->
+    Permutation (x :: y :: l1 ++ l3) (y :: l2 ++ l3).
 Proof.
   (* hammer. *)
   srun eauto use: @lem_perm_1, Permutation_sym.
 Qed.
 
 Lemma lem_perm_4 : forall (x y : nat) l1 l2 l3,
-    Permutation (x :: l1) l2 -> Permutation (x :: y :: l3 ++ l1) (y :: l3 ++ l2).
+    Permutation (x :: l1) l2 ->
+    Permutation (x :: y :: l3 ++ l1) (y :: l3 ++ l2).
 Proof.
   (* hammer. *)
   intros.
