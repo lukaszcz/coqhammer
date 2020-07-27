@@ -51,14 +51,18 @@ Qed.
 Lemma lem_lelst_sorted {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
 Proof.
-  (* induction l; sauto. *)
-  (* induction l; sintuition. *)
+  time (induction l; sauto).
+  Undo.
+  induction l; sintuition.
+  Undo.
   (* simplification tactics: sintuition, qsimpl, ssimpl *)
-  (* induction l; qsimpl. *)
-  (* From "Sorted (a :: l)" it follows that "LeLst a l" by "H1". *)
+  induction l; qsimpl.
+  Undo.
+  (* From "Sorted (a :: l)" it follows that "LeLst a l" by "H2". *)
   (* Because "leb x l", "LeLst x (a :: l)" follows from "LeLst a l" by
      lemma "lem_lelst_trans" *)
-  (* time (induction l; sauto use: lem_lelst_trans). *)
+  time (induction l; sauto use: lem_lelst_trans).
+  Undo.
   (* induction l; sauto use: lem_lelst_trans inv: Sorted, List.Forall. *)
   (* induction l; sauto use: lem_lelst_trans inv: Sorted. *)
   (* induction l; sauto use: lem_lelst_trans inv: List.Forall. *)
