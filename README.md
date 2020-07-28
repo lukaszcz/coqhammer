@@ -1,4 +1,4 @@
-CoqHammer (dev) for Coq 8.10
+CoqHammer 1.3 for Coq 8.10
 
 [![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=coq8.10)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
@@ -739,7 +739,7 @@ Set/Unset Hammer Parallel.
 Set Hammer ATPLimit n.
 (* ATP time limit in seconds, default: 20s *)
 Set Hammer ReconstrLimit n.
-(* time limit for proof reconstruction, default: 10s *)
+(* time limit for proof reconstruction, default: 5s *)
 Set Hammer SAutoLimit n.
 (* before invoking external ATPs the hammer first tries to solve the
    goal using the sauto tactic with a time limit of n seconds; default: 1s *)
@@ -752,7 +752,7 @@ Set/Unset Hammer FilterClasses.
 Set/Unset Hammer FilterHurkens.
 (* ignore dependencies from Coq.Logic.Hurkens.*, default: on *)
 Set Hammer MinimizationThreshold n.
-(* the minimum number of dependencies returned by an ATP for which minimization is performed, default: 6 *)
+(* the minimum number of dependencies returned by an ATP for which minimization is performed, default: 8 *)
 Set/Unset Hammer SearchBlacklist.
 (* ignore dependencies blacklisted with the Search Blacklist
    vernacular command, default: on *)
