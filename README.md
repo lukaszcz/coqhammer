@@ -2,6 +2,10 @@ CoqHammer (dev) for Coq 8.11
 
 [![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=coq8.11)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
+CoqHammer video tutorial:
+[part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
+[part 2 (hammer)](https://www.youtube.com/watch?v=EEmpVCSqShA&list=PLXXF_svQE_b_vja6TWFbGNB266Et8m5yC).
+
 Since version 1.3, the CoqHammer system consists of two major separate
 components.
 
@@ -45,7 +49,15 @@ components.
 Tutorial
 --------
 
-A tutorial is available in [examples/tutorial](examples/tutorial/README.md).
+CoqHammer video tutorial:
+[part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
+[part 2 (hammer)](https://www.youtube.com/watch?v=EEmpVCSqShA&list=PLXXF_svQE_b_vja6TWFbGNB266Et8m5yC).
+
+The tutorial files are available in
+[examples/tutorial](examples/tutorial).
+
+See also a formalisation of various sorting algorithms with sauto:
+[https://github.com/lukaszcz/sortalgs](https://github.com/lukaszcz/sortalgs).
 
 Requirements
 ------------
