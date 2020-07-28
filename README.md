@@ -1,4 +1,4 @@
-CoqHammer (dev) for Coq 8.12
+CoqHammer 1.3 for Coq 8.12
 
 [![Travis](https://travis-ci.org/lukaszcz/coqhammer.svg?branch=coq8.12)](https://travis-ci.org/lukaszcz/coqhammer/builds)
 
