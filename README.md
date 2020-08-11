@@ -161,7 +161,7 @@ are used internally by `sauto`.
 
 * `sinvert t`
 
-  Inversion of the conclusion of `t`. The term `t` may be quantified -
+  Inversion of the conclusion of `t`. The type of `t` may be quantified -
   then new existential variables are introduced or new subgoals are
   generated for the arguments.
 
@@ -236,7 +236,7 @@ are used internally by `sauto`.
 * `srewriting`
 
   Directed rewriting with the hypotheses which may be oriented using
-  LPO. Corresponds to the `erew:` option.
+  LPO. See the `drew:` and `erew:` options.
 
 * `simple_inverting`
 * `simple_inverting_dep`
@@ -576,7 +576,7 @@ Boolean reflection
 
 Importing the Reflect module with
 ```coq
-From Hammer Require Import Reflect.
+From Hammer Require Import Reflect
 ```
 declares `is_true` as a coercion and makes available the following tactics
 related to boolean reflection.
