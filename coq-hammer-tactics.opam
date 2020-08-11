@@ -22,10 +22,10 @@ install: [
 ]
 depends: [
   "ocaml"
-  "coq" {= "dev"}
+  "coq" {= "8.12"}
 ]
 
-tags: [  
+tags: [
   "keyword:automation"
   "keyword:hammer"
   "keyword:tactics"
