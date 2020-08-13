@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "dev"
+version: "8.12.dev"
 maintainer: "palmskog@gmail.com"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
@@ -14,15 +14,15 @@ learning from previous proofs with the translation of problems to the
 logics of automated systems and the reconstruction of successfully found proofs.
 """
 
-build: [make "plugin"]
+build: [make "-j%{jobs}%" {ocaml:version >= "4.06"} "plugin"]
 install: [
   [make "install-plugin"]
   [make "test-plugin"] {with-test}
 ]
 depends: [
   "ocaml"
-  "coq" {= "8.12"}
-  "conf-g++" {build}
+  "coq" {>= "8.12" & < "8.13~"}
+  ("conf-g++" {build} | "conf-clang" {build})
   "coq-hammer-tactics" {= version}
 ]
 
@@ -30,7 +30,7 @@ tags: [
   "category:Miscellaneous/Coq Extensions"
   "keyword:automation"
   "keyword:hammer"
-  "logpath:Hammer"
+  "logpath:Hammer.Plugin"
 ]
 
 authors: [
