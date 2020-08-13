@@ -30,7 +30,7 @@ tags: [
   "category:Miscellaneous/Coq Extensions"
   "keyword:automation"
   "keyword:hammer"
-  "logpath:Hammer"
+  "logpath:Hammer.Plugin"
 ]
 
 authors: [
