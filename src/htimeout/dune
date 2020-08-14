@@ -1,0 +1,9 @@
+(rule
+ (targets htimeout)
+ (deps htimeout.c)
+ (action (run cc -O2 -Wall %{deps} -o %{targets})))
+
+(install
+ (section bin)
+ (package coq-hammer)
+ (files htimeout))
