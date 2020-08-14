@@ -1,0 +1,5 @@
+(coq.theory
+ (name Hammer.Tactics)
+ (package coq-hammer-tactics)
+ (synopsis "CoqHammer Coq tactics")
+ (libraries coq-hammer-tactics.tactics))
