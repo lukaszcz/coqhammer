@@ -1,0 +1,6 @@
+(coq.theory
+ (name Hammer.Plugin)
+ (package coq-hammer)
+ (synopsis "CoqHammer Coq plugin")
+ (libraries coq-hammer.plugin)
+ (theories Hammer.Tactics))
