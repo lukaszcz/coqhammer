@@ -3,6 +3,7 @@
  (public_name coq-hammer.plugin)
  (synopsis "CoqHammer plugin")
  (flags :standard -rectypes -warn-error -3-8-9-14-27-34-A)
- (libraries coq.plugins.ltac coq.vernac coq-hammer-tactics.lib coq-hammer-tactics.tactics))
+ (libraries coq.plugins.ltac coq.vernac coq-hammer-tactics.lib coq-hammer-tactics.tactics)
+ (wrapped false))
 
 (coq.pp (modules g_hammer))
