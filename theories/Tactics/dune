@@ -2,4 +2,4 @@
  (name Hammer.Tactics)
  (package coq-hammer-tactics)
  (synopsis "CoqHammer Coq tactics")
- (libraries coq-hammer-tactics.tactics))
+ (libraries coq-hammer-tactics.lib coq-hammer-tactics.tactics))

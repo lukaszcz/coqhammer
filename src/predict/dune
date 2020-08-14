@@ -1,6 +1,6 @@
 (rule
  (targets predict)
- (deps (:main main.cpp) predictor.cpp format.cpp knn.cpp nbayes.cpp rforest.cpp tfidf.cpp dtree.cpp)
+ (deps (:main main.cpp) dtree.cpp format.cpp knn.cpp mepo.cpp nbayes.cpp predictor.cpp rforest.cpp tfidf.cpp)
  (action (run c++ -std=c++11 -DCOQ_MODE -O2 -Wall %{main} -o %{targets})))
 
 (install
