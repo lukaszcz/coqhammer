@@ -2,4 +2,5 @@
  (name Hammer.Tactics)
  (package coq-hammer-tactics)
  (synopsis "CoqHammer Coq tactics")
+ (modules :standard \ Mathcomp)
  (libraries coq-hammer-tactics.lib coq-hammer-tactics.tactics))
