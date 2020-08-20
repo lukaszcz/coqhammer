@@ -631,7 +631,7 @@ let hint_tactic (_, db, h) t = tac_of_hint db h t
 let hint_to_string (_, _, h) =
   Pp.string_of_ppcmds @@ Hints.FullHint.print (Global.env ()) Evd.empty h
 
-let find_hints db secvars evd t =
+let find_hints db secvars env evd t =
   try
     let open Hints in
     let hdc = Hints.decompose_app_bound evd t in
@@ -641,7 +641,7 @@ let find_hints db secvars evd t =
         | ModeMatch l -> l
         | ModeMismatch -> []
       else
-        Hint_db.map_auto evd ~secvars hdc t db
+        Hint_db.map_auto env evd ~secvars hdc t db
     in
     List.map (fun h -> (FullHint.priority h, db, h)) hints
   with Hints.Bound ->

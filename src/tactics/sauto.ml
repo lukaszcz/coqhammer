@@ -988,9 +988,10 @@ let create_extra_actions opts evd goal hyps =
   actions
 
 let create_hint_actions bases evd goal gl =
+  let env = Proofview.Goal.env gl in
   let secvars = Auto.compute_secvars gl in
   let hints =
-    List.concat (List.map (fun db -> Utils.find_hints db secvars evd goal) bases)
+    List.concat (List.map (fun db -> Utils.find_hints db secvars env evd goal) bases)
   in
   List.map begin fun h ->
     let p = Utils.hint_priority h in
