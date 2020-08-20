@@ -130,4 +130,4 @@ type hint
 val hint_priority : hint -> int
 val hint_tactic : hint -> EConstr.t -> unit Proofview.tactic
 val hint_to_string : hint -> string
-val find_hints : Hints.hint_db -> Id.Pred.t -> Evd.evar_map -> EConstr.t -> hint list
+val find_hints : Hints.hint_db -> Id.Pred.t -> Environ.env -> Evd.evar_map -> EConstr.t -> hint list
