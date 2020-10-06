@@ -56,7 +56,7 @@ CoqHammer video tutorial:
 The tutorial files are available in
 [examples/tutorial](examples/tutorial).
 
-See also a formalisation of various sorting algorithms with sauto:
+See also a formalisation of various sorting algorithms with `sauto`:
 [https://github.com/lukaszcz/sortalgs](https://github.com/lukaszcz/sortalgs).
 
 Requirements

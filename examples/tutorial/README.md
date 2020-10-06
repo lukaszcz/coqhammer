@@ -22,5 +22,5 @@ The tutorial files should be read in the following order:
 
 9. [hammer/gcd.v](hammer/gcd.v)
 
-See also a formalisation of various sorting algorithms with sauto:
+See also a formalisation of various sorting algorithms with `sauto`:
 [https://github.com/lukaszcz/sortalgs](https://github.com/lukaszcz/sortalgs).
