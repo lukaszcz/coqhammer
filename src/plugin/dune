@@ -1,0 +1,9 @@
+(library
+ (name hammer_plugin)
+ (public_name coq-hammer.plugin)
+ (synopsis "CoqHammer plugin")
+ (flags :standard -rectypes -w -3-9-27)
+ (libraries coq.plugins.ltac coq.vernac coq-hammer-tactics.lib coq-hammer-tactics.tactics)
+ (wrapped false))
+
+(coq.pp (modules g_hammer))
