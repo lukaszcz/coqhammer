@@ -1,0 +1,4 @@
+(rule
+ (alias runtest)
+ (deps (:vfile tactics_test.v))
+ (action (run coqc %{vfile})))

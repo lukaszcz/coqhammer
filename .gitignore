@@ -45,3 +45,5 @@ _build/
 setup.data
 setup.log
 /src/hammer.ml
+.merlin
+*.install
