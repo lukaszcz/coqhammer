@@ -17,5 +17,6 @@ install-extra::
 
 clean::
 	rm -f predict htimeout
-	cd eval && $(MAKE) clean
-	cd tests && $(MAKE) clean
+	$(MAKE) -C eval clean
+	$(MAKE) -C tests/plugin clean
+	$(MAKE) -C tests/tactics clean
