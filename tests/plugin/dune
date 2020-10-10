@@ -1,0 +1,4 @@
+(rule
+ (alias runtest)
+ (deps (:vfile plugin_test.v))
+ (action (run coqc %{vfile})))

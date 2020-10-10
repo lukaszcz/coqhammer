@@ -1,9 +1,4 @@
 (rule
  (alias runtest)
- (deps (:vfile plugin_test.v))
- (action (run coqc %{vfile})))
-
-(rule
- (alias runtest)
  (deps (:vfile tactics_test.v))
  (action (run coqc %{vfile})))
