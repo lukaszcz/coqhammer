@@ -31,4 +31,8 @@ Other contributors
 
 * Karl Palmskog
 
-    * Opam packaging and Travis continuous integration.
+    * Opam packaging and Travis CI configuration.
+
+* Other contributors listed on GitHub
+
+    * Small bugfixes and keeping up-to-date with Coq master.
