@@ -48,20 +48,25 @@ Makefile.coq.tactics: _CoqProject.tactics
 Makefile.coq.mathcomp: _CoqProject.mathcomp
 	coq_makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
-tests:
-	cd tests && $(MAKE) -B
+tests: tests-plugin tests-tactics
+
+tests-plugin:
+	$(MAKE) -B -C tests/plugin
+
+tests-tactics:
+	$(MAKE) -B -C tests/tactics
 
 quicktest: test-plugin test-tactics
 
 test-plugin:
-	$(MAKE) -B -C tests plugin_test.vo
+	$(MAKE) -B -C tests/plugin plugin_test.vo
 
 test-tactics:
-	$(MAKE) -B -C tests tactics_test.vo
+	$(MAKE) -B -C tests/tactics tactics_test.vo
 
 clean: Makefile.coq Makefile.coq.local Makefile.coq.mathcomp
 	$(MAKE) -f Makefile.coq cleanall
 	-$(MAKE) -f Makefile.coq.mathcomp cleanall
 	rm -f Makefile.coq Makefile.coq.conf Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf
 
-.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests quicktest test-plugin test-tactics clean
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics clean
