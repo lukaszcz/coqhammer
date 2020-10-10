@@ -17,7 +17,7 @@ components.
    external automated systems and the reconstruction of successfully
    found proofs with the `sauto` procedure.
 
-See the [CoqHammer webapge](https://coqhammer.github.io) for
+See the [CoqHammer webpage](https://coqhammer.github.io) for
 documentation and installation instructions.
 
 Requirements
