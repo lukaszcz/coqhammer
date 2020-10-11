@@ -1,5 +1,5 @@
 (* coqterm datatype and helper functions *)
-
+open Hammer_lib
 open Coq_transl_opts
 open Hhlib
 

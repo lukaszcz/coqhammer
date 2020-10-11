@@ -5,6 +5,7 @@ open Tactypes
 open Locus
 open Proofview.Notations
 open Ltac_plugin
+open Hammer_lib
 
 module Utils = Hhutils
 module Lpo = Hhlpo

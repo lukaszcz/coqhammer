@@ -1,5 +1,6 @@
 (* Author: Evan Marzion, modified by Lukasz Czajka *)
 
+open Hammer_lib
 open Coqterms
 open Hhlib
 open Coq_transl_opts

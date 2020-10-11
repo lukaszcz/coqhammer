@@ -1,5 +1,6 @@
 (* Typing and type destruction *)
 
+open Hammer_lib
 open Coq_transl_opts
 open Coqterms
 

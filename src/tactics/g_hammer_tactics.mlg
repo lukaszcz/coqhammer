@@ -6,6 +6,7 @@ open Stdarg
 open Tacarg
 open Pcoq.Prim
 open Pcoq.Constr
+open Hammer_lib
 open Hammer_errors
 open Sauto
 open Tactics_main
