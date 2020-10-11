@@ -1,5 +1,6 @@
 (* Writing already translated problems to FOF TPTP format *)
 
+open Hammer_lib
 open Coqterms
 open Coq_transl_opts
 open Hhlib
