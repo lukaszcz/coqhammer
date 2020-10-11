@@ -1,3 +1,4 @@
+open Hammer_lib
 open Hh_term
 open Hammer_errors
 
