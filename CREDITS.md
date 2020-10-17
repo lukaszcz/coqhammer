@@ -31,7 +31,7 @@ Other contributors
 
 * Karl Palmskog
 
-    * Opam packaging and Travis CI configuration.
+    * Opam packaging, Travis CI configuration and Dune build scripts.
 
 * Other contributors listed on GitHub
 
