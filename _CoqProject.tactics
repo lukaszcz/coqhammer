@@ -9,6 +9,7 @@ src/lib/hhutils.ml
 src/lib/hhlib.ml
 src/lib/hhlpo.mli
 src/lib/hhlpo.ml
+src/lib/hhpartac.ml
 src/lib/g_hammer_lib.mlg
 src/lib/hammer_lib.mllib
 src/tactics/sauto.mli

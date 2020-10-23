@@ -583,7 +583,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
       (fun _ -> tactics)
   in
   let run limit tacs f_success f_failure =
-    Partac.partac limit (List.map fst tacs)
+    Hhpartac.partac limit (List.map fst tacs)
       begin fun k tac ->
         if k >= 0 then
           f_success (snd (List.nth tacs k)) tac
