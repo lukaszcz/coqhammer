@@ -23,7 +23,39 @@ documentation and installation instructions.
 Requirements
 ------------
 - [Coq master](https://github.com/coq/coq)
-- for `hammer`: automated provers ([Vampire](https://vprover.github.io/download.html), [CVC4](http://cvc4.cs.stanford.edu/downloads/), [Eprover](http://www.eprover.org), and/or [Z3](https://github.com/Z3Prover/z3/releases))
+- for `hammer`: automated provers
+  ([Vampire](https://vprover.github.io/download.html),
+  [CVC4](http://cvc4.cs.stanford.edu/downloads/),
+  [Eprover](http://www.eprover.org), and/or
+  [Z3](https://github.com/Z3Prover/z3/releases))
+
+Related projects
+----------------
+
+- [SMTCoq](https://smtcoq.github.io) connects Coq with external SAT
+  and SMT solvers. In contrast, CoqHammer's target external tools are
+  general automated theorem provers (ATPs). CoqHammer never uses the
+  "modulo theory" facilities of the SMT solvers it supports (CVC4 and
+  Z3), effectively treating them as if they were general ATPs. If what
+  you need is predominantly SMT theory reasoning (e.g. reasoning about
+  linear arithemtic, bit vectors, arrays) then you might want to try
+  SMTCoq.
+
+- [Tactician](https://coq-tactician.github.io) is a tactic learner and
+  prover for Coq. It uses machine learning methods to synthesise
+  tactic scripts. In contrast, CoqHammer searches for proof terms
+  directly at the level of Coq's logic. A limitation of CoqHammer (in
+  particular of the `hammer` tactic which relies on first-order ATPs)
+  is that it might perform poorly with some features of Coq's
+  logic. An approach based on tactic script synthesis is not directly
+  limited in this way.
+
+  In particular, by design CoqHammer will never perform induction. If
+  you are interested in automatically finding inductive proofs or in
+  interactive tactic recommendation, then you might want to try
+  Tactician. On the other hand, we expect CoqHammer to be generally
+  stronger on the parts of Coq logic it can handle well
+  (non-inductive, "close to" first-order, goal-directed proofs).
 
 Copyright and license
 ---------------------
