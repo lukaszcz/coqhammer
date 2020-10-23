@@ -58,6 +58,7 @@ type sopt_t =
 | SOSapply of bool
 | SOLimit of int
 | SODepth of int
+| SOBestLimit of int
 | SOExhaustive of bool
 | SOLia of bool
 | SOSig of bool
@@ -137,6 +138,7 @@ let string_of_sopt evd opt =
   | SOSapply b -> "sapp: " ^ string_of_bopt b
   | SOLimit n -> "limit: " ^ string_of_int n
   | SODepth d -> "depth: " ^ string_of_int d
+  | SOBestLimit n -> "blimit: " ^ string_of_int n
   | SOExhaustive b -> "exh: " ^ string_of_bopt b
   | SOLia b -> "lia: " ^ string_of_bopt b
   | SOSig b -> "sig: " ^ string_of_bopt b
@@ -147,7 +149,9 @@ let string_of_sopt evd opt =
   | SOQuick b -> "q: " ^ string_of_bopt b
 
 let string_of_sopt_list evd lst =
-  List.map (string_of_sopt evd) (List.filter (fun x -> x <> SONop) lst)
+  List.fold_right (^)
+    (List.map (string_of_sopt evd) (List.filter (fun x -> x <> SONop) lst))
+    ""
 
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
@@ -366,6 +370,8 @@ let interp_opt ret opt opts =
      ret { opts with s_limit = n; s_depth_cost_model = false }
   | SODepth n ->
      ret { opts with s_limit = n; s_depth_cost_model = true }
+  | SOBestLimit _ ->
+     ret opts
   | SOExhaustive b ->
      ret { opts with s_exhaustive = b }
   | SOLia b ->
@@ -415,3 +421,122 @@ let use_lemmas lst =
     Utils.ltac_eval "Tactics.use_tac" [Tacinterp.Value.of_constr t]
   in
   List.fold_left (fun tac t -> tac <*> use_tac t) Tacticals.New.tclIDTAC lst
+
+let cbest_tacs lst =
+  [ (usolve (interp_opts (hauto_s_opts ()) lst strivial),
+     "strivial");
+    (usolve (interp_opts (hauto_s_opts ()) lst sfirstorder),
+     "sfirstorder");
+    (usolve (interp_opts (hauto_s_opts ()) lst scongruence),
+     "scongruence")
+  ]
+
+let hbest_tacs lst =
+  [ (usolve (interp_opts
+               (set_quick_opts true
+                  (set_eager_opts false (hauto_s_opts ())))
+               lst sauto),
+     "hauto lq: on");
+    (usolve (interp_opts
+               (set_quick_opts true (hauto_s_opts ()))
+               lst sauto),
+     "hauto q: on");
+    (usolve (interp_opts
+               (set_eager_opts false (hauto_s_opts ()))
+               lst sauto),
+     "hauto l: on");
+    (usolve (interp_opts (hauto_s_opts ()) lst sauto),
+     "hauto");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true
+                     (set_eager_opts false (hauto_s_opts ()))))
+               lst sauto),
+     "hauto lqb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true (hauto_s_opts ())))
+               lst sauto),
+     "hauto qb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_eager_opts false (hauto_s_opts ())))
+               lst sauto),
+     "hauto lb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true (hauto_s_opts ()))
+               lst sauto),
+     "hauto b: on")
+  ]
+
+let sbest_tacs lst =
+  [ (usolve (interp_opts
+               (set_quick_opts true
+                  (set_eager_opts false (default_s_opts ())))
+               lst sauto),
+     "sauto lq: on");
+    (usolve (interp_opts
+               (set_quick_opts true (default_s_opts ()))
+               lst sauto),
+     "sauto q: on");
+    (usolve (interp_opts
+               (set_eager_opts false (default_s_opts ()))
+               lst sauto),
+     "sauto l: on");
+    (usolve (interp_opts (default_s_opts ()) lst sauto),
+     "sauto");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true
+                     (set_eager_opts false (default_s_opts ()))))
+               lst sauto),
+     "sauto lqb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true (default_s_opts ())))
+               lst sauto),
+     "sauto qb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_eager_opts false (default_s_opts ())))
+               lst sauto),
+     "sauto lb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true (default_s_opts ()))
+               lst sauto),
+     "sauto b: on")
+  ]
+
+let run_best limit tacs (lst : sopt_t list)
+      (f_success : string -> unit Proofview.tactic -> unit Proofview.tactic)
+      (f_failure : unit -> unit Proofview.tactic) : unit Proofview.tactic =
+  try_tactic begin fun () ->
+    Hhpartac.partac limit (List.map fst tacs)
+      begin fun k tac ->
+        if k >= 0 then
+          let tacname = snd (List.nth tacs k) in
+          Proofview.Goal.enter begin fun gl ->
+            let evd = Proofview.Goal.sigma gl in
+            f_success (tacname ^ " " ^ string_of_sopt_list evd lst) tac
+          end
+        else
+          f_failure ()
+      end
+  end
+
+let try_best limit lst =
+  let rec hlp tacs =
+    match tacs with
+    | h :: t ->
+       run_best limit h lst
+         begin fun str tac ->
+           Feedback.msg_info (Pp.str ("Replace `best` with: " ^ str));
+           tac
+         end
+         (fun () -> hlp t)
+    | [] ->
+       Tacticals.New.tclZEROMSG (Pp.str "The `best` tactic failed. You may try increasing the time limit with the `blimit:` option (default: 1s).")
+  in
+  hlp [cbest_tacs lst; hbest_tacs lst; sbest_tacs lst]
+
+let default_best_limit = 1
