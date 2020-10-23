@@ -67,6 +67,88 @@ type sopt_t =
 | SOEager of bool
 | SOQuick of bool
 
+let string_of_bopt b =
+  if b then "on" else "off"
+
+let string_of_strlist lst =
+  match lst with
+  | [] -> "-"
+  | _ -> Hhlib.sfold (fun x -> x) ", " lst
+
+let string_of_qualid_list lst =
+  match lst with
+  | [] -> "-"
+  | _ -> Hhlib.sfold (fun q -> Pp.string_of_ppcmds (Libnames.pr_qualid q)) ", " lst
+
+let string_of_tactic evd tac =
+  Pp.string_of_ppcmds (Pptactic.pr_raw_tactic (Global.env ()) evd tac)
+
+let string_of_sopt evd opt =
+  match opt with
+  | SONop -> ""
+  | SOUse lst -> "use: " ^ Hhlib.sfold (Hhutils.constr_expr_to_string evd) ", " lst
+  | SOGen lst -> "gen: " ^ Hhlib.sfold (Hhutils.constr_expr_to_string evd) ", " lst
+  | SOUnfold lst -> "unfold: " ^ string_of_qualid_list lst
+  | SOUnfoldAll -> "unfold: *"
+  | SOUnfoldNone -> "unfold: -"
+  | SOAlwaysUnfold lst -> "unfold!: " ^ string_of_qualid_list lst
+  | SOAlwaysUnfoldAll -> "unfold!: *"
+  | SOAlwaysUnfoldNone -> "unfold!: -"
+  | SOInv lst -> "inv: " ^ string_of_qualid_list lst
+  | SOInvAll -> "inv: *"
+  | SOInvNone -> "inv: never"
+  | SOCtrs lst -> "ctrs: " ^ string_of_qualid_list lst
+  | SOCtrsAll -> "ctrs: *"
+  | SOCtrsNone -> "ctrs: never"
+  | SOCaseSplit lst -> "cases: " ^ string_of_qualid_list lst
+  | SOCaseSplitAll -> "cases: *"
+  | SOCaseSplitNone -> "cases: never"
+  | SOSimpleSplit lst -> "split: " ^ string_of_qualid_list lst
+  | SOSimpleSplitAll -> "split: *"
+  | SOSimpleSplitNone -> "split: never"
+  | SOBases lst -> "db: " ^ string_of_strlist lst
+  | SOBasesAdd lst -> "db+: " ^ string_of_strlist lst
+  | SOBasesAll -> "db: *"
+  | SORewBases lst -> "rew:db: " ^ string_of_strlist lst
+  | SORewBasesAdd lst -> "rew:db+: " ^ string_of_strlist lst
+  | SOHintBases lst -> "hint:db: " ^ string_of_strlist lst
+  | SOHintBasesAdd lst -> "hint:db+: " ^ string_of_strlist lst
+  | SOHintBasesAll -> "hint:db: *"
+  | SOFinish tac -> "finish: " ^ string_of_tactic evd tac
+  | SOFinal tac -> "final: " ^ string_of_tactic evd tac
+  | SOSolve tac -> "solve: " ^ string_of_tactic evd tac
+  | SOSimp tac -> "simp: " ^ string_of_tactic evd tac
+  | SOSSimp tac -> "ssimp: " ^ string_of_tactic evd tac
+  | SOSolveAdd tac -> "solve+: " ^ string_of_tactic evd tac
+  | SOSimpAdd tac -> "simp+: " ^ string_of_tactic evd tac
+  | SOSSimpAdd tac -> "ssimp+: " ^ string_of_tactic evd tac
+  | SOForward b -> "fwd: " ^ string_of_bopt b
+  | SOEagerCaseSplit b -> "ecases: " ^ string_of_bopt b
+  | SOSimpleInvert b -> "sinv: " ^ string_of_bopt b
+  | SOEagerInvert b -> "einv: " ^ string_of_bopt b
+  | SOEagerReduce b -> "ered: " ^ string_of_bopt b
+  | SOEagerRewrite b -> "erew: " ^ string_of_bopt b
+  | SODirectedRewrite b -> "drew: " ^ string_of_bopt b
+  | SOUndirectedRewrite b -> "urew: " ^ string_of_bopt b
+  | SORewrite b -> "rew: " ^ string_of_bopt b
+  | SOReflect b -> "brefl: " ^ string_of_bopt b
+  | SOReflectRaw b -> "brefl!:" ^ string_of_bopt b
+  | SOReduce b -> "red: " ^ string_of_bopt b
+  | SOSapply b -> "sapp: " ^ string_of_bopt b
+  | SOLimit n -> "limit: " ^ string_of_int n
+  | SODepth d -> "depth: " ^ string_of_int d
+  | SOExhaustive b -> "exh: " ^ string_of_bopt b
+  | SOLia b -> "lia: " ^ string_of_bopt b
+  | SOSig b -> "sig: " ^ string_of_bopt b
+  | SOPrf b -> "prf: " ^ string_of_bopt b
+  | SODep b -> "dep: " ^ string_of_bopt b
+  | SODepRaw b -> "dep!: " ^ string_of_bopt b
+  | SOEager b -> "l: " ^ string_of_bopt (not b)
+  | SOQuick b -> "q: " ^ string_of_bopt b
+
+let string_of_sopt_list evd lst =
+  List.map (string_of_sopt evd) (List.filter (fun x -> x <> SONop) lst)
+
 let const_of_qualid q =
   catch_errors (fun () -> Utils.get_const_from_qualid q)
     (fun _ ->
