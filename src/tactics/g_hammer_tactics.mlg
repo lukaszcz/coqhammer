@@ -79,7 +79,9 @@ ARGUMENT EXTEND sauto_opts
 | [ "urew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOUndirectedRewrite b :: sopts }
 | [ "rew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
 | [ "brefl:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
+| [ "b:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
 | [ "brefl!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
+| [ "b!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
 | [ "red:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReduce b :: sopts }
 | [ "sapp:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
 | [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
@@ -99,6 +101,26 @@ ARGUMENT EXTEND sauto_opts
 | [ "lq:" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
       SOEager false :: SOQuick true :: sopts
+    else
+      sopts
+}
+| [ "lb:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect true :: sopts }
+| [ "lb!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect true :: sopts }
+| [ "qb:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+    if b then
+      SOQuick true :: SOReflect true :: sopts
+    else
+      sopts
+}
+| [ "lqb:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+    if b then
+      SOQuick true :: SOReflect true :: sopts
+    else
+      sopts
+}
+| [ "qb!:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+    if b then
+      SOQuick true :: SOReflectRaw true :: sopts
     else
       sopts
 }
