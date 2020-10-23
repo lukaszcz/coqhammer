@@ -11,6 +11,7 @@ src/lib/hhutils.ml
 src/lib/hhlib.ml
 src/lib/hhlpo.mli
 src/lib/hhlpo.ml
+src/lib/hhpartac.ml
 src/lib/g_hammer_lib.mlg
 src/lib/hammer_lib.mlpack
 src/tactics/sauto.mli
@@ -45,7 +46,6 @@ src/plugin/features.mli
 src/plugin/features.ml
 src/plugin/provers.mli
 src/plugin/provers.ml
-src/plugin/partac.ml
 src/plugin/hammer_main.ml
 src/plugin/g_hammer.mlg
 src/plugin/hammer_plugin.mlpack

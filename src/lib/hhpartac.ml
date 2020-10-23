@@ -1,5 +1,3 @@
-open Hammer_lib
-
 (* Parallel invocation of tactics *)
 
 let partac time lst0 cont =
