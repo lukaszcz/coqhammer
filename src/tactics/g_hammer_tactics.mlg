@@ -115,7 +115,7 @@ ARGUMENT EXTEND sauto_opts
 }
 | [ "lqb:" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
-      SOQuick true :: SOReflect true :: sopts
+      SOEager false :: SOQuick true :: SOReflect true :: sopts
     else
       sopts
 }

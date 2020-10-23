@@ -121,6 +121,8 @@ val print_constr : Evd.evar_map -> EConstr.t -> unit
 
 val constr_to_string : Evd.evar_map -> EConstr.t -> string
 
+val constr_expr_to_string : Evd.evar_map -> Constrexpr.constr_expr -> string
+
 val constant_to_string : Constant.t -> string
 
 val inductive_to_string : inductive -> string
