@@ -1,5 +1,6 @@
 (* Translation from Coq to FOL *)
 
+open Hammer_lib
 open Coqterms
 open Coq_transl_opts
 open Hh_term
