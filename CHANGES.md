@@ -5,9 +5,10 @@ Coq versions compatibility: 8.10, 8.11, 8.12.
 
 Overview of changes
 -------------------
-* TODO: New shorthand options: `b:`, `lb:`, `qb:` and `lqb:`.
+* TODO: New shorthand options: `b:`, `qb:`, etc.
 * TODO: Now `let` statements taken into account by case splitting.
-* TODO: The `best` tactic.
+* TODO: New `best` tactic which tries several variants of `sauto` in
+  parallel.
 
 CoqHammer v. 1.3
 ================

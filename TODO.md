@@ -1,5 +1,5 @@
-Research problems
------------------
+Problems
+--------
 
 1. Make boolean reflection work. Make CoqHammer usable with MathComp:
    this will probably require much more than just making boolean
