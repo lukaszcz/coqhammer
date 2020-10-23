@@ -1,14 +1,17 @@
-CoqHammer v. 1.??
+CoqHammer v. 1.?.?
 ==================
 
 Coq versions compatibility: 8.10, 8.11, 8.12.
 
 Overview of changes
 -------------------
-* New shorthand options: `b:`, `qb:`, etc.
-* TODO: Now `let` statements taken into account by case splitting.
+* New `sauto` option shorthands: `b:`, `lb:`, `qb:`, `lqb:`, etc.
+* TODO: Now `let` statements taken into account by case splitting in
+  `sauto`.
 * TODO: New `best` tactic which tries several variants of `sauto` in
   parallel.
+* TODO: Automatic ATP detection in `hammer`.
+* TODO: Fixed issues #86, #45.
 
 CoqHammer v. 1.3
 ================
