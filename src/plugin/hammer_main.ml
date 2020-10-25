@@ -716,11 +716,14 @@ let try_sauto () =
   if !Opt.sauto_timelimit = 0 then
     Proofview.tclZERO (Failure "timeout")
   else
-    Proofview.tclBIND
-      (ltac_timeout !Opt.sauto_timelimit "Tactics.sauto_tac" [])
-      (fun _ ->
-        Msg.info "Replace the hammer tactic with: sauto";
-        Tacticals.New.tclIDTAC)
+    Tacbest.run_best !Opt.sauto_timelimit (Tacbest.hammer_pretactics ()) []
+      begin fun str tac ->
+        Msg.info ("Replace the hammer tactic with: " ^ str);
+        tac
+      end
+      begin fun () ->
+        Proofview.tclZERO (Failure "timeout")
+      end
 
 (***************************************************************************************)
 

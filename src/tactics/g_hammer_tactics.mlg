@@ -9,6 +9,7 @@ open Pcoq.Constr
 open Hammer_lib
 open Hammer_errors
 open Sauto
+open Tacopts
 open Tactics_main
 
 open Proofview.Notations
@@ -87,7 +88,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "sapp:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
 | [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
 | [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
-| [ "blimit:" integer(i) sauto_opts(sopts) ] -> { SOBestLimit i :: sopts }
+| [ "time:" integer(i) sauto_opts(sopts) ] -> { SOTimeout i :: sopts }
 | [ "exh:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
 | [ "lia:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOLia b :: sopts }
 | [ "sig:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSig b :: sopts }
@@ -314,15 +315,20 @@ TACTIC EXTEND Hammer_use
 }
 END
 
+TACTIC EXTEND Hammer_sauto_hbest
+| [ "hbest" sauto_opts(l) ] -> {
+  Tacbest.find_best_tactic (Tacbest.hbest_tactics l) l "hbest"
+}
+END
+
+TACTIC EXTEND Hammer_sauto_sbest
+| [ "sbest" sauto_opts(l) ] -> {
+  Tacbest.find_best_tactic (Tacbest.sbest_tactics l) l "sbest"
+}
+END
+
 TACTIC EXTEND Hammer_sauto_best
 | [ "best" sauto_opts(l) ] -> {
-  let limit =
-    List.fold_left (fun acc x -> match x with SOBestLimit n -> n | _ -> acc)
-      default_best_limit l
-  in
-  let lst =
-    List.filter (fun x -> match x with SOBestLimit _ -> false | _ -> true) l
-  in
-  try_tactic (fun () -> try_best limit lst)
+  Tacbest.find_best_tactic (Tacbest.best_tactics l) l "best"
 }
 END

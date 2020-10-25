@@ -1,4 +1,4 @@
-CoqHammer v. 1.?.?
+CoqHammer v. 1.3.1
 ==================
 
 Coq versions compatibility: 8.10, 8.11, 8.12.
@@ -6,12 +6,14 @@ Coq versions compatibility: 8.10, 8.11, 8.12.
 Overview of changes
 -------------------
 * New `sauto` option shorthands: `b:`, `lb:`, `qb:`, `lqb:`, etc.
-* TODO: Now `let` statements taken into account by case splitting in
-  `sauto`.
-* TODO: New `best` tactic which tries several variants of `sauto` in
+* New `best` tactic which tries several variants of `sauto` in
   parallel.
+* Several variants of `sauto` tried in parallel as the preliminary
+  tactic in `hammer`.
 * TODO: Automatic ATP detection in `hammer`.
 * TODO: Fixed issues #86, #45.
+* TODO: Now `let` statements taken into account by case splitting in
+  `sauto`.
 
 CoqHammer v. 1.3
 ================
