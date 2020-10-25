@@ -14,6 +14,10 @@ src/lib/g_hammer_lib.mlg
 src/lib/hammer_lib.mllib
 src/tactics/sauto.mli
 src/tactics/sauto.ml
+src/tactics/tacopts.mli
+src/tactics/tacopts.ml
+src/tactics/tacbest.mli
+src/tactics/tacbest.ml
 src/tactics/tactics_main.ml
 src/tactics/g_hammer_tactics.mlg
 src/tactics/hammer_tactics.mllib

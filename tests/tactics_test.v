@@ -26,7 +26,7 @@ Qed.
 
 Lemma lem_test_6 : (forall P : nat -> Prop, P 0 -> P (S 0) ->
                                             (forall x, P x -> P (S x) -> P (S (S x))) -> P 20).
-  qblast.
+  sblast.
 Qed.
 
 Definition ff := False.
