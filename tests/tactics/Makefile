@@ -9,6 +9,6 @@ legacy_tactics_test.vo: legacy_tactics_test.v
 	$(COQC) legacy_tactics_test.v
 
 clean:
-	-rm -f *.vo *.glob .*.aux
+	-rm -f *.vo *.glob .*.aux *.vos *.vok .*.cache
 
 .PHONY: all clean
