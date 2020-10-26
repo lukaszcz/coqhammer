@@ -3,12 +3,10 @@ open Hammer_errors
 open Sauto
 open Tacopts
 
-let best_tacs_batch_0 lst =
-  [ (usolve (interp_opts (hauto_s_opts ()) lst strivial),
-     "strivial");
-    (usolve (interp_opts (hauto_s_opts ()) lst sfirstorder),
+let trivial_tacs_batch lst =
+  [ (usolve (interp_opts (default_s_opts ()) lst sfirstorder),
      "sfirstorder");
-    (usolve (interp_opts (hauto_s_opts ()) lst scongruence),
+    (usolve (interp_opts (default_s_opts ()) lst scongruence),
      "scongruence")
   ]
 
@@ -88,7 +86,42 @@ let sbest_tacs lst =
      "sauto b: on")
   ]
 
-let best_tacs_batch_1 lst =
+let best_tacs_batch_a lst =
+  [ (usolve (interp_opts (default_s_opts ()) lst sfirstorder),
+     "sfirstorder");
+    (usolve (interp_opts (default_s_opts ()) lst scongruence),
+     "scongruence");
+    (usolve (interp_opts
+               (set_quick_opts true
+                  (set_eager_opts false (hauto_s_opts ())))
+               lst sauto),
+     "hauto lq: on");
+    (usolve (interp_opts
+               (set_quick_opts true (hauto_s_opts ()))
+               lst sauto),
+     "hauto q: on");
+    (usolve (interp_opts
+               (set_eager_opts false (hauto_s_opts ()))
+               lst sauto),
+     "hauto l: on");
+    (usolve (interp_opts
+               (set_quick_opts true
+                  (set_eager_opts false (default_s_opts ())))
+               lst sauto),
+     "sauto lq: on");
+    (usolve (interp_opts
+               (set_eager_opts false (qauto_s_opts ()))
+               lst sauto),
+     "qauto l: on");
+    (usolve (interp_opts
+               (set_rew_opts false
+                  (set_quick_opts true
+                     (set_eager_opts false (hauto_s_opts ()))))
+               lst sauto),
+     "hauto lq: on rew: off")
+  ]
+
+let best_tacs_batch_b lst =
   [ (usolve (interp_opts
                ({ (set_quick_opts true
                      (set_eager_opts false (hauto_s_opts ()))) with
@@ -106,10 +139,47 @@ let best_tacs_batch_1 lst =
                   s_directed_rewriting = false })
                lst sauto),
      "hauto l: on drew: off");
+    (usolve (interp_opts
+               (set_quick_opts true (hauto_s_opts ()))
+               lst sauto),
+     "hauto");
+    (usolve (interp_opts
+               (set_quick_opts true (default_s_opts ()))
+               lst sauto),
+     "sauto q: on");
+    (usolve (interp_opts
+               (set_eager_opts false (default_s_opts ()))
+               lst sauto),
+     "sauto l: on");
+    (usolve (interp_opts (default_s_opts ()) lst sauto),
+     "sauto");
     (usolve (interp_opts { (hauto_s_opts ()) with
                  s_directed_rewriting = false }
                lst sauto),
-     "hauto drew: off");
+     "hauto drew: off")
+  ]
+
+let best_tacs_batch_c lst =
+  [ (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true
+                     (set_eager_opts false (hauto_s_opts ()))))
+               lst sauto),
+     "hauto lqb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true (hauto_s_opts ())))
+               lst sauto),
+     "hauto qb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_eager_opts false (hauto_s_opts ())))
+               lst sauto),
+     "hauto lb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true (hauto_s_opts ()))
+               lst sauto),
+     "hauto b: on");
     (usolve (interp_opts
                { (set_brefl_opts true
                     (set_quick_opts true
@@ -136,8 +206,28 @@ let best_tacs_batch_1 lst =
      "hauto b: on drew: off")
   ]
 
-let best_tacs_batch_2 lst =
+let best_tacs_batch_1 lst =
   [ (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true
+                     (set_eager_opts false (default_s_opts ()))))
+               lst sauto),
+     "sauto lqb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_quick_opts true (default_s_opts ())))
+               lst sauto),
+     "sauto qb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true
+                  (set_eager_opts false (default_s_opts ())))
+               lst sauto),
+     "sauto lb: on");
+    (usolve (interp_opts
+               (set_brefl_opts true (default_s_opts ()))
+               lst sauto),
+     "sauto b: on");
+    (usolve (interp_opts
                ({ (set_quick_opts true
                      (set_eager_opts false (default_s_opts ()))) with
                   s_directed_rewriting = false
@@ -157,34 +247,10 @@ let best_tacs_batch_2 lst =
     (usolve (interp_opts { (default_s_opts ()) with
                  s_directed_rewriting = false }
                lst sauto),
-     "sauto drew: off");
-    (usolve (interp_opts
-               { (set_brefl_opts true
-                    (set_quick_opts true
-                       (set_eager_opts false (default_s_opts ())))) with
-                 s_directed_rewriting = false }
-               lst sauto),
-     "sauto lqb: on drew: off");
-    (usolve (interp_opts
-               { (set_brefl_opts true
-                    (set_quick_opts true (default_s_opts ()))) with
-                 s_directed_rewriting = false }
-               lst sauto),
-     "sauto qb: on drew: off");
-    (usolve (interp_opts
-               { (set_brefl_opts true
-                    (set_eager_opts false (default_s_opts ()))) with
-                 s_directed_rewriting = false }
-               lst sauto),
-     "sauto lb: on drew: off");
-    (usolve (interp_opts
-               { (set_brefl_opts true (default_s_opts ())) with
-                 s_directed_rewriting = false }
-               lst sauto),
-     "sauto b: on drew: off")
+     "sauto drew: off")
   ]
 
-let best_tacs_batch_3 lst =
+let best_tacs_batch_2 lst =
   [ (usolve (interp_opts (qauto_s_opts ()) lst sauto), "qauto");
     (usolve (interp_opts (hauto_s_opts ()) lst fcrush), "hfcrush");
     (usolve (interp_opts (hauto_s_opts ()) lst ecrush), "hecrush");
@@ -195,7 +261,7 @@ let best_tacs_batch_3 lst =
     (usolve (interp_opts (default_s_opts ()) lst scrush), "scrush")
   ]
 
-let best_tacs_batch_4 lst =
+let best_tacs_batch_3 lst =
   [ (usolve (interp_opts
                { (qauto_s_opts ()) with s_directed_rewriting = false }
                lst sauto), "qauto drew: off");
@@ -222,8 +288,32 @@ let best_tacs_batch_4 lst =
                lst scrush), "scrush drew: off")
   ]
 
-let best_tacs_batch_5 lst =
+let best_tacs_batch_4 lst =
   [ (usolve (interp_opts
+               { (set_brefl_opts true
+                    (set_quick_opts true
+                       (set_eager_opts false (default_s_opts ())))) with
+                 s_directed_rewriting = false }
+               lst sauto),
+     "sauto lqb: on drew: off");
+    (usolve (interp_opts
+               { (set_brefl_opts true
+                    (set_quick_opts true (default_s_opts ()))) with
+                 s_directed_rewriting = false }
+               lst sauto),
+     "sauto qb: on drew: off");
+    (usolve (interp_opts
+               { (set_brefl_opts true
+                    (set_eager_opts false (default_s_opts ()))) with
+                 s_directed_rewriting = false }
+               lst sauto),
+     "sauto lb: on drew: off");
+    (usolve (interp_opts
+               { (set_brefl_opts true (default_s_opts ())) with
+                 s_directed_rewriting = false }
+               lst sauto),
+     "sauto b: on drew: off");
+    (usolve (interp_opts
                (set_dep_opts true
                   (set_quick_opts true
                      (set_eager_opts false (hauto_s_opts ()))))
@@ -242,8 +332,11 @@ let best_tacs_batch_5 lst =
     (usolve (interp_opts
                (set_dep_opts true (hauto_s_opts ()))
                lst sauto),
-     "hauto dep: on");
-    (usolve (interp_opts
+     "hauto dep: on")
+  ]
+
+let best_tacs_batch_5 lst =
+  [ (usolve (interp_opts
                (set_dep_opts true
                   (set_quick_opts true
                      (set_eager_opts false (default_s_opts ()))))
@@ -262,35 +355,7 @@ let best_tacs_batch_5 lst =
     (usolve (interp_opts
                (set_dep_opts true (default_s_opts ()))
                lst sauto),
-     "sauto dep: on")
-  ]
-
-let best_tacs_batch_6 lst =
-  [ (usolve (interp_opts
-               (set_dep_opts true
-                  (set_brefl_opts true
-                     (set_quick_opts true
-                        (set_eager_opts false (hauto_s_opts ())))))
-               lst sauto),
-     "hauto lqb: on dep: on");
-    (usolve (interp_opts
-               (set_dep_opts true
-                  (set_brefl_opts true
-                     (set_quick_opts true (hauto_s_opts ()))))
-               lst sauto),
-     "hauto qb: on dep: on");
-    (usolve (interp_opts
-               (set_dep_opts true
-                  (set_brefl_opts true
-                     (set_eager_opts false (hauto_s_opts ()))))
-               lst sauto),
-     "hauto lb: on dep: on");
-    (usolve (interp_opts
-               (set_dep_opts true
-                  (set_brefl_opts true
-                     (hauto_s_opts ())))
-               lst sauto),
-     "hauto b: on dep: on");
+     "sauto dep: on");
     (usolve (interp_opts
                (set_dep_opts true
                   (set_brefl_opts true
@@ -356,24 +421,24 @@ let best_tacs lst =
                lst sauto),
      "sauto lq: on drew: off");
     (usolve (interp_opts
-               (set_brefl_opts true (default_s_opts ()))
+               (set_brefl_opts true (hauto_s_opts ()))
                lst sauto),
-     "sauto b: on");
+     "hauto b: on");
     (usolve (interp_opts (default_s_opts ())
                lst fcrush),
      "fcrush")
   ]
 
 let best_tactics lst =
-  [best_tacs_batch_0 lst; hbest_tacs lst; sbest_tacs lst;
+  [best_tacs_batch_a lst; best_tacs_batch_b lst; best_tacs_batch_c lst;
    best_tacs_batch_1 lst; best_tacs_batch_2 lst; best_tacs_batch_3 lst;
-   best_tacs_batch_4 lst; best_tacs_batch_5 lst; best_tacs_batch_6 lst]
+   best_tacs_batch_4 lst; best_tacs_batch_5 lst]
 
 let hbest_tactics lst =
-  [best_tacs_batch_0 lst @ hbest_tacs lst]
+  [trivial_tacs_batch lst @ hbest_tacs lst]
 
 let sbest_tactics lst =
-  [best_tacs_batch_0 lst @ sbest_tacs lst]
+  [trivial_tacs_batch lst @ sbest_tacs lst]
 
 let hammer_pretactics () =
   best_tacs []
@@ -423,4 +488,4 @@ let find_best_tactic batches l name =
   try_tactic (fun () ->
       try_best batches limit lst
         ("Replace the `" ^ name ^ "` tactic with:\n\t")
-        ("The `" ^ name ^ "` tactic failed. You may try increasing the time limit with the `time:` option (default: 1s)."))
+        ("The `" ^ name ^ "` tactic failed. You may try increasing the time limit with the `time:` option (default: 1s), or set the `depth:` option. See https://coqhammer.github.io for more information."))
