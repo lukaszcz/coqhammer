@@ -466,11 +466,11 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
               Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
                                          (Some []) ])
   and rcongruence =
-    usolve (use_deps <*> scongruence (mkopts (hauto_s_opts ())))
+    usolve (use_deps <*> scongruence (mkopts (default_s_opts ())))
   and rfirstorder =
-    usolve (use_deps <*> sfirstorder (mkopts (hauto_s_opts ())))
+    usolve (use_deps <*> sfirstorder (mkopts (default_s_opts ())))
   and rtrivial =
-    usolve (use_deps <*> strivial (mkopts (hauto_s_opts ())))
+    usolve (use_deps <*> strivial (mkopts (default_s_opts ())))
   and rreasy () =
     usolve (use_deps <*>
               sinit (mkopts (hauto_s_opts ())) <*>
