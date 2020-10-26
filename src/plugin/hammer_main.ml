@@ -470,11 +470,11 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
               Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
                                          (Some []) ])
   and rcongruence =
-    usolve (use_deps <*> scongruence (mkopts (hauto_s_opts ())))
+    usolve (use_deps <*> scongruence (mkopts (default_s_opts ())))
   and rfirstorder =
-    usolve (use_deps <*> sfirstorder (mkopts (hauto_s_opts ())))
+    usolve (use_deps <*> sfirstorder (mkopts (default_s_opts ())))
   and rtrivial =
-    usolve (use_deps <*> strivial (mkopts (hauto_s_opts ())))
+    usolve (use_deps <*> strivial (mkopts (default_s_opts ())))
   and rreasy () =
     usolve (use_deps <*>
               sinit (mkopts (hauto_s_opts ())) <*>
@@ -751,11 +751,11 @@ let hammer_tac () =
         Msg.info ("Reconstructing the proof...");
         run_tactics deps defs inverts
           begin fun tac ->
-          Msg.info ("Tactic " ^ tac ^ " succeeded.");
-          Msg.info ("Replace the hammer tactic with:\n\t" ^
-                      tac ^ mk_lst_str " use:" sdeps ^
-                        mk_lst_str " unfold:" sdefs ^
-                          mk_lst_str " inv:" sinverts ^ ".")
+            Msg.info ("Tactic " ^ tac ^ " succeeded.");
+            Msg.info ("Replace the hammer tactic with:\n\t" ^
+                        tac ^ mk_lst_str " use:" sdeps ^
+                          mk_lst_str " unfold:" sdefs ^
+                            mk_lst_str " inv:" sinverts ^ ".")
           end
           begin fun () ->
             raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'.")
