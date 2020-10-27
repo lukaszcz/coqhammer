@@ -29,3 +29,8 @@ val minimize : atp_info ->
 val predict : hhdef list (* filtered deps *) -> hhdef list (* hyps *) ->
   hhdef list (* all deps *) -> hhdef (* goal *) ->
   atp_info
+
+(* Detect ATPs and set the hammer options in opt.ml (?_enabled)
+   accordingly. Returns true if at least one prover found, false
+   otherwise. *)
+val detect : unit -> bool
