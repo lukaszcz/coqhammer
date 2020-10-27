@@ -470,3 +470,69 @@ let predict deps1 hyps deps goal =
   with e ->
     clean ();
     raise e
+
+(******************************************************************************)
+
+let detect_eprover () =
+  if Sys.command "eprover --version 2>&1 >/dev/null" = 0 then
+    begin
+      Msg.info "Eprover found";
+      Opt.eprover_enabled := true;
+      true
+    end
+  else
+    begin
+      Msg.info "Eprover not found";
+      Opt.eprover_enabled := false;
+      false
+    end
+
+let detect_vampire () =
+  if Sys.command "vampire --version 2>&1 >/dev/null" = 0 then
+    begin
+      Msg.info "Vampire found";
+      Opt.vampire_enabled := true;
+      true
+    end
+  else
+    begin
+      Msg.info "Vampire not found";
+      Opt.vampire_enabled := false;
+      false
+    end
+
+let detect_z3 () =
+  if Sys.command "z3_tptp -h 2>&1 >/dev/null" = 0 then
+    begin
+      Msg.info "Z3 found";
+      Opt.z3_enabled := true;
+      true
+    end
+  else
+    begin
+      Msg.info "Z3 not found";
+      Opt.z3_enabled := false;
+      false
+    end
+
+let detect_cvc4 () =
+  if Sys.command "cvc4 --version 2>&1 >/dev/null" = 0 then
+    begin
+      Msg.info "CVC4 found";
+      Opt.cvc4_enabled := true;
+      true
+    end
+  else
+    begin
+      Msg.info "CVC4 not found";
+      Opt.cvc4_enabled := false;
+      false
+    end
+
+let detect () =
+  let b1 = detect_eprover ()
+  and b2 = detect_vampire ()
+  and b3 = detect_z3 ()
+  and b4 = detect_cvc4 ()
+  in
+  b1 || b2 || b3 || b4
