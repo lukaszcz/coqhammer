@@ -488,4 +488,4 @@ let find_best_tactic batches l name =
   try_tactic (fun () ->
       try_best batches limit lst
         ("Replace the `" ^ name ^ "` tactic with:\n\t")
-        ("The `" ^ name ^ "` tactic failed. You may try increasing the time limit with the `time:` option (default: 1s), or set the `depth:` option. See https://coqhammer.github.io for more information."))
+        ("The `" ^ name ^ "` tactic failed. You may try increasing the time limit with the `time:` option (default: 1s), or setting the `depth:` option. See https://coqhammer.github.io for more information."))

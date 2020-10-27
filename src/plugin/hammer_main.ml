@@ -729,6 +729,37 @@ let try_sauto () =
 
 (***************************************************************************************)
 
+let provers_detected = ref false
+
+let hammer_main_tac env sigma gl =
+  let goal = get_goal gl in
+  let hyps = get_hyps gl in
+  let defs = get_defs env sigma in
+  if !Opt.debug_mode then
+    Msg.info ("Found " ^ string_of_int (List.length defs) ^
+                " accessible Coq objects.");
+  let info = do_predict hyps defs goal in
+  let (deps, defs, inverts) = get_tac_args env sigma info in
+  let sdeps = List.map (Utils.constr_to_string sigma) deps
+  and sdefs = List.map Utils.constant_to_string defs
+  and sinverts = List.map Utils.inductive_to_string inverts
+  in
+  Msg.info ("Reconstructing the proof...");
+  run_tactics deps defs inverts
+    begin fun tac ->
+      Msg.info ("Tactic " ^ tac ^ " succeeded.");
+      Msg.info ("Replace the hammer tactic with:\n\t" ^
+                  tac ^ mk_lst_str " use:" sdeps ^
+                    mk_lst_str " unfold:" sdefs ^
+                      mk_lst_str " inv:" sinverts ^ ".")
+    end
+    begin fun () ->
+      raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'.")
+    end
+    begin fun k ->
+      Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
+    end
+
 let hammer_tac () =
   Proofview.Goal.enter
     begin fun gl ->
@@ -737,34 +768,18 @@ let hammer_tac () =
     Proofview.tclORELSE
       (try_sauto ())
       begin fun _ ->
-      try_tactic begin fun () ->
-        let goal = get_goal gl in
-        let hyps = get_hyps gl in
-        let defs = get_defs env sigma in
-        if !Opt.debug_mode then
-          Msg.info ("Found " ^ string_of_int (List.length defs) ^
-                      " accessible Coq objects.");
-        let info = do_predict hyps defs goal in
-        let (deps, defs, inverts) = get_tac_args env sigma info in
-        let sdeps = List.map (Utils.constr_to_string sigma) deps
-        and sdefs = List.map Utils.constant_to_string defs
-        and sinverts = List.map Utils.inductive_to_string inverts
-        in
-        Msg.info ("Reconstructing the proof...");
-        run_tactics deps defs inverts
-          begin fun tac ->
-            Msg.info ("Tactic " ^ tac ^ " succeeded.");
-            Msg.info ("Replace the hammer tactic with:\n\t" ^
-                        tac ^ mk_lst_str " use:" sdeps ^
-                          mk_lst_str " unfold:" sdefs ^
-                            mk_lst_str " inv:" sinverts ^ ".")
-          end
-          begin fun () ->
-            raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'.")
-          end
-          begin fun k ->
-            Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
-          end
+        try_tactic begin fun () ->
+          if not !provers_detected then
+            begin
+              provers_detected := true;
+              Msg.info "Detecting provers...";
+              if not (Provers.detect ()) then
+                Tacticals.New.tclZEROMSG (Pp.str "No ATPs found. See https://coqhammer.github.io for instructions on how to install the provers.")
+              else
+                hammer_main_tac env sigma gl
+            end
+          else
+            hammer_main_tac env sigma gl
         end
       end
     end
