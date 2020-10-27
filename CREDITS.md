@@ -29,6 +29,10 @@ Other contributors
 
     * Preliminary version of Coq data export.
 
+* Ping Hou
+
+    * Testing of the `sauto` tactic.
+
 * Karl Palmskog
 
     * Opam packaging, Travis CI configuration and Dune build scripts.
