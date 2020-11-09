@@ -765,12 +765,14 @@ let hammer_tac () =
         try_tactic begin fun () ->
           if not !provers_detected then
             begin
-              provers_detected := true;
               Msg.info "Detecting provers...";
               if not (Provers.detect ()) then
                 Tacticals.New.tclZEROMSG (Pp.str "No ATPs found. See https://coqhammer.github.io for instructions on how to install the provers.")
               else
-                hammer_main_tac env sigma gl
+                begin
+                  provers_detected := true;
+                  hammer_main_tac env sigma gl
+                end
             end
           else
             hammer_main_tac env sigma gl
