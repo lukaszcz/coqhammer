@@ -35,7 +35,7 @@ let ptimeout n tac =
         in
         match status with
         | Unix.WEXITED 0 -> clean (); tac
-        | _ -> clean(); Proofview.tclZERO Logic_monad.Tac_Timeout
+        | _ -> clean(); Proofview.tclZERO CErrors.Timeout
       with
-      | _ -> clean (); Proofview.tclZERO Logic_monad.Tac_Timeout
+      | _ -> clean (); Proofview.tclZERO CErrors.Timeout
     end

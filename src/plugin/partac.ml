@@ -27,14 +27,14 @@ let partac time lst0 cont =
            if k = 0 then
                begin
                  clean ();
-                 cont (-1) (Proofview.tclZERO Logic_monad.Tac_Timeout)
+                 cont (-1) (Proofview.tclZERO CErrors.Timeout)
                end
            else
              let (pid, status) = Unix.wait () in
              if pid = pid2 && time > 0 then
                begin
                  clean ();
-                 cont (-1) (Proofview.tclZERO Logic_monad.Tac_Timeout)
+                 cont (-1) (Proofview.tclZERO CErrors.Timeout)
                end
              else if List.mem pid pids then
                match status with
