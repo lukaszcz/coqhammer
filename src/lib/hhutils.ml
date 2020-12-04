@@ -256,6 +256,10 @@ let map_fold_constr f acc evd t =
       let (ac, ar) = fold_arr k ac (Array.of_list lst) in
       (ac, Array.to_list ar)
     in
+    let fold_ctx k ac (nas, c) =
+      let (ac, c') = hlp (k + Array.length nas) ac c in
+      (ac, (nas, c'))
+    in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
@@ -286,12 +290,13 @@ let map_fold_constr f acc evd t =
     | Evar (evk,cl) ->
        let (acc1, cl') = fold_list m acc cl in
        f m acc1 (mkEvar(evk,cl'))
-    | Case (ci,p,iv,c,bl) ->
-       let (acc, p') = hlp m acc p in
+    | Case (ci,u,pms,p,iv,c,bl) ->
+       let (acc, pms') = fold_arr m acc pms in
+       let (acc, p') = fold_ctx m acc p in
        let (acc, iv') = Constr.fold_map_invert (hlp m) acc iv in
        let (acc, c') = hlp m acc c in
-       let (acc, bl') = fold_arr m acc bl in
-       f m acc (mkCase(ci,p',iv',c',bl'))
+       let (acc, bl') = CArray.fold_left_map (fun acc c -> fold_ctx m acc c) acc bl in
+       f m acc (mkCase(ci,u,pms',p',iv',c',bl'))
     | Fix (nvn,recdef) ->
        let (fnames,typs,bodies) = recdef in
        let (acc1, typs') = fold_arr m acc typs in
@@ -318,6 +323,7 @@ let fold_constr f acc evd t =
     let fold_list k ac ar =
       List.fold_left (hlp k) ac ar
     in
+    let fold_ctx k ac (nas, c) = hlp (k + Array.length nas) ac c in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f m acc t
@@ -348,11 +354,12 @@ let fold_constr f acc evd t =
     | Evar (evk,cl) ->
        let acc1 = fold_list m acc cl in
        f m acc1 t
-    | Case (ci,p,iv,c,bl) ->
-       let acc = hlp m acc p in
+    | Case (ci,u,pms,p,iv,c,bl) ->
+       let acc = fold_arr m acc pms in
+       let acc = fold_ctx m acc p in
        let acc = hlp m acc c in
        let acc = fold_invert (hlp m) acc iv in
-       let acc = fold_arr m acc bl in
+       let acc = fold_arr m acc (Array.map snd bl) in
        f m acc t
     | Fix (nvn,recdef) ->
        let (fnames,typs,bodies) = recdef in
@@ -378,6 +385,7 @@ let fold_constr_shallow f acc evd t =
     let fold_list ac ar =
       List.fold_left hlp ac ar
     in
+    let fold_ctx ac (_, c) = hlp ac c in
     match kind evd t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
        f acc t
@@ -405,11 +413,12 @@ let fold_constr_shallow f acc evd t =
     | Evar (evk,cl) ->
        let acc1 = fold_list acc cl in
        f acc1 t
-    | Case (ci,p,iv,c,bl) ->
-       let acc = hlp acc p in
-       let acc = hlp acc c in
+    | Case (ci,u,pms,p,iv,c,bl) ->
+       let acc = fold_arr acc pms in
+       let acc = fold_ctx acc p in
        let acc = fold_invert hlp acc iv in
-       let acc = fold_arr acc bl in
+       let acc = hlp acc c in
+       let acc = fold_arr acc (Array.map snd bl) in
        f acc t
     | Fix (nvn,recdef) ->
        let (fnames,typs,bodies) = recdef in
@@ -438,6 +447,10 @@ let map_fold_constr_ker f acc t =
     let fold_list k ac lst =
       let (ac, ar) = fold_arr k ac (Array.of_list lst) in
       (ac, Array.to_list ar)
+    in
+    let fold_ctx k ac (nas, c) =
+      let (ac, c') = hlp (k + Array.length nas) ac c in
+      (ac, (nas, c'))
     in
     match kind t with
     | Rel _ | Meta _ | Var _ | Sort _ | Const _ | Ind _ | Construct _ | Int _ | Float _ ->
@@ -469,12 +482,13 @@ let map_fold_constr_ker f acc t =
     | Evar (evk,cl) ->
        let (acc1, cl') = fold_list m acc cl in
        f m acc1 (mkEvar(evk,cl'))
-    | Case (ci,p,iv,c,bl) ->
-       let (acc, p') = hlp m acc p in
+    | Case (ci,u,pms,p,iv,c,bl) ->
+       let (acc, pms') = fold_arr m acc pms in
+       let (acc, p') = fold_ctx m acc p in
        let (acc, iv') = Constr.fold_map_invert (hlp m) acc iv in
        let (acc, c') = hlp m acc c in
-       let (acc, bl') = fold_arr m acc bl in
-       f m acc (mkCase(ci,p',iv',c',bl'))
+       let (acc, bl') = CArray.fold_left_map (fun acc c -> fold_ctx m acc c) acc bl in
+       f m acc (mkCase(ci,u,pms',p',iv',c',bl'))
     | Fix (nvn,recdef) ->
        let (fnames,typs,bodies) = recdef in
        let (acc1, typs') = fold_arr m acc typs in
