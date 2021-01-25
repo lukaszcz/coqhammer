@@ -1043,8 +1043,8 @@ Tactic Notation "generalize" "proofs" := generalize_proofs_in_goal.
 Tactic Notation "generalize" "proofs" "in" ident(H) := generalize_proofs_in_hyp H.
 Tactic Notation "generalize" "proofs" "in" "*" := generalize_proofs.
 
-Ltac use_tac t :=
-  let H := fresh "H" in generalize t; intro H; try move H at top; try simp_hyp H.
+Ltac use_tac :=
+  let H := fresh "H" in intro H; try move H at top; try simp_hyp H.
 
 Ltac congr_tac := congruence 400.
 Ltac lia_tac := lia.
