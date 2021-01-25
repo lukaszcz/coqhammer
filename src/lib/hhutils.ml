@@ -4,9 +4,7 @@ open Globnames
 open Ltac_plugin
 
 let intern_constr env evd cexpr =
-  let (t, uctx) = Constrintern.interp_constr env evd cexpr in
-  let sigma = Evd.from_ctx uctx in
-  Typing.solve_evars env sigma t
+  Constrintern.interp_constr_evars env evd cexpr
 
 let tacinterp tac =
   Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac
