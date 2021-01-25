@@ -43,6 +43,37 @@ Proof.
   sauto.
 Qed.
 
+Lemma lem_implicit_arg {A} : forall l : list A, List.map id l = l.
+Proof.
+  sauto use: List.map_id.
+Qed.
+
+Lemma test_implicit_arg1 {A} : forall l : list A, List.map id l = l.
+Proof.
+  sauto use: lem_implicit_arg.
+Qed.
+
+Class Mere A := {
+  mere : forall x y : A, x = y
+}.
+
+Lemma lem_implicit_arg2 {A} `{Mere A} {B} (f g : B -> A) :
+  forall l : list B, List.map f l = List.map g l.
+Proof.
+  induction l; sauto.
+Qed.
+
+Instance mere_unit : Mere unit.
+Proof.
+  sauto.
+Qed.
+
+Lemma test_implicit_arg2 {B} :
+  forall (l : list B) (f g : B -> unit), List.map f l = List.map g l.
+Proof.
+  sauto use: lem_implicit_arg2.
+Qed.
+
 Require Import Arith.
 
 Lemma lem_test_csplit : forall n, if n =? n then True else False.
