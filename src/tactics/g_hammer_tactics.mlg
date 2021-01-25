@@ -5,7 +5,7 @@ open Ltac_plugin
 open Stdarg
 open Tacarg
 open Pcoq.Prim
-open Pcoq.Constr
+open Pltac
 open Hammer_lib
 open Hammer_errors
 open Sauto
@@ -24,12 +24,12 @@ ARGUMENT EXTEND sauto_bopt
 END
 
 ARGUMENT EXTEND sauto_opts
-| [ "using" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
+| [ "using" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
 | [ "unfolding" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
 | [ "inverting" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
 | [ "with" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
-| [ "use:" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
-| [ "gen:" ne_constr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOGen l :: sopts }
+| [ "use:" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
+| [ "gen:" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOGen l :: sopts }
 | [ "unfold:" "*" sauto_opts(sopts) ] -> { SOUnfoldAll :: sopts }
 | [ "unfold:" "-" sauto_opts(sopts) ] -> { SOUnfoldNone :: sopts }
 | [ "unfold:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
@@ -310,8 +310,8 @@ TACTIC EXTEND Hammer_sauto_actions
 END
 
 TACTIC EXTEND Hammer_use
-| [ "use" ne_constr_list_sep(l, ",") ] -> {
-  try_tactic (fun () -> use_lemmas l)
+| [ "use" ne_uconstr_list_sep(l, ",") ] -> {
+  try_tactic (fun () -> use_lemmas ist l)
 }
 END
 

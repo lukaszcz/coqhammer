@@ -228,7 +228,7 @@ let interp_use use ret opts lst env sigma =
     else
       opts
   in
-  use lems <*> ret opts
+  Tacticals.New.tclWITHHOLES true (use lems) sigma <*> ret opts
 
 let mk_final tac =
   let sfinal =
