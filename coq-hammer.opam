@@ -21,6 +21,7 @@ install: [
 ]
 depends: [
   "ocaml"
+  "stdlib-shims"
   "coq" {>= "8.10" & < "8.11~"}
   ("conf-g++" {build} | "conf-clang" {build})
   "coq-hammer-tactics" {= version}
