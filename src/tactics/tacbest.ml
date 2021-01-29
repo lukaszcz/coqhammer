@@ -1,4 +1,3 @@
-open Hammer_lib
 open Hammer_errors
 open Sauto
 open Tacopts

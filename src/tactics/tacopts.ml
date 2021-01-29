@@ -2,7 +2,6 @@
 
 open Ltac_plugin
 open Proofview.Notations
-open Hammer_lib
 open Hammer_errors
 open Sauto
 

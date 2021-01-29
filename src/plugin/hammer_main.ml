@@ -734,6 +734,7 @@ let hammer_main_tac env sigma gl =
                 " accessible Coq objects.");
   let info = do_predict hyps defs goal in
   let (deps, defs, inverts) = get_tac_args env sigma info in
+  let deps = List.map EConstr.of_constr deps in
   let sdeps = List.map (Utils.constr_to_string sigma) deps
   and sdefs = List.map Utils.constant_to_string defs
   and sinverts = List.map Utils.inductive_to_string inverts
@@ -757,25 +758,26 @@ let hammer_main_tac env sigma gl =
 let hammer_tac () =
   Proofview.Goal.enter
     begin fun gl ->
-    let env = Proofview.Goal.env gl in
-    let sigma = Proofview.Goal.sigma gl in
-    Proofview.tclORELSE
-      (try_sauto ())
-      begin fun _ ->
-        try_tactic begin fun () ->
-          if not !provers_detected then
-            begin
-              Msg.info "Detecting provers...";
-              if not (Provers.detect ()) then
-                Tacticals.New.tclZEROMSG (Pp.str "No ATPs found. See https://coqhammer.github.io for instructions on how to install the provers.")
-              else
-                begin
-                  provers_detected := true;
-                  hammer_main_tac env sigma gl
-                end
-            end
-          else
-            hammer_main_tac env sigma gl
+      let env = Proofview.Goal.env gl in
+      let sigma = Proofview.Goal.sigma gl in
+      Proofview.tclORELSE
+        (try_sauto ())
+        begin fun _ ->
+          try_tactic begin fun () ->
+            if not !provers_detected then
+              begin
+                Msg.info "Detecting provers...";
+                if not (Provers.detect ()) then
+                  Tacticals.New.tclZEROMSG (Pp.str "No ATPs found. See https://coqhammer.github.io for instructions on how to install the provers.")
+                else
+                  begin
+                    provers_detected := true;
+                    hammer_main_tac env sigma gl
+                  end
+              end
+            else
+              hammer_main_tac env sigma gl
+          end
         end
     end
 

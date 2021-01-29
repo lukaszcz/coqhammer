@@ -6,7 +6,6 @@ open Stdarg
 open Tacarg
 open Pcoq.Prim
 open Pltac
-open Hammer_lib
 open Hammer_errors
 open Sauto
 open Tacopts
