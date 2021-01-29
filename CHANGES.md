@@ -13,8 +13,6 @@ Overview of changes
 * Automatic ATP detection in `hammer`.
 * Proper handling of implicit arguments with `use:`.
 * Fixed issue #45.
-* TODO: Now `let` statements taken into account by case splitting in
-  `sauto`.
 
 CoqHammer v. 1.3
 ================
