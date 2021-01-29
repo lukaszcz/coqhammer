@@ -22,7 +22,7 @@ let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
 
 let is_good_dep s = is_alpha (String.get s 0) && not (Hhlib.string_begins_with s "_HAMMER_")
 
-let remove_duplicates = Hhlib.sort_uniq Pervasives.compare
+let remove_duplicates = Hhlib.sort_uniq Stdlib.compare
 
 let get_deps lst = List.filter is_good_dep lst
 
@@ -143,7 +143,7 @@ let get_atp_deps deps =
   in
   fun info ->
     List.map (fun x -> StringMap.find x deps_map)
-      (List.sort_uniq Pervasives.compare
+      (List.sort_uniq Stdlib.compare
          (List.filter (fun x -> StringMap.mem x deps_map)
             (info.deps @ info.defs @ info.typings @ info.types)))
 

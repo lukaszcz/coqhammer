@@ -27,7 +27,7 @@ let rec add_consts_to_hash tm =
           match x with
           | Const(c) ->
             let n = List.length args
-            and m = try Hashtbl.find const_hash c with Not_found -> Pervasives.max_int
+            and m = try Hashtbl.find const_hash c with Not_found -> Stdlib.max_int
             in
             if n < m then
               Hashtbl.replace const_hash c n

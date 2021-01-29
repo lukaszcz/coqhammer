@@ -1,7 +1,7 @@
 CoqHammer v. 1.3.1
 ==================
 
-Coq versions compatibility: 8.10, 8.11, 8.12.
+Coq versions compatibility: 8.10, 8.11, 8.12, 8.13.
 
 Overview of changes
 -------------------
@@ -11,7 +11,8 @@ Overview of changes
 * Several variants of `sauto` tried in parallel as the preliminary
   tactic in `hammer`.
 * Automatic ATP detection in `hammer`.
-* TODO: Fixed issues #86, #45.
+* Proper handling of implicit arguments with `use:`.
+* Fixed issue #45.
 * TODO: Now `let` statements taken into account by case splitting in
   `sauto`.
 
