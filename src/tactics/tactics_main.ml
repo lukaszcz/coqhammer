@@ -18,7 +18,7 @@ let try_usolve (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofvi
         end
   end
 
-let with_delayed_uconstrs ist cs tac =
+let with_delayed_uconstr ist c tac =
   let flags = {
     Pretyping.use_typeclasses = Pretyping.UseTC;
     solve_unification_constraints = true;
@@ -27,12 +27,13 @@ let with_delayed_uconstrs ist cs tac =
     program_mode = false;
     polymorphic = false;
   } in
-  let cs = List.map (Tacinterp.type_uconstr ~flags ist) cs in
-  Tacticals.New.tclMAPDELAYEDWITHHOLES true cs tac
+  let c = Tacinterp.type_uconstr ~flags ist c in
+  Tacticals.New.tclDELAYEDWITHHOLES true c tac
 
 let use_lemmas ist lst =
   let use_tac t =
     Tactics.generalize [t] <*>
       Utils.ltac_eval "Tactics.use_tac" []
   in
-  with_delayed_uconstrs ist lst use_tac
+  List.fold_left (fun tac t -> tac <*> with_delayed_uconstr ist t use_tac)
+    Tacticals.New.tclIDTAC lst
