@@ -76,14 +76,14 @@ let index x =
   let rec ind n l =
     match l with
       [] -> failwith "index"
-    | (h::t) -> if Pervasives.compare x h = 0 then n else ind (n + 1) t in
+    | (h::t) -> if Stdlib.compare x h = 0 then n else ind (n + 1) t in
   ind 0;;
 
 let assoc_index x =
   let rec ind n l =
     match l with
       [] -> failwith "assoc_index"
-    | ((y,_)::t) -> if Pervasives.compare x y = 0 then n else ind (n + 1) t
+    | ((y,_)::t) -> if Stdlib.compare x y = 0 then n else ind (n + 1) t
   in
   ind 0;;
 

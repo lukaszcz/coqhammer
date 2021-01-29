@@ -21,6 +21,7 @@ install: [
 ]
 depends: [
   "ocaml"
+  "stdlib-shims"
   "coq" {= "dev"}
   ("conf-g++" {build} | "conf-clang" {build})
   "coq-hammer-tactics" {= version}

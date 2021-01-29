@@ -326,7 +326,7 @@ let get_const_names tm =
       []
       tm
   in
-  Hhlib.sort_uniq (Pervasives.compare) lst
+  Hhlib.sort_uniq (Stdlib.compare) lst
 
 let var_occurs vname tm =
   try

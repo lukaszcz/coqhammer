@@ -279,7 +279,7 @@ let get_tac_args env sigma info =
   let deps = info.Provers.deps in
   let defs = info.Provers.defs in
   let inverts =
-    Hhlib.sort_uniq Pervasives.compare (info.Provers.inversions @ info.Provers.cases)
+    Hhlib.sort_uniq Stdlib.compare (info.Provers.inversions @ info.Provers.cases)
   in
   let map_locate =
     List.map

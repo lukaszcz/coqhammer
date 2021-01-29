@@ -394,7 +394,7 @@ let ssimpl_tac opts = if opts.s_lia then opts.s_ssimpl_tac else opts.s_ssimpl_no
 (*****************************************************************************************)
 
 let get_consts evd lst =
-  Hhlib.sort_uniq Pervasives.compare
+  Hhlib.sort_uniq Stdlib.compare
     (List.concat
        (List.map
           begin fun t ->
@@ -1058,7 +1058,7 @@ let create_actions extra opts evd goal hyps gl =
   let actions =
     List.concat (List.map (create_hyp_actions opts evd ghead0 ghead) hyps) @ actions
   in
-  List.stable_sort (fun (x, _, _) (y, _, _) -> Pervasives.compare x y) actions
+  List.stable_sort (fun (x, _, _) (y, _, _) -> Stdlib.compare x y) actions
 
 (*****************************************************************************************)
 
