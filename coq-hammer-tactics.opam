@@ -22,10 +22,11 @@ install: [
 ]
 depends: [
   "ocaml"
+  "stdlib-shims"
   "coq" {>= "8.11" & < "8.12~"}
 ]
 
-tags: [  
+tags: [
   "keyword:automation"
   "keyword:hammer"
   "keyword:tactics"

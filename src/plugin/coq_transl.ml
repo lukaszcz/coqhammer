@@ -1129,7 +1129,7 @@ let translate name =
   log 1 ("translate: " ^ name);
   let axs = extract_axioms (add_def_axioms (Defhash.find name))
   in
-  Hhlib.sort_uniq (fun x y -> Pervasives.compare (fst x) (fst y)) axs
+  Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y)) axs
 
 let retranslate lst =
   List.iter
@@ -1141,7 +1141,7 @@ let retranslate lst =
 
 let get_axioms lst =
   coq_axioms @
-    Hhlib.sort_uniq (fun x y -> Pervasives.compare (fst x) (fst y))
+    Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y))
     (List.concat (List.map Axhash.find lst))
 
 let remove_def name =

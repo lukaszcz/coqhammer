@@ -6,7 +6,7 @@ let runline s =
 
 let uniq l =
   let rec uniq2 acc = function
-      x::(y::_ as t) -> uniq2 (if Pervasives.compare x y = 0 then acc else x :: acc) t
+      x::(y::_ as t) -> uniq2 (if Stdlib.compare x y = 0 then acc else x :: acc) t
     | [x] -> List.rev (x :: acc)
     | [] -> List.rev acc
   in uniq2 [] l;;
