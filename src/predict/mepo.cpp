@@ -18,7 +18,7 @@ double cosine(const LDMap &syms1, const LVec &syms2,
   return (sq(sig) / (sig1 * sig2));
   // for jaccard use:
   // return (sig / (sig1 + sig2 + sig));
-  
+
 }
 
 double euclid(const LDMap &syms1, const LVec &syms2, const Tfidf &tfidf) {
@@ -27,7 +27,7 @@ double euclid(const LDMap &syms1, const LVec &syms2, const Tfidf &tfidf) {
   for (auto s : syms2)
     if (syms1.find(s) == syms1.end())
       sig += sq(tfidf.get(s));
-  for (const auto s : syms1)
+  for (const auto& s : syms1)
     if (find(syms2.begin(), syms2.end(), s.first) == syms2.end())
       sig += sq(tfidf.get(s.first)) * sq(s.second);
 
@@ -48,7 +48,7 @@ class MePo : public Predictor {
   private:
     Tfidf tfidf;
     const static int mepo_incr = 100;
-    
+
 };
 
 MePo::MePo(LVecVec deps, LVecVec syms, LVecVec sym_ths, long sym_num)
