@@ -63,7 +63,7 @@ double NaiveBayes::score(sample_t i, set<feature_t> symh) const {
 
   double s = 30 * log(n);
 
-  for (const auto sv : sfreqh) {
+  for (const auto& sv : sfreqh) {
     // sv.first ranges over all features of theorems depending on i
     // sv.second is the number of times sv.first appears among theorems
     // depending on i
@@ -98,4 +98,3 @@ void NaiveBayes::learn(const LVec& csyms, sample_t i, const LVec& cdeps) {
   add_sample_freqs(csyms, i, 1000);
   for (const auto d : cdeps) add_sample_freqs(csyms, d, 1);
 }
-
