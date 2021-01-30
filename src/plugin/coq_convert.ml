@@ -158,15 +158,21 @@ let rec to_coqterm tm =
   | Comb(Comb(Comb(Id "$Proj", _), _), _) ->
      Const("unsupported__" ^ unique_id ())
   (* TODO: primitive projections not really supported *)
+  | Comb(Id "$Int", _) ->
+     Const("unsupported__" ^ unique_id ())
+  (* TODO: primitive integers not really supported *)
+  | Comb(Id "$Float", _) ->
+     Const("unsupported__" ^ unique_id ())
+  (* TODO: primitive floats not really supported *)
   | _ ->
-    print_endline (string_of_hhterm tm);
-    failwith ("to_coqterm")
+     print_endline (string_of_hhterm tm);
+     failwith ("to_coqterm")
 
 let to_coqdef (def : hhdef) (lst : hhdef list) =
   let rec parse_constrs lst cacc =
     match lst with
     | (Comb(Comb(Id "$Construct", _), Id constrname), _, kind, ty, _) :: t ->
-        parse_constrs t (constrname :: cacc)
+       parse_constrs t (constrname :: cacc)
     | _ -> List.rev cacc
   in
   match def with

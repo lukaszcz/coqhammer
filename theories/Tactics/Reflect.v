@@ -125,27 +125,27 @@ Qed.
 
 Create HintDb brefl discriminated.
 
-Hint Rewrite -> andE : brefl.
-Hint Rewrite -> orE : brefl.
-Hint Rewrite -> negE : brefl.
-Hint Rewrite -> implE : brefl.
-Hint Rewrite -> iffE : brefl.
-Hint Rewrite -> falseE : brefl.
-Hint Rewrite -> trueE : brefl.
+Global Hint Rewrite -> andE : brefl.
+Global Hint Rewrite -> orE : brefl.
+Global Hint Rewrite -> negE : brefl.
+Global Hint Rewrite -> implE : brefl.
+Global Hint Rewrite -> iffE : brefl.
+Global Hint Rewrite -> falseE : brefl.
+Global Hint Rewrite -> trueE : brefl.
 
-Hint Rewrite -> Z_eqb_eq : brefl.
-Hint Rewrite -> Z_gtb_gt : brefl.
-Hint Rewrite -> Z_geb_ge : brefl.
-Hint Rewrite -> Z_ltb_lt : brefl.
-Hint Rewrite -> Z_leb_le : brefl.
+Global Hint Rewrite -> Z_eqb_eq : brefl.
+Global Hint Rewrite -> Z_gtb_gt : brefl.
+Global Hint Rewrite -> Z_geb_ge : brefl.
+Global Hint Rewrite -> Z_ltb_lt : brefl.
+Global Hint Rewrite -> Z_leb_le : brefl.
 
-Hint Rewrite -> N_eqb_eq : brefl.
-Hint Rewrite -> N_ltb_lt : brefl.
-Hint Rewrite -> N_leb_le : brefl.
+Global Hint Rewrite -> N_eqb_eq : brefl.
+Global Hint Rewrite -> N_ltb_lt : brefl.
+Global Hint Rewrite -> N_leb_le : brefl.
 
-Hint Rewrite -> Nat_eqb_eq : brefl.
-Hint Rewrite -> Nat_ltb_lt : brefl.
-Hint Rewrite -> Nat_leb_le : brefl.
+Global Hint Rewrite -> Nat_eqb_eq : brefl.
+Global Hint Rewrite -> Nat_ltb_lt : brefl.
+Global Hint Rewrite -> Nat_leb_le : brefl.
 
 Tactic Notation "breflect" :=
   try rewrite_strat topdown hints brefl.
@@ -163,31 +163,31 @@ Tactic Notation "breflect" "in" "*" :=
 
 Create HintDb breif discriminated.
 
-Hint Rewrite <- andE : breif.
-Hint Rewrite <- orE : breif.
-Hint Rewrite <- negE : breif.
-Hint Rewrite <- implE : breif.
-Hint Rewrite <- iffE : breif.
-Hint Rewrite <- falseE : breif.
-Hint Rewrite <- trueE : breif.
+Global Hint Rewrite <- andE : breif.
+Global Hint Rewrite <- orE : breif.
+Global Hint Rewrite <- negE : breif.
+Global Hint Rewrite <- implE : breif.
+Global Hint Rewrite <- iffE : breif.
+Global Hint Rewrite <- falseE : breif.
+Global Hint Rewrite <- trueE : breif.
 
-Hint Rewrite <- Z_eqb_eq : breif.
-Hint Rewrite <- Z_gtb_gt : breif.
-Hint Rewrite <- Z_geb_ge : breif.
-Hint Rewrite <- Z_ltb_lt : breif.
-Hint Rewrite <- Z_leb_le : breif.
+Global Hint Rewrite <- Z_eqb_eq : breif.
+Global Hint Rewrite <- Z_gtb_gt : breif.
+Global Hint Rewrite <- Z_geb_ge : breif.
+Global Hint Rewrite <- Z_ltb_lt : breif.
+Global Hint Rewrite <- Z_leb_le : breif.
 
-Hint Rewrite <- N_eqb_eq : breif.
-Hint Rewrite <- N_ltb_lt : breif.
-Hint Rewrite <- N_leb_le : breif.
-Hint Rewrite -> N_gt_ltb : breif.
-Hint Rewrite -> N_ge_leb : breif.
+Global Hint Rewrite <- N_eqb_eq : breif.
+Global Hint Rewrite <- N_ltb_lt : breif.
+Global Hint Rewrite <- N_leb_le : breif.
+Global Hint Rewrite -> N_gt_ltb : breif.
+Global Hint Rewrite -> N_ge_leb : breif.
 
-Hint Rewrite <- Nat_eqb_eq : breif.
-Hint Rewrite <- Nat_ltb_lt : breif.
-Hint Rewrite <- Nat_leb_le : breif.
-Hint Rewrite -> Nat_gt_ltb : breif.
-Hint Rewrite -> Nat_ge_leb : breif.
+Global Hint Rewrite <- Nat_eqb_eq : breif.
+Global Hint Rewrite <- Nat_ltb_lt : breif.
+Global Hint Rewrite <- Nat_leb_le : breif.
+Global Hint Rewrite -> Nat_gt_ltb : breif.
+Global Hint Rewrite -> Nat_ge_leb : breif.
 
 Tactic Notation "breify" :=
   try rewrite_strat topdown hints breif.
@@ -205,18 +205,18 @@ Tactic Notation "breify" "in" "*" :=
 
 Create HintDb bsimpl discriminated.
 
-Hint Rewrite -> Bool.orb_true_r : bsimpl.
-Hint Rewrite -> Bool.orb_true_l : bsimpl.
-Hint Rewrite -> Bool.orb_false_r : bsimpl.
-Hint Rewrite -> Bool.orb_false_l : bsimpl.
-Hint Rewrite -> Bool.andb_true_r : bsimpl.
-Hint Rewrite -> Bool.andb_true_l : bsimpl.
-Hint Rewrite -> Bool.andb_false_r : bsimpl.
-Hint Rewrite -> Bool.andb_false_l : bsimpl.
-Hint Rewrite <- N.leb_antisym : bsimpl.
-Hint Rewrite <- N.ltb_antisym : bsimpl.
-Hint Rewrite <- Nat.leb_antisym : bsimpl.
-Hint Rewrite <- Nat.ltb_antisym : bsimpl.
+Global Hint Rewrite -> Bool.orb_true_r : bsimpl.
+Global Hint Rewrite -> Bool.orb_true_l : bsimpl.
+Global Hint Rewrite -> Bool.orb_false_r : bsimpl.
+Global Hint Rewrite -> Bool.orb_false_l : bsimpl.
+Global Hint Rewrite -> Bool.andb_true_r : bsimpl.
+Global Hint Rewrite -> Bool.andb_true_l : bsimpl.
+Global Hint Rewrite -> Bool.andb_false_r : bsimpl.
+Global Hint Rewrite -> Bool.andb_false_l : bsimpl.
+Global Hint Rewrite <- N.leb_antisym : bsimpl.
+Global Hint Rewrite <- N.ltb_antisym : bsimpl.
+Global Hint Rewrite <- Nat.leb_antisym : bsimpl.
+Global Hint Rewrite <- Nat.ltb_antisym : bsimpl.
 
 Tactic Notation "bsimpl" :=
   try rewrite_strat topdown hints bsimpl.

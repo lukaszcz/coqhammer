@@ -1,6 +1,7 @@
 (* sauto -- implementation *)
 
 open Names
+open Environ
 open Tactypes
 open Locus
 open Proofview.Notations
@@ -315,7 +316,7 @@ let unfold_local_defs_tac () = Utils.ltac_apply "Tactics.unfold_local_defs" []
 
 (*****************************************************************************************)
 
-let eq_ind (mi1, i1) (mi2, i2) = i1 = i2 && MutInd.equal mi1 mi2
+let eq_ind (mi1, i1) (mi2, i2) = i1 = i2 && QMutInd.equal (Global.env ()) mi1 mi2
 
 let rec mem_constr evd x lst =
   match lst with
@@ -330,7 +331,7 @@ let rec mem_ind ind lst =
 let rec mem_const c lst =
   match lst with
   | [] -> false
-  | h :: t -> if Constant.equal c h then true else mem_const c t
+  | h :: t -> if QConstant.equal (Global.env ()) c h then true else mem_const c t
 
 (*****************************************************************************************)
 
@@ -338,7 +339,7 @@ module IndHash =
   struct
     type t = inductive
     let equal = eq_ind
-    let hash (mi, _) = MutInd.hash mi
+    let hash (mi, _) = QMutInd.hash (Global.env ()) mi
   end
 
 module IndMemo = Hhlib.MakeMemo(IndHash)
@@ -640,7 +641,7 @@ let is_coercion evd t =
   let open Constr in
   let open EConstr in
   match kind evd t with
-  | Const(c, _) when Constant.equal c is_true_const -> true
+  | Const(c, _) when QConstant.equal (Global.env ()) c is_true_const -> true
   | _ -> false
 
 (*****************************************************************************************)

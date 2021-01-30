@@ -12,40 +12,40 @@ Inductive ReconstrT : Set := Empty : ReconstrT | AllHyps : ReconstrT.
 
 Create HintDb yhints discriminated.
 
-Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.add_assoc : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_assoc : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_l : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_r : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_l : yhints.
-Hint Rewrite -> Arith.PeanoNat.Nat.sub_add_distr : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.add_0_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.add_assoc : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_assoc : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_l : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_r : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_l : yhints.
-Hint Rewrite -> ZArith.BinInt.Z.sub_add_distr : yhints.
-Hint Rewrite -> List.in_app_iff : yhints.
-Hint Rewrite -> List.in_map_iff : yhints.
-Hint Rewrite -> List.in_inv : yhints.
-Hint Rewrite <- List.app_assoc : yhints.
-Hint Rewrite -> Bool.orb_true_r : yhints.
-Hint Rewrite -> Bool.orb_true_l : yhints.
-Hint Rewrite -> Bool.orb_false_r : yhints.
-Hint Rewrite -> Bool.orb_false_l : yhints.
-Hint Rewrite -> Bool.andb_true_r : yhints.
-Hint Rewrite -> Bool.andb_true_l : yhints.
-Hint Rewrite -> Bool.andb_false_r : yhints.
-Hint Rewrite -> Bool.andb_false_l : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.add_0_r : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.sub_0_r : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_0_r : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_1_r : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.add_assoc : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_assoc : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_r : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_add_distr_l : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_r : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.mul_sub_distr_l : yhints.
+Global Hint Rewrite -> Arith.PeanoNat.Nat.sub_add_distr : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.add_0_r : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.sub_0_r : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_0_r : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_1_r : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.add_assoc : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_assoc : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_r : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_add_distr_l : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_r : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.mul_sub_distr_l : yhints.
+Global Hint Rewrite -> ZArith.BinInt.Z.sub_add_distr : yhints.
+Global Hint Rewrite -> List.in_app_iff : yhints.
+Global Hint Rewrite -> List.in_map_iff : yhints.
+Global Hint Rewrite -> List.in_inv : yhints.
+Global Hint Rewrite <- List.app_assoc : yhints.
+Global Hint Rewrite -> Bool.orb_true_r : yhints.
+Global Hint Rewrite -> Bool.orb_true_l : yhints.
+Global Hint Rewrite -> Bool.orb_false_r : yhints.
+Global Hint Rewrite -> Bool.orb_false_l : yhints.
+Global Hint Rewrite -> Bool.andb_true_r : yhints.
+Global Hint Rewrite -> Bool.andb_true_l : yhints.
+Global Hint Rewrite -> Bool.andb_false_r : yhints.
+Global Hint Rewrite -> Bool.andb_false_l : yhints.
 
 Ltac tyexact L := let tp := type of L in exact tp.
 
