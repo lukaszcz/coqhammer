@@ -108,8 +108,10 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | CoFix (n,recdef) -> tuple [mk_id "$CoFix";
                                mk_id (string_of_int n);
                                hhterm_of_precdeclaration recdef]
-  | Int _            -> raise (HammerError "Primitive integers not supported.")
-  | Float _          -> raise (HammerError "Primitive floats not supported.")
+  | Int n            -> tuple [mk_id "$Int";
+                               mk_id (Uint63.to_string n)]
+  | Float n          -> tuple [mk_id "$Float";
+                               mk_id (Float64.to_string n)]
   | Array _          -> raise (HammerError "Primitive arrays not supported.")
 
 and hhterm_of_constrarray a =
