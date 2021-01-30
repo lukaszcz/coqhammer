@@ -6,7 +6,7 @@ open Ltac_plugin
 open Stdarg
 open Tacarg
 
-let hammer_version_string = "CoqHammer (dev) for Coq master"
+let hammer_version_string = "CoqHammer (dev) for Coq 8.13"
 
 open Feedback
 let () = Mltop.add_known_plugin (fun () ->
