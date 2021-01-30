@@ -1,10 +1,11 @@
 (* Lexicographic path order on terms -- implementation *)
 
-open Names
+open Environ
 
 module Utils = Hhutils
 
 let gt cgt evd =
+  let env = Global.env () in
   let rec gt t1 t2 =
     let open Constr in
     let open EConstr in
@@ -12,7 +13,7 @@ let gt cgt evd =
     let (h1, args1) = Utils.destruct_app evd t1 in
     let (h2, args2) = Utils.destruct_app evd t2 in
     match kind evd h1, kind evd h2 with
-    | Const (c1, _), Const(c2, _) when Constant.equal c1 c2 ->
+    | Const (c1, _), Const(c2, _) when QConstant.equal env c1 c2 ->
        let rec go args1 args2 =
          match args1, args2 with
          | a1 :: args1', a2 :: args2' when eq_constr evd a1 a2 ->
@@ -45,12 +46,13 @@ let rec const_gt c1 c2 =
         else
           match Global.body_of_constant Library.indirect_accessor c1 with
           | Some (b, _, _) ->
+             let env = Global.env () in
              let consts =
                Utils.fold_constr_ker
                  begin fun _ acc t ->
                  let open Constr in
                  match kind t with
-                 | Const(c, _) when not (Constant.equal c c1) -> c :: acc
+                 | Const(c, _) when not (QConstant.equal env c c1) -> c :: acc
                  | _ -> acc
                  end
                  []
@@ -59,7 +61,7 @@ let rec const_gt c1 c2 =
              let rec go lst =
                match lst with
                | c :: lst' ->
-                  if Constant.equal c c2 || const_gt c c2 then
+                  if QConstant.equal env c c2 || const_gt c c2 then
                     true
                   else
                     go lst'
