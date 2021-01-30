@@ -252,7 +252,7 @@ Inductive R_add : nat -> nat -> nat -> Prop :=
 | R_add_0 : forall m, R_add 0 m m
 | R_add_S : forall p m k, R_add p m k -> R_add (S p) m (S k).
 
-Hint Constructors R_add : R_add_db.
+Global Hint Constructors R_add : R_add_db.
 
 Lemma lem_minus : exists x, R_add x 2 20.
 Proof.
@@ -1467,7 +1467,7 @@ Proof.
   induction 1; sauto.
 Qed.
 
-Hint Resolve lem_lelst_trans lem_lelst_perm_rev lem_lelst_app : lelst.
+Global Hint Resolve lem_lelst_trans lem_lelst_perm_rev lem_lelst_app : lelst.
 
 Lemma lem_sorted_concat_1 {A} {dto : DecTotalOrder A} :
   forall (l l1 l2 : list A) x y,
@@ -1490,7 +1490,7 @@ Proof.
   sauto.
 Qed.
 
-Hint Resolve lem_lelst_nil lem_lelst_cons : lelst.
+Global Hint Resolve lem_lelst_nil lem_lelst_cons : lelst.
 
 Lemma lem_sorted_concat_2 {A} {dto : DecTotalOrder A} :
   forall (l l1 l2 : list A) x y,
