@@ -1277,7 +1277,7 @@ Proof.
   depind e1; sauto dep: on.
 Qed.
 
-Hint Rewrite lem_plus : simp_db.
+Global Hint Rewrite lem_plus : simp_db.
 
 Definition simp_equal (e1 e2 : expr Nat) :=
   match e1, e2 with
@@ -1291,7 +1291,7 @@ Proof.
   depind e1; sauto dep: on.
 Qed.
 
-Hint Rewrite lem_equal : simp_db.
+Global Hint Rewrite lem_equal : simp_db.
 
 Definition unpair_type (T : type) :=
   option (match T with Prod A B => expr A * expr B | _ => unit end).
@@ -1315,7 +1315,7 @@ Proof.
   depind e; sauto.
 Qed.
 
-Hint Rewrite @lem_fst : simp_db.
+Global Hint Rewrite @lem_fst : simp_db.
 
 Definition simp_snd {A B : type} (e : expr (Prod A B)) : expr B :=
   match unpair e with
@@ -1329,7 +1329,7 @@ Proof.
   depind e; sauto.
 Qed.
 
-Hint Rewrite @lem_snd : simp_db.
+Global Hint Rewrite @lem_snd : simp_db.
 
 Definition simp_ite {A} (e : expr Bool) (e1 e2 : expr A) : expr A :=
   match e with
@@ -1345,7 +1345,7 @@ Proof.
   depind e; sauto.
 Qed.
 
-Hint Rewrite @lem_ite : simp_db.
+Global Hint Rewrite @lem_ite : simp_db.
 
 Fixpoint simp {A} (e : expr A) : expr A :=
   match e with
