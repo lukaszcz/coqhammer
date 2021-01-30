@@ -300,7 +300,12 @@ let map_fold_constr f acc evd t =
        let (acc1, typs') = fold_arr m acc typs in
        let (acc2, bodies') = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 (mkCoFix(n,(fnames,typs',bodies')))
-    | Array _ -> assert false
+    | Array (u,arr,b,ty) ->
+       let (acc1, arr') = fold_arr m acc arr in
+       let (acc2, b') = hlp m acc1 b in
+       let (acc3, ty') = hlp m acc2 ty in
+       f m acc3 (mkArray(u,arr',b',ty'))
+
   in
   hlp 0 acc t
 
@@ -362,7 +367,11 @@ let fold_constr f acc evd t =
        let acc1 = fold_arr m acc typs in
        let acc2 = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 t
-    | Array _ -> assert false
+    | Array (u,arr,b,ty) ->
+       let acc1 = fold_arr m acc arr in
+       let acc2 = hlp m acc1 b in
+       let acc3 = hlp m acc2 ty in
+       f m acc3 t
   in
   hlp 0 acc t
 
@@ -417,7 +426,11 @@ let fold_constr_shallow f acc evd t =
        let (fnames,typs,bodies) = recdef in
        let acc1 = fold_arr acc typs in
        f acc1 t
-    | Array _ -> assert false
+    | Array (u,arr,b,ty) ->
+       let acc1 = fold_arr acc arr in
+       let acc2 = hlp acc1 b in
+       let acc3 = hlp acc2 ty in
+       f acc3 t
   in
   hlp acc t
 
@@ -483,7 +496,11 @@ let map_fold_constr_ker f acc t =
        let (acc1, typs') = fold_arr m acc typs in
        let (acc2, bodies') = fold_arr (m + Array.length typs) acc1 bodies in
        f m acc2 (mkCoFix(n,(fnames,typs',bodies')))
-    | Array _ -> assert false
+    | Array (u,arr,b,ty) ->
+       let (acc1, arr') = fold_arr m acc arr in
+       let (acc2, b') = hlp m acc1 b in
+       let (acc3, ty') = hlp m acc2 ty in
+       f m acc3 (mkArray(u,arr',b',ty'))
   in
   hlp 0 acc t
 
@@ -589,10 +606,10 @@ let inductive_to_string ind =
 
 (******************************************************************************************)
 (* Code copied from eauto.ml with minor modifications *)
-  
+
 let unify_e_resolve flags h =
   Hints.hint_res_pf ~with_evars:true ~with_classes:true ~flags h
-  
+
 let e_exact flags h =
   let open Proofview.Notations in
   Proofview.Goal.enter begin fun gl ->
@@ -601,7 +618,7 @@ let e_exact flags h =
     let sigma, c = Hints.fresh_hint env sigma h in
     Proofview.Unsafe.tclEVARS sigma <*> Eauto.e_give_exact c
   end
-  
+
 let tac_of_hint db h concl =
   let open Hints in
   let st = Auto.auto_flags_of_state (Hint_db.transparent_state db) in
@@ -620,7 +637,7 @@ let tac_of_hint db h concl =
     | Extern (p, tacast) -> Auto.conclPattern concl p tacast
   in
   FullHint.run h tac
-    
+
 (******************************************************************************************)
 
 type hint = int * Hints.hint_db * Hints.FullHint.t
