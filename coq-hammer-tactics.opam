@@ -15,14 +15,13 @@ has been successfully applied to a project, only this package needs
 to be installed; the hammer plugin is not required.
 """
 
-build: [make "-j%{jobs}%" {ocaml:version >= "4.06"} "tactics"]
+build: [make "-j%{jobs}%" {ocaml:version >= "4.08"} "tactics"]
 install: [
   [make "install-tactics"]
   [make "test-tactics"] {with-test}
 ]
 depends: [
   "ocaml"
-  "stdlib-shims"
   "coq" {>= "8.11" & < "8.12~"}
 ]
 
