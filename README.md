@@ -1,4 +1,4 @@
-Note: This is an outdated and unstable development version of CoqHammer for Coq 8.9 which will not be updated. You should probably use either one of the releases or a development version for a more recent version of Coq.
+**NOTE**. This is an outdated and unstable development version of CoqHammer for Coq 8.9 which will not be updated. You should probably use either one of the releases or a development version for a more recent version of Coq.
 
 CoqHammer (dev) for Coq 8.9
 
