@@ -670,7 +670,7 @@ let find_hints db secvars env evd t =
     let hints =
       if Termops.occur_existential evd t then
         match Hint_db.map_existential evd ~secvars hdc t db with
-        | ModeMatch l -> l
+        | ModeMatch (m, l) -> l
         | ModeMismatch -> []
       else
         Hint_db.map_auto env evd ~secvars hdc t db
