@@ -6,8 +6,7 @@ CoqHammer video tutorial:
 [part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
 [part 2 (hammer)](https://www.youtube.com/watch?v=EEmpVCSqShA&list=PLXXF_svQE_b_vja6TWFbGNB266Et8m5yC).
 
-Since version 1.3, the CoqHammer system consists of two major separate
-components.
+Since version 1.3, the CoqHammer system consists of two major separate components.
 
 1. The `sauto` general proof search tactic for the Calculus of
    Inductive Construction.
