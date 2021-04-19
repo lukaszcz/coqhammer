@@ -130,6 +130,6 @@ val inductive_to_string : inductive -> string
 type hint
 
 val hint_priority : hint -> int
-val hint_tactic : hint -> EConstr.t -> unit Proofview.tactic
+val hint_tactic : Environ.env -> Evd.evar_map -> hint -> EConstr.t -> unit Hints.hint_tactic
 val hint_to_string : hint -> string
 val find_hints : Hints.hint_db -> Id.Pred.t -> Environ.env -> Evd.evar_map -> EConstr.t -> hint list

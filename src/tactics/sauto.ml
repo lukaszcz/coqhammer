@@ -1207,8 +1207,21 @@ and apply_actions tacs opts n actions rtrace visited =
          | ActDestruct t ->
             cont (sdestruct opts t <*> start_search tacs opts n') acts
          | ActHint h ->
-            continue n' (Tacticals.New.tclPROGRESS
-                           (Utils.hint_tactic h (List.hd visited))
+            let run_hint = function
+              | Hints.HintTactic k -> k
+              | Hints.HintContinuation cont ->
+                let iftac, thentac = cont Tacticals.New.tclIDTAC in
+                match iftac with
+                | None -> thentac
+                | Some iftac ->
+                  Proofview.tclIFCATCH iftac (fun () -> thentac)
+                    (fun e -> Tacticals.New.tclIDTAC)
+            in
+            continue n' (
+              Proofview.tclENV >>= fun env ->
+              Proofview.tclEVARMAP >>= fun sigma ->
+              Tacticals.New.tclPROGRESS
+                    (run_hint (Utils.hint_tactic env sigma h (List.hd visited)))
                          <*> tacs.t_simplify_concl) acts
          | ActSolve ->
             cont opts.s_solve_tac acts
