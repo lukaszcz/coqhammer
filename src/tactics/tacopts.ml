@@ -234,7 +234,7 @@ let mk_final tac =
   let sfinal =
     Libnames.qualid_of_string "Tactics.sfinal"
   in
-  Tacexpr.TacArg(CAst.make
+  CAst.make (Tacexpr.TacArg
                    Tacexpr.(TacCall(CAst.make
                                       (sfinal, [Tacexpr.Tacexp tac]))))
 

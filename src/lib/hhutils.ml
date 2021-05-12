@@ -104,7 +104,7 @@ let get_tactic (s : string) =
     failwith ("tactic not found: " ^ s)
 
 let get_tacexpr tac args =
-  Tacexpr.TacArg(CAst.make
+  CAst.make (Tacexpr.TacArg
                    Tacexpr.(TacCall(CAst.make
                                       (Locus.ArgArg(None, get_tactic tac),
                                        args))))
