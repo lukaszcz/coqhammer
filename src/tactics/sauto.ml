@@ -216,8 +216,9 @@ let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
 let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
 
 let erewrite b_all l2r id =
-  Equality.general_rewrite_clause l2r true (EConstr.mkVar id, NoBindings)
-    Locus.({onhyps = if b_all then None else Some []; concl_occs = AllOccurrences})
+  let c env sigma = (sigma, (EConstr.mkVar id, NoBindings)) in
+  Equality.general_multi_rewrite true [l2r, Equality.Precisely 1, Some false, c]
+    Locus.({onhyps = if b_all then None else Some []; concl_occs = AllOccurrences}) None
 
 let simp_hyps_tac () = Utils.ltac_apply "Tactics.simp_hyps" []
 let esimp_hyps_tac () = Utils.ltac_apply "Tactics.esimp_hyps" []
