@@ -117,7 +117,13 @@ let best_tacs_batch_a lst =
                   (set_quick_opts true
                      (set_eager_opts false (hauto_s_opts ()))))
                lst sauto),
-     "hauto lq: on rew: off")
+     "hauto lq: on rew: off");
+    (usolve (interp_opts
+               (set_rew_opts false
+                  (set_quick_opts true
+                     (set_eager_opts false (default_s_opts ()))))
+               lst sauto),
+     "sauto lq: on rew: off")
   ]
 
 let best_tacs_batch_b lst =
