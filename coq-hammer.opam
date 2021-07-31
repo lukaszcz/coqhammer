@@ -20,7 +20,7 @@ install: [
   [make "test-plugin"] {with-test}
 ]
 depends: [
-  "ocaml"
+  "ocaml" {>= "4.08"}
   "coq" {>= "8.13" & < "8.14~"}
   ("conf-g++" {build} | "conf-clang" {build})
   "coq-hammer-tactics" {= version}
