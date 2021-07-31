@@ -21,7 +21,7 @@ install: [
   [make "test-tactics"] {with-test}
 ]
 depends: [
-  "ocaml"
+  "ocaml" {>= "4.08"}
   "coq" {>= "8.12" & < "8.13~"}
 ]
 
