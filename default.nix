@@ -15,7 +15,7 @@ pkgs.stdenv.mkDerivation {
 
   name = "coqhammer";
 
-  buildInputs = with coq.ocamlPackages; [ ocaml findlib ]
+  buildInputs = with coq.ocamlPackages; [ ocaml findlib zarith ]
     ++ pkgs.lib.optionals shell [ merlin ocp-indent ocp-index ];
 
   propagatedBuildInputs = [
