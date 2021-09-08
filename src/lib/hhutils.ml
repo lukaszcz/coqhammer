@@ -686,7 +686,7 @@ let find_hints db secvars env evd t =
     let hdc = Hints.decompose_app_bound evd t in
     let hints =
       if Termops.occur_existential evd t then
-        match Hint_db.map_existential evd ~secvars hdc t db with
+        match Hint_db.map_eauto env evd ~secvars hdc t db with
         | ModeMatch l -> l
         | ModeMismatch -> []
       else
