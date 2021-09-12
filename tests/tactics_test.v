@@ -1,5 +1,7 @@
 From Hammer Require Import Tactics.
 
+(* Basic tests *)
+
 Lemma lem_test_1 : (forall x y, x + y = y + x -> False) -> forall x, x > x.
   ssimpl.
 Qed.
@@ -69,9 +71,31 @@ Proof.
 Qed.
 
 Lemma test_implicit_arg2 {B} :
-  forall (l : list B) (f g : B -> unit), List.map f l = List.map g l.
+  forall (l: list B) (f g : B -> unit), List.map f l = List.map g l.
 Proof.
   sauto use: lem_implicit_arg2.
+Qed.
+
+(* Argument parsing test *)
+
+Lemma lem_q (q: nat): q = q.
+Proof.
+  sauto q: on.
+Qed.
+
+Lemma lem_l (l: nat): l = l.
+Proof.
+  sauto l: on.
+Qed.
+
+Lemma lem_lq (lq: nat): lq = lq.
+Proof.
+  sauto lq: on.
+Qed.
+
+Lemma lem_depth (depth: nat): depth = depth.
+Proof.
+  sauto depth: 1.
 Qed.
 
 Require Import Arith.
