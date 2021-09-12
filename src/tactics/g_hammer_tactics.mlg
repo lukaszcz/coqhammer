@@ -27,104 +27,104 @@ ARGUMENT EXTEND sauto_opts
 | [ "unfolding" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
 | [ "inverting" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
 | [ "with" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
-| [ "use:" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
-| [ "gen:" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOGen l :: sopts }
-| [ "unfold:" "*" sauto_opts(sopts) ] -> { SOUnfoldAll :: sopts }
-| [ "unfold:" "-" sauto_opts(sopts) ] -> { SOUnfoldNone :: sopts }
-| [ "unfold:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
-| [ "unfold!:" "*" sauto_opts(sopts) ] -> { SOAlwaysUnfoldAll :: sopts }
-| [ "unfold!:" "-" sauto_opts(sopts) ] -> { SOAlwaysUnfoldNone :: sopts }
-| [ "unfold!:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOAlwaysUnfold l :: sopts }
-| [ "inv:" "*" sauto_opts(sopts) ] -> { SOInvAll :: sopts }
-| [ "inv:" "-" sauto_opts(sopts) ] -> { SOInv [] :: sopts }
-| [ "inv:" "never" sauto_opts(sopts) ] -> { SOInvNone :: sopts }
-| [ "inv:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
-| [ "ctrs:" "*" sauto_opts(sopts) ] -> { SOCtrsAll :: sopts }
-| [ "ctrs:" "-" sauto_opts(sopts) ] -> { SOCtrs [] :: sopts }
-| [ "ctrs:" "never" sauto_opts(sopts) ] -> { SOCtrsNone :: sopts }
-| [ "ctrs:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCtrs l :: sopts }
-| [ "cases:" "*" sauto_opts(sopts) ] -> { SOCaseSplitAll :: sopts }
-| [ "cases:" "-" sauto_opts(sopts) ] -> { SOCaseSplit [] :: sopts }
-| [ "cases:" "never" sauto_opts(sopts) ] -> { SOCaseSplitNone :: sopts }
-| [ "cases:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCaseSplit l :: sopts }
-| [ "split:" "*" sauto_opts(sopts) ] -> { SOSimpleSplitAll :: sopts }
-| [ "split:" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
-| [ "split:" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
-| [ "split:" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
-| [ "db:" "*" sauto_opts(sopts) ] -> { SOBasesAll :: sopts }
-| [ "db:" "-" sauto_opts(sopts) ] -> { SOBases [] :: sopts }
-| [ "db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
-| [ "db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBasesAdd l :: sopts }
-| [ "rew:db:" "-" sauto_opts(sopts) ] -> { SORewBases [] :: sopts }
-| [ "rew:db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
-| [ "rew:db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBasesAdd l :: sopts }
-| [ "hint:db:" "*" sauto_opts(sopts) ] -> { SOHintBasesAll :: sopts }
-| [ "hint:db:" "-" sauto_opts(sopts) ] -> { SOHintBases [] :: sopts }
-| [ "hint:db:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBases l :: sopts }
-| [ "hint:db+:" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBasesAdd l :: sopts }
-| [ "finish:" tactic4(tac) sauto_opts(sopts) ] -> { SOFinish tac :: sopts }
-| [ "final:" tactic4(tac) sauto_opts(sopts) ] -> { SOFinal tac :: sopts }
-| [ "solve:" tactic4(tac) sauto_opts(sopts) ] -> { SOSolve tac :: sopts }
-| [ "simp:" tactic4(tac) sauto_opts(sopts) ] -> { SOSimp tac :: sopts }
-| [ "ssimp:" tactic4(tac) sauto_opts(sopts) ] -> { SOSSimp tac :: sopts }
-| [ "solve+:" tactic4(tac) sauto_opts(sopts) ] -> { SOSolveAdd tac :: sopts }
-| [ "simp+:" tactic4(tac) sauto_opts(sopts) ] -> { SOSimpAdd tac :: sopts }
-| [ "ssimp+:" tactic4(tac) sauto_opts(sopts) ] -> { SOSSimpAdd tac :: sopts }
-| [ "fwd:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
-| [ "ecases:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
-| [ "sinv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
-| [ "einv:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerInvert b :: sopts }
-| [ "ered:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerReduce b :: sopts }
-| [ "erew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerRewrite b :: sopts }
-| [ "drew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODirectedRewrite b :: sopts }
-| [ "urew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOUndirectedRewrite b :: sopts }
-| [ "rew:" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
-| [ "brefl:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
-| [ "b:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
-| [ "brefl!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
-| [ "b!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
-| [ "red:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReduce b :: sopts }
-| [ "sapp:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
-| [ "limit:" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
-| [ "depth:" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
-| [ "time:" integer(i) sauto_opts(sopts) ] -> { SOTimeout i :: sopts }
-| [ "exh:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
-| [ "lia:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOLia b :: sopts }
-| [ "sig:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSig b :: sopts }
-| [ "prf:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrf b :: sopts }
-| [ "dep:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODep b :: sopts }
-| [ "dep!:" sauto_bopt(b) sauto_opts(sopts) ] -> { SODepRaw b :: sopts }
-| [ "eager:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
-| [ "e:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
-| [ "lazy:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager (not b) :: sopts }
-| [ "l:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager (not b) :: sopts }
-| [ "quick:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
-| [ "q:" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
-| [ "lq:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+| [ "use" ":" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUse l :: sopts }
+| [ "gen" ":" ne_uconstr_list_sep(l, ",") sauto_opts(sopts) ] -> { SOGen l :: sopts }
+| [ "unfold" ":" "*" sauto_opts(sopts) ] -> { SOUnfoldAll :: sopts }
+| [ "unfold" ":" "-" sauto_opts(sopts) ] -> { SOUnfoldNone :: sopts }
+| [ "unfold" ":" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOUnfold l :: sopts }
+| [ "unfold!" ":" "*" sauto_opts(sopts) ] -> { SOAlwaysUnfoldAll :: sopts }
+| [ "unfold!" ":" "-" sauto_opts(sopts) ] -> { SOAlwaysUnfoldNone :: sopts }
+| [ "unfold!" ":" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOAlwaysUnfold l :: sopts }
+| [ "inv" ":" "*" sauto_opts(sopts) ] -> { SOInvAll :: sopts }
+| [ "inv" ":" "-" sauto_opts(sopts) ] -> { SOInv [] :: sopts }
+| [ "inv" ":" "never" sauto_opts(sopts) ] -> { SOInvNone :: sopts }
+| [ "inv" ":" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOInv l :: sopts }
+| [ "ctrs" ":" "*" sauto_opts(sopts) ] -> { SOCtrsAll :: sopts }
+| [ "ctrs" ":" "-" sauto_opts(sopts) ] -> { SOCtrs [] :: sopts }
+| [ "ctrs" ":" "never" sauto_opts(sopts) ] -> { SOCtrsNone :: sopts }
+| [ "ctrs" ":" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCtrs l :: sopts }
+| [ "cases" ":" "*" sauto_opts(sopts) ] -> { SOCaseSplitAll :: sopts }
+| [ "cases" ":" "-" sauto_opts(sopts) ] -> { SOCaseSplit [] :: sopts }
+| [ "cases" ":" "never" sauto_opts(sopts) ] -> { SOCaseSplitNone :: sopts }
+| [ "cases" ":" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOCaseSplit l :: sopts }
+| [ "split" ":" "*" sauto_opts(sopts) ] -> { SOSimpleSplitAll :: sopts }
+| [ "split" ":" "-" sauto_opts(sopts) ] -> { SOSimpleSplit [] :: sopts }
+| [ "split" ":" "never" sauto_opts(sopts) ] -> { SOSimpleSplitNone :: sopts }
+| [ "split" ":" ne_reference_list_sep(l, ",") sauto_opts(sopts) ] -> { SOSimpleSplit l :: sopts }
+| [ "db" ":" "*" sauto_opts(sopts) ] -> { SOBasesAll :: sopts }
+| [ "db" ":" "-" sauto_opts(sopts) ] -> { SOBases [] :: sopts }
+| [ "db" ":" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBases l :: sopts }
+| [ "db+" ":" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOBasesAdd l :: sopts }
+| [ "rew:db" ":" "-" sauto_opts(sopts) ] -> { SORewBases [] :: sopts }
+| [ "rew:db" ":" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBases l :: sopts }
+| [ "rew:db+" ":" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SORewBasesAdd l :: sopts }
+| [ "hint:db" ":" "*" sauto_opts(sopts) ] -> { SOHintBasesAll :: sopts }
+| [ "hint:db" ":" "-" sauto_opts(sopts) ] -> { SOHintBases [] :: sopts }
+| [ "hint:db" ":" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBases l :: sopts }
+| [ "hint:db+" ":" ne_preident_list_sep(l, ",") sauto_opts(sopts) ] -> { SOHintBasesAdd l :: sopts }
+| [ "finish" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOFinish tac :: sopts }
+| [ "final" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOFinal tac :: sopts }
+| [ "solve" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOSolve tac :: sopts }
+| [ "simp" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOSimp tac :: sopts }
+| [ "ssimp" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOSSimp tac :: sopts }
+| [ "solve+" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOSolveAdd tac :: sopts }
+| [ "simp+" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOSimpAdd tac :: sopts }
+| [ "ssimp+" ":" tactic4(tac) sauto_opts(sopts) ] -> { SOSSimpAdd tac :: sopts }
+| [ "fwd" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOForward b :: sopts }
+| [ "ecases" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerCaseSplit b :: sopts }
+| [ "sinv" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSimpleInvert b :: sopts }
+| [ "einv" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerInvert b :: sopts }
+| [ "ered" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerReduce b :: sopts }
+| [ "erew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerRewrite b :: sopts }
+| [ "drew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SODirectedRewrite b :: sopts }
+| [ "urew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOUndirectedRewrite b :: sopts }
+| [ "rew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
+| [ "brefl" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
+| [ "b" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
+| [ "brefl!" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
+| [ "b!" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflectRaw b :: sopts }
+| [ "red" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReduce b :: sopts }
+| [ "sapp" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSapply b :: sopts }
+| [ "limit" ":" integer(i) sauto_opts(sopts) ] -> { SOLimit i :: sopts }
+| [ "depth" ":" integer(i) sauto_opts(sopts) ] -> { SODepth i :: sopts }
+| [ "time" ":" integer(i) sauto_opts(sopts) ] -> { SOTimeout i :: sopts }
+| [ "exh" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOExhaustive b :: sopts }
+| [ "lia" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOLia b :: sopts }
+| [ "sig" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSig b :: sopts }
+| [ "prf" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOPrf b :: sopts }
+| [ "dep" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SODep b :: sopts }
+| [ "dep!" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SODepRaw b :: sopts }
+| [ "eager" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
+| [ "e" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager b :: sopts }
+| [ "lazy" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager (not b) :: sopts }
+| [ "l" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEager (not b) :: sopts }
+| [ "quick" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
+| [ "q" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOQuick b :: sopts }
+| [ "lq" ":" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
       SOEager false :: SOQuick true :: sopts
     else
       sopts
 }
-| [ "lb:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+| [ "lb" ":" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
       SOEager false :: SOReflect true :: sopts
     else
       sopts
 }
-| [ "qb:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+| [ "qb" ":" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
       SOQuick true :: SOReflect true :: sopts
     else
       sopts
 }
-| [ "lqb:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+| [ "lqb" ":" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
       SOEager false :: SOQuick true :: SOReflect true :: sopts
     else
       sopts
 }
-| [ "qb!:" sauto_bopt(b) sauto_opts(sopts) ] -> {
+| [ "qb!" ":" sauto_bopt(b) sauto_opts(sopts) ] -> {
     if b then
       SOQuick true :: SOReflectRaw true :: sopts
     else
