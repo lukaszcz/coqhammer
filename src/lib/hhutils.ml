@@ -633,22 +633,24 @@ let e_exact flags h =
     Proofview.Unsafe.tclEVARS sigma <*> Eauto.e_give_exact c
   end
 
-let tac_of_hint db h concl =
+let tac_of_hint env sigma db h concl =
   let open Hints in
   let st = Auto.auto_flags_of_state (Hint_db.transparent_state db) in
+  let default tac = HintTactic tac in
   let tac = function
-    | Res_pf h -> Auto.unify_resolve st h
-    | ERes_pf h -> unify_e_resolve st h
-    | Give_exact h -> e_exact st h
+    | Res_pf h -> default (Auto.unify_resolve st h)
+    | ERes_pf h -> default (unify_e_resolve st h)
+    | Give_exact h -> default (e_exact st h)
     | Res_pf_THEN_trivial_fail h ->
-       Tacticals.New.tclTHEN (unify_e_resolve st h)
+       default (Tacticals.New.tclTHEN (unify_e_resolve st h)
             (Tacticals.New.tclSOLVE [Eauto.e_assumption;
                                      Tactics.reflexivity;
-                                     Tactics.any_constructor true None])
+                                     Tactics.any_constructor true None]))
     | Unfold_nth c ->
-       Tactics.reduce
-         (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl
-    | Extern (p, tacast) -> Auto.conclPattern concl p tacast
+       default (Tactics.reduce
+         (Genredexpr.Unfold [Locus.AllOccurrences,c]) Locusops.onConcl)
+    | Extern (p, id, whenast, tacast) ->
+        Auto.conclPattern env sigma id concl p whenast tacast
   in
   FullHint.run h tac
 
@@ -658,7 +660,7 @@ type hint = int * Hints.hint_db * Hints.FullHint.t
 
 let hint_priority (p, _, _) = p
 
-let hint_tactic (_, db, h) t = tac_of_hint db h t
+let hint_tactic env sigma (_, db, h) t = tac_of_hint env sigma db h t
 
 let hint_to_string (_, _, h) =
   Pp.string_of_ppcmds @@ Hints.FullHint.print (Global.env ()) Evd.empty h
@@ -670,7 +672,7 @@ let find_hints db secvars env evd t =
     let hints =
       if Termops.occur_existential evd t then
         match Hint_db.map_existential evd ~secvars hdc t db with
-        | ModeMatch l -> l
+        | ModeMatch (m, l) -> l
         | ModeMismatch -> []
       else
         Hint_db.map_auto env evd ~secvars hdc t db
