@@ -53,12 +53,12 @@ jobs:
 
   # Test supported versions of Coq via OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:8.11
+    - COQ_IMAGE=coqorg/coq:8.11-ocaml-4.10-flambda
     - PACKAGE=coq-hammer.8.11.dev
     - NJOBS=2
     <<: *OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:8.11
+    - COQ_IMAGE=coqorg/coq:8.11-ocaml-4.10-flambda
     - PACKAGE=coq-hammer-tactics.8.11.dev
     - NJOBS=2
     <<: *OPAM
