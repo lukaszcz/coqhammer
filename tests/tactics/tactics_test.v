@@ -98,6 +98,8 @@ Proof.
   sauto depth: 1.
 Qed.
 
+(* More tests *)
+
 Require Import Arith.
 
 Lemma lem_test_csplit : forall n, if n =? n then True else False.

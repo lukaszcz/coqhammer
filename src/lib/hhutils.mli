@@ -8,6 +8,8 @@ val tacinterp : Geninterp.Val.t -> unit Proofview.tactic
 
 val exists_global : string -> bool
 
+val match_globref : ModPath.t -> GlobRef.t -> bool
+
 val get_constr : string -> EConstr.t
 
 val get_global : string -> GlobRef.t
@@ -126,6 +128,8 @@ val constr_expr_to_string : Evd.evar_map -> Constrexpr.constr_expr -> string
 val constant_to_string : Constant.t -> string
 
 val inductive_to_string : inductive -> string
+
+val globref_to_string : GlobRef.t -> string
 
 type hint
 

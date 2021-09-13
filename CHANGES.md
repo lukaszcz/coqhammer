@@ -1,3 +1,13 @@
+CoqHammer v. 1.3.2
+==================
+
+Coq versions compatibility: 8.10, 8.11, 8.12, 8.13, 8.14.
+
+Overview of changes
+-------------------
+* Module filtering with the `Hammer Filter` table.
+* Fixed issue #106 (`sauto` argument parsing bug).
+
 CoqHammer v. 1.3.1
 ==================
 
