@@ -209,7 +209,7 @@ let my_search env =
   in
   let filter glob_ref env typ =
     (if !Opt.search_blacklist then
-       Search.blacklist_filter glob_ref env (Evd.from_env env) typ
+       Search.blacklist_filter glob_ref env typ
      else
        true)
     &&
