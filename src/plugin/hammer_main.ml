@@ -202,11 +202,17 @@ let string_of_goal gl =
 let my_search env =
   let save_in_list refl glob_ref env c = refl := glob_ref :: !refl in
   let ans = ref [] in
+  let filter_modules glob_ref =
+    List.for_all (fun m -> not (Utils.match_globref m glob_ref))
+      (Opt.HammerFilterTable.elements ())
+  in
   let filter glob_ref env typ =
-    if !Opt.search_blacklist then
-      Search.blacklist_filter glob_ref env typ
-    else
-      true
+    (if !Opt.search_blacklist then
+       Search.blacklist_filter glob_ref env typ
+     else
+       true)
+    &&
+    filter_modules glob_ref
   in
   let iter glob_ref env typ =
     if filter glob_ref env typ then save_in_list ans glob_ref env typ

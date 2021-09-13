@@ -28,6 +28,20 @@ let exists_global s =
     true
   with Not_found -> false
 
+let match_globref m g =
+  let (p2, id2) = Libnames.repr_path (Nametab.path_of_global g)
+  in
+  let l1 = List.rev @@ Names.DirPath.repr (Nametab.dirpath_of_module m)
+  and l2 = List.rev @@ id2 :: Names.DirPath.repr p2
+  in
+  let rec pom l1 l2 =
+    match l1, l2 with
+    | [], _ -> true
+    | id1 :: t1, id2 :: t2 -> Id.equal id1 id2 && pom t1 t2
+    | _ -> false
+  in
+  pom l1 l2
+
 let get_constr s =
   to_constr (get_global s)
 
@@ -565,6 +579,9 @@ let constant_to_string c =
 
 let inductive_to_string ind =
   Pp.string_of_ppcmds (Printer.pr_inductive (Global.env ()) ind)
+
+let globref_to_string g =
+  Pp.string_of_ppcmds (Printer.pr_global g)
 
 (******************************************************************************************)
 (* Code copied from eauto.ml with minor modifications *)

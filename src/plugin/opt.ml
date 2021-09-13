@@ -249,3 +249,18 @@ let _ =
       optwrite=(fun b -> search_blacklist := b)}
   in
   declare_bool_option gdopt
+
+module HammerFilter = struct
+  type t = Names.ModPath.t
+  let compare = Names.ModPath.compare
+  let encode = Nametab.locate_module
+  let subst s m = m
+  let printer m = Names.DirPath.print (Nametab.dirpath_of_module m)
+  let key = ["Hammer"; "Filter"]
+  let title = "Hammer Filter"
+  let member_message m b =
+    Pp.app (printer m)
+      (if b then Pp.str " present" else Pp.str "absent")
+end
+
+module HammerFilterTable = MakeRefTable(HammerFilter)
