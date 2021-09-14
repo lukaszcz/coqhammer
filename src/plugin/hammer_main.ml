@@ -167,25 +167,23 @@ let hhdef_of_hyp env sigma (id, maybe_body, ty) =
   in
   (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind, lazy (hhterm_of ty), body)
 
-let econstr_to_constr x = EConstr.to_constr Evd.empty x
-
-let make_good =
-  function
-  | Context.Named.Declaration.LocalAssum(x, y) ->
-     (x.binder_name, None, econstr_to_constr y)
-  | Context.Named.Declaration.LocalDef(x, y, z) ->
-     (x.binder_name, Some (econstr_to_constr y), econstr_to_constr z)
-
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
   let sigma = Proofview.Goal.sigma gl in
+  let make_good =
+    function
+    | Context.Named.Declaration.LocalAssum(x, y) ->
+       (x.binder_name, None, EConstr.to_constr sigma y)
+    | Context.Named.Declaration.LocalDef(x, y, z) ->
+       (x.binder_name, Some (EConstr.to_constr sigma y), EConstr.to_constr sigma z)
+  in
   List.map (Hhlib.comp (hhdef_of_hyp env sigma) make_good) (Proofview.Goal.hyps gl)
 
 let get_goal gl =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    true,
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (hhterm_of (econstr_to_constr (Proofview.Goal.concl gl))),
+   lazy (hhterm_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
@@ -197,7 +195,7 @@ let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
      Hh_term.string_of_hhterm (Lazy.force hterm) ^ ").")
 
 let string_of_goal gl =
-  string_of (econstr_to_constr (Proofview.Goal.concl gl))
+  string_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))
 
 let my_search env =
   let save_in_list refl glob_ref env c = refl := glob_ref :: !refl in
@@ -710,7 +708,7 @@ let do_predict hyps deps goal =
            Msg.info msg;
          info
        end
-  else
+  else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
     Provers.predict deps1 hyps deps goal
 
