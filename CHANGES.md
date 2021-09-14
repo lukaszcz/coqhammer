@@ -7,6 +7,7 @@ Overview of changes
 -------------------
 * Module filtering with the `Hammer Filter` table.
 * Fixed issue #106 (`sauto` argument parsing bug).
+* Fixed issue #108.
 
 CoqHammer v. 1.3.1
 ==================
