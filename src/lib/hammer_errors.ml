@@ -27,7 +27,7 @@ let try_bind_fun (x : 'a) (f : 'a -> 'b) (g : Pp.t -> 'b) =
      g (Pp.str @@ "CoqHammer bug: please report: " ^ s)
   | Sys.Break ->
      raise Sys.Break
-  | CErrors.UserError(_, p) ->
+  | CErrors.UserError p ->
      g p
   | e ->
      g (Pp.str @@ "CoqHammer bug: please report: " ^ Printexc.to_string e)
