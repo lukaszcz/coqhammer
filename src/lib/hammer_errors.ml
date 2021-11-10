@@ -38,10 +38,10 @@ let try_cmd (f : unit -> unit) =
   try_fun f (fun p -> Feedback.msg_notice p)
 
 let try_bind_tactic (f : 'a -> unit Proofview.tactic) (x : 'a) : unit Proofview.tactic =
-  try_bind_fun x f (fun p -> Tacticals.New.tclZEROMSG p)
+  try_bind_fun x f (fun p -> Tacticals.tclZEROMSG p)
 
 let try_tactic (f : unit -> unit Proofview.tactic) : unit Proofview.tactic =
-  try_fun f (fun p -> Tacticals.New.tclZEROMSG p)
+  try_fun f (fun p -> Tacticals.tclZEROMSG p)
 
 let try_goal_tactic f =
   Proofview.Goal.enter

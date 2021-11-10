@@ -477,7 +477,7 @@ let try_best batches limit lst msg_success msg_failure =
          end
          (fun () -> hlp t)
     | [] ->
-       Tacticals.New.tclZEROMSG (Pp.str msg_failure)
+       Tacticals.tclZEROMSG (Pp.str msg_failure)
   in
   hlp batches
 
