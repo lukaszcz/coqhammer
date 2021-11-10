@@ -57,10 +57,10 @@ let default_s_opts () = {
   s_leaf_tac = Utils.ltac_apply "Tactics.leaf_solve" [];
   s_leaf_nolia_tac = Utils.ltac_apply "Tactics.leaf_solve_nolia" [];
   s_solve_tac = Utils.ltac_apply "fail" [];
-  s_simpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.simpl_solve" []);
-  s_simpl_nolia_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.simpl_solve_nolia" []);
-  s_ssimpl_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve" []);
-  s_ssimpl_nolia_tac = Tacticals.New.tclTRY (Utils.ltac_apply "Tactics.ssolve_nolia" []);
+  s_simpl_tac = Tacticals.tclTRY (Utils.ltac_apply "Tactics.simpl_solve" []);
+  s_simpl_nolia_tac = Tacticals.tclTRY (Utils.ltac_apply "Tactics.simpl_solve_nolia" []);
+  s_ssimpl_tac = Tacticals.tclTRY (Utils.ltac_apply "Tactics.ssolve" []);
+  s_ssimpl_nolia_tac = Tacticals.tclTRY (Utils.ltac_apply "Tactics.ssolve_nolia" []);
   s_unfolding = SSome [];
   s_always_unfold = SNone;
   s_constructors = SAll;
@@ -98,10 +98,10 @@ let congr_tac () = Utils.ltac_apply "Tactics.congr_tac" []
 let lia_tac () = Utils.ltac_apply "Tactics.lia_tac" []
 
 let qauto_s_opts () =
-  { (hauto_s_opts ()) with s_simpl_tac = Tacticals.New.tclIDTAC;
-                           s_simpl_nolia_tac = Tacticals.New.tclIDTAC;
+  { (hauto_s_opts ()) with s_simpl_tac = Tacticals.tclIDTAC;
+                           s_simpl_nolia_tac = Tacticals.tclIDTAC;
                            s_leaf_tac = (eauto_tac <*>
-                                           Tacticals.New.tclTRY (congr_tac ()) <*>
+                                           Tacticals.tclTRY (congr_tac ()) <*>
                                            lia_tac ());
                            s_leaf_nolia_tac = (eauto_tac <*> congr_tac ());
                            s_sapply = false;
@@ -127,8 +127,8 @@ let set_eager_opts b opts =
 
 let set_quick_opts b opts =
   if b then
-    { opts with s_simpl_tac = Tacticals.New.tclIDTAC;
-                s_simpl_nolia_tac = Tacticals.New.tclIDTAC;
+    { opts with s_simpl_tac = Tacticals.tclIDTAC;
+                s_simpl_nolia_tac = Tacticals.tclIDTAC;
                 s_leaf_tac = Utils.ltac_apply "Tactics.sdone_tac" [];
                 s_leaf_nolia_tac = Utils.ltac_apply "Tactics.sdone_nolia_tac" [];
                 s_sapply = false;
@@ -223,13 +223,13 @@ let erewrite b_all l2r id =
 let simp_hyps_tac () = Utils.ltac_apply "Tactics.simp_hyps" []
 let esimp_hyps_tac () = Utils.ltac_apply "Tactics.esimp_hyps" []
 let fail_tac = Utils.ltac_apply "fail" []
-let sinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
-let seinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
-let sdepinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sdepinvert" [mk_tac_arg_id id])
-let sedepinvert_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.sedepinvert" [mk_tac_arg_id id])
+let sinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
+let seinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
+let sdepinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.sdepinvert" [mk_tac_arg_id id])
+let sedepinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.sedepinvert" [mk_tac_arg_id id])
 let ssubst_tac () = Utils.ltac_apply "Tactics.ssubst" []
 let subst_simpl_tac () = Utils.ltac_apply "Tactics.subst_simpl" []
-let srewrite_tac id = Tacticals.New.tclPROGRESS (Utils.ltac_apply "Tactics.srewrite" [mk_tac_arg_id id])
+let srewrite_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.srewrite" [mk_tac_arg_id id])
 let intros_until_atom_tac () = Utils.ltac_apply "Tactics.intros_until_atom" []
 let simple_inverting_tac opts =
   Utils.ltac_apply
@@ -349,7 +349,7 @@ let memoize_ind = IndMemo.memoize
 
 (*****************************************************************************************)
 
-let opt b tac = if b then tac else Tacticals.New.tclIDTAC
+let opt b tac = if b then tac else Tacticals.tclIDTAC
 
 let autorewrite b_all bases =
   if bases = [] then
@@ -448,15 +448,15 @@ let fullunfold c = fullunfold_tac (DAst.make (Glob_term.GRef (GlobRef.ConstRef c
 let fullunfolding opts =
   match opts.s_always_unfold with
   | SSome lst ->
-     List.fold_left (fun tac c -> tac <*> fullunfold c) Tacticals.New.tclIDTAC lst
-  | SNone -> Tacticals.New.tclIDTAC
+     List.fold_left (fun tac c -> tac <*> fullunfold c) Tacticals.tclIDTAC lst
+  | SNone -> Tacticals.tclIDTAC
   | SAll -> Utils.ltac_apply "Tactics.fullunfold_all" []
 
 let sunfold b_aggressive c =
   if is_simple_unfold b_aggressive c then
     fullunfold c
   else
-    Tacticals.New.tclIDTAC
+    Tacticals.tclIDTAC
 
 let sdestruct opts t =
   if opts.s_dep then
@@ -467,10 +467,10 @@ let sdestruct opts t =
 (* TODO: port gunfolding from Reconstr.v *)
 let unfolding opts =
   let do_unfolding lst =
-    Tacticals.New.tclREPEAT
+    Tacticals.tclREPEAT
       (List.fold_left
          (fun acc c -> sunfold opts.s_aggressive_unfolding c <*> acc)
-         Tacticals.New.tclIDTAC
+         Tacticals.tclIDTAC
          lst)
   in
   match opts.s_unfolding with
@@ -485,7 +485,7 @@ let unfolding opts =
          (get_consts (Proofview.Goal.sigma gl)
             (Proofview.Goal.concl gl :: List.map snd (Utils.get_hyps gl)))
      end
-  | SNone -> Tacticals.New.tclIDTAC
+  | SNone -> Tacticals.tclIDTAC
 
 let sunfolding b_aggressive =
   unfolding { (default_s_opts ()) with
@@ -654,16 +654,16 @@ let rec brepeat n t =
     Proofview.tclINDEPENDENT begin
       Proofview.tclIFCATCH t
         (fun () -> Proofview.tclCHECKINTERRUPT <*> brepeat (n - 1) t)
-        (fun e -> Tacticals.New.catch_failerror e <*> Proofview.tclUNIT ())
+        (fun e -> Tacticals.catch_failerror e <*> Proofview.tclUNIT ())
     end
 
 let repeat t =
-  brepeat 8 (Tacticals.New.tclPROGRESS t)
+  brepeat 8 (Tacticals.tclPROGRESS t)
 
 let repeat2 tac1 tac2 =
-  Tacticals.New.tclTHEN tac1
+  Tacticals.tclTHEN tac1
     (repeat
-       (Tacticals.New.tclTHEN (Tacticals.New.tclPROGRESS tac2) tac1))
+       (Tacticals.tclTHEN (Tacticals.tclPROGRESS tac2) tac1))
 
 let (<~>) = repeat2
 
@@ -672,7 +672,7 @@ let rec repeat_when p f =
     let evd = Proofview.Goal.sigma gl in
     let rec go hyps =
       match hyps with
-      | [] -> Tacticals.New.tclIDTAC
+      | [] -> Tacticals.tclIDTAC
       | (id, hyp) :: hyps' ->
          if p evd hyp then
            f id <*> repeat_when p f
@@ -687,7 +687,7 @@ let rec do_when p f forbidden_ids =
     let evd = Proofview.Goal.sigma gl in
     let rec go hyps =
       match hyps with
-      | [] -> Tacticals.New.tclIDTAC
+      | [] -> Tacticals.tclIDTAC
       | (id, hyp) :: hyps' ->
          if not (List.memq id forbidden_ids) && p evd hyp then
            f id <*> do_when p f (id :: forbidden_ids)
@@ -712,7 +712,7 @@ let rec simple_splitting opts =
         Tactics.constructor_tac true None 1 NoBindings <*>
           reduce_concl opts <*> simple_splitting opts
       else
-        Tacticals.New.tclIDTAC
+        Tacticals.tclIDTAC
   end
 
 let case_splitting b_all opts =
@@ -722,7 +722,7 @@ let case_splitting b_all opts =
        case_splitting_tac opts
      else
        case_splitting_concl_tac opts
-  | SNone -> Tacticals.New.tclIDTAC
+  | SNone -> Tacticals.tclIDTAC
   | SSome lst ->
      let csplit =
        if b_all then
@@ -730,12 +730,12 @@ let case_splitting b_all opts =
        else
          case_splitting_concl_on_tac opts
      in
-     List.fold_left (fun tac ind -> tac <*> csplit ind) Tacticals.New.tclIDTAC
+     List.fold_left (fun tac ind -> tac <*> csplit ind) Tacticals.tclIDTAC
        (!case_split_hints @ lst)
 
 let eager_inverting opts =
   match opts.s_inversions with
-  | SNone -> Tacticals.New.tclIDTAC
+  | SNone -> Tacticals.tclIDTAC
   | _ ->
      do_when
        begin fun evd hyp ->
@@ -751,7 +751,7 @@ let eager_inverting opts =
 let simple_inverting opts =
   match opts.s_inversions with
   | SAll -> simple_inverting_tac opts
-  | SNone -> Tacticals.New.tclIDTAC
+  | SNone -> Tacticals.tclIDTAC
   | _ ->
      repeat_when
        begin fun evd hyp ->
@@ -771,7 +771,7 @@ let simplify opts =
       opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       simpl_tac opts <~>
       reduce_concl opts <~>
-      (Tacticals.New.tclPROGRESS
+      (Tacticals.tclPROGRESS
          begin
            opt opts.s_genproofs (generalize_proofs_tac ()) <*>
              intros_until_atom_tac ()
@@ -786,16 +786,16 @@ let simplify opts =
     opt opts.s_reflect (bool_reflect_tac ()) <*>
     (if opts.s_forwarding then
        simpl1 <*>
-         (Tacticals.New.tclTRY
-            (Tacticals.New.tclPROGRESS (with_reduction opts (forwarding_tac ()) (forwarding_nored_tac ())) <*> simpl1))
+         (Tacticals.tclTRY
+            (Tacticals.tclPROGRESS (with_reduction opts (forwarding_tac ()) (forwarding_nored_tac ())) <*> simpl1))
      else
        simpl1)
-  <*> Tacticals.New.tclTRY opts.s_solve_tac
+  <*> Tacticals.tclTRY opts.s_solve_tac
 
 let simplify_concl opts =
   (reduce_concl opts <~> autorewriting false opts) <*>
     if opts.s_eager_case_splitting then
-      Tacticals.New.tclTRY (Tacticals.New.tclPROGRESS (case_splitting false opts) <*> simplify opts)
+      Tacticals.tclTRY (Tacticals.tclPROGRESS (case_splitting false opts) <*> simplify opts)
     else
       Proofview.tclUNIT ()
 
@@ -1077,7 +1077,7 @@ type tactics = {
 }
 
 let create_tactics opts = {
-  t_finish = Tacticals.New.tclSOLVE [ leaf_tac opts; opts.s_solve_tac ];
+  t_finish = Tacticals.tclSOLVE [ leaf_tac opts; opts.s_solve_tac ];
   t_simplify = simplify opts;
   t_simplify_concl = simplify_concl opts;
   t_simple_splitting = simple_splitting opts;
@@ -1092,7 +1092,7 @@ let create_tactics opts = {
 
 let rec search extra tacs opts n rtrace visited =
   if n = 0 then
-    Tacticals.New.tclSOLVE [ tacs.t_finish; opts.s_solve_tac ]
+    Tacticals.tclSOLVE [ tacs.t_finish; opts.s_solve_tac ]
   else
     Proofview.Goal.enter begin fun gl ->
       let goal = Proofview.Goal.concl gl in
@@ -1109,7 +1109,7 @@ let rec search extra tacs opts n rtrace visited =
            if is_simple_split opts evd goal then
              tacs.t_simple_splitting <*> search extra tacs opts n rtrace (goal :: visited)
            else if opts.s_eager_case_splitting && is_case_split opts evd goal then
-             Tacticals.New.tclIFCATCH (Tacticals.New.tclPROGRESS tacs.t_case_splitting)
+             Tacticals.tclIFCATCH (Tacticals.tclPROGRESS tacs.t_case_splitting)
                (fun () -> start_search tacs opts n)
                (fun () -> run_actions extra tacs opts n rtrace visited evd goal gl)
            else
@@ -1200,15 +1200,15 @@ and apply_actions tacs opts n actions rtrace visited =
          | ActInvert id ->
             cont (sinvert opts id <*> start_search tacs opts n') acts
          | ActUnfold c ->
-            continue n' (Tacticals.New.tclPROGRESS (unfold c) <*> tacs.t_simplify_concl) acts
+            continue n' (Tacticals.tclPROGRESS (unfold c) <*> tacs.t_simplify_concl) acts
          | ActCaseUnfold c ->
             cont (Proofview.tclBIND
-                    (Tacticals.New.tclPROGRESS (fullunfold c))
+                    (Tacticals.tclPROGRESS (fullunfold c))
                     (fun _ -> start_search tacs opts n')) acts
          | ActDestruct t ->
             cont (sdestruct opts t <*> start_search tacs opts n') acts
          | ActHint h ->
-            continue n' (Tacticals.New.tclPROGRESS
+            continue n' (Tacticals.tclPROGRESS
                            (Utils.hint_tactic h (List.hd visited))
                          <*> tacs.t_simplify_concl) acts
          | ActSolve ->
@@ -1222,7 +1222,7 @@ and apply_actions tacs opts n actions rtrace visited =
             cont (Tactics.intros <*> tacs.t_subst_simpl <*> start_search tacs opts n') acts
          | ActReduce ->
             cont (Proofview.tclBIND
-                    (Tacticals.New.tclPROGRESS (red_in_all_tac ()))
+                    (Tacticals.tclPROGRESS (red_in_all_tac ()))
                     (fun _ -> start_search tacs opts n')) acts
          | ActFEqual ->
             continue n' (f_equal_tac ()) acts
@@ -1244,7 +1244,7 @@ let sintuition opts =
     Tactics.intros <*>
     opt opts.s_reflect (bool_reflect_tac ()) <*>
     simp_hyps_tac () <*> subst_simpl opts <*> ssimpl_tac opts <*>
-    Tacticals.New.tclREPEAT (Tacticals.New.tclPROGRESS
+    Tacticals.tclREPEAT (Tacticals.tclPROGRESS
                                (Tactics.intros <*> simp_hyps_tac () <*> subst_simpl opts) <*>
                                ssimpl_tac opts)
 
@@ -1289,7 +1289,7 @@ let qsimpl opts =
 
 let sauto opts =
   sinit opts <*>
-    Tacticals.New.tclTRY (opts.s_solve_tac) <*>
+    Tacticals.tclTRY (opts.s_solve_tac) <*>
     intros (create_tactics opts) opts opts.s_limit
 
 let scrush opts =
@@ -1307,11 +1307,11 @@ let ecrush opts =
 
 let sblast opts =
   sinit opts <*>
-    Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT (ssimpl opts <*> instering_tac ())]
+    Tacticals.tclSOLVE [Tacticals.tclREPEAT (ssimpl opts <*> instering_tac ())]
 
 let qblast opts =
   sinit opts <*>
-    Tacticals.New.tclSOLVE [Tacticals.New.tclREPEAT
+    Tacticals.tclSOLVE [Tacticals.tclREPEAT
                               (qsimpl opts <*> qforwarding_tac () <*> instering_tac ())]
 
 let scongruence opts =
@@ -1338,7 +1338,7 @@ let print_actions opts =
     let hyps = List.map (eval_hyp evd) (Utils.get_hyps gl) in
     let actions = create_actions true opts evd goal hyps gl in
     print_search_actions actions;
-    Tacticals.New.tclIDTAC
+    Tacticals.tclIDTAC
   end
 
 let unshelve tac =

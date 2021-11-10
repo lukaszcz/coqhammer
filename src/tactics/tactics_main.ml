@@ -14,7 +14,7 @@ let try_usolve (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofvi
       interp_opts opts lst
         begin fun opts ->
           Proofview.tclORELSE (ret opts)
-            (fun _ -> Tacticals.New.tclZEROMSG (Pp.str msg))
+            (fun _ -> Tacticals.tclZEROMSG (Pp.str msg))
         end
   end
 
@@ -28,7 +28,7 @@ let with_delayed_uconstr ist c tac =
     polymorphic = false;
   } in
   let c = Tacinterp.type_uconstr ~flags ist c in
-  Tacticals.New.tclDELAYEDWITHHOLES true c tac
+  Tacticals.tclDELAYEDWITHHOLES true c tac
 
 let use_lemmas ist lst =
   let use_tac t =
@@ -36,4 +36,4 @@ let use_lemmas ist lst =
       Utils.ltac_eval "Tactics.use_tac" []
   in
   List.fold_left (fun tac t -> tac <*> with_delayed_uconstr ist t use_tac)
-    Tacticals.New.tclIDTAC lst
+    Tacticals.tclIDTAC lst

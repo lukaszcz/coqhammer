@@ -658,8 +658,8 @@ let tac_of_hint db h concl =
     | ERes_pf h -> unify_e_resolve st h
     | Give_exact h -> e_exact st h
     | Res_pf_THEN_trivial_fail h ->
-       Tacticals.New.tclTHEN (unify_e_resolve st h)
-            (Tacticals.New.tclSOLVE [Eauto.e_assumption;
+       Tacticals.tclTHEN (unify_e_resolve st h)
+            (Tacticals.tclSOLVE [Eauto.e_assumption;
                                      Tactics.reflexivity;
                                      Tactics.any_constructor true None])
     | Unfold_nth c ->

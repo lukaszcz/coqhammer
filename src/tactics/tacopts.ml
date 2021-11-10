@@ -191,7 +191,7 @@ let sopt_append sc lst2 =
 
 let use_constrs lems =
   Tactics.generalize lems <*>
-    Tacticals.New.tclDO (List.length lems)
+    Tacticals.tclDO (List.length lems)
       (Proofview.tclORELSE
          (Tactics.intro_move None Logic.MoveFirst)
          (fun _ -> Tactics.intro))
@@ -228,7 +228,7 @@ let interp_use use ret opts lst env sigma =
     else
       opts
   in
-  Tacticals.New.tclWITHHOLES true (use lems) sigma <*> ret opts
+  Tacticals.tclWITHHOLES true (use lems) sigma <*> ret opts
 
 let mk_final tac =
   let sfinal =
@@ -319,13 +319,13 @@ let interp_opt ret opt opts =
   | SOHintBasesAll ->
      ret { opts with s_hint_bases = Hints.current_pure_db () }
   | SOFinish tac ->
-     let tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] in
+     let tac = Tacticals.tclSOLVE [Tacinterp.interp tac] in
      ret { opts with s_leaf_tac = tac; s_leaf_nolia_tac = tac }
   | SOFinal tac ->
-     let tac = Tacticals.New.tclSOLVE [Tacinterp.interp (mk_final tac)] in
+     let tac = Tacticals.tclSOLVE [Tacinterp.interp (mk_final tac)] in
      ret { opts with s_leaf_tac = tac; s_leaf_nolia_tac = tac }
   | SOSolve tac ->
-     ret { opts with s_solve_tac = Tacticals.New.tclSOLVE [Tacinterp.interp tac] }
+     ret { opts with s_solve_tac = Tacticals.tclSOLVE [Tacinterp.interp tac] }
   | SOSimp tac ->
      let tac = Tacinterp.interp tac in
      ret { opts with s_simpl_tac = tac; s_simpl_nolia_tac = tac }
@@ -334,13 +334,13 @@ let interp_opt ret opt opts =
      ret { opts with s_ssimpl_tac = tac; s_ssimpl_nolia_tac = tac }
   | SOSolveAdd tac ->
      ret { opts with s_solve_tac =
-                       Tacticals.New.tclSOLVE [opts.s_leaf_tac; Tacinterp.interp tac] }
+                       Tacticals.tclSOLVE [opts.s_leaf_tac; Tacinterp.interp tac] }
   | SOSimpAdd tac ->
-     let tac = Tacticals.New.tclTRY (Tacinterp.interp tac) in
+     let tac = Tacticals.tclTRY (Tacinterp.interp tac) in
      ret { opts with s_simpl_tac = opts.s_simpl_tac <*> tac;
                      s_simpl_nolia_tac = opts.s_simpl_nolia_tac <*> tac }
   | SOSSimpAdd tac ->
-     let tac = Tacticals.New.tclTRY (Tacinterp.interp tac) in
+     let tac = Tacticals.tclTRY (Tacinterp.interp tac) in
      ret { opts with s_ssimpl_tac = opts.s_ssimpl_tac <*> tac;
                      s_ssimpl_nolia_tac = opts.s_ssimpl_nolia_tac <*> tac }
   | SOForward b ->

@@ -12,9 +12,9 @@ TACTIC EXTEND Hammer_isAtom
 | [ "isAtom" lconstr(t) ] -> {
   Proofview.Goal.enter begin fun gl ->
     if Utils.is_atom (Proofview.Goal.sigma gl) t then
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
     else
-      Tacticals.New.tclFAIL 0 Pp.(str "not an atom")
+      Tacticals.tclFAIL 0 Pp.(str "not an atom")
   end
 }
 END
@@ -23,9 +23,9 @@ TACTIC EXTEND Hammer_isIndAtom
 | [ "isIndAtom" lconstr(t) ] -> {
   Proofview.Goal.enter begin fun gl ->
     if Utils.is_ind_atom (Proofview.Goal.sigma gl) t then
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
     else
-      Tacticals.New.tclFAIL 0 Pp.(str "not an inductive atom")
+      Tacticals.tclFAIL 0 Pp.(str "not an inductive atom")
   end
 }
 END
@@ -40,11 +40,11 @@ TACTIC EXTEND Hammer_isIndexedInd
     match kind evd head with
     | Ind(ind, _) ->
        if Utils.is_indexed_ind ind then
-         Tacticals.New.tclIDTAC
+         Tacticals.tclIDTAC
        else
-         Tacticals.New.tclFAIL 0 Pp.(str "not an indexed inductive type")
+         Tacticals.tclFAIL 0 Pp.(str "not an indexed inductive type")
     | _ ->
-       Tacticals.New.tclFAIL 0 Pp.(str "not an indexed inductive type")
+       Tacticals.tclFAIL 0 Pp.(str "not an indexed inductive type")
   end
 }
 END
@@ -53,9 +53,9 @@ TACTIC EXTEND Hammer_checkLPO
 | [ "checkLPO" lconstr(t1) lconstr(t2) ] -> {
   Proofview.Goal.enter begin fun gl ->
     if Lpo.lpo (Proofview.Goal.sigma gl) t1 t2 then
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
     else
-      Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
+      Tacticals.tclFAIL 0 Pp.(str "not LPO decreasing")
   end
 }
 END
@@ -67,9 +67,9 @@ TACTIC EXTEND Hammer_checkTargetLPO
     let (_, _, args) = Utils.destruct_prod evd t in
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] when Lpo.lpo evd t1 t2 ->
-       Tacticals.New.tclIDTAC
+       Tacticals.tclIDTAC
     | _ ->
-       Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
+       Tacticals.tclFAIL 0 Pp.(str "not LPO decreasing")
   end
 }
 END
@@ -81,9 +81,9 @@ TACTIC EXTEND Hammer_checkTargetRevLPO
     let (_, _, args) = Utils.destruct_prod evd t in
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] when Lpo.lpo evd t2 t1 ->
-       Tacticals.New.tclIDTAC
+       Tacticals.tclIDTAC
     | _ ->
-       Tacticals.New.tclFAIL 0 Pp.(str "not LPO decreasing")
+       Tacticals.tclFAIL 0 Pp.(str "not LPO decreasing")
   end
 }
 END

@@ -335,7 +335,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
   in
   let use_deps =
     Tactics.generalize deps <*>
-      Tacticals.New.tclDO (List.length deps) (Tactics.intro_move None Logic.MoveFirst)
+      Tacticals.tclDO (List.length deps) (Tactics.intro_move None Logic.MoveFirst)
   in
   let rhauto =
     usolve (use_deps <*> sauto (mkopts (hauto_s_opts ())))
@@ -475,7 +475,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
   and reauto =
     usolve (use_deps <*>
               sinit (mkopts (hauto_s_opts ())) <*>
-              Tacticals.New.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
+              Tacticals.tclSOLVE [ Eauto.gen_eauto (Eauto.make_dimension None None) []
                                          (Some []) ])
   and rcongruence =
     usolve (use_deps <*> scongruence (mkopts (default_s_opts ())))
@@ -607,7 +607,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     | [] ->
        begin
          msg_fail ();
-         Tacticals.New.tclIDTAC
+         Tacticals.tclIDTAC
        end
     | tacs :: ts ->
        msg_batch k;
@@ -779,7 +779,7 @@ let hammer_tac () =
             begin
               Msg.info "Detecting provers...";
               if not (Provers.detect ()) then
-                Tacticals.New.tclZEROMSG (Pp.str "No ATPs found. See https://coqhammer.github.io for instructions on how to install the provers.")
+                Tacticals.tclZEROMSG (Pp.str "No ATPs found. See https://coqhammer.github.io for instructions on how to install the provers.")
               else
                 begin
                   provers_detected := true;
@@ -823,7 +823,7 @@ let predict_tac n pred_method =
           with e ->
             restore (); raise e
         end;
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
     end
 
 let hammer_features_tac () =
@@ -831,7 +831,7 @@ let hammer_features_tac () =
     begin fun gl ->
       let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
     end
 
 let hammer_print name =
@@ -881,7 +881,7 @@ let hammer_transl_tac () =
           Msg.notice (n ^ ": " ^ Coqterms.string_of_coqterm a)
         end
         (Coq_transl.translate name);
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
     end
 
 let hammer_features name =
@@ -923,7 +923,7 @@ let hammer_hook_tac prefix name =
           let str = input_line fopt in
           close_in fopt;
           if str = "check" then
-            Tacticals.New.tclIDTAC
+            Tacticals.tclIDTAC
           else if str = "gen-atp" then
             begin
               let env = Proofview.Goal.env gl in
@@ -948,7 +948,7 @@ let hammer_hook_tac prefix name =
                 end
                 premises;
               Msg.info ("Done processing " ^ name ^ ".\n");
-              Tacticals.New.tclIDTAC
+              Tacticals.tclIDTAC
             end
           else if str = "reconstr" then
             begin
@@ -1007,7 +1007,7 @@ let hammer_hook_tac prefix name =
                        hlp lst2
                    end
                 | [] ->
-                   Tacticals.New.tclIDTAC
+                   Tacticals.tclIDTAC
               in
               hlp premise_prover_lst
             end
@@ -1045,10 +1045,10 @@ let hammer_hook_tac prefix name =
                 else
                   begin
                     ignore (Unix.waitpid [] pid);
-                    Tacticals.New.tclIDTAC
+                    Tacticals.tclIDTAC
                   end
               else
-                Tacticals.New.tclIDTAC
+                Tacticals.tclIDTAC
             end
           else
             failwith ("Unknown option in coqhammer.opt: " ^ str)
@@ -1056,9 +1056,9 @@ let hammer_hook_tac prefix name =
       else
         begin
           Msg.info "Goal not a proposition.\n";
-          Tacticals.New.tclIDTAC
+          Tacticals.tclIDTAC
         end
     with Sys_error s ->
       Msg.notice ("Warning: " ^ s);
-      Tacticals.New.tclIDTAC
+      Tacticals.tclIDTAC
   end
