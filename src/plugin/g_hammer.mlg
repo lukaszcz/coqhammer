@@ -1,4 +1,4 @@
-DECLARE PLUGIN "hammer_plugin"
+DECLARE PLUGIN "coq-hammer.plugin"
 
 {
 

@@ -1,4 +1,5 @@
 COQ_SRC_SUBDIRS+=user-contrib/Hammer/Tactics
+CAMLPKGS+= -package coq-hammer-tactics.lib
 
 post-all:: predict htimeout
 

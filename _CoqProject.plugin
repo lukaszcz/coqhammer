@@ -1,3 +1,4 @@
+src/plugin/META.coq-hammer
 -Q theories/Plugin Hammer.Plugin
 -Q src/plugin Hammer.Plugin
 -I src/plugin

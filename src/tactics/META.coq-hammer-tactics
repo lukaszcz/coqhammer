@@ -1,0 +1,19 @@
+package "plugin" (
+  description = "Coq Hammer Tactics"
+  requires = "coq-core.plugins.ltac coq-hammer-tactics.lib"
+  archive(byte) = "hammer_tactics.cma"
+  archive(native) = "hammer_tactics.cmxa"
+  plugin(byte) = "hammer_tactics.cma"
+  plugin(native) = "hammer_tactics.cmxs"
+  directory = "."
+)
+package "lib" (
+  description = "Coq Hammer Lib"
+  requires = "coq-core.plugins.ltac"
+  archive(byte) = "hammer_lib.cma"
+  archive(native) = "hammer_lib.cmxa"
+  plugin(byte) = "hammer_lib.cma"
+  plugin(native) = "hammer_lib.cmxs"
+  directory = "../lib"
+)
+directory = "."

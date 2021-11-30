@@ -1,0 +1,10 @@
+package "plugin" (
+  description = "Coq Hammer Plugin"
+  requires = "coq-core.plugins.ltac coq-hammer-tactics.lib"
+  archive(byte) = "hammer_plugin.cma"
+  archive(native) = "hammer_plugin.cmxa"
+  plugin(byte) = "hammer_plugin.cma"
+  plugin(native) = "hammer_plugin.cmxs"
+  directory = "."
+)
+directory = "."
