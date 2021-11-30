@@ -1,3 +1,4 @@
+src/tactics/META.coq-hammer-tactics
 -Q theories/Tactics Hammer.Tactics
 -Q src/lib Hammer.Tactics
 -Q src/tactics Hammer.Tactics

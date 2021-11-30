@@ -3,7 +3,7 @@
 (* This file contains the Ltac part of the automated reasoning tactics. *)
 (* This file may be distributed under the terms of the LGPL 2.1 license. *)
 
-Declare ML Module "hammer_lib".
+Declare ML Module "coq-hammer-tactics.lib".
 
 Require Import Lia.
 Require Import Program.Equality.
@@ -1053,7 +1053,7 @@ Ltac f_equal_tac := f_equal.
 Ltac firstorder_tac := solve [ firstorder (trysolve; auto) ].
 Ltac firstorder_nolia_tac := solve [ firstorder (trysolve_nolia; auto) ].
 
-Declare ML Module "hammer_tactics".
+Declare ML Module "coq-hammer-tactics.plugin".
 
 Ltac sauto_tac := sauto.
 Ltac sdone_tac := solve [ trysolve ].

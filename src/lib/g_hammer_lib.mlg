@@ -1,4 +1,4 @@
-DECLARE PLUGIN "hammer_lib"
+DECLARE PLUGIN "coq-hammer-tactics.lib"
 
 {
 open Ltac_plugin
