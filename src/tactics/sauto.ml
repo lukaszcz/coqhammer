@@ -93,7 +93,7 @@ let hauto_s_opts () =
   { (default_s_opts ()) with s_inversions = SSome [];
                              s_constructors = SSome [] }
 
-let eauto_tac = Eauto.gen_eauto (Eauto.make_dimension None None) [] (Some [])
+let eauto_tac = Eauto.gen_eauto [] (Some [])
 let congr_tac () = Utils.ltac_apply "Tactics.congr_tac" []
 let lia_tac () = Utils.ltac_apply "Tactics.lia_tac" []
 
