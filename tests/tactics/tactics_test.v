@@ -65,7 +65,7 @@ Proof.
   induction l; sauto.
 Qed.
 
-Instance mere_unit : Mere unit.
+Global Instance mere_unit : Mere unit.
 Proof.
   sauto.
 Qed.
@@ -1409,7 +1409,7 @@ Arguments leb_total_dec {A _}.
 Arguments leb_antisym {A _}.
 Arguments leb_trans {A _}.
 
-Instance dto_nat : DecTotalOrder nat.
+Global Instance dto_nat : DecTotalOrder nat.
 Proof.
   apply Build_DecTotalOrder with (leb := Nat.leb);
     induction x; sauto.
@@ -1440,7 +1440,7 @@ Function lexb {A} {dto : DecTotalOrder A} (l1 l2 : list A) : bool :=
     end
   end.
 
-Instance dto_list {A} {dto_a : DecTotalOrder A} : DecTotalOrder (list A).
+Global Instance dto_list {A} {dto_a : DecTotalOrder A} : DecTotalOrder (list A).
 Proof.
   apply Build_DecTotalOrder with (leb := lexb).
   - induction x; sauto.
