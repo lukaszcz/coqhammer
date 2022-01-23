@@ -48,17 +48,17 @@ jobs:
 
   # Test supported versions of Coq via Nix
   - env:
-    - COQ=https://github.com/coq/coq-on-cachix/tarball/master
+    - COQ=8.15
     <<: *NIX
 
   # Test supported versions of Coq via OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:dev-ocaml-4.12-flambda
-    - PACKAGE=coq-hammer.dev
+    - COQ_IMAGE=coqorg/coq:8.15-ocaml-4.12-flambda
+    - PACKAGE=coq-hammer.8.15.dev
     - NJOBS=2
     <<: *OPAM
   - env:
-    - COQ_IMAGE=coqorg/coq:dev-ocaml-4.12-flambda
-    - PACKAGE=coq-hammer-tactics.dev
+    - COQ_IMAGE=coqorg/coq:8.15-ocaml-4.12-flambda
+    - PACKAGE=coq-hammer-tactics.8.15.dev
     - NJOBS=2
     <<: *OPAM
