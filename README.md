@@ -31,7 +31,7 @@ Requirements
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2020, Lukasz Czajka, TU Dortmund University.\
+Copyright (c) 2017-2022, Lukasz Czajka, TU Dortmund University.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file
