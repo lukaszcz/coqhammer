@@ -19,8 +19,9 @@ let try_usolve (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofvi
   end
 
 let with_delayed_uconstr ist c tac =
-  let flags = {
-    Pretyping.use_typeclasses = Pretyping.UseTC;
+  let flags = Pretyping.{
+    use_coercions = true;
+    use_typeclasses = UseTC;
     solve_unification_constraints = true;
     fail_evar = false;
     expand_evars = true;
