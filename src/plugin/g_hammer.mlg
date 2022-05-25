@@ -12,7 +12,6 @@ let () = Mltop.add_known_plugin (fun () ->
   Flags.if_verbose Feedback.msg_info Pp.(str hammer_version_string))
   "coq-hammer.plugin"
 
-open Feedback
 open Hammer_main
 
 }
