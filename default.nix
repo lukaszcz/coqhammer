@@ -19,7 +19,7 @@ pkgs.stdenv.mkDerivation {
     ++ pkgs.lib.optionals shell [ merlin ocp-indent ocp-index ];
 
   propagatedBuildInputs = [
-    coq
+    coq dune
   ];
 
   src = if shell then null else ./.;
