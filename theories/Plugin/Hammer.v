@@ -1,2 +1,2 @@
-From Hammer Require Export Tactics.Tactics.
+From Hammer Require Export Tactics.
 Declare ML Module "coq-hammer.plugin".

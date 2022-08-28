@@ -1053,7 +1053,7 @@ Ltac f_equal_tac := f_equal.
 Ltac firstorder_tac := solve [ firstorder (trysolve; auto) ].
 Ltac firstorder_nolia_tac := solve [ firstorder (trysolve_nolia; auto) ].
 
-Declare ML Module "coq-hammer-tactics.plugin".
+Declare ML Module "coq-hammer-tactics.tactics".
 
 Ltac sauto_tac := sauto.
 Ltac sdone_tac := solve [ trysolve ].
