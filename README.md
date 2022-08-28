@@ -21,7 +21,7 @@ documentation and installation instructions.
 
 Requirements
 ------------
-- [Coq master](https://github.com/coq/coq)
+- Coq 8.15
 - for `hammer`: automated provers
   ([Vampire](https://vprover.github.io/download.html),
   [CVC4](http://cvc4.cs.stanford.edu/downloads/),
