@@ -47,9 +47,12 @@ jobs:
   include:
 
   # Test supported versions of Coq via Nix
-  - env:
-    - COQ=https://github.com/coq/coq-on-cachix/tarball/master
-    <<: *NIX
+#  - env:
+#    - COQ=https://github.com/coq/coq-on-cachix/tarball/master
+#    <<: *NIX
+#
+# Remove Nix till I figure out how to add dune to default.nix
+#
 
   # Test supported versions of Coq via OPAM
   - env:
