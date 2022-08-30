@@ -1,0 +1,28 @@
+src/tactics/META.coq-hammer-tactics
+-Q theories/Tactics Hammer.Tactics
+-Q src/lib Hammer.Tactics
+-Q src/tactics Hammer.Tactics
+-I src/lib
+-I src/tactics
+src/lib/hammer_errors.ml
+src/lib/hhutils.mli
+src/lib/hhutils.ml
+src/lib/hhlib.ml
+src/lib/hhlpo.mli
+src/lib/hhlpo.ml
+src/lib/hhpartac.ml
+src/lib/g_hammer_lib.mlg
+src/lib/hammer_lib.mlpack
+src/tactics/sauto.mli
+src/tactics/sauto.ml
+src/tactics/tacopts.mli
+src/tactics/tacopts.ml
+src/tactics/tacbest.mli
+src/tactics/tacbest.ml
+src/tactics/tactics_main.ml
+src/tactics/g_hammer_tactics.mlg
+src/tactics/hammer_tactics.mlpack
+theories/Tactics/Reconstr.v
+theories/Tactics/Reflect.v
+theories/Tactics/Tactics.v
+theories/Tactics/Hints.v

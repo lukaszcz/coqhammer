@@ -1,0 +1,31 @@
+src/plugin/META.coq-hammer
+-Q theories/Plugin Hammer.Plugin
+-Q src/plugin Hammer.Plugin
+-I src/plugin
+src/plugin/hh_term.ml
+src/plugin/msg.ml
+src/plugin/timeout.ml
+src/plugin/coq_transl_opts.ml
+src/plugin/coqterms.ml
+src/plugin/defhash.mli
+src/plugin/defhash.ml
+src/plugin/coq_typing.mli
+src/plugin/coq_typing.ml
+src/plugin/hashing.mli
+src/plugin/hashing.ml
+src/plugin/coq_convert.mli
+src/plugin/coq_convert.ml
+src/plugin/tptp_out.mli
+src/plugin/tptp_out.ml
+src/plugin/coq_transl.mli
+src/plugin/coq_transl.ml
+src/plugin/opt.ml
+src/plugin/parallel.ml
+src/plugin/features.mli
+src/plugin/features.ml
+src/plugin/provers.mli
+src/plugin/provers.ml
+src/plugin/hammer_main.ml
+src/plugin/g_hammer.mlg
+src/plugin/hammer_plugin.mlpack
+theories/Plugin/Hammer.v
