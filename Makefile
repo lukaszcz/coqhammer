@@ -1,37 +1,52 @@
-
-BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
-
 default: all
 
-all: tactics plugin predict htimeout
+all: Makefile.coq Makefile.coq.local
+	$(MAKE) -f Makefile.coq
 
-tactics:
-	dune build -p coq-hammer-tactics
+tactics: Makefile.coq.tactics
+	$(MAKE) -f Makefile.coq.tactics
 
-plugin: install-tactics
-	dune build -p coq-hammer
+plugin: Makefile.coq.plugin Makefile.coq.plugin.local
+	$(MAKE) -f Makefile.coq.plugin
 
-install: install-tactics install-plugin install-extra
+mathcomp: Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq.mathcomp
 
-install-tactics: tactics
-	dune install coq-hammer-tactics
+install: Makefile.coq Makefile.coq.local
+	$(MAKE) -f Makefile.coq install
 
-install-plugin: plugin
-	dune install coq-hammer
+install-tactics: Makefile.coq.tactics
+	$(MAKE) -f Makefile.coq.tactics install
 
-uninstall:
-	dune build -p coq-hammer
-	dune uninstall coq-hammer
-	dune build -p coq-hammer-tactics
-	dune uninstall coq-hammer-tactics
+install-plugin: Makefile.coq.plugin Makefile.coq.plugin.local
+	$(MAKE) -f Makefile.coq.plugin install
 
-uninstall-tactics:
-	dune build -p coq-hammer-tactics
-	dune uninstall coq-hammer-tactics
+install-mathcomp: Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq.mathcomp install
 
-uninstall-plugin:
-	dune build -p coq-hammer
-	dune uninstall coq-hammer
+uninstall: Makefile.coq Makefile.coq.local
+	$(MAKE) -f Makefile.coq uninstall
+
+uninstall-tactics: Makefile.coq.tactics
+	$(MAKE) -f Makefile.coq.tactics uninstall
+
+uninstall-plugin: Makefile.coq.plugin Makefile.coq.plugin.local
+	$(MAKE) -f Makefile.coq.plugin uninstall
+
+uninstall-mathcomp: Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq.mathcomp uninstall
+
+Makefile.coq: _CoqProject
+	coq_makefile -f _CoqProject -o Makefile.coq
+
+Makefile.coq.plugin: _CoqProject.plugin
+	coq_makefile -f _CoqProject.plugin -o Makefile.coq.plugin
+
+Makefile.coq.tactics: _CoqProject.tactics
+	coq_makefile -f _CoqProject.tactics -o Makefile.coq.tactics
+
+Makefile.coq.mathcomp: _CoqProject.mathcomp
+	coq_makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
 tests: tests-plugin tests-tactics
 
@@ -49,22 +64,9 @@ test-plugin:
 test-tactics:
 	$(MAKE) -B -C tests/tactics tactics_test.vo
 
-predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp src/predict/knn.cpp src/predict/nbayes.cpp src/predict/rforest.cpp src/predict/tfidf.cpp src/predict/dtree.cpp
-	c++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict
-
-htimeout: src/htimeout/htimeout.c
-	cc -O2 -Wall src/htimeout/htimeout.c -o htimeout
-
-install-extra: predict htimeout
-	install -d $(DESTDIR)$(BINDIR)
-	install -m 0755 predict $(DESTDIR)$(BINDIR)predict
-	install -m 0755 htimeout $(DESTDIR)$(BINDIR)htimeout
-
-clean:
-	dune clean
-	-rm -f predict htimeout
-	$(MAKE) -C eval clean
-	$(MAKE) -C tests/plugin clean
-	$(MAKE) -C tests/tactics clean
+clean: Makefile.coq Makefile.coq.local Makefile.coq.mathcomp
+	$(MAKE) -f Makefile.coq cleanall
+	-$(MAKE) -f Makefile.coq.mathcomp cleanall
+	rm -f Makefile.coq Makefile.coq.conf Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf
 
 .PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics clean

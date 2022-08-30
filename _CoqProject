@@ -1,0 +1,56 @@
+-Q theories Hammer
+-Q src/lib Hammer.Tactics
+-Q src/tactics Hammer.Tactics
+-Q src/plugin Hammer.Plugin
+-I src/lib
+-I src/tactics
+-I src/plugin
+src/lib/hammer_errors.ml
+src/lib/hhutils.mli
+src/lib/hhutils.ml
+src/lib/hhlib.ml
+src/lib/hhlpo.mli
+src/lib/hhlpo.ml
+src/lib/hhpartac.ml
+src/lib/g_hammer_lib.mlg
+src/lib/hammer_lib.mlpack
+src/tactics/sauto.mli
+src/tactics/sauto.ml
+src/tactics/tacopts.mli
+src/tactics/tacopts.ml
+src/tactics/tacbest.mli
+src/tactics/tacbest.ml
+src/tactics/tactics_main.ml
+src/tactics/g_hammer_tactics.mlg
+src/tactics/hammer_tactics.mlpack
+theories/Tactics/Reconstr.v
+theories/Tactics/Reflect.v
+theories/Tactics/Tactics.v
+theories/Tactics/Hints.v
+src/plugin/hh_term.ml
+src/plugin/msg.ml
+src/plugin/timeout.ml
+src/plugin/coq_transl_opts.ml
+src/plugin/coqterms.ml
+src/plugin/defhash.mli
+src/plugin/defhash.ml
+src/plugin/coq_typing.mli
+src/plugin/coq_typing.ml
+src/plugin/hashing.mli
+src/plugin/hashing.ml
+src/plugin/coq_convert.mli
+src/plugin/coq_convert.ml
+src/plugin/tptp_out.mli
+src/plugin/tptp_out.ml
+src/plugin/coq_transl.mli
+src/plugin/coq_transl.ml
+src/plugin/opt.ml
+src/plugin/parallel.ml
+src/plugin/features.mli
+src/plugin/features.ml
+src/plugin/provers.mli
+src/plugin/provers.ml
+src/plugin/hammer_main.ml
+src/plugin/g_hammer.mlg
+src/plugin/hammer_plugin.mlpack
+theories/Plugin/Hammer.v
