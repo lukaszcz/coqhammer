@@ -9,6 +9,7 @@ tactics: Makefile.coq.tactics
 	$(MAKE) -f Makefile.coq.tactics
 
 plugin: install-tactics Makefile.coq.plugin Makefile.coq.plugin.local
+	-rm -f META
 	$(MAKE) -f Makefile.coq.plugin
 
 mathcomp: Makefile.coq.mathcomp
@@ -66,7 +67,7 @@ clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefi
 	-$(MAKE) -f Makefile.coq.plugin cleanall
 	-$(MAKE) -f Makefile.coq.mathcomp cleanall
 	-rm -rf _build
-	rm -f Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf
+	rm -f Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf META
 
 dune: dune-tactics dune-plugin predict htimeout
 
