@@ -1,3 +1,6 @@
+
+BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
+
 default: all
 
 all: tactics plugin
@@ -62,6 +65,59 @@ clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefi
 	$(MAKE) -f Makefile.coq.tactics cleanall
 	-$(MAKE) -f Makefile.coq.plugin cleanall
 	-$(MAKE) -f Makefile.coq.mathcomp cleanall
+	-rm -rf _build
 	rm -f Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf
 
-.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics clean
+dune: dune-tactics dune-plugin predict htimeout
+
+dune-tactics:
+	dune build -p coq-hammer-tactics
+
+dune-plugin: dune-install-tactics predict htimeout
+	dune build -p coq-hammer
+
+dune-install: dune-install-tactics dune-install-plugin
+
+dune-install-tactics: dune-tactics
+	dune install coq-hammer-tactics
+
+dune-install-plugin: dune-plugin install-extra
+	dune install coq-hammer
+
+dune-uninstall:
+	dune build -p coq-hammer
+	dune uninstall coq-hammer
+	dune build -p coq-hammer-tactics
+	dune uninstall coq-hammer-tactics
+	-rm -f $(DESTDIR)$(BINDIR)predict
+	-rm -f $(DESTDIR)$(BINDIR)htimeout
+
+dune-uninstall-tactics:
+	dune build -p coq-hammer-tactics
+	dune uninstall coq-hammer-tactics
+
+dune-uninstall-plugin:
+	dune build -p coq-hammer
+	dune uninstall coq-hammer
+	-rm -f $(DESTDIR)$(BINDIR)predict
+	-rm -f $(DESTDIR)$(BINDIR)htimeout
+
+predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp src/predict/knn.cpp src/predict/nbayes.cpp src/predict/rforest.cpp src/predict/tfidf.cpp src/predict/dtree.cpp
+	c++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict
+
+htimeout: src/htimeout/htimeout.c
+	cc -O2 -Wall src/htimeout/htimeout.c -o htimeout
+
+install-extra: predict htimeout
+	install -d $(DESTDIR)$(BINDIR)
+	install -m 0755 predict $(DESTDIR)$(BINDIR)predict
+	install -m 0755 htimeout $(DESTDIR)$(BINDIR)htimeout
+
+dune-clean:
+	dune clean
+	-rm -f predict htimeout
+	$(MAKE) -C eval clean
+	$(MAKE) -C tests/plugin clean
+	$(MAKE) -C tests/tactics clean
+
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics clean dune dune-tactics dune-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
