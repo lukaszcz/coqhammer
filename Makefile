@@ -8,15 +8,15 @@ all: tactics plugin predict htimeout
 tactics:
 	dune build -p coq-hammer-tactics
 
-plugin: install-tactics predict htimeout
+plugin: install-tactics
 	dune build -p coq-hammer
 
-install: install-tactics install-plugin
+install: install-tactics install-plugin install-extra
 
 install-tactics: tactics
 	dune install coq-hammer-tactics
 
-install-plugin: plugin install-extra
+install-plugin: plugin
 	dune install coq-hammer
 
 uninstall:
@@ -24,8 +24,6 @@ uninstall:
 	dune uninstall coq-hammer
 	dune build -p coq-hammer-tactics
 	dune uninstall coq-hammer-tactics
-	-rm -f $(DESTDIR)$(BINDIR)predict
-	-rm -f $(DESTDIR)$(BINDIR)htimeout
 
 uninstall-tactics:
 	dune build -p coq-hammer-tactics
@@ -34,8 +32,6 @@ uninstall-tactics:
 uninstall-plugin:
 	dune build -p coq-hammer
 	dune uninstall coq-hammer
-	-rm -f $(DESTDIR)$(BINDIR)predict
-	-rm -f $(DESTDIR)$(BINDIR)htimeout
 
 tests: tests-plugin tests-tactics
 
