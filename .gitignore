@@ -21,6 +21,7 @@ Makefile.coq.plugin.conf
 Makefile.coq.mathcomp
 Makefile.coq.mathcomp.bak
 Makefile.coq.mathcomp.conf
+META
 
 *.annot
 *.cmo
