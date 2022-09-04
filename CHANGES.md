@@ -1,7 +1,7 @@
 CoqHammer v. 1.3.2
 ==================
 
-Coq versions compatibility: 8.10, 8.11, 8.12, 8.13, 8.14.
+Coq versions compatibility: 8.10, 8.11, 8.12, 8.13, 8.14, 8.15, 8.16.
 
 Overview of changes
 -------------------
