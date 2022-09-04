@@ -1,6 +1,6 @@
 opam-version: "2.0"
-version: "dev"
-maintainer: "palmskog@gmail.com"
+version: "8.16.dev"
+maintainer: "lukaszcz@mimuw.edu.pl"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
 dev-repo: "git+https://github.com/lukaszcz/coqhammer.git"
@@ -22,7 +22,7 @@ install: [
 ]
 depends: [
   "ocaml" {>= "4.08"}
-  "coq" {= "dev"}
+  "coq" {>= "8.16" && < "8.17~"}
 ]
 
 tags: [

@@ -1,6 +1,6 @@
-CoqHammer (dev) for Coq master (use other branches for other versions of Coq)
+CoqHammer (dev) for Coq 8.16
 
-[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=master)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
+[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=coq8.16)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
 
 CoqHammer video tutorial:
 [part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
@@ -21,7 +21,7 @@ documentation and installation instructions.
 
 Requirements
 ------------
-- [Coq master](https://github.com/coq/coq)
+- [Coq 8.16](https://coq.inria.fr)
 - for `hammer`: automated provers
   ([Vampire](https://vprover.github.io/download.html),
   [CVC4](http://cvc4.cs.stanford.edu/downloads/),
