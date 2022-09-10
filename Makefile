@@ -3,19 +3,22 @@ BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`
 
 default: all
 
-all: tactics plugin
+all:
+	$(MAKE) tactics
+	$(MAKE) install-tactics
+	$(MAKE) plugin
 
 tactics: Makefile.coq.tactics
 	$(MAKE) -f Makefile.coq.tactics
 
-plugin: install-tactics Makefile.coq.plugin Makefile.coq.plugin.local
+plugin: Makefile.coq.plugin Makefile.coq.plugin.local
 	-rm -f META
 	$(MAKE) -f Makefile.coq.plugin
 
 mathcomp: Makefile.coq.mathcomp
 	$(MAKE) -f Makefile.coq.mathcomp
 
-install: install-plugin
+install: install-tactics install-plugin
 
 install-tactics: tactics
 	$(MAKE) -f Makefile.coq.tactics install
