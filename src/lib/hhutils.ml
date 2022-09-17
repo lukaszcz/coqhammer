@@ -299,9 +299,10 @@ let map_fold_constr f acc evd t =
     | Proj (p,c) ->
        let (acc1, c') = hlp m acc c in
        f m acc1 (mkProj(p,c'))
-    | Evar (evk,cl) ->
+    | Evar ((evk, _) as ev) ->
+       let cl = Evd.expand_existential evd ev in
        let (acc1, cl') = fold_list m acc cl in
-       f m acc1 (mkEvar(evk,cl'))
+       f m acc1 (mkLEvar evd (evk,cl'))
     | Case (ci,u,pms,p,iv,c,bl) ->
        let (acc, pms') = fold_arr m acc pms in
        let (acc, p') = fold_ctx m acc p in
@@ -368,7 +369,8 @@ let fold_constr f acc evd t =
     | Proj (p,c) ->
        let acc1 = hlp m acc c in
        f m acc1 t
-    | Evar (evk,cl) ->
+    | Evar ev ->
+       let cl = Evd.expand_existential evd ev in
        let acc1 = fold_list m acc cl in
        f m acc1 t
     | Case (ci,u,pms,p,iv,c,bl) ->
@@ -431,7 +433,8 @@ let fold_constr_shallow f acc evd t =
     | Proj (p,c) ->
        let acc1 = hlp acc c in
        f acc1 t
-    | Evar (evk,cl) ->
+    | Evar ev ->
+       let cl = Evd.expand_existential evd ev in
        let acc1 = fold_list acc cl in
        f acc1 t
     | Case (ci,u,pms,p,iv,c,bl) ->
@@ -469,10 +472,6 @@ let map_fold_constr_ker f acc t =
       in
       (ac1, Array.of_list (List.rev lst))
     in
-    let fold_list k ac lst =
-      let (ac, ar) = fold_arr k ac (Array.of_list lst) in
-      (ac, Array.to_list ar)
-    in
     let fold_ctx k ac (nas, c) =
       let (ac, c') = hlp (k + Array.length nas) ac c in
       (ac, (nas, c'))
@@ -504,9 +503,7 @@ let map_fold_constr_ker f acc t =
     | Proj (p,c) ->
        let (acc1, c') = hlp m acc c in
        f m acc1 (mkProj(p,c'))
-    | Evar (evk,cl) ->
-       let (acc1, cl') = fold_list m acc cl in
-       f m acc1 (mkEvar(evk,cl'))
+    | Evar _ -> assert false
     | Case (ci,u,pms,p,iv,c,bl) ->
        let (acc, pms') = fold_arr m acc pms in
        let (acc, p') = fold_ctx m acc p in
