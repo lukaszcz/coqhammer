@@ -35,6 +35,7 @@ let hhterm_of_sort s = match Sorts.family s with
   | InProp -> mk_id "$Prop"
   | InSet  -> mk_id "$Set"
   | InType -> mk_id "$Type"
+  | InQSort -> mk_id "$Type"
 
 let hhterm_of_constant c =
   tuple [mk_id "$Const"; hhterm_of_global (Names.GlobRef.ConstRef c)]
