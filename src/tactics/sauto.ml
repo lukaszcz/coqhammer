@@ -155,29 +155,46 @@ let with_reduction opts tac1 tac2 =
 
 (*****************************************************************************************)
 
-let coq_equality = Utils.get_inductive "Init.Logic.eq"
-let logic_constants = [ Utils.get_const "Init.Logic.iff"; Utils.get_const "Init.Logic.not" ]
-let logic_inductives = [ Utils.get_inductive "Init.Logic.and"; Utils.get_inductive "Init.Logic.or";
-                         Utils.get_inductive "Init.Logic.ex"; Utils.get_inductive "Init.Datatypes.prod";
-                         Utils.get_inductive "Init.Specif.sumbool"; Utils.get_inductive "Init.Specif.sig";
-                         Utils.get_inductive "Init.Datatypes.sum"; Utils.get_inductive "Init.Specif.sigT";
-                         Utils.get_inductive "Init.Logic.False"; Utils.get_inductive "Init.Logic.eq" ]
+let coq_equality = lazy (Utils.get_inductive "Init.Logic.eq")
+let logic_constants = lazy [
+  Utils.get_const "Init.Logic.iff"; Utils.get_const "Init.Logic.not";
+]
+let logic_inductives = lazy [
+  Utils.get_inductive "Init.Logic.and"; Utils.get_inductive "Init.Logic.or";
+  Utils.get_inductive "Init.Logic.ex"; Utils.get_inductive "Init.Datatypes.prod";
+  Utils.get_inductive "Init.Specif.sumbool"; Utils.get_inductive "Init.Specif.sig";
+  Utils.get_inductive "Init.Datatypes.sum"; Utils.get_inductive "Init.Specif.sigT";
+  Utils.get_inductive "Init.Logic.False"; Utils.get_inductive "Init.Logic.eq";
+]
+let split_inductives = lazy [
+  Utils.get_inductive "Init.Logic.and";
+  Utils.get_inductive "Init.Logic.ex";
+  Utils.get_inductive "Init.Datatypes.prod";
+  Utils.get_inductive "Init.Specif.sig";
+  Utils.get_inductive "Init.Specif.sigT";
+]
 
-let unfolding_hints = ref logic_constants
-let constructor_hints = ref logic_inductives
-let simple_split_hints = ref [ Utils.get_inductive "Init.Logic.and";
-                               Utils.get_inductive "Init.Logic.ex";
-                               Utils.get_inductive "Init.Datatypes.prod";
-                               Utils.get_inductive "Init.Specif.sig";
-                               Utils.get_inductive "Init.Specif.sigT" ]
+type 'a in_lazy_ref =
+  | LazyRef of 'a Lazy.t
+  | NotLazy of 'a
+
+let lazyref x = ref (LazyRef x)
+let lazyget x = match !x with
+  | LazyRef (lazy v) -> x := NotLazy v; v
+  | NotLazy v -> v
+let lazyset x v = x := NotLazy v
+
+let unfolding_hints = lazyref logic_constants
+let constructor_hints = lazyref logic_inductives
+let simple_split_hints = lazyref split_inductives
 let case_split_hints = ref []
-let inversion_hints = ref logic_inductives
+let inversion_hints = lazyref logic_inductives
 
-let add_unfold_hint c = unfolding_hints := c :: !unfolding_hints
-let add_ctrs_hint c = constructor_hints := c :: !constructor_hints
-let add_simple_split_hint c = simple_split_hints := c :: !simple_split_hints
+let add_unfold_hint c = lazyset unfolding_hints (c :: lazyget unfolding_hints)
+let add_ctrs_hint c = lazyset constructor_hints (c :: lazyget constructor_hints)
+let add_simple_split_hint c = lazyset simple_split_hints (c :: lazyget simple_split_hints)
 let add_case_split_hint c = case_split_hints := c :: !case_split_hints
-let add_inversion_hint c = inversion_hints := c :: !inversion_hints
+let add_inversion_hint c = lazyset inversion_hints (c :: lazyget inversion_hints)
 
 (*****************************************************************************************)
 
@@ -222,7 +239,7 @@ let erewrite b_all l2r id =
 
 let simp_hyps_tac () = Utils.ltac_apply "Tactics.simp_hyps" []
 let esimp_hyps_tac () = Utils.ltac_apply "Tactics.esimp_hyps" []
-let fail_tac = Utils.ltac_apply "fail" []
+let fail_tac () = Utils.ltac_apply "fail" []
 let sinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.sinvert" [mk_tac_arg_id id])
 let seinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.seinvert" [mk_tac_arg_id id])
 let sdepinvert_tac id = Tacticals.tclPROGRESS (Utils.ltac_apply "Tactics.sdepinvert" [mk_tac_arg_id id])
@@ -476,7 +493,7 @@ let unfolding opts =
   match opts.s_unfolding with
   | SSome lst ->
      if opts.s_hints then
-       do_unfolding (!unfolding_hints @ lst)
+       do_unfolding (lazyget unfolding_hints @ lst)
      else
        do_unfolding lst
   | SAll ->
@@ -566,7 +583,7 @@ let is_simple_split opts evd t =
   let head = Utils.get_head_red evd t in
   match kind evd head with
   | Ind (ind, _) when is_simple_ind ind ->
-     in_sopt_list_ind opts.s_hints !simple_split_hints ind opts.s_simple_splits
+     in_sopt_list_ind opts.s_hints (lazyget simple_split_hints) ind opts.s_simple_splits
   | _ -> false
 
 let is_case_split opts evd t =
@@ -587,8 +604,8 @@ let is_case_split opts evd t =
       true
 
 let is_inversion opts evd ind args =
-  in_sopt_list_ind opts.s_hints !inversion_hints ind opts.s_inversions &&
-    if eq_ind ind coq_equality then
+  in_sopt_list_ind opts.s_hints (lazyget inversion_hints) ind opts.s_inversions &&
+    if eq_ind ind (Lazy.force coq_equality) then
       match args with
       | [_; t1; t2] ->
          begin
@@ -617,7 +634,7 @@ let is_equality evd t =
   let open Constr in
   let open EConstr in
   match kind evd t with
-  | Ind(ind, _) when eq_ind ind coq_equality -> true
+  | Ind(ind, _) when eq_ind ind (Lazy.force coq_equality) -> true
   | _ -> false
 
 let with_equality evd head args default f =
@@ -636,13 +653,13 @@ let is_unorientable_equality evd head args =
 
 (*****************************************************************************************)
 
-let is_true_const = Utils.get_const "Init.Datatypes.is_true"
+let is_true_const = lazy (Utils.get_const "Init.Datatypes.is_true")
 
 let is_coercion evd t =
   let open Constr in
   let open EConstr in
   match kind evd t with
-  | Const(c, _) when QConstant.equal (Global.env ()) c is_true_const -> true
+  | Const(c, _) when QConstant.equal (Global.env ()) c (Lazy.force is_true_const) -> true
   | _ -> false
 
 (*****************************************************************************************)
@@ -963,7 +980,7 @@ let create_case_unfolding_actions opts evd goal hyps =
     match opts.s_unfolding with
     | SSome lst ->
        if opts.s_hints then
-         create (!unfolding_hints @ lst)
+         create (lazyget unfolding_hints @ lst)
        else
          create lst
     | SAll -> create (get_consts evd (goal :: List.map (fun (_, x, _, _, _) -> x) hyps))
@@ -1028,7 +1045,7 @@ let create_actions extra opts evd goal hyps gl =
     let open EConstr in
     match kind evd ghead with
     | Ind (ind, _) when
-           in_sopt_list_ind opts.s_hints !constructor_hints ind opts.s_constructors ->
+           in_sopt_list_ind opts.s_hints (lazyget constructor_hints) ind opts.s_constructors ->
        (constrs_cost ind, constrs_nsubgoals ind, ActConstructor) :: actions
     | _ ->
        actions
@@ -1052,7 +1069,7 @@ let create_actions extra opts evd goal hyps gl =
     let open EConstr in
     match kind evd ghead0 with
     | Const (c, _) when
-           in_sopt_list_const opts.s_hints !unfolding_hints c opts.s_unfolding ->
+           in_sopt_list_const opts.s_hints (lazyget unfolding_hints) c opts.s_unfolding ->
        (60, 1, ActUnfold c) :: actions
     | _ ->
        actions
@@ -1100,7 +1117,7 @@ let rec search extra tacs opts n rtrace visited =
       let open Constr in
       let open EConstr in
       if mem_constr evd goal visited then
-        fail_tac
+        fail_tac ()
       else
         match kind evd goal with
         | Prod (_, h, f) when not (Utils.is_atom evd h) || not (Utils.is_False evd f) ->
@@ -1162,7 +1179,7 @@ and apply_actions tacs opts n actions rtrace visited =
     if not opts.s_depth_cost_model && n < 25 then
       tacs.t_finish
     else
-      fail_tac
+      fail_tac ()
   in
   let apply id =
     if opts.s_sapply then

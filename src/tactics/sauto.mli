@@ -72,9 +72,6 @@ val scongruence : s_opts -> unit Proofview.tactic
 val sfirstorder : s_opts -> unit Proofview.tactic
 val strivial : s_opts -> unit Proofview.tactic
 
-val logic_constants : Constant.t list
-val logic_inductives : inductive list
-
 val add_unfold_hint : Constant.t -> unit
 val add_ctrs_hint : inductive -> unit
 val add_simple_split_hint : inductive -> unit
