@@ -8,10 +8,6 @@ open Tacarg
 
 let hammer_version_string = "CoqHammer (dev) for Coq master"
 
-let () = Mltop.add_known_plugin (fun () ->
-  Flags.if_verbose Feedback.msg_info Pp.(str hammer_version_string))
-  "coq-hammer.plugin"
-
 open Hammer_main
 
 }
