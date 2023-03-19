@@ -1,6 +1,6 @@
-CoqHammer (dev) for Coq 8.17 (use other branches for other versions of Coq)
+CoqHammer 1.3.2 for Coq 8.17
 
-[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=coq8.17)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
+[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=v1.3.2-coq8.17)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
 
 CoqHammer video tutorial:
 [part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
