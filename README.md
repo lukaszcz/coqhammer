@@ -1,6 +1,6 @@
-CoqHammer (dev) for Coq master (use other branches for other versions of Coq)
+CoqHammer (dev) for Coq 8.17 (use other branches for other versions of Coq)
 
-[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=master)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
+[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=coq8.17)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
 
 CoqHammer video tutorial:
 [part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
@@ -31,7 +31,7 @@ Requirements
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2022, Lukasz Czajka, TU Dortmund University.\
+Copyright (c) 2017-2023, Lukasz Czajka, TU Dortmund University.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file
