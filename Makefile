@@ -72,54 +72,33 @@ clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefi
 	-rm -rf _build
 	rm -f Makefile.coq.tactics Makefile.coq.tactics.conf Makefile.coq.plugin Makefile.coq.plugin.conf Makefile.coq.mathcomp Makefile.coq.mathcomp.conf META
 
-dune: dune-tactics dune-plugin predict htimeout
+dune: dune-tactics dune-plugin
 
 dune-tactics:
 	dune build -p coq-hammer-tactics
 
-dune-plugin: dune-install-tactics predict htimeout
-	dune build -p coq-hammer
+dune-plugin:
+	dune build -p coq-hammer-tactics,coq-hammer
 
 dune-install: dune-install-tactics dune-install-plugin
 
 dune-install-tactics: dune-tactics
 	dune install coq-hammer-tactics
 
-dune-install-plugin: dune-plugin install-extra
+dune-install-plugin: dune-plugin
 	dune install coq-hammer
 
 dune-uninstall:
-	dune build -p coq-hammer
-	dune uninstall coq-hammer
-	dune build -p coq-hammer-tactics
-	dune uninstall coq-hammer-tactics
-	-rm -f $(DESTDIR)$(BINDIR)predict
-	-rm -f $(DESTDIR)$(BINDIR)htimeout
+	dune uninstall coq-hammer coq-hammer-tactics
 
 dune-uninstall-tactics:
-	dune build -p coq-hammer-tactics
 	dune uninstall coq-hammer-tactics
 
 dune-uninstall-plugin:
-	dune build -p coq-hammer
 	dune uninstall coq-hammer
-	-rm -f $(DESTDIR)$(BINDIR)predict
-	-rm -f $(DESTDIR)$(BINDIR)htimeout
-
-predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp src/predict/knn.cpp src/predict/nbayes.cpp src/predict/rforest.cpp src/predict/tfidf.cpp src/predict/dtree.cpp
-	c++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict
-
-htimeout: src/htimeout/htimeout.c
-	cc -O2 -Wall src/htimeout/htimeout.c -o htimeout
-
-install-extra: predict htimeout
-	install -d $(DESTDIR)$(BINDIR)
-	install -m 0755 predict $(DESTDIR)$(BINDIR)predict
-	install -m 0755 htimeout $(DESTDIR)$(BINDIR)htimeout
 
 dune-clean:
 	dune clean
-	-rm -f predict htimeout
 	$(MAKE) -C eval clean
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
