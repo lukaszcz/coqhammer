@@ -55,7 +55,8 @@ let hhterm_of_intarray a =
 
 let hhterm_of_caseinfo ci =
   let {ci_ind = ci_ind; ci_npar = ci_npar; ci_cstr_ndecls = ci_cstr_ndecls;
-       ci_cstr_nargs = ci_cstr_nargs; ci_pp_info = ci_pp_info} = ci
+       ci_cstr_nargs = ci_cstr_nargs; ci_pp_info = ci_pp_info;
+       ci_relevance = _} = ci
   in
   tuple [mk_id "$CaseInfo"; hhterm_of_inductive ci_ind;
          mk_id (string_of_int ci_npar);
