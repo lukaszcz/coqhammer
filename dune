@@ -1,0 +1,25 @@
+(env
+ (dev
+  (flags
+   (:standard -w -27))))
+
+(rule
+ (targets predict)
+ (deps
+  (sandbox always)
+  (source_tree src/predict))
+ (action
+  (run c++ -std=c++11 -DCOQ_MODE -O2 -Wall src/predict/main.cpp -o predict)))
+
+(rule
+ (targets htimeout)
+ (deps
+  (sandbox always)
+  (source_tree src/htimeout))
+ (action
+  (run cc -O2 -Wall src/htimeout/htimeout.c -o htimeout)))
+
+(install
+ (files predict htimeout)
+ (section bin)
+ (package coq-hammer))
