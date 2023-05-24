@@ -65,6 +65,7 @@ TACTIC EXTEND Hammer_checkTargetLPO
   Proofview.Goal.enter begin fun gl ->
     let evd = Proofview.Goal.sigma gl in
     let (_, _, args) = Utils.destruct_prod evd t in
+    let args = Array.to_list args in
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] when Lpo.lpo evd t1 t2 ->
        Tacticals.tclIDTAC
@@ -79,6 +80,7 @@ TACTIC EXTEND Hammer_checkTargetRevLPO
   Proofview.Goal.enter begin fun gl ->
     let evd = Proofview.Goal.sigma gl in
     let (_, _, args) = Utils.destruct_prod evd t in
+    let args = Array.to_list args in
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] when Lpo.lpo evd t2 t1 ->
        Tacticals.tclIDTAC
