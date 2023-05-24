@@ -540,7 +540,7 @@ let is_constr_non_recursive ind t =
 
 let has_dangling_evars evd t =
   let (prods, head, args) = Utils.destruct_prod evd t in
-  let app = EConstr.mkApp (head, Array.of_list args) in
+  let app = EConstr.mkApp (head, args) in
   let rec go t k =
     let open Constr in
     let open EConstr in
@@ -607,7 +607,7 @@ let is_inversion opts evd ind args =
   in_sopt_list_ind opts.s_hints (lazyget inversion_hints) ind opts.s_inversions &&
     if eq_ind ind (Lazy.force coq_equality) then
       match args with
-      | [_; t1; t2] ->
+      | [|_; t1; t2|] ->
          begin
            let open Constr in
            let open EConstr in
@@ -639,6 +639,7 @@ let is_equality evd t =
 
 let with_equality evd head args default f =
   if is_equality evd head then
+    let args = Array.to_list args in
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] -> f t1 t2
     | _ -> default
@@ -820,7 +821,7 @@ let simplify_concl opts =
 
 let eval_hyp evd (id, hyp) =
   let (prods, head0, head, args) = Utils.destruct_prod_red evd hyp in
-  let app = EConstr.mkApp (head, Array.of_list args) in
+  let app = EConstr.mkApp (head, args) in
   let n = List.length prods in
   let rec go t m m' k =
     let open Constr in
@@ -864,17 +865,13 @@ let constrs_nsubgoals =
     List.fold_left (fun acc x -> max acc (hyp_nsubgoals evd (EConstr.of_constr x))) 0 cstrs
   end
 
-let rec has_arg_dep evd lst =
+let has_arg_dep evd lst =
   let open Constr in
   let open EConstr in
-  match lst with
-  | [] -> false
-  | h :: t ->
-     begin
-       match kind evd h with
-       | App _ | Const _ | Construct _ -> true
-       | _ -> has_arg_dep evd t
-     end
+  Array.exists (fun h -> match kind evd h with
+      | App _ | Const _ | Construct _ -> true
+      | _ -> false)
+    lst
 
 let eval_ind_inversion =
   memoize_ind begin fun ind ->
@@ -926,6 +923,7 @@ let create_hyp_actions opts evd ghead0 ghead
   if (opts.s_directed_rewriting || opts.s_undirected_rewriting) &&
        is_equality evd head && not (is_coercion evd head0) then
     (* using "with_equality" here slows things down considerably *)
+    let args = Array.to_list args in
     match Hhlib.drop (List.length args - 2) args with
     | [t1; t2] -> (* TODO: Always do undirected rewriting? *)
        if opts.s_directed_rewriting then

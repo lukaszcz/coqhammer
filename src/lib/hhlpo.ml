@@ -23,13 +23,13 @@ let gt cgt evd =
          | _ ->
             false
        in
-       go args1 args2
+       go (Array.to_list args1) (Array.to_list args2)
     | Const (c1, _), Const(c2, _) when cgt c1 c2 ->
-       List.for_all (gt t1) args2
+       Array.for_all (gt t1) args2
     | Const(c1, _), Construct _ | Const(c1, _), Ind _ ->
-       List.for_all (gt t1) args2
+       Array.for_all (gt t1) args2
     | _ ->
-       List.exists (fun x -> ge x t2) args1
+       Array.exists (fun x -> ge x t2) args1
   in
   gt
 
