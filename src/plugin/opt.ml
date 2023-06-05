@@ -4,7 +4,7 @@ let predictions_num = ref 1024
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Predictions"];
       optread=(fun ()->Some !predictions_num);
@@ -19,7 +19,7 @@ let sauto_timelimit = ref 1
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"SAutoLimit"];
       optread=(fun ()->Some !sauto_timelimit);
@@ -34,7 +34,7 @@ let atp_timelimit = ref 20
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"ATPLimit"];
       optread=(fun ()->Some !atp_timelimit);
@@ -49,7 +49,7 @@ let reconstr_timelimit = ref 5
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"ReconstrLimit"];
       optread=(fun ()->Some !reconstr_timelimit);
@@ -64,7 +64,7 @@ let minimize_threshold = ref 8
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"MinimizationThreshold"];
       optread=(fun ()->Some !minimize_threshold);
@@ -79,7 +79,7 @@ let gs_mode = ref 8
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"GSMode"];
       optread=(fun ()->Some !gs_mode);
@@ -94,7 +94,7 @@ let eprover_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Eprover"];
       optread=(fun () -> !eprover_enabled);
@@ -106,7 +106,7 @@ let vampire_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Vampire"];
       optread=(fun () -> !vampire_enabled);
@@ -118,7 +118,7 @@ let z3_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Z3"];
       optread=(fun () -> !z3_enabled);
@@ -130,7 +130,7 @@ let cvc4_enabled = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"CVC4"];
       optread=(fun () -> !cvc4_enabled);
@@ -142,7 +142,7 @@ let predict_path = ref "predict"
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"PredictPath"];
       optread=(fun () -> !predict_path);
@@ -154,7 +154,7 @@ let predict_method = ref "knn"
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"PredictMethod"];
       optread=(fun () -> !predict_method);
@@ -172,7 +172,7 @@ let parallel_mode = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Parallel"];
       optread=(fun () -> !parallel_mode);
@@ -184,7 +184,7 @@ let debug_mode = ref false
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Debug"];
       optread=(fun () -> !debug_mode);
@@ -194,7 +194,7 @@ let _ =
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"ClosureGuards"];
       optread=(fun () -> !Coq_transl_opts.opt_closure_guards);
@@ -206,7 +206,7 @@ let filter_program = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"FilterProgram"];
       optread=(fun () -> !filter_program);
@@ -218,7 +218,7 @@ let filter_classes = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"FilterClasses"];
       optread=(fun () -> !filter_classes);
@@ -230,7 +230,7 @@ let filter_hurkens = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"FilterHurkens"];
       optread=(fun () -> !filter_hurkens);
@@ -242,7 +242,7 @@ let search_blacklist = ref true
 
 let _ =
   let gdopt=
-    { optdepr=false;
+    { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Blacklist"];
       optread=(fun () -> !search_blacklist);
