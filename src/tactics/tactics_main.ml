@@ -33,7 +33,7 @@ let with_delayed_uconstr ist c tac =
 
 let use_lemmas ist lst =
   let use_tac t =
-    Tactics.generalize [t] <*>
+    Generalize.generalize [t] <*>
       Utils.ltac_eval "Tactics.use_tac" []
   in
   List.fold_left (fun tac t -> tac <*> with_delayed_uconstr ist t use_tac)

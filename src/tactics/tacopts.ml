@@ -190,14 +190,14 @@ let sopt_append sc lst2 =
   | _ -> SSome lst2
 
 let use_constrs lems =
-  Tactics.generalize lems <*>
+  Generalize.generalize lems <*>
     Tacticals.tclDO (List.length lems)
       (Proofview.tclORELSE
          (Tactics.intro_move None Logic.MoveFirst)
          (fun _ -> Tactics.intro))
 
 let gen_constrs lems =
-  Tactics.generalize lems
+  Generalize.generalize lems
 
 let interp_use use ret opts lst env sigma =
   let (sigma, lst) =
