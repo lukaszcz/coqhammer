@@ -91,7 +91,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | App (f,args)      ->
      tuple [mk_id "$App"; hhterm_of f; hhterm_of_constrarray args]
   | Const (c,u)       -> hhterm_of_constant c
-  | Proj (p,c)        -> tuple [mk_id "$Proj";
+  | Proj (p,_,c)        -> tuple [mk_id "$Proj";
                                 hhterm_of_constant (Projection.constant p);
                                 hhterm_of_bool (Projection.unfolded p);
                                 hhterm_of c]
