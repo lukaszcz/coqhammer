@@ -296,9 +296,9 @@ let map_fold_constr f acc evd t =
        let (acc1, a') = hlp m acc a in
        let (acc2, args') = fold_arr m acc1 args in
        f m acc2 (mkApp(a',args'))
-    | Proj (p,c) ->
+    | Proj (p,r,c) ->
        let (acc1, c') = hlp m acc c in
-       f m acc1 (mkProj(p,c'))
+       f m acc1 (mkProj(p,r,c'))
     | Evar ((evk, _) as ev) ->
        let cl = Evd.expand_existential evd ev in
        let (acc1, cl') = fold_list m acc cl in
@@ -366,7 +366,7 @@ let fold_constr f acc evd t =
        let acc1 = hlp m acc a in
        let acc2 = fold_arr m acc1 args in
        f m acc2 t
-    | Proj (p,c) ->
+    | Proj (p,_,c) ->
        let acc1 = hlp m acc c in
        f m acc1 t
     | Evar ev ->
@@ -430,7 +430,7 @@ let fold_constr_shallow f acc evd t =
        let acc1 = hlp acc a in
        let acc2 = fold_arr acc1 args in
        f acc2 t
-    | Proj (p,c) ->
+    | Proj (p,_,c) ->
        let acc1 = hlp acc c in
        f acc1 t
     | Evar ev ->
@@ -500,9 +500,9 @@ let map_fold_constr_ker f acc t =
        let (acc1, a') = hlp m acc a in
        let (acc2, args') = fold_arr m acc1 args in
        f m acc2 (mkApp(a',args'))
-    | Proj (p,c) ->
+    | Proj (p,r,c) ->
        let (acc1, c') = hlp m acc c in
-       f m acc1 (mkProj(p,c'))
+       f m acc1 (mkProj(p,r,c'))
     | Evar _ -> assert false
     | Case (ci,u,pms,p,iv,c,bl) ->
        let (acc, pms') = fold_arr m acc pms in
