@@ -207,26 +207,25 @@ let string_of_goal gl =
   string_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))
 
 let my_search env =
-  let save_in_list refl glob_ref env sigma c = refl := glob_ref :: !refl in
+  let save_in_list refl glob_ref env c = refl := glob_ref :: !refl in
   let ans = ref [] in
   let filter_modules glob_ref =
     Opt.FilterSet.for_all (fun m -> not (Utils.match_globref m glob_ref))
       (Opt.HammerFilterTable.v ())
   in
-  let filter glob_ref kind env sigma typ =
+  let filter glob_ref kind env typ =
     (if !Opt.search_blacklist then
-       Search.blacklist_filter glob_ref kind env sigma typ
+       Search.blacklist_filter glob_ref kind env (Evd.from_env env) typ
      else
        true)
     &&
     filter_modules glob_ref
   in
-  let iter glob_ref kind env sigma typ =
-    if filter glob_ref kind env sigma typ then save_in_list ans glob_ref env sigma typ
+  let iter glob_ref kind env typ =
+    if filter glob_ref kind env typ then save_in_list ans glob_ref env typ
   in
   let env = Global.env () in
-  let sigma = Evd.from_env env in
-  let () = Search.generic_search env sigma iter in
+  let () = Search.generic_search env iter in
   List.filter
     begin fun glob_ref ->
       try
