@@ -1,4 +1,4 @@
-CoqHammer 1.3.2  for Coq 8.18 (use other branches for other versions of Coq)
+CoqHammer (dev) for Coq 8.18 (use other branches for other versions of Coq)
 
 [![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=coq8.18)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
 
