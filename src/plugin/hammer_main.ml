@@ -337,7 +337,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     if inverts <> [] then { opts with s_inversions = SSome inverts } else opts
   in
   let use_deps =
-    Generalize.generalize deps <*>
+    Tactics.generalize deps <*>
       Tacticals.tclDO (List.length deps) (Tactics.intro_move None Logic.MoveFirst)
   in
   let rhauto =
