@@ -1,0 +1,47 @@
+name: Docker CI
+
+on:
+  push:
+    branches:
+      - coq8.18
+  pull_request:
+    branches:
+      - '**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - 'coqorg/coq:8.18-ocaml-4.12-flambda'
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v3
+      - uses: coq-community/docker-coq-action@v1
+        with:
+          custom_image: ${{ matrix.image }}
+          custom_script: |
+            {{before_install}}
+            startGroup "Build coq-hammer-tactics dependencies"
+              opam pin add -n -y -k path coq-hammer-tactics .
+              opam update -y
+              opam install -y -j $(nproc) coq-hammer-tactics --deps-only
+            endGroup
+            startGroup "Build coq-hammer-tactics"
+              opam install -y -v -j $(nproc) coq-hammer-tactics
+              opam list
+            endGroup
+            startGroup "Build coq-hammer dependencies"
+              opam pin add -n -y -k path coq-hammer .
+              opam update -y
+              opam install -y -j $(nproc) coq-hammer --deps-only
+            endGroup
+            startGroup "Build coq-hammer"
+              opam install -y -v -j $(nproc) coq-hammer
+              opam list
+            endGroup
+            startGroup "Uninstallation test"
+              opam remove -y coq-hammer
+              opam remove -y coq-hammer-tactics
+            endGroup

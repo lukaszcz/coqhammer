@@ -1,6 +1,9 @@
 CoqHammer (dev) for Coq 8.18 (use other branches for other versions of Coq)
 
-[![Travis](https://app.travis-ci.com/lukaszcz/coqhammer.svg?branch=coq8.18)](https://app.travis-ci.com/lukaszcz/coqhammer/builds)
+[![Docker CI][docker-action-shield]][docker-action-link]
+
+[docker-action-shield]: https://github.com/lukaszcz/coqhammer/workflows/Docker%20CI/badge.svg?branch=coq8.18
+[docker-action-link]: https://github.com/lukaszcz/coqhammer/actions?query=workflow:"Docker%20CI"
 
 CoqHammer video tutorial:
 [part 1 (sauto)](https://www.youtube.com/watch?v=0c_utk9bVgU&list=PLXXF_svQE_b-9A5p2OKU7Tjz-NcE7H2xg),
