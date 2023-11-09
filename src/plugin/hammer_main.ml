@@ -56,8 +56,7 @@ let hhterm_of_intarray a =
 
 let hhterm_of_caseinfo ci =
   let {ci_ind = ci_ind; ci_npar = ci_npar; ci_cstr_ndecls = ci_cstr_ndecls;
-       ci_cstr_nargs = ci_cstr_nargs; ci_pp_info = ci_pp_info;
-       ci_relevance = _} = ci
+       ci_cstr_nargs = ci_cstr_nargs; ci_pp_info = ci_pp_info; } = ci
   in
   tuple [mk_id "$CaseInfo"; hhterm_of_inductive ci_ind;
          mk_id (string_of_int ci_npar);
@@ -100,7 +99,7 @@ let rec hhterm_of (t : Constr.t) : Hh_term.hhterm =
   | Ind (ind,u)       -> hhterm_of_inductive ind
   | Construct (ctr,u) -> hhterm_of_construct ctr
   | Case (ci,u,pms,p,iv,c,bl)  ->
-    let (ci, p, iv, c, bl) = Inductive.expand_case (Global.env ()) (ci, u, pms, p, iv, c, bl) in
+    let (ci, (p,_), iv, c, bl) = Inductive.expand_case (Global.env ()) (ci, u, pms, p, iv, c, bl) in
       tuple ([mk_id "$Case"; hhterm_of_caseinfo ci ; hhterm_of p;
         hhterm_of c; hhterm_of_constrarray bl])
   | Fix (nvn,recdef) -> tuple [mk_id "$Fix";
