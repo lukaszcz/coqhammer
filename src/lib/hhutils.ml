@@ -231,11 +231,9 @@ let destruct_app_red evd t =
   in
   match kind evd head0 with
   | Const _ ->
-     let (head, args) =
-       try
-         destruct_app evd (Tacred.try_red_product (Global.env ()) evd t)
-       with Not_found | Tacred.Redelimination ->
-         destruct_app evd t
+     let (head, args) = match Tacred.red_product (Global.env ()) evd t with
+     | Some t -> destruct_app evd t
+     | None -> destruct_app evd t
      in
      (head0, head, args)
   | _ ->
