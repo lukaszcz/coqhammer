@@ -54,29 +54,29 @@ val get_hyps : Proofview.Goal.t -> (Id.t * EConstr.t) list
 
 val drop_lambdas : Evd.evar_map -> int -> EConstr.t -> EConstr.t
 
-val take_lambdas : Evd.evar_map -> int -> EConstr.t -> (Name.t Context.binder_annot * EConstr.t) list
+val take_lambdas : Evd.evar_map -> int -> EConstr.t -> (Name.t EConstr.binder_annot * EConstr.t) list
 
 val drop_prods : Evd.evar_map -> int -> EConstr.t -> EConstr.t
 
-val take_prods : Evd.evar_map -> int -> EConstr.t -> (Name.t Context.binder_annot * EConstr.t) list
+val take_prods : Evd.evar_map -> int -> EConstr.t -> (Name.t EConstr.binder_annot * EConstr.t) list
 
 val drop_all_lambdas : Evd.evar_map -> EConstr.t -> EConstr.t
 
-val take_all_lambdas : Evd.evar_map -> EConstr.t -> (Name.t Context.binder_annot * EConstr.t) list
+val take_all_lambdas : Evd.evar_map -> EConstr.t -> (Name.t EConstr.binder_annot * EConstr.t) list
 
 val drop_all_prods : Evd.evar_map -> EConstr.t -> EConstr.t
 
-val take_all_prods : Evd.evar_map -> EConstr.t -> (Name.t Context.binder_annot * EConstr.t) list
+val take_all_prods : Evd.evar_map -> EConstr.t -> (Name.t EConstr.binder_annot * EConstr.t) list
 
 val destruct_app : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t array (* args *)
 
 val destruct_app_red : Evd.evar_map -> EConstr.t -> EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t array (* args after red *)
 
 val destruct_prod : Evd.evar_map -> EConstr.t ->
-  (Name.t Context.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t array (* args *)
+  (Name.t EConstr.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t array (* args *)
 
 val destruct_prod_red : Evd.evar_map -> EConstr.t ->
-  (Name.t Context.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t array (* args after red *)
+  (Name.t EConstr.binder_annot * EConstr.t) list (* prods *) * EConstr.t (* head *) * EConstr.t (* head after red *) * EConstr.t array (* args after red *)
 
 val map_fold_constr : (int -> 'a -> EConstr.t -> 'a * EConstr.t) ->
                       'a -> Evd.evar_map -> EConstr.t ->
