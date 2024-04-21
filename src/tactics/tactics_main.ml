@@ -19,17 +19,7 @@ let try_usolve (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofvi
   end
 
 let with_delayed_uconstr ist c tac =
-  let flags = Pretyping.{
-    use_coercions = true;
-    use_typeclasses = UseTC;
-    solve_unification_constraints = true;
-    fail_evar = false;
-    expand_evars = true;
-    program_mode = false;
-    polymorphic = false;
-    undeclared_evars_patvars = false;
-    patvars_abstract = false;
-  } in
+  let flags = Pretyping.default_inference_flags false in
   let c = Tacinterp.type_uconstr ~flags ist c in
   Tacticals.tclDELAYEDWITHHOLES true c tac
 
