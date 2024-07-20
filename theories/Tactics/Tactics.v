@@ -6,7 +6,7 @@
 Declare ML Module "coq-hammer-tactics.lib".
 
 Require Import Lia.
-Require Import Program.Equality.
+From Stdlib.Program Require Import Equality.
 From Hammer Require Import Tactics.Reflect.
 
 Create HintDb shints discriminated.
@@ -379,11 +379,11 @@ Ltac trysolve :=
   eauto 2 with shints; try solve [ constructor ];
   match goal with
   | [ |- ?t = ?u ] => try solve [ try subst; congruence 8 |
-                                  match type of t with nat => lia | ZArith.BinInt.Z => lia end ]
+                                  match type of t with nat => lia | BinInt.Z => lia end ]
   | [ |- ?t <> ?u ] => try solve [ try subst; congruence 8 |
-                                   match type of t with nat => lia | ZArith.BinInt.Z => lia end ]
+                                   match type of t with nat => lia | BinInt.Z => lia end ]
   | [ |- (?t = ?u) -> False ] => try solve [ intro; try subst; congruence 8 |
-                                             match type of t with nat => lia | ZArith.BinInt.Z => lia end ]
+                                             match type of t with nat => lia | BinInt.Z => lia end ]
   | [ |- False ] => try solve [ try subst; congruence 8 ]
   | [ |- ?t >= ?u ] => try solve [ lia ]
   | [ |- ?t <= ?u ] => try solve [ lia ]
@@ -530,24 +530,24 @@ Ltac bnat_reflect :=
            clear H
          | [ H : (Nat.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
-           assert (A = B) by (rewrite Coq.Arith.PeanoNat.Nat.eqb_eq in H; apply H);
+           assert (A = B) by (rewrite PeanoNat.Nat.eqb_eq in H; apply H);
            try subst
          | [ H : (Nat.eqb ?A ?B) = false |- _ ] =>
            notHyp (A = B -> False);
            assert (A = B -> False) by
-               (rewrite <- Coq.Arith.PeanoNat.Nat.eqb_eq; rewrite H; discriminate)
+               (rewrite <- PeanoNat.Nat.eqb_eq; rewrite H; discriminate)
          | [ H : (Nat.leb ?A ?B) = true |- _ ] =>
            notHyp (A <= B);
-           assert (A <= B) by (apply Coq.Arith.Compare_dec.leb_complete; apply H)
+           assert (A <= B) by (apply Compare_dec.leb_complete; apply H)
          | [ H : (Nat.leb ?A ?B) = false |- _ ] =>
            notHyp (B < A);
-           assert (B < A) by (apply Coq.Arith.Compare_dec.leb_complete_conv; apply H)
+           assert (B < A) by (apply Compare_dec.leb_complete_conv; apply H)
          | [ H : (Nat.ltb ?A ?B) = true |- _ ] =>
            notHyp (A < B);
-           assert (A < B) by (apply Coq.Arith.PeanoNat.Nat.ltb_lt; apply H)
+           assert (A < B) by (apply PeanoNat.Nat.ltb_lt; apply H)
          | [ H : (Nat.ltb ?A ?B) = false |- _ ] =>
            notHyp (B <= A);
-           assert (B <= A) by (apply Coq.Arith.PeanoNat.Nat.ltb_ge; apply H)
+           assert (B <= A) by (apply PeanoNat.Nat.ltb_ge; apply H)
          | [ H : (BinNat.N.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
            assert (A = B) by (apply Coq.NArith.BinNat.N.eqb_eq; apply H);
