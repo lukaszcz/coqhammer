@@ -1,8 +1,8 @@
-CoqHammer (dev) for Coq 8.20 (use other branches for other versions of Coq)
+CoqHammer 1.3.2 for Coq 8.20 (use other branches for other versions of Coq)
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
-[docker-action-shield]: https://github.com/lukaszcz/coqhammer/workflows/Docker%20CI/badge.svg?branch=coq8.20
+[docker-action-shield]: https://github.com/lukaszcz/coqhammer/workflows/Docker%20CI/badge.svg?branch=v1.3.2-coq8.20
 [docker-action-link]: https://github.com/lukaszcz/coqhammer/actions?query=workflow:"Docker%20CI"
 
 CoqHammer video tutorial:
