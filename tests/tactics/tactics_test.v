@@ -319,7 +319,7 @@ Qed.
 Lemma lem_lst5 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
 Proof.
   induction l'.
-  - hauto using (@Lists.List.app_nil_end).
+  - hauto using (@Lists.List.app_nil_r).
   - hauto using (@Lists.List.NoDup_remove_1).
 Qed.
 
@@ -1419,7 +1419,7 @@ Definition eq_dec {A} {dto : DecTotalOrder A} : forall x y : A, {x = y}+{x <> y}
   intros x y.
   sdestruct (leb x y).
   - sdestruct (leb y x).
-    + auto using leb_antisym.
+    + firstorder using leb_antisym.
     + sauto.
   - sdestruct (leb y x).
     + sauto.
