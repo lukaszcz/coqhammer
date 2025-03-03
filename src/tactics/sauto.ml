@@ -230,7 +230,7 @@ let print_search_actions actions =
 (*****************************************************************************************)
 
 let mk_tac_arg_id id = Tacexpr.Reference (Locus.ArgVar CAst.(make id))
-let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (Genredexpr.ConstrTerm t)
+let mk_tac_arg_constr t = Tacexpr.ConstrMayEval (ConstrTerm t)
 
 let erewrite b_all l2r id =
   let c env sigma = (sigma, (EConstr.mkVar id, NoBindings)) in
