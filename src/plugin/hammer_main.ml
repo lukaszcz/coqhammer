@@ -30,12 +30,12 @@ let tuple (l : Hh_term.hhterm list) =
 let hhterm_of_global glob =
   mk_id (Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob)))
 
-let hhterm_of_sort s = match Sorts.family s with
-  | InSProp -> mk_id "$Prop"
-  | InProp -> mk_id "$Prop"
-  | InSet  -> mk_id "$Set"
-  | InType -> mk_id "$Type"
-  | InQSort -> mk_id "$Type"
+let hhterm_of_sort s = match s with
+  | SProp -> mk_id "$Prop"
+  | Prop -> mk_id "$Prop"
+  | Set  -> mk_id "$Set"
+  | Type _ -> mk_id "$Type"
+  | QSort _ -> mk_id "$Type"
 
 let hhterm_of_constant c =
   tuple [mk_id "$Const"; hhterm_of_global (Names.GlobRef.ConstRef c)]
@@ -324,7 +324,7 @@ let check_goal_prop gl =
     EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl))
   in
   match Constr.kind tp with
-  | Sort s -> Sorts.family s = InProp
+  | Sort s -> Sorts.is_prop s
   | _ -> false
 
 (***************************************************************************************)
