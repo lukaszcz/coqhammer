@@ -3,4 +3,5 @@
  (package coq-hammer-tactics)
  (synopsis "CoqHammer Coq tactics")
  (modules :standard \ Mathcomp)
- (plugins coq-hammer-tactics.lib coq-hammer-tactics.plugin))
+ (plugins coq-hammer-tactics.lib coq-hammer-tactics.plugin)
+ (theories Stdlib))

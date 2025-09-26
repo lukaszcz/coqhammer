@@ -5,7 +5,7 @@
 
 Declare ML Module "coq-hammer-tactics.lib".
 
-Require Import Lia.
+From Stdlib Require Import Lia.
 From Stdlib.Program Require Import Equality.
 From Hammer Require Import Tactics.Reflect.
 
@@ -550,12 +550,12 @@ Ltac bnat_reflect :=
            assert (B <= A) by (apply PeanoNat.Nat.ltb_ge; apply H)
          | [ H : (BinNat.N.eqb ?A ?B) = true |- _ ] =>
            notHyp (A = B);
-           assert (A = B) by (apply Coq.NArith.BinNat.N.eqb_eq; apply H);
+           assert (A = B) by (apply Stdlib.NArith.BinNat.N.eqb_eq; apply H);
            try subst
          | [ H : (BinNat.N.eqb ?A ?B) = false |- _ ] =>
            notHyp (A = B -> False);
            assert (A = B -> False) by
-               (rewrite <- Coq.NArith.BinNat.N.eqb_eq; rewrite H; discriminate)
+               (rewrite <- Stdlib.NArith.BinNat.N.eqb_eq; rewrite H; discriminate)
          end.
 
 Ltac bool_reflect := bsimpl in *; breflect in *.
