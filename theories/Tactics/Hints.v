@@ -1,5 +1,5 @@
 From Hammer Require Import Tactics.
-Require List Arith ZArith Bool.
+From Stdlib Require List Arith ZArith Bool.
 
 Global Hint Rewrite -> PeanoNat.Nat.add_0_r : shints.
 Global Hint Rewrite -> PeanoNat.Nat.add_1_r : shints.
@@ -45,11 +45,10 @@ Global Hint Rewrite -> Bool.andb_false_r : sbool.
 Global Hint Rewrite -> Bool.andb_false_l : sbool.
 
 Global Hint Rewrite -> List.app_nil_r : slist.
-Global Hint Rewrite -> List.rev_length : slist.
-Global Hint Rewrite -> List.app_length : slist.
-Global Hint Rewrite -> List.seq_length : slist.
-Global Hint Rewrite -> List.map_length : slist.
-Global Hint Rewrite -> List.map_length : slist.
+Global Hint Rewrite -> List.length_rev : slist.
+Global Hint Rewrite -> List.length_app : slist.
+Global Hint Rewrite -> List.length_seq : slist.
+Global Hint Rewrite -> List.length_map : slist.
 Global Hint Rewrite -> List.map_nth : slist.
 Global Hint Rewrite -> List.rev_unit : slist.
 Global Hint Rewrite -> List.rev_involutive : slist.
