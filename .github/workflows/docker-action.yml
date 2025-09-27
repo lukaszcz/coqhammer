@@ -18,6 +18,8 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
+        with:
+          ref: master
       - uses: rocq-community/docker-coq-action@v1
         with:
           custom_image: ${{ matrix.image }}
