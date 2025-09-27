@@ -41,13 +41,13 @@ uninstall-mathcomp: Makefile.coq.mathcomp
 	$(MAKE) -f Makefile.coq.mathcomp uninstall
 
 Makefile.coq.plugin: _CoqProject.plugin
-	coq_makefile -f _CoqProject.plugin -o Makefile.coq.plugin
+	rocq makefile -f _CoqProject.plugin -o Makefile.coq.plugin
 
 Makefile.coq.tactics: _CoqProject.tactics
-	coq_makefile -f _CoqProject.tactics -o Makefile.coq.tactics
+	rocq makefile -f _CoqProject.tactics -o Makefile.coq.tactics
 
 Makefile.coq.mathcomp: _CoqProject.mathcomp
-	coq_makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
+	rocq makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
 tests: tests-plugin tests-tactics
 

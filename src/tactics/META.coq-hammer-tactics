@@ -5,7 +5,7 @@ package "plugin" (
   archive(native) = "hammer_tactics.cmxa"
   plugin(byte) = "hammer_tactics.cma"
   plugin(native) = "hammer_tactics.cmxs"
-  directory = "."
+  directory = "../plugin"
 )
 package "lib" (
   description = "Coq Hammer Lib"
