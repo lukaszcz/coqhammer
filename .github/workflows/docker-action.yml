@@ -18,7 +18,7 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
-      - uses: coq-community/docker-coq-action@v1
+      - uses: rocq-community/docker-coq-action@v1
         with:
           custom_image: ${{ matrix.image }}
           custom_script: |
