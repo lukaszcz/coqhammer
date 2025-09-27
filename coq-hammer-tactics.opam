@@ -22,7 +22,7 @@ install: [
 ]
 depends: [
   "ocaml" {>= "4.09.0"}
-  "coq" {= "dev"}
+  "rocq-stdlib" {= "dev"}
 ]
 
 tags: [
