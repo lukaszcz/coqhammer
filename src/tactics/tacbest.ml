@@ -260,7 +260,7 @@ let best_tacs_batch_2 lst =
   [ (usolve (interp_opts (qauto_s_opts ()) lst sauto), "qauto");
     (usolve (interp_opts (hauto_s_opts ()) lst fcrush), "hfcrush");
     (usolve (interp_opts (hauto_s_opts ()) lst ecrush), "hecrush");
-    (usolve (interp_opts (default_s_opts ()) lst sblast), "qblast");
+    (usolve (interp_opts (default_s_opts ()) lst qblast), "qblast");
     (usolve (interp_opts (default_s_opts ()) lst sblast), "sblast");
     (usolve (interp_opts (default_s_opts ()) lst fcrush), "fcrush");
     (usolve (interp_opts (default_s_opts ()) lst ecrush), "ecrush");
