@@ -14,11 +14,11 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'rocq/rocq-prover:dev-ocaml-4.12.1-flambda'
+          - 'rocq/rocq-prover:dev'
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
-      - uses: rocq-community/docker-coq-action@v2
+      - uses: rocq-community/docker-coq-action@v1
         with:
           custom_image: ${{ matrix.image }}
           custom_script: |
