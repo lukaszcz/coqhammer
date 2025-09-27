@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         image:
-          - 'rocq/rocq-prover:4.12-flambda'
+          - 'rocq/rocq-prover:dev-ocaml-4.12.1-flambda'
       fail-fast: false
     steps:
       - uses: actions/checkout@v3
