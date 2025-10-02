@@ -490,7 +490,15 @@ Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl
 Proof.
   induction t; qsimpl.
   - hauto using vars_abstr.
-  - hauto use: @no_lams_transl, @vars_abstr, @novar_abstr, @hs_lem.
+  - destruct (Nat.eq_dec n0 n).
+    + subst.
+      exfalso.
+      apply (novar_abstr n (transl t)).
+      * apply no_lams_transl.
+      * assumption.
+    + apply hs_lem.
+      * assumption.
+      * hauto lq: on use: @vars_abstr.
 Qed.
 
 Notation "X @ Y" := (LApp X Y) (at level 11, left associativity).
@@ -639,7 +647,15 @@ Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (trans
 Proof.
   induction t; qsimpl.
   - hauto using (@vars_abstr2).
-  - hauto using (@no_lams_transl2, @vars_abstr2, @novar_abstr2, @hs_lem).
+  - destruct (Nat.eq_dec n0 n).
+    + subst.
+      exfalso.
+      apply (novar_abstr2 n (transl2 t)).
+      * apply no_lams_transl2.
+      * assumption.
+    + apply hs_lem.
+      * assumption.
+      * hauto lq: on use: @vars_abstr2.
 Qed.
 
 Lemma hasvar_inv :
@@ -1478,13 +1494,13 @@ Qed.
 Lemma lem_lelst_sorted {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
 Proof.
-  induction l; sauto l: on use: lem_lelst_trans inv: Sorted, List.Forall ctrs: Sorted.
+  induction l; sauto l: on use: lem_lelst_trans inv: Sorted, Forall ctrs: Sorted.
 Qed.
 
 Lemma lem_lelst_perm_rev {A} {dto : DecTotalOrder A} :
   forall l1 l2, Permutation l1 l2 -> forall x, LeLst x l2 -> LeLst x l1.
 Proof.
-  induction 1; sauto inv: List.Forall ctrs: List.Forall.
+  induction 1; sauto inv: Forall ctrs: Forall.
 Qed.
 
 Lemma lem_lelst_app {A} {dto : DecTotalOrder A} :
