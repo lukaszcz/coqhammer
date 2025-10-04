@@ -43,6 +43,9 @@ jobs:
               opam install -y -v -j $(nproc) coq-hammer
               opam list
             endGroup
+            startGroup "Tactics test"
+              make quicktest
+            endGroup
             startGroup "Uninstallation test"
               opam remove -y coq-hammer
               opam remove -y coq-hammer-tactics
