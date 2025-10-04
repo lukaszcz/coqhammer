@@ -25,16 +25,13 @@ jobs:
           custom_image: ${{ matrix.image }}
           custom_script: |
             {{before_install}}
-            # Ensure the current user owns the workspace
-            sudo chown -R $(whoami) /github/workspace
-
             startGroup "Build coq-hammer-tactics dependencies"
               opam pin add -n -y -k path coq-hammer-tactics .
               opam update -y
               opam install -y -j $(nproc) coq-hammer-tactics --deps-only
             endGroup
             startGroup "Build coq-hammer-tactics"
-              opam install -y -v -j $(nproc) coq-hammer-tactics
+              opam install -y -v -j $(nproc) coq-hammer-tactics --with-test
               opam list
             endGroup
             startGroup "Build coq-hammer dependencies"
@@ -43,11 +40,8 @@ jobs:
               opam install -y -j $(nproc) coq-hammer --deps-only
             endGroup
             startGroup "Build coq-hammer"
-              opam install -y -v -j $(nproc) coq-hammer
+              opam install -y -v -j $(nproc) coq-hammer --with-test
               opam list
-            endGroup
-            startGroup "Tactics test"
-              make quicktest
             endGroup
             startGroup "Uninstallation test"
               opam remove -y coq-hammer
