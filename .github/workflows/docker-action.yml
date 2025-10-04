@@ -44,6 +44,7 @@ jobs:
               opam list
             endGroup
             startGroup "Tactics test"
+              chmod -R u+w tests
               make quicktest
             endGroup
             startGroup "Uninstallation test"
