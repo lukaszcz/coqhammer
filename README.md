@@ -1,4 +1,4 @@
-CoqHammer (dev) for Coq master (use other branches for other versions of Coq)
+CoqHammer (dev) for Rocq master (use other branches for other versions of Coq)
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
@@ -24,7 +24,7 @@ documentation and installation instructions.
 
 Requirements
 ------------
-- [Coq master](https://github.com/coq/coq)
+- [Rocq master](https://github.com/rocq-prover/rocq)
 - for `hammer`: automated provers
   ([Vampire](https://vprover.github.io/download.html),
   [CVC4](http://cvc4.cs.stanford.edu/downloads/),
@@ -34,7 +34,7 @@ Requirements
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2022, Lukasz Czajka, TU Dortmund University.\
+Copyright (c) 2017-2025, Lukasz Czajka.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file
