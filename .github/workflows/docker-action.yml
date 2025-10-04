@@ -23,11 +23,9 @@ jobs:
       - uses: rocq-community/docker-coq-action@v1
         with:
           custom_image: ${{ matrix.image }}
+          user: root
           custom_script: |
             {{before_install}}
-            # Ensure opam user can write to the mounted repo
-            sudo chown -R opam:opam /github/workspace
-
             startGroup "Build coq-hammer-tactics dependencies"
               opam pin add -n -y -k path coq-hammer-tactics .
               opam update -y
