@@ -30,7 +30,7 @@ let exists_global s =
 let match_globref m g =
   let (p2, id2) = Libnames.repr_path (Nametab.path_of_global g)
   in
-  let l1 = List.rev @@ Names.DirPath.repr (Nametab.dirpath_of_module m)
+  let l1 = List.rev @@ Names.DirPath.repr (Libnames.dirpath_of_path (Nametab.path_of_module m))
   and l2 = List.rev @@ id2 :: Names.DirPath.repr p2
   in
   let rec pom l1 l2 =

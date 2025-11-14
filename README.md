@@ -1,4 +1,4 @@
-CoqHammer 1.3.2 for Rocq 9.0
+CoqHammer 1.3.2 for Rocq 9.1
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
@@ -24,7 +24,7 @@ documentation and installation instructions.
 
 Requirements
 ------------
-- [Rocq 9.0](https://rocq-prover.org/)
+- [Rocq 9.1](https://rocq-prover.org/)
 - for `hammer`: automated provers
   ([Vampire](https://vprover.github.io/download.html),
   [CVC4](http://cvc4.cs.stanford.edu/downloads/),
