@@ -1,5 +1,5 @@
 opam-version: "2.0"
-version: "1.3.2+9.0"
+version: "1.3.2+9.1"
 maintainer: "lukaszcz@mimuw.edu.pl"
 
 homepage: "https://github.com/lukaszcz/coqhammer"
@@ -21,7 +21,7 @@ install: [
 ]
 depends: [
   "ocaml" {>= "4.09.0"}
-  "coq" {>= "9.0" & < "9.1~"}
+  "coq" {>= "9.1" & < "9.2~"}
   ("conf-g++" {build} | "conf-clang" {build})
   "coq-hammer-tactics" {= version}
 ]
