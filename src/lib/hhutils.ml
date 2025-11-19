@@ -619,7 +619,7 @@ let constr_to_string evd t =
   Pp.string_of_ppcmds (Printer.pr_constr_env (Global.env ()) evd (EConstr.to_constr evd t))
 
 let constr_expr_to_string evd e =
-  Pp.string_of_ppcmds (Ppconstr.pr_constr_expr (Global.env ()) evd e)
+  Pp.string_of_ppcmds (Ppconstr.pr_constr_expr ~flags:(Ppconstr.current_flags()) (Global.env ()) evd e)
 
 let constant_to_string c =
   Pp.string_of_ppcmds (Printer.pr_constant (Global.env ()) c)
