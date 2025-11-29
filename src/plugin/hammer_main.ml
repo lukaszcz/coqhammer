@@ -5,7 +5,7 @@ open Sauto
 
 open Util
 open Names
-open Term
+open Sorts
 open Constr
 open Context
 open Proofview.Notations
@@ -262,9 +262,9 @@ let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
 let globref_to_econstr r =
   match r with
   | Names.GlobRef.VarRef(v) -> EConstr.mkVar v
-  | Names.GlobRef.ConstRef(c) -> EConstr.mkConst c
-  | Names.GlobRef.IndRef(i) -> EConstr.mkInd i
-  | Names.GlobRef.ConstructRef(cr) -> EConstr.mkConstruct cr
+  | Names.GlobRef.ConstRef(c) -> EConstr.UnsafeMonomorphic.mkConst c
+  | Names.GlobRef.IndRef(i) -> EConstr.UnsafeMonomorphic.mkInd i
+  | Names.GlobRef.ConstructRef(cr) -> EConstr.UnsafeMonomorphic.mkConstruct cr
 
 let globref_to_const r =
   match r with

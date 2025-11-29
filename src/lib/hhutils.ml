@@ -11,9 +11,9 @@ let tacinterp tac =
 let to_constr r =
   match r with
   | Names.GlobRef.VarRef(v) -> EConstr.mkVar v
-  | Names.GlobRef.ConstRef(c) -> EConstr.mkConst c
-  | Names.GlobRef.IndRef(i) -> EConstr.mkInd i
-  | Names.GlobRef.ConstructRef(cr) -> EConstr.mkConstruct cr
+  | Names.GlobRef.ConstRef(c) -> EConstr.UnsafeMonomorphic.mkConst c
+  | Names.GlobRef.IndRef(i) -> EConstr.UnsafeMonomorphic.mkInd i
+  | Names.GlobRef.ConstructRef(cr) -> EConstr.UnsafeMonomorphic.mkConstruct cr
 
 let get_global_from_id id =
   Nametab.locate (Libnames.qualid_of_ident id)
