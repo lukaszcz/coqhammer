@@ -303,7 +303,7 @@ let case_splitting_on_tac opts ind =
        with_reduction opts
          "Tactics.case_splitting_on"
          "Tactics.case_splitting_on_nored")
-    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+    [Tacinterp.Value.of_constr (EConstr.UnsafeMonomorphic.mkInd ind)]
 let case_splitting_concl_on_tac opts ind =
   Utils.ltac_eval
     (if opts.s_dep then
@@ -314,7 +314,7 @@ let case_splitting_concl_on_tac opts ind =
        with_reduction opts
          "Tactics.case_splitting_concl_on"
          "Tactics.case_splitting_concl_on_nored")
-    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+    [Tacinterp.Value.of_constr (EConstr.UnsafeMonomorphic.mkInd ind)]
 let forwarding_tac () = Utils.ltac_apply "Tactics.forwarding" []
 let forwarding_nored_tac () = Utils.ltac_apply "Tactics.forwarding_nored" []
 let srewriting_tac () = Utils.ltac_apply "Tactics.srewriting" []
