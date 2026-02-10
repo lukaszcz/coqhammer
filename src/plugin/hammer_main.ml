@@ -260,7 +260,9 @@ let get_argus env sigma l : Hh_term.hhdef list =
   let argu_refs = 
     List.map (fun c -> 
       try let r, _ = Termops.global_of_constr sigma c in r
-      with _ -> raise (HammerError ("Argument " ^ (Utils.constr_to_string sigma c) ^ " not found in environment."))
+      with
+      | Sys.Break -> raise Sys.Break
+      | _ -> raise (HammerError ("Argument " ^ (Utils.constr_to_string sigma c) ^ " not found in environment."))
       ) l in
   List.map snd (unique_hhdefs
                   (List.map (hhdef_of_global env sigma) argu_refs))
