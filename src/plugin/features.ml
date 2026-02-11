@@ -194,6 +194,28 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   close_out oc;
   fname
 
+let choose_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef list) (goal : hhdef) (atpname : string) =
+  Msg.info "Choosing definitions...";
+  let defss = List.filter is_nontrivial defs in
+  if lems = [] then
+     raise (HammerError ("No lemmas given for choice."));
+  if !Opt.debug_mode then
+    Msg.info ("After filtering: " ^ string_of_int (List.length defss) ^ " Coq objects.");
+  let names = Hhlib.strset_from_lst (List.map get_hhdef_name defss) in
+  let choose_def def =
+    let name = get_hhdef_name def in
+    let pre_deps = get_deps_cached def in
+    let deps = List.filter (fun a -> Hhlib.StringSet.mem a names) pre_deps in
+    name::deps
+  in
+  let goal_deps = get_deps_cached goal in
+  let goal_deps = List.filter (fun a -> Hhlib.StringSet.mem a names) goal_deps in
+  let ths_deps = List.sort_uniq Stdlib.compare (goal_deps @ (List.concat (List.map choose_def lems))) in
+  if !Opt.debug_mode || !Opt.gs_mode = 0 then
+    Msg.info ("Running dependency extraction...");
+  let objs = Hhlib.strset_from_lst ths_deps in
+  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) objs) defs
+
 let run_predict fname defs pred_num pred_method =
   let oname = Filename.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in
   let cmd = !Opt.predict_path ^ " " ^ fname ^ "fea " ^ fname ^ "dep " ^
