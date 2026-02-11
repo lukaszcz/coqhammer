@@ -149,8 +149,6 @@ let get_deps_cached (def : hhdef) : string list =
     Hashtbl.add deps_cache name deps;
     deps
 
-
-
 let is_nontrivial (def : hhdef) : bool =
   let name = get_hhdef_name def in
   name <> "" && not (Hhlib.string_begins_with name "Coq.Init.Logic.") &&
@@ -196,13 +194,15 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   close_out oc;
   fname
 
-let extract_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef list) (goal : hhdef) (atpname : string) =
-  Msg.info "Extracting definitions...";
+let choose_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef list) (goal : hhdef) (atpname : string) =
+  Msg.info "Choosing definitions...";
   let defss = List.filter is_nontrivial defs in
+  if lems = [] then
+     raise (HammerError ("No lemmas given for choice."));
   if !Opt.debug_mode then
     Msg.info ("After filtering: " ^ string_of_int (List.length defss) ^ " Coq objects.");
   let names = Hhlib.strset_from_lst (List.map get_hhdef_name defss) in
-  let write_def def =
+  let choose_def def =
     let name = get_hhdef_name def in
     let pre_deps = get_deps_cached def in
     let deps = List.filter (fun a -> Hhlib.StringSet.mem a names) pre_deps in
@@ -210,32 +210,11 @@ let extract_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef l
   in
   let goal_deps = get_deps_cached goal in
   let goal_deps = List.filter (fun a -> Hhlib.StringSet.mem a names) goal_deps in
-  let ths_deps = List.sort_uniq Stdlib.compare (goal_deps @ (List.concat (List.map write_def lems))) in 
-
-  let oname = Filename.temp_file ("coqhammer_out" ^ atpname) "" in
-  let info = "Write " ^ atpname ^ " to file " ^ oname ^ " with arguments: " ^ String.concat " " ths_deps in
-  let ocname = open_out oname in
-  output_string ocname (String.concat " " ths_deps);
-  close_out ocname;
-  
+  let ths_deps = List.sort_uniq Stdlib.compare (goal_deps @ (List.concat (List.map choose_def lems))) in
   if !Opt.debug_mode || !Opt.gs_mode = 0 then
     Msg.info ("Running dependency extraction...");
-  if !Opt.debug_mode then
-    Msg.info info;
-  let ic = open_in oname in
-  try
-    let predicts =
-      Hhlib.strset_from_lst
-        (Str.split (Str.regexp " ")
-           (try input_line ic with End_of_file ->
-             close_in ic; Sys.remove oname;
-             raise (HammerError "Predictor did not return advice.")))
-    in
-    close_in ic; Sys.remove oname;
-    List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) predicts) defs
-  with e ->
-    close_in ic; Sys.remove oname;
-    raise e
+  let objs = Hhlib.strset_from_lst ths_deps in
+  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) objs) defs
 
 let run_predict fname defs pred_num pred_method =
   let oname = Filename.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in

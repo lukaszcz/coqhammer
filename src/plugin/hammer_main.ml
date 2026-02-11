@@ -15,6 +15,9 @@ open Ltac_plugin
 module Utils = Hhutils
 
 (***************************************************************************************)
+type hammer_mode = 
+  | Prediction 
+  | Choice of EConstr.t list
 
 let mk_id x = Hh_term.Id x
 let mk_app x y = Hh_term.Comb(x, y)
@@ -733,7 +736,7 @@ let do_predict hyps deps goal =
     let deps1 = Features.predict hyps deps goal in
     Provers.predict deps1 hyps deps goal
 
-let do_extraction hyps deps goal lems =
+let do_choice hyps deps goal lems =
   if !Opt.gs_mode > 0 then
     (* The last argument (0) is not used as a clustering parameter.
        It's only a placeholder to reuse the function structure. *)
@@ -755,7 +758,7 @@ let do_extraction hyps deps goal lems =
           pref := true;
           Opt.parallel_mode := false;
           try
-            let deps1 = Features.extract_given_lemmas hyps deps lems goal pred_method in
+            let deps1 = Features.choose_given_lemmas hyps deps lems goal pred_method in
             (* All hypotheses are always passed to the ATPs (only deps
                are subject to premise selection) *)
             let info = Provers.predict deps1 hyps deps goal in
@@ -802,7 +805,7 @@ let do_extraction hyps deps goal lems =
          info
        end
   else (* Opts.gs_mode = 0 *)
-    let deps1 = Features.extract_given_lemmas hyps deps lems goal !Opt.predict_method in
+    let deps1 = Features.choose_given_lemmas hyps deps lems goal !Opt.predict_method in
     Provers.predict deps1 hyps deps goal
 
 let try_sauto () =
@@ -822,19 +825,20 @@ let try_sauto () =
 
 let provers_detected = ref false
 
-let hammer_main_tac env sigma gl l =
+let hammer_main_tac env sigma gl argus =
   let goal = get_goal gl in
   let hyps = get_hyps gl in
   let defs = get_defs env sigma in
-  let lems = get_argus env sigma l in
   if !Opt.debug_mode then
     Msg.info ("Found " ^ string_of_int (List.length defs) ^
                 " accessible Coq objects.");
   let info = 
-    if l = [] then
-      do_predict hyps defs goal
-    else
-      do_extraction hyps defs goal lems in
+    match argus with
+    | Prediction -> do_predict hyps defs goal
+    | Choice glems -> 
+        let lems = get_argus env sigma glems in
+        do_choice hyps defs goal lems 
+    in
   let (deps, defs, inverts) = get_tac_args env sigma info in
   let sdeps = List.map (Utils.constr_to_string sigma) deps
   and sdefs = List.map Utils.constant_to_string defs
@@ -856,7 +860,7 @@ let hammer_main_tac env sigma gl l =
       Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
     end
 
-let hammer_tac l  =
+let hammer_tac argus =
   Proofview.Goal.enter
     begin fun gl ->
     let env = Proofview.Goal.env gl in
@@ -873,11 +877,11 @@ let hammer_tac l  =
               else
                 begin
                   provers_detected := true;
-                  hammer_main_tac env sigma gl l
+                  hammer_main_tac env sigma gl argus
                 end
             end
           else
-            hammer_main_tac env sigma gl l
+            hammer_main_tac env sigma gl argus
         end
       end
     end

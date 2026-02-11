@@ -13,10 +13,9 @@ open Hammer_main
 }
 
 TACTIC EXTEND Hammer_tac
-| [ "hammer" ] -> { hammer_tac [] }
-| [ "hammer" "[" constr_list(l) "]" ] -> { hammer_tac l }
+| [ "hammer" ] -> { hammer_tac Prediction }
+| [ "hammer" "[" constr_list(l) "]" ] -> { hammer_tac (Choice l) }
 END
-
 
 TACTIC EXTEND Predict_tac_1
 | [ "predict" integer(n) ] -> { predict_tac n !Opt.predict_method }
