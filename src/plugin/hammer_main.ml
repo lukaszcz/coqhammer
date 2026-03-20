@@ -35,7 +35,7 @@ let hhterm_of_sort s = match s with
   | Prop -> mk_id "$Prop"
   | Set  -> mk_id "$Set"
   | Type _ -> mk_id "$Type"
-  | QSort _ -> mk_id "$Type"
+  | GSort _ | VSort _ -> mk_id "$Type"
 
 let hhterm_of_constant c =
   tuple [mk_id "$Const"; hhterm_of_global (Names.GlobRef.ConstRef c)]
