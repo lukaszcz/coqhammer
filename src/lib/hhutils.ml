@@ -5,9 +5,6 @@ open Ltac_plugin
 let intern_constr env evd cexpr =
   Constrintern.interp_constr_evars env evd cexpr
 
-let tacinterp tac =
-  Tacinterp.tactic_of_value (Tacinterp.default_ist ()) tac
-
 let to_constr r =
   match r with
   | Names.GlobRef.VarRef(v) -> EConstr.mkVar v

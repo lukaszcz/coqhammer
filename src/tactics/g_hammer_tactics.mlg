@@ -160,7 +160,7 @@ TACTIC EXTEND Hammer_srun
 | [ "srun" tactic4(tac) sauto_opts(l) ] -> {
   try_usolve (default_s_opts ()) l
     (fun opts -> sinit opts <*>
-                   Tacticals.tclSOLVE [ Hhutils.tacinterp tac ])
+                   Tacticals.tclSOLVE [ Tacinterp.tactic_of_value ist tac ])
     "srun failed"
 }
 END
