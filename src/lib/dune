@@ -2,7 +2,7 @@
  (name hammer_lib)
  (public_name coq-hammer-tactics.lib)
  (synopsis "CoqHammer library")
- (libraries coq-core.plugins.ltac))
+ (libraries rocq-runtime.plugins.ltac))
 
 (coq.pp
  (modules g_hammer_lib))
