@@ -1,6 +1,6 @@
 package "plugin" (
   description = "Coq Hammer Plugin"
-  requires = "coq-core.plugins.ltac coq-hammer-tactics.lib"
+  requires = "rocq-runtime.plugins.ltac coq-hammer-tactics.lib"
   archive(byte) = "hammer_plugin.cma"
   archive(native) = "hammer_plugin.cmxa"
   plugin(byte) = "hammer_plugin.cma"
