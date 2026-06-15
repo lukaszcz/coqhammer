@@ -675,7 +675,7 @@ let hint_to_string (_, _, h) =
 let find_hints db secvars env evd t =
   try
     let open Hints in
-    let hdc = Hints.decompose_app_bound evd t in
+    let hdc = Hints.decompose_app_bound env evd t in
     let hints =
       if Termops.occur_existential evd t then
         match Hint_db.map_eauto env evd ~secvars hdc t db with
