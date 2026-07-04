@@ -6,8 +6,9 @@ transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
 	@if grep -q 'Init\.Logic\.' transl.out; then \
 	  echo "Translation sanity check FAILED: logical constants not translated to FOL:"; \
-	  cat transl.out; rm -f transl.vo; exit 1; \
+	  cat transl.out; rm -f transl.vo transl.out; exit 1; \
 	fi
+	@rm -f transl.out
 
 plugin_test.vo: plugin_test.v
 	$(COQC) plugin_test.v
