@@ -28,7 +28,11 @@ val get_const_from_id : Id.t -> Constant.t
 
 val get_const_from_qualid : Libnames.qualid -> Constant.t
 
+val get_global_name : GlobRef.t -> string
+
 val get_ind_name : inductive -> string
+
+val lib_ref_name : string -> string
 
 val get_ind_nparams : inductive -> int
 

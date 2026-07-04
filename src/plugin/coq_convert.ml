@@ -1,8 +1,22 @@
 (* Convert hhterm to coqterm *)
 
+open Hammer_lib
 open Hh_term
 open Coqterms
 open Coq_transl_opts
+
+(* Canonical names of the core logical constants, resolved through the
+   registered references so that they match the names produced by
+   [hhterm_of_global] on any Rocq version. *)
+let logic_True = lazy (Hhutils.lib_ref_name "core.True.type")
+let logic_False = lazy (Hhutils.lib_ref_name "core.False.type")
+let logic_and = lazy (Hhutils.lib_ref_name "core.and.type")
+let logic_or = lazy (Hhutils.lib_ref_name "core.or.type")
+let logic_not = lazy (Hhutils.lib_ref_name "core.not.type")
+let logic_iff = lazy (Hhutils.lib_ref_name "core.iff.type")
+let logic_eq = lazy (Hhutils.lib_ref_name "core.eq.type")
+let logic_ex = lazy (Hhutils.lib_ref_name "core.ex.type")
+let logic_all = lazy (Hhutils.lib_ref_name "core.all")
 
 (***************************************************************************************)
 (* Check input *)
@@ -27,41 +41,44 @@ let rec to_coqterm tm =
   and is_cofix = function Id "$CoFix" -> true | _ -> false
   in
   match tm with
-  | Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.True"), _) ->
+  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_True ->
     Const("$True")
 
-  | Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.False"), _) ->
+  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_False ->
     Const("$False")
 
-  | Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.and"), _) ->
+  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_and ->
     Const("&")
 
-  | Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.or"), _) ->
+  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_or ->
     Const("|")
 
-  | Comb(Id "$Const", Id "Coq.Init.Logic.not") ->
+  | Comb(Id "$Const", Id name) when name = Lazy.force logic_not ->
     Const("~")
 
-  | Comb(Id "$Const", Id "Coq.Init.Logic.iff") ->
+  | Comb(Id "$Const", Id name) when name = Lazy.force logic_iff ->
     Const("<=>")
 
-  | Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.eq"), _) when opt_translate_eq ->
+  | Comb(Comb(Id "$Ind", Id name), _)
+      when opt_translate_eq && name = Lazy.force logic_eq ->
     Const("=")
 
-  | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.ex"), _)),
+  | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id name), _)),
          Comb(Comb(Id "$ConstrArray", _),
-              Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body))) ->
+              Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body)))
+      when name = Lazy.force logic_ex ->
     Quant("?", (varname, to_coqterm vartype, to_coqterm body))
 
-  | Comb(Comb(Id "$App", Comb(Id "$Const", Id "Coq.Init.Logic.all")),
+  | Comb(Comb(Id "$App", Comb(Id "$Const", Id name)),
          Comb(Comb(Id "$ConstrArray", _),
-              Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body))) ->
+              Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body)))
+      when name = Lazy.force logic_all ->
     Quant("!", (varname, to_coqterm vartype, to_coqterm body))
 
-  | Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.ex"), _)) ->
+  | Comb(Id "$App", Comb(Comb(Id "$Ind", Id name), _)) when name = Lazy.force logic_ex ->
     Const("?")
 
-  | Comb(Id "$Const", Id "Coq.Init.Logic.all") ->
+  | Comb(Id "$Const", Id name) when name = Lazy.force logic_all ->
     Const("!")
 
   | Comb(Id "$Rel", Id num) ->
