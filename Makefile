@@ -9,6 +9,7 @@ all:
 	$(MAKE) plugin
 
 tactics: Makefile.coq.tactics
+	-rm -f META
 	$(MAKE) -f Makefile.coq.tactics
 
 plugin: Makefile.coq.plugin Makefile.coq.plugin.local
