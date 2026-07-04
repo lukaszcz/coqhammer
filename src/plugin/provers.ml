@@ -205,13 +205,30 @@ let extract_eprover_data outfile =
   with _ ->
     raise (HammerError "Failed to extract EProver data")
 
-let call_z3 infile outfile =
+type z3_binary = Z3Tptp | Z3
+
+let z3_binary = ref Z3Tptp
+
+let z3_name = function
+  | Z3Tptp -> "z3_tptp"
+  | Z3 -> "z3"
+
+let z3_call_args bin infile =
   let tmt = string_of_int !Opt.atp_timelimit in
+  match bin with
+  | Z3Tptp -> "-c -t:" ^ tmt ^ " -file:" ^ Filename.quote infile
+  | Z3 ->
+     "-tptp -t:" ^ string_of_int (!Opt.atp_timelimit * 1000) ^
+       " " ^ Filename.quote infile
+
+let call_z3 infile outfile =
   let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
+  let bin = !z3_binary in
   let cmd =
-    "htimeout " ^ tmt2 ^ " z3_tptp -c -t:" ^ tmt ^ " -file:" ^ infile ^ " 2>/dev/null > " ^ outfile
+    "htimeout " ^ tmt2 ^ " " ^ z3_name bin ^ " " ^ z3_call_args bin infile ^
+      " 2>/dev/null > " ^ Filename.quote outfile
   in
-  invoke_prover "z3_tptp" cmd outfile
+  invoke_prover (z3_name bin) cmd outfile
 
 let extract_z3_data outfile =
   try
@@ -502,10 +519,39 @@ let detect_vampire () =
       false
     end
 
-let detect_z3 () =
-  if Sys.command "z3_tptp -h 2>&1 >/dev/null" = 0 then
+let command_succeeds cmd =
+  Sys.command (cmd ^ " >/dev/null 2>&1") = 0
+
+let z3_supports_tptp bin =
+  let fname = Filename.temp_file "coqhammer-z3-detect" ".p" in
+  try
+    let oc = open_out fname in
+    output_string oc "fof(coqhammer_z3_detect, conjecture, $true).\n";
+    close_out oc;
+    let ret =
+      Sys.command
+        (z3_name bin ^ " " ^ z3_call_args bin fname ^ " >/dev/null 2>&1")
+    in
+    Sys.remove fname;
+    ret = 0
+  with _ ->
     begin
-      Msg.info "Z3 found";
+      try Sys.remove fname with _ -> ()
+    end;
+    false
+
+let detect_z3 () =
+  if command_succeeds "z3_tptp -h" then
+    begin
+      z3_binary := Z3Tptp;
+      Msg.info "Z3 found (z3_tptp)";
+      Opt.z3_enabled := true;
+      true
+    end
+  else if command_succeeds "z3 -h" && z3_supports_tptp Z3 then
+    begin
+      z3_binary := Z3;
+      Msg.info "Z3 found (z3 with TPTP support)";
       Opt.z3_enabled := true;
       true
     end
