@@ -55,7 +55,7 @@ let get_inductive_from_id id =
   | _ -> failwith "not an inductive type"
 
 let get_inductive_from_qualid q =
-  match Nametab.locate q with
+  match Smartlocate.global_with_alias q with
   | Names.GlobRef.IndRef(i) -> i
   | _ -> failwith "not an inductive type"
 
@@ -70,7 +70,7 @@ let get_const_from_id id =
   | _ -> failwith "not a constant"
 
 let get_const_from_qualid q =
-  match Nametab.locate q with
+  match Smartlocate.global_with_alias q with
   | Names.GlobRef.ConstRef(c) -> c
   | _ -> failwith "not a constant"
 
