@@ -3,10 +3,10 @@
 
 Coercion is_true : bool >-> Sortclass.
 
-Require Export Bool.
+From Stdlib Require Export Bool.
 Require Import Setoid.
-Require Import Lia.
-Require Import BinInt BinNat PeanoNat.
+From Stdlib Require Import Lia.
+From Stdlib Require Import BinInt BinNat PeanoNat.
 Require Import ssreflect ssrbool.
 
 (* bool *)

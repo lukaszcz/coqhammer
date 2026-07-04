@@ -100,7 +100,7 @@ Qed.
 
 (* More tests *)
 
-Require Import Arith.
+From Stdlib Require Import Arith.
 
 Lemma lem_test_csplit : forall n, if n =? n then True else False.
 Proof.
@@ -108,11 +108,11 @@ Proof.
 Qed.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
-  hauto use: @Coq.Arith.PeanoNat.Nat.Odd_succ, @Coq.Arith.PeanoNat.Nat.Even_or_Odd, @Coq.Arith.PeanoNat.Nat.add_1_r.
+  hauto use: @Stdlib.Arith.PeanoNat.Nat.Odd_succ, @Stdlib.Arith.PeanoNat.Nat.Even_or_Odd, @Stdlib.Arith.PeanoNat.Nat.add_1_r.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
-  hauto using (@Coq.Arith.PeanoNat.Nat.Even_succ, @Coq.Arith.PeanoNat.Nat.add_1_r, @Coq.Arith.PeanoNat.Nat.Even_or_Odd).
+  hauto using (@Stdlib.Arith.PeanoNat.Nat.Even_succ, @Stdlib.Arith.PeanoNat.Nat.add_1_r, @Stdlib.Arith.PeanoNat.Nat.Even_or_Odd).
 Qed.
 
 Lemma lem_mult_1 : forall m n k : nat, m * n + k = k + n * m.
@@ -121,7 +121,7 @@ Proof.
 Qed.
 
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
-  hauto using (Coq.Arith.PeanoNat.Nat.pow_succ_r, Coq.Arith.PeanoNat.Nat.add_1_r, Coq.Arith.PeanoNat.Nat.le_0_l).
+  hauto using (Stdlib.Arith.PeanoNat.Nat.pow_succ_r, Stdlib.Arith.PeanoNat.Nat.add_1_r, Stdlib.Arith.PeanoNat.Nat.le_0_l).
 Qed.
 
 Lemma lem_even_or_odd :
@@ -131,11 +131,11 @@ Proof.
   exists (S p); strivial.
 Qed.
 
-Require Import ZArith.
+From Stdlib Require Import ZArith.
 
 Lemma le_mul : forall m n k : Z, (k > 0 -> k * m <= k * n -> m <= n)%Z.
 Proof.
-  hauto use: Coq.ZArith.BinInt.Z.mul_comm, Coq.ZArith.BinInt.Z.mul_le_mono_pos_r, Coq.ZArith.BinInt.Z.gt_lt_iff.
+  hauto use: Stdlib.ZArith.BinInt.Z.mul_comm, Stdlib.ZArith.BinInt.Z.mul_le_mono_pos_r, Stdlib.ZArith.BinInt.Z.gt_lt_iff.
 Qed.
 
 Lemma lem_bnat_test_1 : forall x y, Nat.eqb x y = true -> y = x.
@@ -180,7 +180,7 @@ Proof.
   assumption.
 Qed.
 
-Require NArith.BinNat.
+From Stdlib Require NArith.BinNat.
 
 Lemma lem_nbnat_test_1 : forall x y, BinNat.N.eqb x y = true -> x = y.
 Proof.
@@ -285,8 +285,8 @@ Proof.
   hauto db: R_add_db.
 Qed.
 
-Require Import List.
-Require Import Lia.
+From Stdlib Require Import List.
+From Stdlib Require Import Lia.
 
 From Hammer Require Import Hints.
 
@@ -325,8 +325,8 @@ Qed.
 
 End Lists.
 
-Require Import Reals.
-Require Import Lra.
+From Stdlib Require Import Reals.
+From Stdlib Require Import Lra.
 
 Section Real.
 
@@ -411,7 +411,7 @@ Proof.
 Qed.
 
 Require Import Nat.
-Require Import Psatz.
+From Stdlib Require Import Psatz.
 
 Inductive Term : Set :=
 | LS : Term
@@ -688,7 +688,7 @@ Proof.
   intros; induction t; qsimpl.
 Qed.
 
-Require Import String.
+From Stdlib Require Import String.
 
 Inductive aexpr :=
 | Nval : nat -> aexpr
@@ -918,7 +918,7 @@ Inductive SmallStep : cmd * state -> cmd * state -> Prop :=
 
 Notation "A --> B" := (SmallStep A B) (at level 80, no associativity).
 
-Require Import Relations.
+From Stdlib Require Import Relations.
 
 Definition SmallStepStar := clos_refl_trans (cmd * state) SmallStep.
 
@@ -1082,7 +1082,7 @@ Qed.
 (************************************************************************************)
 (* Insertion sort *)
 
-Require List.
+From Stdlib Require List.
 Import List.ListNotations.
 Open Scope list_scope.
 
@@ -1122,7 +1122,7 @@ Proof.
   induction l; sauto use: lem_insert_sorted.
 Qed.
 
-Require Import Sorting.Permutation.
+From Stdlib Require Import Sorting.Permutation.
 
 Lemma lem_insert_perm : forall l x, Permutation (insert l x) (x :: l).
 Proof.
@@ -1268,7 +1268,7 @@ Proof.
   sauto dep: on.
 Qed.
 
-Require Import Program.Equality.
+From Stdlib Require Import Program.Equality.
 
 Module DependentExpressions.
 
@@ -1409,8 +1409,8 @@ Qed.
 
 End DependentExpressions.
 
-Require Import Recdef.
-Require Import Program.
+From Stdlib Require Import Recdef.
+From Stdlib Require Import Program.
 
 Module MergeSort.
 
@@ -1617,7 +1617,7 @@ Ltac use_lem_split :=
     hauto
   end.
 
-Obligation Tactic := idtac.
+#[local] Obligation Tactic := idtac.
 
 Program Fixpoint mergesort {A} {dto : DecTotalOrder A} (l : list A)
   {measure (List.length l)} : {l' | Sorted l' /\ Permutation l' l} :=

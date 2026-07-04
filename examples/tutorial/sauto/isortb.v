@@ -6,13 +6,13 @@ From Hammer Require Import Reflect.
 (* The Reflect module declares "is_true" as a coercion and defines
    some tactics related to boolean reflection. *)
 
-Require List.
+From Stdlib Require List.
 Import List.ListNotations.
 Open Scope list_scope.
 
-Require Import Arith.
-Require Import Lia.
-Require Import Bool.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Lia.
+From Stdlib Require Import Bool.
 
 Inductive Sorted : list nat -> Prop :=
 | Sorted_0 : Sorted []
