@@ -1494,13 +1494,13 @@ Qed.
 Lemma lem_lelst_sorted {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
 Proof.
-  induction l; sauto l: on use: lem_lelst_trans inv: Sorted, Forall ctrs: Sorted.
+  induction l; sauto l: on use: lem_lelst_trans inv: Sorted, List.Forall ctrs: Sorted.
 Qed.
 
 Lemma lem_lelst_perm_rev {A} {dto : DecTotalOrder A} :
   forall l1 l2, Permutation l1 l2 -> forall x, LeLst x l2 -> LeLst x l1.
 Proof.
-  induction 1; sauto inv: Forall ctrs: Forall.
+  induction 1; sauto inv: List.Forall ctrs: List.Forall.
 Qed.
 
 Lemma lem_lelst_app {A} {dto : DecTotalOrder A} :
@@ -1533,6 +1533,16 @@ Proof.
 Qed.
 
 Global Hint Resolve lem_lelst_nil lem_lelst_cons : lelst.
+
+(* Regression: inv:/ctrs: must accept a notation (abbreviation) for an
+   inductive type, including one that expands to a partial application. *)
+Notation ForallNat := (@List.Forall nat).
+
+Lemma lem_forall_abbrev (P : nat -> Prop) :
+  forall l x, ForallNat P (x :: l) -> ForallNat P l /\ P x.
+Proof.
+  sauto inv: ForallNat ctrs: ForallNat.
+Qed.
 
 Lemma lem_sorted_concat_2 {A} {dto : DecTotalOrder A} :
   forall (l l1 l2 : list A) x y,
