@@ -1,6 +1,6 @@
 COQC=coqc
 
-all: transl.vo plugin_test.vo basic.vo bugs.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
+all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
 
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
@@ -12,6 +12,9 @@ transl.vo: transl.v
 
 plugin_test.vo: plugin_test.v
 	$(COQC) plugin_test.v
+
+lemma_choice.vo: lemma_choice.v
+	$(COQC) lemma_choice.v
 
 basic.vo: basic.v
 	$(COQC) basic.v
