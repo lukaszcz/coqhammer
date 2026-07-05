@@ -10,8 +10,13 @@ val get_goal_features : hhdef list (* hyps *) -> hhdef (* goal *) -> string list
 val extract : hhdef list (* hyps *) -> hhdef list (* defs *) -> hhdef (* goal *) ->
   string (* (temporary) file name *)
 
-val choose_given_lemmas : hhdef list (* hyps *) -> hhdef list (* defs *) -> hhdef list (* lemmas *) -> hhdef (* goal *) -> string (* ATP name *) -> 
-  hhdef list (* used objects *)
+(* `choose_given_lemmas` selects the premises for the ATPs based on
+   the given lemmas: the lemmas themselves plus the definitions
+   directly referenced by the goal, the hypotheses or the lemmas.
+   The given lemmas must occur in the defs list. *)
+val choose_given_lemmas : hhdef list (* hyps *) -> hhdef list (* defs *) ->
+  hhdef list (* lemmas *) -> hhdef (* goal *) ->
+  hhdef list (* premises *)
 
 val run_predict : string (* file name (from `extract`) *) -> hhdef list (* defs *) ->
   int (* pred_num *) -> string (* pred_method *) ->

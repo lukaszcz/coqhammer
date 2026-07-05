@@ -15,8 +15,8 @@ open Ltac_plugin
 module Utils = Hhutils
 
 (***************************************************************************************)
-type hammer_mode = 
-  | Prediction 
+type hammer_mode =
+  | Prediction
   | Choice of EConstr.t list
 
 let mk_id x = Hh_term.Id x
@@ -259,16 +259,20 @@ let get_defs env sigma : Hh_term.hhdef list =
   List.map snd (unique_hhdefs
                   (List.map (hhdef_of_global env sigma) (my_search env)))
 
-let get_argus env sigma l : Hh_term.hhdef list =
-  let argu_refs = 
-    List.map (fun c -> 
-      try let r, _ = Termops.global_of_constr sigma c in r
-      with
-      | Sys.Break -> raise Sys.Break
-      | _ -> raise (HammerError ("Argument " ^ (Utils.constr_to_string sigma c) ^ " not found in environment."))
-      ) l in
-  List.map snd (unique_hhdefs
-                  (List.map (hhdef_of_global env sigma) argu_refs))
+let get_given_lemmas env sigma l : Hh_term.hhdef list =
+  let get_lemma c =
+    let r =
+      try fst (EConstr.destRef sigma c)
+      with Constr.DestKO ->
+        raise (HammerError ("Lemma " ^ Utils.constr_to_string sigma c ^
+                              " not found in the environment."))
+    in
+    try hhdef_of_global env sigma r
+    with e when CErrors.noncritical e ->
+      raise (HammerError ("Lemma " ^ Utils.constr_to_string sigma c ^
+                            " cannot be used: " ^ Pp.string_of_ppcmds (CErrors.print e)))
+  in
+  List.map snd (unique_hhdefs (List.map get_lemma l))
 
 let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
   Timeout.ptimeout tm (Utils.ltac_eval tac args)
@@ -645,6 +649,70 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
       hlp 1 tactics
     end
 
+let clean_temp_files () =
+  if not !Opt.debug_mode then
+    begin (* a hack *)
+      ignore (Sys.command ("rm -f " ^ Filename.get_temp_dir_name () ^ "/coqhammer*"))
+    end
+
+(* Runs jobs from `seq` in parallel, each invoking one ATP on the
+   premises returned by its selection function. Each element of `seq`
+   is: (prover description, enabled, enabled option ref, premise
+   selection function). *)
+let run_gs_provers hyps deps goal clean seq =
+  let jobs =
+    List.map
+      begin fun (pname, enabled, pref, select) _ ->
+        if not enabled then
+          exit 1;
+        Opt.vampire_enabled := false;
+        Opt.eprover_enabled := false;
+        Opt.z3_enabled := false;
+        Opt.cvc4_enabled := false;
+        pref := true;
+        Opt.parallel_mode := false;
+        try
+          let deps1 = select () in
+          (* All hypotheses are always passed to the ATPs (only deps
+             are subject to premise selection) *)
+          let info = Provers.predict deps1 hyps deps goal in
+          Msg.info (pname ^ " succeeded");
+          info
+        with
+        | HammerError(msg) ->
+           Msg.error ("Hammer error: " ^ msg);
+           exit 1
+        | _ ->
+           exit 1
+      end
+      (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _) -> enabled) seq))
+  in
+  let time = (float_of_int !Opt.atp_timelimit) *. 1.5
+  in
+  Msg.info ("Running provers (" ^ string_of_int !Opt.gs_mode ^ " threads)...");
+  let ret =
+    try
+      Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
+    with e ->
+      clean (); raise e
+  in
+  match ret with
+  | None -> clean (); raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
+  | Some info ->
+     begin
+       let info =
+         if List.length info.Provers.deps >= !Opt.minimize_threshold then
+           Provers.minimize info hyps deps goal
+         else
+           info
+       in
+       clean ();
+       let msg = Provers.prn_atp_info info in
+       if msg <> "" then
+         Msg.info msg;
+       info
+     end
+
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
     let greedy_sequence =
@@ -673,139 +741,47 @@ let do_predict hyps deps goal =
        ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
     in
     let fname = Features.extract hyps deps goal in
-    let jobs =
+    let seq =
       List.map
-        begin fun (pname, enabled, pref, pred_method, preds_num) _ ->
-          if not enabled then
-            exit 1;
-          Opt.vampire_enabled := false;
-          Opt.eprover_enabled := false;
-          Opt.z3_enabled := false;
-          Opt.cvc4_enabled := false;
-          pref := true;
-          Opt.parallel_mode := false;
-          try
-            let deps1 = Features.run_predict fname deps preds_num pred_method in
-            (* All hypotheses are always passed to the ATPs (only deps
-               are subject to premise selection) *)
-            let info = Provers.predict deps1 hyps deps goal in
-            Msg.info (pname ^ " succeeded");
-            info
-          with
-          | HammerError(msg) ->
-             Msg.error ("Hammer error: " ^ msg);
-             exit 1
-          | _ ->
-             exit 1
+        begin fun (pname, enabled, pref, pred_method, preds_num) ->
+          (pname, enabled, pref,
+           fun () -> Features.run_predict fname deps preds_num pred_method)
         end
-        (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _, _) -> enabled) greedy_sequence))
+        greedy_sequence
     in
-    let time = (float_of_int !Opt.atp_timelimit) *. 1.5
-    in
-    Msg.info ("Running provers (" ^ string_of_int !Opt.gs_mode ^ " threads)...");
     let clean () =
       Features.clean fname;
-      if not !Opt.debug_mode then
-        begin (* a hack *)
-          ignore (Sys.command ("rm -f " ^ Filename.get_temp_dir_name () ^ "/coqhammer*"))
-        end
+      clean_temp_files ()
     in
-    let ret =
-      try
-        Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
-      with e ->
-        clean (); raise e
-    in
-    match ret with
-    | None -> clean (); raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
-    | Some info ->
-       begin
-         let info =
-           if List.length info.Provers.deps >= !Opt.minimize_threshold then
-             Provers.minimize info hyps deps goal
-           else
-             info
-         in
-         clean ();
-         let msg = Provers.prn_atp_info info in
-         if msg <> "" then
-           Msg.info msg;
-         info
-       end
+    run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
     Provers.predict deps1 hyps deps goal
 
 let do_choice hyps deps goal lems =
+  (* The given lemmas must occur in the deps list: the ATP premises
+     are selected from it. They may be missing from the search
+     results, e.g. because of the search blacklist or a module
+     filter. *)
+  let deps =
+    let names = Hhlib.strset_from_lst (List.map Hh_term.get_hhdef_name deps) in
+    deps @
+      List.filter
+        (fun lem -> not (Hhlib.StringSet.mem (Hh_term.get_hhdef_name lem) names))
+        lems
+  in
+  let deps1 = Features.choose_given_lemmas hyps deps lems goal in
   if !Opt.gs_mode > 0 then
-    (* The last argument (0) is not used as a clustering parameter.
-       It's only a placeholder to reuse the function structure. *)
-    let greedy_sequence_lemmas =
-      [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled, "cvc4", 0);
-       ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled, "vampire", 0);
-       ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled, "eprover", 0);
-       ("Z3", !Opt.z3_enabled, Opt.z3_enabled, "z3", 0)]
-    in
-    let jobs seq =
+    let seq =
       List.map
-        begin fun (pname, enabled, pref, pred_method, preds_num) _ ->
-          if not enabled then
-            exit 1;
-          Opt.vampire_enabled := false;
-          Opt.eprover_enabled := false;
-          Opt.z3_enabled := false;
-          Opt.cvc4_enabled := false;
-          pref := true;
-          Opt.parallel_mode := false;
-          try
-            let deps1 = Features.choose_given_lemmas hyps deps lems goal pred_method in
-            (* All hypotheses are always passed to the ATPs (only deps
-               are subject to premise selection) *)
-            let info = Provers.predict deps1 hyps deps goal in
-            Msg.info (pname ^ " succeeded");
-            info
-          with
-          | HammerError(msg) ->
-             Msg.error ("Hammer error: " ^ msg);
-             exit 1
-          | _ ->
-             exit 1
-        end
-        (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _, _) -> enabled) seq))
+        (fun (pname, enabled, pref) -> (pname, enabled, pref, fun () -> deps1))
+        [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled);
+         ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled);
+         ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
+         ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
     in
-    let time = (float_of_int !Opt.atp_timelimit) *. 1.5
-    in
-    Msg.info ("Running provers (" ^ string_of_int !Opt.gs_mode ^ " threads)...");
-    let clean () =
-      if not !Opt.debug_mode then
-        begin (* a hack *)
-          ignore (Sys.command ("rm -f " ^ Filename.get_temp_dir_name () ^ "/coqhammer*"))
-        end
-    in
-    let ret =
-        try
-          Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time (jobs greedy_sequence_lemmas)
-        with e ->
-          clean (); raise e
-    in
-    match ret with
-    | None -> clean (); raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
-    | Some info ->
-       begin
-         let info =
-           if List.length info.Provers.deps >= !Opt.minimize_threshold then
-             Provers.minimize info hyps deps goal
-           else
-             info
-         in
-         clean ();
-         let msg = Provers.prn_atp_info info in
-         if msg <> "" then
-           Msg.info msg;
-         info
-       end
+    run_gs_provers hyps deps goal clean_temp_files seq
   else (* Opts.gs_mode = 0 *)
-    let deps1 = Features.choose_given_lemmas hyps deps lems goal !Opt.predict_method in
     Provers.predict deps1 hyps deps goal
 
 let try_sauto () =
@@ -825,20 +801,22 @@ let try_sauto () =
 
 let provers_detected = ref false
 
-let hammer_main_tac env sigma gl argus =
+let hammer_main_tac env sigma gl mode =
   let goal = get_goal gl in
   let hyps = get_hyps gl in
   let defs = get_defs env sigma in
   if !Opt.debug_mode then
     Msg.info ("Found " ^ string_of_int (List.length defs) ^
                 " accessible Coq objects.");
-  let info = 
-    match argus with
+  let info =
+    match mode with
     | Prediction -> do_predict hyps defs goal
-    | Choice glems -> 
-        let lems = get_argus env sigma glems in
-        do_choice hyps defs goal lems 
-    in
+    | Choice glems ->
+       (* An empty lemma list is allowed: then the premises are the
+          definitions directly referenced by the goal or the
+          hypotheses. *)
+       do_choice hyps defs goal (get_given_lemmas env sigma glems)
+  in
   let (deps, defs, inverts) = get_tac_args env sigma info in
   let sdeps = List.map (Utils.constr_to_string sigma) deps
   and sdefs = List.map Utils.constant_to_string defs
@@ -860,7 +838,7 @@ let hammer_main_tac env sigma gl argus =
       Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
     end
 
-let hammer_tac argus =
+let hammer_tac mode =
   Proofview.Goal.enter
     begin fun gl ->
     let env = Proofview.Goal.env gl in
@@ -877,11 +855,11 @@ let hammer_tac argus =
               else
                 begin
                   provers_detected := true;
-                  hammer_main_tac env sigma gl argus
+                  hammer_main_tac env sigma gl mode
                 end
             end
           else
-            hammer_main_tac env sigma gl argus
+            hammer_main_tac env sigma gl mode
         end
       end
     end
