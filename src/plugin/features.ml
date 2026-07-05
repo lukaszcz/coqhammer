@@ -151,23 +151,32 @@ let cleanup () =
   Hashtbl.reset features_cache;
   Hashtbl.reset deps_cache
 
+(* Variables must not be cached under their names: the same name may
+   denote a different variable in another section or proof. *)
+
 let get_def_features_cached (def : hhdef) : string list =
-  let name = get_hhdef_name def in
-  try
-    Hashtbl.find features_cache name
-  with Not_found ->
-    let fea = get_def_features def in
-    Hashtbl.add features_cache name fea;
-    fea
+  if hhdef_is_var def then
+    get_def_features def
+  else
+    let name = get_hhdef_name def in
+    try
+      Hashtbl.find features_cache name
+    with Not_found ->
+      let fea = get_def_features def in
+      Hashtbl.add features_cache name fea;
+      fea
 
 let get_deps_cached (def : hhdef) : string list =
-  let name = get_hhdef_name def in
-  try
-    Hashtbl.find deps_cache name
-  with Not_found ->
-    let deps = get_deps def in
-    Hashtbl.add deps_cache name deps;
-    deps
+  if hhdef_is_var def then
+    get_deps def
+  else
+    let name = get_hhdef_name def in
+    try
+      Hashtbl.find deps_cache name
+    with Not_found ->
+      let deps = get_deps def in
+      Hashtbl.add deps_cache name deps;
+      deps
 
 let is_nontrivial (def : hhdef) : bool =
   let name = get_hhdef_name def in
