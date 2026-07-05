@@ -5,7 +5,7 @@ From Hammer Require Import Hints.
 (* The Hints module provides the following rewrite hint databases:
    shints, slist, sbool, sarith, szarith. *)
 
-Require List.
+From Stdlib Require List.
 Import List.ListNotations.
 Open Scope list_scope.
 
@@ -120,7 +120,7 @@ Proof.
   induction l; sauto use: @lem_itrev unfold: rev.
 Qed.
 
-Require Import Sorting.Permutation.
+From Stdlib Require Import Sorting.Permutation.
 
 Lemma lem_itrev_perm {A} :
   forall l l' : list A, Permutation (itrev l l') (l ++ l').
@@ -143,7 +143,7 @@ Lemma lem_rev_perm {A} : forall l : list A, Permutation (rev l) l.
 Proof.
   unfold rev.
   intro l.
-  rewrite List.app_nil_end.
+  rewrite <- List.app_nil_r.
   apply lem_itrev_perm.
 Qed.
 

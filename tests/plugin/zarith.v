@@ -1,6 +1,6 @@
 From Hammer Require Import Hammer.
 
-Require Import ZArith.
+From Stdlib Require Import ZArith.
 Open Scope Z_scope.
 
 Hammer_version.

@@ -1074,7 +1074,7 @@ and add_def_axioms ((name, value, ty, srt) as def) =
          if Coq_typing.check_type_target_is_prop ty then
            begin
              begin
-               if opt_prop_inversion_axioms && name <> "Coq.Init.Logic.eq" then
+               if opt_prop_inversion_axioms && name <> Hhutils.lib_ref_name "core.eq.type" then
                  add_inversion_axioms true name constrs
                else
                  return ()

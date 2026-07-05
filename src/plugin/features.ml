@@ -9,6 +9,23 @@ let opt_feature_polarity = true
 
 (*********************************************************************************)
 
+(* Canonical names of the core logical constants, resolved through the
+   registered references so that they match the names produced by
+   [hhterm_of_global] on any Rocq version. *)
+let logic_and = lazy (Hhutils.lib_ref_name "core.and.type")
+let logic_or = lazy (Hhutils.lib_ref_name "core.or.type")
+let logic_not = lazy (Hhutils.lib_ref_name "core.not.type")
+let logic_iff = lazy (Hhutils.lib_ref_name "core.iff.type")
+let logic_ex = lazy (Hhutils.lib_ref_name "core.ex.type")
+let logic_all = lazy (Hhutils.lib_ref_name "core.all")
+
+(* The module prefix of the logical constants, e.g. "Corelib.Init.Logic." *)
+let logic_prefix = lazy
+  (let s = Hhutils.lib_ref_name "core.False.type" in
+   String.sub s 0 (String.length s - String.length "False"))
+
+let is_logic_name c = Hhlib.string_begins_with c (Lazy.force logic_prefix)
+
 let extract_consts (t : hhterm) : string list =
   let rec pom t acc =
     match t with
@@ -16,11 +33,11 @@ let extract_consts (t : hhterm) : string list =
       acc
     | Comb(Comb(Id "$Construct", x), Id c)
         when
-          not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
+          not (is_logic_name c) ->
       pom x (c :: acc)
     | Comb(Id x, Id c)
         when (x = "$Const" || x = "$Ind") &&
-          not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
+          not (is_logic_name c) ->
       (c :: acc)
     | Comb(x, y) ->
       pom y (pom x acc)
@@ -55,29 +72,32 @@ let extract_features (t : hhterm) : string list =
       acc
     | Comb(Comb(Comb(Id "$Prod", Comb(Id "$Name", Id _)), vartype), body) ->
        pom vartype (not pos) (pom body pos acc)
-    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.and"), _)), args) ->
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id c), _)), args)
+        when c = Lazy.force logic_and || c = Lazy.force logic_or ->
        pom args pos acc
-    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.or"), _)), args) ->
-       pom args pos acc
-    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.not"), _)), args) ->
+    | Comb(Comb(Id "$App", Comb(Id "$Const", Id c)), args)
+        when c = Lazy.force logic_not ->
        pom args (not pos) acc
-    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.iff"), _)), args) ->
+    | Comb(Comb(Id "$App", Comb(Id "$Const", Id c)), args)
+        when c = Lazy.force logic_iff ->
        pom args pos (pom args (not pos) acc)
-    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id "Coq.Init.Logic.ex"), _)),
+    | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id c), _)),
            Comb(Comb(Id "$ConstrArray", _),
-                Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id _)), vartype), body))) ->
+                Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id _)), vartype), body)))
+        when c = Lazy.force logic_ex ->
        pom vartype pos (pom body pos acc)
-    | Comb(Comb(Id "$App", Comb(Id "$Const", Id "Coq.Init.Logic.all")),
+    | Comb(Comb(Id "$App", Comb(Id "$Const", Id c)),
            Comb(Comb(Id "$ConstrArray", _),
-                Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id _)), vartype), body))) ->
+                Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id _)), vartype), body)))
+        when c = Lazy.force logic_all ->
        pom vartype (not pos) (pom body pos acc)
     | Comb(Comb(Id "$Construct", x), Id c)
         when
-          not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
+          not (is_logic_name c) ->
        pom x pos (add_feature c pos acc)
     | Comb(Id x, Id c)
         when (x = "$Const" || x = "$Ind") &&
-          not (Hhlib.string_begins_with c "Coq.Init.Logic.") ->
+          not (is_logic_name c) ->
        add_feature c pos acc
     | Comb(Comb(Id "$App", Comb(Id "$Const", Id c)), args)
     | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id c), _)), args)
@@ -151,11 +171,11 @@ let get_deps_cached (def : hhdef) : string list =
 
 let is_nontrivial (def : hhdef) : bool =
   let name = get_hhdef_name def in
-  name <> "" && not (Hhlib.string_begins_with name "Coq.Init.Logic.") &&
-    (if !Opt.filter_program then not (Hhlib.string_begins_with name "Coq.Program.") else true) &&
-    (if !Opt.filter_classes then not (Hhlib.string_begins_with name "Coq.Classes.") else true) &&
+  name <> "" && not (is_logic_name name) &&
+    (if !Opt.filter_program then not (Hhlib.string_begins_with name "Stdlib.Program.") else true) &&
+    (if !Opt.filter_classes then not (Hhlib.string_begins_with name "Stdlib.Classes.") else true) &&
     (if !Opt.filter_hurkens then
-        not (Hhlib.string_begins_with name "Coq.Logic.Hurkens.") else true)
+        not (Hhlib.string_begins_with name "Stdlib.Logic.Hurkens.") else true)
 
 let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
