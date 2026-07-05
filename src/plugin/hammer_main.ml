@@ -553,7 +553,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
               Utils.ltac_apply "Reconstr.qrrexhaustive1" [])
   in
   let pretactics =
-    [ (reauto, "srun eauto"); (rcongruence, "scongruence");
+    [ (reauto, "srun (eauto)"); (rcongruence, "scongruence");
       (rtrivial, "strivial"); (rfirstorder, "sfirstorder") ]
   in
   let tactics = [
@@ -598,18 +598,18 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     catch_errors
       begin fun () ->
         tactics @
-          [ [ (rreasy (), "srun Reconstr.rreasy");
-              (rrsimple (), "srun Reconstr.rrsimple");
-              (rrcrush (), "srun Reconstr.rrcrush");
-              (rryelles4 (), "srun Reconstr.rryelles4") ];
-            [ (rrblast (), "srun Reconstr.rrblast");
-              (rrscrush (), "srun Reconstr.rrscrush");
-              (rryreconstr (), "srun Reconstr.rryreconstr");
-              (rrhreconstr4 (), "srun Reconstr.rrhreconstr4") ];
-            [ (rryelles6 (), "srun Reconstr.rryelles6");
-              (rrhreconstr6 (), "srun Reconstr.rrhreconstr6");
-              (rrhrauto4 (), "srun Reconstr.rrhrauto4");
-              (rrexhaustive1 (), "srun Reconstr.rrexhaustive1") ] ]
+          [ [ (rreasy (), "srun (Reconstr.rreasy)");
+              (rrsimple (), "srun (Reconstr.rrsimple)");
+              (rrcrush (), "srun (Reconstr.rrcrush)");
+              (rryelles4 (), "srun (Reconstr.rryelles4)") ];
+            [ (rrblast (), "srun (Reconstr.rrblast)");
+              (rrscrush (), "srun (Reconstr.rrscrush)");
+              (rryreconstr (), "srun (Reconstr.rryreconstr)");
+              (rrhreconstr4 (), "srun (Reconstr.rrhreconstr4)") ];
+            [ (rryelles6 (), "srun (Reconstr.rryelles6)");
+              (rrhreconstr6 (), "srun (Reconstr.rrhreconstr6)");
+              (rrhrauto4 (), "srun (Reconstr.rrhrauto4)");
+              (rrexhaustive1 (), "srun (Reconstr.rrexhaustive1)") ] ]
       end
       (fun _ -> tactics)
   in
