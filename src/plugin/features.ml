@@ -151,23 +151,32 @@ let cleanup () =
   Hashtbl.reset features_cache;
   Hashtbl.reset deps_cache
 
+(* Variables must not be cached under their names: the same name may
+   denote a different variable in another section or proof. *)
+
 let get_def_features_cached (def : hhdef) : string list =
-  let name = get_hhdef_name def in
-  try
-    Hashtbl.find features_cache name
-  with Not_found ->
-    let fea = get_def_features def in
-    Hashtbl.add features_cache name fea;
-    fea
+  if hhdef_is_var def then
+    get_def_features def
+  else
+    let name = get_hhdef_name def in
+    try
+      Hashtbl.find features_cache name
+    with Not_found ->
+      let fea = get_def_features def in
+      Hashtbl.add features_cache name fea;
+      fea
 
 let get_deps_cached (def : hhdef) : string list =
-  let name = get_hhdef_name def in
-  try
-    Hashtbl.find deps_cache name
-  with Not_found ->
-    let deps = get_deps def in
-    Hashtbl.add deps_cache name deps;
-    deps
+  if hhdef_is_var def then
+    get_deps def
+  else
+    let name = get_hhdef_name def in
+    try
+      Hashtbl.find deps_cache name
+    with Not_found ->
+      let deps = get_deps def in
+      Hashtbl.add deps_cache name deps;
+      deps
 
 let is_nontrivial (def : hhdef) : bool =
   let name = get_hhdef_name def in
@@ -213,6 +222,26 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   output_string oc "\"\n";
   close_out oc;
   fname
+
+let choose_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef list) (goal : hhdef) : hhdef list =
+  Msg.info "Choosing definitions...";
+  let ndefs = List.filter is_nontrivial defs in
+  if !Opt.debug_mode then
+    Msg.info ("After filtering: " ^ string_of_int (List.length ndefs) ^ " Coq objects.");
+  let names = Hhlib.strset_from_lst (List.map get_hhdef_name ndefs) in
+  let filter_deps deps = List.filter (fun a -> Hhlib.StringSet.mem a names) deps in
+  let choose_def def =
+    get_hhdef_name def :: filter_deps (get_deps_cached def)
+  in
+  (* The goal and the hypotheses are local to the current proof, so
+     their dependencies must not be cached under their names. *)
+  let goal_deps = filter_deps (get_deps goal) in
+  let hyps_deps = List.concat (List.map (fun h -> filter_deps (get_deps h)) hyps) in
+  let objs =
+    Hhlib.strset_from_lst
+      (goal_deps @ hyps_deps @ List.concat (List.map choose_def lems))
+  in
+  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) objs) defs
 
 let run_predict fname defs pred_num pred_method =
   let oname = Filename.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in
