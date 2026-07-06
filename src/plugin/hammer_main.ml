@@ -715,7 +715,7 @@ let run_gs_provers hyps deps goal clean seq =
     List.map
       begin fun (pname, enabled, pref, select) _ ->
         if not enabled then
-          exit 1;
+          Unix._exit 1;
         Opt.vampire_enabled := false;
         Opt.eprover_enabled := false;
         Opt.z3_enabled := false;
@@ -732,9 +732,9 @@ let run_gs_provers hyps deps goal clean seq =
         with
         | HammerError(msg) ->
            Msg.error ("Hammer error: " ^ msg);
-           exit 1
+           Unix._exit 1
         | _ ->
-           exit 1
+           Unix._exit 1
       end
       (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _) -> enabled) seq))
   in
@@ -1113,19 +1113,19 @@ let hammer_hook_tac prefix name =
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                      Msg.info msg;
-                                     exit 0
+                                     Unix._exit 0
                                    end
                                    begin fun () ->
                                      let msg = "Failure " ^ name ^ " " ^ str in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                      Msg.info msg;
-                                     exit 1
+                                     Unix._exit 1
                                    end
                                    (fun _ -> ())
                                end
-                               (fun p -> Feedback.msg_notice p; exit 1)
+                               (fun p -> Feedback.msg_notice p; Unix._exit 1)
                            with _ ->
-                             exit 1
+                             Unix._exit 1
                          end
                        else
                          begin
@@ -1160,17 +1160,17 @@ let hammer_hook_tac prefix name =
                                let msg = "Success " ^ name in
                                ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                Msg.info msg;
-                               exit 0))
+                               Unix._exit 0))
                           begin fun _ ->
                             let msg = "Failure " ^ name in
                             ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                             Msg.info msg;
-                            exit 1
+                            Unix._exit 1
                           end
                       end
-                      (fun p -> Feedback.msg_notice p; exit 1)
+                      (fun p -> Feedback.msg_notice p; Unix._exit 1)
                   with _ ->
-                    exit 1
+                    Unix._exit 1
                 else
                   begin
                     ignore (Unix.waitpid [] pid);
