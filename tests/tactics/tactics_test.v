@@ -1771,3 +1771,40 @@ Proof.
 Qed.
 
 End SetoidRewriting.
+
+(* Issue #156 / #141: SProp support in reconstruction. These are ATP-free
+   regressions locking in that sauto handles SProp goals and hypotheses like
+   Prop, and -- crucially -- declines an illegal elimination of a non-empty
+   SProp hypothesis into a non-SProp goal by failing cleanly, without ever
+   raising a kernel anomaly (the #156 symptom). *)
+
+From Stdlib Require Import StrictProp.
+
+Section SPropTests.
+
+Fixpoint s_eq_nat (n m : nat) : SProp :=
+  match n with
+  | O => match m with O => sUnit | _ => sEmpty end
+  | S n' => match m with O => sEmpty | S m' => s_eq_nat n' m' end
+  end.
+
+(* An SProp goal is provable, just like a Prop goal. *)
+Goal sUnit.
+Proof. sauto. Qed.
+
+(* An SProp goal established by induction. *)
+Lemma lem_sprop_refl : forall n, s_eq_nat n n.
+Proof. induction n; sauto. Qed.
+
+(* Eliminating an *empty* SProp hypothesis into a Prop goal is legal in CIC
+   and sauto performs it. *)
+Lemma lem_sprop_empty_elim : forall n, s_eq_nat (S n) 0 -> False.
+Proof. sauto. Qed.
+
+(* Eliminating a *non-empty* SProp hypothesis into a non-SProp (Prop) goal is
+   illegal in CIC. sauto must fail cleanly ("No applicable tactic") -- it must
+   never raise a kernel anomaly (issue #156). *)
+Lemma lem_sprop_illegal_elim : forall n m, s_eq_nat n m -> n = m.
+Proof. Fail sauto. Abort.
+
+End SPropTests.

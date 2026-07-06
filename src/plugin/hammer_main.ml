@@ -34,6 +34,10 @@ let hhterm_of_global glob =
   mk_id (Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob)))
 
 let hhterm_of_sort s = match s with
+  (* SProp is intentionally collapsed to Prop: like Prop it is
+     proof-irrelevant, so in the FOL translation its inhabitants become the
+     opaque $Proof constant and its types become formulas, exactly as for Prop.
+     See issue #141. *)
   | SProp -> mk_id "$Prop"
   | Prop -> mk_id "$Prop"
   | Set  -> mk_id "$Set"
@@ -392,7 +396,7 @@ let check_goal_prop gl =
     EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl))
   in
   match Constr.kind tp with
-  | Sort s -> Sorts.is_prop s
+  | Sort s -> Sorts.is_prop s || Sorts.is_sprop s
   | _ -> false
 
 (***************************************************************************************)
