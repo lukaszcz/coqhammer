@@ -98,7 +98,13 @@ sed -i \
   -e "s|branch=rocq-${ROCQ}|branch=${REL_BRANCH}|g" \
   README.md
 
-git add coq-hammer.opam coq-hammer-tactics.opam README.md
+# Version string displayed by the `Hammer_version` command: drop the
+# "(dev)" placeholder for the released version (mirrors migrate.sh).
+sed -i \
+  -e "s|^let hammer_version_string = \".*\"|let hammer_version_string = \"CoqHammer ${CVER} for Rocq ${ROCQ}\"|" \
+  src/plugin/g_hammer.mlg
+
+git add coq-hammer.opam coq-hammer-tactics.opam README.md src/plugin/g_hammer.mlg
 git commit -q -m "Release CoqHammer ${CVER} for Rocq ${ROCQ}"
 git tag -a "$TAG" -m "CoqHammer ${CVER} for Rocq ${ROCQ}"
 
@@ -107,14 +113,14 @@ info "pushing $REL_BRANCH and $TAG to origin"
 git push -q origin "$REL_BRANCH"
 git push -q origin "refs/tags/$TAG"
 
-notes="$(changes_section "$CVER")"
+notes="$(changes_section "$CVER" "$ROCQ")"
 info "creating GitHub release $TAG"
 if [ -n "$notes" ]; then
   gh release create "$TAG" --repo "$GH_REPO" \
-    --title "CoqHammer ${CVER} for Rocq ${ROCQ}" --notes "$notes"
+    --title "$REL_BRANCH" --notes "$notes"
 else
   gh release create "$TAG" --repo "$GH_REPO" \
-    --title "CoqHammer ${CVER} for Rocq ${ROCQ}" --generate-notes
+    --title "$REL_BRANCH" --generate-notes
 fi
 
 git checkout -q "$DEV_BRANCH"
