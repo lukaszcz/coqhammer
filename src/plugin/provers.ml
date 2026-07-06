@@ -376,7 +376,7 @@ let call_provers_par fname ofname =
   let jobs =
     List.map
       begin fun ((_, pname, _, _) as h) _ ->
-        call_prover h fname (ofname ^ "." ^ pname) (fun () -> exit 1)
+        call_prover h fname (ofname ^ "." ^ pname) (fun () -> Unix._exit 1)
       end
       provers
   in
@@ -427,17 +427,17 @@ let minimize info hyps deps goal =
           if pname <> pname1 then
             begin
               let (pname2, info2) =
-                call_prover h fname (ofname ^ "." ^ pname) (fun () -> exit 1)
+                call_prover h fname (ofname ^ "." ^ pname) (fun () -> Unix._exit 1)
               in
               if List.length info2.deps < List.length info.deps ||
                 List.length info2.defs < List.length info.defs
               then
                 (pname2, info2)
               else
-                exit 1
+                Unix._exit 1
             end
           else
-            exit 1
+            Unix._exit 1
         end
         provers
     in

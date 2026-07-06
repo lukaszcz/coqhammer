@@ -18,10 +18,10 @@ let run_parallel (progress_fn : 'a -> unit) (sec_fn : unit -> unit)
           let ret = f progress_sub_fn in
           output_value oc (Inr ret);
           flush oc;
-          exit 0
+          Unix._exit 0
         with _ ->
-          try output_value oc (Err (Unix.getpid ())); flush oc; exit 0
-          with _ -> exit 0
+          try output_value oc (Err (Unix.getpid ())); flush oc; Unix._exit 0
+          with _ -> Unix._exit 0
       end;
     pid
   in

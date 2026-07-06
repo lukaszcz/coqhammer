@@ -12,7 +12,7 @@ let partac time lst0 cont =
                Unix.sleep time;
                List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) pids
              end;
-           exit 0
+           Unix._exit 0
          end
        else
          let clean () =
@@ -52,8 +52,8 @@ let partac time lst0 cont =
        if pid = 0 then
          begin (* a worker *)
            Proofview.tclOR
-             (Proofview.tclBIND tac (fun _ -> exit 0))
-             (fun _ -> exit 1)
+             (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
+             (fun _ -> Unix._exit 1)
          end
        else
          pom t (pid :: pids)
