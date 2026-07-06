@@ -259,7 +259,7 @@ let run_predict fname defs pred_num pred_method =
     begin
       raise (HammerError ("Dependency prediction failed.\nPrediction command: " ^ cmd ^
                           (if !Opt.debug_mode then
-                             "\nSee '" ^ Opt.error_log_file ^ "' for the error output."
+                             "\nSee '" ^ Opt.error_log_file () ^ "' for the error output."
                            else "")))
     end;
   let ic = open_in oname in

@@ -166,7 +166,7 @@ let invoke_prover prover_name cmd outfile =
       if !Opt.debug_mode then
         begin
           Msg.info ("Return code: " ^ string_of_int ret);
-          Msg.info ("See '" ^ Opt.error_log_file ^ "' for the error output.")
+          Msg.info ("See '" ^ Opt.error_log_file () ^ "' for the error output.")
         end;
       false
     end
@@ -369,6 +369,10 @@ let call_provers fname ofname =
   pom provers
 
 let call_provers_par fname ofname =
+  (* Allocate the debug log in the parent so that the forked workers
+     below all append to the same file. *)
+  if !Opt.debug_mode then
+    ignore (Opt.error_log_file ());
   let jobs =
     List.map
       begin fun ((_, pname, _, _) as h) _ ->
