@@ -32,6 +32,7 @@ type s_opts = {
   s_reducing : bool;
   s_directed_rewriting : bool;
   s_undirected_rewriting : bool;
+  s_setoid_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;

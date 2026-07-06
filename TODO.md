@@ -102,7 +102,7 @@ Problems
    2. forall y, nat(y) -> F (S(y)) = t2'[S(y)/x]
 
    Note that in point 2 the guard nat(y) should be omitted if
-   `opt_closure_guards` is true (this is analogous to omitting type
+   `opt_closure_guards` is false (this is analogous to omitting type
    guards for free variables of lambda-lifted expressions).
 
    This is related to program extraction. See Pierre Letouzey’s

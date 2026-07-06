@@ -49,3 +49,4 @@ setup.log
 .merlin
 *.install
 .agent-files
+_opam/

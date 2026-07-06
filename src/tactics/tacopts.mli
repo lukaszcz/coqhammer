@@ -49,6 +49,7 @@ type sopt_t =
 | SOEagerRewrite of bool
 | SODirectedRewrite of bool
 | SOUndirectedRewrite of bool
+| SOSetoidRewrite of bool
 | SORewrite of bool
 | SOReflect of bool
 | SOReflectRaw of bool
