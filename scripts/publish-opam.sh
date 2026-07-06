@@ -81,7 +81,10 @@ info "sha512 = $SHA512"
 
 # --- Create the two package entries ----------------------------------------
 add_package() {
-  local pkg="$1" dir="released/packages/$pkg" newdir="$dir/$pkg.$VERSTR" template
+  local pkg="$1"
+  local dir="released/packages/$pkg"
+  local newdir="$dir/$pkg.$VERSTR"
+  local template
 
   # Prefer the most recent entry of the same CoqHammer version; otherwise the
   # most recent entry of the package overall.
