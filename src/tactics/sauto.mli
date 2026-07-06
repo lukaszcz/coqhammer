@@ -82,4 +82,5 @@ val add_inversion_hint : inductive -> unit
 val print_actions : s_opts -> unit Proofview.tactic
 
 val unshelve : 'a Proofview.tactic -> unit Proofview.tactic
+val usolve_partial : 'a Proofview.tactic -> unit Proofview.tactic
 val usolve : 'a Proofview.tactic -> unit Proofview.tactic
