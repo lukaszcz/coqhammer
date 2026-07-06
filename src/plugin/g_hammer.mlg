@@ -6,14 +6,15 @@ open Ltac_plugin
 open Stdarg
 open Tacarg
 
-let hammer_version_string = "CoqHammer (dev) for Coq master"
+let hammer_version_string = "CoqHammer (dev) for Rocq 9.1"
 
 open Hammer_main
 
 }
 
 TACTIC EXTEND Hammer_tac
-| [ "hammer" ] -> { hammer_tac () }
+| [ "hammer" ] -> { hammer_tac Prediction }
+| [ "hammer" "[" constr_list(l) "]" ] -> { hammer_tac (Choice l) }
 END
 
 TACTIC EXTEND Predict_tac_1

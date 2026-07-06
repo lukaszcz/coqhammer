@@ -1,5 +1,5 @@
 From Hammer Require Import Hammer.
-Require Import List.
+From Stdlib Require Import List.
 
 Hammer_version.
 Hammer_objects.

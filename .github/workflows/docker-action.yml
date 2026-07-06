@@ -7,7 +7,7 @@ on:
   pull_request:
     branches:
       - '**'
-  workflow_dispatch: {}   # enables the “Run workflow” button
+  workflow_dispatch: {}
 
 jobs:
   build:

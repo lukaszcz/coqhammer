@@ -5,8 +5,8 @@
 (* From Hammer Require Import Hammer. *)
 From Hammer Require Import Tactics.
 
-Require Import Reals.
-Require Import Lra.
+From Stdlib Require Import Reals.
+From Stdlib Require Import Lra.
 
 Local Open Scope Z_scope.
 Local Open Scope R_scope.
@@ -39,7 +39,7 @@ Proof.
           { generalize (archimed (x / y)); sintuition.
             assert (IZR (up (x / y)) - (x / y) + (x / y) <= 1 + (x / y)).
             { qauto use: @Rplus_le_compat_r. }
-            qauto use: Rplus_opp_l, Rplus_assoc, Rplus_0_r unfold: Rdefinitions.Rminus. }
+            scongruence use: Rplus_minus_r, Rplus_minus_swap. }
           assert (IZR (up (x / y)) * y <= (1 + x / y) * y) by sauto.
           assert (IZR (up (x / y)) * y <= y + ((x / y) * y)).
           { qauto use: @Rmult_1_l, @Rmult_plus_distr_r. }
@@ -93,8 +93,8 @@ Proof.
               assert (HH2: forall u, u <> 0 -> (x / u) * u = x).
               { hfcrush use: @Rinv_l_sym, @Rmult_1_r, @Rmult_assoc unfold: Rdiv. }
               (* Unset Hammer CVC4. hammer. *)
-              qauto use: @Ropp_gt_cancel, @atan_right_inv, @Rgt_not_eq unfold: atan, Rdiv. }
-            qauto use: @Ropp_involutive, @Ropp_mult_distr_r_reverse unfold: Rminus. }
+              qauto use: @Rgt_not_eq. }
+            scongruence use: Ropp_mult_distr_r, Ropp_involutive unfold: Rminus. }
           rewrite HH in *; clear HH.
           sauto. }
         lra.

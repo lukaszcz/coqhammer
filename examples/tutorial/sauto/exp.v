@@ -2,9 +2,9 @@
 
 From Hammer Require Import Tactics.
 
-Require Import Program.Equality. (* for "depind" and "depelim" *)
-Require Import Arith.
-Require Import String.
+From Stdlib Require Import Program.Equality. (* for "depind" and "depelim" *)
+From Stdlib Require Import Arith.
+From Stdlib Require Import String.
 
 Inductive type := Nat | Bool | Prod (ty1 ty2 : type).
 

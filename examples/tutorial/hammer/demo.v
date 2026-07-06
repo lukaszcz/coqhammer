@@ -32,7 +32,7 @@ From Hammer Require Import Hammer.
 Hammer_version.
 Hammer_objects.
 
-Require Import Arith.
+From Stdlib Require Import Arith.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
 Proof.
@@ -54,7 +54,7 @@ Proof.
   hauto lq: on use: Nat.pow_succ_r, Nat.le_0_l, Nat.add_1_r.
 Qed.
 
-Require List.
+From Stdlib Require List.
 Import List.ListNotations.
 Open Scope list_scope.
 
@@ -75,12 +75,12 @@ Proof.
   manually. *)
   induction l'.
   - (* hammer. *)
-    scongruence use: List.app_nil_end.
+    scongruence use: List.app_nil_r.
   - (* hammer. *)
-    srun eauto use: List.NoDup_remove_1.
+    srun (eauto) use: List.NoDup_remove_1.
 Qed.
 
-Require Import Sorting.Permutation.
+From Stdlib Require Import Sorting.Permutation.
 
 (*
 Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
@@ -103,11 +103,11 @@ Lemma lem_perm_1 {A} : forall (x y : A) l1 l2 l3,
     Permutation (x :: l1 ++ l3) (y :: x :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  srun eauto use: @lem_perm_0, perm_skip, Permutation_Add,
+  srun (eauto) use: @lem_perm_0, perm_skip, Permutation_Add,
     Permutation_trans, Permutation_sym, perm_swap unfold: app.
   Undo.
   (* Occasionally, some of the returned dependencies are not necessary. *)
-  srun eauto use: @lem_perm_0, Permutation_trans, perm_swap.
+  srun (eauto) use: @lem_perm_0, Permutation_trans, perm_swap.
   (*
   Undo.
   Set Hammer MinimizationThreshold 0.
@@ -128,7 +128,7 @@ Proof.
      automatically minimize the number of dependencies by repeatedly
      running the ATPs with the returned dependencies as long as some
      ATP returns fewer dependencies. *)
-  srun eauto use: Permutation_app_head, Permutation_trans,
+  srun (eauto) use: Permutation_app_head, Permutation_trans,
     Permutation_app_comm, Permutation_cons_app.
 Qed.
 
@@ -137,7 +137,7 @@ Lemma lem_perm_3 : forall (x y : nat) l1 l2 l3,
     Permutation (x :: y :: l1 ++ l3) (y :: l2 ++ l3).
 Proof.
   (* hammer. *)
-  srun eauto use: @lem_perm_1, Permutation_sym.
+  srun (eauto) use: @lem_perm_1, Permutation_sym.
 Qed.
 
 Lemma lem_perm_4 : forall (x y : nat) l1 l2 l3,

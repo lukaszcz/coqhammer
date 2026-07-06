@@ -1,13 +1,13 @@
 From Hammer Require Import Tactics.
 From Hammer Require Import Reflect.
 
-Require List.
+From Stdlib Require List.
 Open Scope list_scope.
 Import List.ListNotations.
-Require Import Arith.
-Require Import Lia.
-Require Import Sorting.Permutation.
-Require Import Program.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Lia.
+From Stdlib Require Import Sorting.Permutation.
+From Stdlib Require Import Program.
 
 Class DecTotalOrder (A : Type) := {
   leb : A -> A -> bool;

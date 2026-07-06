@@ -1,8 +1,8 @@
 From Hammer Require Import Tactics.
 From Hammer Require Import Hammer. (* for `hammer` *)
-Require Import Program.
-Require Import Arith.
-Require Import Lia.
+From Stdlib Require Import Program.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Lia.
 
 (* Is "d" a common divisor of "a" and "b"? *)
 Definition is_cd d a b :=
@@ -18,13 +18,13 @@ Proof.
   intros a b d Hb.
   sintuition.
   - destruct (Nat.eq_dec d 0) as [Hd|Hd].
-    + subst; reflexivity.
+    + scongruence use: Nat.mod_0_r.
     + assert (Hc1: exists c1, b = d * c1).
-      { (* hammer. *) strivial use: Nat.mod_divides. }
+      { (* hammer. *) strivial use: Nat.Div0.mod_divides. }
       assert (Hc2: exists c2, a mod b = d * c2).
-      { (* hammer. *) strivial use: Nat.mod_divides. }
+      { (* hammer. *) strivial use: Nat.Div0.mod_divides. }
       assert (Hc3: exists c3, a = b * c3 + a mod b).
-      { (* hammer. *) srun eauto use: Nat.div_mod. }
+      { (* hammer. *) srun (eauto) use: Nat.div_mod. }
       clear -Hc1 Hc2 Hc3 Hd.
       destruct Hc1 as [c1 H1].
       destruct Hc2 as [c2 H2].
@@ -37,9 +37,9 @@ Proof.
       auto using Nat.mod_mul.
   - enough ((a mod b) mod d' = 0) by auto.
     destruct (Nat.eq_dec d' 0) as [Hd|Hd].
-    + subst; reflexivity.
-    + assert (Hc1: exists c1, b = d' * c1) by hauto use: Nat.mod_divides.
-      assert (Hc2: exists c2, a = d' * c2) by hauto use: Nat.mod_divides.
+    + scongruence use: Nat.mod_0_r.
+    + assert (Hc1: exists c1, b = d' * c1) by hauto use: Nat.Div0.mod_divides.
+      assert (Hc2: exists c2, a = d' * c2) by hauto use: Nat.Div0.mod_divides.
       assert (Hc3: exists c3, a = b * c3 + a mod b).
       { exists (a / b); auto using Nat.div_mod. }
       clear -Hc1 Hc2 Hc3 Hd Hb.
@@ -49,9 +49,9 @@ Proof.
       subst.
       (* hammer. *)
       clear - Hb Hd.
-      (* Coq.Arith.PeanoNat.Nat.mod_mul,
-      Coq.Arith.PeanoNat.Nat.mul_mod_distr_l,
-      Coq.Arith.PeanoNat.Nat.mul_comm *)
+      (* Stdlib.Arith.PeanoNat.Nat.mod_mul,
+      Stdlib.Arith.PeanoNat.Nat.mul_mod_distr_l,
+      Stdlib.Arith.PeanoNat.Nat.mul_comm *)
       rewrite Nat.mul_mod_distr_l; [| lia | lia ].
       rewrite Nat.mul_comm.
       apply Nat.mod_mul; assumption.
@@ -79,7 +79,7 @@ Next Obligation.
 Qed.
 Next Obligation.
   (* hammer. *)
-  srun eauto use: Nat.mod_upper_bound.
+  srun (eauto) use: Nat.mod_upper_bound.
 Qed.
 Next Obligation.
   simpl_sigma.

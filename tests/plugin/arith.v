@@ -1,6 +1,6 @@
 From Hammer Require Import Hammer.
 
-Require Import Arith.
+From Stdlib Require Import Arith.
 
 Hammer_version.
 Hammer_objects.

@@ -4,11 +4,10 @@
 (* From Hammer Require Import Hammer. *)
 From Hammer Require Import Tactics.
 
-Require Import Reals.
-Require Import Arith.
-Require Import Wf_nat.
-Require Import Even.
-Require Import Lia.
+From Stdlib Require Import Reals.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Wf_nat.
+From Stdlib Require Import Lia.
 
 Lemma lem_0 : forall n m, n <> 0 -> m * m = 2 * n * n -> m < 2 * n.
 Proof.
@@ -32,8 +31,7 @@ Proof.
   intros n H m H0.
   destruct (Nat.eq_dec n 0) as [H1|H1]; subst.
   - sauto.
-  - destruct (even_odd_cor n) as [k HH].
-    destruct HH as [H2|H2]; subst.
+  - destruct (Nat.Even_or_Odd n) as [[k H2]|[k H2]]; subst.
     + assert (2 * k * k = m * m) by lia.
       assert (m < 2 * k).
       { qauto use: @Nat.mul_0_r, @lem_0. }
@@ -52,7 +50,7 @@ Proof.
     assert (((INR p / INR q) ^ 2)%R = ((INR p / INR q) * (INR p / INR q))%R).
     { qauto use: @Rsqr_pow2 unfold: Rsqr. }
     assert (((INR p / INR q) * (INR p / INR q))%R = ((INR p * INR p) / (INR q * INR q))%R).
-    { hauto use: @Rsqr_div, @not_0_INR. }
+    { hauto use: @Rsqr_div', @not_0_INR. }
     assert (HH: 2%R = ((INR p * INR p) / (INR q * INR q))%R) by sauto.
     assert (INR q <> 0%R).
     { qauto use: @INR_not_0, @INR_eq. }
