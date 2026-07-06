@@ -1385,5 +1385,19 @@ let unshelve tac =
       Proofview.Unsafe.tclNEWGOALS (List.map Proofview.with_empty_state shelf)
     end
 
-let usolve tac =
+(* [usolve_partial] runs [tac], unshelves any goals it left on the shelf, and
+   tries to discharge them with [dsolve]. [dsolve] is best-effort (it never
+   fails), so this may leave subgoals behind. Used by the simplification
+   tactics (ssimpl, qsimpl, csimpl, sintuition), which are allowed to do so. *)
+let usolve_partial tac =
   unshelve tac <*> dsolve_tac ()
+
+(* [usolve] is like [usolve_partial] but additionally requires (via [tclSOLVE])
+   that no goal remains. This enforces the invariant that the reconstruction
+   tactics (sauto, hauto, qauto, scrush, ...) either solve the goal completely
+   or fail -- they must never leave subgoals behind (issue #183). A subgoal can
+   otherwise escape when the leaf tactic (e.g. [eauto]) "succeeds" by shelving
+   it: the shelved goal is not seen by the search's own [tclSOLVE], so it is
+   unshelved here and must then be discharged. *)
+let usolve tac =
+  Tacticals.tclSOLVE [ usolve_partial tac ]
