@@ -168,7 +168,15 @@ let string_of_sopt_list evd lst =
     ""
 
 let const_of_smart_global r =
-  catch_errors (fun () -> Smartlocate.smart_global_constant r)
+  (* [~head:true] resolves aliases/notations that expand to a (partially)
+     applied constant to the head constant, e.g. [Notation idnat := (@id nat)]
+     followed by [unfold: idnat] (preserving the behavior of the former
+     [get_const_from_qualid]). *)
+  catch_errors
+    (fun () ->
+      match Smartlocate.smart_global ~head:true r with
+      | Names.GlobRef.ConstRef c -> c
+      | _ -> failwith "not a constant")
     (fun _ ->
       raise (HammerTacticError
                ("not a constant: " ^

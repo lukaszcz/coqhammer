@@ -1832,6 +1832,17 @@ Definition myid2 (n : nat) := n.
 Lemma lem_unfold_mixed : forall n, # n = myid2 n.
 Proof. sauto unfold: "#", myid2. Qed.
 
+(* Head aliases: an abbreviation whose RHS is a partially applied constant
+   resolves to the head constant (behavior of the former get_const_from_qualid). *)
+Definition myadd (n m : nat) := n + m.
+Notation add0 := (myadd 0).
+
+Lemma lem_unfold_alias : forall n : nat, add0 n = n.
+Proof. sauto unfold: add0. Qed.
+
+Lemma lem_unfold_alias_bang : forall n : nat, add0 n = n.
+Proof. sauto unfold!: add0. Qed.
+
 (* The "*" and "-" forms are preserved. *)
 Lemma lem_unfold_all : forall n, # n = n.
 Proof. sauto unfold: *. Qed.
