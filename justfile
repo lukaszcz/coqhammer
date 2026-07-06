@@ -14,6 +14,11 @@
 _default:
     @just --list
 
+# Install both packages, then run the quick smoke-test suite.
+check:
+    make install
+    make quicktest
+
 # Bump the CoqHammer version (patch|minor|major) and publish a GitHub release.
 release level:
     ./scripts/make-release.sh {{level}}
