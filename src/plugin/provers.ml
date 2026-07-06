@@ -497,7 +497,6 @@ let detect_eprover () =
   if Sys.command "eprover --version 2>&1 >/dev/null" = 0 then
     begin
       Msg.info "Eprover found";
-      Opt.eprover_enabled := true;
       true
     end
   else
@@ -511,7 +510,6 @@ let detect_vampire () =
   if Sys.command "vampire --version 2>&1 >/dev/null" = 0 then
     begin
       Msg.info "Vampire found";
-      Opt.vampire_enabled := true;
       true
     end
   else
@@ -547,14 +545,12 @@ let detect_z3 () =
     begin
       z3_binary := Z3Tptp;
       Msg.info "Z3 found (z3_tptp)";
-      Opt.z3_enabled := true;
       true
     end
   else if command_succeeds "z3 -h" && z3_supports_tptp Z3 then
     begin
       z3_binary := Z3;
       Msg.info "Z3 found (z3 with TPTP support)";
-      Opt.z3_enabled := true;
       true
     end
   else
@@ -568,7 +564,6 @@ let detect_cvc4 () =
   if Sys.command "cvc4 --version 2>&1 >/dev/null" = 0 then
     begin
       Msg.info "CVC4 found";
-      Opt.cvc4_enabled := true;
       true
     end
   else
