@@ -38,6 +38,34 @@ Proof.
   hauto.
 Qed.
 
+(* srun takes a tactic at level 0, so a simple tactic followed by sauto
+   options need not be parenthesised (a compound tactic still does). *)
+
+Definition srun_p (n : nat) := n = n.
+
+Lemma srun_lem : forall n, srun_p n.
+Proof. unfold srun_p; auto. Qed.
+
+Lemma lem_test_srun_1 : forall n : nat, srun_p n.
+Proof.
+  srun eauto use: srun_lem.
+Qed.
+
+Lemma lem_test_srun_2 : forall n : nat, srun_p n.
+Proof.
+  srun (eauto) use: srun_lem.
+Qed.
+
+Lemma lem_test_srun_3 : forall n : nat, srun_p n.
+Proof.
+  srun eauto unfold: srun_p.
+Qed.
+
+Lemma lem_test_srun_4 : forall n : nat, srun_p n.
+Proof.
+  srun (idtac; eauto) use: srun_lem.
+Qed.
+
 Definition feq (x y z : nat) : Prop := x + y + z = x * y + z.
 
 Lemma lem_sym_feq : (forall x y z, feq x y z) -> forall x y z, x * y + z = x + y + z.
