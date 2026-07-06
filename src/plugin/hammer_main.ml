@@ -140,7 +140,7 @@ let hhproof_of c =
      delegated to worker processes and their opaque tables are not loaded
      here (issue #86). A constant whose body cannot be accessed is treated
      as an axiom. *)
-  begin match Global.body_of_constant Library.indirect_accessor c with
+  begin match Utils.body_of_constant c with
   | Some (b, _, _) -> hhterm_of b
   | None -> mk_id "$Axiom"
   | exception Not_found -> mk_id "$Axiom"
@@ -291,9 +291,9 @@ let ltac_timeout tm tac (args: Tacinterp.Value.t list) =
 let globref_to_econstr r =
   match r with
   | Names.GlobRef.VarRef(v) -> EConstr.mkVar v
-  | Names.GlobRef.ConstRef(c) -> EConstr.mkConst c
-  | Names.GlobRef.IndRef(i) -> EConstr.mkInd i
-  | Names.GlobRef.ConstructRef(cr) -> EConstr.mkConstruct cr
+  | Names.GlobRef.ConstRef(c) -> EConstr.UnsafeMonomorphic.mkConst c
+  | Names.GlobRef.IndRef(i) -> EConstr.UnsafeMonomorphic.mkInd i
+  | Names.GlobRef.ConstructRef(cr) -> EConstr.UnsafeMonomorphic.mkConstruct cr
 
 let globref_to_const r =
   match r with

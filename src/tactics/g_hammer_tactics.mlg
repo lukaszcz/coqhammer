@@ -4,7 +4,7 @@ DECLARE PLUGIN "coq-hammer-tactics.plugin"
 open Ltac_plugin
 open Stdarg
 open Tacarg
-open Pcoq.Prim
+open Procq.Prim
 open Pltac
 open Hammer_lib
 open Hammer_errors

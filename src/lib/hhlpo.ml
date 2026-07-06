@@ -44,7 +44,7 @@ let rec const_gt c1 c2 =
         if Declareops.is_opaque (Global.lookup_constant c1) then
           false
         else
-          match Global.body_of_constant Library.indirect_accessor c1 with
+          match Utils.body_of_constant c1 with
           | Some (b, _, _) ->
              let env = Global.env () in
              let consts =

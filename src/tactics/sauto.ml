@@ -305,7 +305,7 @@ let case_splitting_on_tac opts ind =
        with_reduction opts
          "Tactics.case_splitting_on"
          "Tactics.case_splitting_on_nored")
-    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+    [Tacinterp.Value.of_constr (EConstr.UnsafeMonomorphic.mkInd ind)]
 let case_splitting_concl_on_tac opts ind =
   Utils.ltac_eval
     (if opts.s_dep then
@@ -316,7 +316,7 @@ let case_splitting_concl_on_tac opts ind =
        with_reduction opts
          "Tactics.case_splitting_concl_on"
          "Tactics.case_splitting_concl_on_nored")
-    [Tacinterp.Value.of_constr (EConstr.mkInd ind)]
+    [Tacinterp.Value.of_constr (EConstr.UnsafeMonomorphic.mkInd ind)]
 let forwarding_tac () = Utils.ltac_apply "Tactics.forwarding" []
 let forwarding_nored_tac () = Utils.ltac_apply "Tactics.forwarding_nored" []
 let srewriting_tac () = Utils.ltac_apply "Tactics.srewriting" []
@@ -426,7 +426,7 @@ let get_consts evd lst =
    processing in an IDE (issue #86, #64). Such a constant is treated as
    not unfoldable. *)
 let is_simple_unfold b_aggressive c =
-  match Global.body_of_constant Library.indirect_accessor c with
+  match Utils.body_of_constant c with
   | exception Not_found -> false
   | Some (b, _, _) ->
      begin
@@ -443,7 +443,7 @@ let is_simple_unfold b_aggressive c =
 
 (* -1 if not a case unfold *)
 let case_unfold_cost c =
-  match Global.body_of_constant Library.indirect_accessor c with
+  match Utils.body_of_constant c with
   | exception Not_found -> -1
   | Some (b, _, _) ->
      begin
