@@ -1,7 +1,19 @@
+CoqHammer v. 1.3.3
+==================
+
+Rocq versions compatibility: 9.1.
+
+Overview of changes
+-------------------
+* `hammer [lemma1; ...; lemmaN]` syntax.
+* Fixed translation regression due to changed qualified Rocq names for logical connectives.
+* Fixed `dune` build.
+* Fixed issues #118, #119, #130, #134, #138, #140, #144, #183, #202.
+
 CoqHammer v. 1.3.2
 ==================
 
-Coq versions compatibility: 8.10, 8.11, 8.12, 8.13, 8.14.
+Coq versions compatibility: 8.10-9.1.
 
 Overview of changes
 -------------------
