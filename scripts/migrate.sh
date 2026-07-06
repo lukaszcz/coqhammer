@@ -21,8 +21,6 @@
 #      `just sync` is a no-op on them:
 #        * the two *.opam files: version "<X.Y>.dev" and the Rocq dependency
 #          line `"coq" {>= "<X.Y>" & < "<next>~"}`;
-#        * the `rocq-runtime` -> `coq-core` runtime prefix in the dune / META
-#          build-metadata files;
 #        * the README title line, the CI-badge branch, and the requirement
 #          label + homepage URL;
 #        * the docker image tag in the Docker CI workflow, plus the `rocq-*` /
@@ -136,18 +134,14 @@ export GIT_INDEX_FILE="$IDX"
 git read-tree "$SOURCE"
 
 # The transforms are flavor-agnostic: they map either the `master` flavor
-# (rocq-runtime / "dev" / "Coq master" / rocq-stdlib) or an existing
-# `rocq-<N>` flavor to the target Rocq <X.Y>, so migrate works from any branch.
+# ("dev" / "Coq master" / rocq-stdlib) or an existing `rocq-<N>` flavor to the
+# target Rocq <X.Y>, so migrate works from any branch.
 
 transform_opam() {
   sed -i -E \
     -e "s#^version: \".*\"#version: \"${V}.dev\"#" \
     -e "s#^([[:space:]]*)\"(rocq-stdlib|coq)\"[[:space:]]*\{[^}]*\}#\1\"coq\" {>= \"${V}\" \& < \"${NEXT}~\"}#" \
     "$1"
-}
-
-transform_build_meta() {          # dune / META: runtime library prefix
-  sed -i -E "s#rocq-runtime#coq-core#g" "$1"
 }
 
 transform_readme() {
@@ -197,11 +191,6 @@ stage() {
 info "rewriting version tokens on $NEW_BRANCH:"
 stage coq-hammer.opam                     transform_opam
 stage coq-hammer-tactics.opam             transform_opam
-stage src/lib/dune                        transform_build_meta
-stage src/plugin/dune                     transform_build_meta
-stage src/tactics/dune                    transform_build_meta
-stage src/plugin/META.coq-hammer          transform_build_meta
-stage src/tactics/META.coq-hammer-tactics transform_build_meta
 stage README.md                           transform_readme
 stage .github/workflows/docker-action.yml transform_docker
 stage src/plugin/g_hammer.mlg             transform_mlg
