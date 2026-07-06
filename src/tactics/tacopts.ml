@@ -12,10 +12,10 @@ type sopt_t =
   SONop
 | SOUse of Constrexpr.constr_expr list
 | SOGen of Constrexpr.constr_expr list
-| SOUnfold of Libnames.qualid list
+| SOUnfold of Libnames.qualid Constrexpr.or_by_notation list
 | SOUnfoldAll
 | SOUnfoldNone
-| SOAlwaysUnfold of Libnames.qualid list
+| SOAlwaysUnfold of Libnames.qualid Constrexpr.or_by_notation list
 | SOAlwaysUnfoldAll
 | SOAlwaysUnfoldNone
 | SOInv of Libnames.qualid list
@@ -85,6 +85,15 @@ let string_of_qualid_list lst =
   | [] -> "-"
   | _ -> Hhlib.sfold (fun q -> Pp.string_of_ppcmds (Libnames.pr_qualid q)) ", " lst
 
+let string_of_smart_global_list lst =
+  match lst with
+  | [] -> "-"
+  | _ ->
+     Hhlib.sfold
+       (fun q ->
+          Pp.string_of_ppcmds (Pputils.pr_or_by_notation Libnames.pr_qualid q))
+       ", " lst
+
 let string_of_tactic evd tac =
   Pp.string_of_ppcmds (Pptactic.pr_raw_tactic (Global.env ()) evd tac)
 
@@ -93,10 +102,10 @@ let string_of_sopt evd opt =
   | SONop -> ""
   | SOUse lst -> "use: " ^ Hhlib.sfold (Hhutils.constr_expr_to_string evd) ", " lst
   | SOGen lst -> "gen: " ^ Hhlib.sfold (Hhutils.constr_expr_to_string evd) ", " lst
-  | SOUnfold lst -> "unfold: " ^ string_of_qualid_list lst
+  | SOUnfold lst -> "unfold: " ^ string_of_smart_global_list lst
   | SOUnfoldAll -> "unfold: *"
   | SOUnfoldNone -> "unfold: -"
-  | SOAlwaysUnfold lst -> "unfold!: " ^ string_of_qualid_list lst
+  | SOAlwaysUnfold lst -> "unfold!: " ^ string_of_smart_global_list lst
   | SOAlwaysUnfoldAll -> "unfold!: *"
   | SOAlwaysUnfoldNone -> "unfold!: -"
   | SOInv lst -> "inv: " ^ string_of_qualid_list lst
@@ -158,10 +167,13 @@ let string_of_sopt_list evd lst =
     (List.map (string_of_sopt evd) (List.filter (fun x -> x <> SONop) lst))
     ""
 
-let const_of_qualid q =
-  catch_errors (fun () -> Utils.get_const_from_qualid q)
+let const_of_smart_global r =
+  catch_errors (fun () -> Smartlocate.smart_global_constant r)
     (fun _ ->
-      raise (HammerTacticError ("not a constant: " ^ Libnames.string_of_qualid q)))
+      raise (HammerTacticError
+               ("not a constant: " ^
+                Pp.string_of_ppcmds
+                  (Pputils.pr_or_by_notation Libnames.pr_qualid r))))
 
 let inductive_of_qualid q =
   catch_errors (fun () -> Utils.get_inductive_from_qualid q)
@@ -256,14 +268,14 @@ let interp_opt ret opt opts =
        interp_use gen_constrs ret opts lst env sigma
      end
   | SOUnfold lst ->
-     let lst = List.map const_of_qualid lst in
+     let lst = List.map const_of_smart_global lst in
      ret { opts with s_unfolding = sopt_append opts.s_unfolding lst }
   | SOUnfoldAll ->
      ret { opts with s_unfolding = SAll }
   | SOUnfoldNone ->
      ret { opts with s_unfolding = SNone }
   | SOAlwaysUnfold lst ->
-     let lst = List.map const_of_qualid lst in
+     let lst = List.map const_of_smart_global lst in
      ret { opts with s_always_unfold = sopt_append opts.s_always_unfold lst }
   | SOAlwaysUnfoldAll ->
      ret { opts with s_always_unfold = SAll }
