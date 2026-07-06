@@ -250,6 +250,18 @@ let _ =
   in
   declare_bool_option gdopt
 
+let clear_unused = ref true
+
+let _ =
+  let gdopt=
+    { optdepr=None;
+      optstage = Interp;
+      optkey=["Hammer";"ClearUnused"];
+      optread=(fun () -> !clear_unused);
+      optwrite=(fun b -> clear_unused := b)}
+  in
+  declare_bool_option gdopt
+
 module FilterSet = Set.Make(Names.ModPath)
 
 module HammerFilter = struct
