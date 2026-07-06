@@ -97,22 +97,26 @@ ATTRS
 git config merge.rocqsync.name   "CoqHammer version-token aware merge"
 git config merge.rocqsync.driver "$DRIVER %O %A %B %L %P"
 
-# rerere makes any genuine resolution reusable on the next sync. It has to stay
-# enabled after this script exits (you resolve the conflicts by hand afterwards,
-# and rerere only records a resolution while it is on), so -- unlike the merge
-# driver above -- it is left enabled rather than torn down on exit. Announce it
-# (and how to switch it off) the first time we turn it on, since it then applies
-# to *every* merge in this repository, not just syncs.
+# rerere makes any genuine resolution reusable on the next sync. It must be on
+# *during* the merge to capture the conflict preimages, so enable it now, but
+# remember its previous state: if the merge turns out clean there is nothing to
+# record and we restore rerere to how we found it (see below). Only when real
+# conflicts remain -- which you resolve by hand after this script exits, while
+# rerere records the resolution -- does it need to stay on, and there we tell
+# you it was enabled and how to switch it off.
 RERERE_WAS="$(git config --get rerere.enabled 2>/dev/null || true)"
 git config rerere.enabled true
-if [ "$RERERE_WAS" != "true" ]; then
-  info "enabled git rerere for this repository: a conflict you resolve once is"
-  info "replayed automatically on the next sync (handy for the recurring"
-  info "version-specific conflicts, e.g. stdlib module paths in tests). It stays"
-  info "on and applies to ALL merges here. To turn it back off:"
-  info "    git config --unset rerere.enabled       # cached resolutions kept"
-  info "    git rerere clear                         # also drop what it learned"
-fi
+
+restore_rerere() {
+  # Put rerere.enabled back the way we found it (clean-merge path only).
+  if [ "$RERERE_WAS" = "true" ]; then
+    :                                              # was already on; leave it
+  elif [ -n "$RERERE_WAS" ]; then
+    git config rerere.enabled "$RERERE_WAS"        # restore an explicit value
+  else
+    git config --unset rerere.enabled 2>/dev/null || true   # was unset; unset
+  fi
+}
 
 # ---- do the merge ---------------------------------------------------------
 
@@ -124,6 +128,9 @@ MERGE_RC=$?
 set -e
 
 if [ "$MERGE_RC" -eq 0 ]; then
+  # Clean merge: no conflicts were recorded, so there is no reason to leave
+  # rerere enabled repo-wide -- put it back the way we found it.
+  restore_rerere
   info "merge completed cleanly on '$TARGET'."
   info "review it (git show / git log) and push when satisfied:"
   info "    git push origin $TARGET"
@@ -142,5 +149,9 @@ info "    git add <files> && git commit --no-edit"
 info "or abort with:  git merge --abort   (leaves you on '$TARGET')"
 echo >&2
 info "rerere will remember how you resolve these and reapply it on the next"
-info "sync; see the rerere note above to switch that off."
+info "sync. Because conflicts remain it is left enabled, and (if it was not"
+info "already on) it now applies to ALL merges in this repository. Switch off"
+info "once you no longer want that:"
+info "    git config --unset rerere.enabled       # cached resolutions kept"
+info "    git rerere clear                         # also drop what it learned"
 exit "$MERGE_RC"
