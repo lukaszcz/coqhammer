@@ -1,6 +1,6 @@
 From Hammer Require Import Tactics Reflect.
 
-Require List.
+From Stdlib Require List.
 Open Scope list_scope.
 Import List.ListNotations.
 
@@ -24,7 +24,7 @@ Definition eq_dec {A} {dto : DecTotalOrder A} : forall x y : A, {x = y}+{x <> y}
      not normally try to eliminate composite terms unless they occur
      as discriminees in match expressions *)
   - sdestruct (leb y x).
-    + auto using leb_antisym.
+    + eauto using leb_antisym.
     + (* firstorder. *)
       (* easy. *)
       (* eauto. *)
@@ -43,7 +43,7 @@ Defined.
    computable function which decides whether the equality holds or
    not. *)
 
-Require Import Recdef. (* for Function *)
+From Stdlib Require Import Recdef. (* for Function *)
 
 Function lexb {A} {dto : DecTotalOrder A} (l1 l2 : list A) : bool :=
   match l1 with

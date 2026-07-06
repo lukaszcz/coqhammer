@@ -1618,7 +1618,7 @@ Ltac use_lem_split :=
     hauto
   end.
 
-Obligation Tactic := idtac.
+#[local] Obligation Tactic := idtac.
 
 Program Fixpoint mergesort {A} {dto : DecTotalOrder A} (l : list A)
   {measure (List.length l)} : {l' | Sorted l' /\ Permutation l' l} :=

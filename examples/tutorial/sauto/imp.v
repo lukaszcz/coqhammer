@@ -10,9 +10,9 @@
    compares to the automation available in Isabelle/HOL. *)
 
 From Hammer Require Import Tactics Reflect.
-Require Import String.
-Require Import Arith.
-Require Import Lia.
+From Stdlib Require Import String.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Lia.
 Open Scope string_scope.
 
 Inductive aexpr :=
@@ -52,7 +52,7 @@ Fixpoint bval (s : state) (e : bexpr) :=
   | Bval b => b
   | Bnot e1 => negb (bval s e1)
   | Band e1 e2 => bval s e1 && bval s e2
-  | Bless a1 a2 => aval s a1 <? aval s a2
+  | Bless a1 a2 => (aval s a1 <? aval s a2)%nat
   end.
 
 Inductive cmd :=
@@ -236,7 +236,7 @@ Inductive SmallStep : cmd * state -> cmd * state -> Prop :=
 
 Notation "A --> B" := (SmallStep A B) (at level 80, no associativity).
 
-Require Import Relations.
+From Stdlib Require Import Relations.
 
 Definition SmallStepStar := clos_refl_trans (cmd * state) SmallStep.
 

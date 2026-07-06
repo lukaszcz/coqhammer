@@ -5,7 +5,7 @@ Hammer_objects.
 
 Set Hammer SAutoLimit 0.
 
-Require NArith.Ndec.
+From Stdlib Require NArith.Ndec.
 
 Lemma Nleb_alt :
   forall b a c : BinNums.N, Ndec.Nleb b c = BinNat.N.leb b c /\ Ndec.Nleb a b = BinNat.N.leb a b.
@@ -13,7 +13,7 @@ Proof.
   hammer.
 Qed.
 
-Require NArith.BinNat.
+From Stdlib Require NArith.BinNat.
 
 Lemma setbit_iff : forall m a n : BinNums.N,
                      n = m \/ true = BinNat.N.testbit a m <->
@@ -28,7 +28,7 @@ Proof.
   hammer.
 Qed.
 
-Require Reals.Rminmax.
+From Stdlib Require Reals.Rminmax.
 
 Lemma min_spec_1 : forall n m : Rdefinitions.R,
                    (Rdefinitions.Rle m n /\ Rbasic_fun.Rmin m m = m) \/
@@ -44,7 +44,7 @@ Proof.
   hammer.
 Qed.
 
-Require Reals.Rpower.
+From Stdlib Require Reals.Rpower.
 
 Lemma exp_Ropp
      : forall x y : Rdefinitions.R,

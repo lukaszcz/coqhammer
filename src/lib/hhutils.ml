@@ -27,7 +27,7 @@ let exists_global s =
 let match_globref m g =
   let (p2, id2) = Libnames.repr_path (Nametab.path_of_global g)
   in
-  let l1 = List.rev @@ Names.DirPath.repr (Libnames.dirpath_of_path @@ Nametab.path_of_module m)
+  let l1 = List.rev @@ Names.DirPath.repr (Libnames.dirpath_of_path (Nametab.path_of_module m))
   and l2 = List.rev @@ id2 :: Names.DirPath.repr p2
   in
   let rec pom l1 l2 =
@@ -52,7 +52,7 @@ let get_inductive_from_id id =
   | _ -> failwith "not an inductive type"
 
 let get_inductive_from_qualid q =
-  match Nametab.locate q with
+  match Smartlocate.global_with_alias q with
   | Names.GlobRef.IndRef(i) -> i
   | _ -> failwith "not an inductive type"
 
@@ -67,12 +67,28 @@ let get_const_from_id id =
   | _ -> failwith "not a constant"
 
 let get_const_from_qualid q =
-  match Nametab.locate q with
+  match Smartlocate.global_with_alias q with
   | Names.GlobRef.ConstRef(c) -> c
   | _ -> failwith "not a constant"
 
-let get_ind_name ind =
-  Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr (Names.GlobRef.IndRef ind)))
+let get_global_name gr =
+  Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr gr))
+
+let get_ind_name ind = get_global_name (Names.GlobRef.IndRef ind)
+
+(* Canonical name of a global registered with the Register vernacular
+   (e.g. "core.and.type"). Names obtained this way match those produced by
+   [get_global_name] regardless of how the prelude modules are called
+   (Coq.Init.Logic vs Corelib.Init.Logic). *)
+let lib_ref_name =
+  let cache = Hashtbl.create 16 in
+  fun s ->
+    match Hashtbl.find_opt cache s with
+    | Some name -> name
+    | None ->
+       let name = get_global_name (Coqlib.lib_ref s) in
+       Hashtbl.add cache s name;
+       name
 
 let get_ind_nparams ind =
   let mind = fst (Inductive.lookup_mind_specif (Global.env ()) ind) in
@@ -571,7 +587,7 @@ let is_False evd t =
   let open Constr in
   let open EConstr in
   match kind evd t with
-  | Ind (ind, _) when get_ind_name ind = "Coq.Init.Logic.False" -> true
+  | Ind (ind, _) when get_ind_name ind = lib_ref_name "core.False.type" -> true
   | _ -> false
 
 let rec is_atom evd t =
@@ -581,7 +597,8 @@ let rec is_atom evd t =
   | App (h, _) -> is_atom evd h
   | Ind (ind, _) ->
      let s = get_ind_name ind in
-     s <> "Coq.Init.Logic.and" && s <> "Coq.Init.Logic.or" && s <> "Coq.Init.Logic.ex"
+     s <> lib_ref_name "core.and.type" && s <> lib_ref_name "core.or.type" &&
+       s <> lib_ref_name "core.ex.type"
   | Const _ | Sort _ | Evar _ | Meta _ | Var _ | Rel _ -> true
   | Prod (_, h, f) when is_atom evd h && is_False evd f -> true
   | _ -> false

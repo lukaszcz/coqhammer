@@ -27,7 +27,7 @@ Proof.
   hammer.
 Qed.*)
 
-Require Import Arith.
+From Stdlib Require Import Arith.
 
 (* disable the preliminary sauto tactic *)
 Set Hammer SAutoLimit 0.
@@ -49,7 +49,7 @@ Qed.
 
 Lemma lem_3 : le 2 3.
   hammer. Restart.
-  srun eauto use: Nat.le_succ_diag_r unfold: Init.Nat.two.
+  srun (eauto) use: Nat.le_succ_diag_r unfold: Init.Nat.two.
 Qed.
 
 Lemma lem_4 : le 3 10.
@@ -75,9 +75,9 @@ Proof.
   qauto use: Nat.pow_succ_r, Nat.le_0_l, Nat.add_1_r.
 Qed.
 
-Require Coq.Reals.RIneq.
-Require Coq.Reals.Raxioms.
-Require Coq.Reals.Rtrigo1.
+Require Stdlib.Reals.RIneq.
+Require Stdlib.Reals.Raxioms.
+Require Stdlib.Reals.Rtrigo1.
 
 Lemma cos_decreasing_1 :
   forall y x : Rdefinitions.R,
@@ -92,16 +92,23 @@ Proof.
   hauto using (@Reals.Rtrigo1.cos_decreasing_1, @Reals.RIneq.Rge_le).
 Qed.
 
-Require ZArith.BinInt.
+From Stdlib Require ZArith.BinInt.
+
+(* Vampire finds a proof based on Zmax_spec whose case analysis cannot
+   be reconstructed intuitionistically. If you get an unreconstructible
+   proof, it might help to disable the prover which found it. *)
+Unset Hammer Vampire.
 
 Lemma max_lub : forall m p k n : BinNums.Z,
                   BinInt.Z.ge p m -> BinInt.Z.le n p -> BinInt.Z.le (BinInt.Z.max n m) p.
 Proof.
   hammer. Restart.
-  srun eauto use: BinInt.Z.max_lub, BinInt.Z.ge_le.
+  srun (eauto) use: BinInt.Z.ge_le, BinInt.Z.max_lub.
 Qed.
 
-Require Reals.
+Set Hammer Vampire.
+
+From Stdlib Require Reals.
 
 Lemma lem_iso : forall x1 y1 x2 y2 theta : Rdefinitions.R,
     Rgeom.dist_euc x1 y1 x2 y2 =
@@ -112,7 +119,7 @@ Proof.
   scongruence use: Rgeom.isometric_rotation.
 Qed.
 
-Require Import List.
+From Stdlib Require Import List.
 
 Lemma lem_lst :
   forall {A} (x : A) l1 l2 (P : A -> Prop),
@@ -138,16 +145,16 @@ Proof.
   qauto use: le_S, Nat.le_0_l, le_n unfold: tl, length.
 Qed.
 
-Require NArith.Ndec.
+From Stdlib Require NArith.Ndec.
 
 Lemma Nleb_alt :
   forall b a c : BinNums.N, Ndec.Nleb b c = BinNat.N.leb b c /\ Ndec.Nleb a b = BinNat.N.leb a b.
 Proof.
   hammer. Restart.
-  srun eauto use: Ndec.Nleb_alt.
+  srun (eauto) use: Ndec.Nleb_alt.
 Qed.
 
-Require NArith.BinNat.
+From Stdlib Require NArith.BinNat.
 
 Lemma setbit_iff : forall m a n : BinNums.N,
                      n = m \/ true = BinNat.N.testbit a m <->
@@ -164,7 +171,7 @@ Proof.
   hauto lq: on use: in_int_p_Sq.
 Qed.
 
-Require Reals.Rminmax.
+From Stdlib Require Reals.Rminmax.
 
 Lemma min_spec_1 : forall n m : Rdefinitions.R,
                    (Rdefinitions.Rle m n /\ Rbasic_fun.Rmin m m = m) \/
@@ -189,14 +196,14 @@ Proof.
   strivial use: incl_app.
 Qed.
 
-Require Reals.Rpower.
+From Stdlib Require Reals.Rpower.
 
 Lemma exp_Ropp
      : forall x y : Rdefinitions.R,
        Rdefinitions.Rinv (Rtrigo_def.exp x) = Rtrigo_def.exp (Rdefinitions.Ropp x).
 Proof.
   hammer. Restart.
-  srun eauto use: Rpower.exp_Ropp.
+  srun (eauto) use: Rpower.exp_Ropp.
 Qed.
 
 Lemma lem_lst_1 : forall (A : Type) (l l' : list A), List.NoDup (l ++ l') -> List.NoDup l.
@@ -207,7 +214,7 @@ Proof.
   - hammer. Undo.
     scongruence use: app_nil_end.
   - hammer. Undo.
-    srun eauto use: NoDup_remove_1.
+    srun (eauto) use: NoDup_remove_1.
 Qed.
 
 Lemma NoDup_remove_2
@@ -234,13 +241,13 @@ Qed.
 Lemma leb_1 : forall m n : nat, PeanoNat.Nat.leb m n = true <-> m <= n.
 Proof.
   hammer. Restart.
-  srun eauto use: Nat.leb_le, Nat.leb_nle, leb_correct, leb_complete.
+  srun (eauto) use: Nat.leb_le, Nat.leb_nle, leb_correct, leb_complete.
 Qed.
 
 Lemma leb_2 : forall m n : nat, PeanoNat.Nat.leb m n = false <-> m > n.
 Proof.
   hammer. Restart.
-  srun eauto use: leb_iff_conv, leb_correct_conv unfold: gt.
+  srun (eauto) use: leb_iff_conv, leb_correct_conv unfold: gt.
 Qed.
 
 Lemma incl_appl_1
@@ -260,7 +267,7 @@ Qed.
 Lemma nat_compare_eq : forall n m : nat, PeanoNat.Nat.compare n m = Eq <-> n = m.
 Proof.
   hammer. Restart.
-  srun eauto use: Nat.compare_eq_iff.
+  srun (eauto) use: Nat.compare_eq_iff.
 Qed.
 
 Lemma Forall_1
@@ -283,7 +290,7 @@ Lemma Forall_impl
 Proof.
   induction l.
   - hammer. Undo.
-    srun eauto use: app_nil_end.
+    srun (eauto) use: app_nil_r.
   - hammer. Undo.
     qauto use: Forall_inv, Forall_inv_tail, Forall_1.
 Qed.
@@ -291,5 +298,5 @@ Qed.
 Lemma minus_neq_O : forall n i:nat, (i < n) -> (n - i) <> 0.
 Proof.
   hammer. Undo.
-  srun eauto use: Nat.sub_gt.
+  srun (eauto) use: Nat.sub_gt.
 Qed.

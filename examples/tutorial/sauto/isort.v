@@ -11,12 +11,12 @@ From Hammer Require Import Tactics.
    `make tactics` and `make install-tactics` *)
 (* Documentation is available at: https://github.com/lukaszcz/coqhammer. *)
 
-Require List.
+From Stdlib Require List.
 Import List.ListNotations.
 Open Scope list_scope.
 
-Require Import Arith.
-Require Import Lia.
+From Stdlib Require Import Arith.
+From Stdlib Require Import Lia.
 
 Inductive Sorted : list nat -> Prop :=
 | Sorted_0 : Sorted []
@@ -120,7 +120,7 @@ Qed.
 (* We have proven that the result of "isort" is a sorted list. Now we
    prove that the result is a permutation of the argument. *)
 
-Require Import Sorting.Permutation.
+From Stdlib Require Import Sorting.Permutation.
 
 Lemma lem_insert_perm :
   forall l x, Permutation (insert l x) (x :: l).

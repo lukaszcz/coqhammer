@@ -35,8 +35,8 @@ Proof.
   reasy (PeanoNat.Nat.mul_comm, PeanoNat.Nat.add_comm) Reconstr.Empty.
 Qed.
 
-Require Import PeanoNat.
-Require Import Omega.
+From Stdlib Require Import PeanoNat.
+From Stdlib Require Import Lia.
 
 Inductive Term : Set :=
 | LS : Term
@@ -108,14 +108,14 @@ Lemma vars_abstr :
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.reasy (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.eqb_eq) Reconstr.Empty.
 Qed.
 
 Lemma novar_abstr : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr v t)).
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.eqb_refl, @Coq.Bool.Bool.not_true_iff_false) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.eqb_refl, @Stdlib.Bool.Bool.not_true_iff_false) Reconstr.Empty.
 Qed.
 
 Lemma vars_transl : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl t).
@@ -153,38 +153,38 @@ Qed.
 Lemma abstr_size :
   forall (t : Term) (v : nat), size (abstr v t) <= 3 * size t.
 Proof.
-  intros; induction t; sauto; omega.
+  intros; induction t; sauto; lia.
 Qed.
 
 Lemma lem_pow_3 : (forall x y : nat, 3 ^ x + 3 ^ y + 1 <= 3 ^ (x + y + 1)).
 Proof.
   intros.
   induction x; simpl in *.
-  induction y; simpl in *; omega.
-  omega.
+  induction y; simpl in *; lia.
+  lia.
 Qed.
 
 Lemma transl_size :
   forall (t : Term), size (transl t) <= 3 ^ (size t).
 Proof.
-  induction t; sauto; try omega.
+  induction t; sauto; try lia.
   assert (size (transl t1) + size (transl t2) <= 3 ^ size t1 + 3 ^ size t2).
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_le_mono) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.add_le_mono) Reconstr.Empty.
   assert (size (transl t1) + size (transl t2) + 1 <= 3 ^ size t1 + 3 ^ size t2 + 1).
   auto with zarith.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Coq.Arith.PeanoNat.Nat.lt_succ_r)  Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.le_lt_trans, @lem_pow_3, @Stdlib.Arith.PeanoNat.Nat.lt_succ_r)  Reconstr.Empty.
   assert (size (abstr n (transl t)) <= 3 * size (transl t)).
   pose proof abstr_size; eauto with zarith.
   assert (size (abstr n (transl t)) <= 3 * 3 ^ size t).
-  pose proof le_trans; eauto with zarith.
+  pose proof Nat.le_trans; eauto with zarith.
   assert (forall x : nat, 3 * 3 ^ x = 3 ^ (x + 1)).
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.add_0_r, @Coq.Arith.PeanoNat.Nat.pow_succ_r', @Coq.Arith.PeanoNat.Nat.shiftl_1_l, @Coq.Arith.PeanoNat.Nat.pow_1_r, @Coq.Arith.PeanoNat.Nat.pow_0_r, @Coq.Arith.PeanoNat.Nat.add_succ_r) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.add_0_r, @Stdlib.Arith.PeanoNat.Nat.pow_succ_r', @Stdlib.Arith.PeanoNat.Nat.shiftl_1_l, @Stdlib.Arith.PeanoNat.Nat.pow_1_r, @Stdlib.Arith.PeanoNat.Nat.pow_0_r, @Stdlib.Arith.PeanoNat.Nat.add_succ_r) Reconstr.Empty.
   ycrush.
 Qed.
 
 Lemma abstr_size_lb : forall (t : Term) (v : nat), NoLambdas t -> size (abstr v t) >= 2 * size t.
 Proof.
-  intros; induction t; sauto; omega.
+  intros; induction t; sauto; lia.
 Qed.
 
 Fixpoint long_app (n : nat) : Term :=
@@ -203,14 +203,14 @@ Definition cex_term (n : nat) := long_term n n.
 
 Lemma size_nonneg : forall (t : Term), size t > 0.
 Proof.
-  induction t; simpl; omega.
+  induction t; simpl; lia.
 Qed.
 
 Lemma transl_size_lb : forall (n : nat), size (transl (cex_term n)) >= 2^n.
 Proof.
   assert (forall (n m : nat), size (transl (long_term n m)) >= 2^n).
   induction n; sauto.
-  Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.nlt_ge, @Coq.Arith.Gt.gt_le_S, @Coq.Arith.Compare_dec.not_ge, @size_nonneg) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.nlt_ge, @Stdlib.Arith.Arith_base.gt_le_S_stt, @Stdlib.Arith.Compare_dec.not_ge, @size_nonneg) Reconstr.Empty.
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * size (transl (long_term n m))).
   Reconstr.reasy (@abstr_size_lb, @no_lams_transl) Reconstr.Empty.
   assert (size (abstr (m - S n) (transl (long_term n m))) >= 2 * 2 ^ n).
@@ -230,11 +230,11 @@ Fixpoint occurs (v : nat) (t : Term) : bool :=
 Lemma occurs_spec : forall (v : nat) (t : Term), occurs v t = true <-> HasVar v t.
 Proof.
   pose_hasvar.
-  pose proof Coq.Arith.EqNat.beq_nat_true.
-  pose proof Coq.Arith.EqNat.beq_nat_false.
+  pose proof (fun n m => proj1 (PeanoNat.Nat.eqb_eq n m)).
+  pose proof (fun n m => proj1 (PeanoNat.Nat.eqb_neq n m)).
   induction t; sauto; unfold orb; try yelles 2.
   assert (occurs v t1 = true \/ occurs v t2 = true).
-  Reconstr.reasy (@Coq.Bool.Bool.orb_prop) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Bool.Bool.orb_prop) Reconstr.Empty.
   yelles 1.
 Qed.
 
@@ -272,7 +272,7 @@ Lemma vars_abstr2 :
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.reasy (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
+  Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.eqb_eq) Reconstr.Empty.
 Qed.
 
 Lemma novar_abstr2 : forall (v : nat) (t : Term), NoLambdas t -> ~(HasVar v (abstr2 v t)).
@@ -280,9 +280,9 @@ Proof.
   pose_hasvar.
   pose (u := t).
   induction t; destruct (occurs v u) eqn:?; sauto.
-  - Reconstr.reasy (@Coq.Arith.PeanoNat.Nat.eqb_refl, @Coq.Bool.Bool.not_true_iff_false) Reconstr.Empty.
-  - Reconstr.rsimple (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) (@Coq.Init.Datatypes.orb).
-  - Reconstr.rscrush (@occurs_spec, @Coq.Bool.Bool.not_true_iff_false) (@Coq.Init.Datatypes.orb).
+  - Reconstr.reasy (@Stdlib.Arith.PeanoNat.Nat.eqb_refl, @Stdlib.Bool.Bool.not_true_iff_false) Reconstr.Empty.
+  - Reconstr.rsimple (@occurs_spec, @Stdlib.Bool.Bool.not_true_iff_false) (@Corelib.Init.Datatypes.orb).
+  - Reconstr.rscrush (@occurs_spec, @Stdlib.Bool.Bool.not_true_iff_false) (@Corelib.Init.Datatypes.orb).
 Qed.
 
 Lemma vars_transl2 : forall (t : Term) (n : nat), HasVar n t <-> HasVar n (transl2 t).
@@ -304,7 +304,7 @@ Lemma csubst_novar :
 Proof.
   pose_hasvar.
   induction t; sauto.
-  Reconstr.rsimple (@Coq.Arith.EqNat.beq_nat_true) Reconstr.Empty.
+  Reconstr.rsimple (@Stdlib.Arith.PeanoNat.Nat.eqb_eq) Reconstr.Empty.
 Qed.
 
 Lemma abstr2_correct :
@@ -324,5 +324,5 @@ Qed.
 Lemma abstr2_size_ub :
   forall (t : Term) (v : nat), size (abstr2 v t) <= 3 * size t.
 Proof.
-  intros; induction t; sauto; omega.
+  intros; induction t; sauto; lia.
 Qed.

@@ -28,6 +28,14 @@ let get_hhdef_name ((c, _, _, _, _) : hhdef) : string =
 let hhdef_is_opaque ((_, opaque, _, _, _) : hhdef) : bool =
   opaque
 
+(* A variable (a section variable or a local hypothesis) is not a
+   global object: its name may denote something else in another
+   context. *)
+let hhdef_is_var ((c, _, _, _, _) : hhdef) : bool =
+  match c with
+  | Comb(Id "$Var", Id _) -> true
+  | _ -> false
+
 let rec string_of_hhterm t =
   match t with
   | Id(s) -> s
