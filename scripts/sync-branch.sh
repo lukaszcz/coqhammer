@@ -97,8 +97,22 @@ ATTRS
 git config merge.rocqsync.name   "CoqHammer version-token aware merge"
 git config merge.rocqsync.driver "$DRIVER %O %A %B %L %P"
 
-# rerere makes any genuine resolution reusable on the next sync.
+# rerere makes any genuine resolution reusable on the next sync. It has to stay
+# enabled after this script exits (you resolve the conflicts by hand afterwards,
+# and rerere only records a resolution while it is on), so -- unlike the merge
+# driver above -- it is left enabled rather than torn down on exit. Announce it
+# (and how to switch it off) the first time we turn it on, since it then applies
+# to *every* merge in this repository, not just syncs.
+RERERE_WAS="$(git config --get rerere.enabled 2>/dev/null || true)"
 git config rerere.enabled true
+if [ "$RERERE_WAS" != "true" ]; then
+  info "enabled git rerere for this repository: a conflict you resolve once is"
+  info "replayed automatically on the next sync (handy for the recurring"
+  info "version-specific conflicts, e.g. stdlib module paths in tests). It stays"
+  info "on and applies to ALL merges here. To turn it back off:"
+  info "    git config --unset rerere.enabled       # cached resolutions kept"
+  info "    git rerere clear                         # also drop what it learned"
+fi
 
 # ---- do the merge ---------------------------------------------------------
 
@@ -126,4 +140,7 @@ git diff --name-only --diff-filter=U | sed 's/^/    /' >&2
 echo >&2
 info "    git add <files> && git commit --no-edit"
 info "or abort with:  git merge --abort   (leaves you on '$TARGET')"
+echo >&2
+info "rerere will remember how you resolve these and reapply it on the next"
+info "sync; see the rerere note above to switch that off."
 exit "$MERGE_RC"
