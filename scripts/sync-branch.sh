@@ -80,9 +80,9 @@ fi
 mkdir -p "$(dirname "$INFO_ATTR")"
 cat > "$INFO_ATTR" <<'ATTRS'
 # Temporary: installed by scripts/sync-branch.sh, removed on exit.
-*.opam  merge=rocqsync
-dune    merge=rocqsync
-META.*  merge=rocqsync
+# The driver derives every substitution from OUR side and is a no-op on files
+# with no version tokens (and on binary files), so it is safe for all files.
+* merge=rocqsync
 ATTRS
 
 git config merge.rocqsync.name   "CoqHammer version-token aware merge"
