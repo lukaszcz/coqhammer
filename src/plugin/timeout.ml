@@ -15,8 +15,8 @@ let ptimeout n tac =
   if pid = 0 then
     begin (* the worker *)
       Proofview.tclOR
-        (Proofview.tclBIND tac (fun _ -> exit 0))
-        (fun _ -> exit 1)
+        (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
+        (fun _ -> Unix._exit 1)
     end
   else
     begin
@@ -25,7 +25,7 @@ let ptimeout n tac =
         begin (* the watchdog *)
           Unix.sleep n;
           Unix.kill pid Sys.sigterm;
-          exit 0
+          Unix._exit 0
         end;
       let clean () =
         ignore (try Unix.kill pid2 Sys.sigterm with _ -> ())

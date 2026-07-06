@@ -12,6 +12,17 @@ let to_constr r =
   | Names.GlobRef.IndRef(i) -> EConstr.UnsafeMonomorphic.mkInd i
   | Names.GlobRef.ConstructRef(cr) -> EConstr.UnsafeMonomorphic.mkConstruct cr
 
+(* Access the (possibly opaque) body of a constant. [Library.indirect_accessor]
+   is deprecated (Rocq 8.20) in favour of coqpp's "opaque_access" state
+   specifier, but that specifier is only available in VERNAC EXTEND bodies --
+   there is no non-deprecated way to obtain an opaque accessor from tactic code
+   (e.g. sauto). We therefore keep using it through this single wrapper.
+   May raise [Not_found] when the opaque proof body is not accessible in the
+   current process (issue #86). *)
+let body_of_constant c =
+  Global.body_of_constant Library.indirect_accessor c
+  [@@alert "-deprecated"]
+
 let get_global_from_id id =
   Nametab.locate (Libnames.qualid_of_ident id)
 
@@ -91,7 +102,7 @@ let lib_ref_name =
     match Hashtbl.find_opt cache s with
     | Some name -> name
     | None ->
-       let name = get_global_name (Coqlib.lib_ref s) in
+       let name = get_global_name (Rocqlib.lib_ref s) in
        Hashtbl.add cache s name;
        name
 

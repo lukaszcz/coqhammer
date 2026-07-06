@@ -4,6 +4,12 @@ open Ltac_plugin
 val intern_constr : Environ.env -> Evd.evar_map -> Constrexpr.constr_expr ->
                     Evd.evar_map * EConstr.t
 
+(* Body of a constant together with its universe context; [None] if the
+   constant has no body. May raise [Not_found] when an opaque body is not
+   accessible in the current process (issue #86). *)
+val body_of_constant : Constant.t ->
+  (Constr.constr * unit Opaqueproof.delayed_universes * UVars.AbstractContext.t) option
+
 val exists_global : string -> bool
 
 val match_globref : ModPath.t -> GlobRef.t -> bool

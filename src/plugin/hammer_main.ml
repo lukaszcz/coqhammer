@@ -34,6 +34,10 @@ let hhterm_of_global glob =
   mk_id (Libnames.string_of_path (Nametab.path_of_global (Globnames.canonical_gr glob)))
 
 let hhterm_of_sort s = match s with
+  (* SProp is intentionally collapsed to Prop: like Prop it is
+     proof-irrelevant, so in the FOL translation its inhabitants become the
+     opaque $Proof constant and its types become formulas, exactly as for Prop.
+     See issue #141. *)
   | SProp -> mk_id "$Prop"
   | Prop -> mk_id "$Prop"
   | Set  -> mk_id "$Set"
@@ -130,9 +134,16 @@ let get_type_of env evmap t =
 
 (* only for constants *)
 let hhproof_of c =
-  begin match Global.body_of_constant Library.indirect_accessor c with
+  (* [body_of_constant] may raise [Not_found] when the opaque proof body
+     is not accessible in the current process. This happens with parallel
+     proof processing in an IDE (e.g. CoqIDE), where opaque proofs are
+     delegated to worker processes and their opaque tables are not loaded
+     here (issue #86). A constant whose body cannot be accessed is treated
+     as an axiom. *)
+  begin match Utils.body_of_constant c with
   | Some (b, _, _) -> hhterm_of b
   | None -> mk_id "$Axiom"
+  | exception Not_found -> mk_id "$Axiom"
   end
 
 let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
@@ -385,7 +396,7 @@ let check_goal_prop gl =
     EConstr.to_constr evmap (Retyping.get_type_of env evmap (Proofview.Goal.concl gl))
   in
   match Constr.kind tp with
-  | Sort s -> Sorts.is_prop s
+  | Sort s -> Sorts.is_prop s || Sorts.is_sprop s
   | _ -> false
 
 (***************************************************************************************)
@@ -708,7 +719,7 @@ let run_gs_provers hyps deps goal clean seq =
     List.map
       begin fun (pname, enabled, pref, select) _ ->
         if not enabled then
-          exit 1;
+          Unix._exit 1;
         Opt.vampire_enabled := false;
         Opt.eprover_enabled := false;
         Opt.z3_enabled := false;
@@ -725,9 +736,9 @@ let run_gs_provers hyps deps goal clean seq =
         with
         | HammerError(msg) ->
            Msg.error ("Hammer error: " ^ msg);
-           exit 1
+           Unix._exit 1
         | _ ->
-           exit 1
+           Unix._exit 1
       end
       (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _) -> enabled) seq))
   in
@@ -1106,19 +1117,19 @@ let hammer_hook_tac prefix name =
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                      Msg.info msg;
-                                     exit 0
+                                     Unix._exit 0
                                    end
                                    begin fun () ->
                                      let msg = "Failure " ^ name ^ " " ^ str in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                      Msg.info msg;
-                                     exit 1
+                                     Unix._exit 1
                                    end
                                    (fun _ -> ())
                                end
-                               (fun p -> Feedback.msg_notice p; exit 1)
+                               (fun p -> Feedback.msg_notice p; Unix._exit 1)
                            with _ ->
-                             exit 1
+                             Unix._exit 1
                          end
                        else
                          begin
@@ -1153,17 +1164,17 @@ let hammer_hook_tac prefix name =
                                let msg = "Success " ^ name in
                                ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                                Msg.info msg;
-                               exit 0))
+                               Unix._exit 0))
                           begin fun _ ->
                             let msg = "Failure " ^ name in
                             ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));
                             Msg.info msg;
-                            exit 1
+                            Unix._exit 1
                           end
                       end
-                      (fun p -> Feedback.msg_notice p; exit 1)
+                      (fun p -> Feedback.msg_notice p; Unix._exit 1)
                   with _ ->
-                    exit 1
+                    Unix._exit 1
                 else
                   begin
                     ignore (Unix.waitpid [] pid);
