@@ -370,14 +370,6 @@ let memoize_ind = IndMemo.memoize
 
 let opt b tac = if b then tac else Tacticals.tclIDTAC
 
-let autorewrite b_all bases =
-  if bases = [] then
-    Proofview.tclUNIT ()
-  else
-    Autorewrite.auto_multi_rewrite
-      bases
-      { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
-
 let subst_simpl opts =
   opt opts.s_simpl_sigma (simpl_sigma_tac ()) <*>
     if opts.s_eager_reducing && opts.s_reducing then
@@ -729,33 +721,26 @@ let setoid_rewrite_in base clause =
        clause)
 
 let setoid_autorewrite b_all bases =
-  if bases = [] then
-    Proofview.tclUNIT ()
-  else
-    let in_concl =
-      List.fold_right (fun base tac -> setoid_rewrite_in base None <*> tac)
-        bases (Proofview.tclUNIT ())
-    in
-    let in_hyps =
-      if b_all then
-        Proofview.Goal.enter begin fun gl ->
-          List.fold_right
-            (fun (id, _) tac ->
-              List.fold_right (fun base t -> setoid_rewrite_in base (Some id) <*> t)
-                bases tac)
-            (Utils.get_hyps gl)
-            (Proofview.tclUNIT ())
-        end
-      else
-        Proofview.tclUNIT ()
-    in
-    in_concl <*> in_hyps
+  let seq_bases clause =
+    Tacticals.tclMAP (fun base -> setoid_rewrite_in base clause) bases
+  in
+  seq_bases None <*>
+    if b_all then
+      Proofview.Goal.enter begin fun gl ->
+        Tacticals.tclMAP (fun (id, _) -> seq_bases (Some id)) (Utils.get_hyps gl)
+      end
+    else
+      Proofview.tclUNIT ()
 
 let autorewriting b_all opts =
-  if opts.s_setoid_rewriting then
-    setoid_autorewrite b_all opts.s_rew_bases
+  let bases = opts.s_rew_bases in
+  if bases = [] then
+    Proofview.tclUNIT ()
+  else if opts.s_setoid_rewriting then
+    setoid_autorewrite b_all bases
   else
-    autorewrite b_all opts.s_rew_bases
+    Autorewrite.auto_multi_rewrite bases
+      { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let rec simple_splitting opts =
   if opts.s_simple_splits = SNone then
