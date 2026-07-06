@@ -1,0 +1,11 @@
+# coq_makefile's default findlib_remove delegates to `ocamlfind remove`.
+# That is not robust when switching from a dune/opam install to this Makefile:
+# dune can leave subdirectories such as plugin/ in the package directory, and
+# ocamlfind refuses to remove those directories.
+#
+# The install rule immediately reinstalls the same package, so make removal
+# idempotent by deleting the whole package directory in the selected destdir.
+findlib_remove = \
+  $(HIDE)if [ -n "$(METAFILE)" ] && [ -n "$(FINDLIBPACKAGE)" ]; then \
+    rm -rf "$(COQPLUGININSTALL)/$(FINDLIBPACKAGE)"; \
+  fi

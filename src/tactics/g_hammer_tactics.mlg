@@ -79,6 +79,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "erew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerRewrite b :: sopts }
 | [ "drew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SODirectedRewrite b :: sopts }
 | [ "urew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOUndirectedRewrite b :: sopts }
+| [ "setoid_rew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSetoidRewrite b :: sopts }
 | [ "rew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
 | [ "brefl" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
 | [ "b" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
