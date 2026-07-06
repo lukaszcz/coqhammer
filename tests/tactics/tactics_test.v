@@ -4,31 +4,38 @@ From Hammer Require Import Tactics.
 (* Basic tests *)
 
 Lemma lem_test_1 : (forall x y, x + y = y + x -> False) -> forall x, x > x.
+Proof.
   ssimpl.
 Qed.
 
 Lemma lem_test_1_1 : (forall x, x >= x /\ x < x + x) -> forall x, x >= x /\ x < x + x.
+Proof.
   strivial.
 Qed.
 
 Lemma lem_test_2 : (forall x, x > x) -> (forall x, x + x > x) -> exists x, x > x \/ x + x > x.
+Proof.
   strivial.
 Qed.
 
 Lemma lem_test_3 : (forall x, x > x) -> (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
+Proof.
   strivial.
 Qed.
 
 Lemma lem_test_4 : (forall x, x + x > x) -> { x & { x > x } + { x + x > x } }.
+Proof.
   hauto.
 Qed.
 
 Lemma lem_test_5 : (forall P : nat -> Prop, P 0 -> (forall x, P x -> P (S x)) -> P 60).
+Proof.
   hauto.
 Qed.
 
 Lemma lem_test_6 : (forall P : nat -> Prop, P 0 -> P (S 0) ->
                                             (forall x, P x -> P (S x) -> P (S (S x))) -> P 20).
+Proof.
   sblast.
 Qed.
 
@@ -137,10 +144,12 @@ Proof.
 Qed.
 
 Lemma lem_odd : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
+Proof.
   hauto use: @Stdlib.Arith.PeanoNat.Nat.Odd_succ, @Stdlib.Arith.PeanoNat.Nat.Even_or_Odd, @Stdlib.Arith.PeanoNat.Nat.add_1_r.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
+Proof.
   hauto using (@Stdlib.Arith.PeanoNat.Nat.Even_succ, @Stdlib.Arith.PeanoNat.Nat.add_1_r, @Stdlib.Arith.PeanoNat.Nat.Even_or_Odd).
 Qed.
 
@@ -150,6 +159,7 @@ Proof.
 Qed.
 
 Lemma lem_pow : forall n : nat, 3 * 3 ^ n = 3 ^ (n + 1).
+Proof.
   hauto using (Stdlib.Arith.PeanoNat.Nat.pow_succ_r, Stdlib.Arith.PeanoNat.Nat.add_1_r, Stdlib.Arith.PeanoNat.Nat.le_0_l).
 Qed.
 
@@ -307,6 +317,7 @@ Inductive R_add : nat -> nat -> nat -> Prop :=
 | R_add_0 : forall m, R_add 0 m m
 | R_add_S : forall p m k, R_add p m k -> R_add (S p) m (S k).
 
+Create HintDb R_add_db.
 Global Hint Constructors R_add : R_add_db.
 
 Lemma lem_minus : exists x, R_add x 2 20.
@@ -498,6 +509,8 @@ Lemma no_lams_transl : forall t : Term, NoLambdas (transl t).
 Proof.
   induction t; sauto using no_lams_abstr.
 Qed.
+
+Scheme All for or.
 
 Inductive HasVar : nat -> Term -> Prop :=
 | hs_var : forall n : nat, HasVar n (LVar n)
@@ -834,12 +847,12 @@ Notation "'If' A 'Then' B 'Else' C" := (If A B C) (at level 65).
 Notation "'While' A 'Do' B" := (While A B) (at level 65).
 
 Definition update (s : state) x v y :=
-  if string_dec x y then v else s y.
+  match string_dec x y with left _ => v | right _ => s y end.
 
 Definition state_subst (s : state) (x : string) (a : aexpr) : state :=
   (update s x (aval s a)).
 
-Notation "s [[ x := a ]]" := (state_subst s x a) (at level 5).
+Notation "s [[ x := a ]]" := (state_subst s x a) (at level 1).
 
 (* Big-step operational semantics *)
 
@@ -1348,6 +1361,7 @@ Proof.
   depind e1; sauto dep: on.
 Qed.
 
+Create Rewrite HintDb simp_db.
 Global Hint Rewrite lem_plus : simp_db.
 
 Definition simp_equal (e1 e2 : expr Nat) :=
@@ -1461,6 +1475,7 @@ Proof.
 Defined.
 
 Definition eq_dec {A} {dto : DecTotalOrder A} : forall x y : A, {x = y}+{x <> y}.
+Proof.
   intros x y.
   sdestruct (leb x y).
   - sdestruct (leb y x).
@@ -1478,10 +1493,10 @@ Function lexb {A} {dto : DecTotalOrder A} (l1 l2 : list A) : bool :=
     match l2 with
     | [] => false
     | y :: l2' =>
-      if eq_dec x y then
-        lexb l1' l2'
-      else
-        leb x y
+      match eq_dec x y with
+      | left _ => lexb l1' l2'
+      | right _ => leb x y
+      end
     end
   end.
 
@@ -1538,6 +1553,7 @@ Proof.
   induction 1; sauto.
 Qed.
 
+Create HintDb lelst.
 Global Hint Resolve lem_lelst_trans lem_lelst_perm_rev lem_lelst_app : lelst.
 
 Lemma lem_sorted_concat_1 {A} {dto : DecTotalOrder A} :
@@ -1565,7 +1581,7 @@ Global Hint Resolve lem_lelst_nil lem_lelst_cons : lelst.
 
 (* Regression: inv:/ctrs: must accept a notation (abbreviation) for an
    inductive type, including one that expands to a partial application. *)
-Notation ForallNat := (@List.Forall nat).
+Abbreviation ForallNat := (@List.Forall nat).
 
 Lemma lem_forall_abbrev (P : nat -> Prop) :
   forall l x, ForallNat P (x :: l) -> ForallNat P l /\ P x.
@@ -1592,10 +1608,10 @@ Program Fixpoint merge {A} {dto : DecTotalOrder A}
     match l2 with
     | [] => l1
     | h2 :: t2 =>
-      if leb_total_dec h1 h2 then
-        h1 :: merge t1 l2
-      else
-        h2 :: merge l1 t2
+      match leb_total_dec h1 h2 with
+      | left _ => h1 :: merge t1 l2
+      | right _ => h2 :: merge l1 t2
+      end
     end
   end.
 Next Obligation.
@@ -1759,6 +1775,7 @@ Section SetoidRewriting.
 
 Parameter A B : Prop.
 Parameter ab : A <-> B.
+Create Rewrite HintDb ab_db.
 Hint Rewrite ab : ab_db.
 
 Lemma lem_setoid_rew_concl : (forall x : nat, A) -> B.
@@ -1816,7 +1833,7 @@ End SPropTests.
 Section UnfoldNotationTests.
 
 Definition myid (n : nat) := n.
-Notation "# x" := (myid x) (at level 0).
+Notation "# x" := (myid x) (at level 1, x at level 0).
 
 Lemma lem_unfold_notation : forall n, # n = n.
 Proof. sauto unfold: "#". Qed.
@@ -1836,7 +1853,7 @@ Proof. sauto unfold: "#", myid2. Qed.
 (* Head aliases: an abbreviation whose RHS is a partially applied constant
    resolves to the head constant (behavior of the former get_const_from_qualid). *)
 Definition myadd (n m : nat) := n + m.
-Notation add0 := (myadd 0).
+Abbreviation add0 := (myadd 0).
 
 Lemma lem_unfold_alias : forall n : nat, add0 n = n.
 Proof. sauto unfold: add0. Qed.
