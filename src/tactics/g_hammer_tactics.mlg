@@ -212,7 +212,7 @@ END
 
 TACTIC EXTEND Hammer_ssimpl
 | [ "ssimpl" sauto_opts(l) ] -> {
-  try_usolve (default_s_opts ()) l ssimpl "ssimpl failed"
+  try_usolve_partial (default_s_opts ()) l ssimpl "ssimpl failed"
 }
 END
 
@@ -221,19 +221,19 @@ TACTIC EXTEND Hammer_csimpl
   let opts =
     { (default_s_opts ()) with s_forwarding = false }
   in
-  try_usolve opts l ssimpl "csimpl failed"
+  try_usolve_partial opts l ssimpl "csimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_qsimpl
 | [ "qsimpl" sauto_opts(l) ] -> {
-  try_usolve (default_s_opts ()) l qsimpl "qsimpl failed"
+  try_usolve_partial (default_s_opts ()) l qsimpl "qsimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_sintuition
 | [ "sintuition" sauto_opts(l) ] -> {
-  try_usolve (default_s_opts ()) l sintuition "sintuition failed"
+  try_usolve_partial (default_s_opts ()) l sintuition "sintuition failed"
 }
 END
 

@@ -1660,3 +1660,22 @@ Next Obligation.
 Defined.
 
 End MergeSort.
+
+(* Issue #183: the reconstruction tactics must either solve the goal
+   completely or fail -- they should never leave subgoals behind, even
+   when a leaf tactic "succeeds" by shelving an unprovable goal. *)
+
+Lemma lem_issue_183_1 : (forall P : Prop, P) /\ True.
+Proof.
+  Fail srun ltac:(split; [ shelve | exact I ]).
+  Fail qauto.
+  Fail hauto.
+  Fail sauto.
+  Fail scrush.
+Abort.
+
+Lemma lem_issue_183_2 : 1 = 1 /\ 2 = 2.
+Proof.
+  (* a genuinely solvable goal is still solved *)
+  qauto.
+Qed.
