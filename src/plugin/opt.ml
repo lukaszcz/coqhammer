@@ -192,6 +192,20 @@ let _ =
   in
   declare_bool_option gdopt
 
+(* File the stderr of external commands (the predictor and the ATPs) is
+   appended to when debugging is on. *)
+let error_log_file =
+  Filename.concat (Filename.get_temp_dir_name ()) "coqhammer_error.log"
+
+(* Shell redirection for the stderr of external commands: in debug mode
+   the error output is kept in `error_log_file` so that configuration
+   problems can be diagnosed; otherwise it is discarded. *)
+let stderr_redirect () =
+  if !debug_mode then
+    "2>> " ^ Filename.quote error_log_file
+  else
+    "2>/dev/null"
+
 let _ =
   let gdopt=
     { optdepr=None;
