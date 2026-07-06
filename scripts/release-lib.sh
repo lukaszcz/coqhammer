@@ -96,15 +96,26 @@ next_rocq() {
   echo "${maj}.$((min + 1))"
 }
 
-# changes_section <cver>
-# Prints the CHANGES.md section for the given version (empty if absent).
-# CHANGES.md is read only to source the GitHub release notes -- never to
-# determine the version (that comes from the GitHub releases; see
-# current_cver).
+# changes_section <cver> <rocq>
+# Prints the GitHub release notes for the given version: a plain
+# "CoqHammer v. <CVER> for Rocq <ROCQ>" line followed by the bullet list
+# from the "Overview of changes" subsection of that version's CHANGES.md
+# entry (empty if the entry is absent). CHANGES.md is read only to source
+# the release notes -- never to determine the version (that comes from the
+# GitHub releases; see current_cver).
 changes_section() {
-  awk -v v="$1" '
-    $0 ~ "^CoqHammer v\\. " v "([^0-9]|$)" { grab = 1; print; next }
-    grab && /^CoqHammer v\. / { exit }
-    grab { print }
-  ' "$REPO_ROOT/CHANGES.md"
+  local cver="$1" rocq="$2" body
+  body="$(awk -v v="$cver" '
+    $0 ~ "^CoqHammer v\\. " v "([^0-9]|$)" { insec = 1; next }
+    insec && /^CoqHammer v\. / { exit }
+    insec && !grab && /^Overview of changes/ { getline; grab = 1; next }
+    grab {
+      if ($0 ~ /^(-{3,}|={3,})$/) { have = 0; exit }   # underline of the next heading
+      if (have) print buf
+      buf = $0; have = 1
+    }
+    END { if (have && buf !~ /^[[:space:]]*$/) print buf }
+  ' "$REPO_ROOT/CHANGES.md")"
+  [ -n "$body" ] || return 0
+  printf 'CoqHammer v. %s for Rocq %s\n\n%s\n' "$cver" "$rocq" "$body"
 }
