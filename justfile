@@ -28,3 +28,11 @@ release-rocq *args:
 # Add opam packages for a published release to the opam-coq-archive fork.
 publish-opam version:
     ./scripts/publish-opam.sh {{version}}
+
+# Merge <source> into the CURRENT branch, automatically absorbing the trivial
+# per-branch version-token differences in the *.opam / dune / META.* files.
+# Run it on the branch you are merging INTO; any real conflicts are left in
+# progress on it for you to resolve and commit. E.g. on `master` (which tracks
+# unstable Rocq): `just sync rocq-9.1`.
+sync source:
+    ./scripts/sync-branch.sh {{source}}
