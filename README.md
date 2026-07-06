@@ -2,7 +2,7 @@ CoqHammer (dev) for Rocq master (use other branches for other versions of Coq)
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
-[docker-action-shield]: https://github.com/lukaszcz/coqhammer/workflows/Docker%20CI/badge.svg?branch=master
+[docker-action-shield]: https://github.com/lukaszcz/coqhammer/actions/workflows/docker-action.yml/badge.svg?branch=master
 [docker-action-link]: https://github.com/lukaszcz/coqhammer/actions?query=workflow:"Docker%20CI"
 
 CoqHammer video tutorial:

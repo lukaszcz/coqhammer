@@ -7,16 +7,24 @@ open Tacopts
 
 module Utils = Hhutils
 
-let try_usolve (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
+let try_usolve_with (finish : unit Proofview.tactic -> unit Proofview.tactic)
+      (opts : s_opts) (lst : sopt_t list) (ret : s_opts -> unit Proofview.tactic)
       (msg : string) : unit Proofview.tactic =
   try_tactic begin fun () ->
-    usolve @@
+    finish @@
       interp_opts opts lst
         begin fun opts ->
           Proofview.tclORELSE (ret opts)
             (fun _ -> Tacticals.tclZEROMSG (Pp.str msg))
         end
   end
+
+(* For the reconstruction tactics, which must either solve the goal or fail. *)
+let try_usolve = try_usolve_with usolve
+
+(* For the simplification tactics (ssimpl, qsimpl, csimpl, sintuition), which
+   are allowed to leave subgoals behind. *)
+let try_usolve_partial = try_usolve_with usolve_partial
 
 let with_delayed_uconstr ist c tac =
   let flags = Pretyping.default_inference_flags false in

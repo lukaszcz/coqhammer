@@ -32,6 +32,7 @@ type s_opts = {
   s_reducing : bool;
   s_directed_rewriting : bool;
   s_undirected_rewriting : bool;
+  s_setoid_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;
@@ -81,4 +82,5 @@ val add_inversion_hint : inductive -> unit
 val print_actions : s_opts -> unit Proofview.tactic
 
 val unshelve : 'a Proofview.tactic -> unit Proofview.tactic
+val usolve_partial : 'a Proofview.tactic -> unit Proofview.tactic
 val usolve : 'a Proofview.tactic -> unit Proofview.tactic

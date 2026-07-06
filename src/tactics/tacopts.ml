@@ -54,6 +54,7 @@ type sopt_t =
 | SOEagerRewrite of bool
 | SODirectedRewrite of bool
 | SOUndirectedRewrite of bool
+| SOSetoidRewrite of bool
 | SORewrite of bool
 | SOReflect of bool
 | SOReflectRaw of bool
@@ -134,6 +135,7 @@ let string_of_sopt evd opt =
   | SOEagerRewrite b -> "erew: " ^ string_of_bopt b
   | SODirectedRewrite b -> "drew: " ^ string_of_bopt b
   | SOUndirectedRewrite b -> "urew: " ^ string_of_bopt b
+  | SOSetoidRewrite b -> "setoid_rew: " ^ string_of_bopt b
   | SORewrite b -> "rew: " ^ string_of_bopt b
   | SOReflect b -> "brefl: " ^ string_of_bopt b
   | SOReflectRaw b -> "brefl!:" ^ string_of_bopt b
@@ -359,6 +361,8 @@ let interp_opt ret opt opts =
      ret { opts with s_directed_rewriting = b }
   | SOUndirectedRewrite b ->
      ret { opts with s_undirected_rewriting = b }
+  | SOSetoidRewrite b ->
+     ret { opts with s_setoid_rewriting = b }
   | SORewrite b ->
      ret (set_rew_opts b opts)
   | SOReflect b ->

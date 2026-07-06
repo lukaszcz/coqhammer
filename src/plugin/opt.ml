@@ -192,6 +192,30 @@ let _ =
   in
   declare_bool_option gdopt
 
+let error_log_file_ref = ref None
+
+(* Path of the log file collecting the stderr of external commands (the
+   predictor and the ATPs) in debug mode. A fresh, user-owned temporary
+   file with safe permissions is created on first use, so the
+   redirection cannot be diverted to a pre-existing attacker-controlled
+   path in the shared temp directory. *)
+let error_log_file () =
+  match !error_log_file_ref with
+  | Some f -> f
+  | None ->
+     let f = Filename.temp_file "coqhammer_error" ".log" in
+     error_log_file_ref := Some f;
+     f
+
+(* Shell redirection for the stderr of external commands: in debug mode
+   the error output is kept in the error log file so that configuration
+   problems can be diagnosed; otherwise it is discarded. *)
+let stderr_redirect () =
+  if !debug_mode then
+    "2>> " ^ Filename.quote (error_log_file ())
+  else
+    "2>/dev/null"
+
 let _ =
   let gdopt=
     { optdepr=None;
@@ -247,6 +271,18 @@ let _ =
       optkey=["Hammer";"Blacklist"];
       optread=(fun () -> !search_blacklist);
       optwrite=(fun b -> search_blacklist := b)}
+  in
+  declare_bool_option gdopt
+
+let clear_unused = ref true
+
+let _ =
+  let gdopt=
+    { optdepr=None;
+      optstage = Interp;
+      optkey=["Hammer";"ClearUnused"];
+      optread=(fun () -> !clear_unused);
+      optwrite=(fun b -> clear_unused := b)}
   in
   declare_bool_option gdopt
 

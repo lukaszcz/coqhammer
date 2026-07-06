@@ -79,6 +79,7 @@ ARGUMENT EXTEND sauto_opts
 | [ "erew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOEagerRewrite b :: sopts }
 | [ "drew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SODirectedRewrite b :: sopts }
 | [ "urew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOUndirectedRewrite b :: sopts }
+| [ "setoid_rew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOSetoidRewrite b :: sopts }
 | [ "rew" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SORewrite b :: sopts }
 | [ "brefl" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
 | [ "b" ":" sauto_bopt(b) sauto_opts(sopts) ] -> { SOReflect b :: sopts }
@@ -157,7 +158,7 @@ TACTIC EXTEND Hammer_sunfolding
 END
 
 TACTIC EXTEND Hammer_srun
-| [ "srun" tactic4(tac) sauto_opts(l) ] -> {
+| [ "srun" tactic0(tac) sauto_opts(l) ] -> {
   try_usolve (default_s_opts ()) l
     (fun opts -> sinit opts <*>
                    Tacticals.tclSOLVE [ Tacinterp.tactic_of_value ist tac ])
@@ -212,7 +213,7 @@ END
 
 TACTIC EXTEND Hammer_ssimpl
 | [ "ssimpl" sauto_opts(l) ] -> {
-  try_usolve (default_s_opts ()) l ssimpl "ssimpl failed"
+  try_usolve_partial (default_s_opts ()) l ssimpl "ssimpl failed"
 }
 END
 
@@ -221,19 +222,19 @@ TACTIC EXTEND Hammer_csimpl
   let opts =
     { (default_s_opts ()) with s_forwarding = false }
   in
-  try_usolve opts l ssimpl "csimpl failed"
+  try_usolve_partial opts l ssimpl "csimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_qsimpl
 | [ "qsimpl" sauto_opts(l) ] -> {
-  try_usolve (default_s_opts ()) l qsimpl "qsimpl failed"
+  try_usolve_partial (default_s_opts ()) l qsimpl "qsimpl failed"
 }
 END
 
 TACTIC EXTEND Hammer_sintuition
 | [ "sintuition" sauto_opts(l) ] -> {
-  try_usolve (default_s_opts ()) l sintuition "sintuition failed"
+  try_usolve_partial (default_s_opts ()) l sintuition "sintuition failed"
 }
 END
 

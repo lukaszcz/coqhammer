@@ -39,6 +39,34 @@ Proof.
   hauto.
 Qed.
 
+(* srun takes a tactic at level 0, so a simple tactic followed by sauto
+   options need not be parenthesised (a compound tactic still does). *)
+
+Definition srun_p (n : nat) := n = n.
+
+Lemma srun_lem : forall n, srun_p n.
+Proof. unfold srun_p; auto. Qed.
+
+Lemma lem_test_srun_1 : forall n : nat, srun_p n.
+Proof.
+  srun eauto use: srun_lem.
+Qed.
+
+Lemma lem_test_srun_2 : forall n : nat, srun_p n.
+Proof.
+  srun (eauto) use: srun_lem.
+Qed.
+
+Lemma lem_test_srun_3 : forall n : nat, srun_p n.
+Proof.
+  srun eauto unfold: srun_p.
+Qed.
+
+Lemma lem_test_srun_4 : forall n : nat, srun_p n.
+Proof.
+  srun (idtac; eauto) use: srun_lem.
+Qed.
+
 Definition feq (x y z : nat) : Prop := x + y + z = x * y + z.
 
 Lemma lem_sym_feq : (forall x y z, feq x y z) -> forall x y z, x * y + z = x + y + z.
@@ -1495,13 +1523,13 @@ Qed.
 Lemma lem_lelst_sorted {A} {dto : DecTotalOrder A} :
   forall l x, Sorted (x :: l) <-> LeLst x l /\ Sorted l.
 Proof.
-  induction l; sauto l: on use: lem_lelst_trans inv: Sorted, Forall ctrs: Sorted.
+  induction l; sauto l: on use: lem_lelst_trans inv: Sorted, List.Forall ctrs: Sorted.
 Qed.
 
 Lemma lem_lelst_perm_rev {A} {dto : DecTotalOrder A} :
   forall l1 l2, Permutation l1 l2 -> forall x, LeLst x l2 -> LeLst x l1.
 Proof.
-  induction 1; sauto inv: Forall ctrs: Forall.
+  induction 1; sauto inv: List.Forall ctrs: List.Forall.
 Qed.
 
 Lemma lem_lelst_app {A} {dto : DecTotalOrder A} :
@@ -1534,6 +1562,16 @@ Proof.
 Qed.
 
 Global Hint Resolve lem_lelst_nil lem_lelst_cons : lelst.
+
+(* Regression: inv:/ctrs: must accept a notation (abbreviation) for an
+   inductive type, including one that expands to a partial application. *)
+Notation ForallNat := (@List.Forall nat).
+
+Lemma lem_forall_abbrev (P : nat -> Prop) :
+  forall l x, ForallNat P (x :: l) -> ForallNat P l /\ P x.
+Proof.
+  sauto inv: ForallNat ctrs: ForallNat.
+Qed.
 
 Lemma lem_sorted_concat_2 {A} {dto : DecTotalOrder A} :
   forall (l l1 l2 : list A) x y,
@@ -1661,3 +1699,76 @@ Next Obligation.
 Defined.
 
 End MergeSort.
+
+(* Regression test for issue #134: on older Rocq versions sauto raised
+   Anomaly "Unable to handle arbitrary u+k <= v constraints." on goals
+   mentioning a section variable of a class with a let-field, when the
+   definition and the lemma live in different sections. *)
+
+Class ExternSem := {
+  extern_state : Type;
+  AbsMet := extern_state -> extern_state -> Prop
+}.
+
+Section EXT.
+  Context {target : ExternSem}.
+  (* Logic.and / Logic.True are qualified because [and] is shadowed by a
+     boolean definition earlier in this test file. *)
+  Definition EXT (a : list (extern_state -> Prop)) (es : extern_state) : Prop :=
+    fold_right Logic.and Logic.True (map (fun (ep : extern_state -> Prop) => (ep es)) a).
+End EXT.
+
+Section ExtExtract.
+  Context {target : ExternSem}.
+  Fixpoint remove_nth {A} (n : nat) (al : list A) {struct n} : list A :=
+    match n, al with
+    | O, a :: al => al
+    | S n', a :: al' => a :: remove_nth n' al'
+    | _, nil => nil
+    end.
+
+  Lemma lem_issue_134 : forall n es, EXT (remove_nth n nil) es.
+  Proof.
+    sauto.
+  Qed.
+End ExtExtract.
+
+(* Issue #183: the reconstruction tactics must either solve the goal
+   completely or fail -- they should never leave subgoals behind, even
+   when a leaf tactic "succeeds" by shelving an unprovable goal. *)
+
+Lemma lem_issue_183_1 : (forall P : Prop, P) /\ True.
+Proof.
+  Fail srun (split; [ shelve | exact I ]).
+  Fail qauto.
+  Fail hauto.
+  Fail sauto.
+  Fail scrush.
+Abort.
+
+Lemma lem_issue_183_2 : 1 = 1 /\ 2 = 2.
+Proof.
+  (* a genuinely solvable goal is still solved *)
+  qauto.
+Qed.
+
+(* Setoid rewriting (setoid_rew:on) rewrites under binders and to the left
+   of arrows, which ordinary autorewrite (rew:db) cannot do. Issue #119. *)
+
+Section SetoidRewriting.
+
+Parameter A B : Prop.
+Parameter ab : A <-> B.
+Hint Rewrite ab : ab_db.
+
+Lemma lem_setoid_rew_concl : (forall x : nat, A) -> B.
+Proof.
+  sauto db: ab_db setoid_rew: on.
+Qed.
+
+Lemma lem_setoid_rew_hyp : (forall x : nat, B) -> (forall y : nat, A).
+Proof.
+  sauto db: ab_db setoid_rew: on.
+Qed.
+
+End SetoidRewriting.

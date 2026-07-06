@@ -68,3 +68,7 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 - Follow the existing indentation and formatting style.
 - Remove dead code instead of commenting it out.
 - Keep commits focused; avoid unrelated or behavior-neutral changes unless the commit is explicitly a refactor.
+
+## Instructions
+
+- When finished, verify with `make quicktest`
