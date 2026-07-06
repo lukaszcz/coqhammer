@@ -1,8 +1,8 @@
-CoqHammer (dev) for Rocq 9.1 (use other branches for other versions of Rocq)
+CoqHammer 1.3.3 for Rocq 9.1
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
-[docker-action-shield]: https://github.com/lukaszcz/coqhammer/actions/workflows/docker-action.yml/badge.svg?branch=rocq-9.1
+[docker-action-shield]: https://github.com/lukaszcz/coqhammer/actions/workflows/docker-action.yml/badge.svg?branch=v1.3.3-rocq9.1
 [docker-action-link]: https://github.com/lukaszcz/coqhammer/actions?query=workflow:"Docker%20CI"
 
 CoqHammer video tutorial:
