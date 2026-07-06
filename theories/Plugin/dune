@@ -1,4 +1,4 @@
-(coq.theory
+(rocq.theory
  (name Hammer.Plugin)
  (package coq-hammer)
  (synopsis "CoqHammer Coq plugin")

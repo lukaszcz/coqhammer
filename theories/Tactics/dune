@@ -1,4 +1,4 @@
-(coq.theory
+(rocq.theory
  (name Hammer.Tactics)
  (package coq-hammer-tactics)
  (synopsis "CoqHammer Coq tactics")

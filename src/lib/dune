@@ -4,5 +4,5 @@
  (synopsis "CoqHammer library")
  (libraries rocq-runtime.plugins.ltac))
 
-(coq.pp
+(rocq.pp
  (modules g_hammer_lib))

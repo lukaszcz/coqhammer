@@ -9,5 +9,5 @@
   coq-hammer-tactics.plugin
   ))
 
-(coq.pp
+(rocq.pp
  (modules g_hammer))

@@ -1,3 +1,3 @@
-(lang dune 3.8)
+(lang dune 3.21)
 
-(using coq 0.8)
+(using rocq 0.11)
