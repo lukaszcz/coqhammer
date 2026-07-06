@@ -8,6 +8,7 @@ Overview of changes
 * `hammer [lemma1; ...; lemmaN]` syntax.
 * Fixed translation regression due to changed qualified Rocq names for logical connectives.
 * Fixed `dune` build.
+* Fixed deprecation warnings.
 * Fixed issues #118, #119, #130, #134, #138, #140, #144, #183, #202.
 
 CoqHammer v. 1.3.2
