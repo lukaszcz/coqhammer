@@ -269,6 +269,7 @@ let run_predict fname defs pred_num pred_method =
         else
           ""
       in
+      Sys.remove oname;
       raise (HammerError ("Dependency prediction failed." ^ hint ^
                             "\nPrediction command: " ^ cmd ^
                             (if !Opt.debug_mode then
