@@ -4,5 +4,5 @@
  (synopsis "CoqHammer tactics")
  (libraries rocq-runtime.plugins.ltac coq-hammer-tactics.lib))
 
-(coq.pp
+(rocq.pp
  (modules g_hammer_tactics))
