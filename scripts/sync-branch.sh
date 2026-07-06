@@ -57,8 +57,12 @@ TARGET="$(current_branch)"
 
 require_clean_worktree
 
-GIT_DIR="$(git rev-parse --git-dir)"
-INFO_ATTR="$GIT_DIR/info/attributes"
+# Use the COMMON git dir, not `--git-dir`: in a linked worktree the latter is
+# the per-worktree gitdir (.git/worktrees/<name>), but git reads info/attributes
+# only from the shared .git, so a driver mapping written to the per-worktree dir
+# would be silently ignored and the merge would fall back to the default driver.
+GIT_COMMON_DIR="$(cd "$(git rev-parse --git-common-dir)" && pwd)"
+INFO_ATTR="$GIT_COMMON_DIR/info/attributes"
 DRIVER="$SCRIPT_DIR/sync-merge-driver.sh"
 [ -x "$DRIVER" ] || die "merge driver not executable: $DRIVER"
 
