@@ -37,6 +37,11 @@ require_clean_worktree() {
     || die "working tree is dirty; commit or stash first"
 }
 
+# Locate the companion merge driver next to THIS script, not via the repo root:
+# `just sync` may run on a branch that has not yet received the scripts/ tooling
+# (e.g. the first sync onto master), where $REPO_ROOT/scripts/ would be empty.
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
 
@@ -54,7 +59,7 @@ require_clean_worktree
 
 GIT_DIR="$(git rev-parse --git-dir)"
 INFO_ATTR="$GIT_DIR/info/attributes"
-DRIVER="$REPO_ROOT/scripts/sync-merge-driver.sh"
+DRIVER="$SCRIPT_DIR/sync-merge-driver.sh"
 [ -x "$DRIVER" ] || die "merge driver not executable: $DRIVER"
 
 # ---- set up the local, temporary merge driver -----------------------------
