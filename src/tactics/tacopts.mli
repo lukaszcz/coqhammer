@@ -7,10 +7,10 @@ type sopt_t =
   SONop
 | SOUse of Constrexpr.constr_expr list
 | SOGen of Constrexpr.constr_expr list
-| SOUnfold of Libnames.qualid list
+| SOUnfold of Libnames.qualid Constrexpr.or_by_notation list
 | SOUnfoldAll
 | SOUnfoldNone
-| SOAlwaysUnfold of Libnames.qualid list
+| SOAlwaysUnfold of Libnames.qualid Constrexpr.or_by_notation list
 | SOAlwaysUnfoldAll
 | SOAlwaysUnfoldNone
 | SOInv of Libnames.qualid list

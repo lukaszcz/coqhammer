@@ -1772,3 +1772,83 @@ Proof.
 Qed.
 
 End SetoidRewriting.
+
+(* Issue #156 / #141: SProp support in reconstruction. These are ATP-free
+   regressions locking in that sauto handles SProp goals and hypotheses like
+   Prop, and -- crucially -- declines an illegal elimination of a non-empty
+   SProp hypothesis into a non-SProp goal by failing cleanly, without ever
+   raising a kernel anomaly (the #156 symptom). *)
+
+From Stdlib Require Import StrictProp.
+
+Section SPropTests.
+
+Fixpoint s_eq_nat (n m : nat) : SProp :=
+  match n with
+  | O => match m with O => sUnit | _ => sEmpty end
+  | S n' => match m with O => sEmpty | S m' => s_eq_nat n' m' end
+  end.
+
+(* An SProp goal is provable, just like a Prop goal. *)
+Goal sUnit.
+Proof. sauto. Qed.
+
+(* An SProp goal established by induction. *)
+Lemma lem_sprop_refl : forall n, s_eq_nat n n.
+Proof. induction n; sauto. Qed.
+
+(* Eliminating an *empty* SProp hypothesis into a Prop goal is legal in CIC
+   and sauto performs it. *)
+Lemma lem_sprop_empty_elim : forall n, s_eq_nat (S n) 0 -> False.
+Proof. sauto. Qed.
+
+(* Eliminating a *non-empty* SProp hypothesis into a non-SProp (Prop) goal is
+   illegal in CIC. sauto must fail cleanly ("No applicable tactic") -- it must
+   never raise a kernel anomaly (issue #156). *)
+Lemma lem_sprop_illegal_elim : forall n m, s_eq_nat n m -> n = m.
+Proof. Fail sauto. Abort.
+
+End SPropTests.
+
+(* Issue #141: the "unfold", "unfold!" and "unfolding" options accept
+   notations (as with the standard "unfold" tactic), not only references. *)
+
+Section UnfoldNotationTests.
+
+Definition myid (n : nat) := n.
+Notation "# x" := (myid x) (at level 0).
+
+Lemma lem_unfold_notation : forall n, # n = n.
+Proof. sauto unfold: "#". Qed.
+
+Lemma lem_unfold_notation_bang : forall n, # n = n.
+Proof. sauto unfold!: "#". Qed.
+
+Lemma lem_unfolding_notation : forall n, # n = n.
+Proof. sauto unfolding "#". Qed.
+
+(* Plain references still work, including in a list mixed with notations. *)
+Definition myid2 (n : nat) := n.
+
+Lemma lem_unfold_mixed : forall n, # n = myid2 n.
+Proof. sauto unfold: "#", myid2. Qed.
+
+(* Head aliases: an abbreviation whose RHS is a partially applied constant
+   resolves to the head constant (behavior of the former get_const_from_qualid). *)
+Definition myadd (n m : nat) := n + m.
+Notation add0 := (myadd 0).
+
+Lemma lem_unfold_alias : forall n : nat, add0 n = n.
+Proof. sauto unfold: add0. Qed.
+
+Lemma lem_unfold_alias_bang : forall n : nat, add0 n = n.
+Proof. sauto unfold!: add0. Qed.
+
+(* The "*" and "-" forms are preserved. *)
+Lemma lem_unfold_all : forall n, # n = n.
+Proof. sauto unfold: *. Qed.
+
+Lemma lem_unfold_none : forall (n : nat), n = n.
+Proof. sauto unfold: -. Qed.
+
+End UnfoldNotationTests.

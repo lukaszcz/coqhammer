@@ -9,7 +9,8 @@ Overview of changes
 * Fixed translation regression due to changed qualified Rocq names for logical connectives.
 * Fixed `dune` build.
 * Fixed deprecation warnings.
-* Fixed issues #118, #119, #130, #134, #138, #140, #144, #183, #202.
+* The `unfold`, `unfold!` and `unfolding` options accept notations (e.g. `unfold: "#"`).
+* Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2
 ==================

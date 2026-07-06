@@ -71,4 +71,4 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 
 ## Instructions
 
-- When finished, verify with `make quicktest`
+- When finished, verify with `just check`
