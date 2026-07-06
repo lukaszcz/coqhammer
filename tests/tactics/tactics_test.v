@@ -1808,3 +1808,46 @@ Lemma lem_sprop_illegal_elim : forall n m, s_eq_nat n m -> n = m.
 Proof. Fail sauto. Abort.
 
 End SPropTests.
+
+(* Issue #141: the "unfold", "unfold!" and "unfolding" options accept
+   notations (as with the standard "unfold" tactic), not only references. *)
+
+Section UnfoldNotationTests.
+
+Definition myid (n : nat) := n.
+Notation "# x" := (myid x) (at level 0).
+
+Lemma lem_unfold_notation : forall n, # n = n.
+Proof. sauto unfold: "#". Qed.
+
+Lemma lem_unfold_notation_bang : forall n, # n = n.
+Proof. sauto unfold!: "#". Qed.
+
+Lemma lem_unfolding_notation : forall n, # n = n.
+Proof. sauto unfolding "#". Qed.
+
+(* Plain references still work, including in a list mixed with notations. *)
+Definition myid2 (n : nat) := n.
+
+Lemma lem_unfold_mixed : forall n, # n = myid2 n.
+Proof. sauto unfold: "#", myid2. Qed.
+
+(* Head aliases: an abbreviation whose RHS is a partially applied constant
+   resolves to the head constant (behavior of the former get_const_from_qualid). *)
+Definition myadd (n m : nat) := n + m.
+Notation add0 := (myadd 0).
+
+Lemma lem_unfold_alias : forall n : nat, add0 n = n.
+Proof. sauto unfold: add0. Qed.
+
+Lemma lem_unfold_alias_bang : forall n : nat, add0 n = n.
+Proof. sauto unfold!: add0. Qed.
+
+(* The "*" and "-" forms are preserved. *)
+Lemma lem_unfold_all : forall n, # n = n.
+Proof. sauto unfold: *. Qed.
+
+Lemma lem_unfold_none : forall (n : nat), n = n.
+Proof. sauto unfold: -. Qed.
+
+End UnfoldNotationTests.
