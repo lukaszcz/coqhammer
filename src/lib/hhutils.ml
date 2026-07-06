@@ -55,7 +55,10 @@ let get_inductive_from_id id =
   | _ -> failwith "not an inductive type"
 
 let get_inductive_from_qualid q =
-  match Smartlocate.global_with_alias q with
+  (* [~head:true] resolves abbreviations that expand to a (partially) applied
+     inductive, e.g. [Notation Forall := Forall] or [Notation P := (@Q nat)],
+     to the head inductive. *)
+  match Smartlocate.global_with_alias ~head:true q with
   | Names.GlobRef.IndRef(i) -> i
   | _ -> failwith "not an inductive type"
 
@@ -70,7 +73,9 @@ let get_const_from_id id =
   | _ -> failwith "not a constant"
 
 let get_const_from_qualid q =
-  match Smartlocate.global_with_alias q with
+  (* [~head:true] resolves abbreviations that expand to a (partially) applied
+     constant to the head constant (e.g. for [unfold:]). *)
+  match Smartlocate.global_with_alias ~head:true q with
   | Names.GlobRef.ConstRef(c) -> c
   | _ -> failwith "not a constant"
 
