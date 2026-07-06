@@ -41,6 +41,7 @@ type s_opts = {
   s_reducing : bool;
   s_directed_rewriting : bool;
   s_undirected_rewriting : bool;
+  s_setoid_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;
@@ -79,6 +80,7 @@ let default_s_opts () = {
   s_reducing = true;
   s_directed_rewriting = true;
   s_undirected_rewriting = true;
+  s_setoid_rewriting = false;
   s_aggressive_unfolding = false;
   s_sapply = true;
   s_depth_cost_model = false;
@@ -367,14 +369,6 @@ let memoize_ind = IndMemo.memoize
 (*****************************************************************************************)
 
 let opt b tac = if b then tac else Tacticals.tclIDTAC
-
-let autorewrite b_all bases =
-  if bases = [] then
-    Proofview.tclUNIT ()
-  else
-    Autorewrite.auto_multi_rewrite
-      bases
-      { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let subst_simpl opts =
   opt opts.s_simpl_sigma (simpl_sigma_tac ()) <*>
@@ -717,7 +711,36 @@ let rec do_when p f forbidden_ids =
 
 let do_when p f = do_when p f []
 
-let autorewriting b_all opts = autorewrite b_all opts.s_rew_bases
+(* Setoid-based rewriting (via [rewrite_strat]) is able to rewrite under
+   binders and to the left of arrows, unlike ordinary [autorewrite]. It is
+   more expensive, hence enabled only through the [setoid_rew] option. *)
+let setoid_rewrite_in base clause =
+  Tacticals.tclTRY
+    (Rewrite.cl_rewrite_clause_strat
+       (Rewrite.Strategies.topdown (Rewrite.Strategies.hints base))
+       clause)
+
+let setoid_autorewrite b_all bases =
+  let seq_bases clause =
+    Tacticals.tclMAP (fun base -> setoid_rewrite_in base clause) bases
+  in
+  seq_bases None <*>
+    if b_all then
+      Proofview.Goal.enter begin fun gl ->
+        Tacticals.tclMAP (fun (id, _) -> seq_bases (Some id)) (Utils.get_hyps gl)
+      end
+    else
+      Proofview.tclUNIT ()
+
+let autorewriting b_all opts =
+  let bases = opts.s_rew_bases in
+  if bases = [] then
+    Proofview.tclUNIT ()
+  else if opts.s_setoid_rewriting then
+    setoid_autorewrite b_all bases
+  else
+    Autorewrite.auto_multi_rewrite bases
+      { onhyps = if b_all then None else Some []; concl_occs = AllOccurrences }
 
 let rec simple_splitting opts =
   if opts.s_simple_splits = SNone then
