@@ -328,12 +328,55 @@ let get_tac_args env sigma info =
     List.filter (fun r -> match r with Names.GlobRef.ConstRef(_) -> true | _ -> false)
   in
   let (vars, deps) = (filter_vars deps, filter_nonvars deps) in
+  let used_ids =
+    List.map (function Names.GlobRef.VarRef(v) -> v | _ -> assert false) vars
+  in
   let (deps, defs, inverts) =
     (List.map globref_to_econstr deps,
      List.map globref_to_const (filter_consts defs),
      List.map globref_to_inductive inverts)
   in
-  (deps, defs, inverts)
+  (deps, defs, inverts, used_ids)
+
+(* Backward dependency closure: extend `s` with all the hypotheses that
+   the hypotheses in `s` depend on (through their types and bodies). *)
+let rec close_deps env sigma s =
+  let s' =
+    Id.Set.fold
+      begin fun id acc ->
+        match EConstr.lookup_named id env with
+        | decl -> Id.Set.union acc (Termops.global_vars_set_of_decl env sigma decl)
+        | exception Not_found -> acc
+      end
+      s s
+  in
+  if Id.Set.equal s s' then s else close_deps env sigma s'
+
+(* The local hypotheses not needed by the ATP proof: neither used as
+   premises (`used_ids`) nor depended upon by a used premise or by the
+   goal. Clearing them before reconstruction considerably speeds up
+   proof search (issue #118). Section variables are never cleared. *)
+let hyps_to_clear env sigma gl used_ids =
+  if not !Opt.clear_unused then
+    []
+  else
+    let seed =
+      List.fold_right Id.Set.add used_ids
+        (Termops.global_vars_set env sigma (Proofview.Goal.concl gl))
+    in
+    let keep = close_deps env sigma seed in
+    let section_ids =
+      List.fold_right
+        (fun d -> Id.Set.add (Named.Declaration.get_id d))
+        (Environ.named_context (Global.env ())) Id.Set.empty
+    in
+    List.filter_map
+      begin fun decl ->
+        let id = Named.Declaration.get_id decl in
+        if Id.Set.mem id keep || Id.Set.mem id section_ids then None
+        else Some id
+      end
+      (List.rev (Proofview.Goal.hyps gl))
 
 let check_goal_prop gl =
   let env = Proofview.Goal.env gl in
@@ -347,7 +390,7 @@ let check_goal_prop gl =
 
 (***************************************************************************************)
 
-let run_tactics deps defs inverts msg_success msg_fail msg_batch =
+let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
   let mkopts opts =
     let opts =
       if defs <> [] then { opts with s_unfolding = SSome defs } else opts
@@ -355,7 +398,8 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     if inverts <> [] then { opts with s_inversions = SSome inverts } else opts
   in
   let use_deps =
-    Generalize.generalize deps <*>
+    (if clear_ids = [] then Tacticals.tclIDTAC else Tactics.clear clear_ids) <*>
+      Generalize.generalize deps <*>
       Tacticals.tclDO (List.length deps) (Tactics.intro_move None Logic.MoveFirst)
   in
   let rhauto =
@@ -553,7 +597,7 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
               Utils.ltac_apply "Reconstr.qrrexhaustive1" [])
   in
   let pretactics =
-    [ (reauto, "srun eauto"); (rcongruence, "scongruence");
+    [ (reauto, "srun (eauto)"); (rcongruence, "scongruence");
       (rtrivial, "strivial"); (rfirstorder, "sfirstorder") ]
   in
   let tactics = [
@@ -598,18 +642,18 @@ let run_tactics deps defs inverts msg_success msg_fail msg_batch =
     catch_errors
       begin fun () ->
         tactics @
-          [ [ (rreasy (), "srun Reconstr.rreasy");
-              (rrsimple (), "srun Reconstr.rrsimple");
-              (rrcrush (), "srun Reconstr.rrcrush");
-              (rryelles4 (), "srun Reconstr.rryelles4") ];
-            [ (rrblast (), "srun Reconstr.rrblast");
-              (rrscrush (), "srun Reconstr.rrscrush");
-              (rryreconstr (), "srun Reconstr.rryreconstr");
-              (rrhreconstr4 (), "srun Reconstr.rrhreconstr4") ];
-            [ (rryelles6 (), "srun Reconstr.rryelles6");
-              (rrhreconstr6 (), "srun Reconstr.rrhreconstr6");
-              (rrhrauto4 (), "srun Reconstr.rrhrauto4");
-              (rrexhaustive1 (), "srun Reconstr.rrexhaustive1") ] ]
+          [ [ (rreasy (), "srun (Reconstr.rreasy)");
+              (rrsimple (), "srun (Reconstr.rrsimple)");
+              (rrcrush (), "srun (Reconstr.rrcrush)");
+              (rryelles4 (), "srun (Reconstr.rryelles4)") ];
+            [ (rrblast (), "srun (Reconstr.rrblast)");
+              (rrscrush (), "srun (Reconstr.rrscrush)");
+              (rryreconstr (), "srun (Reconstr.rryreconstr)");
+              (rrhreconstr4 (), "srun (Reconstr.rrhreconstr4)") ];
+            [ (rryelles6 (), "srun (Reconstr.rryelles6)");
+              (rrhreconstr6 (), "srun (Reconstr.rrhreconstr6)");
+              (rrhrauto4 (), "srun (Reconstr.rrhrauto4)");
+              (rrexhaustive1 (), "srun (Reconstr.rrexhaustive1)") ] ]
       end
       (fun _ -> tactics)
   in
@@ -817,16 +861,21 @@ let hammer_main_tac env sigma gl mode =
           hypotheses. *)
        do_choice hyps defs goal (get_given_lemmas env sigma glems)
   in
-  let (deps, defs, inverts) = get_tac_args env sigma info in
+  let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
+  let clear_ids = hyps_to_clear env sigma gl used_ids in
   let sdeps = List.map (Utils.constr_to_string sigma) deps
   and sdefs = List.map Utils.constant_to_string defs
   and sinverts = List.map Utils.inductive_to_string inverts
+  and sclear =
+    match clear_ids with
+    | [] -> ""
+    | _ -> "clear " ^ String.concat " " (List.map Id.to_string clear_ids) ^ ".\n\t"
   in
   Msg.info ("Reconstructing the proof...");
-  run_tactics deps defs inverts
+  run_tactics clear_ids deps defs inverts
     begin fun tac ->
       Msg.info ("Tactic " ^ tac ^ " succeeded.");
-      Msg.info ("Replace the hammer tactic with:\n\t" ^
+      Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
                   tac ^ mk_lst_str " use:" sdeps ^
                     mk_lst_str " unfold:" sdefs ^
                       mk_lst_str " inv:" sinverts ^ ".")
@@ -1050,8 +1099,9 @@ let hammer_hook_tac prefix name =
                                begin fun () ->
                                  Msg.info ("Reconstructing theorem " ^ name ^ " (" ^ str ^ ")...");
                                  let info = extract fname in
-                                 let (deps, defs, inverts) = get_tac_args env sigma info in
-                                 run_tactics deps defs inverts
+                                 let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
+                                 let clear_ids = hyps_to_clear env sigma gl used_ids in
+                                 run_tactics clear_ids deps defs inverts
                                    begin fun tac ->
                                      let msg = "Success " ^ name ^ " " ^ str ^ " " ^ tac in
                                      ignore (Sys.command ("echo \"" ^ msg ^ "\" > \"" ^ ofname ^ "\""));

@@ -164,7 +164,10 @@ let invoke_prover prover_name cmd outfile =
     begin
       Msg.error ("Error running " ^ prover_name ^ ".");
       if !Opt.debug_mode then
-        Msg.info ("Return code: " ^ string_of_int ret);
+        begin
+          Msg.info ("Return code: " ^ string_of_int ret);
+          Msg.info ("See '" ^ Opt.error_log_file () ^ "' for the error output.")
+        end;
       false
     end
   else
@@ -174,7 +177,7 @@ let call_eprover infile outfile =
   let tmt = string_of_int !Opt.atp_timelimit in
   let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
   let cmd =
-    "htimeout " ^ tmt2 ^ " eprover -s --cpu-limit=" ^ tmt ^ " --auto-schedule -R --print-statistics -p --tstp-format \"" ^ infile ^ "\" 2>/dev/null | grep \"file[(]'\\|# SZS\" > \"" ^ outfile ^ "\""
+    "htimeout " ^ tmt2 ^ " eprover -s --cpu-limit=" ^ tmt ^ " --auto-schedule -R --print-statistics -p --tstp-format \"" ^ infile ^ "\" " ^ Opt.stderr_redirect () ^ " | grep \"file[(]'\\|# SZS\" > \"" ^ outfile ^ "\""
   in
   invoke_prover "eprover" cmd outfile
 
@@ -228,7 +231,7 @@ let call_z3 infile outfile =
   let bin = !z3_binary in
   let cmd =
     "htimeout " ^ tmt2 ^ " " ^ z3_name bin ^ " " ^ z3_call_args bin infile ^
-      " 2>/dev/null > " ^ Filename.quote outfile
+      " " ^ Opt.stderr_redirect () ^ " > " ^ Filename.quote outfile
   in
   invoke_prover (z3_name bin) cmd outfile
 
@@ -249,7 +252,7 @@ let call_vampire infile outfile =
   let tmt = string_of_int !Opt.atp_timelimit in
   let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
   let cmd =
-    "htimeout " ^ tmt2 ^ " vampire --mode casc -t " ^ tmt ^ " --proof tptp --output_axiom_names on " ^ infile ^ " 2>/dev/null | grep \"file[(]'\\|% SZS\" > " ^ outfile
+    "htimeout " ^ tmt2 ^ " vampire --mode casc -t " ^ tmt ^ " --proof tptp --output_axiom_names on " ^ infile ^ " " ^ Opt.stderr_redirect () ^ " | grep \"file[(]'\\|% SZS\" > " ^ outfile
   in
   invoke_prover "vampire" cmd outfile
 
@@ -366,6 +369,10 @@ let call_provers fname ofname =
   pom provers
 
 let call_provers_par fname ofname =
+  (* Allocate the debug log in the parent so that the forked workers
+     below all append to the same file. *)
+  if !Opt.debug_mode then
+    ignore (Opt.error_log_file ());
   let jobs =
     List.map
       begin fun ((_, pname, _, _) as h) _ ->
@@ -497,7 +504,6 @@ let detect_eprover () =
   if Sys.command "eprover --version 2>&1 >/dev/null" = 0 then
     begin
       Msg.info "Eprover found";
-      Opt.eprover_enabled := true;
       true
     end
   else
@@ -511,7 +517,6 @@ let detect_vampire () =
   if Sys.command "vampire --version 2>&1 >/dev/null" = 0 then
     begin
       Msg.info "Vampire found";
-      Opt.vampire_enabled := true;
       true
     end
   else
@@ -547,14 +552,12 @@ let detect_z3 () =
     begin
       z3_binary := Z3Tptp;
       Msg.info "Z3 found (z3_tptp)";
-      Opt.z3_enabled := true;
       true
     end
   else if command_succeeds "z3 -h" && z3_supports_tptp Z3 then
     begin
       z3_binary := Z3;
       Msg.info "Z3 found (z3 with TPTP support)";
-      Opt.z3_enabled := true;
       true
     end
   else
@@ -568,7 +571,6 @@ let detect_cvc4 () =
   if Sys.command "cvc4 --version 2>&1 >/dev/null" = 0 then
     begin
       Msg.info "CVC4 found";
-      Opt.cvc4_enabled := true;
       true
     end
   else
