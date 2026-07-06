@@ -55,13 +55,16 @@ rocq_version_from_opam() {
 }
 
 # current_cver
-# The most recent released CoqHammer version, taken from the top of
-# CHANGES.md (the canonical "current version" marker).
+# The most recent released CoqHammer version, read from the GitHub
+# releases -- the authoritative record of what has actually shipped.
+# Release tags are v<CVER>+<ROCQ> (older ones v<CVER>+coq<ROCQ>); the
+# CoqHammer version is the leading v<X.Y[.Z]> component, maximised over
+# all Rocq lines.
 current_cver() {
   local v
-  v="$(grep -m1 -oE 'CoqHammer v\. [0-9]+(\.[0-9]+){1,2}' "$REPO_ROOT/CHANGES.md" \
-        | grep -oE '[0-9]+(\.[0-9]+){1,2}')"
-  [ -n "$v" ] || die "could not read current version from CHANGES.md"
+  v="$(gh api "repos/${GH_REPO}/releases" --paginate --jq '.[].tag_name' 2>/dev/null \
+        | grep -oE '^v[0-9]+(\.[0-9]+){1,2}' | sed 's/^v//' | sort -V | tail -1)"
+  [ -n "$v" ] || die "could not read the latest release version from GitHub (${GH_REPO})"
   normalize_cver "$v"
 }
 
@@ -95,6 +98,9 @@ next_rocq() {
 
 # changes_section <cver>
 # Prints the CHANGES.md section for the given version (empty if absent).
+# CHANGES.md is read only to source the GitHub release notes -- never to
+# determine the version (that comes from the GitHub releases; see
+# current_cver).
 changes_section() {
   awk -v v="$1" '
     $0 ~ "^CoqHammer v\\. " v "([^0-9]|$)" { grab = 1; print; next }
