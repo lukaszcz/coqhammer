@@ -10,6 +10,8 @@
 #   just release-rocq             # release the current version for a new Rocq
 #                                 # (check out the rocq-<X.Y> dev branch first)
 #   just publish-opam 1.3.2+9.1   # publish a released version on opam (fork)
+#   just migrate 9.2              # branch rocq-9.2 off the current branch and
+#                                 # retarget its version strings / opam files
 
 _default:
     @just --list
@@ -41,3 +43,14 @@ publish-opam version:
 # unstable Rocq): `just sync rocq-9.1`.
 sync source:
     ./scripts/sync-branch.sh {{source}}
+
+# Migrate the project to a new Rocq version. Run it on the branch to migrate
+# FROM (typically `master`): creates a new local branch `rocq-<VERSION>`,
+# rewrites the per-Rocq version strings and *.opam files on it, and -- when the
+# AGM project config tree is present -- adds a `config/rocq-<VERSION>` workspace
+# config selecting the toolchain (opam package, or a from-source build when the
+# version is not yet on opam). Branch only: no worktree is created and no build
+# is run; review and push the branch (and the config commit) yourself.
+# E.g. on master:  just migrate 9.2
+migrate version:
+    ./scripts/migrate.sh {{version}}
