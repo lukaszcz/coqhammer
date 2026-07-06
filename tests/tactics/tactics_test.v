@@ -1738,7 +1738,7 @@ End ExtExtract.
 
 Lemma lem_issue_183_1 : (forall P : Prop, P) /\ True.
 Proof.
-  Fail srun ltac:(split; [ shelve | exact I ]).
+  Fail srun (split; [ shelve | exact I ]).
   Fail qauto.
   Fail hauto.
   Fail sauto.

@@ -255,12 +255,26 @@ let run_predict fname defs pred_num pred_method =
                  string_of_int pred_num ^ ")...");
   if !Opt.debug_mode then
     Msg.info cmd;
-  if Sys.command cmd <> 0 then
+  let ret = Sys.command cmd in
+  if ret <> 0 then
     begin
-      raise (HammerError ("Dependency prediction failed.\nPrediction command: " ^ cmd ^
-                          (if !Opt.debug_mode then
-                             "\nSee '" ^ Opt.error_log_file () ^ "' for the error output."
-                           else "")))
+      (* sh exits with 127 when the command cannot be found *)
+      let hint =
+        if ret = 127 then
+          "\nThe '" ^ !Opt.predict_path ^
+            "' program could not be found. Most probably it is not installed \
+             or not in the PATH. Note that the PATH seen by CoqHammer may \
+             differ from your shell's PATH (e.g. when Rocq is started from an \
+             IDE); see the CoqHammer installation instructions."
+        else
+          ""
+      in
+      Sys.remove oname;
+      raise (HammerError ("Dependency prediction failed." ^ hint ^
+                            "\nPrediction command: " ^ cmd ^
+                            (if !Opt.debug_mode then
+                               "\nSee '" ^ Opt.error_log_file () ^ "' for the error output."
+                             else "")))
     end;
   let ic = open_in oname in
   try
