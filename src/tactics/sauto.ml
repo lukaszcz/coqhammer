@@ -41,6 +41,7 @@ type s_opts = {
   s_reducing : bool;
   s_directed_rewriting : bool;
   s_undirected_rewriting : bool;
+  s_setoid_rewriting : bool;
   s_aggressive_unfolding : bool;
   s_sapply : bool;
   s_depth_cost_model : bool;
@@ -79,6 +80,7 @@ let default_s_opts () = {
   s_reducing = true;
   s_directed_rewriting = true;
   s_undirected_rewriting = true;
+  s_setoid_rewriting = false;
   s_aggressive_unfolding = false;
   s_sapply = true;
   s_depth_cost_model = false;
@@ -717,7 +719,43 @@ let rec do_when p f forbidden_ids =
 
 let do_when p f = do_when p f []
 
-let autorewriting b_all opts = autorewrite b_all opts.s_rew_bases
+(* Setoid-based rewriting (via [rewrite_strat]) is able to rewrite under
+   binders and to the left of arrows, unlike ordinary [autorewrite]. It is
+   more expensive, hence enabled only through the [setoid_rew] option. *)
+let setoid_rewrite_in base clause =
+  Tacticals.tclTRY
+    (Rewrite.cl_rewrite_clause_strat
+       (Rewrite.Strategies.topdown (Rewrite.Strategies.hints base))
+       clause)
+
+let setoid_autorewrite b_all bases =
+  if bases = [] then
+    Proofview.tclUNIT ()
+  else
+    let in_concl =
+      List.fold_right (fun base tac -> setoid_rewrite_in base None <*> tac)
+        bases (Proofview.tclUNIT ())
+    in
+    let in_hyps =
+      if b_all then
+        Proofview.Goal.enter begin fun gl ->
+          List.fold_right
+            (fun (id, _) tac ->
+              List.fold_right (fun base t -> setoid_rewrite_in base (Some id) <*> t)
+                bases tac)
+            (Utils.get_hyps gl)
+            (Proofview.tclUNIT ())
+        end
+      else
+        Proofview.tclUNIT ()
+    in
+    in_concl <*> in_hyps
+
+let autorewriting b_all opts =
+  if opts.s_setoid_rewriting then
+    setoid_autorewrite b_all opts.s_rew_bases
+  else
+    autorewrite b_all opts.s_rew_bases
 
 let rec simple_splitting opts =
   if opts.s_simple_splits = SNone then

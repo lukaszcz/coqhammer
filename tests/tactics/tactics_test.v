@@ -1660,3 +1660,24 @@ Next Obligation.
 Defined.
 
 End MergeSort.
+
+(* Setoid rewriting (setoid_rew:on) rewrites under binders and to the left
+   of arrows, which ordinary autorewrite (rew:db) cannot do. Issue #119. *)
+
+Section SetoidRewriting.
+
+Parameter A B : Prop.
+Parameter ab : A <-> B.
+Hint Rewrite ab : ab_db.
+
+Lemma lem_setoid_rew_concl : (forall x : nat, A) -> B.
+Proof.
+  sauto db: ab_db setoid_rew: on.
+Qed.
+
+Lemma lem_setoid_rew_hyp : (forall x : nat, B) -> (forall y : nat, A).
+Proof.
+  sauto db: ab_db setoid_rew: on.
+Qed.
+
+End SetoidRewriting.
