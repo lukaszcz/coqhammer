@@ -10,7 +10,7 @@ Overview of changes
 * Fixed `dune` build.
 * Fixed deprecation warnings.
 * The `unfold`, `unfold!` and `unfolding` options accept notations (e.g. `unfold: "#"`).
-* Fixed issues #118, #119, #130, #134, #138, #140, #141, #144, #183, #202.
+* Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #183, #202.
 
 CoqHammer v. 1.3.2
 ==================

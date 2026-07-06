@@ -134,9 +134,16 @@ let get_type_of env evmap t =
 
 (* only for constants *)
 let hhproof_of c =
+  (* [body_of_constant] may raise [Not_found] when the opaque proof body
+     is not accessible in the current process. This happens with parallel
+     proof processing in an IDE (e.g. CoqIDE), where opaque proofs are
+     delegated to worker processes and their opaque tables are not loaded
+     here (issue #86). A constant whose body cannot be accessed is treated
+     as an axiom. *)
   begin match Global.body_of_constant Library.indirect_accessor c with
   | Some (b, _, _) -> hhterm_of b
   | None -> mk_id "$Axiom"
+  | exception Not_found -> mk_id "$Axiom"
   end
 
 let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =

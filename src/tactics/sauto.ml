@@ -421,8 +421,13 @@ let get_consts evd lst =
           end
           lst))
 
+(* [body_of_constant] may raise [Not_found] when the opaque proof body is
+   not accessible in the current process, e.g. with parallel proof
+   processing in an IDE (issue #86, #64). Such a constant is treated as
+   not unfoldable. *)
 let is_simple_unfold b_aggressive c =
   match Global.body_of_constant Library.indirect_accessor c with
+  | exception Not_found -> false
   | Some (b, _, _) ->
      begin
        let t = EConstr.of_constr b in
@@ -439,6 +444,7 @@ let is_simple_unfold b_aggressive c =
 (* -1 if not a case unfold *)
 let case_unfold_cost c =
   match Global.body_of_constant Library.indirect_accessor c with
+  | exception Not_found -> -1
   | Some (b, _, _) ->
      begin
        let t = EConstr.of_constr b in
