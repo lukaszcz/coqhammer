@@ -2,5 +2,5 @@
  (name Hammer.Plugin)
  (package coq-hammer)
  (synopsis "CoqHammer Coq plugin")
- (theories Hammer.Tactics)
+ (theories Stdlib Hammer.Tactics)
  (plugins coq-hammer.plugin))
