@@ -1699,6 +1699,39 @@ Defined.
 
 End MergeSort.
 
+(* Regression test for issue #134: on older Rocq versions sauto raised
+   Anomaly "Unable to handle arbitrary u+k <= v constraints." on goals
+   mentioning a section variable of a class with a let-field, when the
+   definition and the lemma live in different sections. *)
+
+Class ExternSem := {
+  extern_state : Type;
+  AbsMet := extern_state -> extern_state -> Prop
+}.
+
+Section EXT.
+  Context {target : ExternSem}.
+  (* Logic.and / Logic.True are qualified because [and] is shadowed by a
+     boolean definition earlier in this test file. *)
+  Definition EXT (a : list (extern_state -> Prop)) (es : extern_state) : Prop :=
+    fold_right Logic.and Logic.True (map (fun (ep : extern_state -> Prop) => (ep es)) a).
+End EXT.
+
+Section ExtExtract.
+  Context {target : ExternSem}.
+  Fixpoint remove_nth {A} (n : nat) (al : list A) {struct n} : list A :=
+    match n, al with
+    | O, a :: al => al
+    | S n', a :: al' => a :: remove_nth n' al'
+    | _, nil => nil
+    end.
+
+  Lemma lem_issue_134 : forall n es, EXT (remove_nth n nil) es.
+  Proof.
+    sauto.
+  Qed.
+End ExtExtract.
+
 (* Issue #183: the reconstruction tactics must either solve the goal
    completely or fail -- they should never leave subgoals behind, even
    when a leaf tactic "succeeds" by shelving an unprovable goal. *)
