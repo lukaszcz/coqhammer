@@ -23,7 +23,7 @@ install: [
 depends: [
   "ocaml" {>= "4.09.0"}
   "rocq-core" {>= "9.2" & < "9.3~"}
-  "rocq-stdlib" {>= "9.2" & < "9.3~"}
+  "rocq-stdlib" {>= "9.1" & < "9.3~"}
 ]
 
 tags: [

@@ -165,6 +165,22 @@ else
   info "toolchain:       source build, Rocq ref '$ROCQ_REF', stdlib ref '$STDLIB_REF'"
 fi
 
+# Lower bound for the rocq-stdlib opam-file dependency. Normally the target Rocq
+# <X.Y>, but rocq-stdlib usually lags rocq-core on opam; when <X.Y> is not yet
+# published, fall back to the newest available stdlib line so the constraint
+# stays satisfiable -- an older stdlib builds and loads against the newer core,
+# and opam CI resolves rocq-hammer's deps against the published packages. rocq-core
+# keeps the exact <X.Y> lower bound (that package is published). Defaults to <X.Y>
+# when opam is unavailable (a source build ignores the opam constraints anyway).
+STDLIB_LB="$V"
+if [ -z "$(opam_newest_matching rocq-stdlib "$V" || true)" ]; then
+  _stdlib_newest="$(opam_newest rocq-stdlib || true)"
+  if [ -n "$_stdlib_newest" ]; then
+    STDLIB_LB="$(printf '%s\n' "$_stdlib_newest" | grep -oE '^[0-9]+\.[0-9]+')"
+  fi
+fi
+info "opam constraints: rocq-core >= $V, rocq-stdlib >= $STDLIB_LB (both < ${NEXT}~)"
+
 # ---------------------------------------------------------------------------
 # 2. Build the new branch by rewriting the version tokens, without a worktree.
 #    Each file is read from $SOURCE, transformed in a temp file, hashed into a
@@ -187,13 +203,14 @@ transform_opam() {
   # Replace whatever Rocq/Coq dependency line(s) the source flavor carries --
   # master's single "rocq-stdlib" line, an older branch's single "coq" line, or
   # the current two-line "rocq-core"/"rocq-stdlib" form -- with the canonical
-  # two-line dependency for the target Rocq <X.Y>. (`nxt`, not `next`, since
-  # `next` is an awk statement.)
-  awk -v v="$V" -v nxt="$NEXT" '
+  # two-line dependency for the target Rocq <X.Y>. rocq-stdlib takes the lower
+  # bound $STDLIB_LB (<X.Y>, or an older published line when <X.Y> lags on opam).
+  # (`nxt`, not `next`, since `next` is an awk statement.)
+  awk -v v="$V" -v nxt="$NEXT" -v slb="$STDLIB_LB" '
     /^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]/ {
       if (!done) {
         print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
-        print "  \"rocq-stdlib\" {>= \"" v "\" & < \"" nxt "~\"}"
+        print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
         done = 1
       }
       next
