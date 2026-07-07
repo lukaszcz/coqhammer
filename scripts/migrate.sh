@@ -20,7 +20,8 @@
 #      sync merge driver (scripts/sync-merge-driver.sh) normalizes, so a later
 #      `just sync` is a no-op on them:
 #        * the two *.opam files: version "<X.Y>.dev" and the Rocq dependency
-#          line `"coq" {>= "<X.Y>" & < "<next>~"}`;
+#          lines `"rocq-core" {>= "<X.Y>" & < "<next>~"}` and the matching
+#          `"rocq-stdlib"` (the deprecated `coq` package is no longer used);
 #        * the README title line, the CI-badge branch, and the requirement
 #          label + homepage URL;
 #        * the docker image tag in the Docker CI workflow, plus the `rocq-*` /
@@ -29,10 +30,14 @@
 #
 #   3. If the AGM project config tree exists ($PROJ_DIR/config), adds a
 #      workspace config `$PROJ_DIR/config/rocq-<X.Y>/env.sh` selecting the Rocq
-#      toolchain for the new branch: the opam `coq` package when Rocq <X.Y> is
-#      available on opam, otherwise a from-source build pinned to a git ref
-#      resolved from the official Rocq repository (latest release tag, else the
-#      version branch). The config change is committed in the config repo.
+#      toolchain for the new branch. When rocq-core <X.Y> is on opam it uses the
+#      opam packages: if rocq-stdlib <X.Y> is also published the opam-file
+#      constraints solve on their own, otherwise the newest available rocq-core
+#      and rocq-stdlib are pinned via COQHAMMER_ROCQ_PACKAGES (an older stdlib
+#      builds against the newer core). When Rocq <X.Y> is not on opam at all it
+#      falls back to a from-source build pinned to a git ref resolved from the
+#      official Rocq repository (latest release tag, else the version branch).
+#      The config change is committed in the config repo.
 #
 # Everything is local: review the new branch (and the config commit) and push
 # when satisfied. To build it, open a workspace for `rocq-<X.Y>` yourself.
@@ -74,11 +79,28 @@ info "new branch:      $NEW_BRANCH"
 # 1. Resolve the toolchain for the new branch: opam package vs from-source.
 # ---------------------------------------------------------------------------
 
-# opam_has_rocq <X.Y>: true if the opam `coq` package has a release <X.Y>.*
-opam_has_rocq() {
+# rocq_core_pkg: the opam core/meta package name for Rocq <X.Y>. Since the Rocq
+# rename (Rocq >= 9.0) it is rocq-core; the deprecated `coq` meta-package is used
+# only for the older Coq (< 9.0) branches.
+rocq_core_pkg() {
+  [ "${V%%.*}" -ge 9 ] 2>/dev/null && echo rocq-core || echo coq
+}
+
+# opam_pkg_versions <pkg>: all released opam versions of <pkg>, one per line.
+opam_pkg_versions() {
   command -v opam >/dev/null || return 1
-  opam show coq -f all-versions 2>/dev/null \
-    | tr ' ,' '\n\n' | grep -qE "^${VRE}(\.|$)"
+  opam show "$1" -f all-versions 2>/dev/null | tr ' ,' '\n\n' | grep -E '^[0-9]'
+}
+
+# opam_newest_matching <pkg> <X.Y>: newest opam version of <pkg> in the <X.Y>
+# line (e.g. 9.2.1 for rocq-core 9.2); empty if none.
+opam_newest_matching() {
+  opam_pkg_versions "$1" | grep -E "^${2//./\\.}(\.|$)" | sort -V | tail -1
+}
+
+# opam_newest <pkg>: newest opam version of <pkg> overall; empty if none.
+opam_newest() {
+  opam_pkg_versions "$1" | sort -V | tail -1
 }
 
 # resolve_source_ref <repo-url>: print a git ref for a source build of <X.Y>,
@@ -100,13 +122,36 @@ resolve_source_ref() {
   return 1
 }
 
-TOOLCHAIN=""        # "opam" or "source"
+TOOLCHAIN=""            # "opam" or "source"
+CORE_PKG="$(rocq_core_pkg)"
+CORE_OPAM_VER=""        # newest opam <X.Y> version of the core package
+ROCQ_OPAM_PACKAGES=""   # explicit pin list for env.sh; empty => rely on constraints
+STDLIB_OPAM_GUESSED=0   # 1 if an older-than-<X.Y> stdlib had to be pinned
 ROCQ_REF=""
 STDLIB_REF=""
 STDLIB_GUESSED=0
-if opam_has_rocq; then
+CORE_OPAM_VER="$(opam_newest_matching "$CORE_PKG" "$V" || true)"
+if [ -n "$CORE_OPAM_VER" ]; then
   TOOLCHAIN="opam"
-  info "toolchain:       opam package coq.$V*"
+  if [ "$CORE_PKG" = "rocq-core" ]; then
+    # Rocq >= 9.0: the standard library is a separate opam package. If rocq-stdlib
+    # is not yet published for this <X.Y>, pin the newest available stdlib -- an
+    # older stdlib builds and loads against the newer core -- and let setup.sh
+    # install it while ignoring the opam-file constraints. When rocq-stdlib <X.Y>
+    # IS available, no pin is needed and the constraints solve on their own.
+    if [ -z "$(opam_newest_matching rocq-stdlib "$V" || true)" ]; then
+      stdlib_ver="$(opam_newest rocq-stdlib || true)"
+      if [ -n "$stdlib_ver" ]; then
+        ROCQ_OPAM_PACKAGES="rocq-core.${CORE_OPAM_VER} rocq-stdlib.${stdlib_ver}"
+        STDLIB_OPAM_GUESSED=1
+      fi
+    fi
+  fi
+  if [ -n "$ROCQ_OPAM_PACKAGES" ]; then
+    info "toolchain:       opam, pinned packages: $ROCQ_OPAM_PACKAGES"
+  else
+    info "toolchain:       opam package ${CORE_PKG}.${CORE_OPAM_VER} (via opam-file constraints)"
+  fi
 else
   TOOLCHAIN="source"
   ROCQ_REF="$(resolve_source_ref "$ROCQ_SOURCE_REPO")" \
@@ -138,10 +183,23 @@ git read-tree "$SOURCE"
 # target Rocq <X.Y>, so migrate works from any branch.
 
 transform_opam() {
-  sed -i -E \
-    -e "s#^version: \".*\"#version: \"${V}.dev\"#" \
-    -e "s#^([[:space:]]*)\"(rocq-stdlib|coq)\"[[:space:]]*\{[^}]*\}#\1\"coq\" {>= \"${V}\" \& < \"${NEXT}~\"}#" \
-    "$1"
+  sed -i -E "s#^version: \".*\"#version: \"${V}.dev\"#" "$1"
+  # Replace whatever Rocq/Coq dependency line(s) the source flavor carries --
+  # master's single "rocq-stdlib" line, an older branch's single "coq" line, or
+  # the current two-line "rocq-core"/"rocq-stdlib" form -- with the canonical
+  # two-line dependency for the target Rocq <X.Y>. (`nxt`, not `next`, since
+  # `next` is an awk statement.)
+  awk -v v="$V" -v nxt="$NEXT" '
+    /^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]/ {
+      if (!done) {
+        print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
+        print "  \"rocq-stdlib\" {>= \"" v "\" & < \"" nxt "~\"}"
+        done = 1
+      }
+      next
+    }
+    { print }
+  ' "$1" > "$1.mig" && mv "$1.mig" "$1"
 }
 
 transform_readme() {
@@ -227,17 +285,32 @@ if [ -n "$CFG_DIR" ] && [ -d "$CFG_DIR" ]; then
   env_file="$branch_cfg/env.sh"
   mkdir -p "$branch_cfg"
   if [ "$TOOLCHAIN" = "opam" ]; then
-    cat > "$env_file" <<EOF
+    if [ -n "$ROCQ_OPAM_PACKAGES" ]; then
+      cat > "$env_file" <<EOF
 #!/usr/bin/env bash
 #
 # Workspace config for the $NEW_BRANCH development branch (Rocq $V).
 #
-# Rocq $V is available as an opam package, so setup.sh installs it from the
-# opam constraints in this branch's coq-hammer*.opam files. No version override
-# is needed; the package name is pinned for clarity.
+# ${CORE_PKG} is on opam for Rocq $V, but rocq-stdlib is not yet published for
+# $V -- the newest available stdlib is pinned below, and it builds and loads
+# against the $V core. setup.sh installs these explicitly and resolves the
+# remaining CoqHammer dependencies while ignoring the Rocq version constraints
+# in the opam files. Drop this override once rocq-stdlib $V is on opam; the
+# opam-file constraints will then solve on their own.
 
-export COQHAMMER_ROCQ_PACKAGE=coq
+export COQHAMMER_ROCQ_PACKAGES="$ROCQ_OPAM_PACKAGES"
 EOF
+    else
+      cat > "$env_file" <<EOF
+#!/usr/bin/env bash
+#
+# Workspace config for the $NEW_BRANCH development branch (Rocq $V).
+#
+# Rocq $V is fully available on opam (${CORE_PKG}.${CORE_OPAM_VER} and a matching
+# rocq-stdlib), so setup.sh installs it from the opam constraints in this
+# branch's coq-hammer*.opam files. No version override is needed.
+EOF
+    fi
   else
     {
       cat <<EOF
@@ -275,6 +348,11 @@ EOF
   fi
   if [ "$STDLIB_GUESSED" -eq 1 ]; then
     info "WARNING: stdlib source ref guessed as '$STDLIB_REF'; verify $env_file"
+  fi
+  if [ "$STDLIB_OPAM_GUESSED" -eq 1 ]; then
+    info "WARNING: rocq-stdlib $V is not on opam; pinned an older stdlib in"
+    info "         $ROCQ_OPAM_PACKAGES -- verify $env_file and drop the pin"
+    info "         once rocq-stdlib $V is published."
   fi
 else
   info "no AGM config tree at \${PROJ_DIR}/config -- skipping workspace config"

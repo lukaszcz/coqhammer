@@ -95,9 +95,16 @@ fi
 #      maintainer), so OUR value always wins.
 AVER="$(sed -n 's/^version: "\(.*\)"/\1/p' "$A" | head -n1)"
 AMAINT="$(sed -n 's/^maintainer: "\(.*\)"/\1/p' "$A" | head -n1)"
-#   3. Rocq stdlib/core dependency line: '"coq" {>= "9.1" & < "9.2~"}' vs
-#      '"rocq-stdlib" {= "dev"}'; also pure per-branch metadata, OUR line wins.
-ADEP="$(grep -m1 -E '^[[:space:]]*"(rocq-stdlib|coq)"[[:space:]]*\{' "$A" || true)"
+#   3. Rocq dependency line(s): the ported rocq-* branches carry a two-line
+#      '"rocq-core" {...}' + '"rocq-stdlib" {...}' block, master a single
+#      '"rocq-stdlib" {= "dev"}', an older branch a single '"coq" {>= ...}';
+#      all pure per-branch metadata, so OUR whole block wins. Capture every Rocq
+#      dependency line from OUR side (they are adjacent in `depends`) so the full
+#      block -- not just the first line -- is substituted into base/theirs.
+ADEP_RE='^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]'
+ADEP_FILE="$(mktemp)"
+trap 'rm -f "$ADEP_FILE"' EXIT
+grep -E "$ADEP_RE" "$A" > "$ADEP_FILE" || true
 
 # Documentation / CI (README.md, .github/workflows/*, ...):
 #   4. workflow-status badge branch:  ...badge.svg?branch=<name>
@@ -126,9 +133,16 @@ normalize() {
   [ -n "$PREFIX" ] && sed -i -E "s/\b(coq-core|rocq-runtime)\b/$PREFIX/g" "$f"
   [ -n "$AVER" ]   && sed -i -E "s/^version: \".*\"/version: \"$AVER\"/" "$f"
   [ -n "$AMAINT" ] && sed -i -E "s/^maintainer: \".*\"/maintainer: \"$AMAINT\"/" "$f"
-  if [ -n "$ADEP" ]; then
-    awk -v dep="$ADEP" '
-      /^[[:space:]]*"(rocq-stdlib|coq)"[[:space:]]*\{/ && !seen { print dep; seen = 1; next }
+  if [ -s "$ADEP_FILE" ]; then
+    awk -v depfile="$ADEP_FILE" -v re="$ADEP_RE" '
+      $0 ~ re {
+        if (!seen) {
+          while ((getline line < depfile) > 0) print line
+          close(depfile)
+          seen = 1
+        }
+        next
+      }
       { print }
     ' "$f" > "$f.sync" && mv "$f.sync" "$f"
   fi

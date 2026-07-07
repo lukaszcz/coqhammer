@@ -14,7 +14,9 @@
 # (coq/opam-coq-archive). Each new opam file is derived from the most recent
 # existing entry of the same package by updating exactly four things:
 #
-#   * the "coq" version constraint       (>= <ROCQ> & < <next>~)
+#   * the Rocq dependency                (rocq-core + rocq-stdlib, each
+#                                         >= <ROCQ> & < <next>~; a legacy "coq"
+#                                         line in an older template is replaced)
 #   * the "date:" tag                    (today)
 #   * the release tarball URL            (.../tags/v<CVER>+<ROCQ>.tar.gz)
 #   * the sha512 checksum                (computed from that tarball)
@@ -97,8 +99,23 @@ add_package() {
   mkdir -p "$newdir"
   cp "$template/opam" "$newdir/opam"
 
+  # Replace whatever Rocq/Coq dependency line(s) the template carries -- an old
+  # entry's single "coq" line or a newer entry's two-line "rocq-core"/"rocq-stdlib"
+  # form -- with the canonical two-line dependency for this release's Rocq <X.Y>.
+  # (`nxt`, not `next`, since `next` is an awk statement.)
+  awk -v v="$ROCQ" -v nxt="$ROCQ_NEXT" '
+    /^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]/ {
+      if (!done) {
+        print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
+        print "  \"rocq-stdlib\" {>= \"" v "\" & < \"" nxt "~\"}"
+        done = 1
+      }
+      next
+    }
+    { print }
+  ' "$newdir/opam" > "$newdir/opam.pub" && mv "$newdir/opam.pub" "$newdir/opam"
+
   sed -i \
-    -e "s|.*\"coq\" *{>=.*|  \"coq\" {>= \"${ROCQ}\" \& < \"${ROCQ_NEXT}~\"}|" \
     -e "s|\"date:[0-9-]*\"|\"date:${TODAY}\"|" \
     -e "s|archive/refs/tags/v[^\"]*|archive/refs/tags/${TAG}.tar.gz|" \
     -e "s|checksum: \"sha512=[0-9a-fA-F]*\"|checksum: \"sha512=${SHA512}\"|" \
