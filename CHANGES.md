@@ -1,7 +1,7 @@
 CoqHammer v. 1.3.3
 ==================
 
-Rocq versions compatibility: 9.1.
+Rocq versions compatibility: 9.1, 9.2.
 
 Overview of changes
 -------------------
