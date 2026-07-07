@@ -45,6 +45,31 @@ cd tests/tactics && rocq c tactics_test.v
 
 `tests/plugin/*.v` require external ATPs to be installed since they actually run `hammer`.
 
+## Automation (`just`)
+
+The `justfile` wraps the build/release/branch workflow (run `just` with no
+argument to list everything). The most useful recipes:
+
+```bash
+just check                    # install both packages + run quicktest (the
+                              # verification gate; run this when finished)
+just release <patch|minor|major>   # bump the CoqHammer version and cut a
+                                   # GitHub release for this branch's Rocq
+just release-rocq             # release the current version for a newly
+                              # checked-out rocq-<X.Y> dev branch (Rocq port)
+just publish-opam <ver>       # add a released version to the opam-coq-archive
+                              # fork, e.g. just publish-opam 1.3.2+9.1
+just sync <source>            # merge <source> into the current branch,
+                              # auto-absorbing the per-branch version tokens
+                              # in *.opam / dune / META.* (e.g. just sync master)
+just migrate <X.Y>            # branch rocq-<X.Y> off the current branch and
+                              # retarget its version strings / opam files
+```
+
+Release conventions and the underlying scripts live in `scripts/` (see
+`scripts/release-lib.sh` for branch/tag/version naming). Never run release work
+from `master` — it tracks unstable Rocq (see Overview).
+
 ## Architecture
 
 The `hammer` pipeline (entry point `src/plugin/hammer_main.ml`, vernacular/tactic syntax in `src/plugin/g_hammer.mlg`):
