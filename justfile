@@ -26,6 +26,7 @@ check:
 # Bump the CoqHammer version (patch|minor|major, or none to keep it) and publish
 # a GitHub release. Extra args after <level> are forwarded to make-release.sh
 # (e.g. --trivial to skip the triviality confirmation on a `none` release).
+[doc('Cut a GitHub release (level: patch|minor|major|none); extra args forwarded')]
 release level *args:
     ./scripts/make-release.sh {{level}} {{args}}
 
@@ -33,6 +34,7 @@ release level *args:
 # dev branch (porting an existing release to a new Rocq). Scans the new
 # commits and asks you to confirm they are trivial before proceeding.
 # Pass "--trivial" to skip the confirmation.
+[doc('Alias for "just release none": release the current version for a new Rocq')]
 release-rocq *args:
     ./scripts/make-release.sh none {{args}}
 
@@ -45,6 +47,7 @@ publish-opam version:
 # Run it on the branch you are merging INTO; any real conflicts are left in
 # progress on it for you to resolve and commit. E.g. on `master` (which tracks
 # unstable Rocq): `just sync rocq-9.1`.
+[doc('Merge <source> into the current branch, absorbing per-branch version tokens')]
 sync source:
     ./scripts/sync-branch.sh {{source}}
 
@@ -56,5 +59,6 @@ sync source:
 # version is not yet on opam). Branch only: no worktree is created and no build
 # is run; review and push the branch (and the config commit) yourself.
 # E.g. on master:  just migrate 9.2
+[doc('Branch rocq-<version> off the current branch and retarget its version tokens')]
 migrate version:
     ./scripts/migrate.sh {{version}}
