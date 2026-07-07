@@ -5,5 +5,8 @@
 
 (rule
  (alias extraction)
- (deps (:vfile extraction_matches.v))
- (action (run rocq c %{vfile})))
+ (deps extraction_matches.v extraction_deptypes.v)
+ (action
+  (progn
+   (run rocq c extraction_matches.v)
+   (run rocq c extraction_deptypes.v))))

@@ -96,5 +96,7 @@ Proof. hammer. Qed.
 Lemma extraction_nat_eqb_refl : Nat.eqb 5 5 = true.
 Proof. hammer. Qed.
 
+Set Hammer ATPLimit 0.
 Lemma extraction_rsize_nil : rsize (Rose nil) = 1.
 Proof. Fail hammer. Abort.
+Set Hammer ATPLimit 20.

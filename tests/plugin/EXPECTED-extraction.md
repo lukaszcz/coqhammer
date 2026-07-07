@@ -1,11 +1,12 @@
 # Extraction test expected profile
 
 This records the current (pre extraction-refactor) end-to-end `hammer` profile for
-`tests/plugin/extraction_matches.v`. Goals listed as passing are left as
+the extraction test files. Goals listed as passing are left as
 `Proof. hammer. Qed.` and must keep passing in later phases. Goals listed as
 failing are wrapped as `Fail hammer.` / `Abort.` until the relevant translator work
-makes them pass. The file temporarily pins `Hammer Predictions` to 16 around
-`extraction_g_deep` through `extraction_tmirror_node` to keep the current profile
+makes them pass. `extraction_matches.v` temporarily pins `Hammer Predictions` to 16
+around `extraction_g_deep` through `extraction_tmirror_node`, and pins
+`Hammer ATPLimit` to 0 around `extraction_rsize_nil`, to keep the current profile
 reproducible with the pre-refactor translator.
 
 ## `extraction_matches.v`
@@ -33,4 +34,30 @@ reproducible with the pre-refactor translator.
 - `extraction_is_zero_succ`: `forall n, ~ is_zero (S n)`
 - `extraction_hd_d_cons`: `forall (d x : nat) l, hd_d d (cons x l) = x`
 - `extraction_even_ss`: `forall n, even (S (S n)) = even n`
-- `extraction_rsize_nil`: `rsize (Rose nil) = 1`
+- `extraction_rsize_nil`: `rsize (Rose nil) = 1` (checked with `Set Hammer ATPLimit 0` to keep the expected failure deterministic)
+
+## `extraction_deptypes.v`
+
+### Passing now
+
+- `no_junk`: `2 + 2 = 4` (after the `Program Fixpoint idiv` definition)
+- `extraction_h_two_specs`: two instantiated `h` specs imply `a = c`
+- `extraction_safe_pred_proof_irrel`: `safe_pred (S n)` result independent of proof argument
+- `extraction_posnat_payload`: `forall p : posnat, 0 < pval p`
+- `extraction_vhead_cons`: vector-head equation on `Vector.cons`
+
+### Expected failures now
+
+- `extraction_h_proj`: `forall x y z p, proj1_sig (h x y z p) = z`
+- `extraction_h_spec`: `forall x y z p, x = proj1_sig (h x y z p)`
+- `extraction_safe_pred_spec`: `forall n p, S (proj1_sig (safe_pred n p)) = n`
+- `extraction_tr_refl`: transport erasure goal, expected only at ATP level until Phase 5 reconstruction support
+- `extraction_beq_correct`: `forall n m, beq n m = true <-> n = m`
+- `extraction_between_low`: `forall n, n <= proj1_sig (sig_of_sig2 (between n))`
+- `extraction_tag_fst`: `forall n, fst (tag n) = n`
+- `extraction_refinement_hyp`: refinement expansion in hypothesis position
+- `extraction_h_exists`: positive-polarity expansion under `exists`
+- `extraction_idiv_small`: Phase-4 `Program Fixpoint` WF unfolding equation
+- `extraction_idiv2_small`: Phase-4 bare `Fix lt_wf` WF unfolding equation
+- `extraction_idiv3_small`: Phase-4 `Fix_F` WF detection-coverage guardrail; pre-Phase-4 it must remain wrapped
+- `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5` (the `Fail hammer` must keep succeeding)

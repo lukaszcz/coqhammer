@@ -3,12 +3,12 @@
 ## 1. Task status
 
 - TASK_01 — done
-- TASK_02 — unblocked (not started)
-- TASK_03 — blocked (02)
+- TASK_02 — done
+- TASK_03 — unblocked (not started)
 - TASK_04 — blocked (03)
 - TASK_05 — unblocked (not started)
 - TASK_06 — unblocked (not started)
-- TASK_07 — blocked (02, 04)
+- TASK_07 — blocked (04)
 - TASK_08 — blocked (03, 04)
 - TASK_09 — blocked (08)
 - TASK_10 — blocked (07, 09)
@@ -28,9 +28,10 @@
 
 ## 2. Next unblocked task
 
-/home/dev/coqhammer/worktrees/extraction/.agent-files/tasks/TASK_02.md
+/home/dev/coqhammer/worktrees/extraction/.agent-files/tasks/TASK_03.md
 
 ## 3. Completion log
 
 Append exactly ONE line per task as it lands, newest last.
-- 2026-07-07 TASK_01: Added the extraction match/fix TDD corpus, separate test-extraction harness target, and expected current pass/fail profile.
+- 2026-07-07 TASK_01: Added and verified the extraction match/fix TDD corpus, separate test-extraction harness target, and expected current pass/fail profile.
+- 2026-07-07 TASK_02: Added and verified the dependent-types extraction TDD corpus, including WF-recursion fixtures, the consistency canary, harness wiring, and expected pass/fail profile.
