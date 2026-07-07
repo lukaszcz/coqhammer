@@ -47,26 +47,8 @@ cd tests/tactics && rocq c tactics_test.v
 
 ## Automation (`just`)
 
-The `justfile` wraps the build/release/branch workflow (run `just` with no
-argument to list everything). The most useful recipes:
-
-```bash
-just check                    # install both packages + run quicktest (the
-                              # verification gate; run this when finished)
-just release <patch|minor|major|none> [args...]   # cut a GitHub release for
-                              # this branch's Rocq; patch/minor/major bump the
-                              # CoqHammer version, none keeps it (Rocq port, run
-                              # on a newly checked-out rocq-<X.Y> branch).
-                              # Extra args forward to make-release.sh,
-                              # e.g. just release none --trivial
-just publish-opam <ver>       # add a released version to the opam-coq-archive
-                              # fork, e.g. just publish-opam 1.3.2+9.1
-just sync <source>            # merge <source> into the current branch,
-                              # auto-absorbing the per-branch version tokens
-                              # in *.opam / dune / META.* (e.g. just sync master)
-just migrate <X.Y>            # branch rocq-<X.Y> off the current branch and
-                              # retarget its version strings / opam files
-```
+The `justfile` wraps the build/release/branch workflow. Run `just` with no
+arguments to list all recipes.
 
 Release conventions and the underlying scripts live in `scripts/` (see
 `scripts/release-lib.sh` for branch/tag/version naming). Never run release work
@@ -94,6 +76,7 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 - No TABs, ever — spaces only.
 - Follow the existing indentation and formatting style.
 - Remove dead code instead of commenting it out.
+- Avoid code duplication. Abstract common logic into shared helper functions.
 - Keep commits focused; avoid unrelated or behavior-neutral changes unless the commit is explicitly a refactor.
 
 ## Instructions
