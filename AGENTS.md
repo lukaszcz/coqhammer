@@ -53,14 +53,13 @@ argument to list everything). The most useful recipes:
 ```bash
 just check                    # install both packages + run quicktest (the
                               # verification gate; run this when finished)
-just release <patch|minor|major|none>   # cut a GitHub release for this
-                                        # branch's Rocq; patch/minor/major bump
-                                        # the CoqHammer version, none keeps it
-                                        # (release the current version for a new
-                                        # Rocq port)
-just release-rocq             # same as `just release none` for a newly
-                              # checked-out rocq-<X.Y> dev branch, forwarding
-                              # extra args (e.g. --trivial)
+just release <patch|minor|major|none> [args...]   # cut a GitHub release for
+                              # this branch's Rocq; patch/minor/major bump the
+                              # CoqHammer version, none keeps it (Rocq port).
+                              # Extra args are forwarded to make-release.sh,
+                              # e.g. just release none --trivial
+just release-rocq [--trivial]   # alias for `just release none [--trivial]`
+                              # (run on a newly checked-out rocq-<X.Y> branch)
 just publish-opam <ver>       # add a released version to the opam-coq-archive
                               # fork, e.g. just publish-opam 1.3.2+9.1
 just sync <source>            # merge <source> into the current branch,

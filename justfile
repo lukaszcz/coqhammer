@@ -7,8 +7,10 @@
 #                                 # current branch's Rocq version
 #   just release patch            # 1.3.2 -> 1.3.3
 #   just release major            # 1.3.2 -> 2.0.0
-#   just release-rocq             # release the current version for a new Rocq
-#                                 # (check out the rocq-<X.Y> dev branch first)
+#   just release none             # release the current version unchanged for a
+#                                 # new Rocq (check out the rocq-<X.Y> branch first)
+#   just release none --trivial   # ... skipping the triviality confirmation
+#   just release-rocq [--trivial] # alias for `just release none [--trivial]`
 #   just publish-opam 1.3.2+9.1   # publish a released version on opam (fork)
 #   just migrate 9.2              # branch rocq-9.2 off the current branch and
 #                                 # retarget its version strings / opam files
@@ -21,9 +23,11 @@ check:
     make install
     make quicktest
 
-# Bump the CoqHammer version (patch|minor|major) and publish a GitHub release.
-release level:
-    ./scripts/make-release.sh {{level}}
+# Bump the CoqHammer version (patch|minor|major, or none to keep it) and publish
+# a GitHub release. Extra args after <level> are forwarded to make-release.sh
+# (e.g. --trivial to skip the triviality confirmation on a `none` release).
+release level *args:
+    ./scripts/make-release.sh {{level}} {{args}}
 
 # Release the current CoqHammer version for the currently checked-out Rocq
 # dev branch (porting an existing release to a new Rocq). Scans the new
