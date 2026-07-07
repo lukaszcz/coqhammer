@@ -49,13 +49,18 @@ extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
+	@rm -f hammer_dump_smoke.p
 	$(COQC) extraction_transl.v > extraction_transl.out 2>&1
 	@if ! ./check-extraction-transl.sh extraction_transl.out; then \
-	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out hammer_dump_smoke.p; exit 1; \
 	fi
-	@rm -f extraction_transl.out
+	@if ! grep -Eq '^fof\(.*conjecture' hammer_dump_smoke.p; then \
+	  echo "Hammer_dump smoke check FAILED"; cat hammer_dump_smoke.p 2>/dev/null || true; \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out hammer_dump_smoke.p; exit 1; \
+	fi
+	@rm -f extraction_transl.out hammer_dump_smoke.p
 
 clean:
-	-rm -f *.vo *.glob *.out .*.aux
+	-rm -f *.vo *.glob *.out .*.aux hammer_dump_smoke.p
 
 .PHONY: all test-extraction clean

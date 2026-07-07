@@ -10,6 +10,18 @@ From Stdlib Require Import Arith.PeanoNat Arith.Wf_nat Classes.RelationClasses
 
 Require Import extraction_matches extraction_deptypes.
 
+Inductive sflag : SProp := sflag_intro : sflag.
+Parameter sprop_consumer : sflag -> nat.
+Definition sprop_arg_term (h : sflag) : nat := sprop_consumer h.
+
+Goal True.
+  Hammer_dump "hammer_dump_smoke.p".
+  exact I.
+Qed.
+
+(* SProp regression: the sflag argument must be treated like a proof. *)
+Hammer_transl "sprop_arg_term".
+
 (* Corpus constants from extraction_matches.v. *)
 Hammer_transl "myadd".
 Hammer_transl "g".

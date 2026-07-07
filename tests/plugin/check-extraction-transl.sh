@@ -52,6 +52,13 @@ forbid_line "unexpected printed generic-case axiom" '\$_generic_case'
 # Corpus constants: baseline structural assertions that hold today.
 # -----------------------------------------------------------------------------
 
+# SProp hypotheses are proof-like: the argument becomes a formula premise and is
+# pruned from the term-level definition equation.
+require_line "SProp argument is translated as a premise" '^\$_type_[0-9]+: .*\(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ var_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\)'
+require_line "SProp function uses the premise type" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ \$_type_[0-9]+\)'
+require_line "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
+forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
+
 # myadd: current translator emits one guarded/disjunctive definition axiom.
 require_count_at_least "myadd has a definition axiom" '^\$_def_extraction_matches\.myadd:' 1
 require_line "myadd mentions the zero branch" '^\$_def_extraction_matches\.myadd:.*Corelib\.Init\.Datatypes\.O'

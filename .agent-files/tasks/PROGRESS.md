@@ -5,11 +5,11 @@
 - TASK_01 — done
 - TASK_02 — done
 - TASK_03 — done
-- TASK_04 — unblocked (not started)
+- TASK_04 — done
 - TASK_05 — unblocked (not started)
 - TASK_06 — unblocked (not started)
-- TASK_07 — blocked (04)
-- TASK_08 — blocked (04)
+- TASK_07 — unblocked (not started)
+- TASK_08 — unblocked (not started)
 - TASK_09 — blocked (08)
 - TASK_10 — blocked (07, 09)
 - TASK_11 — blocked (05, 06, 10)
@@ -22,13 +22,13 @@
 - TASK_18 — blocked (17)
 - TASK_19 — blocked (17)
 - TASK_20 — blocked (18, 19)
-- TASK_21 — blocked (04)
+- TASK_21 — unblocked (not started)
 - TASK_22 — blocked (20, 21)
 - TASK_23 — blocked (22)
 
 ## 2. Next unblocked task
 
-/home/dev/coqhammer/worktrees/extraction/.agent-files/tasks/TASK_04.md
+/home/dev/coqhammer/worktrees/extraction/.agent-files/tasks/TASK_05.md
 
 ## 3. Completion log
 
@@ -36,3 +36,4 @@ Append exactly ONE line per task as it lands, newest last.
 - 2026-07-07 TASK_01: Added and verified the extraction match/fix TDD corpus, separate test-extraction harness target, and expected current pass/fail profile.
 - 2026-07-07 TASK_02: Added and verified the dependent-types extraction TDD corpus, including WF-recursion fixtures, the consistency canary, harness wiring, and expected pass/fail profile.
 - 2026-07-07 TASK_03: Added and verified the extraction translation-shape harness, Makefile assertions, staged phase assertion blocks, and transl expected profile.
+- 2026-07-08 TASK_04: Added Phase 0 translation option constants, Hammer_dump proof-mode TPTP dumping, SProp translation assertions, and dump smoke coverage.

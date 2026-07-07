@@ -1010,6 +1010,26 @@ let hammer_transl_tac () =
       Tacticals.tclIDTAC
     end
 
+let hammer_dump_tac fname =
+  try_goal_tactic
+    begin fun gl ->
+      let env = Proofview.Goal.env gl in
+      let sigma = Proofview.Goal.sigma gl in
+      let goal = get_goal gl in
+      let hyps = get_hyps gl in
+      let defs = get_defs env sigma in
+      let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
+      Provers.write_atp_file fname defs1 hyps defs goal;
+      Tacticals.tclIDTAC
+    end
+
+let hammer_dump fname =
+  ignore (Vernacstate.Declare.with_current_proof
+            begin fun proof ->
+              let proof, _, () = Proof.run_tactic (Global.env ()) (hammer_dump_tac fname) proof in
+              (proof, ())
+            end)
+
 let hammer_features name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try

@@ -47,6 +47,16 @@ let opt_precise_inversion = true
 let opt_type_lifting = true
 (* should translate Set to Type? *)
 let opt_set_to_type = true
+(* Phase 1 (D2): emit per-constructor case equations. *)
+let opt_split_case_axioms = true
+(* Phase 2: erase propositional case analyses. *)
+let opt_prop_case_erasure = true
+(* Phase 2 (D3): guard erased transports. *)
+let opt_erasure_guards = false
+(* Phase 3: expand refinement types shallowly. *)
+let opt_refinement_types = true
+(* Phase 4 (D4): emit guarded equations for well-founded recursion. *)
+let opt_wf_recursion_eqs = false
 
 (***************************************************************************************)
 (* Debugging *)
