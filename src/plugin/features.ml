@@ -188,7 +188,7 @@ let is_nontrivial (def : hhdef) : bool =
 
 let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
-  let fname = Filename.temp_file "predict" "" in
+  let fname = Opt.temp_file "predict" "" in
   let ocfea = open_out (fname ^ "fea") in
   let ocdep = open_out (fname ^ "dep") in
   let ocseq = open_out (fname ^ "seq") in
@@ -244,7 +244,7 @@ let choose_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef li
   List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) objs) defs
 
 let run_predict fname defs pred_num pred_method =
-  let oname = Filename.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in
+  let oname = Opt.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in
   let cmd = !Opt.predict_path ^ " " ^ fname ^ "fea " ^ fname ^ "dep " ^
     fname ^ "seq -n " ^ string_of_int pred_num ^
     " -p " ^ pred_method ^ " " ^ Opt.stderr_redirect () ^ " < " ^ fname ^

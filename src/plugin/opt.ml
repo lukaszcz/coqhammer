@@ -192,6 +192,53 @@ let _ =
   in
   declare_bool_option gdopt
 
+(* Per-invocation temporary directory. All temporary files created
+   during a single hammer/predict invocation are placed inside a fresh,
+   private directory (see [temp_file]) which is removed as a whole when
+   the invocation finishes -- even on interruption or when an ATP worker
+   is killed mid-run. This makes cleanup deterministic and race-free: no
+   process globs over the shared temp directory, so concurrent hammer
+   invocations never delete each other's files. In debug mode no such
+   directory is used, so the intermediate files are left in the system
+   temp directory for inspection. *)
+
+let temp_dir_ref = ref None
+
+(* Create a temporary file for the current invocation. When an
+   invocation directory is active the file is placed inside it;
+   otherwise (e.g. in debug mode, or outside any invocation) it falls
+   back to the system temp directory. *)
+let temp_file prefix suffix =
+  match !temp_dir_ref with
+  | Some dir -> Filename.temp_file ~temp_dir:dir prefix suffix
+  | None -> Filename.temp_file prefix suffix
+
+(* Remove a (flat) invocation directory together with its contents. *)
+let remove_temp_dir dir =
+  (try
+     Array.iter
+       (fun f -> try Sys.remove (Filename.concat dir f) with _ -> ())
+       (Sys.readdir dir)
+   with _ -> ());
+  (try Sys.rmdir dir with _ -> ())
+
+(* Run [f] with a fresh invocation directory active, removing it (and
+   everything left inside it) afterwards. In debug mode, or when a
+   directory is already active (nested call), [f] is run as-is. *)
+let with_temp_dir (f : unit -> 'a) : 'a =
+  if !debug_mode || !temp_dir_ref <> None then
+    f ()
+  else
+    begin
+      let base = Filename.temp_file "coqhammer" "" in
+      Sys.remove base;
+      Sys.mkdir base 0o700;
+      temp_dir_ref := Some base;
+      Fun.protect
+        ~finally:(fun () -> temp_dir_ref := None; remove_temp_dir base)
+        f
+    end
+
 let error_log_file_ref = ref None
 
 (* Path of the log file collecting the stderr of external commands (the

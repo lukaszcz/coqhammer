@@ -409,7 +409,7 @@ let minimize info hyps deps goal =
   let get_atp_deps = get_atp_deps deps
   in
   let rec pom pname1 info =
-    let fname = Filename.temp_file "coqhammer" ".p" in
+    let fname = Opt.temp_file "coqhammer" ".p" in
     write_atp_file fname (get_atp_deps info) hyps deps goal;
     let ofname = fname ^ ".out" in
     let clean () =
@@ -461,7 +461,7 @@ let minimize info hyps deps goal =
   pom "" info
 
 let predict deps1 hyps deps goal =
-  let fname = Filename.temp_file "coqhammer" ".p" in
+  let fname = Opt.temp_file "coqhammer" ".p" in
   write_atp_file fname deps1 hyps deps goal;
   let ofname = fname ^ ".out" in
   let clean () =
@@ -530,7 +530,7 @@ let command_succeeds cmd =
   Sys.command (cmd ^ " >/dev/null 2>&1") = 0
 
 let z3_supports_tptp bin =
-  let fname = Filename.temp_file "coqhammer-z3-detect" ".p" in
+  let fname = Opt.temp_file "coqhammer-z3-detect" ".p" in
   try
     let oc = open_out fname in
     output_string oc "fof(coqhammer_z3_detect, conjecture, $true).\n";

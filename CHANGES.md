@@ -10,6 +10,10 @@ Overview of changes
 * Fixed `dune` build.
 * Fixed deprecation warnings.
 * The `unfold`, `unfold!` and `unfolding` options accept notations (e.g. `unfold: "#"`).
+* Fixed temporary file leaks: all temporary files of a `hammer`/`predict`
+  invocation are now placed in a private per-invocation directory that is
+  removed as a whole on completion, interruption, or ATP worker kill (no
+  more racy globbing over the shared temp directory).
 * Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2

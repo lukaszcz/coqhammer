@@ -704,12 +704,6 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
       hlp 1 tactics
     end
 
-let clean_temp_files () =
-  if not !Opt.debug_mode then
-    begin (* a hack *)
-      ignore (Sys.command ("rm -f " ^ Filename.get_temp_dir_name () ^ "/coqhammer*"))
-    end
-
 (* Runs jobs from `seq` in parallel, each invoking one ATP on the
    premises returned by its selection function. Each element of `seq`
    is: (prover description, enabled, enabled option ref, premise
@@ -804,10 +798,7 @@ let do_predict hyps deps goal =
         end
         greedy_sequence
     in
-    let clean () =
-      Features.clean fname;
-      clean_temp_files ()
-    in
+    let clean () = Features.clean fname in
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
@@ -835,7 +826,7 @@ let do_choice hyps deps goal lems =
          ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
          ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
     in
-    run_gs_provers hyps deps goal clean_temp_files seq
+    run_gs_provers hyps deps goal (fun () -> ()) seq
   else (* Opts.gs_mode = 0 *)
     Provers.predict deps1 hyps deps goal
 
@@ -864,13 +855,16 @@ let hammer_main_tac env sigma gl mode =
     Msg.info ("Found " ^ string_of_int (List.length defs) ^
                 " accessible Coq objects.");
   let info =
-    match mode with
-    | Prediction -> do_predict hyps defs goal
-    | Choice glems ->
-       (* An empty lemma list is allowed: then the premises are the
-          definitions directly referenced by the goal or the
-          hypotheses. *)
-       do_choice hyps defs goal (get_given_lemmas env sigma glems)
+    Opt.with_temp_dir
+      begin fun () ->
+        match mode with
+        | Prediction -> do_predict hyps defs goal
+        | Choice glems ->
+           (* An empty lemma list is allowed: then the premises are the
+              definitions directly referenced by the goal or the
+              hypotheses. *)
+           do_choice hyps defs goal (get_given_lemmas env sigma glems)
+      end
   in
   let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
   let clear_ids = hyps_to_clear env sigma gl used_ids in
@@ -949,7 +943,7 @@ let predict_tac n pred_method =
             Opt.predictions_num := old_n
           in
           try
-            let defs1 = Features.predict hyps defs goal in
+            let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
             restore ();
             Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
           with e ->
@@ -1075,7 +1069,7 @@ let hammer_hook_tac prefix name =
                   let goal = get_goal gl in
                   let hyps = get_hyps gl in
                   let defs = get_defs env sigma in
-                  let defs1 = Features.predict hyps defs goal in
+                  let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
                   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
                 end
                 premises;
