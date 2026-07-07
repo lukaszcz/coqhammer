@@ -9,7 +9,7 @@ predict: src/predict/main.cpp src/predict/predictor.cpp src/predict/format.cpp s
 htimeout: src/htimeout/htimeout.c
 	cc -O2 -Wall src/htimeout/htimeout.c -o htimeout
 
-BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
+BINDIR ?= $(if $(COQBIN),$(COQBIN),`rocq c -where | xargs dirname | xargs dirname`/bin/)
 
 install-extra::
 	install -d $(DESTDIR)$(BINDIR)

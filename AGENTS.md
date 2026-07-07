@@ -27,7 +27,7 @@ Two small standalone binaries are built alongside the plugin and installed into 
 
 ## Tests
 
-Tests are `.v` files compiled with the **installed** plugin (`coqc` with no `-Q`/`-R` flags), so install before testing.
+Tests are `.v` files compiled with the **installed** plugin (`rocq c` with no `-Q`/`-R` flags), so install before testing.
 
 ```bash
 make tests            # full test suite (tests/plugin + tests/tactics)
@@ -39,8 +39,8 @@ make test-tactics
 Run a single test file directly:
 
 ```bash
-cd tests/plugin && coqc bugs.v      # or basic.v, arith.v, lists.v, ...
-cd tests/tactics && coqc tactics_test.v
+cd tests/plugin && rocq c bugs.v      # or basic.v, arith.v, lists.v, ...
+cd tests/tactics && rocq c tactics_test.v
 ```
 
 `tests/plugin/*.v` require external ATPs to be installed since they actually run `hammer`.

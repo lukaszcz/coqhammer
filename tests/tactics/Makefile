@@ -1,4 +1,4 @@
-COQC=coqc
+COQC ?= rocq c
 
 all: tactics_test.vo
 

@@ -1,4 +1,4 @@
-COQC=coqc
+COQC ?= rocq c
 
 all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
 

@@ -1,5 +1,5 @@
 
-BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
+BINDIR ?= $(if $(COQBIN),$(COQBIN),`rocq c -where | xargs dirname | xargs dirname`/bin/)
 
 default: all
 
