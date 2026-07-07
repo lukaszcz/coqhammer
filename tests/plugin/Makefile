@@ -2,6 +2,8 @@ COQC ?= rocq c
 
 all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
 
+test-extraction: extraction_matches.vo
+
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
 	@if grep -q 'Init\.Logic\.' transl.out; then \
@@ -40,7 +42,10 @@ lists.vo: lists.v
 misc.vo: misc.v
 	$(COQC) misc.v
 
+extraction_matches.vo: extraction_matches.v
+	$(COQC) extraction_matches.v
+
 clean:
 	-rm -f *.vo *.glob *.out .*.aux
 
-.PHONY: all clean
+.PHONY: all test-extraction clean

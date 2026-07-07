@@ -2,3 +2,8 @@
  (alias runtest)
  (deps (:vfile plugin_test.v))
  (action (run rocq c %{vfile})))
+
+(rule
+ (alias extraction)
+ (deps (:vfile extraction_matches.v))
+ (action (run rocq c %{vfile})))
