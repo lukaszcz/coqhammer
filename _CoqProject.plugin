@@ -11,6 +11,8 @@ src/plugin/defhash.mli
 src/plugin/defhash.ml
 src/plugin/coq_typing.mli
 src/plugin/coq_typing.ml
+src/plugin/coq_erasure.mli
+src/plugin/coq_erasure.ml
 src/plugin/hashing.mli
 src/plugin/hashing.ml
 src/plugin/coq_convert.mli

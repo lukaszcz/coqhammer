@@ -5,6 +5,7 @@ Coq_transl_opts
 Coqterms
 Defhash
 Coq_typing
+Coq_erasure
 Hashing
 Coq_convert
 Tptp_out

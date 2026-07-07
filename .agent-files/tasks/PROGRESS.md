@@ -6,7 +6,7 @@
 - TASK_02 — done
 - TASK_03 — done
 - TASK_04 — done
-- TASK_05 — unblocked (not started)
+- TASK_05 — done
 - TASK_06 — unblocked (not started)
 - TASK_07 — unblocked (not started)
 - TASK_08 — unblocked (not started)
@@ -28,7 +28,7 @@
 
 ## 2. Next unblocked task
 
-/home/dev/coqhammer/worktrees/extraction/.agent-files/tasks/TASK_05.md
+/home/dev/coqhammer/worktrees/extraction/.agent-files/tasks/TASK_06.md
 
 ## 3. Completion log
 
@@ -37,3 +37,4 @@ Append exactly ONE line per task as it lands, newest last.
 - 2026-07-07 TASK_02: Added and verified the dependent-types extraction TDD corpus, including WF-recursion fixtures, the consistency canary, harness wiring, and expected pass/fail profile.
 - 2026-07-07 TASK_03: Added and verified the extraction translation-shape harness, Makefile assertions, staged phase assertion blocks, and transl expected profile.
 - 2026-07-08 TASK_04: Added Phase 0 translation option constants, Hammer_dump proof-mode TPTP dumping, SProp translation assertions, and dump smoke coverage.
+- 2026-07-08 TASK_05: Added the Coq_erasure classification module and registered it in both plugin build paths.
