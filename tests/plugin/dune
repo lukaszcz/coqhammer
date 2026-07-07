@@ -5,8 +5,12 @@
 
 (rule
  (alias extraction)
- (deps extraction_matches.v extraction_deptypes.v)
+ (deps extraction_matches.v extraction_deptypes.v extraction_transl.v check-extraction-transl.sh)
  (action
   (progn
    (run rocq c extraction_matches.v)
-   (run rocq c extraction_deptypes.v))))
+   (run rocq c extraction_deptypes.v)
+   (with-stdout-to extraction_transl.out
+    (with-stderr-to extraction_transl.out
+     (run rocq c extraction_transl.v)))
+   (run ./check-extraction-transl.sh extraction_transl.out))))

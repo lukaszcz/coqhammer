@@ -2,7 +2,7 @@ COQC ?= rocq c
 
 all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
 
-test-extraction: extraction_matches.vo extraction_deptypes.vo
+test-extraction: extraction_matches.vo extraction_deptypes.vo extraction_transl.vo
 
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
@@ -47,6 +47,13 @@ extraction_matches.vo: extraction_matches.v
 
 extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
+
+extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
+	$(COQC) extraction_transl.v > extraction_transl.out 2>&1
+	@if ! ./check-extraction-transl.sh extraction_transl.out; then \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; \
+	fi
+	@rm -f extraction_transl.out
 
 clean:
 	-rm -f *.vo *.glob *.out .*.aux
