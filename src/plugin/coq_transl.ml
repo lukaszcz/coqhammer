@@ -135,7 +135,11 @@ let listM_nth lst n =
 
 let add_axiom ax =
   log 3 ("add_axiom: " ^ fst ax);
-  ((), fun axs -> ax :: axs)
+  ((), fun axs ->
+    debug 1 (fun () ->
+      if List.exists (fun ax2 -> fst ax2 = fst ax) axs then
+        failwith ("duplicate axiom name: " ^ fst ax));
+    ax :: axs)
 
 let extract_axioms m = (snd m) []
 
@@ -438,101 +442,285 @@ and case_lifting axname0 name0 fvars lvars tm =
     Defhash.add def;
     Const(name)
   in
-  try
-    begin
-      match tm with
-      | Cast(Const("$Proof"), _) | Const("$Proof") ->
-         return (generic_match ())
-      | Case(indname, matched_term, return_type, params_num, branches) ->
-        let df = try Defhash.find indname with _ -> raise Not_found
-        in
-        begin
-          match df with
-          | (_, IndType(_, constrs, pnum), indty, _) ->
-             assert (pnum = params_num);
-             if Coq_typing.check_type_target_is_prop indty then
-               return (generic_match ())
+  let legacy_case_lifting () =
+    try
+      begin
+        match tm with
+        | Cast(Const("$Proof"), _) | Const("$Proof") ->
+           return (generic_match ())
+        | Case(indname, matched_term, return_type, params_num, branches) ->
+          let df = try Defhash.find indname with _ -> raise Not_found
+          in
+          begin
+            match df with
+            | (_, IndType(_, constrs, pnum), indty, _) ->
+               assert (pnum = params_num);
+               if Coq_typing.check_type_target_is_prop indty then
+                 return (generic_match ())
+               else
+                 let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
+                 in
+                 let axname = if name0 = "" then fname else axname0
+                 in
+                 convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+                 >>=
+                 fun case_replacement ->
+                   let case_repl2 = mk_long_app case_replacement (mk_vars lvars)
+                   in
+                   let params = get_params indty return_type params_num
+                   in
+                   let rec hlp constrs branches params params_num vars tm =
+                     let rec get_branch cname cstrs brs =
+                       match cstrs, brs with
+                       | c :: cstrs2, b :: brs2 ->
+                          if c = cname then
+                            b
+                          else
+                            get_branch cname cstrs2 brs2
+                       | _ -> failwith "case_lifting: get_branch"
+                     in
+                     begin fun cname _ args eqt ->
+                     let (n, branch) = get_branch cname constrs branches
+                     in
+                     assert (List.length args <= n);
+                     (* We may have List.length args < n if there are some lets
+                        in the type and they get evaluated away. We do not
+                        properly deal with this (rare) situation: the generated
+                        formula will in this case not be correct (the branch
+                        (`cr' below) will miss arguments). *)
+                     let ctx = List.rev (vars @ args)
+                     in
+                     let ys = mk_vars args
+                     in
+                     let cr = simpl (mk_long_app branch ys)
+                     in
+                     match cr with
+                     | Case(indname2, mt2, return_type2, pnum2, branches2) ->
+                        let df = try Defhash.find indname2 with _ -> raise Not_found
+                        in
+                        begin
+                          match df with
+                          | (_, IndType(_, constrs2, pn), indty2, _) ->
+                             assert (pn = pnum2);
+                             if Coq_typing.check_type_target_is_prop indty2 then
+                               eqt
+                             else
+                               let params2 = get_params indty2 return_type2 pnum2
+                               in
+                               mk_guards []
+                                 (get_fvars ctx mt2)
+                                 (mk_and eqt (mk_inversion params2 indname constrs2 mt2
+                                                (hlp constrs2 branches2 params2 pnum2 (vars @ args) cr)))
+                          | _ ->
+                             failwith "impossible"
+                        end
+                     | _ ->
+                        let eqv =
+                          if Coq_typing.check_prop ctx cr then
+                            mk_equiv case_repl2 cr
+                          else
+                            mk_eq case_repl2 cr
+                        in
+                        mk_and eqt eqv
+                     end
+                   in
+                   add_inversion_axioms0
+                     (mk_inversion params) indname axname fvars lvars constrs matched_term
+                     (hlp constrs branches params params_num (fvars @ lvars) tm)
+                   >>
+                     return case_replacement
+            | _ ->
+               failwith "impossible"
+          end
+        | _ ->
+          failwith "case_lifting"
+      end
+    with Not_found ->
+      log 2 ("case exception: " ^ name0);
+      return (generic_match ())
+  in
+  if not opt_split_case_axioms then
+    legacy_case_lifting ()
+  else
+    let short_constructor_name name =
+      try
+        let i = String.rindex name '.' in
+        String.sub name (i + 1) (String.length name - i - 1)
+      with Not_found -> name
+    in
+    let rec get_branch cname cstrs brs =
+      match cstrs, brs with
+      | c :: cstrs2, b :: brs2 ->
+         if c = cname then b else get_branch cname cstrs2 brs2
+      | _ -> failwith "case_lifting: get_branch"
+    in
+    let constructor_args params params_num cname =
+      let (_, targs, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+      in
+      let cargs1 = Hhlib.take params_num cargs
+      in
+      let cargs2 =
+        List.map
+          (fun (name, ty) -> (name, subst_params cargs1 params ty))
+          (Hhlib.drop params_num cargs)
+      in
+      let targs2 =
+        List.map
+          (fun tm -> subst_params cargs1 params tm)
+          (Hhlib.drop params_num targs)
+      in
+      (targs2, cargs2)
+    in
+    let subst_proof_args base_ctx args body =
+      let rec hlp ctx args body =
+        match args with
+        | [] -> body
+        | (name, ty) :: args2 ->
+           let body2 =
+             if Coq_typing.check_prop ctx ty then
+               subst_proof name ty body
              else
-               let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
-               in
-               let axname = if name0 = "" then fname else axname0
-               in
-               convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
-               >>=
-               fun case_replacement ->
-                 let case_repl2 = mk_long_app case_replacement (mk_vars lvars)
-                 in
-                 let params = get_params indty return_type params_num
-                 in
-                 let rec hlp constrs branches params params_num vars tm =
-                   let rec get_branch cname cstrs brs =
-                     match cstrs, brs with
-                     | c :: cstrs2, b :: brs2 ->
-                        if c = cname then
-                          b
-                        else
-                          get_branch cname cstrs2 brs2
-                     | _ -> failwith "case_lifting: get_branch"
-                   in
-                   begin fun cname _ args eqt ->
-                   let (n, branch) = get_branch cname constrs branches
-                   in
-                   assert (List.length args <= n);
-                   (* We may have List.length args < n if there are some lets
-                      in the type and they get evaluated away. We do not
-                      properly deal with this (rare) situation: the generated
-                      formula will in this case not be correct (the branch
-                      (`cr' below) will miss arguments). *)
-                   let ctx = List.rev (vars @ args)
-                   in
-                   let ys = mk_vars args
-                   in
-                   let cr = simpl (mk_long_app branch ys)
-                   in
-                   match cr with
-                   | Case(indname2, mt2, return_type2, pnum2, branches2) ->
-                      let df = try Defhash.find indname2 with _ -> raise Not_found
+               body
+           in
+           hlp ((name, ty) :: ctx) args2 body2
+      in
+      hlp base_ctx args body
+    in
+    let emit_leaf axname vars lhs body =
+      let mk_eqv ctx =
+        if Coq_typing.check_prop ctx body then
+          mk_equiv lhs body
+        else
+          mk_eq lhs body
+      in
+      (* Rule 5 (paper, Body compilation; Rem.: closure guards): split
+         equations carry only computation.  With the default guard policy they
+         are unguarded even for pattern variables (Prop.: the split form needs
+         no guards); when ClosureGuards is enabled we use the ordinary guarded
+         closure machinery uniformly. *)
+      begin
+        if !opt_closure_guards then
+          close vars (fun ctx -> prop_to_formula ctx (mk_eqv ctx))
+        else
+          make_fol_forall [] vars (mk_eqv (List.rev vars))
+      end >>= fun r ->
+      add_axiom (mk_axiom axname r)
+    in
+    (* Termination follows the paper's Body-compilation measure: first the
+       number of root case/lambda/fix nodes remaining to compile, then the node
+       count.  Rule 2 recurses into constructor branches, and this Phase-1a
+       implementation sends the non-decreasing rule-1/3/4 shapes to the legacy
+       value-translation fallback (TASK_09), so every recursive split step is on
+       a strict sub-body. *)
+    let rec compile_case lhs vars axname body =
+      match simpl body with
+      | Case(indname, matched_term, return_type, params_num, branches) as case_body ->
+         let df = try Defhash.find indname with _ -> raise Not_found
+         in
+         begin
+           match df with
+           | (_, IndType(_, constrs, pnum), indty, _) ->
+              assert (pnum = params_num);
+              if Coq_typing.check_type_target_is_prop indty then
+                (* TASK_09: Phase 2 takes over Prop-scrutinee erasure; keep the
+                   status-quo generic-match fallback for this subtree. *)
+                emit_leaf axname vars lhs case_body
+              else
+                begin
+                  match matched_term with
+                  | Var scrutinee when var_occurs scrutinee lhs ->
+                     let params = get_params indty return_type params_num
+                     in
+                     let compile_branch acc cname =
+                       acc >>
+                       let (n, branch) = get_branch cname constrs branches
+                       in
+                       let (_, args) = constructor_args params params_num cname
+                       in
+                       assert (List.length args <= n);
+                       if List.length args <> n then
+                         (* We may have List.length args < n if there are some lets
+                            in the type and they get evaluated away.  Emitting a
+                            split equation would miss branch arguments, so fall
+                            back instead of producing a wrong equation. *)
+                         raise Not_found
+                       else
+                         let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
+                         in
+                         let branch_body = simpl (mk_long_app branch (mk_vars args))
+                         in
+                         let branch_body = subst_proof_args (List.rev vars) args branch_body
+                         in
+                         let lhs2 = substvar scrutinee pattern lhs
+                         and body2 = substvar scrutinee pattern branch_body
+                         and axname2 = axname ^ "$" ^ short_constructor_name cname
+                         and vars2 = List.filter (fun (name, _) -> name <> scrutinee) vars @ args
+                         in
+                         compile_case lhs2 vars2 axname2 body2
+                     in
+                     List.fold_left compile_branch (return ()) constrs
+                  | _ ->
+                     (* TASK_09: compound scrutinees become hash-consed aux
+                        symbols.  For now convert the subtree through the legacy
+                        case-lifting path, preserving the status quo. *)
+                     emit_leaf axname vars lhs case_body
+                end
+           | _ -> failwith "impossible"
+         end
+      | Lam(_) as lam_body ->
+         (* TASK_09: rule 1 will deepen lambdas; for now translate this subtree
+            through existing lambda lifting. *)
+         emit_leaf axname vars lhs lam_body
+      | Fix(_) as fix_body ->
+         (* TASK_09: rule 4 will delegate explicitly to fix lifting; for now the
+            leaf conversion uses the existing fix-lifting machinery. *)
+         emit_leaf axname vars lhs fix_body
+      | body2 ->
+         emit_leaf axname vars lhs body2
+    in
+    try
+      begin
+        match tm with
+        | Cast(Const("$Proof"), _) | Const("$Proof") ->
+           return (generic_match ())
+        | Case(indname, matched_term, return_type, params_num, branches) ->
+          let df = try Defhash.find indname with _ -> raise Not_found
+          in
+          begin
+            match df with
+            | (_, IndType(_, _constrs, pnum), indty, _) ->
+               assert (pnum = params_num);
+               if Coq_typing.check_type_target_is_prop indty then
+                 return (generic_match ())
+               else
+                 begin
+                   match matched_term with
+                   | Var(_) ->
+                      let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
                       in
-                      begin
-                        match df with
-                        | (_, IndType(_, constrs2, pn), indty2, _) ->
-                           assert (pn = pnum2);
-                           if Coq_typing.check_type_target_is_prop indty2 then
-                             eqt
-                           else
-                             let params2 = get_params indty2 return_type2 pnum2
-                             in
-                             mk_guards []
-                               (get_fvars ctx mt2)
-                               (mk_and eqt (mk_inversion params2 indname constrs2 mt2
-                                              (hlp constrs2 branches2 params2 pnum2 (vars @ args) cr)))
-                        | _ ->
-                           failwith "impossible"
-                      end
+                      let axname = if name0 = "" then fname else axname0
+                      in
+                      convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+                      >>=
+                      fun case_replacement ->
+                        let lhs = mk_long_app case_replacement (mk_vars lvars)
+                        in
+                        compile_case lhs (fvars @ lvars) axname tm >>
+                        return case_replacement
                    | _ ->
-                      let eqv =
-                        if Coq_typing.check_prop ctx cr then
-                          mk_equiv case_repl2 cr
-                        else
-                          mk_eq case_repl2 cr
-                      in
-                      mk_and eqt eqv
-                   end
-                 in
-                 add_inversion_axioms0
-                   (mk_inversion params) indname axname fvars lvars constrs matched_term
-                   (hlp constrs branches params params_num (fvars @ lvars) tm)
-                 >>
-                   return case_replacement
-          | _ ->
-             failwith "impossible"
-        end
-      | _ ->
-        failwith "case_lifting"
-    end
-  with Not_found ->
-    log 2 ("case exception: " ^ name0);
-    return (generic_match ())
+                      (* TASK_09: root compound scrutinees keep the legacy
+                         guarded-disjunction translation in Phase 1a. *)
+                      legacy_case_lifting ()
+                 end
+            | _ ->
+               failwith "impossible"
+          end
+        | _ ->
+          failwith "case_lifting"
+      end
+    with Not_found ->
+      log 2 ("case exception: " ^ name0);
+      return (generic_match ())
 
 (*****************************************************************************************)
 (* Convert definitions to axioms *)

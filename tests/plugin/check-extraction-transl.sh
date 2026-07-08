@@ -59,14 +59,16 @@ require_line "SProp function uses the premise type" '^\$_typeof_extraction_trans
 require_line "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
 forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
 
-# myadd: current translator emits one guarded/disjunctive definition axiom.
-require_count_at_least "myadd has a definition axiom" '^\$_def_extraction_matches\.myadd:' 1
-require_line "myadd mentions the zero branch" '^\$_def_extraction_matches\.myadd:.*Corelib\.Init\.Datatypes\.O'
-require_line "myadd mentions the successor branch" '^\$_def_extraction_matches\.myadd:.*Corelib\.Init\.Datatypes\.S'
+# Phase 1a split equations: variable-scrutinee definitions are emitted as one
+# guard-free unit equation per constructor.
+require_line "myadd zero split equation" '^\$_def_extraction_matches\.myadd[$]O:.*extraction_matches\.myadd @ Corelib\.Init\.Datatypes\.O'
+require_line "myadd successor split equation" '^\$_def_extraction_matches\.myadd[$]S:.*extraction_matches\.myadd @ \(Corelib\.Init\.Datatypes\.S @'
+forbid_line "myadd split equations are guard/existential/disjunction free" '^\$_def_extraction_matches\.myadd[$].*(\$HasType|\?\[|[|])'
 
-# g: current nested match is represented inside one definition axiom.
-require_count_at_least "g has a definition axiom" '^\$_def_extraction_matches\.g:' 1
-require_line "g keeps the nested-successor shape in the baseline" '^\$_def_extraction_matches\.g:.*Corelib\.Init\.Datatypes\.S'
+require_line "g zero split equation" '^\$_def_extraction_matches\.g[$]O:'
+require_line "g one split equation" '^\$_def_extraction_matches\.g[$]S[$]O:'
+require_line "g deep split equation" '^\$_def_extraction_matches\.g[$]S[$]S:.*Corelib\.Init\.Datatypes\.S @ \(Corelib\.Init\.Datatypes\.S @'
+forbid_line "g split equations are existential-free" '^\$_def_extraction_matches\.g[$].*\?\['
 
 # k: current compound-scrutinee match remains a guarded/disjunctive definition.
 require_count_at_least "k has a definition axiom" '^\$_def_extraction_matches\.k:' 1
@@ -79,14 +81,14 @@ forbid_line "h must not get a baseline definition equation" '^\$_def_extraction_
 
 # safe_pred: baseline emits the dependent match as a disjunctive definition and
 # still exposes proof/refinement constructors.
-require_count_at_least "safe_pred has a definition axiom" '^\$_def_extraction_deptypes\.safe_pred:' 1
+require_count_at_least "safe_pred has split definition axioms" '^\$_def_extraction_deptypes\.safe_pred[$]' 2
 require_line "safe_pred baseline still exposes exist" 'Corelib\.Init\.Specif\.exist'
 require_line "safe_pred baseline still exposes False_rect" 'Corelib\.Init\.Logic\.False_rect'
 
 # pval: non-primitive projection record fixture currently has an inversion-style
 # definition axiom.
-require_count_at_least "pval has a definition axiom" '^\$_def_extraction_deptypes\.pval:' 1
-require_line "pval baseline mentions mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
+require_count_at_least "pval has a split definition axiom" '^\$_def_extraction_deptypes\.pval[$]' 1
+require_line "pval split mentions mkpos" '^\$_def_extraction_deptypes\.pval[$].*extraction_deptypes\.mkpos'
 
 # beq: sumbool-driven definition currently splits on Nat.eq_dec.
 require_count_at_least "beq has a definition axiom" '^\$_def_extraction_deptypes\.beq:' 1
@@ -110,13 +112,13 @@ forbid_line "idiv must not expose an unconditional recursive sub-call unfolding"
 # Stdlib regression constants: structural snapshots enforced now.
 # -----------------------------------------------------------------------------
 
-require_count_at_least "Nat.add has a definition axiom" '^\$_def_Corelib\.Init\.Nat\.add:' 1
-require_line "Nat.add baseline mentions O" '^\$_def_Corelib\.Init\.Nat\.add:.*Corelib\.Init\.Datatypes\.O'
-require_line "Nat.add baseline mentions S" '^\$_def_Corelib\.Init\.Nat\.add:.*Corelib\.Init\.Datatypes\.S'
+require_line "Nat.add zero split equation" '^\$_def_Corelib\.Init\.Nat\.add[$]O:'
+require_line "Nat.add successor split equation" '^\$_def_Corelib\.Init\.Nat\.add[$]S:'
+forbid_line "Nat.add split equations are guard/existential/disjunction free" '^\$_def_Corelib\.Init\.Nat\.add[$].*(\$HasType|\?\[|[|])'
 
-require_count_at_least "List.app has a definition axiom" '^\$_def_Corelib\.Init\.Datatypes\.app:' 1
-require_line "List.app baseline mentions nil" '^\$_def_Corelib\.Init\.Datatypes\.app:.*Corelib\.Init\.Datatypes\.nil'
-require_line "List.app baseline mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.app:.*Corelib\.Init\.Datatypes\.cons'
+require_count_at_least "List.app has split definition axioms" '^\$_def_Corelib\.Init\.Datatypes\.app[$]' 2
+require_line "List.app split mentions nil" '^\$_def_Corelib\.Init\.Datatypes\.app[$]nil:.*Corelib\.Init\.Datatypes\.nil'
+require_line "List.app split mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.app[$]cons:.*Corelib\.Init\.Datatypes\.cons'
 
 require_line "List.Forall has an inversion axiom" '^\$_inversion_Corelib\.Lists\.ListDef\.Forall:'
 require_line "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'
@@ -127,7 +129,7 @@ require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Spec
 require_line "sig has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
 require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
-require_count_at_least "Streams.hd has a definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd:' 1
+require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1
 require_line "typeclass method projection is translated" '^Corelib\.Classes\.RelationClasses\.Equivalence_Reflexive:'
 
 # -----------------------------------------------------------------------------

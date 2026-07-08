@@ -20,16 +20,31 @@ let unescape s = Scanf.unescaped (Scanf.unescaped s)
 
 let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
 
-let is_good_dep s = is_alpha (String.get s 0) && not (Hhlib.string_begins_with s "_HAMMER_")
+let is_good_dep s = String.length s > 0 && is_alpha (String.get s 0) && not (Hhlib.string_begins_with s "_HAMMER_")
 
 let remove_duplicates = Hhlib.sort_uniq Stdlib.compare
 
 let get_deps lst = List.filter is_good_dep lst
 
+let strip_dollar_suffix s =
+  try
+    let i = String.index s '$' in
+    if i > 0 then String.sub s 0 i else s
+  with Not_found -> s
+
 let get_defs lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 6 (String.length s - 6))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_def_") lst))
+  remove_duplicates
+    (List.filter is_good_dep
+       (List.map (fun s -> strip_dollar_suffix (String.sub s 6 (String.length s - 6)))
+          (List.filter (fun s -> Hhlib.string_begins_with s "$_def_") lst)))
+
+let () =
+  let defs = get_defs ["$_def_$_lam_1$Corelib.Init.Datatypes.O";
+                       "$_def_$_case_Corelib.Init.Datatypes.nat$2$O";
+                       "$_def_Corelib.Init.Nat.add$S"]
+  in
+  if defs <> ["Corelib.Init.Nat.add"] then
+    failwith "Provers.get_defs: lifted split-axiom suffix parsing regression"
 
 let get_typings lst =
   List.filter is_good_dep

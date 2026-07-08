@@ -28,7 +28,7 @@ Fixpoint rsize (r : rose) : nat :=
   match r with Rose cs => S (List.fold_right (fun c acc => rsize c + acc) 0 cs) end.
 
 Lemma extraction_myadd_ground : myadd 2 2 = 4.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_myadd_succ : forall n m, myadd (S n) m = S (myadd n m).
 Proof. hammer. Qed.
@@ -48,11 +48,11 @@ Proof. hammer. Qed.
 Lemma extraction_k_cases : forall b, k b = 0 \/ k b = 1.
 Proof. hammer. Qed.
 
-(* With the current translator this goal is flaky at the default prediction budget;
-   pin a small budget to record the stable pre-refactor failure. *)
+(* Keep this at the staged small prediction budget; split equations now make the
+   deep nested-match goal succeed there. *)
 Set Hammer Predictions 16.
 Lemma extraction_g_deep : forall x, g (S (S x)) = x.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_g_one : g 1 = 1.
 Proof. hammer. Qed.
