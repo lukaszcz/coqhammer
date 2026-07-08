@@ -637,11 +637,15 @@ and case_lifting axname0 name0 fvars lvars tm =
                        in
                        let (_, args) = constructor_args params params_num cname
                        in
-                       assert (List.length args <= n);
+                       if List.length args > n then
+                         raise Not_found
+                       else
+                         assert (List.length args <= n);
                        if List.length args <> n then
                          (* We may have List.length args < n if there are some lets
-                            in the type and they get evaluated away.  Emitting a
-                            split equation would miss branch arguments, so fall
+                            in the type and they get evaluated away; args > n is
+                            another unexpected arity mismatch.  Emitting a split
+                            equation would use the wrong branch arguments, so fall
                             back instead of producing a wrong equation. *)
                          raise Not_found
                        else
