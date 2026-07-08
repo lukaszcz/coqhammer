@@ -48,5 +48,10 @@ setup.log
 /src/hammer.ml
 .merlin
 *.install
-.agent-files
 _opam/
+
+# agents
+.agent-files
+.claude
+.codex
+.pi
