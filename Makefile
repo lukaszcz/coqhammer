@@ -1,7 +1,28 @@
 
 BINDIR ?= $(if $(COQBIN),$(COQBIN),`rocq c -where | xargs dirname | xargs dirname`/bin/)
+DUNE ?= dune
+DUNE_ENV ?= env -u OPAMSWITCH -u OPAM_SWITCH_PREFIX -u OCAMLPATH -u OCAMLTOP_INCLUDE_PATH -u OCAML_TOPLEVEL_PATH
+LOCAL_INSTALL ?= $(CURDIR)/_check-install
+LOCAL_ROCQLIB ?= $(LOCAL_INSTALL)/coq
+LOCAL_COQLIBINSTALL ?= $(LOCAL_ROCQLIB)/user-contrib
+LOCAL_COQPLUGININSTALL ?= $(LOCAL_INSTALL)
+ifneq ($(wildcard $(LOCAL_COQPLUGININSTALL)),)
+export OCAMLPATH := $(LOCAL_COQPLUGININSTALL)$(if $(OCAMLPATH),:$(OCAMLPATH))
+export PATH := $(LOCAL_INSTALL)/bin:$(PATH)
+endif
+ifneq ($(wildcard $(LOCAL_ROCQLIB)/theories),)
+export COQC ?= rocq c -coqlib $(LOCAL_ROCQLIB)
+endif
 
 default: all
+
+prepare-local-install:
+	mkdir -p $(LOCAL_ROCQLIB)/user-contrib
+	ln -sfn $$(rocq c -where)/theories $(LOCAL_ROCQLIB)/theories
+	ln -sfn $$(rocq c -where)/user-contrib/Stdlib $(LOCAL_ROCQLIB)/user-contrib/Stdlib
+	rm -rf $(LOCAL_INSTALL)/rocq-runtime
+	mkdir -p $(LOCAL_INSTALL)/rocq-runtime
+	for f in $$(dirname $$(rocq c -where))/rocq-runtime/*; do ln -sfn $$f $(LOCAL_INSTALL)/rocq-runtime/$$(basename $$f); done
 
 all:
 	$(MAKE) tactics
@@ -79,32 +100,32 @@ clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefi
 dune: dune-tactics dune-plugin
 
 dune-tactics:
-	dune build -p coq-hammer-tactics
+	$(DUNE_ENV) $(DUNE) build -p coq-hammer-tactics
 
 dune-plugin:
-	dune build -p coq-hammer-tactics,coq-hammer
+	$(DUNE_ENV) $(DUNE) build -p coq-hammer-tactics,coq-hammer
 
 dune-install: dune-install-tactics dune-install-plugin
 
 dune-install-tactics: dune-tactics
-	dune install coq-hammer-tactics
+	$(DUNE_ENV) $(DUNE) install coq-hammer-tactics
 
 dune-install-plugin: dune-plugin
-	dune install coq-hammer
+	$(DUNE_ENV) $(DUNE) install coq-hammer
 
 dune-uninstall:
-	dune uninstall coq-hammer coq-hammer-tactics
+	$(DUNE_ENV) $(DUNE) uninstall coq-hammer coq-hammer-tactics
 
 dune-uninstall-tactics:
-	dune uninstall coq-hammer-tactics
+	$(DUNE_ENV) $(DUNE) uninstall coq-hammer-tactics
 
 dune-uninstall-plugin:
-	dune uninstall coq-hammer
+	$(DUNE_ENV) $(DUNE) uninstall coq-hammer
 
 dune-clean:
-	dune clean
+	$(DUNE_ENV) $(DUNE) clean
 	$(MAKE) -C eval clean
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
 
-.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics test-extraction clean dune dune-tactics dune-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
+.PHONY: default prepare-local-install all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics test-extraction clean dune dune-tactics dune-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin

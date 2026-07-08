@@ -252,7 +252,7 @@ let rec has_erasable_content ctx tm =
       has_erasable_content ctx matched_term || has_erasable_content ctx return_type ||
       List.exists (fun (_, branch) -> has_erasable_content ctx branch) branches
   | Cast (term, ty) -> has_erasable_content ctx term || has_erasable_content ctx ty
-  | Fix (_, _, _, types, bodies) ->
+  | Fix (_, _, _, _, types, bodies) ->
       List.exists (has_erasable_content ctx) types || List.exists (has_erasable_content ctx) bodies
   | IndType _ -> false
   | Equal (x, y) -> has_erasable_content ctx x || has_erasable_content ctx y

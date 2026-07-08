@@ -143,15 +143,24 @@ let rec to_coqterm tm =
       match trm with
       | Comb(trm2, arg) ->
         build_lst f trm2 ((f arg) :: acc)
-      | Id "$ConstrArray" | Id "$NameArray" ->
+      | Id "$ConstrArray" | Id "$NameArray" | Id "$IntArray" ->
         acc
       | _ ->
         failwith "to_coqterm: build_lst"
     and name_to_str = function
       | Comb(Id "$Name", Id name) -> check_name name; name
       | _ -> failwith "name_to_str"
+    and int_to_int = function
+      | Id n -> int_of_string n
+      | _ -> failwith "int_to_int"
     in
-    Fix((if is_fix fix_or_cofix then CoqFix else CoqCoFix), int_of_string result_index,
+    let cft, recargs =
+      match fix_or_cofix with
+      | Comb(Id "$Fix", recargs) -> CoqFix, build_lst int_to_int recargs []
+      | Id "$CoFix" -> CoqCoFix, []
+      | _ -> failwith "to_coqterm: fix_or_cofix"
+    in
+    Fix(cft, int_of_string result_index, recargs,
         build_lst name_to_str names [], build_lst to_coqterm types [],
         build_lst to_coqterm bodies [])
 

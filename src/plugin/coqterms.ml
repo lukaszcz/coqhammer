@@ -26,8 +26,8 @@ type coqterm =
    it is always the case for each branch that params_num + n is the
    total number of arguments to the corresponding constructor *)
 | Cast of coqterm (* term *) * coqterm (* type *)
-| Fix of coqfixtype * int (* 0-based result index *) * string list (* name list *) *
-    coqterm list (* type list *) * coqterm list (* body list *)
+| Fix of coqfixtype * int (* 0-based result index *) * int list (* recargs *) *
+    string list (* name list *) * coqterm list (* type list *) * coqterm list (* body list *)
 | Let of coqterm (* value *) * coqabstraction
 | Prod of coqabstraction
 | IndType of string (* inductive type name *) * string list (* constructor names *) * int (* params_num *)
@@ -236,7 +236,7 @@ let map_fold_coqterm0 f acc tm =
       let tm2 = Cast(x2, y2)
       in
       f n ctx acc3 tm2
-    | Fix(cft, k, names, types, bodies) ->
+    | Fix(cft, k, recargs, names, types, bodies) ->
       let (types2, acc2) = map_fold_lst do_map_fold n ctx types acc
       and m = List.length types
       in
@@ -254,7 +254,7 @@ let map_fold_coqterm0 f acc tm =
       in
       let (bodies2, acc3) = mk_bodies2 bodies acc2
       in
-      let tm2 = Fix(cft, k, names, types2, bodies2)
+      let tm2 = Fix(cft, k, recargs, names, types2, bodies2)
       in
       f n ctx acc3 tm2
     | Let(value, (name, ty, body)) ->
@@ -434,10 +434,10 @@ let dsubst lst tm =
                let (abs2, acc2) = rename_abs n abs acc
                in
                (Let(value, abs2), acc2)
-           | Fix(cft, k, names, types, bodies) ->
+           | Fix(cft, k, recargs, names, types, bodies) ->
                let (names2, acc2) = rename_fix_names names n acc
                in
-               (Fix(cft, k, names2, types, bodies), acc2)
+               (Fix(cft, k, recargs, names2, types, bodies), acc2)
            | _ ->
                (tm, acc)
          end
@@ -507,12 +507,14 @@ let write_coqterm out tm =
       out " : ";
       write ty;
       out ")"
-    | Fix(cft, res, names, types, bodies) ->
+    | Fix(cft, res, recargs, names, types, bodies) ->
       out "(";
       out (match cft with CoqFix -> "fix" | CoqCoFix -> "cofix");
       out " ";
       out (string_of_int res);
-      out " ";
+      out " [";
+      oiter out (fun i -> out (string_of_int i)) ";" recargs;
+      out "] ";
       oiter
         out
         (fun ((n, ty), tm) -> out "("; out n; out " : "; write ty; out " := "; write tm; out ")")

@@ -31,7 +31,7 @@ let adjust_varnames =
           Quant(op, rename_abs n a)
       | Let(value, a) ->
           Let(value, rename_abs n a)
-      | Fix(cft, m, names, types, bodies) ->
+      | Fix(cft, m, recargs, names, types, bodies) ->
           let names2 =
             List.rev
               (fst
@@ -40,7 +40,7 @@ let adjust_varnames =
                     ([], n)
                     names))
           in
-          Fix(cft, m, names2, types, bodies)
+          Fix(cft, m, recargs, names2, types, bodies)
       | _ ->
           tm
     end
@@ -372,7 +372,7 @@ and lambda_lifting axname name fvars lvars1 tm =
 and fix_lifting axname dname fvars lvars tm =
   debug 3 (fun () -> print_header "fix_lifting" tm (fvars @ lvars));
   match tm with
-  | Fix(cft, k, names, types, bodies) ->
+  | Fix(cft, k, _recargs, names, types, bodies) ->
       let fix_pref = "$_fix_" ^ unique_id () ^ "_"
       in
       let names1 = List.map ((^) fix_pref) names
@@ -1126,7 +1126,16 @@ end
 (***************************************************************************************)
 (* Translation *)
 
+(* Phase-0 plumbing for later well-founded-recursion handling.  Later phases set this
+   during one [translate] call and inspect it before attaching premises; for now it is
+   intentionally inert and only reset here, so it cannot leak across constants. *)
+let wf_mark = ref false
+
+let wf_mark_for_testing () = !wf_mark
+let set_wf_mark_for_testing value = wf_mark := value
+
 let translate name =
+  wf_mark := false;
   log 1 ("translate: " ^ name);
   let axs = extract_axioms (add_def_axioms (Defhash.find name))
   in

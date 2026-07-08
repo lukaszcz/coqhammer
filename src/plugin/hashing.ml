@@ -33,10 +33,10 @@ let rec can_aux n t =
     | Lam(x,t1,t2)          -> let v = var n in Lam(v, f t1, can_aux (n+1) (sub v x t2))
     | Case(indt,t1,t2,m,cs) -> Case(indt, f t1, f t2, m, List.map (fun (p,u) -> (p, f u)) cs)
     | Cast(t1,t2)           -> Cast(f t1, f t2)
-    | Fix(t,i,xs,ts1,ts2)   -> let m = List.length xs in
-                               let newvars = vars n m in
-                               let newbodies = List.map (fun b -> can_aux (n+m) (subs (zip (vars n m) xs) b)) ts2
-                               in Fix(t, i, newvars, List.map f ts1, newbodies)
+    | Fix(t,i,recargs,xs,ts1,ts2) -> let m = List.length xs in
+                                     let newvars = vars n m in
+                                     let newbodies = List.map (fun b -> can_aux (n+m) (subs (zip (vars n m) xs) b)) ts2
+                                     in Fix(t, i, recargs, newvars, List.map f ts1, newbodies)
     | Let(t1,(x,t2,t3))     -> let v = var n in Let(f t1, (v,f t2, can_aux (n+1) (sub v x t2)))
     | Prod(x,t1,t2)         -> let v = var n in Prod(v, f t1, can_aux (n+1) (sub v x t2))
     | IndType(indt,xs,n)    -> IndType(indt,xs,n)

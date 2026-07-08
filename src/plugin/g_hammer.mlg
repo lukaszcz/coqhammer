@@ -47,6 +47,12 @@ VERNAC COMMAND EXTEND Hammer_plugin_transl CLASSIFIED AS QUERY
 | [ "Hammer_transl" string(name) ] -> { hammer_transl name }
 END
 
+VERNAC COMMAND EXTEND Hammer_plugin_test_wf_mark_reset CLASSIFIED AS QUERY
+| [ "Hammer_test_wf_mark_reset" string(name0) string(name1) ] -> {
+  hammer_test_wf_mark_reset name0 name1
+}
+END
+
 VERNAC COMMAND EXTEND Hammer_plugin_dump CLASSIFIED AS SIDEFF
 | [ "Hammer_dump" string(fname) ] -> { hammer_dump fname }
 END

@@ -19,8 +19,10 @@ _default:
 
 # Install both packages, then run the quick smoke-test suite.
 check:
-    make install
-    make quicktest
+    rm -rf _check-install
+    make prepare-local-install
+    make install COQLIBINSTALL="$PWD/_check-install/coq/user-contrib" COQPLUGININSTALL="$PWD/_check-install" BINDIR="$PWD/_check-install/bin/" COQFLAGS="-coqlib $PWD/_check-install/coq"
+    make quicktest COQC="rocq c -coqlib $PWD/_check-install/coq"
 
 # Bump the CoqHammer version (patch|minor|major, or none to keep it) and publish
 # a GitHub release for this branch's Rocq. `none` ports the current release to a

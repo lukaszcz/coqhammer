@@ -149,11 +149,11 @@ let eval (tm : coqterm) : coqvalue =
           N (TERM (delay_subst env
                      (Case(indname, reify mt2, return_type, params_num, branches))))
       end
-    | Fix(cft, k, names, types, bodies) ->
+    | Fix(cft, k, recargs, names, types, bodies) ->
       let rec mkenv m lst acc =
         match lst with
         | h :: t ->
-            let fx = Fix(cft, m, names, types, bodies)
+            let fx = Fix(cft, m, recargs, names, types, bodies)
             in
             let v =
               if cft = CoqFix then
@@ -236,7 +236,7 @@ let rec check_prop args ctx tm =
       (* NOTE: this is incorrect if `params_num' is smaller than the
          number of arguments of the inductive type `indname' *)
       is_prop_tgt args (App(return_type, matched_term))
-  | Fix(_, k, names, types, bodies) ->
+  | Fix(_, k, _, names, types, bodies) ->
       is_prop_tgt args (List.nth types k)
   | Let(value, (name, ty, body)) ->
       check_prop args ctx (dsubst [(name, lazy (Cast(value, ty)))] body)

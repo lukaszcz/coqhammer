@@ -22,6 +22,10 @@ Qed.
 (* SProp regression: the sflag argument must be treated like a proof. *)
 Hammer_transl "sprop_arg_term".
 
+(* Phase-0 plumbing regression: the later WF-recursion mark must not leak
+   between top-level translations. *)
+Hammer_test_wf_mark_reset "myadd" "g".
+
 (* Corpus constants from extraction_matches.v. *)
 Hammer_transl "myadd".
 Hammer_transl "g".
