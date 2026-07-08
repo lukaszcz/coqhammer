@@ -2,7 +2,13 @@ COQC ?= rocq c
 
 all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
 
-test-extraction: extraction_matches.vo extraction_deptypes.vo extraction_transl.vo
+test-extraction: extraction_matches.vo extraction_deptypes.vo extraction_transl.vo consistency-canary-dumps
+	./check-consistency.sh
+	@rm -f consistency-idiv.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
+
+consistency-canary-dumps: consistency_canaries.v extraction_deptypes.vo
+	@rm -f consistency-idiv.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
+	$(COQC) consistency_canaries.v
 
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
@@ -61,6 +67,6 @@ extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_depty
 	@rm -f extraction_transl.out hammer_dump_smoke.p
 
 clean:
-	-rm -f *.vo *.glob *.out .*.aux hammer_dump_smoke.p
+	-rm -f *.vo *.glob *.out .*.aux hammer_dump_smoke.p consistency-idiv.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
 
-.PHONY: all test-extraction clean
+.PHONY: all test-extraction consistency-canary-dumps clean
