@@ -83,6 +83,70 @@ Tools
 
   Example: `tools/stat , y,p , , false`
 
+Phase 6 extraction evaluation workflow
+--------------------------------------
+
+The extraction-factored translator is evaluated by alternating installed plugin
+prefixes rather than by runtime options. The helper scripts below keep each build
+switchable and leave the source constants in `src/plugin/coq_transl_opts.ml`
+restored after a configuration build.
+
+1. Build the pre-refactor baseline at the branch fork point:
+
+   ```bash
+   ./build-baseline.sh --label baseline-merge-base
+   ```
+
+2. Build a refactored configuration:
+
+   ```bash
+   ./rebuild-config.sh --list
+   ./rebuild-config.sh all-on --label refactor-all-on
+   ```
+
+   Named configurations are `all-off`, `all-on`, and the five leave-one-out
+   ablations `loo-split-case-axioms`, `loo-prop-case-erasure`,
+   `loo-erasure-guards`, `loo-refinement-types`, and
+   `loo-wf-recursion-eqs`. Append `-decl-skips` to any of them to enable
+   declaration-level refinement skips for the rebuild.
+
+3. Prepare one corpus in `eval/problems`:
+
+   ```bash
+   ./prepare-corpus.sh stdlib-regression --sample
+   ./prepare-corpus.sh dependent-slice --sample
+   ./prepare-corpus.sh external-equations --sample
+   ```
+
+   `stdlib-regression` is the standard stdlib regression axis (the full prepared
+   stdlib problem set can still be dropped directly into `problems/` as described
+   above). `dependent-slice` contains Vector/Fin, FMapAVL/MSetAVL, Eqdep_dec,
+   Program/WF, and extraction_deptypes-style fixtures. `external-equations` is
+   the selected external Program/Equations-heavy development; see
+   `corpora/external-equations/CANDIDATES.md` for candidates and rationale. For
+   a full external run, pass `--source /path/to/Coq-Equations`.
+
+4. Dry-run a small sample end-to-end (one prover, one premise-count directory):
+
+   ```bash
+   ./run-dry-sample.sh --label baseline-merge-base --corpus stdlib-regression \
+     --prover eprover --premise knn-32
+   ./run-dry-sample.sh --label refactor-all-on --corpus external-equations \
+     --prover eprover --premise knn-32
+   ```
+
+   Summaries are written under `results/<label>/<corpus>/summary.txt`; the
+   generated ATP and reconstruction result lists next to each summary are the
+   quick parse check for harness regressions.
+
+5. To verify that scripted configuration rebuilding changes translation output
+   and restores the tree, run for example:
+
+   ```bash
+   ./diff-transl-configs.sh all-off all-on Nat.add
+   git diff --exit-code -- src/plugin/coq_transl_opts.ml
+   ```
+
 `stat` takes 5 (optionally 6) space-separated arguments: the `-r`
 option (optional), 4 lists (comma-separated values; empty list is
 represented by a single comma) and a boolean
