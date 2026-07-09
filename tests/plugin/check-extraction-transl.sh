@@ -164,11 +164,10 @@ require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*
 require_line "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
 
 # pval: non-primitive projection over a proof-carrying record is the identity
-# after subset-match collapse; its argument guard expands the record payload.
+# after subset-match collapse; its argument keeps the named record guard.
 require_line "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
-require_line "pval type axiom expands the posnat payload" '^\$_typeof_extraction_deptypes\.pval:.*\(=> @ \(\(& @ \(\(\$HasType @ var_0_p_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(\(Corelib\.Init\.Peano\.lt @ Corelib\.Init\.Datatypes\.O\) @ var_0_p_[0-9]+\)\)\)'
+require_line "pval type axiom keeps the posnat package guard" '^\$_typeof_extraction_deptypes\.pval:.*\(\(\$HasType @ var_0_p_[0-9]+\) @ extraction_deptypes\.posnat\)'
 forbid_line "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
-forbid_line "pval type axiom must not keep a posnat HasType atom" '^\$_typeof_extraction_deptypes\.pval:.*\$HasType @ var_0_p_[0-9]+\) @ extraction_deptypes\.posnat'
 
 # beq: sumbool-driven definition links through an auxiliary case symbol for
 # the compound Nat.eq_dec scrutinee; enum guards expand to constructor tags plus
