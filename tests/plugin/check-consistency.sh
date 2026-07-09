@@ -136,7 +136,13 @@ run_cvc4() {
   out=$tmpdir/cvc4.out
 
   echo "CHECK: CVC4 consistency on $label"
-  if cvc4 --tlimit "$timeout" "$problem" >"$out" 2>&1; then
+  if command -v timeout >/dev/null 2>&1; then
+    cvc4_cmd="timeout $((timeout + 1)) cvc4 --tlimit $((timeout * 1000))"
+  else
+    cvc4_cmd="cvc4 --tlimit $((timeout * 1000))"
+  fi
+  # shellcheck disable=SC2086
+  if $cvc4_cmd "$problem" >"$out" 2>&1; then
     :
   else
     status=$?
@@ -209,7 +215,13 @@ try_cvc4_theorem() {
   out=$tmpdir/cvc4-theorem.out
 
   echo "CHECK: CVC4 proves $label"
-  if cvc4 --tlimit "$timeout" "$problem" >"$out" 2>&1; then
+  if command -v timeout >/dev/null 2>&1; then
+    cvc4_cmd="timeout $((timeout + 1)) cvc4 --tlimit $((timeout * 1000))"
+  else
+    cvc4_cmd="cvc4 --tlimit $((timeout * 1000))"
+  fi
+  # shellcheck disable=SC2086
+  if $cvc4_cmd "$problem" >"$out" 2>&1; then
     :
   else
     status=$?
