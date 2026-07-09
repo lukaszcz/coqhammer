@@ -10,7 +10,7 @@ trap 'rm -rf \"$work\"' EXIT
 cp -LR . \"$work/tests\"
 chmod -R u+w \"$work/tests\"
 cd \"$work/tests\"
-make -B all COQC='rocq c'")))
+make -B all COQC='%{bin:rocq} c'")))
 
 (alias
  (name extraction)
