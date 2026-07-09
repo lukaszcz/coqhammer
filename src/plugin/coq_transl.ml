@@ -1902,7 +1902,8 @@ and add_def_eq_axiom (name, value, ty, srt) =
             the transport to its carried proof/value.  Reconstruction-sensitive
             cases are the same as user constants whose bodies are eq_rect/eq_rec
             or eq_ind wrappers. *)
-         emit_definition_equation axname name [] vars (Var(proof_name)) >>
+         let premise = transport_erasure_premise (mk_long_app (Const name) (mk_vars vars)) in
+         emit_definition_equation ?premise axname name [] vars (Var(proof_name)) >>
          return ()
       | [] -> return ()
     with _ ->
