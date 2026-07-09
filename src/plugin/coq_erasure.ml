@@ -115,8 +115,15 @@ let validate_enum ctor_infos ctor_prop_indices =
                | _ -> acc)
             prop_indices []
         in
+        let local_arg_names = List.map (fun info -> info.arg_name) ctor.ctor_args in
         if List.length prop_tys = List.length prop_indices &&
-           List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args
+           List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args &&
+           List.for_all
+             (fun prop_ty ->
+                List.for_all
+                  (fun arg_name -> not (var_occurs arg_name prop_ty))
+                  local_arg_names)
+             prop_tys
         then
           Some (name, prop_tys)
         else
