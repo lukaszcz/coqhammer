@@ -1,6 +1,10 @@
 LOCAL_ROCQLIB ?= ../../_check-install/coq
+ifeq ($(USE_LOCAL_INSTALL),1)
 ifneq ($(wildcard $(LOCAL_ROCQLIB)/theories),)
 COQC ?= rocq c -coqlib $(LOCAL_ROCQLIB)
+else
+$(error USE_LOCAL_INSTALL=1 but LOCAL_ROCQLIB=$(LOCAL_ROCQLIB) has no theories directory)
+endif
 else
 COQC ?= rocq c
 endif
