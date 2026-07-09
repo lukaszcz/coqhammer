@@ -19,6 +19,7 @@ PROVERS = ("eprover", "vampire")
 CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
 BASELINE = "baseline-merge-base"
 ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
+CONSISTENCY_HIT_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable|ContradictoryAxioms)\b|^unsat$", re.M)
 
 
 def read_list(path: Path) -> list[Path]:
@@ -50,16 +51,24 @@ def baseline_generated_count(root: Path, corpus: str, premise: str) -> int:
     return len(read_list(root / BASELINE / corpus / f"generated-{premise}.lst"))
 
 
-def status_theorem_count(files: list[Path]) -> int:
+def status_count(files: list[Path], status_re: re.Pattern[str]) -> int:
     count = 0
     for path in files:
         try:
             text = path.read_text(errors="replace")
         except FileNotFoundError:
             continue
-        if ATP_SUCCESS_RE.search(text):
+        if status_re.search(text):
             count += 1
     return count
+
+
+def status_theorem_count(files: list[Path]) -> int:
+    return status_count(files, ATP_SUCCESS_RE)
+
+
+def consistency_hit_count(files: list[Path]) -> int:
+    return status_count(files, CONSISTENCY_HIT_RE)
 
 
 def def_base(name: str) -> str | None:
@@ -118,8 +127,11 @@ def load_rows(root: Path) -> list[dict[str, object]]:
                 for prover in PROVERS:
                     prover_outputs = read_list(corpus_dir / f"prover-outputs-{prover}-{premise}.lst")
                     theorems = status_theorem_count(prover_outputs)
-                    consistency_outputs = read_list(corpus_dir / f"consistency-outputs-{prover}-knn-64.lst")
-                    consistency_hits = status_theorem_count(consistency_outputs)
+                    if premise == "knn-64":
+                        consistency_outputs = read_list(corpus_dir / f"consistency-outputs-{prover}-knn-64.lst")
+                    else:
+                        consistency_outputs = []
+                    consistency_hits = consistency_hit_count(consistency_outputs)
                     generated_n = len(generated)
                     if generation_failed and generated_n == 0:
                         generated_n = generated_counts.get(
