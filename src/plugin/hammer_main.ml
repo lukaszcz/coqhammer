@@ -1121,9 +1121,10 @@ let hammer_features_cached name =
 let hammer_prover_parse_test () =
   let assert_equal label expected actual =
     if expected <> actual then
-      Msg.error
-        (label ^ ": expected [" ^ String.concat "; " expected ^ "], got [" ^
-         String.concat "; " actual ^ "]")
+      CErrors.user_err
+        Pp.(str
+              (label ^ ": expected [" ^ String.concat "; " expected ^ "], got [" ^
+               String.concat "; " actual ^ "]"))
   in
   let info =
     Provers.classify_atp_names
