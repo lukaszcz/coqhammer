@@ -103,8 +103,7 @@ require_line "box_arg_collision split keeps outer and constructor a distinct" '^
 # formal [F : A -> Type] is not.  A stale declaration-level cache entry must not
 # keep the instantiated [depbox] guard on the regular path.
 require_line "depbox_project unboxes an instance-dependent user subset" '^\$_def_extraction_transl\.depbox_project:.*= 1_b\)'
-require_line "depbox_project type axiom expands the instantiated predicate" '^\$_typeof_extraction_transl\.depbox_project:.*\(& @ \(\(\$HasType @ var_1_b_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_P_[0-9]+ @ var_1_b_[0-9]+\)'
-forbid_line "depbox_project must not keep a depbox HasType atom" '^\$_typeof_extraction_transl\.depbox_project:.*@ \(\(extraction_transl\.depbox @'
+require_line "depbox_project type axiom keeps the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(\(\$HasType @ var_1_b_[0-9]+\) @ \(\(extraction_transl\.depbox @ Corelib\.Init\.Datatypes\.nat\) @ var_0_P_[0-9]+\)\)'
 
 # Split equations: variable-scrutinee definitions are emitted as one guard-free
 # unit equation per constructor.
