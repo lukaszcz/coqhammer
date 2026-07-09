@@ -70,6 +70,13 @@ check_unprovable_status() {
     cat "$out" >&2
     fail "$prover reported a proving, inconsistency, or error status for $label"
   fi
+
+  if grep -Eq 'SZS status (CounterSatisfiable|Satisfiable)|^sat$' "$out"; then
+    return 0
+  fi
+
+  cat "$out" >&2
+  fail "$prover did not report an explicit satisfiable/counter-satisfiable status for $label"
 }
 
 run_eprover() {
