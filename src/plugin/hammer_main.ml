@@ -787,46 +787,71 @@ let run_gs_provers hyps deps goal clean seq =
        info
      end
 
+let greedy_predictor_sequence () =
+  [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
+   ("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
+   ("CVC4 (knn-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
+   ("CVC4 (knn-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 256);
+   ("Vampire (nbayes-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 64);
+   ("CVC4 (nbayes-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 256);
+   ("Eprover (nbayes-64)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 64);
+   ("Z3 (nbayes-128)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
+   ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
+   ("CVC4 (nbayes-32)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 32);
+   ("CVC4 (nbayes-1024)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 1024);
+   ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
+   ("Vampire (nbayes-128)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 128);
+   ("Eprover (knn-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 128);
+   ("Vampire (nbayes-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
+   ("Z3 (knn-64)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
+   ("Vampire (knn-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
+   ("Eprover (nbayes-32)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 32);
+   ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
+   ("CVC4 (nbayes-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 64);
+   ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
+   ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
+   ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
+
+let with_greedy_features hyps deps goal f =
+  let fname = Features.extract hyps deps goal in
+  let clean () = Features.clean fname in
+  try
+    let r = f fname clean in
+    clean (); r
+  with e -> clean (); raise e
+
+let greedy_selected_deps hyps deps goal pred_method preds_num fname =
+  let predicted = Features.run_predict fname deps preds_num pred_method in
+  Features.add_direct_goal_dependencies hyps deps goal predicted
+
+let first_dump_deps hyps deps goal =
+  match Hhlib.take !Opt.gs_mode
+          (List.filter (fun (_, enabled, _, _, _) -> enabled) (greedy_predictor_sequence ())) with
+  | (_, _, _, pred_method, preds_num) :: _ ->
+      with_greedy_features hyps deps goal
+        (fun fname _ -> greedy_selected_deps hyps deps goal pred_method preds_num fname)
+  | [] -> Features.predict hyps deps goal
+
+let dump_deps hyps deps goal =
+  if !Opt.gs_mode > 0 then
+    first_dump_deps hyps deps goal
+  else
+    Features.predict hyps deps goal
+
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
-    let greedy_sequence =
-      [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
-       ("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
-       ("CVC4 (knn-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
-       ("CVC4 (knn-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 256);
-       ("Vampire (nbayes-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 64);
-       ("CVC4 (nbayes-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 256);
-       ("Eprover (nbayes-64)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 64);
-       ("Z3 (nbayes-128)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
-       ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
-       ("CVC4 (nbayes-32)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 32);
-       ("CVC4 (nbayes-1024)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 1024);
-       ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
-       ("Vampire (nbayes-128)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 128);
-       ("Eprover (knn-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 128);
-       ("Vampire (nbayes-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       ("Z3 (knn-64)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
-       ("Vampire (knn-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
-       ("Eprover (nbayes-32)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 32);
-       ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
-       ("CVC4 (nbayes-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 64);
-       ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
-       ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
-       ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
-    in
-    let fname = Features.extract hyps deps goal in
-    let seq =
-      List.map
-        begin fun (pname, enabled, pref, pred_method, preds_num) ->
-          (pname, enabled, pref,
-           fun () ->
-             let predicted = Features.run_predict fname deps preds_num pred_method in
-             Features.add_direct_goal_dependencies hyps deps goal predicted)
-        end
-        greedy_sequence
-    in
-    let clean () = Features.clean fname in
-    run_gs_provers hyps deps goal clean seq
+    with_greedy_features hyps deps goal
+      begin fun fname clean ->
+        let seq =
+          List.map
+            begin fun (pname, enabled, pref, pred_method, preds_num) ->
+              (pname, enabled, pref,
+               fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname)
+            end
+            (greedy_predictor_sequence ())
+        in
+        run_gs_provers hyps deps goal clean seq
+      end
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
     Provers.predict deps1 hyps deps goal
@@ -1045,7 +1070,7 @@ let hammer_dump_tac fname =
       let goal = get_goal gl in
       let hyps = get_hyps gl in
       let defs = get_defs env sigma in
-      let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
+      let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
       Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
       Tacticals.tclIDTAC
     end
@@ -1116,7 +1141,7 @@ let hammer_hook_tac prefix name =
                   let goal = get_goal gl in
                   let hyps = get_hyps gl in
                   let defs = get_defs env sigma in
-                  let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
+                  let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
                   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
                 end
                 premises;

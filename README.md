@@ -25,11 +25,14 @@ documentation and installation instructions.
 Debugging ATP problems
 ----------------------
 Inside an open proof, `Hammer_dump "file.p"` (or the tactic form
-`hammer_dump "file.p"`) writes the TPTP problem that `hammer` would send to the
-external provers for the current goal. Relative dump names are resolved against
-`Set Hammer Dump Directory "..."`; if that option is unset, the
-`COQHAMMER_DUMP_DIR` environment variable is used, and otherwise the name is
-used relative to the current directory.
+`hammer_dump "file.p"`) writes the first TPTP problem that `hammer` would send to
+an external prover for the current goal. With `Set Hammer GSMode 0`, this is the
+single problem selected by the current `Hammer PredictMethod`/`Hammer Predictions`
+settings; with the default greedy mode, it is the first enabled greedy
+predictor/prover problem. Relative dump names are resolved against `Set Hammer
+Dump Directory "..."`; if that option is unset, the `COQHAMMER_DUMP_DIR`
+environment variable is used, and otherwise the name is used relative to the
+current directory.
 
 Requirements
 ------------
