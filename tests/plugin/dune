@@ -10,6 +10,7 @@
 root=%{workspace_root}
 export COQPATH=\"$root/_build/install/default/lib/coq/user-contrib${COQPATH:+:$COQPATH}\"
 export OCAMLPATH=\"$root/_build/install/default/lib${OCAMLPATH:+:$OCAMLPATH}\"
+export PATH=\"$root/_build/install/default/bin:$PATH\"
 work=$(mktemp -d)
 trap 'rm -rf \"$work\"' EXIT
 cp -LR . \"$work/tests\"
