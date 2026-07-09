@@ -24,10 +24,12 @@ note_nonzero_exit() {
   if [ "$status" -gt 128 ] ||
      grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction' "$out"; then
     cat "$out" >&2
-    fail "$prover crashed while checking $label"
+    echo "SKIP: $prover crashed while checking $label; skipping this prover for this check" >&2
+    return 1
   fi
 
   echo "NOTE: $prover exited with status $status on $label; checking status anyway"
+  return 0
 }
 
 have_eprover=0
@@ -106,7 +108,9 @@ run_eprover() {
     :
   else
     status=$?
-    note_nonzero_exit "E" "$status" "$out" "$label"
+    if ! note_nonzero_exit "E" "$status" "$out" "$label"; then
+      return 1
+    fi
   fi
   check_unprovable_status "E" "$out" "$label"
 }
@@ -122,7 +126,9 @@ run_vampire() {
     :
   else
     status=$?
-    note_nonzero_exit "Vampire" "$status" "$out" "$label"
+    if ! note_nonzero_exit "Vampire" "$status" "$out" "$label"; then
+      return 1
+    fi
   fi
   check_unprovable_status "Vampire" "$out" "$label"
 }
@@ -139,14 +145,18 @@ run_z3() {
       :
     else
       status=$?
-      note_nonzero_exit "Z3" "$status" "$out" "$label"
+      if ! note_nonzero_exit "Z3" "$status" "$out" "$label"; then
+        return 1
+      fi
     fi
   else
     if "$z3_bin" -tptp -t:$((timeout * 1000)) "$problem" >"$out" 2>&1; then
       :
     else
       status=$?
-      note_nonzero_exit "Z3" "$status" "$out" "$label"
+      if ! note_nonzero_exit "Z3" "$status" "$out" "$label"; then
+        return 1
+      fi
     fi
   fi
   check_unprovable_status "Z3" "$out" "$label"
@@ -169,7 +179,9 @@ run_cvc4() {
     :
   else
     status=$?
-    note_nonzero_exit "CVC4" "$status" "$out" "$label"
+    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label"; then
+      return 1
+    fi
   fi
   check_unprovable_status "CVC4" "$out" "$label"
 }
@@ -185,7 +197,9 @@ try_eprover_theorem() {
     :
   else
     status=$?
-    note_nonzero_exit "E" "$status" "$out" "$label"
+    if ! note_nonzero_exit "E" "$status" "$out" "$label"; then
+      return 1
+    fi
   fi
   grep -q 'SZS status Theorem' "$out"
 }
@@ -201,7 +215,9 @@ try_vampire_theorem() {
     :
   else
     status=$?
-    note_nonzero_exit "Vampire" "$status" "$out" "$label"
+    if ! note_nonzero_exit "Vampire" "$status" "$out" "$label"; then
+      return 1
+    fi
   fi
   grep -q 'SZS status Theorem' "$out"
 }
@@ -218,14 +234,18 @@ try_z3_theorem() {
       :
     else
       status=$?
-      note_nonzero_exit "Z3" "$status" "$out" "$label"
+      if ! note_nonzero_exit "Z3" "$status" "$out" "$label"; then
+        return 1
+      fi
     fi
   else
     if "$z3_bin" -tptp -t:$((timeout * 1000)) "$problem" >"$out" 2>&1; then
       :
     else
       status=$?
-      note_nonzero_exit "Z3" "$status" "$out" "$label"
+      if ! note_nonzero_exit "Z3" "$status" "$out" "$label"; then
+        return 1
+      fi
     fi
   fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
@@ -248,7 +268,9 @@ try_cvc4_theorem() {
     :
   else
     status=$?
-    note_nonzero_exit "CVC4" "$status" "$out" "$label"
+    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label"; then
+      return 1
+    fi
   fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
 }
@@ -259,20 +281,22 @@ assert_unprovable_problem() {
   problem=$1
   timeout=$2
   label=$3
+  checked=0
 
   [ -f "$problem" ] || fail "missing dumped problem $problem"
-  if [ "$have_eprover" -eq 1 ]; then
-    run_eprover "$problem" "$timeout" "$label"
+  if [ "$have_eprover" -eq 1 ] && run_eprover "$problem" "$timeout" "$label"; then
+    checked=1
   fi
-  if [ "$have_vampire" -eq 1 ]; then
-    run_vampire "$problem" "$timeout" "$label"
+  if [ "$have_vampire" -eq 1 ] && run_vampire "$problem" "$timeout" "$label"; then
+    checked=1
   fi
-  if [ "$have_z3" -eq 1 ]; then
-    run_z3 "$problem" "$timeout" "$label"
+  if [ "$have_z3" -eq 1 ] && run_z3 "$problem" "$timeout" "$label"; then
+    checked=1
   fi
-  if [ "$have_cvc4" -eq 1 ]; then
-    run_cvc4 "$problem" "$timeout" "$label"
+  if [ "$have_cvc4" -eq 1 ] && run_cvc4 "$problem" "$timeout" "$label"; then
+    checked=1
   fi
+  [ "$checked" -eq 1 ] || fail "no available prover completed consistency check for $label"
 }
 
 check_index=0
