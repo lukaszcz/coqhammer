@@ -20,6 +20,9 @@ Options:
   --skip-builds         require install prefixes to already exist; do not build them
   --only-label LABEL    run only one install label (debug/resume convenience)
   --only-corpus CORPUS  run only one corpus (debug/resume convenience)
+  --full-corpus         use full committed corpora instead of sample subdirectories
+  --external-source DIR
+                        use DIR as the source for the external-equations corpus
   --force               rerun checkpoints even when done markers exist
   -h, --help            show this help
 USAGE
@@ -31,6 +34,8 @@ consistency_tim=2
 skip_builds=false
 only_label=
 only_corpus=
+sample_corpora=true
+external_source=
 force=false
 
 while [ "$#" -gt 0 ]; do
@@ -41,6 +46,8 @@ while [ "$#" -gt 0 ]; do
     --skip-builds) skip_builds=true; shift ;;
     --only-label) only_label="$2"; shift 2 ;;
     --only-corpus) only_corpus="$2"; shift 2 ;;
+    --full-corpus) sample_corpora=false; shift ;;
+    --external-source) external_source="$2"; shift 2 ;;
     --force) force=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
@@ -151,6 +158,18 @@ manifest_matches_label() {
   fi
 }
 
+prepare_corpus() {
+  local corpus="$1"
+  local args=("$corpus")
+  if [ "$sample_corpora" = true ]; then
+    args+=(--sample)
+  fi
+  if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
+    args+=(--source "$external_source")
+  fi
+  ./prepare-corpus.sh "${args[@]}"
+}
+
 build_label() {
   local label="$1"
   local prefix="$eval_dir/_installs/$label"
@@ -196,7 +215,7 @@ run_generation() {
   echo "[gen] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
-  ./prepare-corpus.sh "$corpus" --sample > "$outdir/prepared-files.lst"
+  prepare_corpus "$corpus" > "$outdir/prepared-files.lst"
   rm -rf logs atp/problems atp/i atp/o out statistics.html check.log gen-atp.log gen-atp.log.bak coqhammer.opt
   mkdir -p atp/o out
 
@@ -282,7 +301,7 @@ run_reconstruction() {
   echo "[reconstr] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
-  ./prepare-corpus.sh "$corpus" --sample > "$outdir/reconstr-prepared-files.lst"
+  prepare_corpus "$corpus" > "$outdir/reconstr-prepared-files.lst"
   rm -rf logs/reconstr atp/o out coqhammer.opt
   mkdir -p atp/o out
   for premise in "${premises[@]}"; do
