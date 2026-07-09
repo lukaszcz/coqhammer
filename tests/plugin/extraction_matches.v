@@ -34,10 +34,10 @@ Lemma extraction_myadd_succ : forall n m, myadd (S n) m = S (myadd n m).
 Proof. hammer. Qed.
 
 Lemma extraction_mypred_succ : forall n, mypred (S n) = n.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_mypred_nonzero : forall n, n <> 0 -> S (mypred n) = n.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_match_goal : forall n (m : nat), (match n with 0 => m | S _ => m end) = m.
 Proof. hammer. Qed.
@@ -56,18 +56,19 @@ Proof. hammer. Qed.
 
 Lemma extraction_g_one : g 1 = 1.
 Proof. hammer. Qed.
+Set Hammer Predictions 1024.
 
 Lemma extraction_is_zero_zero : is_zero 0.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_is_zero_succ : forall n, ~ is_zero (S n).
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_hd_d_cons : forall (d x : nat) l, hd_d d (cons x l) = x.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_even_ss : forall n, even (S (S n)) = even n.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_tsize_node : forall l x r, tsize (N l x r) = S (myadd (tsize l) (tsize r)).
 Proof. hammer. Qed.
@@ -77,7 +78,6 @@ Lemma extraction_tmirror_node :
     tmirror (tmirror (N l x r)) =
     N (tmirror (tmirror l)) x (tmirror (tmirror r)).
 Proof. hammer. Qed.
-Set Hammer Predictions 1024.
 
 Lemma tmirror_invol : forall t, tmirror (tmirror t) = t.
 Proof.
@@ -96,7 +96,5 @@ Proof. hammer. Qed.
 Lemma extraction_nat_eqb_refl : Nat.eqb 5 5 = true.
 Proof. hammer. Qed.
 
-Set Hammer ATPLimit 0.
 Lemma extraction_rsize_nil : rsize (Rose nil) = 1.
-Proof. Fail hammer. Abort.
-Set Hammer ATPLimit 20.
+Proof. hammer. Qed.

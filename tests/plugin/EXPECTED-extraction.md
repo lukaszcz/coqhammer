@@ -13,26 +13,25 @@ Passing end-to-end `hammer` goals in `extraction_matches.v`:
 
 - `extraction_myadd_ground`: `myadd 2 2 = 4`
 - `extraction_myadd_succ`: `forall n m, myadd (S n) m = S (myadd n m)`
+- `extraction_mypred_succ`: `forall n, mypred (S n) = n`
+- `extraction_mypred_nonzero`: `forall n, n <> 0 -> S (mypred n) = n`
 - `extraction_match_goal`: `forall n (m : nat), (match n with 0 => m | S _ => m end) = m`
 - `extraction_k_true`: `k true = 1`
 - `extraction_k_cases`: `forall b, k b = 0 \/ k b = 1`
 - `extraction_g_deep`: `forall x, g (S (S x)) = x`
 - `extraction_g_one`: `g 1 = 1`
+- `extraction_is_zero_zero`: `is_zero 0`
+- `extraction_is_zero_succ`: `forall n, ~ is_zero (S n)`
+- `extraction_hd_d_cons`: `forall (d x : nat) l, hd_d d (cons x l) = x`
+- `extraction_even_ss`: `forall n, even (S (S n)) = even n`
 - `extraction_tsize_node`: node equation for `tsize`
 - `extraction_tmirror_node`: two-step `tmirror` equation on `N l x r`
 - `extraction_tmirror_injective`: injectivity via the proved `tmirror_invol` premise
 - `extraction_list_map_cons`: stdlib `List.map` cons equation
 - `extraction_nat_eqb_refl`: `Nat.eqb 5 5 = true`
+- `extraction_rsize_nil`: nested-inductive/nested-fix fallback ground equation
 
-### Staged per phase
-
-Expected failures now, wrapped with `Fail hammer.` / `Abort.`:
-
-- Phase 1 / TASK_10: `extraction_mypred_succ`,
-  `extraction_mypred_nonzero`, `extraction_is_zero_zero`,
-  `extraction_is_zero_succ`, `extraction_hd_d_cons`, `extraction_even_ss`
-- Fallback-profile fixture: `extraction_rsize_nil` remains expected-failing until
-  a later task explicitly changes the nested-inductive/nested-fix fallback story
+Phase 1 / TASK_10 landed: all §4.1 match/fix goals are unwrapped and enforced.
 
 ## deptypes
 
@@ -72,12 +71,13 @@ structural assertions that hold with the current translator:
 - No untranslated `Init.Logic` connective constants (`and`, `or`, `not`, `iff`,
   `ex`, `all`) in the output. Proof constants such as `eq_refl`/`False_rect` are
   still part of the baseline profile and are pinned where relevant.
-- Corpus constants: Phase-1a split-equation checks for variable-scrutinee
-  `myadd`, `g`, `safe_pred`, and `pval`; baseline definition/type-shape checks
-  for `k`, `h`, `beq`, `tag`, and `idiv`; `idiv` is specifically
-  checked not to expose an unconditional recursive `le_lt_dec`/`Nat.sub`
-  unfolding equation before Phase 4.
-- Stdlib regression constants: Phase-1a split-equation checks for `Nat.add`,
+- Corpus constants: Phase-1 split-equation checks for variable and compound
+  scrutinees (`myadd`, `g`, `k`, `safe_pred`, `pval`, `beq`) plus mutual-fix
+  equations for `even`/`odd`; baseline definition/type-shape checks for `h`,
+  `tag`, and `idiv`; `idiv` is specifically checked not to expose an
+  unconditional recursive `le_lt_dec`/`Nat.sub` unfolding equation before
+  Phase 4.
+- Stdlib regression constants: Phase-1 split-equation checks for `Nat.add`,
   `List.app`, and `Streams.hd`; structural checks for
   `List.Forall`, `eq_ind_r`, `proj1`, `Acc_rect`, `Nat.eq_dec`, `sumbool`, `sig`,
   `prod`, `Vector.hd`, a `Streams` coinductive destructor, and the
@@ -88,9 +88,6 @@ structural assertions that hold with the current translator:
 Disabled, clearly labeled assertion blocks live in
 `check-extraction-transl.sh` and are enabled by the phase acceptance tasks:
 
-- Phase 1 / TASK_10: remaining unit split-equation shapes for `k` and any
-  structural-recursive constants not covered by TASK_08's variable-scrutinee
-  checks.
 - Phase 2 / TASK_12: Prop-singleton elimination shapes for `h`, `safe_pred`,
   transport/`eq_ind_r`, and WF guardrails.
 - Phase 3 / TASK_15: refinement unboxing/specification shapes for `h`,

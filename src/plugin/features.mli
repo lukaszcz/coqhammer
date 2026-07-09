@@ -22,6 +22,11 @@ val run_predict : string (* file name (from `extract`) *) -> hhdef list (* defs 
   int (* pred_num *) -> string (* pred_method *) ->
   hhdef list (* predictions *)
 
+(* Always keep definitions directly mentioned by the goal/hypotheses alongside
+   ML predictions. *)
+val add_direct_goal_dependencies : hhdef list (* hyps *) -> hhdef list (* defs *) ->
+  hhdef (* goal *) -> hhdef list (* predictions *) -> hhdef list
+
 (* `clean` removes the temporary files created by `extract` *)
 val clean : string (* file name  *) -> unit
 

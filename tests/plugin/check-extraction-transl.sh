@@ -48,6 +48,13 @@ forbid_line "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|
 # phase-specific guardrails below document where future tasks will tighten this.
 forbid_line "unexpected printed generic-case axiom" '\$_generic_case'
 
+# Phase 1 shallowness gates for definitional output: split equations should not
+# reintroduce type guards, existential packages, or disjunctive case bodies on
+# definition lines.
+forbid_line "definition axioms are HasType-free" '^\$_def_.*\$HasType'
+forbid_line "definition axioms are existential-free" '^\$_def_.*\?\['
+forbid_line "definition axioms are disjunction-free" '^\$_def_.*[|]'
+
 # -----------------------------------------------------------------------------
 # Corpus constants: baseline structural assertions that hold today.
 # -----------------------------------------------------------------------------
@@ -150,18 +157,8 @@ require_line "typeclass method projection is translated" '^Corelib\.Classes\.Rel
 # -----------------------------------------------------------------------------
 # Disabled staged assertions. These are intentionally comments until the named
 # phase task changes the translator and updates the regexes to the final §6.3
-# naming scheme.
+# naming scheme. Phase 1 split-case assertions are enforced above.
 # -----------------------------------------------------------------------------
-
-: <<'PHASE_1_SPLIT_CASES'
-# TASK_10 / Phase 1: split case compilation.
-# - myadd: exactly two $_def_extraction_matches.myadd$<ctor> unit equations,
-#   one for O and one for S; those lines contain no $HasType, ?[, or |.
-# - g: three flattened equations, no existential/disjunction nesting, and a
-#   depth-2 S(S _) pattern on a def line.
-# - Nat.add/List.app/Vector.hd/Streams.hd: split equations use constructor
-#   suffixes and remain attributable to their originating constants.
-PHASE_1_SPLIT_CASES
 
 : <<'PHASE_2_SINGLETONS'
 # TASK_12 / Phase 2: Prop-singleton elimination.

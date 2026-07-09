@@ -794,7 +794,9 @@ let do_predict hyps deps goal =
       List.map
         begin fun (pname, enabled, pref, pred_method, preds_num) ->
           (pname, enabled, pref,
-           fun () -> Features.run_predict fname deps preds_num pred_method)
+           fun () ->
+             let predicted = Features.run_predict fname deps preds_num pred_method in
+             Features.add_direct_goal_dependencies hyps deps goal predicted)
         end
         greedy_sequence
     in
