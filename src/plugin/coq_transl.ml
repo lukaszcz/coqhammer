@@ -168,6 +168,16 @@ let is_init_logic_constant basename name =
     [ "Corelib.Init.Logic"; "Coq.Init.Logic"; "Stdlib.Init.Logic" ]
     basename name
 
+let is_init_specif_constant basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Specif"; "Coq.Init.Specif"; "Stdlib.Init.Specif" ]
+    basename name
+
+let is_init_wf_constant basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Wf"; "Coq.Init.Wf"; "Stdlib.Init.Wf" ]
+    basename name
+
 let is_jmeq_constant basename name =
   is_canonical_constant
     [ "Corelib.Logic.JMeq"; "Coq.Logic.JMeq"; "Stdlib.Logic.JMeq" ]
@@ -395,7 +405,6 @@ let rec mk_guards ctx vars tm =
    (coqterm axioms_monad) or (unit axioms_monad). *)
 
 let program_wf_simpl tm =
-  let is_name basename name = short_name name = basename in
   (* projector, packing constructor, index of the packed field it selects *)
   let proj_table =
     [ "projT1", "existT", 2;
@@ -429,13 +438,22 @@ let program_wf_simpl tm =
     | _ ->
        begin
          match flatten_app tm with
-         | Const pname, [_; _; packed]
-           when List.exists (fun (p, _, _) -> is_name p pname) proj_table ->
-            let (_, ctor, idx) = List.find (fun (p, _, _) -> is_name p pname) proj_table in
-            begin match flatten_app packed with
-            | Const cname, cargs when is_name ctor cname && List.length cargs = 4 ->
-               simpl_rec (List.nth cargs idx)
-            | _ -> tm
+         | Const pname, [_; _; packed] ->
+            begin
+              try
+                let (_, ctor, idx) =
+                  List.find
+                    (fun (p, _, _) -> is_init_specif_constant p pname)
+                    proj_table
+                in
+                begin match flatten_app packed with
+                | Const cname, cargs
+                    when is_init_specif_constant ctor cname && List.length cargs = 4 ->
+                   simpl_rec (List.nth cargs idx)
+                | _ -> tm
+                end
+              with Not_found ->
+                tm
             end
          | head, args -> rebuild_app head args
        end
@@ -939,8 +957,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            subst_args (List.rev vars) 0 body args
       | _ -> raise Not_found
     in
-    let is_eq_ind indname = short_name indname = "eq" in
-    let is_acc_ind indname = short_name indname = "Acc" in
+    let is_eq_ind indname = is_init_logic_constant "eq" indname in
+    let is_acc_ind indname = is_init_wf_constant "Acc" indname in
     let term_mentions_const names tm =
       fold_coqterm
         (fun _ acc tm ->

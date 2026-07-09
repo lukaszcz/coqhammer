@@ -42,12 +42,30 @@ let rec subst_params formals params tm =
       let tm2 = subst_params formals2 params2 tm in
       if var_occurs name tm2 then substvar name param tm2 else tm2
 
-let is_ex_ind name = short_name name = "ex"
+let is_canonical_constant prefixes basename name =
+  List.exists (fun prefix -> name = prefix ^ "." ^ basename) prefixes
+
+let is_init_logic_ind basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Logic"; "Coq.Init.Logic"; "Stdlib.Init.Logic" ]
+    basename name
+
+let is_init_datatypes_ind basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Datatypes"; "Coq.Init.Datatypes"; "Stdlib.Init.Datatypes" ]
+    basename name
+
+let is_init_specif_ind basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Specif"; "Coq.Init.Specif"; "Stdlib.Init.Specif" ]
+    basename name
+
+let is_ex_ind name = is_init_logic_ind "ex" name
 
 let is_instance_dependent_decl name =
-  match short_name name with
-  | "prod" | "sum" | "sigT" -> true
-  | _ -> false
+  is_init_datatypes_ind "prod" name ||
+  is_init_datatypes_ind "sum" name ||
+  is_init_specif_ind "sigT" name
 
 let get_inductive name =
   if Defhash.mem name then
