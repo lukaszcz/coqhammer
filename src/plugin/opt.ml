@@ -211,7 +211,8 @@ let _ =
       optread=(fun () -> !dump_directory);
       optwrite=(fun s -> dump_directory := s; dump_directory_set := true)}
   in
-  declare_string_option gdopt
+  declare_string_option gdopt;
+  dump_directory_set := false
 
 (* Resolve the path of a [Hammer_dump] file: a relative name is placed in
    the configured dump directory (the Hammer Dump Directory option, or the
