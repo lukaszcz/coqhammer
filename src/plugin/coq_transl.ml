@@ -173,6 +173,12 @@ let is_transport_constant name =
 
 let is_false_rect_constant name = short_name name = "False_rect"
 
+let is_wf_fix_constant name =
+  name = "Corelib.Init.Wf.Fix" || name = "Coq.Init.Wf.Fix"
+
+let is_wf_fix_f_constant name =
+  name = "Corelib.Init.Wf.Fix_F" || name = "Coq.Init.Wf.Fix_F"
+
 let erase_false_rect_type_arg tm =
   if opt_refinement_types then
     match flatten_app tm with
@@ -409,26 +415,39 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
 (* Lambda-lifting, fix-lifting and case-lifting *)
 
 and emit_definition_equation ?premise axname name fvars lvars body =
-  close fvars
-    begin fun ctx ->
-      let mk_eqv =
-        if Coq_typing.check_prop (List.rev_append lvars ctx) body then
-          mk_equiv
-        else
-          mk_eq
-      in
-      let lhs = mk_long_app (Const(name)) (mk_vars (fvars @ lvars)) in
-      let eqv = mk_eqv lhs body in
-      let eqv =
-        match premise with
-        | Some prem -> mk_impl prem eqv
-        | None -> eqv
-      in
-      if !opt_closure_guards || opt_lambda_guards then
-        prop_to_formula ctx (mk_long_forall lvars eqv)
+  let vars = fvars @ lvars in
+  let mk_eqv ctx =
+    let mk_eqv =
+      if Coq_typing.check_prop ctx body then
+        mk_equiv
       else
-        make_fol_forall ctx lvars eqv
-    end
+        mk_eq
+    in
+    let lhs = mk_long_app (Const(name)) (mk_vars vars) in
+    let eqv = mk_eqv lhs body in
+    match premise with
+    | Some prem -> mk_impl prem eqv
+    | None -> eqv
+  in
+  let closed =
+    if !wf_mark && opt_wf_recursion_eqs then
+      (* WF-recursion model note: these equations are not read as
+         delta-unfolding in the term model.  They are Coq theorems only with
+         the erased PI premises (Fix_eq), and semantically describe an
+         arbitrary total extension outside those premises; the consistency
+         canaries check this load-bearing path. *)
+      make_fol_forall_keep_prop_premises [] vars (mk_eqv (List.rev vars))
+    else
+      close fvars
+        begin fun ctx ->
+          let eqv = mk_eqv (List.rev_append lvars ctx) in
+          if !opt_closure_guards || opt_lambda_guards then
+            prop_to_formula ctx (mk_long_forall lvars eqv)
+          else
+            make_fol_forall ctx lvars eqv
+        end
+  in
+  closed
   >>=
   (fun tm -> add_axiom (mk_axiom axname tm))
   >>
@@ -449,6 +468,65 @@ and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
   | Some body3 ->
      let premise = transport_erasure_premise body2 in
      emit_definition_equation ?premise axname name fvars lvars body3
+  | None ->
+  let wf_recursion_equation tm =
+    if not opt_wf_recursion_eqs || name = "" then
+      None
+    else
+      let rec_call_args xname yname lvars_ext =
+        List.map
+          (fun (vname, _) -> if vname = xname then Var(yname) else Var(vname))
+          (fvars @ lvars_ext)
+      in
+      let build a_ty rel f x lvars_ext =
+        match x with
+        | Var xname when List.mem_assoc xname lvars_ext ->
+           let yname = refresh_varname "wfarg" in
+           let hname = refresh_varname "wfproof" in
+           let rel_y_x = mk_long_app rel [ Var(yname); x ] in
+           let rec_fun =
+             Lam(yname, a_ty,
+                 Lam(hname, rel_y_x,
+                     mk_long_app (Const(name)) (rec_call_args xname yname lvars_ext)))
+           in
+           let unfolded = simpl (mk_long_app f [ x; rec_fun ]) in
+           Some(lvars_ext, unfolded)
+        | _ -> None
+      in
+      try
+        match flatten_app tm with
+        | Const cname, args when is_wf_fix_constant cname && List.length args >= 5 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 4
+           and rest = Hhlib.drop 5 args
+           in
+           begin match rest with
+           | [] ->
+              let xname = refresh_varname "wfarg" in
+              build a_ty rel f (Var xname) (lvars @ [ (xname, a_ty) ])
+           | [Var xname as x] when List.mem_assoc xname lvars ->
+              build a_ty rel f x lvars
+           | _ -> None
+           end
+        | Const cname, args when is_wf_fix_f_constant cname && List.length args >= 6 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 3
+           and x = List.nth args 4
+           in
+           build a_ty rel f x lvars
+        | _ -> None
+      with _ -> None
+  in
+  match wf_recursion_equation body2 with
+  | Some(lvars, body3) ->
+     wf_mark := true;
+     begin match simpl body3 with
+     | Fix(_) -> fix_lifting wf_fix_names axname name fvars lvars body3
+     | Case(_) -> case_lifting wf_fix_names axname name fvars lvars body3
+     | _ -> emit_definition_equation axname name fvars lvars body3
+     end
   | None ->
   match body2 with
   | Fix(_) ->
@@ -507,6 +585,8 @@ and fix_lifting wf_fix_names axname dname fvars lvars tm =
                if recarg_is_prop recarg ty then name2 :: acc else acc)
             (List.combine names2 (List.combine types recargs)) []
       in
+      if wf_fix_names2 <> [] then
+        wf_mark := true;
       let wf_fix_names = wf_fix_names2 @ wf_fix_names in
       listM_nth
         (List.map2
@@ -726,10 +806,11 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              begin
                (* WF guardrail: erasing an Acc proof on a recursive path would
                   produce the forbidden unconditional WF-unfolding equation.
-                  Phase 4 reads this per-translate mark and emits premised
-                  equations; until then we keep the status-quo generic case. *)
+                  With Phase 4 enabled the per-translate mark makes all emitted
+                  equations keep the definition's erased Prop premises; with the
+                  option off we keep the status-quo generic case. *)
                wf_mark := true;
-               None
+               if opt_wf_recursion_eqs then Some body else None
              end
            else
              Some body
@@ -758,7 +839,13 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          ClosureGuards is enabled we use the ordinary guarded closure machinery
          uniformly. *)
       begin
-        if !opt_closure_guards then
+        if !wf_mark && opt_wf_recursion_eqs then
+          (* WF-recursion model note: premised equations are read as an
+             arbitrary total extension outside the erased PI premises, not as
+             unconditional delta-unfolding; Fix_eq justifies only the premised
+             form and the canaries guard consistency. *)
+          make_fol_forall_keep_prop_premises [] vars mk_eqv
+        else if !opt_closure_guards then
           close vars (fun ctx -> prop_to_formula ctx mk_eqv)
         else
           make_fol_forall [] vars mk_eqv
@@ -1386,6 +1473,22 @@ and make_fol_forall ctx vars tm =
         return (mk_forall name type_any r)
     | [] ->
       prop_to_formula ctx tm
+  in
+  hlp ctx vars tm
+
+and make_fol_forall_keep_prop_premises ctx vars tm =
+  let rec hlp ctx vars tm =
+    match vars with
+    | (name, ty) :: vars2 ->
+       if Coq_typing.check_prop ctx ty then
+         prop_to_formula ctx ty >>= fun premise ->
+         hlp ((name, ty) :: ctx) vars2 (subst_proof name ty tm) >>= fun r ->
+         return (mk_impl premise r)
+       else
+         hlp ((name, ty) :: ctx) vars2 tm >>= fun r ->
+         return (mk_forall name type_any r)
+    | [] ->
+       prop_to_formula ctx tm
   in
   hlp ctx vars tm
 

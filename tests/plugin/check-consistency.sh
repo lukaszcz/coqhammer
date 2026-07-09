@@ -154,6 +154,13 @@ assert_provable() {
 assert_provable transport-tr-refl.p "$TIMEOUT" "transport tr reflexivity"
 
 assert_unprovable consistency-idiv.p "$TIMEOUT"
+assert_unprovable consistency-idiv2.p "$TIMEOUT"
+
+bad_idiv2=$tmpdir/bad-idiv2.p
+sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
+  consistency-idiv2.p >"$bad_idiv2"
+assert_unprovable_problem "$bad_idiv2" "$TIMEOUT" "idiv2 violated-premise unfolding instance"
+
 assert_unprovable consistency-h.p "$TIMEOUT"
 assert_unprovable consistency-eq-rect.p "$TIMEOUT"
 assert_unprovable consistency-nat-add.p "$TIMEOUT"

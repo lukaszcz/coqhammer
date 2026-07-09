@@ -65,6 +65,24 @@ Definition idiv3 (b : nat) (Hb : b <> 0) (a : nat) : nat :=
        | right _ => 0
        end) (lt_wf a).
 
+Lemma idiv2_small_unfold : forall b Hb a, b <> 0 -> a < b -> idiv2 b Hb a = 0.
+Proof.
+  intros b Hb a _ Hlt.
+  unfold idiv2.
+  rewrite Corelib.Init.Wf.Fix_eq.
+  - destruct (le_lt_dec b a); lia.
+  - intros x f g Hfg.
+    destruct (le_lt_dec b x); auto.
+Qed.
+
+Lemma idiv3_small_unfold : forall b Hb a, b <> 0 -> a < b -> idiv3 b Hb a = 0.
+Proof.
+  intros b Hb a _ Hlt.
+  unfold idiv3.
+  rewrite <- Corelib.Init.Wf.Fix_F_eq.
+  destruct (le_lt_dec b a); lia.
+Qed.
+
 Lemma extraction_h_proj : forall x y z p, proj1_sig (h x y z p) = z.
 Proof. hammer. Qed.
 
@@ -111,10 +129,10 @@ Lemma extraction_idiv_small : forall a b p, b <> 0 -> a < b -> idiv a b p = 0.
 Proof. Fail hammer. Abort.
 
 Lemma extraction_idiv2_small : forall b Hb a, b <> 0 -> a < b -> idiv2 b Hb a = 0.
-Proof. Fail hammer. Abort.
+Proof. hammer [idiv2_small_unfold]. Qed.
 
 Lemma extraction_idiv3_small : forall b Hb a, b <> 0 -> a < b -> idiv3 b Hb a = 0.
-Proof. Fail hammer. Abort.
+Proof. hammer [idiv3_small_unfold]. Qed.
 
 Set Hammer ATPLimit 5.
 Lemma canary : False.

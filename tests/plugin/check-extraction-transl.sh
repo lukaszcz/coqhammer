@@ -181,19 +181,26 @@ forbid_line "vhead split equations are existential-free" '^\$_def_extraction_dep
 forbid_line "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'
 forbid_line "covered extraction type axioms do not keep classified HasType leaves" '^\$_typeof_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag):.*Corelib\.Init\.(Specif\.(sig|sig2|sumbool)|Datatypes\.prod)'
 
-# WF guardrail: until Phase 4, the Acc/Fix_F packagings must not expose an
-# unconditional unfolding equation.  These assertions are part of make tests.
+# WF recursion: Program Fixpoint idiv is still the TASK_17 fallback, but the
+# bare Fix/Fix_F fixtures expose premised unfolding equations.  The erased
+# b <> 0 premise is mandatory on the top-level link and on recursive branches.
 require_count_at_least "idiv has a top-level linking definition" '^\$_def_extraction_deptypes\.idiv:' 1
 require_line "idiv baseline links to idiv_func" '^\$_def_extraction_deptypes\.idiv:.*extraction_deptypes\.idiv_func'
 forbid_line "idiv must not expose an unconditional le_lt_dec unfolding" '^\$_def_extraction_deptypes\.idiv:.*le_lt_dec'
 forbid_line "idiv must not expose an unconditional recursive sub-call unfolding" '^\$_def_extraction_deptypes\.idiv:.*Corelib\.Init\.Nat\.sub'
-require_count_at_least "idiv2 has only the safe Fix link" '^\$_def_extraction_deptypes\.idiv2:' 1
-forbid_line "idiv2 must not expose an unconditional le_lt_dec unfolding" '^\$_def_extraction_deptypes\.idiv2:.*le_lt_dec'
-forbid_line "idiv2 must not expose an unconditional recursive sub-call unfolding" '^\$_def_extraction_deptypes\.idiv2:.*Corelib\.Init\.Nat\.sub'
-require_count_at_least "idiv3 has only the safe Fix_F link" '^\$_def_extraction_deptypes\.idiv3:' 1
-forbid_line "idiv3 must not expose an unconditional le_lt_dec unfolding" '^\$_def_extraction_deptypes\.idiv3:.*le_lt_dec'
-forbid_line "idiv3 must not expose an unconditional recursive sub-call unfolding" '^\$_def_extraction_deptypes\.idiv3:.*Corelib\.Init\.Nat\.sub'
-forbid_line "Acc_rect must not get an unconditional definition equation" '^\$_def_Corelib\.Init\.Wf\.Acc_rect:'
+require_line "idiv2 link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv2[$]link:.*=> @ \(~ @ \(0_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
+require_line "idiv3 link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv3[$]link:.*=> @ \(~ @ \(0_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
+require_line "idiv2 recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv2 @ v_CANONICAL_0.*Corelib\.Init\.Nat\.sub'
+require_line "idiv3 recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv3 @ v_CANONICAL_0.*Corelib\.Init\.Nat\.sub'
+require_line "idiv2 zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
+require_line "idiv3 zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
+if grep -E '^\$_def_extraction_deptypes\.idiv2[$][^:]*:.*le_lt_dec' "$out" | grep -Ev '=> @ \(~ @ \([^)]* = Corelib\.Init\.Datatypes\.O\)\)' >/dev/null; then
+  fail "idiv2 must not expose an unpremised le_lt_dec definition"
+fi
+if grep -E '^\$_def_extraction_deptypes\.idiv3[$][^:]*:.*le_lt_dec' "$out" | grep -Ev '=> @ \(~ @ \([^)]* = Corelib\.Init\.Datatypes\.O\)\)' >/dev/null; then
+  fail "idiv3 must not expose an unpremised le_lt_dec definition"
+fi
+require_line "Acc_rect definition is premised by its Acc proof" '^\$_def_Corelib\.Init\.Wf\.Acc_rect:.*=> @ \(\(\(Corelib\.Init\.Wf\.Acc @ 0_A\) @ 1_R\) @ 5_x\)'
 
 # -----------------------------------------------------------------------------
 # Stdlib regression constants: structural snapshots enforced now.
@@ -236,12 +243,12 @@ require_line "typeclass method projection is translated" '^Corelib\.Classes\.Rel
 #   expose unconditional unfolding equations.
 PHASE_2_SINGLETONS
 
-: <<'PHASE_4_WF_RECURSION'
-# TASK_17 / Phase 4: premised WF-recursion equations.
-# - idiv/idiv2/idiv3 unfolding equations are present only with the converted
-#   b <> 0 premise; no unconditional WF unfolding equation is printed.
+: <<'PHASE_4B_WF_RECURSION'
+# TASK_17 / Phase 4b: Program Fixpoint/Fix_sub WF-recursion equations.
+# - idiv unfolding equations are present only with the converted b <> 0 premise;
+#   no unconditional WF unfolding equation is printed.
 # - Acc_rect/WF regression outputs stay in the marked/premised class and do not
 #   silently revert to an unsafe unconditional definition axiom.
-PHASE_4_WF_RECURSION
+PHASE_4B_WF_RECURSION
 
 printf 'extraction_transl assertions passed\n'
