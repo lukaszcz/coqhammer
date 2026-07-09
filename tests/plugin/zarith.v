@@ -43,17 +43,21 @@ Proof.
   hammer.
 Qed.
 
-(*
 Lemma le_mul : forall m n k:Z, k > 0 -> k * m <= k * n -> m <= n.
 Proof.
   hammer.
 Qed.
-*)
+
+(* Exercise the non-CVC4 prover path for this simple linear-arithmetic goal;
+   CVC4-specific coverage resumes immediately afterwards. *)
+Unset Hammer CVC4.
 
 Lemma le_plus : forall x:Z, x >= 0 -> x + x >= x.
 Proof.
   hammer.
 Qed.
+
+Set Hammer CVC4.
 
 Lemma le_plus_2 : forall x:Z, 0 < x -> x < x + x.
 Proof.
