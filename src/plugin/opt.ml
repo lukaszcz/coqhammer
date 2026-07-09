@@ -201,7 +201,6 @@ let _ =
    unset -- this is what the test harness uses, since a fresh temporary
    directory is only known at run time and cannot be baked into a script. *)
 let dump_directory = ref ""
-let dump_directory_set = ref false
 
 let _ =
   let gdopt=
@@ -209,10 +208,9 @@ let _ =
       optstage = Interp;
       optkey=["Hammer";"Dump";"Directory"];
       optread=(fun () -> !dump_directory);
-      optwrite=(fun s -> dump_directory := s; dump_directory_set := true)}
+      optwrite=(fun s -> dump_directory := s)}
   in
-  declare_string_option gdopt;
-  dump_directory_set := false
+  declare_string_option gdopt
 
 (* Resolve the path of a [Hammer_dump] file: a relative name is placed in
    the configured dump directory (the Hammer Dump Directory option, or the
@@ -220,7 +218,7 @@ let _ =
    otherwise (and always for absolute names) the name is used unchanged. *)
 let resolve_dump_path fname =
   let dir =
-    if !dump_directory_set then !dump_directory
+    if !dump_directory <> "" then !dump_directory
     else match Sys.getenv_opt "COQHAMMER_DUMP_DIR" with Some d -> d | None -> ""
   in
   if dir <> "" && Filename.is_relative fname then
