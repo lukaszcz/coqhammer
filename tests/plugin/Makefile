@@ -1,4 +1,9 @@
+LOCAL_ROCQLIB ?= ../../_check-install/coq
+ifneq ($(wildcard $(LOCAL_ROCQLIB)/theories),)
+COQC ?= rocq c -coqlib $(LOCAL_ROCQLIB)
+else
 COQC ?= rocq c
+endif
 
 all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_transl.vo consistency-canary-dumps
 	./check-consistency.sh
