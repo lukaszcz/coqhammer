@@ -22,6 +22,9 @@ Overview of changes
   196/440 (44.5%) to 385/440 (87.5%) with 100% reconstruction of ATP successes
   and zero inconsistency-scan hits; indexed enum/subset refinements without
   index constraints conservatively stay on the regular fallback path.
+* Added `Hammer_dump`/`hammer_dump` for writing the current goal's TPTP problem,
+  with `Set Hammer Dump Directory` and `COQHAMMER_DUMP_DIR` support for redirecting
+  relative dump names.
 * Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2
