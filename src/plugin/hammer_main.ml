@@ -727,8 +727,8 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
 
 (* Runs jobs from `seq` in parallel, each invoking one ATP on the
    premises returned by its selection function. Each element of `seq`
-   is: (prover description, enabled, enabled option ref, premise
-   selection function). *)
+   is: (index, (prover description, enabled, enabled option ref,
+   selection function)). *)
 let run_gs_provers hyps deps goal clean seq =
   let candidates = List.filter (fun (_, (_, enabled, _, _)) -> enabled) seq in
   let rec split_batch n lst acc =
