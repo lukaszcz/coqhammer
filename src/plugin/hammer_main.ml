@@ -742,7 +742,7 @@ let run_gs_provers hyps deps goal clean seq =
     clean ();
     raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
   in
-  let rec run_batches candidates =
+  let rec run_batches tried candidates =
     match split_batch !Opt.gs_mode candidates [] with
     | [], _ -> failure ()
     | enabled_seq, rest ->
@@ -783,12 +783,13 @@ let run_gs_provers hyps deps goal clean seq =
        in
        match ret with
        | None ->
+          let tried = List.map fst enabled_seq @ tried in
           if rest = [] then
             failure ()
           else
             begin
               Msg.info "ATPs failed to find a proof in this batch; trying remaining ATP candidates...";
-              run_batches rest
+              run_batches tried rest
             end
        | Some (idx, info) ->
           begin
@@ -802,10 +803,10 @@ let run_gs_provers hyps deps goal clean seq =
             let msg = Provers.prn_atp_info info in
             if msg <> "" then
               Msg.info msg;
-            (idx, info)
+            (idx :: tried, info)
           end
   in
-  run_batches candidates
+  run_batches [] candidates
 
 let greedy_predictor_sequence () =
   [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
@@ -859,7 +860,7 @@ let do_predict tried hyps deps goal =
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
-    (-1, Provers.predict deps1 hyps deps goal)
+    ([], Provers.predict deps1 hyps deps goal)
 
 let do_choice tried hyps deps goal lems =
   (* ATP premises are selected from [deps], so append any requested lemmas
@@ -885,7 +886,7 @@ let do_choice tried hyps deps goal lems =
     in
     run_gs_provers hyps deps goal (fun () -> ()) seq
   else (* Opts.gs_mode = 0 *)
-    (-1, Provers.predict deps1 hyps deps goal)
+    ([], Provers.predict deps1 hyps deps goal)
 
 let try_sauto () =
   if !Opt.sauto_timelimit = 0 then
@@ -933,7 +934,7 @@ let hammer_main_tac env sigma gl mode =
     Msg.info ("Found " ^ string_of_int (List.length defs) ^
                 " accessible Coq objects.");
   let rec attempt tried =
-    let (attempt_id, info) =
+    let (attempt_ids, info) =
       Opt.with_temp_dir
         begin fun () ->
           match mode with
@@ -945,7 +946,7 @@ let hammer_main_tac env sigma gl mode =
              do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
         end
     in
-    let tried = if attempt_id >= 0 then attempt_id :: tried else tried in
+    let tried = attempt_ids @ tried in
     let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
     let clear_ids = hyps_to_clear env sigma gl used_ids in
     let sdeps = List.map (Utils.constr_to_string sigma) deps
