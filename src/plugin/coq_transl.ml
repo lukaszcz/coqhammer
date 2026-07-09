@@ -945,6 +945,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          if List.length args <> n then
            raise Not_found
          else
+           let args = refresh_case_args vars args in
            let body = simpl (mk_long_app branch (mk_vars args)) in
            let rec subst_args ctx idx body = function
              | [] -> body
@@ -989,6 +990,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          if List.length args <> n then
            raise Not_found
          else
+           let args = refresh_case_args vars args in
            let body = simpl (mk_long_app branch (mk_vars args)) in
            let body = subst_proof_args (List.rev vars) args body in
            if wf_fix_names <> [] && is_acc_ind indname && term_mentions_const wf_fix_names body then
