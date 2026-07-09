@@ -50,6 +50,14 @@ Definition box_arg_collision (A : Type) (a : A) (b : onebox A) : A :=
   | onebox_intro _ a => a
   end.
 
+Inductive depbox (A : Type) (F : A -> Type) : Type :=
+| depbox_intro (x : A) (pf : F x).
+
+Definition depbox_project (P : nat -> Prop) (b : depbox nat P) : nat :=
+  match b with
+  | depbox_intro _ _ x _ => x
+  end.
+
 Goal True.
   hammer_dump "hammer_dump_smoke.p".
   exact I.
@@ -75,6 +83,10 @@ Hammer_transl "shadow_jmeq_refl_user".
 
 (* Split-case constructor binders must not capture same-named function binders. *)
 Hammer_transl "box_arg_collision".
+
+(* Instance-dependent user inductives must be classified from actual parameters,
+   not from a declaration-level cache entry produced for formal parameters. *)
+Hammer_transl "depbox_project".
 
 (* Corpus constants from extraction_matches.v. *)
 Hammer_transl "myadd".

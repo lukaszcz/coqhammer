@@ -33,7 +33,7 @@ type memo_class =
   | MEnum of (string * int list) list
   | MRegular
 
-let memo : ((string * bool list), memo_class) Hashtbl.t = Hashtbl.create 257
+let memo : ((string * bool list * bool * bool list list), memo_class) Hashtbl.t = Hashtbl.create 257
 
 let rec subst_params formals params tm =
   match formals, params with
@@ -204,13 +204,17 @@ let classify ctx indname params =
       let params = Hhlib.take params_num params in
       let mask = List.map (Coq_typing.check_prop ctx) params in
       let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
+      let is_prop_ind =
+        ind_sort = SortProp || Coq_typing.check_prop ctx (mk_long_app (Const indname) params)
+      in
+      let ctor_prop_mask =
+        List.map (fun ctor -> List.map (fun info -> info.arg_is_prop) ctor.ctor_args) ctor_infos
+      in
+      let key = (indname, mask, is_prop_ind, ctor_prop_mask) in
       let shape =
-        try Hashtbl.find memo (indname, mask) with Not_found ->
-          let is_prop_ind =
-            ind_sort = SortProp || Coq_typing.check_prop ctx (mk_long_app (Const indname) params)
-          in
+        try Hashtbl.find memo key with Not_found ->
           let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
-          Hashtbl.add memo (indname, mask) shape;
+          Hashtbl.add memo key shape;
           shape
       in
       instantiate_class indname ctor_infos shape
