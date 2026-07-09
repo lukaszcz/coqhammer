@@ -1594,10 +1594,16 @@ and guard_leaf ctx ty x =
                     | Var name when not (List.mem_assoc name ctx) -> (name, carrier_ty) :: ctx
                     | _ -> ctx
                   in
-                  make_guard ctx carrier_ty x >>= fun carrier_guard ->
+                  convert ctx x >>= fun carrier ->
+                  make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
+                  let payload_ctx =
+                    match carrier with
+                    | Var name when not (List.mem_assoc name ctx) -> (name, carrier_ty) :: ctx
+                    | _ -> payload_ctx
+                  in
                   formulas payload_ctx
                     (List.map
-                       (fun (_, prop_ty) -> simpl (substvar carrier_name x prop_ty))
+                       (fun (_, prop_ty) -> simpl (substvar carrier_name carrier prop_ty))
                        prop_args) >>= fun payloads ->
                   return (conjoin (carrier_guard :: payloads))
                | _ -> fallback ()
