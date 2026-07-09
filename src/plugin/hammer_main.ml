@@ -742,7 +742,7 @@ let run_gs_provers hyps deps goal clean seq =
     clean ();
     raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
   in
-  let rec run_batches tried candidates =
+  let run_batches tried candidates =
     match split_batch !Opt.gs_mode candidates [] with
     | [], _ -> failure ()
     | enabled_seq, _ ->
