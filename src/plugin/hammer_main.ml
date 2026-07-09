@@ -707,7 +707,7 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
     | [] ->
        begin
          msg_fail ();
-         Tacticals.tclIDTAC
+         Proofview.tclZERO (Failure "reconstruction failed")
        end
     | tacs :: ts ->
        msg_batch k;
@@ -973,7 +973,25 @@ let hammer_main_tac env sigma gl mode =
           Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
         end
     in
-    if retry_available tried then
+    let can_retry = retry_available tried in
+    let reconstruct =
+      if can_retry then
+        run_tactics clear_ids deps defs inverts
+          begin fun tac ->
+            Msg.info ("Tactic " ^ tac ^ " succeeded.");
+            Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
+                        tac ^ mk_lst_str " use:" sdeps ^
+                          mk_lst_str " unfold:" sdefs ^
+                            mk_lst_str " inv:" sinverts ^ ".")
+          end
+          (fun () -> ())
+          begin fun k ->
+            Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
+          end
+      else
+        reconstruct
+    in
+    if can_retry then
       Proofview.tclORELSE reconstruct
         begin fun _ ->
           Msg.info "Proof reconstruction failed for this ATP proof; trying another ATP proof...";
