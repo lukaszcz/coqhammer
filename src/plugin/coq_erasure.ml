@@ -72,6 +72,15 @@ let arg_at infos idx =
   try Some (List.find (fun info -> info.arg_index = idx) infos) with Not_found -> None
 
 let validate_subset indname infos carrier_idx prop_indices =
+  let no_erased_payload_dependencies prop_args =
+    let prop_names = List.map fst prop_args in
+    List.for_all
+      (fun (name, ty) ->
+         List.for_all
+           (fun prop_name -> prop_name = name || not (var_occurs prop_name ty))
+           prop_names)
+      prop_args
+  in
   match arg_at infos carrier_idx with
   | Some carrier when not carrier.arg_is_prop && not (term_mentions_const indname carrier.arg_ty) ->
       let prop_args =
@@ -82,7 +91,9 @@ let validate_subset indname infos carrier_idx prop_indices =
              | _ -> acc)
           prop_indices []
       in
-      if List.length prop_args = List.length prop_indices && prop_args <> [] then
+      if List.length prop_args = List.length prop_indices && prop_args <> [] &&
+         no_erased_payload_dependencies prop_args
+      then
         CSubset { carrier_idx; carrier_name = carrier.arg_name; prop_args }
       else
         CRegular
