@@ -730,62 +730,82 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
    is: (prover description, enabled, enabled option ref, premise
    selection function). *)
 let run_gs_provers hyps deps goal clean seq =
-  let enabled_seq =
-    Hhlib.take !Opt.gs_mode
-      (List.filter (fun (_, (_, enabled, _, _)) -> enabled) seq)
+  let candidates = List.filter (fun (_, (_, enabled, _, _)) -> enabled) seq in
+  let rec split_batch n lst acc =
+    if n <= 0 then (List.rev acc, lst)
+    else
+      match lst with
+      | [] -> (List.rev acc, [])
+      | x :: xs -> split_batch (n - 1) xs (x :: acc)
   in
-  let jobs =
-    List.map
-      begin fun (idx, (pname, enabled, pref, select)) _ ->
-        if not enabled then
-          Unix._exit 1;
-        Opt.vampire_enabled := false;
-        Opt.eprover_enabled := false;
-        Opt.z3_enabled := false;
-        Opt.cvc4_enabled := false;
-        pref := true;
-        Opt.parallel_mode := false;
-        try
-          let deps1 = select () in
-          (* All hypotheses are always passed to the ATPs (only deps
-             are subject to premise selection) *)
-          let info = Provers.predict deps1 hyps deps goal in
-          Msg.info (pname ^ " succeeded");
-          (idx, info)
-        with
-        | HammerError(msg) ->
-           Msg.error ("Hammer error: " ^ msg);
-           Unix._exit 1
-        | _ ->
-           Unix._exit 1
-      end
-      enabled_seq
+  let failure () =
+    clean ();
+    raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
   in
-  let time = (float_of_int !Opt.atp_timelimit) *. 1.5
-  in
-  Msg.info ("Running provers (" ^ string_of_int (List.length enabled_seq) ^ " threads)...");
-  let ret =
-    try
-      Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
-    with e ->
-      clean (); raise e
-  in
-  match ret with
-  | None -> clean (); raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
-  | Some (idx, info) ->
-     begin
-       let info =
-         if List.length info.Provers.deps >= !Opt.minimize_threshold then
-           Provers.minimize info hyps deps goal
-         else
-           info
+  let rec run_batches candidates =
+    match split_batch !Opt.gs_mode candidates [] with
+    | [], _ -> failure ()
+    | enabled_seq, rest ->
+       let jobs =
+         List.map
+           begin fun (idx, (pname, enabled, pref, select)) _ ->
+             if not enabled then
+               Unix._exit 1;
+             Opt.vampire_enabled := false;
+             Opt.eprover_enabled := false;
+             Opt.z3_enabled := false;
+             Opt.cvc4_enabled := false;
+             pref := true;
+             Opt.parallel_mode := false;
+             try
+               let deps1 = select () in
+               (* All hypotheses are always passed to the ATPs (only deps
+                  are subject to premise selection) *)
+               let info = Provers.predict deps1 hyps deps goal in
+               Msg.info (pname ^ " succeeded");
+               (idx, info)
+             with
+             | HammerError(msg) ->
+                Msg.error ("Hammer error: " ^ msg);
+                Unix._exit 1
+             | _ ->
+                Unix._exit 1
+           end
+           enabled_seq
        in
-       clean ();
-       let msg = Provers.prn_atp_info info in
-       if msg <> "" then
-         Msg.info msg;
-       (idx, info)
-     end
+       let time = (float_of_int !Opt.atp_timelimit) *. 1.5 in
+       Msg.info ("Running provers (" ^ string_of_int (List.length enabled_seq) ^ " threads)...");
+       let ret =
+         try
+           Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
+         with e ->
+           clean (); raise e
+       in
+       match ret with
+       | None ->
+          if rest = [] then
+            failure ()
+          else
+            begin
+              Msg.info "ATPs failed to find a proof in this batch; trying remaining ATP candidates...";
+              run_batches rest
+            end
+       | Some (idx, info) ->
+          begin
+            let info =
+              if List.length info.Provers.deps >= !Opt.minimize_threshold then
+                Provers.minimize info hyps deps goal
+              else
+                info
+            in
+            clean ();
+            let msg = Provers.prn_atp_info info in
+            if msg <> "" then
+              Msg.info msg;
+            (idx, info)
+          end
+  in
+  run_batches candidates
 
 let greedy_predictor_sequence () =
   [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
