@@ -68,7 +68,7 @@ repo=$(git rev-parse --show-toplevel)
 cd "$repo"
 
 opts=src/plugin/coq_transl_opts.ml
-if ! git diff --quiet -- "$opts"; then
+if ! git diff --quiet -- "$opts" || ! git diff --cached --quiet -- "$opts"; then
   echo "$opts has uncommitted tracked changes; refusing to patch it" >&2
   exit 1
 fi
@@ -103,7 +103,7 @@ if [ -z "$prefix" ]; then
 fi
 
 restore_opts() {
-  git checkout -- "$opts" >/dev/null 2>&1 || true
+  git checkout HEAD -- "$opts" >/dev/null 2>&1 || true
 }
 trap restore_opts EXIT INT TERM
 
