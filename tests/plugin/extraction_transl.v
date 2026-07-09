@@ -1,7 +1,7 @@
-(* Translation-shape regression harness for the extraction-factored
-   translation plan. The Makefile redirects this file's Hammer_transl output to
-   extraction_transl.out and check-extraction-transl.sh performs line-based
-   assertions over the printed axioms. *)
+(* Translation-shape regression harness for extraction-factored translation.
+   The Makefile redirects this file's Hammer_transl output to extraction_transl.out,
+   and check-extraction-transl.sh performs line-based assertions over the printed
+   axioms. *)
 
 From Hammer Require Import Hammer.
 
@@ -28,12 +28,12 @@ Qed.
 (* SProp regression: the sflag argument must be treated like a proof. *)
 Hammer_transl "sprop_arg_term".
 
-(* Spec-extraction S4 regression: the Prop premise must not become an applied
-   term argument in the $_typeof_ axiom. *)
+(* Prop-premise regression: the proof premise must not become an applied term
+   argument in the $_typeof_ axiom. *)
 Hammer_transl "spec_pruned".
 
-(* Phase-0 plumbing regression: the later WF-recursion mark must not leak
-   between top-level translations. *)
+(* WF-recursion marker regression: the mark must not leak between top-level
+   translations. *)
 Hammer_test_wf_mark_reset "myadd" "g".
 
 (* Corpus constants from extraction_matches.v. *)
@@ -57,9 +57,9 @@ Hammer_transl "idiv".
 Hammer_transl "idiv2".
 Hammer_transl "idiv3".
 
-(* Stdlib regression list. Keep these as structural snapshots, not golden files:
-   they pin one representative per fallback/coverage row from PLAN.md §10 while
-   remaining robust across Rocq point releases. *)
+(* Stdlib regression list. Keep these as structural snapshots, not golden files;
+   they pin representative fallback and coverage cases while remaining robust
+   across Rocq point releases. *)
 Hammer_transl "Nat.add".
 Hammer_transl "app".              (* List.app *)
 Hammer_transl "Forall".           (* List.Forall *)

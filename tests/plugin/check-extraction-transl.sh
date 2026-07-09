@@ -52,17 +52,15 @@ forbid_line "Hammer_transl lookup failures" '^Error: Not found:'
 
 # Same intent as transl.v's Init.Logic sanity check, but restricted to logical
 # connective constants: this corpus intentionally still exposes proof constants
-# such as eq_refl/False_rect before the extraction phases remove those shapes.
+# such as eq_refl/False_rect on fallback paths.
 forbid_line "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|ex|all)\b'
 
-# Generic-case symbols may still appear only on fallback paths guarded below;
-# covered E1 singleton definitions must not contain them.
 
 # Proof arguments are proof-irrelevant in constructor injectivity: they must not
 # leave tautological $Proof = $Proof conjuncts behind.
 forbid_line "injectivity axioms omit proof-only equalities" '^\$_inj_.*\$Proof = \$Proof'
 
-# Phase 1 shallowness gates for definitional output: split equations should not
+# Shallowness gates for definitional output: split equations should not
 # reintroduce type guards, existential packages, or disjunctive case bodies on
 # definition lines.
 forbid_line "definition axioms are HasType-free" '^\$_def_.*\$HasType'
@@ -79,13 +77,13 @@ require_line "SProp argument is translated as a premise" '^\$_typeof_extraction_
 require_line "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
 forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
 
-# Spec-extraction S4: a Prop premise must leave the extracted term unapplied
-# across the implication (proof argument pruned from arity).
+# A Prop premise must leave the extracted term unapplied across the implication
+# (proof argument pruned from arity).
 require_line "spec_pruned type axiom keeps pruned arity" '^\$_typeof_extraction_transl\.spec_pruned:.*\(=> @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)\) @ \(\(& @ \(\(\$HasType @ \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\)\)'
 forbid_line "spec_pruned proof premise must not be applied as a term" '^\$_typeof_extraction_transl\.spec_pruned:.*extraction_transl\.spec_pruned @ .*\$Proof'
 
-# Phase 1a split equations: variable-scrutinee definitions are emitted as one
-# guard-free unit equation per constructor.
+# Split equations: variable-scrutinee definitions are emitted as one guard-free
+# unit equation per constructor.
 require_line "myadd zero split equation" '^\$_def_extraction_matches\.myadd[$]O:.*extraction_matches\.myadd @ Corelib\.Init\.Datatypes\.O'
 require_line "myadd successor split equation" '^\$_def_extraction_matches\.myadd[$]S:.*extraction_matches\.myadd @ \(Corelib\.Init\.Datatypes\.S @'
 forbid_line "myadd split equations are guard/existential/disjunction free" '^\$_def_extraction_matches\.myadd[$].*(\$HasType|\?\[|[|])'
@@ -113,9 +111,8 @@ require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
 require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
 require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
-# Phase 3 acceptance: the h example has exactly the paper's two axioms: a
-# carrier-only program equation and a specification axiom with nat guards plus
-# the expanded equality payload.
+# The h example has exactly two axioms: a carrier-only program equation and a
+# specification axiom with nat guards plus the expanded equality payload.
 require_count_exact "h emits exactly its definition and type axioms" '^\$_(def|typeof)_extraction_deptypes\.h:' 2
 require_line "h has the carrier-only definition equation" '^\$_def_extraction_deptypes\.h: !\[0_x : \$Any\]: \(!\[1_y : \$Any\]: \(!\[2_z : \$Any\]: .*\(\(\(extraction_deptypes\.h @ 0_x\) @ 1_y\) @ 2_z\) = 2_z'
 require_line "h has the specification-extracted axiom shape" '^\$_typeof_extraction_deptypes\.h:.*\$HasType @ var_0_x_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_1_y_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_2_z_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*=> @ \(\(& @ \(var_0_x_[0-9]+ = var_1_y_[0-9]+\)\) @ \(var_1_y_[0-9]+ = var_2_z_[0-9]+\)\).*& @ \(\(\$HasType @ \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_x_[0-9]+ = \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\)'
@@ -144,7 +141,7 @@ require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*
 require_line "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
 
 # pval: non-primitive projection over a proof-carrying record is the identity
-# after E3 subset-match collapse; its argument guard expands the record payload.
+# after subset-match collapse; its argument guard expands the record payload.
 require_line "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
 require_line "pval type axiom expands the posnat payload" '^\$_typeof_extraction_deptypes\.pval:.*\(=> @ \(\(& @ \(\(\$HasType @ var_0_p_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(\(Corelib\.Init\.Peano\.lt @ Corelib\.Init\.Datatypes\.O\) @ var_0_p_[0-9]+\)\)\)'
 forbid_line "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
@@ -180,8 +177,8 @@ forbid_line "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extra
 require_line "vhead has a cons split equation" '^\$_def_extraction_deptypes\.vhead[$]cons:.*= var_1_h_[0-9]+\)'
 forbid_line "vhead split equations are existential-free" '^\$_def_extraction_deptypes\.vhead[$].*\?\['
 
-# Corpus-wide G1 shallowness gates for the covered Phase 3 constants.  WF-gated
-# idiv definitions and explicit stdlib structural snapshots are checked separately.
+# Corpus-wide shallowness gates for the covered constants.  WF-gated idiv
+# definitions and explicit stdlib structural snapshots are checked separately.
 forbid_line "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'
 forbid_line "covered extraction type axioms do not keep classified HasType leaves" '^\$_typeof_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag):.*Corelib\.Init\.(Specif\.(sig|sig2|sumbool)|Datatypes\.prod)'
 
@@ -232,20 +229,5 @@ require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatyp
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
 require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1
 require_line "typeclass method projection is translated" '^Corelib\.Classes\.RelationClasses\.Equivalence_Reflexive:'
-
-# -----------------------------------------------------------------------------
-# Disabled staged assertions. These are intentionally comments until the named
-# phase task changes the translator and updates the regexes to the final §6.3
-# naming scheme. Phase 1 split-case assertions are enforced above.
-# -----------------------------------------------------------------------------
-
-: <<'PHASE_2_SINGLETONS'
-# TASK_12 / Phase 2: Prop-singleton elimination.
-# - h: $_def_extraction_deptypes.h appears and no $_generic_case/fallback marker
-#   remains for the and-match; before Phase 3 its RHS may still mention exist.
-# - safe_pred: dead False_rect branch is no longer exposed in the def equation.
-# - WF/Acc-recursive definitions (idiv/idiv2/idiv3/Acc_rect users) still do not
-#   expose unconditional unfolding equations.
-PHASE_2_SINGLETONS
 
 printf 'extraction_transl assertions passed\n'

@@ -83,8 +83,8 @@ Tools
 
   Example: `tools/stat , y,p , , false`
 
-Phase 6 extraction evaluation workflow
---------------------------------------
+Extraction evaluation workflow
+------------------------------
 
 The extraction-factored translator is evaluated by alternating installed plugin
 prefixes rather than by runtime options. The helper scripts below keep each build
@@ -139,7 +139,7 @@ restored after a configuration build.
    generated ATP and reconstruction result lists next to each summary are the
    quick parse check for harness regressions.
 
-5. Run the Stage 2 confirmation grid (baseline versus the selected winner,
+5. Run the confirmation grid (baseline versus the selected screening configuration,
    all standard `hammer_hook` premise-selector/count directories and all four
    provers):
 
@@ -147,8 +147,8 @@ restored after a configuration build.
    ./run-confirmation-grid.sh -j 4 --tim 10 --consistency-tim 2
    ```
 
-   The script writes resumable raw checkpoints under `results/stage2/` and the
-   committed summary artifacts under `artifacts/task23-stage2/`.
+   The script writes resumable raw checkpoints under `results/confirmation/` and the
+   committed summary artifacts under `artifacts/extraction-confirmation/`.
 
 6. To verify that scripted configuration rebuilding changes translation output
    and restores the tree, run for example:

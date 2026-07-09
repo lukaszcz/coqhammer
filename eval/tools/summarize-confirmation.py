@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize Phase 6 Stage 2 confirmation-grid checkpoints."""
+"""Summarize extraction confirmation checkpoints."""
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ PROVERS = ("eprover", "vampire", "z3", "cvc4")
 CONSISTENCY_PROVERS = ("eprover", "vampire")
 CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
 BASELINE = "baseline-merge-base"
-WINNER = "stage2-winner"
+WINNER = "selected-config"
 
 
 def read_list(path: Path) -> list[Path]:
@@ -303,12 +303,12 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
     consistency_hits = sum(int(r["consistency_hits"]) for r in rows)
 
     lines = [
-        "# Phase 6 Stage 2 confirmation analysis",
+        "# Extraction confirmation analysis",
         "",
         f"Rows summarized: {len(rows)}.",
-        "Grid: {knn,nbayes} x {32,64,128,256,1024} x {E,Vampire,Z3,CVC4} over the three committed Phase-6 corpora.",
+        "Grid: {knn,nbayes} x {32,64,128,256,1024} x {E prover,Vampire,Z3,CVC4} over the three committed extraction corpora.",
         f"Consistency hits: {consistency_hits}.",
-        "Consistency scope: exhaustive scan of every generated Stage-2 problem in the committed corpora with E and Vampire after rewriting the conjecture to `$false`.",
+        "Consistency scope: exhaustive scan of every generated confirmation problem in the committed corpora with E prover and Vampire after rewriting the conjecture to `$false`.",
         "",
         "## Overall rates",
         "",

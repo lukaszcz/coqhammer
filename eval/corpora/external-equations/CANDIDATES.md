@@ -1,6 +1,6 @@
 # External Program/Equations-heavy corpus selection
 
-Candidates considered for the Phase 6 dependent/external evaluation slice:
+Candidates considered for the dependent/external evaluation slice:
 
 - **Coq-Equations** (`mattam82/Coq-Equations`) — canonical Equations-heavy
   development, LGPL-2.1-compatible, actively maintained for recent Rocq

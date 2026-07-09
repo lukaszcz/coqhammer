@@ -5,13 +5,13 @@ usage() {
   cat <<'USAGE'
 Usage: ./run-confirmation-grid.sh [options]
 
-Run the Phase 6 Stage 2 confirmation grid for the extraction refactor:
+Run the extraction confirmation grid:
   all standard hammer_hook premise-selector/count directories
   ({knn,nbayes} x {32,64,128,256,1024}) x all four provers
-  for baseline vs the Stage-1 winner only.
+  for baseline vs the selected screening configuration only.
 
-Results are checkpointed under eval/results/stage2/ and summarized under
-  eval/artifacts/task23-stage2/{summary.tsv,analysis.md}
+Results are checkpointed under eval/results/confirmation/ and summarized under
+  eval/artifacts/extraction-confirmation/{summary.tsv,analysis.md}
 
 Options:
   -j, --jobs N          parallel jobs for Rocq/prover make invocations (default: 1)
@@ -49,19 +49,19 @@ done
 
 repo=$(git rev-parse --show-toplevel)
 eval_dir="$repo/eval"
-results_root="$eval_dir/results/stage2"
-artifacts_dir="$eval_dir/artifacts/task23-stage2"
+results_root="$eval_dir/results/confirmation"
+artifacts_dir="$eval_dir/artifacts/extraction-confirmation"
 mkdir -p "$results_root" "$artifacts_dir"
 
 premises=(knn-32 knn-64 knn-128 knn-256 knn-1024 nbayes-32 nbayes-64 nbayes-128 nbayes-256 nbayes-1024)
 provers=(eprover vampire z3 cvc4)
 consistency_provers=(eprover vampire)
 corpora=(stdlib-regression dependent-slice external-equations)
-labels=(baseline-merge-base stage2-winner)
+labels=(baseline-merge-base selected-config)
 
 declare -A label_config
 label_config[baseline-merge-base]=baseline
-label_config[stage2-winner]=loo-erasure-guards-decl-skips
+label_config[selected-config]=loo-erasure-guards-decl-skips
 
 have_done() {
   [ "$force" = false ] && [ -f "$1.done" ]
@@ -286,8 +286,8 @@ for label in "${labels[@]}"; do
         run_prover "$label" "$corpus" "$premise" "$prover" "$prefix"
       done
       # The committed confirmation corpora are intentionally small, so scan all
-      # generated problems (rather than a sample) with E and Vampire.  This
-      # includes every canary/eq_rect/WF problem in the Stage-2 configurations.
+      # generated problems (rather than a sample) with E prover and Vampire.  This
+      # includes every canary/eq_rect/WF problem in the confirmation configurations.
       for prover in "${consistency_provers[@]}"; do
         run_consistency "$label" "$corpus" "$premise" "$prover" "$prefix"
       done
@@ -298,7 +298,7 @@ done
 
 python3 "$eval_dir/tools/summarize-confirmation.py" "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
 
-echo "Stage 2 confirmation complete."
+echo "Extraction confirmation complete."
 echo "  raw checkpoints: $results_root"
 echo "  summary:         $artifacts_dir/summary.tsv"
 echo "  analysis:        $artifacts_dir/analysis.md"

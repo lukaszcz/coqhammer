@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Summarize Phase 6 Stage 1 screening-grid checkpoints.
+"""Summarize extraction screening checkpoints.
 
 The input tree is produced by eval/run-screening-grid.sh.  The script is kept
 separate so partially completed runs can be re-summarized without rerunning ATPs.
@@ -77,7 +77,7 @@ def load_rows(root: Path) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
     for label_dir in sorted(p for p in root.iterdir() if p.is_dir()):
         label = label_dir.name
-        config = "baseline" if label == BASELINE else label.removeprefix("stage1-")
+        config = "baseline" if label == BASELINE else label.removeprefix("screening-")
         decl_skips = config.endswith("-decl-skips")
         if decl_skips:
             config_core = config.removesuffix("-decl-skips")
@@ -211,12 +211,12 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
     baseline_rate = next((r["success_rate"] for r in by_label if r["label"] == BASELINE), 0.0)
     non_baseline = [r for r in by_label_sorted if r["label"] != BASELINE]
     winner = non_baseline[0] if non_baseline else None
-    all_on = next((r for r in by_label if r["label"] == "stage1-all-on"), None)
+    all_on = next((r for r in by_label if r["label"] == "screening-all-on"), None)
 
     flagged: list[str] = []
     if all_on is not None:
         for r in by_label:
-            if str(r["label"]).startswith("stage1-loo-") and not str(r["label"]).endswith("decl-skips"):
+            if str(r["label"]).startswith("screening-loo-") and not str(r["label"]).endswith("decl-skips"):
                 if r["success_rate"] > all_on["success_rate"]:
                     flagged.append(f"{r['config']} improved over all-on ({100*r['success_rate']:.1f}% vs {100*all_on['success_rate']:.1f}%)")
 
@@ -229,7 +229,7 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
 
     generation_failures = find_generation_failures(root)
     lines = [
-        "# Phase 6 Stage 1 screening analysis",
+        "# Extraction screening analysis",
         "",
         f"Rows summarized: {len(rows)}.",
         f"Baseline sanity success rate: {100*baseline_rate:.1f}% overall.",
@@ -253,7 +253,7 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
         lines.extend([
             "## Decision inputs",
             "",
-            f"Winner by Stage-1 ATP success rate: `{winner['label']}` ({100*winner['success_rate']:.1f}%).",
+            f"Winner by screening ATP success rate: `{winner['label']}` ({100*winner['success_rate']:.1f}%).",
         ])
     if dep_delta is not None:
         lines.append(f"Dependent-slice delta for winner vs baseline: {100*dep_delta:+.1f} percentage points.")

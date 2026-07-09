@@ -10,8 +10,8 @@ Patch src/plugin/coq_transl_opts.ml to CONFIG, rebuild and reinstall the current
 checkout into a switchable prefix, then restore the committed option constants.
 
 Core configs:
-  all-off                  baseline-equivalent: all new stage constants off
-  all-on                   all five stage constants on, decl-level skips off
+  all-off                  baseline-equivalent: all new extraction constants off
+  all-on                   all five extraction constants on, decl-level skips off
   loo-split-case-axioms    all-on except opt_split_case_axioms=false
   loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false

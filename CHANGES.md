@@ -18,7 +18,7 @@ Overview of changes
   equations, proof/singleton erasure, shallow refinement/specification
   expansion, and premised well-founded-recursion equations are enabled by
   compile-time translation constants and covered by the normal plugin tests.  In
-  the Phase 6 confirmation grid, the final defaults improved ATP success from
+  the confirmation grid, the final defaults improved ATP success from
   196/440 (44.5%) to 385/440 (87.5%) with 100% reconstruction of ATP successes
   and zero inconsistency-scan hits; indexed enum/subset refinements without
   index constraints conservatively stay on the regular fallback path.

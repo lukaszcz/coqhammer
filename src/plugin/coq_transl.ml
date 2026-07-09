@@ -193,11 +193,11 @@ let erase_false_rect_type_arg ctx tm =
     | Const name, ty :: args
          when is_false_rect_constant name && args <> [] && ty <> type_any &&
               Coq_erasure.has_erasable_content ctx ty ->
-       (* E3 shallowness for impossible branches: by the Coincidence lemma, the
-          eliminated result type may mention a collapsed refinement package, but
-          the proof argument is erased and the branch is unreachable.  Keep the
-          status-quo opaque eliminator and replace only the type parameter by
-          [$Any] so no sig/exist bridge leaks into a definition axiom. *)
+       (* Impossible branches may mention a collapsed refinement package in
+          the eliminated result type, but the proof argument is erased and the
+          branch is unreachable.  Keep the ordinary opaque eliminator and replace
+          only the type parameter by [$Any] so no sig/exist bridge leaks into a
+          definition axiom. *)
        Some (mk_long_app (Const name) (type_any :: args))
     | _ -> None
   else
@@ -207,11 +207,9 @@ let erase_transport_head tm =
   if opt_prop_case_erasure then
     match flatten_app tm with
     | Const name, args when is_transport_constant name && List.length args >= 4 ->
-       (* E1 transport erasure: the paper's erasure clause maps casts to the
-          transported value; the fundamental-erasure lemma validates the
-          resulting identity in the proof-irrelevant model.  Per the
-          transport/UIP limitation, reconstruction debt is isolated by
-          [opt_erasure_guards]. *)
+       (* Transport erasure maps casts to the transported value in the
+          proof-irrelevant model.  Reconstruction-sensitive cases are isolated
+          by [opt_erasure_guards]. *)
        Some (List.nth args 3)
     | _ -> None
   else
@@ -427,9 +425,9 @@ let program_wf_simpl tm =
   in
   simpl_rec tm
 
-(* Per-translate WF-recursion marker introduced by the Phase-0 plumbing.  E1
-   singleton erasure sets it before falling back whenever an Acc/proof-recursive
-   path would otherwise emit an unsafe unconditional equation. *)
+(* Per-translation WF-recursion marker.  Proof-only erasure sets it before
+   falling back whenever an Acc/proof-recursive path would otherwise emit an
+   unsafe unconditional equation. *)
 let wf_mark = ref false
 
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
@@ -872,9 +870,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       in
       hlp base_ctx args body
     in
-    (* E3 refinement occurrence collapse: by the Coincidence lemma, matching a
-       subset value exposes the erased carrier itself, and the remaining proof
-       payload binders are erased. *)
+    (* Refinement occurrence collapse: matching a subset value exposes the
+       erased carrier itself, and the remaining proof payload binders are erased. *)
     let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
       match constrs, branches with
       | [cname], [(n, branch)] ->
@@ -949,14 +946,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         | Some prem -> mk_impl prem mk_eqv
         | None -> mk_eqv
       in
-      (* Body-compilation rules 2/5 and the rule-3/rule-4 linking equations are
-         justified by the compilation-adequacy lemma: split equations carry only
-         computation.  The split-form validity theorem says constructor-pattern
-         equations need no guards; the guarded-disjunctive-case interderivability
-         theorem explains why dropping the old packaged case split loses no
-         soundness (inversion axioms still provide exhaustiveness).  When
-         ClosureGuards is enabled we use the ordinary guarded closure machinery
-         uniformly. *)
+      (* Split equations carry only computation.  Constructor-pattern equations
+         need no guards, and inversion axioms still provide exhaustiveness after
+         the old packaged case split is dropped.  When ClosureGuards is enabled
+         we use the ordinary guarded closure machinery uniformly. *)
       begin
         if !wf_mark && opt_wf_recursion_eqs then
           (* WF-recursion model note: premised equations are read through the
@@ -991,11 +984,11 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       convert (List.rev vars) matched_term >>= fun mt ->
       return (App(aux, mt))
     in
-    (* Termination follows the paper's Body-compilation measure: first the
+    (* Termination follows the structure of the generated statement: first the
        number of root case/lambda/fix nodes remaining to compile, then the node
-       count.  Rule 3 strictly decreases because it replaces a non-variable
-       scrutinee by a fresh variable in the hash-consed auxiliary case; rules 1,
-       2, 4 and 5 recurse into proper bodies or delegate to value translation. *)
+       count.  Non-variable scrutinees are replaced by fresh variables in
+       hash-consed auxiliary cases; the remaining branches recurse into proper
+       bodies or delegate to value translation. *)
     let rec compile_case ?premise lhs vars axname body =
       match simpl body with
       | Case(indname, matched_term, return_type, params_num, branches) as case_body ->
@@ -1020,10 +1013,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          | None -> emit_leaf ?premise axname vars lhs case_body
                          | Some body2 ->
                             let premise = erased_case_premise vars indname params in
-                            (* E1 singleton erasure: by the paper's erasure
-                               clause and fundamental-erasure lemma, the proof
-                               match computes as its unique branch after proof
-                               arguments are erased. *)
+                            (* Singleton erasure: the proof match computes as
+                               its unique branch after proof arguments are erased. *)
                             compile_case ?premise lhs vars axname body2
                        end
                     | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
@@ -1081,10 +1072,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   | Coq_erasure.CSubset { carrier_idx; _ } ->
                      compile_case ?premise lhs vars axname (collapse_subset_case carrier_idx)
                   | Coq_erasure.CEnum _ ->
-                     (* E3/CEnum discipline: enum scrutinees (e.g. sumbool) need
-                        no special collapse; split-form validity applies to the
-                        erased constructor tags, while enum guards are the image
-                        of the existing inversion scheme. *)
+                     (* Enum scrutinees (e.g. sumbool) need no special collapse;
+                        split-form validity applies to the erased constructor tags,
+                        while enum guards reuse the existing inversion scheme. *)
                      regular_case ()
                   | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
                      regular_case ()
@@ -1098,9 +1088,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          else
            compile_case ?premise (App(lhs, Var(vname))) (vars @ [ (vname, vtype) ]) axname body2
       | Fix(_) as fix_body ->
-         (* Body-compilation rule 4: the right-hand side is the ordinary value
-            translation of the inner fix, justified by the compilation-adequacy
-            lemma and reusing the existing fix_lifting machinery. *)
+         (* The right-hand side is the ordinary value translation of the inner
+            fix, reusing the existing fix_lifting machinery. *)
          emit_leaf ?premise axname vars lhs fix_body
       | body2 ->
          emit_leaf ?premise axname vars lhs body2
@@ -1130,11 +1119,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                           | None -> return (generic_match ())
                           | Some body2 ->
                              let premise = erased_case_premise (fvars @ lvars) indname params in
-                             (* E1 singleton erasure: by the paper's erasure
-                                clause and fundamental-erasure lemma, a whole
-                                defining body that matches on a proof emits the
-                                equation for the unique branch after proof
-                                erasure. *)
+                             (* Singleton erasure: a whole defining body that
+                                matches on a proof emits the equation for the
+                                unique branch after proof erasure. *)
                              if name0 = "" then
                                convert (List.rev (fvars @ lvars)) body2
                              else
@@ -1181,9 +1168,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                         compile_case lhs vars axname0 body2 >>
                         return case_replacement
                    | Coq_erasure.CEnum _ ->
-                      (* E3/CEnum discipline: enum scrutinees are handled by the
-                         ordinary split path after proof-argument dropping; enum
-                         guard expansion is the image of the inversion scheme. *)
+                      (* Enum scrutinees are handled by the ordinary split path
+                         after proof-argument dropping; enum guard expansion reuses
+                         the inversion scheme. *)
                       lifted_case ()
                    | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
                       lifted_case ()
@@ -1303,16 +1290,16 @@ and convert ctx tm =
          if List.length args > carrier_pos then
            let carrier_arg = List.nth args carrier_pos in
            let extras = Hhlib.drop (List.length cargs) args in
-           (* E3 refinement occurrence collapse: by the Coincidence lemma,
-              subset constructors erase to their carrier at each occurrence.
-              Trailing applications are preserved on the translated carrier. *)
+           (* Refinement occurrence collapse: subset constructors erase to
+              their carrier at each occurrence.  Trailing applications are
+              preserved on the translated carrier. *)
            convert ctx carrier_arg >>= fun carrier ->
            convert_extra_app carrier extras
          else
            (* Under-applied subset constructors are eta-expanded and then lifted;
               the lifted symbol's equation may look like a bridge [F x = x],
               which is legitimate only because it is generated at this partial
-              application occurrence by the same E3 collapse rule. *)
+              application occurrence by the same refinement-collapse rule. *)
            remove_lambda ctx (eta_expand_subset_constructor cname args cargs)
       | None ->
       begin
@@ -1454,12 +1441,11 @@ and guard_leaf ctx ty x =
                   in
                   let (_, carrier_ty) = List.nth cargs carrier_idx
                   in
-                  (* Spec-extraction G/F: a refinement guard is expanded at the
-                     occurrence itself, [G({x:A | P x}, u) = G(A,u) ∧ F(P u)].
-                     The Coincidence lemma justifies using this same leaf in
-                     hypotheses and conclusions.  Substitute the erased carrier
-                     before translating the payload so beta-redexes in predicate
-                     parameters disappear shallowly. *)
+                  (* A refinement guard is expanded at the occurrence itself:
+                     the carrier guard is conjoined with the translated payload.
+                     The same leaf is used in hypotheses and conclusions.
+                     Substitute the erased carrier before translating the payload
+                     so beta-redexes in predicate parameters disappear shallowly. *)
                   let carrier_ty = simpl carrier_ty in
                   let payload_ctx =
                     match x with
@@ -1487,16 +1473,15 @@ and guard_leaf ctx ty x =
                     disjs ctors >>= fun fs ->
                     return (f :: fs)
                in
-               (* E4/spec-extraction G/F: a CEnum guard is the image of the
-                  existing inversion scheme, i.e. the self-contained disjunction
-                  of constructor tags and their propositional payload formulas;
-                  non-guard occurrences still use the ordinary inversion axiom. *)
+               (* A CEnum guard reuses the existing inversion scheme as a
+                  self-contained disjunction of constructor tags and their
+                  propositional payload formulas; non-guard occurrences still use
+                  the ordinary inversion axiom. *)
                disjs ctors >>= fun fs ->
                return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
             | Coq_erasure.CEmpty ->
-               (* Spec-extraction G/F: the guard for an empty classified type is
-                  false, the zero-constructor image of the existing inversion
-                  scheme. *)
+               (* The guard for an empty classified type is false, matching the
+                  zero-constructor inversion scheme. *)
                return (Const("$False"))
             | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
                fallback ()
@@ -1529,10 +1514,9 @@ and type_to_guard ctx ty x =
   | Prod(vname, ty1, ty2) ->
      if Coq_typing.check_prop ctx ty1 then
        prop_to_formula ctx ty1 >>= fun tm1 ->
-       (* Spec-extraction S uses pruned arity for Prop domains: proof arguments
-          are formulas, not term arguments, so [x] is deliberately left
-          unapplied across the implication; the Coincidence lemma connects this
-          pruned specification with the erased program occurrence. *)
+       (* Prop domains use pruned arity: proof arguments are formulas, not term
+          arguments, so [x] is deliberately left unapplied across the implication,
+          matching the erased program occurrence. *)
        type_to_guard ctx (subst_proof vname ty1 ty2) x >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
@@ -1707,11 +1691,9 @@ and add_typing_axiom name ty =
     begin
       if opt_refinement_types && Coq_erasure.has_erasable_content [] ty then
         begin
-          (* Spec-extraction S(c): when the type contains erasure-relevant
-             refinements/enums, emit the applied forall-form directly through
-             type_to_guard.  This bypasses type lifting/optimization so the
-             G/F leaf expands payloads per occurrence; by the Coincidence lemma
-             this is equivalent in both polarities to the source specification. *)
+          (* When the type contains erasure-relevant refinements/enums, emit the
+             applied forall-form directly through type_to_guard.  This bypasses
+             type lifting/optimization so payloads are expanded per occurrence. *)
           type_to_guard [] (refresh_bvars ty) (Const(name)) >>= fun guard ->
           add_axiom (mk_axiom ("$_typeof_" ^ name) guard)
         end
@@ -1774,10 +1756,10 @@ and add_def_eq_axiom (name, value, ty, srt) =
       let vars = Coq_typing.get_type_args ty in
       match Hhlib.drop 3 vars with
       | (proof_name, _) :: _ ->
-         (* E1 transport erasure for the standard transport family itself:
-            the erasure clause maps the transport to its carried proof/value;
-            by the transport/UIP limitation this remains the same debt as user
-            constants whose bodies are eq_rect/eq_rec/eq_ind wrappers. *)
+         (* Transport erasure for the standard transport family itself maps
+            the transport to its carried proof/value.  Reconstruction-sensitive
+            cases are the same as user constants whose bodies are eq_rect/eq_rec
+            or eq_ind wrappers. *)
          emit_definition_equation axname name [] vars (Var(proof_name)) >>
          return ()
       | [] -> return ()

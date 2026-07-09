@@ -184,8 +184,8 @@ info "opam constraints: rocq-core >= $V, rocq-stdlib >= $STDLIB_LB (both < ${NEX
 # ---------------------------------------------------------------------------
 # 2. Build the new branch by rewriting the version tokens, without a worktree.
 #    Each file is read from $SOURCE, transformed in a temp file, hashed into a
-#    blob, and staged in a scratch index; the resulting tree becomes one commit
-#    whose parent is $SOURCE. The current working tree is never touched.
+#    blob, and written into a scratch index; the resulting tree becomes one
+#    commit whose parent is $SOURCE. The current working tree is never touched.
 # ---------------------------------------------------------------------------
 
 TMPDIR_MIG="$(mktemp -d)"
@@ -250,8 +250,9 @@ transform_mlg() {
     "$1"
 }
 
-# stage <path> <transform-fn>: transform $SOURCE:<path> and stage the result.
-stage() {
+# write_transformed <path> <transform-fn>: transform $SOURCE:<path> and write
+# the result into the scratch index.
+write_transformed() {
   local path="$1" fn="$2" mode blob work
   git cat-file -e "$SOURCE:$path" 2>/dev/null \
     || { info "  skip (absent on $SOURCE): $path"; return 0; }
@@ -264,11 +265,11 @@ stage() {
 }
 
 info "rewriting version tokens on $NEW_BRANCH:"
-stage coq-hammer.opam                     transform_opam
-stage coq-hammer-tactics.opam             transform_opam
-stage README.md                           transform_readme
-stage .github/workflows/docker-action.yml transform_docker
-stage src/plugin/g_hammer.mlg             transform_mlg
+write_transformed coq-hammer.opam                     transform_opam
+write_transformed coq-hammer-tactics.opam             transform_opam
+write_transformed README.md                           transform_readme
+write_transformed .github/workflows/docker-action.yml transform_docker
+write_transformed src/plugin/g_hammer.mlg             transform_mlg
 
 NEW_TREE="$(git write-tree)"
 SOURCE_TREE="$(git rev-parse "${SOURCE}^{tree}")"

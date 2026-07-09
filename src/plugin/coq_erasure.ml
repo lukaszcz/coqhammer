@@ -1,10 +1,8 @@
 (* Classification of inductive instances for proof/content erasure.
 
-   The emission sites in coq_transl.ml cite the corresponding soundness result.
-   This module only decides which clause applies: CPropSingleton/CEmpty feed the
-   paper's erasure clause and fundamental-erasure lemma; CSubset/CEnum feed
-   spec-extraction G/F and the Coincidence lemma; CEnum guards are emitted as the
-   image of the existing inversion scheme.  CRegular is the status-quo fallback. *)
+   This module only chooses the translation path.  CPropSingleton/CEmpty cover
+   proof-only matches, CSubset/CEnum cover shallow expansion of informative
+   payloads, and CRegular leaves the ordinary translation unchanged. *)
 
 open Hammer_lib
 open Coqterms
@@ -137,16 +135,15 @@ let instantiate_class indname ctor_infos = function
   | MRegular -> CRegular
 
 let classify_shape indname is_prop_ind has_indices ctor_infos =
-  (* These syntactic classes mirror the named paper clauses used at emission:
-     singleton proof matches are erased by the erasure clause, refinement and
-     enum occurrences are expanded by G/F plus Coincidence, and anything not
-     recognized stays on the status-quo path for totality.
+  (* Singleton proof matches can be erased, and refinement/enum occurrences
+     can be expanded from their informative payloads.  Anything not recognized
+     stays on the ordinary path for totality.
 
      Indexed Set/Type families need their indices reflected in every enum/subset
      guard.  The current shallow expansion records constructor payloads but not
      result-index constraints, so classifying such families as CEnum/CSubset would
      be too weak (e.g. reflect P false could be guarded as ReflectT P).  Keep
-     them on the status-quo path until index constraints are represented. *)
+     them on the ordinary path until index constraints are represented. *)
   match ctor_infos with
   | [] -> MEmpty
   | _ when is_ex_ind indname -> MRegular

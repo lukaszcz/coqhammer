@@ -5,13 +5,13 @@ usage() {
   cat <<'USAGE'
 Usage: ./run-screening-grid.sh [options]
 
-Run the Phase 6 Stage 1 extraction screening grid in a resumable layout:
-  premise counts {64,256,1024} x {Vampire,E} x
+Run the extraction screening grid in a resumable layout:
+  premise counts {64,256,1024} x {Vampire,E prover} x
   {baseline, all-on, five leave-one-out ablations} x {decl-skips off,on for refactor configs}
   over the three prepared corpora.
 
-Results are checkpointed under eval/results/stage1/ and summarized under
-  eval/artifacts/task22-stage1/summary.tsv
+Results are checkpointed under eval/results/screening/ and summarized under
+  eval/artifacts/extraction-screening/summary.tsv
 
 Options:
   -j, --jobs N          parallel jobs for Rocq/prover make invocations (default: 1)
@@ -53,8 +53,8 @@ done
 
 repo=$(git rev-parse --show-toplevel)
 eval_dir="$repo/eval"
-results_root="$eval_dir/results/stage1"
-artifacts_dir="$eval_dir/artifacts/task22-stage1"
+results_root="$eval_dir/results/screening"
+artifacts_dir="$eval_dir/artifacts/extraction-screening"
 mkdir -p "$results_root" "$artifacts_dir"
 
 premises=(knn-64 knn-256 knn-1024)
@@ -73,10 +73,10 @@ labels=(baseline-merge-base)
 declare -A label_config
 label_config[baseline-merge-base]=baseline
 for cfg in "${configs[@]}"; do
-  label="stage1-$cfg"
+  label="screening-$cfg"
   labels+=("$label")
   label_config[$label]="$cfg"
-  label_ds="stage1-$cfg-decl-skips"
+  label_ds="screening-$cfg-decl-skips"
   labels+=("$label_ds")
   label_config[$label_ds]="$cfg-decl-skips"
 done
@@ -239,7 +239,7 @@ import sys
 src = pathlib.Path(sys.argv[1])
 dst = pathlib.Path(sys.argv[2])
 files = sorted(src.glob('*.p'))
-# The committed Stage-1 corpora are small; scan all generated problems.  The
+# The committed screening corpora are small; scan all generated problems.  The
 # selection code is deterministic and can be narrowed later for larger corpora.
 for path in files:
     text = path.read_text()
@@ -301,7 +301,7 @@ done
 
 python3 "$eval_dir/tools/summarize-screening.py" "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
 
-echo "Stage 1 screening complete."
+echo "Extraction screening complete."
 echo "  raw checkpoints: $results_root"
 echo "  summary:         $artifacts_dir/summary.tsv"
 echo "  analysis:        $artifacts_dir/analysis.md"

@@ -102,7 +102,7 @@ try_vampire_theorem() {
   grep -q 'SZS status Theorem' "$out"
 }
 
-# Helper kept separate for Phase 4 negative instances: those tests can pass an
+# Helper kept separate for negative consistency checks: those tests can pass an
 # already-formed conjecture here and assert that ATPs do not prove it.
 assert_unprovable_problem() {
   problem=$1

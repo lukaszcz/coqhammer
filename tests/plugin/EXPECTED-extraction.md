@@ -31,8 +31,7 @@ Passing end-to-end `hammer` goals in `extraction_matches.v`:
 - `extraction_nat_eqb_refl`: `Nat.eqb 5 5 = true`
 - `extraction_rsize_nil`: nested-inductive/nested-fix fallback ground equation
 
-Phase 1 / TASK_10 landed: all §4.1 match/fix goals are unwrapped and enforced.
-Phase 5c / TASK_20 promoted them into the normal plugin test suite.
+All match/fix goals in this section are unwrapped and enforced in the normal plugin test suite.
 
 ## deptypes
 
@@ -69,13 +68,13 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
 
-Phase 5 / TASK_19 landed: the bare `Fix`/`Fix_F`, Program `Fix_sub`, and
-transport/UIP fixtures are unwrapped and enforced.  The transport ATP dump
-assertion remains as an independent translation-quality gate.
+The bare `Fix`/`Fix_F`, Program `Fix_sub`, and transport/UIP fixtures are
+unwrapped and enforced.  The transport ATP dump assertion remains as an
+independent translation-quality gate.
 
 ### Documented deviations
 
-No dependent-types extraction goals remain wrapped before Phase 6. The `canary`
+No dependent-types extraction goals remain wrapped. The `canary`
 lemma is intentionally a negative consistency check (`Fail hammer`) and is
 enforced by compilation.
 
@@ -91,24 +90,22 @@ structural assertions that hold with the current translator:
 - No untranslated `Init.Logic` connective constants (`and`, `or`, `not`, `iff`,
   `ex`, `all`) in the output. Proof constants such as `eq_refl`/`False_rect` are
   still part of the baseline profile and are pinned where relevant.
-- Corpus constants: Phase-1 split-equation checks for variable and compound
-  scrutinees (`myadd`, `g`, `k`, `safe_pred`, `pval`, `beq`) plus mutual-fix
-  equations for `even`/`odd`; E3 unboxing checks for `h`, `safe_pred`, `pval`,
-  `between`, `tag`, and `proj1_sig`; Phase-3 spec checks for inline
-  `sig`/`sig2`/record/prod payloads, enum result guards, `Nat.eq_dec` sumbool
-  payloads, and pruned Prop-premise arity; G1 shallowness gates over the covered
-  Phase-3 corpus; premised WF equations for Program `idiv`, bare `Fix` `idiv2`,
-  and direct `Fix_F` `idiv3`; all three are checked to carry the converted
-  `b <> 0` premise on link and case equations, with corpus-wide guards against
-  unpremised WF unfolding equations.
-- Stdlib regression constants: Phase-1 split-equation checks for `Nat.add`,
-  `List.app`, and `Streams.hd`; structural checks for
-  `List.Forall`, `eq_ind_r`, `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`,
-  `sumbool`, `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
-  the `Equivalence_Reflexive` typeclass method projection.  Phase 2 additionally
-  enforces a transport-erased `$_def_` equation for `eq_ind_r`; Phase 3c pins
-  declaration-level subset injectivity/inversion as present with the optional
-  skip constant off by default.
+- Corpus constants: split-equation checks for variable and compound scrutinees
+  (`myadd`, `g`, `k`, `safe_pred`, `pval`, `beq`) plus mutual-fix equations for
+  `even`/`odd`; unboxing checks for `h`, `safe_pred`, `pval`, `between`, `tag`,
+  and `proj1_sig`; specification checks for inline `sig`/`sig2`/record/prod
+  payloads, enum result guards, `Nat.eq_dec` sumbool payloads, and pruned
+  Prop-premise arity; shallow-output gates over the covered corpus; premised WF
+  equations for Program `idiv`, bare `Fix` `idiv2`, and direct `Fix_F` `idiv3`;
+  all three are checked to carry the converted `b <> 0` premise on link and case
+  equations, with corpus-wide guards against unpremised WF unfolding equations.
+- Stdlib regression constants: split-equation checks for `Nat.add`, `List.app`,
+  and `Streams.hd`; structural checks for `List.Forall`, `eq_ind_r`, `proj1`,
+  `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `sumbool`, `sig`, `prod`, `Vector.hd`, a
+  `Streams` coinductive destructor, and the `Equivalence_Reflexive` typeclass
+  method projection.  The profile additionally enforces a transport-erased
+  `$_def_` equation for `eq_ind_r` and pins declaration-level subset
+  injectivity/inversion as present with the optional skip constant off by default.
 
 ### Documented deviations
 

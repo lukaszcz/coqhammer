@@ -390,7 +390,7 @@ if greed2 then begin
 end
 let greedy2m = Array.of_list (List.rev !greed);;
 
-Printf.fprintf oc "<h3>Greedy sequence</h3><table><tr><td>Prover</td><td>Sum%%</td><td>Sum</td><td>G+2</td><td>G1+2</td><td>G-1+2</td><td>G+2M</td><td>Alt</td></tr>\n";;
+Printf.fprintf oc "<h3>Greedy sequence</h3><table><tr><td>Prover</td><td>Sum%%</td><td>Sum</td><td>Add2</td><td>Add2Alt</td><td>Drop1Add2</td><td>Add2Multi</td><td>Alt</td></tr>\n";;
 try for i = 0 to Array.length greedy - 1 do
   let ((a, alt), m) = greedy.(i) in
   let alt5s = String.concat " = " (List.map (Array.get atps) (cut_list [] 3 alt)) in
