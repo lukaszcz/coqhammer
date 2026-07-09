@@ -1097,7 +1097,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          match collapse_prop_singleton vars indname constrs params params_num branches with
                          | None -> emit_leaf ?premise axname vars lhs case_body
                          | Some body2 ->
-                            let premise = erased_case_premise indty return_type params_num indname in
+                            let case_premise = erased_case_premise indty return_type params_num indname in
+                            let premise = combine_premises premise case_premise in
                             (* Singleton erasure: the proof match computes as
                                its unique branch after proof arguments are erased. *)
                             compile_case ?premise lhs vars axname body2
