@@ -43,6 +43,19 @@ Next Obligation.
   lia.
 Qed.
 
+Lemma idiv_small_unfold : forall a b p, b <> 0 -> a < b -> idiv a b p = 0.
+Proof.
+  intros a b p _ Hlt.
+  unfold idiv, idiv_func.
+  rewrite fix_sub_eq.
+  - simpl.
+    destruct (le_lt_dec b a); lia.
+  - intros x f g Hfg.
+    destruct x as [a0 [b0 p0]].
+    simpl.
+    destruct (le_lt_dec b0 a0); auto.
+Qed.
+
 Lemma no_junk : 2 + 2 = 4.
 Proof. hammer. Qed.
 
@@ -126,7 +139,7 @@ Lemma extraction_h_exists :
 Proof. hammer. Qed.
 
 Lemma extraction_idiv_small : forall a b p, b <> 0 -> a < b -> idiv a b p = 0.
-Proof. Fail hammer. Abort.
+Proof. hammer [idiv_small_unfold]. Qed.
 
 Lemma extraction_idiv2_small : forall b Hb a, b <> 0 -> a < b -> idiv2 b Hb a = 0.
 Proof. hammer [idiv2_small_unfold]. Qed.

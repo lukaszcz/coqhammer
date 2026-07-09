@@ -179,6 +179,20 @@ let is_wf_fix_constant name =
 let is_wf_fix_f_constant name =
   name = "Corelib.Init.Wf.Fix_F" || name = "Coq.Init.Wf.Fix_F"
 
+let is_program_fix_sub_constant name =
+  name = "Corelib.Program.Wf.Fix_sub" || name = "Coq.Program.Wf.Fix_sub" ||
+  name = "Stdlib.Program.Wf.Fix_sub"
+
+let is_program_fix_f_sub_constant name =
+  name = "Corelib.Program.Wf.Fix_F_sub" || name = "Coq.Program.Wf.Fix_F_sub" ||
+  name = "Stdlib.Program.Wf.Fix_F_sub"
+
+let specif_constant basename =
+  let core = "Corelib.Init.Specif." ^ basename
+  and coq = "Coq.Init.Specif." ^ basename
+  and stdlib = "Stdlib.Init.Specif." ^ basename in
+  if Defhash.mem core then core else if Defhash.mem coq then coq else stdlib
+
 let erase_false_rect_type_arg tm =
   if opt_refinement_types then
     match flatten_app tm with
@@ -368,6 +382,59 @@ let rec mk_guards ctx vars tm =
 (* The following mutually recursively defined functions return
    (coqterm axioms_monad) or (unit axioms_monad). *)
 
+let program_wf_simpl tm =
+  let is_name basename name = short_name name = basename in
+  let rebuild_app head args =
+    match args with
+    | [] -> head
+    | _ -> mk_long_app head args
+  in
+  let rec simpl_rec tm =
+    let tm =
+      match tm with
+      | App(x, y) -> App(simpl_rec x, simpl_rec y)
+      | Lam(vname, vtype, body) -> Lam(vname, simpl_rec vtype, simpl_rec body)
+      | Prod(vname, vtype, body) -> Prod(vname, simpl_rec vtype, simpl_rec body)
+      | Quant(op, (vname, vtype, body)) -> Quant(op, (vname, simpl_rec vtype, simpl_rec body))
+      | Let(value, (vname, _, body)) -> simpl_rec (substvar vname (simpl_rec value) body)
+      | Case(indname, matched_term, return_type, params_num, branches) ->
+         Case(indname, simpl_rec matched_term, simpl_rec return_type, params_num,
+              List.map (fun (n, branch) -> (n, simpl_rec branch)) branches)
+      | Cast(body, ty) -> Cast(simpl_rec body, simpl_rec ty)
+      | Fix(cft, k, recargs, names, types, bodies) ->
+         Fix(cft, k, recargs, names, List.map simpl_rec types, List.map simpl_rec bodies)
+      | _ -> tm
+    in
+    match tm with
+    | App(Lam(vname, _, body), x) -> simpl_rec (substvar vname x body)
+    | _ ->
+       begin
+         match flatten_app tm with
+         | Const pname, [_; _; packed] when is_name "projT1" pname ->
+            begin match flatten_app packed with
+            | Const cname, [_; _; x; _] when is_name "existT" cname -> simpl_rec x
+            | _ -> tm
+            end
+         | Const pname, [_; _; packed] when is_name "projT2" pname ->
+            begin match flatten_app packed with
+            | Const cname, [_; _; _; y] when is_name "existT" cname -> simpl_rec y
+            | _ -> tm
+            end
+         | Const pname, [_; _; packed] when is_name "proj1_sig" pname ->
+            begin match flatten_app packed with
+            | Const cname, [_; _; x; _] when is_name "exist" cname -> simpl_rec x
+            | _ -> tm
+            end
+         | Const pname, [_; _; packed] when is_name "proj2_sig" pname ->
+            begin match flatten_app packed with
+            | Const cname, [_; _; _; proof] when is_name "exist" cname -> simpl_rec proof
+            | _ -> tm
+            end
+         | head, args -> rebuild_app head args
+       end
+  in
+  simpl_rec tm
+
 (* Per-translate WF-recursion marker introduced by the Phase-0 plumbing.  E1
    singleton erasure sets it before falling back whenever an Acc/proof-recursive
    path would otherwise emit an unsafe unconditional equation. *)
@@ -493,7 +560,48 @@ and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
            Some(lvars_ext, unfolded)
         | _ -> None
       in
+      let build_program_sub helper_name a_ty rel f x =
+        let yname = refresh_varname "wfarg" in
+        let zname = refresh_varname "wfarg" in
+        let subset_pred = Lam(zname, a_ty, mk_long_app rel [ Var(zname); x ]) in
+        let proj1_sig = specif_constant "proj1_sig" in
+        let rec_arg = mk_long_app (Const(proj1_sig)) [ a_ty; subset_pred; Var(yname) ] in
+        let rec_fun = Lam(yname, type_any, mk_long_app (Const(helper_name)) [ rec_arg ]) in
+        Some(lvars, program_wf_simpl (mk_long_app f [ x; rec_fun ]))
+      in
+      let program_fix_sub_components tm =
+        match flatten_app tm with
+        | Const cname, args when is_program_fix_sub_constant cname && List.length args >= 5 ->
+           Some(List.nth args 0, List.nth args 1, List.nth args 4)
+        | Const cname, args when is_program_fix_f_sub_constant cname && List.length args >= 4 ->
+           Some(List.nth args 0, List.nth args 1, List.nth args 3)
+        | _ -> None
+      in
       try
+        match flatten_app tm with
+        | Const helper_name, [x] ->
+           begin
+             try
+               match program_fix_sub_components (coqdef_value (Defhash.find helper_name)) with
+               | Some(a_ty, rel, f) -> build_program_sub helper_name a_ty rel f x
+               | None -> None
+             with _ -> None
+           end
+        | Const cname, args when is_program_fix_sub_constant cname && List.length args >= 6 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 4
+           and x = List.nth args 5
+           in
+           build_program_sub name a_ty rel f x
+        | Const cname, args when is_program_fix_f_sub_constant cname && List.length args >= 5 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 3
+           and x = List.nth args 4
+           in
+           build_program_sub name a_ty rel f x
+        | _ ->
         match flatten_app tm with
         | Const cname, args when is_wf_fix_constant cname && List.length args >= 5 ->
            let a_ty = List.nth args 0

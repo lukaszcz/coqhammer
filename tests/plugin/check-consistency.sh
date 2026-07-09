@@ -156,6 +156,11 @@ assert_provable transport-tr-refl.p "$TIMEOUT" "transport tr reflexivity"
 assert_unprovable consistency-idiv.p "$TIMEOUT"
 assert_unprovable consistency-idiv2.p "$TIMEOUT"
 
+bad_idiv=$tmpdir/bad-idiv.p
+sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
+  consistency-idiv.p >"$bad_idiv"
+assert_unprovable_problem "$bad_idiv" "$TIMEOUT" "idiv violated-premise unfolding instance"
+
 bad_idiv2=$tmpdir/bad-idiv2.p
 sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
   consistency-idiv2.p >"$bad_idiv2"

@@ -57,6 +57,9 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
   `Hammer_dump` problem `transport-tr-refl.p` and enforced by
   `check-consistency.sh`; the lemma remains wrapped end-to-end until the Phase 5
   reconstruction variants graduate the UIP/transport case
+- `extraction_idiv_small`: Program `Fix_sub` division small-argument equation,
+  using the proved `idiv_small_unfold` reconstruction helper while the
+  translation-shape gates enforce the premised unfolding axiom
 - `extraction_idiv2_small`: bare `Fix lt_wf` division small-argument equation,
   using the proved `idiv2_small_unfold` reconstruction helper while the
   translation-shape gates enforce the premised unfolding axiom
@@ -66,9 +69,9 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
 
-Phase 4a / TASK_16 landed: the bare `Fix`/`Fix_F` WF-recursion fixtures are
-unwrapped and enforced.  `Program Fixpoint idiv` remains the TASK_17 fallback,
-and transport remains ATP-level until the Phase 5 reconstruction variants.
+Phase 4 / TASK_16+TASK_17 landed: the bare `Fix`/`Fix_F` and Program
+`Fix_sub` WF-recursion fixtures are unwrapped and enforced.  Transport remains
+ATP-level until the Phase 5 reconstruction variants.
 
 ### Staged per phase
 
@@ -76,7 +79,6 @@ Expected failures now, wrapped with `Fail hammer.` / `Abort.`:
 
 - Phase 5 / TASK_19: `extraction_tr_refl` remains ATP-level only until the
   reconstruction variants graduate the UIP/transport case
-- Phase 4b / TASK_17: `extraction_idiv_small` (Program `Fix_sub` packaging)
 
 ## transl
 
@@ -96,11 +98,10 @@ structural assertions that hold with the current translator:
   `between`, `tag`, and `proj1_sig`; Phase-3 spec checks for inline
   `sig`/`sig2`/record/prod payloads, enum result guards, `Nat.eq_dec` sumbool
   payloads, and pruned Prop-premise arity; G1 shallowness gates over the covered
-  Phase-3 corpus; baseline definition/type-shape checks for `idiv`; `idiv` is
-  specifically checked not to expose an unconditional recursive
-  `le_lt_dec`/`Nat.sub` unfolding equation before TASK_17.  TASK_16 adds
-  premised `idiv2`/`idiv3` WF equations and checks that the `b <> 0` premise is
-  present on the link and recursive case equations.
+  Phase-3 corpus; premised WF equations for Program `idiv`, bare `Fix` `idiv2`,
+  and direct `Fix_F` `idiv3`; all three are checked to carry the converted
+  `b <> 0` premise on link and case equations, with corpus-wide guards against
+  unpremised WF unfolding equations.
 - Stdlib regression constants: Phase-1 split-equation checks for `Nat.add`,
   `List.app`, and `Streams.hd`; structural checks for
   `List.Forall`, `eq_ind_r`, `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`,
@@ -112,8 +113,5 @@ structural assertions that hold with the current translator:
 
 ### Staged per phase
 
-Disabled, clearly labeled assertion blocks live in
-`check-extraction-transl.sh` and are enabled by the phase acceptance tasks:
-
-- Phase 4b / TASK_17: premised WF-recursion equations for Program `idiv`, with
-  explicit absence of unconditional WF unfolding equations.
+No disabled translation assertion blocks remain before Phase 5; the remaining
+wrapped transport goal is enforced at the ATP-dump layer.
