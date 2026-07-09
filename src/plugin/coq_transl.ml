@@ -941,9 +941,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
     in
     let is_eq_ind indname = short_name indname = "eq" in
     let is_acc_ind indname = short_name indname = "Acc" in
-    let is_indexed_ind indty params_num =
-      List.length (Coq_typing.get_type_args indty) > params_num
-    in
     let term_mentions_const names tm =
       fold_coqterm
         (fun _ acc tm ->
@@ -987,6 +984,36 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         end
       else
         None
+    in
+    let combine_premises p1 p2 =
+      match p1, p2 with
+      | None, None -> None
+      | Some p, None | None, Some p -> Some p
+      | Some p1, Some p2 -> Some (mk_and p1 p2)
+    in
+    let constructor_index_premise indty return_type params_num targs =
+      let actual_args = Hhlib.drop params_num (get_case_type_args indty return_type params_num)
+      and index_formals = Hhlib.drop params_num (Coq_typing.get_type_args indty)
+      and ctx = List.rev (Hhlib.take params_num (Coq_typing.get_type_args indty))
+      in
+      let rec conjs ctx actuals targs formals acc =
+        match actuals, targs, formals with
+        | actual :: actuals2, targ :: targs2, (name, ty) :: formals2 ->
+           let acc =
+             if Coq_typing.check_prop ctx ty then
+               acc
+             else
+               mk_eq actual targ :: acc
+           in
+           conjs ((name, ty) :: ctx) actuals2 targs2 formals2 acc
+        | [], [], [] ->
+           begin match acc with
+           | [] -> None
+           | _ -> Some (join_right mk_and acc)
+           end
+        | _ -> raise Not_found
+      in
+      conjs ctx actual_args targs index_formals []
     in
     let emit_equation ?premise axname vars lhs rhs is_prop =
       let mk_eqv = if is_prop then mk_equiv lhs rhs else mk_eq lhs rhs in
@@ -1076,23 +1103,13 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                     ~params ~params_num carrier_idx
                 in
                 let regular_case () =
-                  if is_indexed_ind indty params_num then
-                    (* Split equations for indexed families need the constructor
-                       result-index constraints as guards.  Until split-form
-                       equations carry those constraints, use a legacy auxiliary
-                       case, whose inversion axiom keeps them. *)
-                    case_aux_value vars indname matched_term return_type params_num branches indty
-                    >>= fun rhs ->
-                    emit_equation ?premise (axname ^ "$link") vars lhs rhs
-                      (Coq_typing.check_prop (List.rev vars) case_body)
-                  else
                   match matched_term with
                   | Var scrutinee when var_occurs scrutinee lhs ->
                      let compile_branch acc cname =
                        acc >>
                        let (n, branch) = get_branch cname constrs branches
                        in
-                       let (_, args) = constructor_args params params_num cname
+                       let (targs, args) = constructor_args params params_num cname
                        in
                        if List.length args > n then
                          raise Not_found
@@ -1106,8 +1123,20 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             back instead of producing a wrong equation. *)
                          raise Not_found
                        else
-                         let args = refresh_case_args vars args
+                         let args0 = args in
+                         let args = refresh_case_args vars args in
+                         let refresh_terms tms =
+                           List.map
+                             (fun tm ->
+                                List.fold_left2
+                                  (fun tm (name, _) (name2, _) ->
+                                     if name = name2 then tm else substvar name (Var name2) tm)
+                                  tm args0 args)
+                             tms
                          in
+                         let targs = refresh_terms targs in
+                         let index_premise = constructor_index_premise indty return_type params_num targs in
+                         let premise = combine_premises premise index_premise in
                          let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
                          in
                          let branch_body = simpl (mk_long_app branch (mk_vars args))
@@ -1204,9 +1233,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      ~params ~params_num carrier_idx
                  in
                  let lifted_case () =
-                   if is_indexed_ind indty params_num then
-                     legacy_case_lifting ()
-                   else
                    let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
                    in
                    let axname = if name0 = "" then fname else axname0
