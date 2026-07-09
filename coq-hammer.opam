@@ -26,6 +26,7 @@ depends: [
   "rocq-stdlib" {>= "9.1" & < "9.3~"}
   ("conf-g++" {build} | "conf-clang" {build})
   "coq-hammer-tactics" {= version}
+  "eprover" {with-test}
 ]
 
 tags: [
