@@ -51,6 +51,8 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `extraction_refinement_hyp`: `forall s : {u : nat | 0 < u}, 1 <= proj1_sig s`
 - `extraction_h_exists`: `forall x y z p, exists u, proj1_sig (h x y z p) = u /\\ x = u`
 - `extraction_vhead_cons`: vector-head equation on `Vector.cons`
+- `extraction_beq_correct`: `forall n m, beq n m = true <-> n = m` using the
+  `Nat.eq_dec`/`sumbool`-driven definition and helper lemmas for reconstruction
 - `extraction_tr_refl`: transport reflexivity is ATP-provable from the
   `Hammer_dump` problem `transport-tr-refl.p` and enforced by
   `check-consistency.sh`; the lemma remains wrapped end-to-end until the Phase 5
@@ -58,17 +60,16 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
 
-Phase 3b / TASK_14 landed: specification extraction and enum guard expansion
-are enforced at the translation layer (inline refinement payloads, sumbool/bool
-result guards, and pruned Prop-premise arity). Direct projection/unboxing goals
-remain end-to-end green; broader dependent goals are still staged for TASK_15 or
-later reconstruction work.
+Phase 3 / TASK_15 landed: all §4.2 dependent/refinement goals are enforced
+end-to-end except the known transport reconstruction gate and the Phase-4
+well-founded-recursion goals.
 
 ### Staged per phase
 
 Expected failures now, wrapped with `Fail hammer.` / `Abort.`:
 
-- Phase 3b / TASK_14: `extraction_beq_correct` (enum/spec extraction)
+- Phase 5 / TASK_19: `extraction_tr_refl` remains ATP-level only until the
+  reconstruction variants graduate the UIP/transport case
 - Phase 4 / TASK_17: `extraction_idiv_small`, `extraction_idiv2_small`,
   `extraction_idiv3_small`
 
@@ -87,17 +88,20 @@ structural assertions that hold with the current translator:
 - Corpus constants: Phase-1 split-equation checks for variable and compound
   scrutinees (`myadd`, `g`, `k`, `safe_pred`, `pval`, `beq`) plus mutual-fix
   equations for `even`/`odd`; E3 unboxing checks for `h`, `safe_pred`, `pval`,
-  `tag`, and `proj1_sig`; Phase-3b spec checks for inline `sig`/record/prod
-  payloads, enum result guards, `Nat.eq_dec` sumbool payloads, and pruned
-  Prop-premise arity; baseline definition/type-shape checks for `idiv`;
-  `idiv` is specifically checked not to expose an unconditional recursive
+  `between`, `tag`, and `proj1_sig`; Phase-3 spec checks for inline
+  `sig`/`sig2`/record/prod payloads, enum result guards, `Nat.eq_dec` sumbool
+  payloads, and pruned Prop-premise arity; G1 shallowness gates over the covered
+  Phase-3 corpus; baseline definition/type-shape checks for `idiv`; `idiv` is
+  specifically checked not to expose an unconditional recursive
   `le_lt_dec`/`Nat.sub` unfolding equation before Phase 4.
 - Stdlib regression constants: Phase-1 split-equation checks for `Nat.add`,
   `List.app`, and `Streams.hd`; structural checks for
   `List.Forall`, `eq_ind_r`, `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`,
   `sumbool`, `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
   the `Equivalence_Reflexive` typeclass method projection.  Phase 2 additionally
-  enforces a transport-erased `$_def_` equation for `eq_ind_r`.
+  enforces a transport-erased `$_def_` equation for `eq_ind_r`; Phase 3c pins
+  declaration-level subset injectivity/inversion as present with the optional
+  skip constant off by default.
 
 ### Staged per phase
 

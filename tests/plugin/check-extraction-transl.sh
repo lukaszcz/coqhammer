@@ -33,6 +33,17 @@ require_count_at_least() {
   fi
 }
 
+require_count_exact() {
+  local label=$1
+  local pattern=$2
+  local expected=$3
+  local count
+  count=$(grep -Ec -- "$pattern" "$out" || true)
+  if [ "$count" -ne "$expected" ]; then
+    fail "$label (expected $expected matches for: $pattern; found $count)"
+  fi
+}
+
 # -----------------------------------------------------------------------------
 # Global sanity checks enforced now.
 # -----------------------------------------------------------------------------
@@ -98,10 +109,12 @@ require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
 require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
 require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
-# Phase 3a E3 refinement unboxing: the conjunction match in h collapses as in
-# Phase 2 and the subset constructor occurrence now erases to its carrier z.
-require_line "h has a specification-extracted type axiom" '^\$_typeof_extraction_deptypes\.h:.*var_0_x_[0-9]+ = \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)'
-require_line "h has a refinement-unboxed definition" '^\$_def_extraction_deptypes\.h:.*= 2_z\)'
+# Phase 3 acceptance: the h example has exactly the paper's two axioms: a
+# carrier-only program equation and a specification axiom with nat guards plus
+# the expanded equality payload.
+require_count_exact "h emits exactly its definition and type axioms" '^\$_(def|typeof)_extraction_deptypes\.h:' 2
+require_line "h has the carrier-only definition equation" '^\$_def_extraction_deptypes\.h: !\[0_x : \$Any\]: \(!\[1_y : \$Any\]: \(!\[2_z : \$Any\]: .*\(\(\(extraction_deptypes\.h @ 0_x\) @ 1_y\) @ 2_z\) = 2_z'
+require_line "h has the specification-extracted axiom shape" '^\$_typeof_extraction_deptypes\.h:.*\$HasType @ var_0_x_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_1_y_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_2_z_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*=> @ \(\(& @ \(var_0_x_[0-9]+ = var_1_y_[0-9]+\)\) @ \(var_1_y_[0-9]+ = var_2_z_[0-9]+\)\).*& @ \(\(\$HasType @ \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_x_[0-9]+ = \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\)'
 forbid_line "h type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.h:.*Corelib\.Init\.Specif\.sig'
 forbid_line "h output must not mention erased sig/exist/proj1_sig" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.(sig|exist|proj1_sig)'
 forbid_line "h singleton collapse must not leave generic case" '^.*extraction_deptypes\.h.*\$_generic_case'
@@ -110,6 +123,7 @@ forbid_line "h singleton collapse must not leave generic case" '^.*extraction_de
 # for both branches while proof payloads in the live successor branch are erased.
 require_count_at_least "safe_pred has split definition axioms" '^\$_def_extraction_deptypes\.safe_pred[$]' 2
 require_line "safe_pred zero branch remains dead-code fallback" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Logic\.False_rect'
+forbid_line "safe_pred zero branch must not leak the erased sig package" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Specif\.sig'
 require_line "safe_pred successor branch unboxes the subset result" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*= var_0_[$]Anonymous_[0-9]+\)'
 require_line "safe_pred type axiom expands the subset payload" '^\$_typeof_extraction_deptypes\.safe_pred:.*var_0_n_[0-9]+ = \(Corelib\.Init\.Datatypes\.S @ \(extraction_deptypes\.safe_pred @ var_0_n_[0-9]+\)\)'
 forbid_line "safe_pred type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.safe_pred:.*Corelib\.Init\.Specif\.sig'
@@ -142,6 +156,13 @@ require_line "beq type axiom expands bool enum result" '^\$_typeof_extraction_de
 require_line "Nat.eq_dec type axiom expands sumbool payloads" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*var_0_n_[0-9]+ = var_1_m_[0-9]+.*~ @ \(var_0_n_[0-9]+ = var_1_m_[0-9]+\)'
 forbid_line "Nat.eq_dec type axiom must not keep a sumbool HasType atom" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*Corelib\.Init\.Specif\.sumbool'
 
+# between: sig2 is declaration-level subset-like and erases to its carrier while
+# both payload propositions are expanded in the type axiom.
+require_line "between has an unboxed definition axiom" '^\$_def_extraction_deptypes\.between:.*= 0_n\)'
+require_line "between type axiom expands both sig2 payloads" '^\$_typeof_extraction_deptypes\.between:.*Corelib\.Init\.Peano\.le @ var_0_n_[0-9]+\) @ \(extraction_deptypes\.between @ var_0_n_[0-9]+\).*Corelib\.Init\.Peano\.le @ \(extraction_deptypes\.between @ var_0_n_[0-9]+\)\) @ \(Corelib\.Init\.Datatypes\.S @ var_0_n_[0-9]+\)'
+forbid_line "between definition must not mention exist2" '^\$_def_extraction_deptypes\.between:.*Corelib\.Init\.Specif\.exist2'
+forbid_line "between type axiom must not keep a sig2 HasType atom" '^\$_typeof_extraction_deptypes\.between:.*Corelib\.Init\.Specif\.sig2'
+
 # tag: prod-with-Prop is a per-instance subset; pair erases to the informative
 # first component and the result guard carries the equality payload.
 require_line "tag has an unboxed definition axiom" '^\$_def_extraction_deptypes\.tag:.*= 0_n\)'
@@ -149,6 +170,16 @@ require_line "tag type axiom expands the prod payload" '^\$_typeof_extraction_de
 forbid_line "tag definition must not mention pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
 forbid_line "tag proof payload is erased" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
 forbid_line "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.prod'
+
+# Indexed-family match: vhead is a normal split-pattern equation over Vector.t;
+# it must not introduce existential case bodies in definition axioms.
+require_line "vhead has a cons split equation" '^\$_def_extraction_deptypes\.vhead[$]cons:.*= var_1_h_[0-9]+\)'
+forbid_line "vhead split equations are existential-free" '^\$_def_extraction_deptypes\.vhead[$].*\?\['
+
+# Corpus-wide G1 shallowness gates for the covered Phase 3 constants.  WF-gated
+# idiv definitions and explicit stdlib structural snapshots are checked separately.
+forbid_line "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'
+forbid_line "covered extraction type axioms do not keep classified HasType leaves" '^\$_typeof_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag):.*Corelib\.Init\.(Specif\.(sig|sig2|sumbool)|Datatypes\.prod)'
 
 # WF guardrail: until Phase 4, the Acc/Fix_F packagings must not expose an
 # unconditional unfolding equation.  These assertions are part of make tests.
@@ -183,7 +214,8 @@ require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
 require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'
-require_line "sig has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
+require_line "sig has an inversion axiom with decl-skip default off" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
+require_line "sig constructor injectivity remains with decl-skip default off" '^\$_inj_Corelib\.Init\.Specif\.exist:'
 require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
 require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1

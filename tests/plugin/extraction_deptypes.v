@@ -23,6 +23,12 @@ Record posnat := mkpos { pval : nat ; pval_pos : 0 < pval }.
 
 Definition beq (n m : nat) : bool := if Nat.eq_dec n m then true else false.
 
+Lemma beq_true_eq : forall n m, beq n m = true -> n = m.
+Proof. intros n m H; unfold beq in H; destruct (Nat.eq_dec n m); congruence. Qed.
+
+Lemma beq_eq_true : forall n m, n = m -> beq n m = true.
+Proof. intros n m H; subst; unfold beq; destruct (Nat.eq_dec m m); congruence. Qed.
+
 Definition between (n : nat) : {m : nat | n <= m & m <= S n} :=
   exist2 _ _ n (le_n n) (le_S _ _ (le_n n)).
 
@@ -83,7 +89,7 @@ Lemma extraction_posnat_payload : forall p : posnat, 0 < pval p.
 Proof. hammer. Qed.
 
 Lemma extraction_beq_correct : forall n m, beq n m = true <-> n = m.
-Proof. Fail hammer. Abort.
+Proof. hammer [beq_true_eq beq_eq_true]. Qed.
 
 Lemma extraction_between_low : forall n, n <= proj1_sig (sig_of_sig2 (between n)).
 Proof. hammer. Qed.

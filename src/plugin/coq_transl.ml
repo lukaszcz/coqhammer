@@ -171,6 +171,24 @@ let is_transport_constant name =
   | "eq_rect" | "eq_rec" | "eq_ind" | "eq_rect_r" | "eq_rec_r" | "eq_ind_r" -> true
   | _ -> false
 
+let is_false_rect_constant name = short_name name = "False_rect"
+
+let erase_false_rect_type_arg tm =
+  if opt_refinement_types then
+    match flatten_app tm with
+    | Const name, ty :: args
+         when is_false_rect_constant name && args <> [] && ty <> type_any &&
+              Coq_erasure.has_erasable_content [] ty ->
+       (* E3 shallowness for impossible branches: the eliminated result type can
+          mention a collapsed refinement package, but the proof argument is erased
+          and the branch is unreachable.  Keep the status-quo opaque eliminator and
+          replace only the type parameter by [$Any] so no sig/exist bridge leaks
+          into a definition axiom. *)
+       Some (mk_long_app (Const name) (type_any :: args))
+    | _ -> None
+  else
+    None
+
 let erase_transport_head tm =
   if opt_prop_case_erasure then
     match flatten_app tm with
@@ -1112,6 +1130,9 @@ and convert ctx tm =
       begin match erase_transport_head tm with
       | Some tm2 -> convert ctx tm2
       | None ->
+      begin match erase_false_rect_type_arg tm with
+      | Some tm2 -> convert ctx tm2
+      | None ->
       begin
       match if opt_refinement_types then subset_constructor_spine () else None with
       | Some (cname, args, cargs, params_num, carrier_idx) ->
@@ -1144,6 +1165,7 @@ and convert ctx tm =
         else
           return (App(x2, y2))
       | _ -> failwith "convert: app"
+      end
       end
       end
       end
@@ -1613,6 +1635,12 @@ and add_def_eq_axiom (name, value, ty, srt) =
            end
       end
 
+and skip_refinement_decl_axioms indname =
+  opt_refinement_types && opt_refinement_decl_skips &&
+  match Coq_erasure.classify_decl indname with
+  | Some (Coq_erasure.CSubset _) -> true
+  | _ -> false
+
 and add_injection_axioms constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
   let ty = coqdef_type (Defhash.find constr)
@@ -1784,10 +1812,14 @@ and add_def_axioms ((name, value, ty, srt) as def) =
            end
         else
           begin
-            List.fold_left (fun acc c -> add_injection_axioms c >> acc) (return ()) constrs >>
+            let skip_refinement_decl = skip_refinement_decl_axioms name in
+            (if skip_refinement_decl then
+               return ()
+             else
+               List.fold_left (fun acc c -> add_injection_axioms c >> acc) (return ()) constrs) >>
             List.fold_left (fun acc (c1, c2) -> add_discrim_axioms c1 c2) (return ()) (Hhlib.mk_pairs constrs) >>
             add_typing_axiom name ty >>
-            if opt_inversion_axioms then
+            if opt_inversion_axioms && not skip_refinement_decl then
               add_inversion_axioms false name constrs
             else
               return ()

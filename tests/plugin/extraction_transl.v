@@ -49,7 +49,9 @@ Hammer_transl "tr".
 Hammer_transl "proj1_sig".
 Hammer_transl "pval".
 Hammer_transl "beq".
+Hammer_transl "between".
 Hammer_transl "tag".
+Hammer_transl "vhead".
 Hammer_transl "idiv".
 Hammer_transl "idiv2".
 Hammer_transl "idiv3".
