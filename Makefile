@@ -6,12 +6,15 @@ LOCAL_INSTALL ?= $(CURDIR)/_check-install
 LOCAL_ROCQLIB ?= $(LOCAL_INSTALL)/coq
 LOCAL_COQLIBINSTALL ?= $(LOCAL_ROCQLIB)/user-contrib
 LOCAL_COQPLUGININSTALL ?= $(LOCAL_INSTALL)
+USE_LOCAL_INSTALL ?= 0
+ifeq ($(USE_LOCAL_INSTALL),1)
 ifneq ($(wildcard $(LOCAL_COQPLUGININSTALL)),)
 export OCAMLPATH := $(LOCAL_COQPLUGININSTALL)$(if $(OCAMLPATH),:$(OCAMLPATH))
 export PATH := $(LOCAL_INSTALL)/bin:$(PATH)
 endif
 ifneq ($(wildcard $(LOCAL_ROCQLIB)/theories),)
 export COQC ?= rocq c -coqlib $(LOCAL_ROCQLIB)
+endif
 endif
 
 default: all
