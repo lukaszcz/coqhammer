@@ -1228,9 +1228,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                                 matches on a proof emits the equation for the
                                 unique branch after proof erasure. *)
                              if name0 = "" then
-                               match premise with
+                               (match premise with
                                | Some _ -> return (generic_match ())
-                               | None -> convert (List.rev (fvars @ lvars)) body2
+                               | None -> convert (List.rev (fvars @ lvars)) body2)
                              else
                                convert (List.rev fvars) (mk_long_app (Const(name0)) (mk_vars fvars))
                                >>= fun case_replacement ->
