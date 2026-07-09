@@ -950,6 +950,15 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            | _ -> false)
         false tm
     in
+    let term_fvars_subset names tm =
+      fold_coqterm
+        (fun ctx acc tm ->
+           acc &&
+           match tm with
+           | Var name when not (List.mem_assoc name ctx) -> List.mem name names
+           | _ -> true)
+        true tm
+    in
     let collapse_prop_singleton vars indname constrs params params_num branches =
       match constrs, branches with
       | [cname], [(n, branch)] ->
@@ -991,8 +1000,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       | Some p, None | None, Some p -> Some p
       | Some p1, Some p2 -> Some (mk_and p1 p2)
     in
-    let constructor_index_premise indty return_type params_num targs =
-      let actual_args = Hhlib.drop params_num (get_case_type_args indty return_type params_num)
+    let constructor_index_premise indty params_num actual_tyargs targs =
+      let actual_args = Hhlib.drop params_num actual_tyargs
       and index_formals = Hhlib.drop params_num (Coq_typing.get_type_args indty)
       and ctx = List.rev (Hhlib.take params_num (Coq_typing.get_type_args indty))
       in
@@ -1135,7 +1144,12 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                              tms
                          in
                          let targs = refresh_terms targs in
-                         let index_premise = constructor_index_premise indty return_type params_num targs in
+                         let (_, actual_tyargs) = flatten_app (List.assoc scrutinee vars) in
+                         let bound_names = List.map fst (vars @ args) in
+                         if not (List.for_all (term_fvars_subset bound_names) (actual_tyargs @ targs)) then
+                           raise Not_found
+                         else
+                         let index_premise = constructor_index_premise indty params_num actual_tyargs targs in
                          let premise = combine_premises premise index_premise in
                          let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
                          in
