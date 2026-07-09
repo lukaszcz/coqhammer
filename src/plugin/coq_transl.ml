@@ -2090,9 +2090,6 @@ end
 (***************************************************************************************)
 (* Translation *)
 
-let wf_mark_for_testing () = !wf_mark
-let set_wf_mark_for_testing value = wf_mark := value
-
 let translate name =
   wf_mark := false;
   log 1 ("translate: " ^ name);

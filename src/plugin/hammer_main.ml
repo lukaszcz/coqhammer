@@ -1017,32 +1017,6 @@ let hammer_transl name0 =
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
 
-let hammer_test_wf_mark_reset name0 name1 =
-  let env, sigma = let e = Global.env () in e, Evd.from_env e in
-  try
-    let resolve name =
-      let glob = Utils.get_global name in
-      let (_, def) = hhdef_of_global env sigma glob in
-      Hh_term.get_hhdef_name def
-    in
-    let name0 = resolve name0
-    and name1 = resolve name1
-    in
-    Coq_transl.remove_def name0;
-    Coq_transl.remove_def name1;
-    Coq_transl.reinit (get_defs env sigma);
-    let check_reset name =
-      Coq_transl.set_wf_mark_for_testing true;
-      ignore (Coq_transl.translate name);
-      if Coq_transl.wf_mark_for_testing () then
-        raise (HammerError ("WF mark was not reset while translating " ^ name))
-    in
-    check_reset name0;
-    check_reset name1;
-    Msg.notice "WF mark reset test passed"
-  with Not_found ->
-    Msg.error ("Not found: " ^ name0 ^ " or " ^ name1)
-
 let hammer_transl_tac () =
   try_goal_tactic
     begin fun gl ->

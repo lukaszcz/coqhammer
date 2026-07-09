@@ -5,8 +5,6 @@ open Coqterms
 
 val reinit : hhdef list -> unit
 val translate : string (* name *) -> fol_axioms (* axioms *)
-val wf_mark_for_testing : unit -> bool
-val set_wf_mark_for_testing : bool -> unit
 val retranslate : string list (* names *) -> unit
 val get_axioms : string list (* definition names *) -> fol_axioms
 val remove_def : string (* name *) -> unit

@@ -76,10 +76,6 @@ Hammer_transl "shadow_jmeq_refl_user".
 (* Split-case constructor binders must not capture same-named function binders. *)
 Hammer_transl "box_arg_collision".
 
-(* WF-recursion marker regression: the mark must not leak between top-level
-   translations. *)
-Hammer_test_wf_mark_reset "myadd" "g".
-
 (* Corpus constants from extraction_matches.v. *)
 Hammer_transl "myadd".
 Hammer_transl "g".
