@@ -1,20 +1,24 @@
 (rule
  (alias runtest)
  (deps
-  plugin_test.v
-  extraction_matches.v
-  extraction_deptypes.v
-  extraction_transl.v
-  check-extraction-transl.sh)
+  (source_tree .)
+  ../../Makefile
+  ../../_CoqProject.tactics
+  ../../_CoqProject.plugin)
  (action
-  (progn
-   (run rocq c plugin_test.v)
-   (run rocq c extraction_matches.v)
-   (run rocq c extraction_deptypes.v)
-   (with-stdout-to extraction_transl.out
-    (with-stderr-to extraction_transl.out
-     (run rocq c extraction_transl.v)))
-   (run ./check-extraction-transl.sh extraction_transl.out))))
+  (run bash -c "set -euo pipefail
+repo=$(git rev-parse --show-toplevel)
+cd \"$repo\"
+rm -rf _check-install
+make prepare-local-install
+make install \\
+  COQLIBINSTALL=\"$repo/_check-install/coq/user-contrib\" \\
+  COQPLUGININSTALL=\"$repo/_check-install\" \\
+  BINDIR=\"$repo/_check-install/bin/\" \\
+  COQFLAGS=\"-coqlib $repo/_check-install/coq\"
+make -B -C tests/plugin all \\
+  LOCAL_ROCQLIB=\"$repo/_check-install/coq\" \\
+  COQC=\"rocq c -coqlib $repo/_check-install/coq\"")))
 
 (alias
  (name extraction)
