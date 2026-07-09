@@ -35,6 +35,11 @@ type memo_class =
 
 let memo : ((string * bool list * bool * bool list list), memo_class) Hashtbl.t = Hashtbl.create 257
 
+exception Not_classifiable
+
+let check_prop ctx ty =
+  try Coq_typing.check_prop ctx ty with _ -> raise Not_classifiable
+
 let rec subst_params formals params tm =
   match formals, params with
   | [], _ | _, [] -> tm
@@ -225,41 +230,43 @@ let constructor_info ctx params params_num cname =
     | [] -> List.rev acc
     | (name, ty) :: args2 ->
         let ty = simpl ty in
-        let is_prop = Coq_typing.check_prop ctx ty in
+        let is_prop = check_prop ctx ty in
         let info = { arg_index = idx; arg_name = name; arg_ty = ty; arg_is_prop = is_prop } in
         collect ((name, ty) :: ctx) (idx + 1) (info :: acc) args2
   in
   { ctor_name = cname; ctor_args = collect ctx 0 [] args }
 
 let classify ctx indname params =
-  match get_inductive indname with
-  | None -> CRegular
-  | Some (_, params_num, _, _) when List.length params < params_num ->
-      (* A partially applied inductive is not a classifiable instance: its
-         parameters are not all determined, so [constructor_info] could not
-         substitute them and [check_prop] would be handed unbound formals.
-         Such occurrences stay on the status-quo path. *)
-      CRegular
-  | Some (constrs, params_num, ind_ty, ind_sort) ->
-      let all_formals = Coq_typing.get_type_args ind_ty in
-      let has_indices = List.length all_formals > params_num in
-      let params = Hhlib.take params_num params in
-      let mask = List.map (Coq_typing.check_prop ctx) params in
-      let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
-      let is_prop_ind =
-        ind_sort = SortProp || Coq_typing.check_prop ctx (mk_long_app (Const indname) params)
-      in
-      let ctor_prop_mask =
-        List.map (fun ctor -> List.map (fun info -> info.arg_is_prop) ctor.ctor_args) ctor_infos
-      in
-      let key = (indname, mask, is_prop_ind, ctor_prop_mask) in
-      let shape =
-        try Hashtbl.find memo key with Not_found ->
-          let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
-          Hashtbl.add memo key shape;
-          shape
-      in
-      instantiate_class indname ctor_infos shape
+  try
+    match get_inductive indname with
+    | None -> CRegular
+    | Some (_, params_num, _, _) when List.length params < params_num ->
+        (* A partially applied inductive is not a classifiable instance: its
+           parameters are not all determined, so [constructor_info] could not
+           substitute them and [check_prop] would be handed unbound formals.
+           Such occurrences stay on the status-quo path. *)
+        CRegular
+    | Some (constrs, params_num, ind_ty, ind_sort) ->
+        let all_formals = Coq_typing.get_type_args ind_ty in
+        let has_indices = List.length all_formals > params_num in
+        let params = Hhlib.take params_num params in
+        let mask = List.map (check_prop ctx) params in
+        let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
+        let is_prop_ind =
+          ind_sort = SortProp || check_prop ctx (mk_long_app (Const indname) params)
+        in
+        let ctor_prop_mask =
+          List.map (fun ctor -> List.map (fun info -> info.arg_is_prop) ctor.ctor_args) ctor_infos
+        in
+        let key = (indname, mask, is_prop_ind, ctor_prop_mask) in
+        let shape =
+          try Hashtbl.find memo key with Not_found ->
+            let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
+            Hashtbl.add memo key shape;
+            shape
+        in
+        instantiate_class indname ctor_infos shape
+  with Not_classifiable -> CRegular
 
 let classify_decl indname =
   if is_instance_dependent_decl indname then
