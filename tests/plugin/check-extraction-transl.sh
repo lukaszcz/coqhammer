@@ -100,10 +100,10 @@ require_line "box_arg_collision split keeps outer and constructor a distinct" '^
 
 # A user inductive whose field has type [F x] is instance-dependent: for
 # [F : nat -> Prop], the field is proof-only even though the declaration-level
-# formal [F : A -> Type] is not.  The definition unboxes the carrier while the
-# dependent package guard remains explicit.
+# formal [F : A -> Type] is not.  The definition unboxes the carrier and the
+# occurrence guard expands to the carrier guard plus the predicate payload.
 require_line "depbox_project unboxes an instance-dependent user subset" '^\$_def_extraction_transl\.depbox_project:.*= 1_b\)'
-require_line "depbox_project type axiom keeps the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(\(\$HasType @ var_1_b_[0-9]+\) @ \(\(extraction_transl\.depbox @ Corelib\.Init\.Datatypes\.nat\) @ var_0_P_[0-9]+\)\)'
+require_line "depbox_project type axiom expands the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(& @ \(\(\$HasType @ var_1_b_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_P_[0-9]+ @ var_1_b_[0-9]+\)'
 
 # Split equations: variable-scrutinee definitions are emitted as one guard-free
 # unit equation per constructor.
