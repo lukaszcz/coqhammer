@@ -311,6 +311,7 @@ assert_provable "$tmpdir/transport-tr-refl.p" "$TIMEOUT" "transport tr reflexivi
 
 assert_unprovable "$tmpdir/consistency-idiv.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-idiv2.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-idiv3.p" "$TIMEOUT"
 
 bad_idiv=$tmpdir/bad-idiv.p
 assert_contains_fixed "$tmpdir/consistency-idiv.p" \
@@ -329,6 +330,15 @@ assert_contains_fixed "$tmpdir/consistency-idiv2.p" \
 sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
   "$tmpdir/consistency-idiv2.p" >"$bad_idiv2"
 assert_unprovable_problem "$bad_idiv2" "$TIMEOUT" "idiv2 violated-premise unfolding instance"
+
+bad_idiv3=$tmpdir/bad-idiv3.p
+assert_contains_fixed "$tmpdir/consistency-idiv3.p" \
+  "cextraction__deptypes_2eidiv3___24a2" "idiv3 violated-premise symbol"
+assert_contains_fixed "$tmpdir/consistency-idiv3.p" \
+  "cCorelib_2eInit_2eDatatypes_2eS___24a1" "successor constructor symbol"
+sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv3___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv3___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
+  "$tmpdir/consistency-idiv3.p" >"$bad_idiv3"
+assert_unprovable_problem "$bad_idiv3" "$TIMEOUT" "idiv3 violated-premise unfolding instance"
 
 assert_unprovable "$tmpdir/consistency-h.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-eq-rect.p" "$TIMEOUT"

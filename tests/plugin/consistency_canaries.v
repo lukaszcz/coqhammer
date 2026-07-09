@@ -22,6 +22,10 @@ Goal forall b Hb a, b <> 0 -> a < b -> idiv2 b Hb a = 0.
   hammer_dump "consistency-idiv2.p".
 Abort.
 
+Goal forall b Hb a, b <> 0 -> a < b -> idiv3 b Hb a = 0.
+  hammer_dump "consistency-idiv3.p".
+Abort.
+
 Goal forall x y z p, proj1_sig (h x y z p) = z.
   hammer_dump "consistency-h.p".
 Abort.
