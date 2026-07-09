@@ -1645,7 +1645,7 @@ and guard_leaf ctx ty x =
                     | Var name when not (List.mem_assoc name ctx) -> (name, carrier_ty) :: ctx
                     | _ -> ctx
                   in
-                  convert ctx x >>= fun carrier ->
+                  convert payload_ctx x >>= fun carrier ->
                   make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
                   let payload_ctx =
                     match carrier with
