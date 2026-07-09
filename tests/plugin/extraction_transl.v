@@ -20,6 +20,12 @@ Definition sprop_arg_term (h : sflag) : nat := sprop_consumer h.
 Definition spec_pruned (n : nat) (p : n = n) : {m : nat | n = m} :=
   exist _ n eq_refl.
 
+Inductive proof_first_subset (A : Type) (P : A -> Prop) : Type :=
+| proof_first_intro (pf : True) (x : A) (px : P x).
+
+Definition proof_first_make (n : nat) : proof_first_subset nat (fun m => n = m) :=
+  proof_first_intro nat (fun m => n = m) I n eq_refl.
+
 Module ShadowTransport.
 Definition eq_rect (a b c d e : nat) : nat := e.
 End ShadowTransport.
@@ -69,6 +75,10 @@ Hammer_transl "sprop_arg_term".
 (* Prop-premise regression: the proof premise must not become an applied term
    argument in the $_typeof_ axiom. *)
 Hammer_transl "spec_pruned".
+
+(* Prop binders before a subset carrier are pruned from typing guards, but the
+   following carrier still has to be erased at the constructor occurrence. *)
+Hammer_transl "proof_first_make".
 
 (* Same-basename user constants must not be treated as canonical proof/transport
    constants. *)

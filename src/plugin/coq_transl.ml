@@ -1382,6 +1382,56 @@ and convert ctx tm =
         hlp base extras
       in
       let subset_constructor_spine () =
+        let align_actuals cargs args =
+          let is_prop_formal formals actuals ty =
+            try Coq_typing.check_prop ctx (simpl (subst_params (List.rev formals) (List.rev actuals) ty))
+            with _ -> false
+          in
+          let required_nonprop_count formals actuals rest_formals =
+            let rec count formals actuals acc = function
+              | [] -> acc
+              | (formal_name, formal_ty) :: formals2 ->
+                 if is_prop_formal formals actuals formal_ty then
+                   count ((formal_name, formal_ty) :: formals) (Const("$Proof") :: actuals) acc formals2
+                 else
+                   count ((formal_name, formal_ty) :: formals) (Var formal_name :: actuals) (acc + 1) formals2
+            in
+            count formals actuals 0 rest_formals
+          in
+          let rec hlp formals actuals rest_formals rest_args =
+            match rest_formals with
+            | [] -> (List.rev actuals, rest_args)
+            | (formal_name, formal_ty) :: formals2 ->
+               let formal_ty = simpl (subst_params (List.rev formals) (List.rev actuals) formal_ty) in
+               let formal_is_prop =
+                 try Coq_typing.check_prop ctx formal_ty with _ -> false
+               in
+               begin match rest_args with
+               | arg :: args2 ->
+                  if formal_is_prop &&
+                       not (proof_like_after_erasure ctx arg) &&
+                       List.length rest_args <=
+                         required_nonprop_count
+                           ((formal_name, formal_ty) :: formals)
+                           (Const("$Proof") :: actuals)
+                           formals2
+                  then
+                    (* [type_to_guard] prunes proof binders from the term spine.
+                       Keep a placeholder in the aligned spine so later
+                       informative arguments retain their constructor positions
+                       before subset constructors are erased to their carrier. *)
+                    hlp ((formal_name, formal_ty) :: formals) (Const("$Proof") :: actuals) formals2 rest_args
+                  else
+                    hlp ((formal_name, formal_ty) :: formals) (arg :: actuals) formals2 args2
+               | [] ->
+                  if formal_is_prop then
+                    hlp ((formal_name, formal_ty) :: formals) (Const("$Proof") :: actuals) formals2 []
+                  else
+                    (List.rev actuals, [])
+               end
+          in
+          hlp [] [] cargs args
+        in
         try
           match flatten_app tm with
           | Const cname, args ->
@@ -1396,7 +1446,12 @@ and convert ctx tm =
                        begin
                          match Coq_erasure.classify ctx indname params with
                          | Coq_erasure.CSubset { carrier_idx; _ } ->
-                            Some (cname, args, cargs, params_num, carrier_idx)
+                            let actuals, extras = align_actuals cargs args in
+                            let carrier_pos = params_num + carrier_idx in
+                            if List.length actuals > carrier_pos then
+                              Some (`Carrier (List.nth actuals carrier_pos, extras))
+                            else
+                              Some (`UnderApplied (cname, args, cargs))
                          | _ -> None
                        end
                     | _ -> None
@@ -1427,22 +1482,18 @@ and convert ctx tm =
       | None ->
       begin
       match if opt_refinement_types then subset_constructor_spine () else None with
-      | Some (cname, args, cargs, params_num, carrier_idx) ->
-         let carrier_pos = params_num + carrier_idx in
-         if List.length args > carrier_pos then
-           let carrier_arg = List.nth args carrier_pos in
-           let extras = Hhlib.drop (List.length cargs) args in
-           (* Refinement occurrence collapse: subset constructors erase to
-              their carrier at each occurrence.  Trailing applications are
-              preserved on the translated carrier. *)
-           convert ctx carrier_arg >>= fun carrier ->
-           convert_extra_app carrier extras
-         else
-           (* Under-applied subset constructors are eta-expanded and then lifted;
-              the lifted symbol's equation may look like a bridge [F x = x],
-              which is legitimate only because it is generated at this partial
-              application occurrence by the same refinement-collapse rule. *)
-           remove_lambda ctx (eta_expand_subset_constructor cname args cargs)
+      | Some (`Carrier (carrier_arg, extras)) ->
+         (* Refinement occurrence collapse: subset constructors erase to
+            their carrier at each occurrence.  Trailing applications are
+            preserved on the translated carrier. *)
+         convert ctx carrier_arg >>= fun carrier ->
+         convert_extra_app carrier extras
+      | Some (`UnderApplied (cname, args, cargs)) ->
+         (* Under-applied subset constructors are eta-expanded and then lifted;
+            the lifted symbol's equation may look like a bridge [F x = x],
+            which is legitimate only because it is generated at this partial
+            application occurrence by the same refinement-collapse rule. *)
+         remove_lambda ctx (eta_expand_subset_constructor cname args cargs)
       | None ->
       begin
       match tm with

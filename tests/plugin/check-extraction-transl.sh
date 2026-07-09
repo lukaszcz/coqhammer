@@ -134,6 +134,12 @@ require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
 require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
 require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
+# A subset constructor with a proof binder before the carrier must still erase
+# the constructor occurrence in the type axiom guard.
+require_line "proof-first subset type axiom expands the payload on the erased carrier" '^\$_typeof_extraction_transl\.proof_first_make:.*\(\(\$HasType @ \(extraction_transl\.proof_first_make @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\).*var_0_n_[0-9]+ = \(extraction_transl\.proof_first_make @ var_0_n_[0-9]+\)'
+forbid_line "proof-first subset type axiom must not keep the constructor application" '^\$_typeof_extraction_transl\.proof_first_make:.*extraction_transl\.proof_first_intro'
+forbid_line "proof-first subset definition must erase proof payloads" '^\$_def_extraction_transl\.proof_first_make:.*(Corelib\.Init\.Logic\.(I|eq_refl)|extraction_transl\.proof_first_intro)'
+
 # The h example has exactly two axioms: a carrier-only program equation and a
 # specification axiom with nat guards plus the expanded equality payload.
 require_count_exact "h emits exactly its definition and type axioms" '^\$_(def|typeof)_extraction_deptypes\.h:' 2
