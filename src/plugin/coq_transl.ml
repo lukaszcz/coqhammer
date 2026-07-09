@@ -113,25 +113,19 @@ let (>>) m1 m2 = bind m1 (fun _ -> m2)
 let lift f m = m >>= fun x -> return (f x)
 
 let listM_nth lst n =
-  let rec pom lst n acc x =
+  let rec hlp i selected lst =
     match lst with
-    | [] -> return x
+    | [] ->
+       begin
+         match selected with
+         | Some r -> return r
+         | None -> failwith "listM_nth"
+       end
     | h :: t ->
-       if n = 0 then
-         begin
-           acc >> h >>= fun r ->
-           pom t (n - 1) (return r) r
-         end
-       else
-         pom t (n - 1) (acc >> h) x
-  in
-  match lst with
-  | [] -> failwith "listM_nth"
-  | h :: t ->
-     begin
        h >>= fun r ->
-       pom t n (return r) r
-     end
+       hlp (i + 1) (if i = n then Some r else selected) t
+  in
+  hlp 0 None lst
 
 let add_axiom ax =
   log 3 ("add_axiom: " ^ fst ax);
@@ -586,32 +580,47 @@ and case_lifting axname0 name0 fvars lvars tm =
       in
       hlp base_ctx args body
     in
-    let emit_leaf axname vars lhs body =
-      let mk_eqv ctx =
-        if Coq_typing.check_prop ctx body then
-          mk_equiv lhs body
-        else
-          mk_eq lhs body
-      in
-      (* Rule 5 (paper, Body compilation; Rem.: closure guards): split
-         equations carry only computation.  With the default guard policy they
-         are unguarded even for pattern variables (Prop.: the split form needs
-         no guards); when ClosureGuards is enabled we use the ordinary guarded
-         closure machinery uniformly. *)
+    let emit_equation axname vars lhs rhs is_prop =
+      let mk_eqv = if is_prop then mk_equiv lhs rhs else mk_eq lhs rhs in
+      (* Rule 5 and the rule-3/rule-4 linking equations (paper Body
+         compilation, Soundness of compilation): split equations carry only
+         computation.  With the default guard policy they are unguarded even for
+         pattern variables (Prop.: the split form needs no guards); when
+         ClosureGuards is enabled we use the ordinary guarded closure machinery
+         uniformly. *)
       begin
         if !opt_closure_guards then
-          close vars (fun ctx -> prop_to_formula ctx (mk_eqv ctx))
+          close vars (fun ctx -> prop_to_formula ctx mk_eqv)
         else
-          make_fol_forall [] vars (mk_eqv (List.rev vars))
+          make_fol_forall [] vars mk_eqv
       end >>= fun r ->
       add_axiom (mk_axiom axname r)
     in
+    let emit_leaf axname vars lhs body =
+      let ctx = List.rev vars in
+      emit_equation axname vars lhs body (Coq_typing.check_prop ctx body)
+    in
+    let case_aux_value vars indname matched_term return_type params_num branches indty =
+      let params = get_params indty return_type params_num in
+      let z = refresh_varname "case" in
+      let ind_ty_app = mk_long_app (Const(indname)) params in
+      let aux_case = Lam(z, ind_ty_app, Case(indname, Var(z), return_type, params_num, branches)) in
+      Hashing.find_or_insert coqterm_hash (List.rev vars) aux_case
+        begin fun cctx ctm ->
+          match ctm with
+          | Lam(_, _, Case(indname2, _, _, _, _)) ->
+             let name = "$_case_" ^ indname2 ^ "$" ^ unique_id () in
+             lambda_lifting name name (ctx_to_vars cctx) [] ctm
+          | _ -> failwith "case_lifting: case_aux_value"
+        end >>= fun aux ->
+      convert (List.rev vars) matched_term >>= fun mt ->
+      return (App(aux, mt))
+    in
     (* Termination follows the paper's Body-compilation measure: first the
        number of root case/lambda/fix nodes remaining to compile, then the node
-       count.  Rule 2 recurses into constructor branches, and this Phase-1a
-       implementation sends the non-decreasing rule-1/3/4 shapes to the legacy
-       value-translation fallback (TASK_09), so every recursive split step is on
-       a strict sub-body. *)
+       count.  Rule 3 strictly decreases because it replaces a non-variable
+       scrutinee by a fresh variable in the hash-consed auxiliary case; rules 1,
+       2, 4 and 5 recurse into proper bodies or delegate to value translation. *)
     let rec compile_case lhs vars axname body =
       match simpl body with
       | Case(indname, matched_term, return_type, params_num, branches) as case_body ->
@@ -622,8 +631,8 @@ and case_lifting axname0 name0 fvars lvars tm =
            | (_, IndType(_, constrs, pnum), indty, _) ->
               assert (pnum = params_num);
               if Coq_typing.check_type_target_is_prop indty then
-                (* TASK_09: Phase 2 takes over Prop-scrutinee erasure; keep the
-                   status-quo generic-match fallback for this subtree. *)
+                (* Phase 2 takes over Prop-scrutinee erasure; keep the
+                   status-quo generic-match-style leaf for this subtree. *)
                 emit_leaf axname vars lhs case_body
               else
                 begin
@@ -664,20 +673,21 @@ and case_lifting axname0 name0 fvars lvars tm =
                      in
                      List.fold_left compile_branch (return ()) constrs
                   | _ ->
-                     (* TASK_09: compound scrutinees become hash-consed aux
-                        symbols.  For now convert the subtree through the legacy
-                        case-lifting path, preserving the status quo. *)
-                     emit_leaf axname vars lhs case_body
+                     case_aux_value vars indname matched_term return_type params_num branches indty
+                     >>= fun rhs ->
+                     emit_equation (axname ^ "$link") vars lhs rhs
+                       (Coq_typing.check_prop (List.rev vars) case_body)
                 end
            | _ -> failwith "impossible"
          end
-      | Lam(_) as lam_body ->
-         (* TASK_09: rule 1 will deepen lambdas; for now translate this subtree
-            through existing lambda lifting. *)
-         emit_leaf axname vars lhs lam_body
+      | Lam(vname, vtype, body2) ->
+         if Coq_typing.check_prop (List.rev vars) vtype then
+           compile_case lhs vars axname (subst_proof vname vtype body2)
+         else
+           compile_case (App(lhs, Var(vname))) (vars @ [ (vname, vtype) ]) axname body2
       | Fix(_) as fix_body ->
-         (* TASK_09: rule 4 will delegate explicitly to fix lifting; for now the
-            leaf conversion uses the existing fix-lifting machinery. *)
+         (* Rule 4: the right-hand side is the ordinary value translation of the
+            inner fix, which reuses the existing fix_lifting machinery. *)
          emit_leaf axname vars lhs fix_body
       | body2 ->
          emit_leaf axname vars lhs body2
@@ -697,25 +707,17 @@ and case_lifting axname0 name0 fvars lvars tm =
                if Coq_typing.check_type_target_is_prop indty then
                  return (generic_match ())
                else
-                 begin
-                   match matched_term with
-                   | Var(_) ->
-                      let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
-                      in
-                      let axname = if name0 = "" then fname else axname0
-                      in
-                      convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
-                      >>=
-                      fun case_replacement ->
-                        let lhs = mk_long_app case_replacement (mk_vars lvars)
-                        in
-                        compile_case lhs (fvars @ lvars) axname tm >>
-                        return case_replacement
-                   | _ ->
-                      (* TASK_09: root compound scrutinees keep the legacy
-                         guarded-disjunction translation in Phase 1a. *)
-                      legacy_case_lifting ()
-                 end
+                 let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
+                 in
+                 let axname = if name0 = "" then fname else axname0
+                 in
+                 convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+                 >>=
+                 fun case_replacement ->
+                   let lhs = mk_long_app case_replacement (mk_vars lvars)
+                   in
+                   compile_case lhs (fvars @ lvars) axname tm >>
+                   return case_replacement
             | _ ->
                failwith "impossible"
           end

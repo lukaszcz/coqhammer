@@ -65,6 +65,14 @@ let get_cases lst =
           (List.map (fun s -> String.sub s 7 (String.length s - 7))
              (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst))))
 
+let () =
+  let cases = get_cases ["$_case_Corelib.Init.Datatypes.nat$2$O";
+                         "$_case_Corelib.Init.Datatypes.nat$2$link";
+                         "$_case_$_case_Corelib.Init.Datatypes.nat$3$O"]
+  in
+  if cases <> ["Corelib.Init.Datatypes.nat"] then
+    failwith "Provers.get_cases: split case suffix parsing regression"
+
 let get_inversions lst =
   List.filter is_good_dep
     (List.map (fun s -> String.sub s 12 (String.length s - 12))

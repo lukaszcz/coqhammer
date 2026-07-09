@@ -70,9 +70,23 @@ require_line "g one split equation" '^\$_def_extraction_matches\.g[$]S[$]O:'
 require_line "g deep split equation" '^\$_def_extraction_matches\.g[$]S[$]S:.*Corelib\.Init\.Datatypes\.S @ \(Corelib\.Init\.Datatypes\.S @'
 forbid_line "g split equations are existential-free" '^\$_def_extraction_matches\.g[$].*\?\['
 
-# k: current compound-scrutinee match remains a guarded/disjunctive definition.
-require_count_at_least "k has a definition axiom" '^\$_def_extraction_matches\.k:' 1
-require_line "k baseline mentions negb scrutinee" '^\$_def_extraction_matches\.k:.*Corelib\.Init\.Datatypes\.negb'
+# k: compound scrutinee compilation emits one linking equation to a shared
+# bool case symbol plus one unit equation per constructor for that symbol.
+require_line "k has a linking definition axiom" '^\$_def_extraction_matches\.k[$]link:.*\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+ @ \(Corelib\.Init\.Datatypes\.negb @'
+require_line "k aux case true equation" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$]true:'
+require_line "k aux case false equation" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$]false:'
+forbid_line "k aux case equations are unit/guard-free" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$].*(\$HasType|\?\[|[|])'
+
+# Mutual fixpoints: translating either body emits two equations for the result
+# name and two equations for the sibling under the $_fix_<id>_ prefix.
+require_line "even zero equation" '^\$_def_extraction_matches\.even[$]O:'
+require_line "even successor equation" '^\$_def_extraction_matches\.even[$]S:'
+require_line "even translation emits odd sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_odd[$]O:'
+require_line "even translation emits odd sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_odd[$]S:'
+require_line "odd zero equation" '^\$_def_extraction_matches\.odd[$]O:'
+require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
+require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
+require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
 # h: pre-refactor fallback has no definitional equation; only the type/spec-like
 # HasType axiom remains visible. Phase 2/3 staged checks below replace this.
@@ -90,10 +104,11 @@ require_line "safe_pred baseline still exposes False_rect" 'Corelib\.Init\.Logic
 require_count_at_least "pval has a split definition axiom" '^\$_def_extraction_deptypes\.pval[$]' 1
 require_line "pval split mentions mkpos" '^\$_def_extraction_deptypes\.pval[$].*extraction_deptypes\.mkpos'
 
-# beq: sumbool-driven definition currently splits on Nat.eq_dec.
-require_count_at_least "beq has a definition axiom" '^\$_def_extraction_deptypes\.beq:' 1
-require_line "beq baseline mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq:.*Nat\.eq_dec'
-require_line "beq baseline mentions sumbool constructors" '^\$_def_extraction_deptypes\.beq:.*Corelib\.Init\.Specif\.(left|right)'
+# beq: sumbool-driven definition links through an auxiliary case symbol for
+# the compound Nat.eq_dec scrutinee.
+require_count_at_least "beq has a linking definition axiom" '^\$_def_extraction_deptypes\.beq[$]link:' 1
+require_line "beq link mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq[$]link:.*Nat\.eq_dec'
+require_line "beq aux case mentions sumbool constructors" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$].*Corelib\.Init\.Specif\.(left|right)'
 
 # tag: prod-with-Prop fixture currently still contains the pair constructor and
 # proof payload.
@@ -144,8 +159,6 @@ require_line "typeclass method projection is translated" '^Corelib\.Classes\.Rel
 #   one for O and one for S; those lines contain no $HasType, ?[, or |.
 # - g: three flattened equations, no existential/disjunction nesting, and a
 #   depth-2 S(S _) pattern on a def line.
-# - k: one $_def_extraction_matches.k$link equation referencing a shared
-#   $_case_bool$<id> symbol plus two unit equations for that case symbol.
 # - Nat.add/List.app/Vector.hd/Streams.hd: split equations use constructor
 #   suffixes and remain attributable to their originating constants.
 PHASE_1_SPLIT_CASES

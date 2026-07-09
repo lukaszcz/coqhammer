@@ -30,6 +30,8 @@ Hammer_test_wf_mark_reset "myadd" "g".
 Hammer_transl "myadd".
 Hammer_transl "g".
 Hammer_transl "k".
+Hammer_transl "even".
+Hammer_transl "odd".
 
 (* Corpus constants from extraction_deptypes.v. *)
 Hammer_transl "h".
