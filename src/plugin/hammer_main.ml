@@ -745,7 +745,7 @@ let run_gs_provers hyps deps goal clean seq =
   let rec run_batches tried candidates =
     match split_batch !Opt.gs_mode candidates [] with
     | [], _ -> failure ()
-    | enabled_seq, rest ->
+    | enabled_seq, _ ->
        let jobs =
          List.map
            begin fun (idx, (pname, enabled, pref, select)) _ ->
@@ -783,14 +783,7 @@ let run_gs_provers hyps deps goal clean seq =
        in
        match ret with
        | None ->
-          let tried = List.map fst enabled_seq @ tried in
-          if rest = [] then
-            failure ()
-          else
-            begin
-              Msg.info "ATPs failed to find a proof in this batch; trying remaining ATP candidates...";
-              run_batches tried rest
-            end
+          failure ()
        | Some (idx, info) ->
           begin
             let info =
