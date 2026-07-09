@@ -82,6 +82,14 @@ forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extrac
 require_line "spec_pruned type axiom keeps pruned arity" '^\$_typeof_extraction_transl\.spec_pruned:.*\(=> @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)\) @ \(\(& @ \(\(\$HasType @ \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\)\)'
 forbid_line "spec_pruned proof premise must not be applied as a term" '^\$_typeof_extraction_transl\.spec_pruned:.*extraction_transl\.spec_pruned @ .*\$Proof'
 
+# User constants with transport basenames must remain ordinary constants.
+require_line "shadow eq_rect definition is not a fake transport definition" '^\$_def_extraction_transl\.ShadowTransport\.eq_rect:.*= 4_e\)'
+require_line "shadow eq_rect applications are not transport-erased" '^\$_def_extraction_transl\.shadow_eq_rect_user:.*extraction_transl\.ShadowTransport\.eq_rect'
+
+# Split-case constructor binders are refreshed when they collide with function
+# binders, so the function argument and constructor payload remain distinct.
+require_line "box_arg_collision split keeps outer and constructor a distinct" '^\$_def_extraction_transl\.box_arg_collision[$]onebox_intro:.*\(\(\(extraction_transl\.box_arg_collision @ 0_A\) @ 1_a\) @ \(\(extraction_transl\.onebox_intro @ 0_A\) @ var_[0-9]+_a_[0-9]+\)\) = var_[0-9]+_a_[0-9]+'
+
 # Split equations: variable-scrutinee definitions are emitted as one guard-free
 # unit equation per constructor.
 require_line "myadd zero split equation" '^\$_def_extraction_matches\.myadd[$]O:.*extraction_matches\.myadd @ Corelib\.Init\.Datatypes\.O'

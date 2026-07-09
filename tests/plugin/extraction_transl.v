@@ -20,6 +20,21 @@ Definition sprop_arg_term (h : sflag) : nat := sprop_consumer h.
 Definition spec_pruned (n : nat) (p : n = n) : {m : nat | n = m} :=
   exist _ n eq_refl.
 
+Module ShadowTransport.
+Definition eq_rect (a b c d e : nat) : nat := e.
+End ShadowTransport.
+
+Definition shadow_eq_rect_user (a b c d e : nat) :=
+  ShadowTransport.eq_rect a b c d e.
+
+Inductive onebox (A : Type) : Type :=
+| onebox_intro (a : A).
+
+Definition box_arg_collision (A : Type) (a : A) (b : onebox A) : A :=
+  match b with
+  | onebox_intro _ a => a
+  end.
+
 Goal True.
   hammer_dump "hammer_dump_smoke.p".
   exact I.
@@ -31,6 +46,13 @@ Hammer_transl "sprop_arg_term".
 (* Prop-premise regression: the proof premise must not become an applied term
    argument in the $_typeof_ axiom. *)
 Hammer_transl "spec_pruned".
+
+(* Same-basename user constants must not be treated as Coq transports. *)
+Hammer_transl "ShadowTransport.eq_rect".
+Hammer_transl "shadow_eq_rect_user".
+
+(* Split-case constructor binders must not capture same-named function binders. *)
+Hammer_transl "box_arg_collision".
 
 (* WF-recursion marker regression: the mark must not leak between top-level
    translations. *)

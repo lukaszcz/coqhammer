@@ -161,9 +161,13 @@ let coq_axioms = [
 let coqterm_hash = Hashing.create lift
 
 let is_transport_constant name =
-  match short_name name with
-  | "eq_rect" | "eq_rec" | "eq_ind" | "eq_rect_r" | "eq_rec_r" | "eq_ind_r" -> true
-  | _ -> false
+  let is_init_logic basename =
+    name = "Corelib.Init.Logic." ^ basename ||
+    name = "Coq.Init.Logic." ^ basename ||
+    name = "Stdlib.Init.Logic." ^ basename
+  in
+  List.exists is_init_logic
+    [ "eq_rect"; "eq_rec"; "eq_ind"; "eq_rect_r"; "eq_rec_r"; "eq_ind_r" ]
 
 let is_false_rect_constant name = short_name name = "False_rect"
 
@@ -870,6 +874,29 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       in
       hlp base_ctx args body
     in
+    let refresh_case_args vars args =
+      let refresh_name used name =
+        if List.mem name used then
+          refresh_varname name
+        else
+          name
+      in
+      let subst_renamings renamings tm =
+        List.fold_left
+          (fun tm (name, name2) ->
+             if name = name2 then tm else substvar name (Var name2) tm)
+          tm renamings
+      in
+      let rec hlp used renamings acc args =
+        match args with
+        | [] -> List.rev acc
+        | (name, ty) :: args2 ->
+           let name2 = refresh_name used name in
+           let ty2 = subst_renamings renamings ty in
+           hlp (name2 :: used) ((name, name2) :: renamings) ((name2, ty2) :: acc) args2
+      in
+      hlp (List.map fst vars) [] [] args
+    in
     (* Refinement occurrence collapse: matching a subset value exposes the
        erased carrier itself, and the remaining proof payload binders are erased. *)
     let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
@@ -1047,6 +1074,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             back instead of producing a wrong equation. *)
                          raise Not_found
                        else
+                         let args = refresh_case_args vars args
+                         in
                          let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
                          in
                          let branch_body = simpl (mk_long_app branch (mk_vars args))
