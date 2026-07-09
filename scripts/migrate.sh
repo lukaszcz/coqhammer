@@ -2,10 +2,11 @@
 #
 # migrate.sh <X.Y>
 #
-# Migrate CoqHammer to a new Rocq version. Run it on the branch you want to
-# branch FROM -- typically `master` (which tracks unstable Rocq):
+# Migrate CoqHammer to a new Rocq version. Run it on the release branch you want
+# to branch FROM -- typically the latest stable `rocq-<X.Y>` branch. Do not use
+# `master`, which tracks unstable Rocq development:
 #
-#   git checkout master
+#   git checkout rocq-9.1
 #   just migrate 9.2
 #
 # It performs three local, side-effect-contained steps and NOTHING ELSE (no
