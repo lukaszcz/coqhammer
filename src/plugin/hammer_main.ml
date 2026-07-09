@@ -840,18 +840,17 @@ let dump_deps hyps deps goal =
 
 let do_predict hyps deps goal =
   if !Opt.gs_mode > 0 then
-    with_greedy_features hyps deps goal
-      begin fun fname clean ->
-        let seq =
-          List.map
-            begin fun (pname, enabled, pref, pred_method, preds_num) ->
-              (pname, enabled, pref,
-               fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname)
-            end
-            (greedy_predictor_sequence ())
-        in
-        run_gs_provers hyps deps goal clean seq
-      end
+    let fname = Features.extract hyps deps goal in
+    let seq =
+      List.map
+        begin fun (pname, enabled, pref, pred_method, preds_num) ->
+          (pname, enabled, pref,
+           fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname)
+        end
+        (greedy_predictor_sequence ())
+    in
+    let clean () = Features.clean fname in
+    run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
     Provers.predict deps1 hyps deps goal
