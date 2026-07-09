@@ -95,13 +95,14 @@ fi
 #      maintainer), so OUR value always wins.
 AVER="$(sed -n 's/^version: "\(.*\)"/\1/p' "$A" | head -n1)"
 AMAINT="$(sed -n 's/^maintainer: "\(.*\)"/\1/p' "$A" | head -n1)"
-#   3. Rocq dependency line(s): the ported rocq-* branches carry a two-line
-#      '"rocq-core" {...}' + '"rocq-stdlib" {...}' block, master a single
-#      '"rocq-stdlib" {= "dev"}', an older branch a single '"coq" {>= ...}';
+#   3. Rocq dependency line(s): the ported rocq-* branches carry a
+#      '"rocq-core" {...}' + '"rocq-runtime" {...}' + '"rocq-stdlib" {...}'
+#      block, master a single '"rocq-stdlib" {= "dev"}', an older branch a
+#      single '"coq" {>= ...}';
 #      all pure per-branch metadata, so OUR whole block wins. Capture every Rocq
 #      dependency line from OUR side (they are adjacent in `depends`) so the full
 #      block -- not just the first line -- is substituted into base/theirs.
-ADEP_RE='^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]'
+ADEP_RE='^[[:space:]]*"(rocq-core|rocq-runtime|rocq-stdlib|coq)"[[:space:]]*[{]'
 ADEP_FILE="$(mktemp)"
 trap 'rm -f "$ADEP_FILE"' EXIT
 grep -E "$ADEP_RE" "$A" > "$ADEP_FILE" || true

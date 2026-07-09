@@ -14,9 +14,9 @@
 # (coq/opam-coq-archive). Each new opam file is derived from the most recent
 # existing entry of the same package by updating exactly four things:
 #
-#   * the Rocq dependency                (rocq-core >= <ROCQ> & rocq-stdlib
-#                                         >= <ROCQ-or-newest-published>, both
-#                                         < <next>~; a legacy "coq" line in an
+#   * the Rocq dependency                (rocq-core/rocq-runtime >= <ROCQ> &
+#                                         rocq-stdlib >= <ROCQ-or-newest-published>,
+#                                         all < <next>~; a legacy "coq" line in an
 #                                         older template is replaced)
 #   * the "date:" tag                    (today)
 #   * the release tarball URL            (.../tags/v<CVER>+<ROCQ>.tar.gz)
@@ -116,13 +116,14 @@ add_package() {
   cp "$template/opam" "$newdir/opam"
 
   # Replace whatever Rocq/Coq dependency line(s) the template carries -- an old
-  # entry's single "coq" line or a newer entry's two-line "rocq-core"/"rocq-stdlib"
-  # form -- with the canonical two-line dependency for this release's Rocq <X.Y>.
+  # entry's single "coq" line or a newer entry's "rocq-core"/"rocq-runtime"/
+  # "rocq-stdlib" form -- with the canonical dependency block for this release's Rocq <X.Y>.
   # (`nxt`, not `next`, since `next` is an awk statement.)
   awk -v v="$ROCQ" -v nxt="$ROCQ_NEXT" -v slb="$STDLIB_LB" '
-    /^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]/ {
+    /^[[:space:]]*"(rocq-core|rocq-runtime|rocq-stdlib|coq)"[[:space:]]*[{]/ {
       if (!done) {
         print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
+        print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
         print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
         done = 1
       }
