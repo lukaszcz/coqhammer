@@ -160,16 +160,24 @@ let coq_axioms = [
 
 let coqterm_hash = Hashing.create lift
 
+let is_canonical_constant prefixes basename name =
+  List.exists (fun prefix -> name = prefix ^ "." ^ basename) prefixes
+
+let is_init_logic_constant basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Logic"; "Coq.Init.Logic"; "Stdlib.Init.Logic" ]
+    basename name
+
+let is_jmeq_constant basename name =
+  is_canonical_constant
+    [ "Corelib.Logic.JMeq"; "Coq.Logic.JMeq"; "Stdlib.Logic.JMeq" ]
+    basename name
+
 let is_transport_constant name =
-  let is_init_logic basename =
-    name = "Corelib.Init.Logic." ^ basename ||
-    name = "Coq.Init.Logic." ^ basename ||
-    name = "Stdlib.Init.Logic." ^ basename
-  in
-  List.exists is_init_logic
+  List.exists (fun basename -> is_init_logic_constant basename name)
     [ "eq_rect"; "eq_rec"; "eq_ind"; "eq_rect_r"; "eq_rec_r"; "eq_ind_r" ]
 
-let is_false_rect_constant name = short_name name = "False_rect"
+let is_false_rect_constant name = is_init_logic_constant "False_rect" name
 
 let is_wf_fix_constant name =
   name = "Corelib.Init.Wf.Fix" || name = "Coq.Init.Wf.Fix"
@@ -243,13 +251,16 @@ let proof_like_after_erasure ctx tm =
   | _ ->
      match flatten_app tm with
      | Const name, args ->
-        begin match short_name name with
-        | "eq_refl" -> List.length args >= 2
-        | "eq_trans" -> List.length args >= 4
-        | "eq_sym" -> List.length args >= 3
-        | "JMeq_refl" -> List.length args >= 2
-        | _ -> false
-        end
+        if is_init_logic_constant "eq_refl" name then
+          List.length args >= 2
+        else if is_init_logic_constant "eq_trans" name then
+          List.length args >= 4
+        else if is_init_logic_constant "eq_sym" name then
+          List.length args >= 3
+        else if is_jmeq_constant "JMeq_refl" name then
+          List.length args >= 2
+        else
+          false
      | _ -> false
 
 (***************************************************************************************)

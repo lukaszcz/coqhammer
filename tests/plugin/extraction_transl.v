@@ -27,6 +27,21 @@ End ShadowTransport.
 Definition shadow_eq_rect_user (a b c d e : nat) :=
   ShadowTransport.eq_rect a b c d e.
 
+Module ShadowProofNames.
+Definition False_rect (A : Type) (p : nat) : nat := p.
+Definition eq_refl (A : Type) (x : A) : nat := 3.
+Definition eq_trans (A : Type) (x y z : A) (p q : nat) : nat := p.
+Definition eq_sym (A : Type) (x y : A) (p : nat) : nat := p.
+Definition JMeq_refl (A : Type) (x : A) : nat := 5.
+End ShadowProofNames.
+
+Definition shadow_false_rect_user (p : nat) : nat :=
+  ShadowProofNames.False_rect {m : nat | p = m} p.
+Definition shadow_eq_refl_user : nat := ShadowProofNames.eq_refl nat 0.
+Definition shadow_eq_trans_user : nat := ShadowProofNames.eq_trans nat 0 1 2 11 12.
+Definition shadow_eq_sym_user : nat := ShadowProofNames.eq_sym nat 0 1 13.
+Definition shadow_jmeq_refl_user : nat := ShadowProofNames.JMeq_refl nat 0.
+
 Inductive onebox (A : Type) : Type :=
 | onebox_intro (a : A).
 
@@ -47,9 +62,16 @@ Hammer_transl "sprop_arg_term".
    argument in the $_typeof_ axiom. *)
 Hammer_transl "spec_pruned".
 
-(* Same-basename user constants must not be treated as Coq transports. *)
+(* Same-basename user constants must not be treated as canonical proof/transport
+   constants. *)
 Hammer_transl "ShadowTransport.eq_rect".
 Hammer_transl "shadow_eq_rect_user".
+Hammer_transl "ShadowProofNames.False_rect".
+Hammer_transl "shadow_false_rect_user".
+Hammer_transl "shadow_eq_refl_user".
+Hammer_transl "shadow_eq_trans_user".
+Hammer_transl "shadow_eq_sym_user".
+Hammer_transl "shadow_jmeq_refl_user".
 
 (* Split-case constructor binders must not capture same-named function binders. *)
 Hammer_transl "box_arg_collision".

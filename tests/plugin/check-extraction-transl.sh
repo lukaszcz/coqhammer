@@ -82,9 +82,17 @@ forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extrac
 require_line "spec_pruned type axiom keeps pruned arity" '^\$_typeof_extraction_transl\.spec_pruned:.*\(=> @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)\) @ \(\(& @ \(\(\$HasType @ \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\)\)'
 forbid_line "spec_pruned proof premise must not be applied as a term" '^\$_typeof_extraction_transl\.spec_pruned:.*extraction_transl\.spec_pruned @ .*\$Proof'
 
-# User constants with transport basenames must remain ordinary constants.
+# User constants with proof/transport basenames must remain ordinary constants.
 require_line "shadow eq_rect definition is not a fake transport definition" '^\$_def_extraction_transl\.ShadowTransport\.eq_rect:.*= 4_e\)'
 require_line "shadow eq_rect applications are not transport-erased" '^\$_def_extraction_transl\.shadow_eq_rect_user:.*extraction_transl\.ShadowTransport\.eq_rect'
+require_line "shadow False_rect type argument is not proof-erased" '^\$_def_extraction_transl\.shadow_false_rect_user:.*Corelib\.Init\.Specif\.sig'
+require_line "shadow eq_refl application remains a term" '^\$_def_extraction_transl\.shadow_eq_refl_user:.*extraction_transl\.ShadowProofNames\.eq_refl'
+require_line "shadow eq_trans application remains a term" '^\$_def_extraction_transl\.shadow_eq_trans_user:.*extraction_transl\.ShadowProofNames\.eq_trans'
+require_line "shadow eq_sym application remains a term" '^\$_def_extraction_transl\.shadow_eq_sym_user:.*extraction_transl\.ShadowProofNames\.eq_sym'
+require_line "shadow JMeq_refl application remains a term" '^\$_def_extraction_transl\.shadow_jmeq_refl_user:.*extraction_transl\.ShadowProofNames\.JMeq_refl'
+for shadow_name in shadow_false_rect_user shadow_eq_refl_user shadow_eq_trans_user shadow_eq_sym_user shadow_jmeq_refl_user; do
+  forbid_line "shadow proof-name constants must not become proof terms ($shadow_name)" '^\$_def_extraction_transl\.'"$shadow_name"':.*\$Proof'
+done
 
 # Split-case constructor binders are refreshed when they collide with function
 # binders, so the function argument and constructor payload remain distinct.
