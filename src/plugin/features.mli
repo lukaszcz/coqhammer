@@ -13,7 +13,8 @@ val extract : hhdef list (* hyps *) -> hhdef list (* defs *) -> hhdef (* goal *)
 (* `choose_given_lemmas` selects the premises for the ATPs based on
    the given lemmas: the lemmas themselves plus the definitions
    directly referenced by the goal, the hypotheses or the lemmas.
-   The given lemmas must occur in the defs list. *)
+   Callers that accept arbitrary user lemmas should append lemmas missing from
+   the search results to the defs list before calling this function. *)
 val choose_given_lemmas : hhdef list (* hyps *) -> hhdef list (* defs *) ->
   hhdef list (* lemmas *) -> hhdef (* goal *) ->
   hhdef list (* premises *)

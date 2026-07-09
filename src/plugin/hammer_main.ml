@@ -862,10 +862,9 @@ let do_predict tried hyps deps goal =
     (-1, Provers.predict deps1 hyps deps goal)
 
 let do_choice tried hyps deps goal lems =
-  (* The given lemmas must occur in the deps list: the ATP premises
-     are selected from it. They may be missing from the search
-     results, e.g. because of the search blacklist or a module
-     filter. *)
+  (* ATP premises are selected from [deps], so append any requested lemmas
+     missing from the search results (e.g. because of the search blacklist or a
+     module filter). *)
   let deps =
     let names = Hhlib.strset_from_lst (List.map Hh_term.get_hhdef_name deps) in
     deps @
