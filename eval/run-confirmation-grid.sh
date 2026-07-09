@@ -77,6 +77,23 @@ prepare_prefix_env() {
   fi
 }
 
+require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Required command not found: $1" >&2
+    exit 1
+  fi
+}
+
+require_prover() {
+  case "$1" in
+    eprover) require_cmd eprover ;;
+    vampire) require_cmd htimeout; require_cmd vampire ;;
+    z3) require_cmd htimeout; require_cmd z3_tptp ;;
+    cvc4) require_cmd htimeout; require_cmd cvc4 ;;
+    *) echo "Unknown prover: $1" >&2; exit 1 ;;
+  esac
+}
+
 base_path="$PATH"
 base_ocamlpath="${OCAMLPATH:-}"
 
@@ -168,11 +185,12 @@ run_prover() {
 
   echo "[prover] $label/$corpus/$prover/$premise"
   prepare_prefix_env "$prefix"
+  require_prover "$prover"
   cd "$eval_dir"
   rm -rf atp/i "atp/o/$prover" "atp/o/$prover-$premise"
   mkdir -p atp/i atp/o
   ln -s "$outdir/atp-problems/$premise" atp/i/f
-  make -C atp -k -j "$jobs" TIM="$tim" "$prover" > "$outdir/$prover-$premise.log" 2>&1 || true
+  make -C atp -k -j "$jobs" TIM="$tim" "$prover" > "$outdir/$prover-$premise.log" 2>&1
   rm -rf "$outdir/prover-outputs/$prover-$premise"
   mkdir -p "$outdir/prover-outputs" "atp/o/$prover"
   mv "atp/o/$prover" "$outdir/prover-outputs/$prover-$premise"
@@ -227,6 +245,7 @@ run_consistency() {
 
   echo "[consistency] $label/$corpus/$prover/$premise"
   prepare_prefix_env "$prefix"
+  require_prover "$prover"
   local work="$outdir/consistency/$prover-$premise"
   rm -rf "$work"
   mkdir -p "$work/problems" "$work/outputs"
