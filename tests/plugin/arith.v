@@ -8,15 +8,18 @@ Hammer_objects.
 Set Hammer SAutoLimit 0.
 
 Lemma lem_1 : le 1 2.
+Proof.
   hammer.
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
-  hfcrush use: Nat.Odd_add_r, Nat.odd_spec, Nat.Even_or_Odd unfold: Init.Nat.even, Init.Nat.odd, negb.
+Proof.
+  hammer.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
-  hauto use: Nat.Even_succ, Nat.add_1_r, Nat.Even_or_Odd.
+Proof.
+  hammer.
 Qed.
 
 Lemma lem_3 : le 2 3.

@@ -25,7 +25,7 @@ Qed.
 Lemma in_int_p_Sq : forall r p q a : nat, a >= 0 ->
                       Between.in_int p (S q) r -> Between.in_int p q r \/ r = q \/ a = 0.
 Proof.
-  hauto lq: on use: Between.in_int_p_Sq.
+  hammer.
 Qed.
 
 From Stdlib Require Reals.Rminmax.
@@ -71,7 +71,7 @@ Qed.
 
 Lemma leb_2 : forall m n : nat, PeanoNat.Nat.leb m n = false <-> m > n.
 Proof.
-  srun (eauto) use: PeanoNat.Nat.leb_gt.
+  hammer.
 Qed.
 
 Lemma in_int_lt2 : forall p q r : nat, Between.in_int p q r -> q >= p /\ r >= p /\ r <= q.

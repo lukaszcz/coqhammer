@@ -6,8 +6,6 @@ Open Scope Z_scope.
 Hammer_version.
 Hammer_objects.
 
-Set Hammer SAutoLimit 0.
-
 Lemma lem_1 : Z.le 1 2.
 Proof.
   hammer.
@@ -15,10 +13,8 @@ Qed.
 
 Lemma lem_2 : forall n : Z, BinInt.Z.Odd n \/ BinInt.Z.Odd (n + 1).
 Proof.
-  Unset Hammer CVC4.
   hammer.
 Qed.
-Set Hammer CVC4.
 
 Lemma lem_3 : Z.le 2 3.
 Proof.
@@ -47,14 +43,11 @@ Qed.
 
 Lemma le_mul : forall m n k:Z, k > 0 -> k * m <= k * n -> m <= n.
 Proof.
-  Unset Hammer CVC4.
   hammer.
 Qed.
-Set Hammer CVC4.
 
 Lemma le_plus : forall x:Z, x >= 0 -> x + x >= x.
 Proof.
-  Unset Hammer CVC4.
   hammer.
 Qed.
 
