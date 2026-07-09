@@ -227,14 +227,18 @@ let erase_false_rect_type_arg ctx tm =
   else
     None
 
+let transport_full_arity = 6
+
 let erase_transport_head tm =
   if opt_prop_case_erasure then
     match flatten_app tm with
-    | Const name, args when is_transport_constant name && List.length args >= 4 ->
-       (* Transport erasure maps casts to the transported value in the
-          proof-irrelevant model.  Reconstruction-sensitive cases are isolated
-          by [opt_erasure_guards]. *)
-       Some (List.nth args 3)
+    | Const name, args
+         when is_transport_constant name && List.length args >= transport_full_arity ->
+       (* Transport erasure maps fully applied casts to the transported value in
+          the proof-irrelevant model.  Preserve applications after the transport
+          spine, e.g. [(eq_rect ... f ... e) x] erases to [f x].
+          Reconstruction-sensitive cases are isolated by [opt_erasure_guards]. *)
+       Some (mk_long_app (List.nth args 3) (Hhlib.drop transport_full_arity args))
     | _ -> None
   else
     None
@@ -242,7 +246,8 @@ let erase_transport_head tm =
 let transport_erasure_premise tm =
   if opt_erasure_guards then
     match flatten_app tm with
-    | Const name, args when is_transport_constant name && List.length args >= 5 ->
+    | Const name, args
+         when is_transport_constant name && List.length args >= transport_full_arity ->
        let ty = List.nth args 0
        and a = List.nth args 1
        and b = List.nth args 4
