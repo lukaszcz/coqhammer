@@ -1117,7 +1117,8 @@ let hammer_dump_tac fname =
     end
 
 let hammer_dump fname ~pstate =
-  let _, _, () = Proof.run_tactic (Global.env ()) (hammer_dump_tac fname) pstate in
+  let proof = Declare.Proof.get pstate in
+  let _, _, () = Proof.run_tactic (Global.env ()) (hammer_dump_tac fname) proof in
   ()
 
 let hammer_features name =
