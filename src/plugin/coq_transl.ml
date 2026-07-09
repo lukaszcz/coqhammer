@@ -941,6 +941,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
     in
     let is_eq_ind indname = short_name indname = "eq" in
     let is_acc_ind indname = short_name indname = "Acc" in
+    let is_indexed_ind indty params_num =
+      List.length (Coq_typing.get_type_args indty) > params_num
+    in
     let term_mentions_const names tm =
       fold_coqterm
         (fun _ acc tm ->
@@ -1073,6 +1076,16 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                     ~params ~params_num carrier_idx
                 in
                 let regular_case () =
+                  if is_indexed_ind indty params_num then
+                    (* Split equations for indexed families need the constructor
+                       result-index constraints as guards.  Until split-form
+                       equations carry those constraints, use a legacy auxiliary
+                       case, whose inversion axiom keeps them. *)
+                    case_aux_value vars indname matched_term return_type params_num branches indty
+                    >>= fun rhs ->
+                    emit_equation ?premise (axname ^ "$link") vars lhs rhs
+                      (Coq_typing.check_prop (List.rev vars) case_body)
+                  else
                   match matched_term with
                   | Var scrutinee when var_occurs scrutinee lhs ->
                      let compile_branch acc cname =
@@ -1191,6 +1204,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      ~params ~params_num carrier_idx
                  in
                  let lifted_case () =
+                   if is_indexed_ind indty params_num then
+                     legacy_case_lifting ()
+                   else
                    let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
                    in
                    let axname = if name0 = "" then fname else axname0
