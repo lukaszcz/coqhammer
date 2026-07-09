@@ -62,12 +62,18 @@ let is_init_datatypes_ind basename name =
     [ "Corelib.Init.Datatypes"; "Coq.Init.Datatypes"; "Stdlib.Init.Datatypes" ]
     basename name
 
+let is_init_wf_ind basename name =
+  is_canonical_constant
+    [ "Corelib.Init.Wf"; "Coq.Init.Wf"; "Stdlib.Init.Wf" ]
+    basename name
+
 let is_init_specif_ind basename name =
   is_canonical_constant
     [ "Corelib.Init.Specif"; "Coq.Init.Specif"; "Stdlib.Init.Specif" ]
     basename name
 
 let is_ex_ind name = is_init_logic_ind "ex" name
+let is_acc_ind name = is_init_wf_ind "Acc" name
 
 let is_instance_dependent_decl name =
   is_init_datatypes_ind "prod" name ||
@@ -195,11 +201,13 @@ let classify_shape indname is_prop_ind has_indices ctor_infos =
      index constraints, so classifying indexed families as CEnum/CSubset or
      CPropSingleton would be too weak (e.g. equality/transport could be reduced
      without requiring the source equality).  Keep them on the ordinary path
-     until index constraints are represented. *)
+     until index constraints are represented.  [Acc] is the one indexed
+     proof-singleton exception: its erasure path has a well-founded-recursion
+     guardrail in the translation layer. *)
   match ctor_infos with
   | [] -> MEmpty
   | _ when is_ex_ind indname -> MRegular
-  | _ when has_indices -> MRegular
+  | _ when has_indices && not (is_acc_ind indname) -> MRegular
   | [ctor] when is_prop_ind && List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args ->
       MPropSingleton
   | _ when is_prop_ind -> MRegular
