@@ -2240,6 +2240,7 @@ let remove_def name =
 let cleanup () =
   Defhash.clear ();
   Axhash.clear ();
+  Coq_erasure.clear ();
   Hashing.clear coqterm_hash
 
 (******************************************************************************)

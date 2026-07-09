@@ -35,6 +35,8 @@ type memo_class =
 
 let memo : ((string * bool list * bool * bool list list), memo_class) Hashtbl.t = Hashtbl.create 257
 
+let clear () = Hashtbl.clear memo
+
 exception Not_classifiable
 
 let check_prop ctx ty =

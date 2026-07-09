@@ -51,6 +51,9 @@ type ind_class =
           constructor, inversion, and typing translation remains the sound
           fallback. *)
 
+val clear : unit -> unit
+(** Clear the classification memo table. *)
+
 val classify : coqcontext -> string -> coqterm list -> ind_class
 (** [classify ctx indname params] classifies the inductive instance
     [indname params] in context [ctx].  Constructor telescopes are instantiated
