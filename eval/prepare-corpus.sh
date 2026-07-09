@@ -75,7 +75,15 @@ case "$corpus" in
         cp "$file" "problems/external-equations/$rel"
       done
       if [ -f "$source_dir/_CoqProject" ]; then
-        sed -n '/^-Q /p; /^-R /p; /^-I /p' "$source_dir/_CoqProject" > problems/external-equations.conf || true
+        awk '
+          function relocated(path) {
+            if (path ~ /^\//) return path
+            return "problems/external-equations/" path
+          }
+          $1 == "-Q" && NF >= 3 { print $1, relocated($2), $3; next }
+          $1 == "-R" && NF >= 3 { print $1, relocated($2), $3; next }
+          $1 == "-I" && NF >= 2 { print $1, relocated($2); next }
+        ' "$source_dir/_CoqProject" > problems/external-equations.conf || true
       fi
     else
       copy_committed external-equations
