@@ -16,6 +16,7 @@ all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
 
 test-extraction: $(EXTRACTION_VOS)
+	COQC="$(COQC)" ./check-consistency.sh
 
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
