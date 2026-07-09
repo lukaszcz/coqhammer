@@ -269,6 +269,14 @@ assert_unprovable() {
   assert_unprovable_problem "$false_problem" "$timeout" "$source_problem"
 }
 
+assert_contains_fixed() {
+  problem=$1
+  needle=$2
+  label=$3
+
+  grep -Fq "$needle" "$problem" || fail "expected $label in $problem"
+}
+
 assert_provable() {
   problem=$1
   timeout=$2
@@ -305,11 +313,19 @@ assert_unprovable "$tmpdir/consistency-idiv.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-idiv2.p" "$TIMEOUT"
 
 bad_idiv=$tmpdir/bad-idiv.p
+assert_contains_fixed "$tmpdir/consistency-idiv.p" \
+  "cextraction__deptypes_2eidiv___24a2" "idiv violated-premise symbol"
+assert_contains_fixed "$tmpdir/consistency-idiv.p" \
+  "cCorelib_2eInit_2eDatatypes_2eS___24a1" "successor constructor symbol"
 sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
   "$tmpdir/consistency-idiv.p" >"$bad_idiv"
 assert_unprovable_problem "$bad_idiv" "$TIMEOUT" "idiv violated-premise unfolding instance"
 
 bad_idiv2=$tmpdir/bad-idiv2.p
+assert_contains_fixed "$tmpdir/consistency-idiv2.p" \
+  "cextraction__deptypes_2eidiv2___24a2" "idiv2 violated-premise symbol"
+assert_contains_fixed "$tmpdir/consistency-idiv2.p" \
+  "cCorelib_2eInit_2eDatatypes_2eS___24a1" "successor constructor symbol"
 sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
   "$tmpdir/consistency-idiv2.p" >"$bad_idiv2"
 assert_unprovable_problem "$bad_idiv2" "$TIMEOUT" "idiv2 violated-premise unfolding instance"
