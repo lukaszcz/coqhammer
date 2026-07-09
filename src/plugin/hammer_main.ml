@@ -784,7 +784,7 @@ let run_gs_provers hyps deps goal clean seq =
        match ret with
        | None ->
           failure ()
-       | Some (idx, info) ->
+       | Some (_, info) ->
           begin
             let info =
               if List.length info.Provers.deps >= !Opt.minimize_threshold then
@@ -796,7 +796,7 @@ let run_gs_provers hyps deps goal clean seq =
             let msg = Provers.prn_atp_info info in
             if msg <> "" then
               Msg.info msg;
-            (idx :: tried, info)
+            (List.map fst enabled_seq @ tried, info)
           end
   in
   run_batches [] candidates
