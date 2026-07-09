@@ -717,19 +717,15 @@ and fix_lifting wf_fix_names axname dname fvars lvars tm =
 
 and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
   debug 3 (fun () -> print_header "case_lifting" tm (fvars @ lvars));
-  let get_params indty rt params_num =
+  let get_case_type_args indty rt params_num =
     let args = Coq_typing.get_type_args indty
     in
     let rec pom n tm =
       match tm with
       | Lam(_, ty, body) ->
         if n = 0 then
-          let (_, tyargs) = flatten_app ty
-          in
-          if List.length tyargs < params_num then
-            raise Not_found
-          else
-            Hhlib.take params_num tyargs
+          let (_, tyargs) = flatten_app ty in
+          tyargs
         else
           pom (n - 1) body
       | _ -> raise Not_found
@@ -740,6 +736,13 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       raise Not_found
     else
       pom (n - params_num) rt
+  in
+  let get_params indty rt params_num =
+    let tyargs = get_case_type_args indty rt params_num in
+    if List.length tyargs < params_num then
+      raise Not_found
+    else
+      Hhlib.take params_num tyargs
   in
   let generic_match () =
     let name = "$_generic_case_" ^ unique_id ()
@@ -970,12 +973,15 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              Some body
       | _ -> raise Not_found
     in
-    let erased_case_premise vars indname params =
+    let erased_case_premise indty return_type params_num indname =
       if opt_erasure_guards && is_eq_ind indname then
         (* Transport/UIP debt note: transport erasure is validated semantically
            by proof irrelevance, but is not generally a CIC source theorem; the
            guarded variant keeps the converted source equality as premise. *)
-        Some (mk_long_app (Const indname) params)
+        begin
+          try Some (mk_long_app (Const indname) (get_case_type_args indty return_type params_num))
+          with Not_found -> None
+        end
       else
         None
     in
@@ -1052,7 +1058,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          match collapse_prop_singleton vars indname constrs params params_num branches with
                          | None -> emit_leaf ?premise axname vars lhs case_body
                          | Some body2 ->
-                            let premise = erased_case_premise vars indname params in
+                            let premise = erased_case_premise indty return_type params_num indname in
                             (* Singleton erasure: the proof match computes as
                                its unique branch after proof arguments are erased. *)
                             compile_case ?premise lhs vars axname body2
@@ -1160,7 +1166,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                           match collapse_prop_singleton (fvars @ lvars) indname constrs params params_num branches with
                           | None -> return (generic_match ())
                           | Some body2 ->
-                             let premise = erased_case_premise (fvars @ lvars) indname params in
+                             let premise = erased_case_premise indty return_type params_num indname in
                              (* Singleton erasure: a whole defining body that
                                 matches on a proof emits the equation for the
                                 unique branch after proof erasure. *)
