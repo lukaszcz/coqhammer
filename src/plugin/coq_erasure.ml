@@ -1,4 +1,10 @@
-(* Classification of inductive instances for proof/content erasure. *)
+(* Classification of inductive instances for proof/content erasure.
+
+   The emission sites in coq_transl.ml cite the corresponding soundness result.
+   This module only decides which clause applies: CPropSingleton/CEmpty feed the
+   paper's erasure clause and fundamental-erasure lemma; CSubset/CEnum feed
+   spec-extraction G/F and the Coincidence lemma; CEnum guards are emitted as the
+   image of the existing inversion scheme.  CRegular is the status-quo fallback. *)
 
 open Hammer_lib
 open Coqterms
@@ -141,6 +147,10 @@ let instantiate_class indname ctor_infos = function
   | MRegular -> CRegular
 
 let classify_shape indname is_prop_ind ctor_infos =
+  (* These syntactic classes mirror the named paper clauses used at emission:
+     singleton proof matches are erased by the erasure clause, refinement and
+     enum occurrences are expanded by G/F plus Coincidence, and anything not
+     recognized stays on the status-quo path for totality. *)
   match ctor_infos with
   | [] -> MEmpty
   | _ when is_ex_ind indname -> MRegular

@@ -199,11 +199,11 @@ let erase_false_rect_type_arg tm =
     | Const name, ty :: args
          when is_false_rect_constant name && args <> [] && ty <> type_any &&
               Coq_erasure.has_erasable_content [] ty ->
-       (* E3 shallowness for impossible branches: the eliminated result type can
-          mention a collapsed refinement package, but the proof argument is erased
-          and the branch is unreachable.  Keep the status-quo opaque eliminator and
-          replace only the type parameter by [$Any] so no sig/exist bridge leaks
-          into a definition axiom. *)
+       (* E3 shallowness for impossible branches: by the Coincidence lemma, the
+          eliminated result type may mention a collapsed refinement package, but
+          the proof argument is erased and the branch is unreachable.  Keep the
+          status-quo opaque eliminator and replace only the type parameter by
+          [$Any] so no sig/exist bridge leaks into a definition axiom. *)
        Some (mk_long_app (Const name) (type_any :: args))
     | _ -> None
   else
@@ -213,9 +213,11 @@ let erase_transport_head tm =
   if opt_prop_case_erasure then
     match flatten_app tm with
     | Const name, args when is_transport_constant name && List.length args >= 4 ->
-       (* E1 transport erasure: the paper's Erasure clause maps casts to the
-          transported value; the Fundamental lemma validates the resulting
-          identity in the proof-irrelevant model. *)
+       (* E1 transport erasure: the paper's erasure clause maps casts to the
+          transported value; the fundamental-erasure lemma validates the
+          resulting identity in the proof-irrelevant model.  Per the
+          transport/UIP limitation, reconstruction debt is isolated by
+          [opt_erasure_guards]. *)
        Some (List.nth args 3)
     | _ -> None
   else
@@ -229,9 +231,10 @@ let transport_erasure_premise tm =
        and a = List.nth args 1
        and b = List.nth args 4
        in
-       (* Transport-debt note: transport erasure is not generally replayable as
-          a CIC source theorem (UIP), so the guarded option emits the converted
-          source equality as a premise. *)
+       (* Transport/UIP debt note: transport erasure is valid in the junk model
+          by proof irrelevance but is not generally replayable as a CIC source
+          theorem; the guarded option emits the converted source equality as a
+          premise. *)
        Some (mk_long_app (Const "=") [ty; a; b])
     | _ -> None
   else
@@ -500,9 +503,9 @@ and emit_definition_equation ?premise axname name fvars lvars body =
     if !wf_mark && opt_wf_recursion_eqs then
       (* WF-recursion model note: these equations are not read as
          delta-unfolding in the term model.  They are Coq theorems only with
-         the erased PI premises (Fix_eq), and semantically describe an
-         arbitrary total extension outside those premises; the consistency
-         canaries check this load-bearing path. *)
+         the erased PI premises (Fix_eq), and semantically describe a total
+         extension outside those premises; the consistency canaries check this
+         load-bearing path. *)
       make_fol_forall_keep_prop_premises [] vars (mk_eqv (List.rev vars))
     else
       close fvars
@@ -684,6 +687,8 @@ and fix_lifting wf_fix_names axname dname fvars lvars tm =
       let recargs_available = List.length recargs = List.length names2 in
       let wf_fix_names2 =
         if cft <> CoqFix then
+          (* Cofix unfolding is a status-quo axiom path: no new WF premise
+             discipline applies to cofixpoints in this refactor. *)
           []
         else if not recargs_available then
           names2
@@ -914,9 +919,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              begin
                (* WF guardrail: erasing an Acc proof on a recursive path would
                   produce the forbidden unconditional WF-unfolding equation.
-                  With Phase 4 enabled the per-translate mark makes all emitted
-                  equations keep the definition's erased Prop premises; with the
-                  option off we keep the status-quo generic case. *)
+                  Fix_eq justifies only the premised equation, and the total-
+                  extension model accounts for values outside the premise; with
+                  the option off we keep the status-quo generic case. *)
                wf_mark := true;
                if opt_wf_recursion_eqs then Some body else None
              end
@@ -926,9 +931,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
     in
     let erased_case_premise vars indname params =
       if opt_erasure_guards && is_eq_ind indname then
-        (* Transport-debt note: transport erasure is validated semantically by
-           proof irrelevance, but is not generally a CIC source theorem (UIP);
-           the guarded variant keeps the converted source equality as premise. *)
+        (* Transport/UIP debt note: transport erasure is validated semantically
+           by proof irrelevance, but is not generally a CIC source theorem; the
+           guarded variant keeps the converted source equality as premise. *)
         Some (mk_long_app (Const indname) params)
       else
         None
@@ -940,16 +945,18 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         | Some prem -> mk_impl prem mk_eqv
         | None -> mk_eqv
       in
-      (* Rule 5 and the rule-3/rule-4 linking equations (paper Body
-         compilation, Soundness of compilation): split equations carry only
-         computation.  With the default guard policy they are unguarded even for
-         pattern variables (Prop.: the split form needs no guards); when
+      (* Body-compilation rules 2/5 and the rule-3/rule-4 linking equations are
+         justified by the compilation-adequacy lemma: split equations carry only
+         computation.  The split-form validity theorem says constructor-pattern
+         equations need no guards; the guarded-disjunctive-case interderivability
+         theorem explains why dropping the old packaged case split loses no
+         soundness (inversion axioms still provide exhaustiveness).  When
          ClosureGuards is enabled we use the ordinary guarded closure machinery
          uniformly. *)
       begin
         if !wf_mark && opt_wf_recursion_eqs then
-          (* WF-recursion model note: premised equations are read as an
-             arbitrary total extension outside the erased PI premises, not as
+          (* WF-recursion model note: premised equations are read through the
+             total-extension model outside the erased PI premises, not as
              unconditional delta-unfolding; Fix_eq justifies only the premised
              form and the canaries guard consistency. *)
           make_fol_forall_keep_prop_premises [] vars mk_eqv
@@ -1009,9 +1016,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          | None -> emit_leaf ?premise axname vars lhs case_body
                          | Some body2 ->
                             let premise = erased_case_premise vars indname params in
-                            (* E1 singleton erasure: by the paper's Erasure
-                               clause and Fundamental lemma, the proof match
-                               computes as its unique branch after proof
+                            (* E1 singleton erasure: by the paper's erasure
+                               clause and fundamental-erasure lemma, the proof
+                               match computes as its unique branch after proof
                                arguments are erased. *)
                             compile_case ?premise lhs vars axname body2
                        end
@@ -1093,9 +1100,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   | Coq_erasure.CSubset { carrier_idx; _ } ->
                      compile_case ?premise lhs vars axname (collapse_subset_case carrier_idx)
                   | Coq_erasure.CEnum _ ->
-                     (* E3 discipline: enum scrutinees (e.g. sumbool) need no
-                        special collapse; split equations already operate on the
-                        erased constructor tags. *)
+                     (* E3/CEnum discipline: enum scrutinees (e.g. sumbool) need
+                        no special collapse; split-form validity applies to the
+                        erased constructor tags, while enum guards are the image
+                        of the existing inversion scheme. *)
                      regular_case ()
                   | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
                      regular_case ()
@@ -1109,8 +1117,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          else
            compile_case ?premise (App(lhs, Var(vname))) (vars @ [ (vname, vtype) ]) axname body2
       | Fix(_) as fix_body ->
-         (* Rule 4: the right-hand side is the ordinary value translation of the
-            inner fix, which reuses the existing fix_lifting machinery. *)
+         (* Body-compilation rule 4: the right-hand side is the ordinary value
+            translation of the inner fix, justified by the compilation-adequacy
+            lemma and reusing the existing fix_lifting machinery. *)
          emit_leaf ?premise axname vars lhs fix_body
       | body2 ->
          emit_leaf ?premise axname vars lhs body2
@@ -1140,10 +1149,11 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                           | None -> return (generic_match ())
                           | Some body2 ->
                              let premise = erased_case_premise (fvars @ lvars) indname params in
-                             (* E1 singleton erasure: by the paper's Erasure
-                                clause and Fundamental lemma, a whole defining
-                                body that matches on a proof emits the equation
-                                for the unique branch after proof erasure. *)
+                             (* E1 singleton erasure: by the paper's erasure
+                                clause and fundamental-erasure lemma, a whole
+                                defining body that matches on a proof emits the
+                                equation for the unique branch after proof
+                                erasure. *)
                              if name0 = "" then
                                convert (List.rev (fvars @ lvars)) body2
                              else
@@ -1214,8 +1224,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                         compile_case lhs vars axname0 body2 >>
                         return case_replacement
                    | Coq_erasure.CEnum _ ->
-                      (* E3 discipline: enum scrutinees are already handled by
-                         the ordinary split path after proof-argument dropping. *)
+                      (* E3/CEnum discipline: enum scrutinees are handled by the
+                         ordinary split path after proof-argument dropping; enum
+                         guard expansion is the image of the inversion scheme. *)
                       lifted_case ()
                    | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
                       lifted_case ()
@@ -1519,13 +1530,16 @@ and guard_leaf ctx ty x =
                     disjs ctors >>= fun fs ->
                     return (f :: fs)
                in
-               (* E4/spec-extraction G/F: an enum guard is the self-contained
-                  disjunction of constructor tags and their propositional
-                  payload formulas; non-guard occurrences still use the ordinary
-                  inversion axiom. *)
+               (* E4/spec-extraction G/F: a CEnum guard is the image of the
+                  existing inversion scheme, i.e. the self-contained disjunction
+                  of constructor tags and their propositional payload formulas;
+                  non-guard occurrences still use the ordinary inversion axiom. *)
                disjs ctors >>= fun fs ->
                return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
             | Coq_erasure.CEmpty ->
+               (* Spec-extraction G/F: the guard for an empty classified type is
+                  false, the zero-constructor image of the existing inversion
+                  scheme. *)
                return (Const("$False"))
             | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
                fallback ()
@@ -1558,9 +1572,10 @@ and type_to_guard ctx ty x =
   | Prod(vname, ty1, ty2) ->
      if Coq_typing.check_prop ctx ty1 then
        prop_to_formula ctx ty1 >>= fun tm1 ->
-       (* Spec-extraction S uses pruned arity for Prop domains: proof
-          arguments are formulas, not term arguments, so [x] is deliberately
-          left unapplied across the implication. *)
+       (* Spec-extraction S uses pruned arity for Prop domains: proof arguments
+          are formulas, not term arguments, so [x] is deliberately left
+          unapplied across the implication; the Coincidence lemma connects this
+          pruned specification with the erased program occurrence. *)
        type_to_guard ctx (subst_proof vname ty1 ty2) x >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
@@ -1738,8 +1753,8 @@ and add_typing_axiom name ty =
           (* Spec-extraction S(c): when the type contains erasure-relevant
              refinements/enums, emit the applied forall-form directly through
              type_to_guard.  This bypasses type lifting/optimization so the
-             G/F leaf expands payloads per occurrence; by Coincidence this is
-             equivalent in both polarities to the source specification. *)
+             G/F leaf expands payloads per occurrence; by the Coincidence lemma
+             this is equivalent in both polarities to the source specification. *)
           type_to_guard [] (refresh_bvars ty) (Const(name)) >>= fun guard ->
           add_axiom (mk_axiom ("$_typeof_" ^ name) guard)
         end
@@ -1804,8 +1819,9 @@ and add_def_eq_axiom (name, value, ty, srt) =
         match Hhlib.drop 3 vars with
         | (proof_name, _) :: _ ->
            (* E1 transport erasure for the standard transport family itself:
-              the defining equation is the same identity equation used for
-              user constants whose bodies are eq_rect/eq_rec/eq_ind wrappers. *)
+              the erasure clause maps the transport to its carried proof/value;
+              by the transport/UIP limitation this remains the same debt as user
+              constants whose bodies are eq_rect/eq_rec/eq_ind wrappers. *)
            emit_definition_equation axname name [] vars (Var(proof_name)) >>
            return ()
         | [] -> return ()
@@ -1856,11 +1872,12 @@ and add_injection_axioms constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
   let ty = coqdef_type (Defhash.find constr)
   in
-  (* Proof fields are proof-irrelevant for constructor injectivity.  Avoid the
-     old $Proof = $Proof conjuncts, but keep a neutral tautology in their place:
-     the consistency canaries are intentionally ATP-level tests, and preserving
-     this harmless clutter keeps their search profile stable while removing the
-     misleading proof equality from generated axioms. *)
+  (* Status quo structural axiom: constructor injectivity is pre-existing.  For
+     proof fields, proof irrelevance permits replacing the old generated
+     $Proof = $Proof conjuncts by a neutral tautology; the consistency canaries
+     are intentionally ATP-level tests, and preserving this harmless clutter
+     keeps their search profile stable while removing the misleading proof
+     equality from generated axioms. *)
   let proof_irrel_marker =
     mk_eq (Const("Hammer.ProofIrrel")) (Const("Hammer.ProofIrrel"))
   in
@@ -2030,6 +2047,10 @@ and add_def_axioms ((name, value, ty, srt) as def) =
            begin
              begin
                if opt_prop_inversion_axioms && name <> Hhutils.lib_ref_name "core.eq.type" then
+                 (* Status quo structural axiom: propositional inversion remains
+                    the exhaustiveness principle used after losing the old
+                    packaged case split; this is covered by the split/disjunctive
+                    case interderivability theorem. *)
                  add_inversion_axioms true name constrs
                else
                  return ()
@@ -2049,6 +2070,10 @@ and add_def_axioms ((name, value, ty, srt) as def) =
             List.fold_left (fun acc (c1, c2) -> add_discrim_axioms c1 c2) (return ()) (Hhlib.mk_pairs constrs) >>
             add_typing_axiom name ty >>
             if opt_inversion_axioms && not skip_refinement_decl then
+              (* Status quo structural axiom: inversion remains the emitted
+                 exhaustiveness principle; the split/disjunctive-case
+                 interderivability theorem justifies relying on it after the old
+                 packaged case disjunction is no longer emitted. *)
               add_inversion_axioms false name constrs
             else
               return ()

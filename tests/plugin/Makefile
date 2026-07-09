@@ -5,13 +5,13 @@ else
 COQC ?= rocq c
 endif
 
-all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_transl.vo consistency-canary-dumps
+all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_matches.vo extraction_deptypes.vo extraction_transl.vo consistency-canary-dumps
 	./check-consistency.sh
 	@rm -f transport-tr-refl.p consistency-idiv.p consistency-idiv2.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
 
-test-extraction: extraction_matches.vo extraction_deptypes.vo extraction_transl.vo consistency-canary-dumps
-	./check-consistency.sh
-	@rm -f transport-tr-refl.p consistency-idiv.p consistency-idiv2.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
+# Convenience alias kept after promotion: the extraction corpus and canaries are
+# now part of the normal plugin test suite above.
+test-extraction: all
 
 consistency-canary-dumps: consistency_canaries.v extraction_deptypes.vo
 	@rm -f transport-tr-refl.p consistency-idiv.p consistency-idiv2.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p

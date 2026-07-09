@@ -14,6 +14,10 @@ Overview of changes
   invocation are now placed in a private per-invocation directory that is
   removed as a whole on completion, interruption, or ATP worker kill (no
   more racy globbing over the shared temp directory).
+* Added the extraction-factored first-order translation: per-constructor match
+  equations, proof/singleton erasure, shallow refinement/specification
+  expansion, and premised well-founded-recursion equations are enabled by
+  compile-time translation constants and covered by the normal plugin tests.
 * Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2

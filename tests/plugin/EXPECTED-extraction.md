@@ -1,9 +1,9 @@
 # Extraction test expected profile
 
-This records the current extraction-refactor profile for the extraction
-TDD files. Items marked **enforced now** are compiled or checked by
-`make -C tests/plugin test-extraction`. Items marked **staged** remain wrapped in
-`Fail`/disabled assertion blocks until the listed phase task makes them pass.
+This records the current extraction-refactor profile for the extraction TDD
+files after suite promotion. All listed items are enforced by `make tests`
+(`make -C tests/plugin all`), with `make -C tests/plugin test-extraction` kept as
+an alias. Any remaining deviations are called out explicitly below.
 
 ## matches
 
@@ -32,6 +32,7 @@ Passing end-to-end `hammer` goals in `extraction_matches.v`:
 - `extraction_rsize_nil`: nested-inductive/nested-fix fallback ground equation
 
 Phase 1 / TASK_10 landed: all §4.1 match/fix goals are unwrapped and enforced.
+Phase 5c / TASK_20 promoted them into the normal plugin test suite.
 
 ## deptypes
 
@@ -72,9 +73,11 @@ Phase 5 / TASK_19 landed: the bare `Fix`/`Fix_F`, Program `Fix_sub`, and
 transport/UIP fixtures are unwrapped and enforced.  The transport ATP dump
 assertion remains as an independent translation-quality gate.
 
-### Staged per phase
+### Documented deviations
 
-No dependent-types extraction goals remain wrapped before Phase 6.
+No dependent-types extraction goals remain wrapped before Phase 6. The `canary`
+lemma is intentionally a negative consistency check (`Fail hammer`) and is
+enforced by compilation.
 
 ## transl
 
@@ -107,7 +110,8 @@ structural assertions that hold with the current translator:
   declaration-level subset injectivity/inversion as present with the optional
   skip constant off by default.
 
-### Staged per phase
+### Documented deviations
 
-No disabled translation assertion blocks remain before Phase 5; the transport
-ATP-dump layer remains as an independent translation-quality gate.
+No disabled translation assertion blocks remain. The transport ATP-dump layer
+remains as an independent translation-quality gate in addition to the end-to-end
+`hammer` goal.
