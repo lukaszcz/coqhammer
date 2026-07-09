@@ -5,17 +5,12 @@ else
 COQC ?= rocq c
 endif
 
-all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_matches.vo extraction_deptypes.vo extraction_transl.vo consistency-canary-dumps
-	./check-consistency.sh
-	@rm -f transport-tr-refl.p consistency-idiv.p consistency-idiv2.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
+all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_matches.vo extraction_deptypes.vo extraction_transl.vo
+	COQC="$(COQC)" ./check-consistency.sh
 
 # Convenience alias kept after promotion: the extraction corpus and canaries are
 # now part of the normal plugin test suite above.
 test-extraction: all
-
-consistency-canary-dumps: consistency_canaries.v extraction_deptypes.vo
-	@rm -f transport-tr-refl.p consistency-idiv.p consistency-idiv2.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
-	$(COQC) consistency_canaries.v
 
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
@@ -62,18 +57,21 @@ extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
-	@rm -f hammer_dump_smoke.p
-	$(COQC) extraction_transl.v > extraction_transl.out 2>&1
-	@if ! ./check-extraction-transl.sh extraction_transl.out; then \
-	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out hammer_dump_smoke.p; exit 1; \
-	fi
-	@if ! grep -Eq '^fof\(.*conjecture' hammer_dump_smoke.p; then \
-	  echo "Hammer_dump smoke check FAILED"; cat hammer_dump_smoke.p 2>/dev/null || true; \
-	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out hammer_dump_smoke.p; exit 1; \
-	fi
-	@rm -f extraction_transl.out hammer_dump_smoke.p
+	@set -e; \
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	COQHAMMER_DUMP_DIR="$$tmp" $(COQC) extraction_transl.v > extraction_transl.out 2>&1 || { \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; }; \
+	if ! ./check-extraction-transl.sh extraction_transl.out; then \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; \
+	fi; \
+	if ! grep -Eq '^fof\(.*conjecture' "$$tmp/hammer_dump_smoke.p"; then \
+	  echo "Hammer_dump smoke check FAILED"; cat "$$tmp/hammer_dump_smoke.p" 2>/dev/null || true; \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; \
+	fi; \
+	rm -f extraction_transl.out
 
 clean:
-	-rm -f *.vo *.glob *.out .*.aux hammer_dump_smoke.p transport-tr-refl.p consistency-idiv.p consistency-idiv2.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
+	-rm -f *.vo *.glob *.out .*.aux
 
-.PHONY: all test-extraction consistency-canary-dumps clean
+.PHONY: all test-extraction clean

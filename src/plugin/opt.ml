@@ -192,6 +192,40 @@ let _ =
   in
   declare_bool_option gdopt
 
+(* Target directory for the files written by [Hammer_dump]. Empty by
+   default, in which case a dumped file is written to the name given
+   verbatim (i.e. relative to the current directory), as users expect. A
+   non-empty value redirects relative dump names into that directory. Set
+   it with [Set Hammer Dump Directory "..."]. The COQHAMMER_DUMP_DIR
+   environment variable provides the same redirection when the option is
+   unset -- this is what the test harness uses, since a fresh temporary
+   directory is only known at run time and cannot be baked into a script. *)
+let dump_directory = ref ""
+
+let _ =
+  let gdopt=
+    { optdepr=None;
+      optstage = Interp;
+      optkey=["Hammer";"Dump";"Directory"];
+      optread=(fun () -> !dump_directory);
+      optwrite=(fun s -> dump_directory := s)}
+  in
+  declare_string_option gdopt
+
+(* Resolve the path of a [Hammer_dump] file: a relative name is placed in
+   the configured dump directory (the Hammer Dump Directory option, or the
+   COQHAMMER_DUMP_DIR environment variable when the option is unset);
+   otherwise (and always for absolute names) the name is used unchanged. *)
+let resolve_dump_path fname =
+  let dir =
+    if !dump_directory <> "" then !dump_directory
+    else match Sys.getenv_opt "COQHAMMER_DUMP_DIR" with Some d -> d | None -> ""
+  in
+  if dir <> "" && Filename.is_relative fname then
+    Filename.concat dir fname
+  else
+    fname
+
 (* Per-invocation temporary directory. All temporary files created
    during a single hammer/predict invocation are placed inside a fresh,
    private directory (see [temp_file]) which is removed as a whole when

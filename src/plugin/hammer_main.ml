@@ -1072,7 +1072,7 @@ let hammer_dump_tac fname =
       let hyps = get_hyps gl in
       let defs = get_defs env sigma in
       let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
-      Provers.write_atp_file fname defs1 hyps defs goal;
+      Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
       Tacticals.tclIDTAC
     end
 

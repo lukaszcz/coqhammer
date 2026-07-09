@@ -151,23 +151,31 @@ assert_provable() {
   [ "$proved" -eq 1 ] || fail "no available prover reported SZS status Theorem for $label"
 }
 
-assert_provable transport-tr-refl.p "$TIMEOUT" "transport tr reflexivity"
+# Generate the canary problem dumps into the private temp directory (kept out
+# of the source tree via COQHAMMER_DUMP_DIR), rather than littering the
+# working directory.
+COQC=${COQC:-rocq c}
+echo "GEN: dumping consistency canaries into $tmpdir"
+COQHAMMER_DUMP_DIR="$tmpdir" $COQC consistency_canaries.v >"$tmpdir/gen.log" 2>&1 \
+  || { cat "$tmpdir/gen.log" >&2; fail "compiling consistency_canaries.v"; }
 
-assert_unprovable consistency-idiv.p "$TIMEOUT"
-assert_unprovable consistency-idiv2.p "$TIMEOUT"
+assert_provable "$tmpdir/transport-tr-refl.p" "$TIMEOUT" "transport tr reflexivity"
+
+assert_unprovable "$tmpdir/consistency-idiv.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-idiv2.p" "$TIMEOUT"
 
 bad_idiv=$tmpdir/bad-idiv.p
 sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
-  consistency-idiv.p >"$bad_idiv"
+  "$tmpdir/consistency-idiv.p" >"$bad_idiv"
 assert_unprovable_problem "$bad_idiv" "$TIMEOUT" "idiv violated-premise unfolding instance"
 
 bad_idiv2=$tmpdir/bad-idiv2.p
 sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
-  consistency-idiv2.p >"$bad_idiv2"
+  "$tmpdir/consistency-idiv2.p" >"$bad_idiv2"
 assert_unprovable_problem "$bad_idiv2" "$TIMEOUT" "idiv2 violated-premise unfolding instance"
 
-assert_unprovable consistency-h.p "$TIMEOUT"
-assert_unprovable consistency-eq-rect.p "$TIMEOUT"
-assert_unprovable consistency-nat-add.p "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-h.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-eq-rect.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-nat-add.p" "$TIMEOUT"
 
 echo "consistency canaries passed"

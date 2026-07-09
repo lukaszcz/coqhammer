@@ -23,6 +23,10 @@ Makefile.coq.mathcomp.bak
 Makefile.coq.mathcomp.conf
 META
 
+# Hammer_dump TPTP problem dumps (the test harness redirects these to a temp
+# directory; this only catches manual/default dumps run inside the tree).
+tests/plugin/*.p
+
 *.annot
 *.cmo
 *.cma
