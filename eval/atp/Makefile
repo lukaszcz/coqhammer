@@ -30,4 +30,4 @@ o/z3/%: i/f/%
 cvc4: $(patsubst i/f/%,o/cvc4/%,$(FFILES))
 o/cvc4/%: i/f/%
 	@mkdir -p `dirname "$@"`
-	@htimeout $(TIM) cvc4 --tlimit $(TIM) --dump-unsat-cores-full "$<" > "$@"
+	@htimeout $(TIM) cvc4 --tlimit $$(($(TIM) * 1000)) --dump-unsat-cores-full "$<" > "$@"
