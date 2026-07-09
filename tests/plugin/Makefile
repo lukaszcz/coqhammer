@@ -9,12 +9,13 @@ else
 COQC ?= rocq c
 endif
 
-all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_matches.vo extraction_deptypes.vo extraction_transl.vo
+EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo extraction_transl.vo
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo $(EXTRACTION_VOS)
+
+all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
 
-# Convenience alias kept after promotion: the extraction corpus and canaries are
-# now part of the normal plugin test suite above.
-test-extraction: all
+test-extraction: $(EXTRACTION_VOS)
 
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
