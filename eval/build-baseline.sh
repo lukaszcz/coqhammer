@@ -4,10 +4,12 @@ set -euo pipefail
 usage() {
   cat <<'USAGE'
 Usage: ./build-baseline.sh [--label LABEL] [--prefix PREFIX] [--worktree DIR]
+                           [--feature-ref REF] [--base-ref REF]
 
-Build and install the pre-refactor baseline at
-  git merge-base extraction rocq-9.2
-into a switchable local prefix. Defaults:
+Build and install the baseline at git merge-base FEATURE_REF BASE_REF into a
+switchable local prefix. Defaults:
+  FEATURE_REF=HEAD
+  BASE_REF=rocq-9.2
   LABEL=baseline-merge-base
   PREFIX=eval/_installs/$LABEL
   WORKTREE=eval/_worktrees/$LABEL
@@ -17,12 +19,16 @@ USAGE
 label=baseline-merge-base
 prefix=
 worktree=
+feature_ref=HEAD
+base_ref=rocq-9.2
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --label) label="$2"; shift 2 ;;
     --prefix) prefix="$2"; shift 2 ;;
     --worktree) worktree="$2"; shift 2 ;;
+    --feature-ref) feature_ref="$2"; shift 2 ;;
+    --base-ref) base_ref="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -38,7 +44,7 @@ if [ -z "$worktree" ]; then
   worktree="$repo/eval/_worktrees/$label"
 fi
 
-base=$(git merge-base extraction rocq-9.2)
+base=$(git merge-base "$feature_ref" "$base_ref")
 mkdir -p "$(dirname "$worktree")" "$(dirname "$prefix")"
 
 if [ -d "$worktree/.git" ] || [ -f "$worktree/.git" ]; then
@@ -79,6 +85,8 @@ cat > "$prefix/manifest.env" <<MANIFEST
 label=$label
 kind=baseline
 commit=$base
+feature_ref=$feature_ref
+base_ref=$base_ref
 prefix=$prefix
 worktree=$worktree
 built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
