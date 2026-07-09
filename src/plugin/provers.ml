@@ -32,6 +32,19 @@ let strip_dollar_suffix s =
     if i > 0 then String.sub s 0 i else s
   with Not_found -> s
 
+let case_name_subject s =
+  let rec peel s =
+    if Hhlib.string_begins_with s "$_case_" then
+      peel (String.sub s 7 (String.length s - 7))
+    else
+      s
+  in
+  let s = peel s in
+  try
+    let i = String.index s '$' in
+    if i > 0 then String.sub s 0 i else "$none"
+  with Not_found -> "$none"
+
 let get_defs lst =
   remove_duplicates
     (List.filter is_good_dep
@@ -48,15 +61,8 @@ let get_cases lst =
   remove_duplicates
     (List.filter is_good_dep
        (List.map
-          begin fun s ->
-            try
-              let i = String.index s '$' in
-              String.sub s 0 i
-            with Not_found ->
-              "$none"
-          end
-          (List.map (fun s -> String.sub s 7 (String.length s - 7))
-             (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst))))
+          (fun s -> case_name_subject (String.sub s 7 (String.length s - 7)))
+          (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst)))
 
 let get_inversions lst =
   List.filter is_good_dep
@@ -97,9 +103,7 @@ let get_types lst =
                   let i = String.index s '$' in
                   String.sub s 0 i
                 else if Hhlib.string_begins_with s "$_case_" then
-                  let s = String.sub s 7 (String.length s - 7) in
-                  let i = String.index s '$' in
-                  String.sub s 0 i
+                  case_name_subject (String.sub s 7 (String.length s - 7))
                 else
                   "$none"
               in

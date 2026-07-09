@@ -1160,7 +1160,11 @@ let hammer_prover_parse_test () =
   assert_equal "defs" ["Corelib.Init.Nat.add"; "extraction_deptypes.h"] info.Provers.defs;
   assert_equal "cases" ["Corelib.Init.Datatypes.nat"] info.Provers.cases;
   assert_equal "typings" ["extraction_deptypes.h"] info.Provers.typings;
-  assert_equal "deps" [] info.Provers.deps
+  assert_equal "deps" [] info.Provers.deps;
+  let nested_info =
+    Provers.classify_atp_names [ "$_case_$_case_Corelib.Init.Datatypes.nat$3$O" ]
+  in
+  assert_equal "nested cases" ["Corelib.Init.Datatypes.nat"] nested_info.Provers.cases
 
 let hammer_objects () =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
