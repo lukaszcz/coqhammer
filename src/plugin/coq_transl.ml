@@ -248,15 +248,14 @@ let transport_erasure_premise tm =
     match flatten_app tm with
     | Const name, args
          when is_transport_constant name && List.length args >= transport_full_arity ->
-       let ty = List.nth args 0
-       and a = List.nth args 1
+       let a = List.nth args 1
        and b = List.nth args 4
        in
        (* Transport/UIP debt note: transport erasure is valid in the junk model
           by proof irrelevance but is not generally replayable as a CIC source
           theorem; the guarded option emits the converted source equality as a
           premise. *)
-       Some (mk_long_app (Const "=") [ty; a; b])
+       Some (mk_eq a b)
     | _ -> None
   else
     None
@@ -1013,7 +1012,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            by proof irrelevance, but is not generally a CIC source theorem; the
            guarded variant keeps the converted source equality as premise. *)
         begin
-          try Some (mk_long_app (Const indname) (get_case_type_args indty return_type params_num))
+          try
+            match get_case_type_args indty return_type params_num with
+            | [_; a; b] -> Some (mk_eq a b)
+            | _ -> None
           with Not_found -> None
         end
       else
