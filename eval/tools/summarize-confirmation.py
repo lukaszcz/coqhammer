@@ -27,6 +27,7 @@ CONSISTENCY_PROVERS = ("eprover", "vampire")
 CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
 BASELINE = "baseline-merge-base"
 WINNER = "selected-config"
+ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
 
 
 def read_list(path: Path) -> list[Path]:
@@ -40,7 +41,7 @@ def has_atp_theorem(path: Path) -> bool:
         text = path.read_text(errors="replace")
     except FileNotFoundError:
         return False
-    return "SZS status Theorem" in text
+    return ATP_SUCCESS_RE.search(text) is not None
 
 
 def status_theorem_count(files: list[Path]) -> int:

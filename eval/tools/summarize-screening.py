@@ -18,6 +18,7 @@ PREMISES = ("knn-64", "knn-256", "knn-1024")
 PROVERS = ("eprover", "vampire")
 CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
 BASELINE = "baseline-merge-base"
+ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
 
 
 def read_list(path: Path) -> list[Path]:
@@ -56,7 +57,7 @@ def status_theorem_count(files: list[Path]) -> int:
             text = path.read_text(errors="replace")
         except FileNotFoundError:
             continue
-        if "SZS status Theorem" in text:
+        if ATP_SUCCESS_RE.search(text):
             count += 1
     return count
 
