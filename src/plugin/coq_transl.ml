@@ -180,10 +180,12 @@ let is_transport_constant name =
 let is_false_rect_constant name = is_init_logic_constant "False_rect" name
 
 let is_wf_fix_constant name =
-  name = "Corelib.Init.Wf.Fix" || name = "Coq.Init.Wf.Fix"
+  name = "Corelib.Init.Wf.Fix" || name = "Coq.Init.Wf.Fix" ||
+  name = "Stdlib.Init.Wf.Fix"
 
 let is_wf_fix_f_constant name =
-  name = "Corelib.Init.Wf.Fix_F" || name = "Coq.Init.Wf.Fix_F"
+  name = "Corelib.Init.Wf.Fix_F" || name = "Coq.Init.Wf.Fix_F" ||
+  name = "Stdlib.Init.Wf.Fix_F"
 
 let is_program_fix_sub_constant name =
   name = "Corelib.Program.Wf.Fix_sub" || name = "Coq.Program.Wf.Fix_sub" ||
