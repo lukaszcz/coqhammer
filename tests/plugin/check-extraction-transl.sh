@@ -170,9 +170,10 @@ require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*
 require_line "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
 
 # pval: non-primitive projection over a proof-carrying record is the identity
-# after subset-match collapse; its argument keeps the named record guard.
+# after subset-match collapse; its argument guard expands to the carrier and
+# positivity payload.
 require_line "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
-require_line "pval type axiom keeps the posnat package guard" '^\$_typeof_extraction_deptypes\.pval:.*\(\(\$HasType @ var_0_p_[0-9]+\) @ extraction_deptypes\.posnat\)'
+require_line "pval type axiom expands the posnat guard" '^\$_typeof_extraction_deptypes\.pval:.*\(& @ \(\(\$HasType @ var_0_p_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(\(Corelib\.Init\.Peano\.lt @ Corelib\.Init\.Datatypes\.O\) @ var_0_p_[0-9]+\)'
 forbid_line "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
 
 # beq: sumbool-driven definition links through an auxiliary case symbol for
