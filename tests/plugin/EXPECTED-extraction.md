@@ -58,10 +58,11 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
 
-Phase 3a / TASK_13 landed: refinement constructor and subset-match occurrence
-collapse are enforced at the translation layer; the direct projection/unboxing
-goals above are now end-to-end green. Transport remains pinned ATP-level while
-reconstruction work is deferred to Phase 5.
+Phase 3b / TASK_14 landed: specification extraction and enum guard expansion
+are enforced at the translation layer (inline refinement payloads, sumbool/bool
+result guards, and pruned Prop-premise arity). Direct projection/unboxing goals
+remain end-to-end green; broader dependent goals are still staged for TASK_15 or
+later reconstruction work.
 
 ### Staged per phase
 
@@ -86,7 +87,9 @@ structural assertions that hold with the current translator:
 - Corpus constants: Phase-1 split-equation checks for variable and compound
   scrutinees (`myadd`, `g`, `k`, `safe_pred`, `pval`, `beq`) plus mutual-fix
   equations for `even`/`odd`; E3 unboxing checks for `h`, `safe_pred`, `pval`,
-  `tag`, and `proj1_sig`; baseline definition/type-shape checks for `idiv`;
+  `tag`, and `proj1_sig`; Phase-3b spec checks for inline `sig`/record/prod
+  payloads, enum result guards, `Nat.eq_dec` sumbool payloads, and pruned
+  Prop-premise arity; baseline definition/type-shape checks for `idiv`;
   `idiv` is specifically checked not to expose an unconditional recursive
   `le_lt_dec`/`Nat.sub` unfolding equation before Phase 4.
 - Stdlib regression constants: Phase-1 split-equation checks for `Nat.add`,
@@ -101,7 +104,5 @@ structural assertions that hold with the current translator:
 Disabled, clearly labeled assertion blocks live in
 `check-extraction-transl.sh` and are enabled by the phase acceptance tasks:
 
-- Phase 3b / TASK_14: specification/enum shapes for `h`, `beq`, and
-  `sig`/`sumbool` guards.
 - Phase 4 / TASK_17: premised WF-recursion equations for `idiv`, `idiv2`, and
   `idiv3`, with explicit absence of unconditional WF unfolding equations.

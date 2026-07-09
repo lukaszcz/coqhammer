@@ -16,6 +16,9 @@ Inductive sflag : SProp := sflag_intro : sflag.
 Parameter sprop_consumer : sflag -> nat.
 Definition sprop_arg_term (h : sflag) : nat := sprop_consumer h.
 
+Definition spec_pruned (n : nat) (p : n = n) : {m : nat | n = m} :=
+  exist _ n eq_refl.
+
 Goal True.
   hammer_dump "hammer_dump_smoke.p".
   exact I.
@@ -23,6 +26,10 @@ Qed.
 
 (* SProp regression: the sflag argument must be treated like a proof. *)
 Hammer_transl "sprop_arg_term".
+
+(* Spec-extraction S4 regression: the Prop premise must not become an applied
+   term argument in the $_typeof_ axiom. *)
+Hammer_transl "spec_pruned".
 
 (* Phase-0 plumbing regression: the later WF-recursion mark must not leak
    between top-level translations. *)

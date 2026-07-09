@@ -1225,6 +1225,101 @@ and prop_to_formula ctx tm =
     convert ctx tm
 
 (* `x' does not get converted *)
+and guard_leaf ctx ty x =
+  debug 3 (fun () -> print_header_nonl "guard_leaf" ty ctx; print_coqterm x; print_newline ());
+  let fallback () =
+    convert ctx ty >>= fun ty1 ->
+    return (mk_hastype x ty1)
+  in
+  let rec formulas ctx = function
+    | [] -> return []
+    | prop_ty :: prop_tys ->
+       prop_to_formula ctx prop_ty >>= fun f ->
+       formulas ctx prop_tys >>= fun fs ->
+       return (f :: fs)
+  in
+  let conjoin = function
+    | [] -> Const("$True")
+    | fs -> join_right mk_and fs
+  in
+  if not opt_refinement_types then
+    fallback ()
+  else
+    let ty_nf = simpl (Coq_typing.reify (Coq_typing.eval ty))
+    in
+    try
+      match flatten_app ty_nf with
+      | Const indname, args ->
+         begin match Defhash.find indname with
+         | (_, IndType(_, constrs, params_num), _, _) ->
+            let params = Hhlib.take params_num args
+            in
+            begin match Coq_erasure.classify ctx indname params with
+            | Coq_erasure.CSubset { carrier_idx; carrier_name; prop_args } ->
+               begin match constrs with
+               | [cname] ->
+                  let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+                  in
+                  let cparams = Hhlib.take params_num cargs
+                  in
+                  let cargs =
+                    List.map
+                      (fun (name, ty) -> (name, subst_params cparams params ty))
+                      (Hhlib.drop params_num cargs)
+                  in
+                  let (_, carrier_ty) = List.nth cargs carrier_idx
+                  in
+                  (* Spec-extraction G/F: a refinement guard is expanded at the
+                     occurrence itself, [G({x:A | P x}, u) = G(A,u) ∧ F(P u)].
+                     The Coincidence lemma justifies using this same leaf in
+                     hypotheses and conclusions.  Substitute the erased carrier
+                     before translating the payload so beta-redexes in predicate
+                     parameters disappear shallowly. *)
+                  let carrier_ty = simpl carrier_ty in
+                  let payload_ctx =
+                    match x with
+                    | Var name when not (List.mem_assoc name ctx) -> (name, carrier_ty) :: ctx
+                    | _ -> ctx
+                  in
+                  make_guard ctx carrier_ty x >>= fun carrier_guard ->
+                  formulas payload_ctx
+                    (List.map
+                       (fun (_, prop_ty) -> simpl (substvar carrier_name x prop_ty))
+                       prop_args) >>= fun payloads ->
+                  return (conjoin (carrier_guard :: payloads))
+               | _ -> fallback ()
+               end
+            | Coq_erasure.CEnum ctors ->
+               let one_ctor (cname, payloads) =
+                 convert ctx (mk_long_app (Const cname) params) >>= fun ctor ->
+                 formulas ctx payloads >>= fun payloads ->
+                 return (mk_and (mk_eq x ctor) (conjoin payloads))
+               in
+               let rec disjs = function
+                 | [] -> return []
+                 | ctor :: ctors ->
+                    one_ctor ctor >>= fun f ->
+                    disjs ctors >>= fun fs ->
+                    return (f :: fs)
+               in
+               (* E4/spec-extraction G/F: an enum guard is the self-contained
+                  disjunction of constructor tags and their propositional
+                  payload formulas; non-guard occurrences still use the ordinary
+                  inversion axiom. *)
+               disjs ctors >>= fun fs ->
+               return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
+            | Coq_erasure.CEmpty ->
+               return (Const("$False"))
+            | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
+               fallback ()
+            end
+         | _ -> fallback ()
+         end
+      | _ -> fallback ()
+    with _ ->
+      fallback ()
+
+(* `x' does not get converted *)
 and make_guard ctx ty x =
   debug 3 (fun () -> print_header_nonl "make_guard" ty ctx; print_coqterm x; print_newline ());
   match ty with
@@ -1237,8 +1332,7 @@ and make_guard ctx ty x =
           e.g. Prod(x, Prod(x, ty1, ty2), ty3) *)
        type_to_guard ctx (refresh_bvars ty) x
   | _ ->
-     convert ctx ty >>= fun ty1 ->
-     return (mk_hastype x ty1)
+     guard_leaf ctx ty x
 
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
@@ -1247,6 +1341,9 @@ and type_to_guard ctx ty x =
   | Prod(vname, ty1, ty2) ->
      if Coq_typing.check_prop ctx ty1 then
        prop_to_formula ctx ty1 >>= fun tm1 ->
+       (* Spec-extraction S uses pruned arity for Prop domains: proof
+          arguments are formulas, not term arguments, so [x] is deliberately
+          left unapplied across the implication. *)
        type_to_guard ctx (subst_proof vname ty1 ty2) x >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
@@ -1254,8 +1351,7 @@ and type_to_guard ctx ty x =
        type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname)))) >>= fun tm2 ->
        return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
-     convert ctx ty >>= fun tm ->
-     return (mk_hastype x tm)
+     guard_leaf ctx ty x
 
 and make_fol_forall ctx vars tm =
   let rec hlp ctx vars tm =
@@ -1404,7 +1500,17 @@ and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
-      if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
+      if opt_refinement_types && Coq_erasure.has_erasable_content [] ty then
+        begin
+          (* Spec-extraction S(c): when the type contains erasure-relevant
+             refinements/enums, emit the applied forall-form directly through
+             type_to_guard.  This bypasses type lifting/optimization so the
+             G/F leaf expands payloads per occurrence; by Coincidence this is
+             equivalent in both polarities to the source specification. *)
+          type_to_guard [] (refresh_bvars ty) (Const(name)) >>= fun guard ->
+          add_axiom (mk_axiom ("$_typeof_" ^ name) guard)
+        end
+      else if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
         return ()
       else if opt_type_optimization &&
           (Coq_typing.check_type_target_is_type ty || Coq_typing.check_type_target_is_prop ty) then

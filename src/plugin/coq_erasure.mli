@@ -23,6 +23,10 @@ type ind_class =
       carrier_idx : int;
       (** Zero-based position, among non-parameter constructor arguments, of the
           unique informative carrier argument that remains after erasure. *)
+      carrier_name : string;
+      (** Binder name of the informative carrier in the instantiated constructor
+          telescope.  Payload types may mention this name and guard expansion
+          substitutes the guarded term for it before proposition translation. *)
       prop_args : (string * coqterm) list;
       (** Propositional payload fields dropped by program extraction.  The types
           are instantiated with the actual inductive parameters and may mention

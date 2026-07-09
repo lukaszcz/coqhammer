@@ -6,7 +6,7 @@ open Coqterms
 type ind_class =
   | CEmpty
   | CPropSingleton
-  | CSubset of { carrier_idx : int; prop_args : (string * coqterm) list }
+  | CSubset of { carrier_idx : int; carrier_name : string; prop_args : (string * coqterm) list }
   | CEnum of (string * coqterm list) list
   | CRegular
 
@@ -89,7 +89,7 @@ let validate_subset indname infos carrier_idx prop_indices =
           prop_indices []
       in
       if List.length prop_args = List.length prop_indices && prop_args <> [] then
-        CSubset { carrier_idx; prop_args }
+        CSubset { carrier_idx; carrier_name = carrier.arg_name; prop_args }
       else
         CRegular
   | _ -> CRegular

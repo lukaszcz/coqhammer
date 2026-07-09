@@ -60,10 +60,14 @@ forbid_line "definition axioms are disjunction-free" '^\$_def_.*[|]'
 
 # SProp hypotheses are proof-like: the argument becomes a formula premise and is
 # pruned from the term-level definition equation.
-require_line "SProp argument is translated as a premise" '^\$_type_[0-9]+: .*\(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ var_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\)'
-require_line "SProp function uses the premise type" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ \$_type_[0-9]+\)'
+require_line "SProp argument is translated as a premise" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ Corelib\.Init\.Datatypes\.nat\)\)'
 require_line "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
 forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
+
+# Spec-extraction S4: a Prop premise must leave the extracted term unapplied
+# across the implication (proof argument pruned from arity).
+require_line "spec_pruned type axiom keeps pruned arity" '^\$_typeof_extraction_transl\.spec_pruned:.*\(=> @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)\) @ \(\(& @ \(\(\$HasType @ \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\)\)'
+forbid_line "spec_pruned proof premise must not be applied as a term" '^\$_typeof_extraction_transl\.spec_pruned:.*extraction_transl\.spec_pruned @ .*\$Proof'
 
 # Phase 1a split equations: variable-scrutinee definitions are emitted as one
 # guard-free unit equation per constructor.
@@ -96,9 +100,10 @@ require_line "odd translation emits even sibling successor equation" '^\$_fix_[0
 
 # Phase 3a E3 refinement unboxing: the conjunction match in h collapses as in
 # Phase 2 and the subset constructor occurrence now erases to its carrier z.
-require_line "h has a type axiom" '^\$_typeof_extraction_deptypes\.h:'
+require_line "h has a specification-extracted type axiom" '^\$_typeof_extraction_deptypes\.h:.*var_0_x_[0-9]+ = \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)'
 require_line "h has a refinement-unboxed definition" '^\$_def_extraction_deptypes\.h:.*= 2_z\)'
-forbid_line "h output must not mention erased exist constructors" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.exist'
+forbid_line "h type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.h:.*Corelib\.Init\.Specif\.sig'
+forbid_line "h output must not mention erased sig/exist/proj1_sig" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.(sig|exist|proj1_sig)'
 forbid_line "h singleton collapse must not leave generic case" '^.*extraction_deptypes\.h.*\$_generic_case'
 
 # safe_pred: the dependent match still splits on nat and now keeps a definition
@@ -106,6 +111,8 @@ forbid_line "h singleton collapse must not leave generic case" '^.*extraction_de
 require_count_at_least "safe_pred has split definition axioms" '^\$_def_extraction_deptypes\.safe_pred[$]' 2
 require_line "safe_pred zero branch remains dead-code fallback" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Logic\.False_rect'
 require_line "safe_pred successor branch unboxes the subset result" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*= var_0_[$]Anonymous_[0-9]+\)'
+require_line "safe_pred type axiom expands the subset payload" '^\$_typeof_extraction_deptypes\.safe_pred:.*var_0_n_[0-9]+ = \(Corelib\.Init\.Datatypes\.S @ \(extraction_deptypes\.safe_pred @ var_0_n_[0-9]+\)\)'
+forbid_line "safe_pred type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.safe_pred:.*Corelib\.Init\.Specif\.sig'
 forbid_line "safe_pred successor branch must not keep eq_refl" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Logic\.eq_refl'
 forbid_line "safe_pred successor branch must not keep exist" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
 
@@ -119,21 +126,29 @@ require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*
 require_line "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
 
 # pval: non-primitive projection over a proof-carrying record is the identity
-# after E3 subset-match collapse.
+# after E3 subset-match collapse; its argument guard expands the record payload.
 require_line "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
+require_line "pval type axiom expands the posnat payload" '^\$_typeof_extraction_deptypes\.pval:.*\(=> @ \(\(& @ \(\(\$HasType @ var_0_p_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(\(Corelib\.Init\.Peano\.lt @ Corelib\.Init\.Datatypes\.O\) @ var_0_p_[0-9]+\)\)\)'
 forbid_line "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
+forbid_line "pval type axiom must not keep a posnat HasType atom" '^\$_typeof_extraction_deptypes\.pval:.*\$HasType @ var_0_p_[0-9]+\) @ extraction_deptypes\.posnat'
 
 # beq: sumbool-driven definition links through an auxiliary case symbol for
-# the compound Nat.eq_dec scrutinee.
+# the compound Nat.eq_dec scrutinee; enum guards expand to constructor tags plus
+# payload formulas.
 require_count_at_least "beq has a linking definition axiom" '^\$_def_extraction_deptypes\.beq[$]link:' 1
 require_line "beq link mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq[$]link:.*Nat\.eq_dec'
 require_line "beq aux case mentions sumbool constructors" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$].*Corelib\.Init\.Specif\.(left|right)'
+require_line "beq type axiom expands bool enum result" '^\$_typeof_extraction_deptypes\.beq:.*extraction_deptypes\.beq @ var_0_n_[0-9]+.*Corelib\.Init\.Datatypes\.true.*Corelib\.Init\.Datatypes\.false'
+require_line "Nat.eq_dec type axiom expands sumbool payloads" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*var_0_n_[0-9]+ = var_1_m_[0-9]+.*~ @ \(var_0_n_[0-9]+ = var_1_m_[0-9]+\)'
+forbid_line "Nat.eq_dec type axiom must not keep a sumbool HasType atom" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*Corelib\.Init\.Specif\.sumbool'
 
 # tag: prod-with-Prop is a per-instance subset; pair erases to the informative
-# first component.
+# first component and the result guard carries the equality payload.
 require_line "tag has an unboxed definition axiom" '^\$_def_extraction_deptypes\.tag:.*= 0_n\)'
+require_line "tag type axiom expands the prod payload" '^\$_typeof_extraction_deptypes\.tag:.*\(& @ \(\(\$HasType @ \(extraction_deptypes\.tag @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)'
 forbid_line "tag definition must not mention pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
 forbid_line "tag proof payload is erased" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
+forbid_line "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.prod'
 
 # WF guardrail: until Phase 4, the Acc/Fix_F packagings must not expose an
 # unconditional unfolding equation.  These assertions are part of make tests.
@@ -188,12 +203,6 @@ require_line "typeclass method projection is translated" '^Corelib\.Classes\.Rel
 # - WF/Acc-recursive definitions (idiv/idiv2/idiv3/Acc_rect users) still do not
 #   expose unconditional unfolding equations.
 PHASE_2_SINGLETONS
-
-: <<'PHASE_3B_SPECS'
-# TASK_14 / Phase 3b: specification extraction and enum guard expansion.
-# - $_typeof_h contains the payload x = h x y z and no $HasType(..., sig ...).
-# - beq/Nat.eq_dec sumbool guards are expanded shallowly.
-PHASE_3B_SPECS
 
 : <<'PHASE_4_WF_RECURSION'
 # TASK_17 / Phase 4: premised WF-recursion equations.
