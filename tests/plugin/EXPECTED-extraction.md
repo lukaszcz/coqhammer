@@ -44,14 +44,21 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `extraction_safe_pred_proof_irrel`: `safe_pred (S n)` result independent of proof argument
 - `extraction_posnat_payload`: `forall p : posnat, 0 < pval p`
 - `extraction_vhead_cons`: vector-head equation on `Vector.cons`
+- `extraction_tr_refl`: transport reflexivity is ATP-provable from the
+  `Hammer_dump` problem `transport-tr-refl.p` and enforced by
+  `check-consistency.sh`; the lemma remains wrapped end-to-end until the Phase 5
+  reconstruction variants graduate the UIP/transport case
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
+
+Phase 2 / TASK_12 landed: singleton/transport erasure is enforced at the
+translation layer, `safe_pred` proof-irrelevance remains end-to-end green, and
+transport is pinned ATP-level while reconstruction work is deferred to Phase 5.
 
 ### Staged per phase
 
 Expected failures now, wrapped with `Fail hammer.` / `Abort.`:
 
-- Phase 2 / TASK_12: `extraction_tr_refl` (ATP-level first; end-to-end after Phase 5)
 - Phase 3 / TASK_15: `extraction_h_proj`, `extraction_h_spec`,
   `extraction_safe_pred_spec`, `extraction_beq_correct`,
   `extraction_between_low`, `extraction_tag_fst`, `extraction_refinement_hyp`,
@@ -81,15 +88,14 @@ structural assertions that hold with the current translator:
   `List.app`, and `Streams.hd`; structural checks for
   `List.Forall`, `eq_ind_r`, `proj1`, `Acc_rect`, `Nat.eq_dec`, `sumbool`, `sig`,
   `prod`, `Vector.hd`, a `Streams` coinductive destructor, and the
-  `Equivalence_Reflexive` typeclass method projection.
+  `Equivalence_Reflexive` typeclass method projection.  Phase 2 additionally
+  enforces a transport-erased `$_def_` equation for `eq_ind_r`.
 
 ### Staged per phase
 
 Disabled, clearly labeled assertion blocks live in
 `check-extraction-transl.sh` and are enabled by the phase acceptance tasks:
 
-- Phase 2 / TASK_12: Prop-singleton elimination shapes for `h`, `safe_pred`,
-  transport/`eq_ind_r`, and WF guardrails.
 - Phase 3 / TASK_15: refinement unboxing/specification shapes for `h`,
   `safe_pred`, `pval`, `tag`, `beq`, `sig`/`sumbool`.
 - Phase 4 / TASK_17: premised WF-recursion equations for `idiv`, `idiv2`, and

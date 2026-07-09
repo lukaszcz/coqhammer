@@ -1294,6 +1294,26 @@ and add_def_eq_axiom (name, value, ty, srt) =
   debug 2 (fun () -> print_endline ("add_def_eq_axiom: " ^ name));
   let axname = "$_def_" ^ name
   in
+  let emit_transport_definition () =
+    if is_transport_constant name then
+      try
+        let vars = Coq_typing.get_type_args ty in
+        match Hhlib.drop 3 vars with
+        | (proof_name, _) :: _ ->
+           (* E1 transport erasure for the standard transport family itself:
+              the defining equation is the same identity equation used for
+              user constants whose bodies are eq_rect/eq_rec/eq_ind wrappers. *)
+           emit_definition_equation axname name [] vars (Var(proof_name)) >>
+           return ()
+        | [] -> return ()
+      with _ ->
+        return ()
+    else
+      return ()
+  in
+  if is_transport_constant name then
+    emit_transport_definition ()
+  else
   match value with
   | Lam(_) ->
      lambda_lifting [] axname name [] [] value >>
@@ -1507,7 +1527,11 @@ and add_def_axioms ((name, value, ty, srt) as def) =
      if srt = SortProp then
        begin
          prop_to_formula [] ty >>= fun r ->
-         add_axiom (mk_axiom name r)
+         add_axiom (mk_axiom name r) >>
+         if is_transport_constant name then
+           add_def_eq_axiom def
+         else
+           return ()
        end
      else
        begin

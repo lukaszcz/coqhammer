@@ -70,6 +70,38 @@ run_vampire() {
   fi
 }
 
+try_eprover_theorem() {
+  problem=$1
+  timeout=$2
+  label=$3
+  out=$tmpdir/eprover-theorem.out
+
+  echo "CHECK: E proves $label"
+  if eprover -s --cpu-limit="$timeout" --auto-schedule -R --print-statistics -p --tstp-format "$problem" >"$out" 2>&1; then
+    :
+  else
+    status=$?
+    echo "NOTE: eprover exited with status $status on $label; checking SZS status anyway"
+  fi
+  grep -q 'SZS status Theorem' "$out"
+}
+
+try_vampire_theorem() {
+  problem=$1
+  timeout=$2
+  label=$3
+  out=$tmpdir/vampire-theorem.out
+
+  echo "CHECK: Vampire proves $label"
+  if vampire --mode casc -t "$timeout" --proof tptp --output_axiom_names on "$problem" >"$out" 2>&1; then
+    :
+  else
+    status=$?
+    echo "NOTE: vampire exited with status $status on $label; checking SZS status anyway"
+  fi
+  grep -q 'SZS status Theorem' "$out"
+}
+
 # Helper kept separate for Phase 4 negative instances: those tests can pass an
 # already-formed conjecture here and assert that ATPs do not prove it.
 assert_unprovable_problem() {
@@ -102,6 +134,24 @@ assert_unprovable() {
 
   assert_unprovable_problem "$false_problem" "$timeout" "$source_problem"
 }
+
+assert_provable() {
+  problem=$1
+  timeout=$2
+  label=$3
+  proved=0
+
+  [ -f "$problem" ] || fail "missing dumped problem $problem"
+  if [ "$have_eprover" -eq 1 ] && try_eprover_theorem "$problem" "$timeout" "$label"; then
+    proved=1
+  fi
+  if [ "$have_vampire" -eq 1 ] && try_vampire_theorem "$problem" "$timeout" "$label"; then
+    proved=1
+  fi
+  [ "$proved" -eq 1 ] || fail "no available prover reported SZS status Theorem for $label"
+}
+
+assert_provable transport-tr-refl.p "$TIMEOUT" "transport tr reflexivity"
 
 assert_unprovable consistency-idiv.p "$TIMEOUT"
 assert_unprovable consistency-h.p "$TIMEOUT"

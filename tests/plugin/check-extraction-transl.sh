@@ -157,6 +157,7 @@ require_line "List.app split mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.a
 
 require_line "List.Forall has an inversion axiom" '^\$_inversion_Corelib\.Lists\.ListDef\.Forall:'
 require_line "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'
+require_line "eq_ind_r has a transport-erased definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:.*\$Proof = \$Proof'
 require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
@@ -178,8 +179,7 @@ require_line "typeclass method projection is translated" '^Corelib\.Classes\.Rel
 # - h: $_def_extraction_deptypes.h appears and no $_generic_case/fallback marker
 #   remains for the and-match; before Phase 3 its RHS may still mention exist.
 # - safe_pred: dead False_rect branch is no longer exposed in the def equation.
-# - eq_ind_r / transport-family constants gain identity-like equations, while
-#   WF/Acc-recursive definitions (idiv/idiv2/idiv3/Acc_rect users) still do not
+# - WF/Acc-recursive definitions (idiv/idiv2/idiv3/Acc_rect users) still do not
 #   expose unconditional unfolding equations.
 PHASE_2_SINGLETONS
 

@@ -22,6 +22,10 @@ Goal forall x y z p, proj1_sig (h x y z p) = z.
   hammer_dump "consistency-h.p".
 Abort.
 
+Goal forall (P : nat -> Set) a (e : a = a) x, tr P a a e x = x.
+  hammer_dump "transport-tr-refl.p".
+Abort.
+
 Goal forall (P : nat -> Set) a (e1 e2 : a = a) (x : P a),
     eq_rect a P (eq_rect a P x a e1) a e2 = x.
   hammer_dump "consistency-eq-rect.p".
