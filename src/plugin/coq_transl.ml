@@ -1054,9 +1054,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       emit_equation ?premise axname vars lhs body (Coq_typing.check_prop ctx body)
     in
     let case_aux_value vars indname matched_term return_type params_num branches indty =
-      let params = get_params indty return_type params_num in
+      let tyargs = get_case_type_args indty return_type params_num in
       let z = refresh_varname "case" in
-      let ind_ty_app = mk_long_app (Const(indname)) params in
+      let ind_ty_app = mk_long_app (Const(indname)) tyargs in
       let aux_case = Lam(z, ind_ty_app, Case(indname, Var(z), return_type, params_num, branches)) in
       Hashing.find_or_insert coqterm_hash (List.rev vars) aux_case
         begin fun cctx ctm ->
