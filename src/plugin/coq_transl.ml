@@ -1228,7 +1228,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                                 matches on a proof emits the equation for the
                                 unique branch after proof erasure. *)
                              if name0 = "" then
-                               convert (List.rev (fvars @ lvars)) body2
+                               match premise with
+                               | Some _ -> return (generic_match ())
+                               | None -> convert (List.rev (fvars @ lvars)) body2
                              else
                                convert (List.rev fvars) (mk_long_app (Const(name0)) (mk_vars fvars))
                                >>= fun case_replacement ->
@@ -1382,7 +1384,7 @@ and convert ctx tm =
         in
         build args missing
       in
-      begin match erase_transport_head tm with
+      begin match if opt_erasure_guards then None else erase_transport_head tm with
       | Some tm2 -> convert ctx tm2
       | None ->
       begin match erase_false_rect_type_arg ctx tm with
