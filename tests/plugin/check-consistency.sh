@@ -28,9 +28,20 @@ else
   echo "SKIP: vampire not found; skipping Vampire consistency checks"
 fi
 if [ "$have_eprover" -eq 0 ] && [ "$have_vampire" -eq 0 ]; then
-  echo "SKIP: no E/Vampire binary found; dumped consistency canaries were not ATP-checked"
-  exit 0
+  fail "no E/Vampire binary found; dumped consistency canaries were not ATP-checked"
 fi
+
+check_unprovable_status() {
+  prover=$1
+  out=$2
+  label=$3
+
+  if grep -Eq 'SZS status (Theorem|Unsatisfiable|ContradictoryAxioms|Error|SyntaxError|TypeError)' "$out" ||
+     grep -Eiq '(syntax|parse)[[:space:]_-]*error' "$out"; then
+    cat "$out" >&2
+    fail "$prover reported a proving, inconsistency, or error status for $label"
+  fi
+}
 
 run_eprover() {
   problem=$1
@@ -45,10 +56,7 @@ run_eprover() {
     status=$?
     echo "NOTE: eprover exited with status $status on $label; checking SZS status anyway"
   fi
-  if grep -q 'SZS status Theorem' "$out"; then
-    cat "$out" >&2
-    fail "E reported SZS status Theorem for $label"
-  fi
+  check_unprovable_status "E" "$out" "$label"
 }
 
 run_vampire() {
@@ -64,10 +72,7 @@ run_vampire() {
     status=$?
     echo "NOTE: vampire exited with status $status on $label; checking SZS status anyway"
   fi
-  if grep -q 'SZS status Theorem' "$out"; then
-    cat "$out" >&2
-    fail "Vampire reported SZS status Theorem for $label"
-  fi
+  check_unprovable_status "Vampire" "$out" "$label"
 }
 
 try_eprover_theorem() {
