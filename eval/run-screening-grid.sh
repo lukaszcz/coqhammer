@@ -156,7 +156,18 @@ run_generation() {
       echo "Baseline ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
       exit 1
     fi
-    echo "generation_failed=1" > "$outdir/generation.status"
+    {
+      echo "generation_failed=1"
+      for premise in "${premises[@]}"; do
+        baseline_list="$results_root/baseline-merge-base/$corpus/generated-$premise.lst"
+        if [ -f "$baseline_list" ]; then
+          count=$(grep -cve '^[[:space:]]*$' "$baseline_list")
+        else
+          count=0
+        fi
+        echo "generated_count $premise $count"
+      done
+    } > "$outdir/generation.status"
     echo "ATP generation failed for $label/$corpus; recording as a screened regression" >&2
     rm -rf "$outdir/atp-problems"
     mkdir -p "$outdir/atp-problems"

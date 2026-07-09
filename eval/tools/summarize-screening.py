@@ -26,6 +26,29 @@ def read_list(path: Path) -> list[Path]:
     return [Path(line.strip()) for line in path.read_text().splitlines() if line.strip()]
 
 
+def generation_status(corpus_dir: Path) -> tuple[bool, dict[str, int]]:
+    path = corpus_dir / "generation.status"
+    if not path.exists():
+        return False, {}
+    failed = False
+    counts: dict[str, int] = {}
+    for line in path.read_text(errors="replace").splitlines():
+        if line == "generation_failed=1":
+            failed = True
+            continue
+        parts = line.split()
+        if len(parts) == 3 and parts[0] == "generated_count":
+            try:
+                counts[parts[1]] = int(parts[2])
+            except ValueError:
+                pass
+    return failed, counts
+
+
+def baseline_generated_count(root: Path, corpus: str, premise: str) -> int:
+    return len(read_list(root / BASELINE / corpus / f"generated-{premise}.lst"))
+
+
 def status_theorem_count(files: list[Path]) -> int:
     count = 0
     for path in files:
@@ -87,6 +110,7 @@ def load_rows(root: Path) -> list[dict[str, object]]:
             corpus_dir = label_dir / corpus
             if not corpus_dir.exists():
                 continue
+            generation_failed, generated_counts = generation_status(corpus_dir)
             for premise in PREMISES:
                 generated = read_list(corpus_dir / f"generated-{premise}.lst")
                 def_count, total_bytes, avg_bytes, max_bytes, avg_lines, max_lines = problem_metrics(generated)
@@ -96,6 +120,10 @@ def load_rows(root: Path) -> list[dict[str, object]]:
                     consistency_outputs = read_list(corpus_dir / f"consistency-outputs-{prover}-knn-64.lst")
                     consistency_hits = status_theorem_count(consistency_outputs)
                     generated_n = len(generated)
+                    if generation_failed and generated_n == 0:
+                        generated_n = generated_counts.get(
+                            premise, baseline_generated_count(root, corpus, premise)
+                        )
                     rows.append(
                         {
                             "label": label,
