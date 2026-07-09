@@ -15,6 +15,21 @@ fail() {
   exit 1
 }
 
+note_nonzero_exit() {
+  prover=$1
+  status=$2
+  out=$3
+  label=$4
+
+  if [ "$status" -gt 128 ] ||
+     grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction' "$out"; then
+    cat "$out" >&2
+    fail "$prover crashed while checking $label"
+  fi
+
+  echo "NOTE: $prover exited with status $status on $label; checking status anyway"
+}
+
 have_eprover=0
 have_vampire=0
 have_z3=0
@@ -91,7 +106,7 @@ run_eprover() {
     :
   else
     status=$?
-    echo "NOTE: eprover exited with status $status on $label; checking SZS status anyway"
+    note_nonzero_exit "E" "$status" "$out" "$label"
   fi
   check_unprovable_status "E" "$out" "$label"
 }
@@ -107,7 +122,7 @@ run_vampire() {
     :
   else
     status=$?
-    echo "NOTE: vampire exited with status $status on $label; checking SZS status anyway"
+    note_nonzero_exit "Vampire" "$status" "$out" "$label"
   fi
   check_unprovable_status "Vampire" "$out" "$label"
 }
@@ -124,14 +139,14 @@ run_z3() {
       :
     else
       status=$?
-      echo "NOTE: Z3 exited with status $status on $label; checking status anyway"
+      note_nonzero_exit "Z3" "$status" "$out" "$label"
     fi
   else
     if "$z3_bin" -tptp -t:$((timeout * 1000)) "$problem" >"$out" 2>&1; then
       :
     else
       status=$?
-      echo "NOTE: Z3 exited with status $status on $label; checking status anyway"
+      note_nonzero_exit "Z3" "$status" "$out" "$label"
     fi
   fi
   check_unprovable_status "Z3" "$out" "$label"
@@ -154,7 +169,7 @@ run_cvc4() {
     :
   else
     status=$?
-    echo "NOTE: cvc4 exited with status $status on $label; checking status anyway"
+    note_nonzero_exit "CVC4" "$status" "$out" "$label"
   fi
   check_unprovable_status "CVC4" "$out" "$label"
 }
@@ -170,7 +185,7 @@ try_eprover_theorem() {
     :
   else
     status=$?
-    echo "NOTE: eprover exited with status $status on $label; checking SZS status anyway"
+    note_nonzero_exit "E" "$status" "$out" "$label"
   fi
   grep -q 'SZS status Theorem' "$out"
 }
@@ -186,7 +201,7 @@ try_vampire_theorem() {
     :
   else
     status=$?
-    echo "NOTE: vampire exited with status $status on $label; checking SZS status anyway"
+    note_nonzero_exit "Vampire" "$status" "$out" "$label"
   fi
   grep -q 'SZS status Theorem' "$out"
 }
@@ -203,14 +218,14 @@ try_z3_theorem() {
       :
     else
       status=$?
-      echo "NOTE: Z3 exited with status $status on $label; checking status anyway"
+      note_nonzero_exit "Z3" "$status" "$out" "$label"
     fi
   else
     if "$z3_bin" -tptp -t:$((timeout * 1000)) "$problem" >"$out" 2>&1; then
       :
     else
       status=$?
-      echo "NOTE: Z3 exited with status $status on $label; checking status anyway"
+      note_nonzero_exit "Z3" "$status" "$out" "$label"
     fi
   fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
@@ -233,7 +248,7 @@ try_cvc4_theorem() {
     :
   else
     status=$?
-    echo "NOTE: cvc4 exited with status $status on $label; checking status anyway"
+    note_nonzero_exit "CVC4" "$status" "$out" "$label"
   fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
 }
