@@ -60,7 +60,7 @@ Lemma no_junk : 2 + 2 = 4.
 Proof. hammer. Qed.
 
 Lemma idiv2_decr : forall b a : nat, b <> 0 -> b <= a -> a - b < a.
-Proof. lia. Qed.
+Proof. hammer. Qed.
 
 Definition idiv2 (b : nat) (Hb : b <> 0) : nat -> nat :=
   Fix lt_wf (fun _ => nat)
@@ -125,12 +125,14 @@ Proof. hammer [beq_true_eq beq_eq_true]. Qed.
 Lemma extraction_between_low : forall n, n <= proj1_sig (sig_of_sig2 (between n)).
 Proof. hammer. Qed.
 
+(* The prod-with-Prop translation shape is pinned at the ATP level in
+   extraction_transl.v.  This goal is still proved through the hammer entry
+   point; allow hammer's initial reconstruction pass for this tiny projection
+   lemma rather than using a direct Coq proof. *)
+Set Hammer SAutoLimit 1.
 Lemma extraction_tag_fst : forall n, fst (tag n) = n.
-Proof.
-  (* The prod-with-Prop translation shape is pinned in extraction_transl.v; keep
-     this corpus lemma stable even when the ATP premise-selection noise changes. *)
-  reflexivity.
-Qed.
+Proof. hammer. Qed.
+Set Hammer SAutoLimit 0.
 
 Lemma extraction_vhead_cons : forall A n (x : A) (v : Vector.t A n), vhead (Vector.cons A x n v) = x.
 Proof. hammer. Qed.

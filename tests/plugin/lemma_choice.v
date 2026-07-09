@@ -56,7 +56,7 @@ Qed.
 Lemma lem_not_global : 1 + 1 = 2.
 Proof.
   Fail hammer [(1 + 1)].
-  reflexivity.
+  hammer.
 Qed.
 
 (* The lemma choice also works with GSMode 0. *)
