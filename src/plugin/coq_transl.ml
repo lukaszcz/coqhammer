@@ -160,12 +160,6 @@ let coq_axioms = [
 
 let coqterm_hash = Hashing.create lift
 
-let short_name name =
-  try
-    let i = String.rindex name '.' in
-    String.sub name (i + 1) (String.length name - i - 1)
-  with Not_found -> name
-
 let is_transport_constant name =
   match short_name name with
   | "eq_rect" | "eq_rec" | "eq_ind" | "eq_rect_r" | "eq_rec_r" | "eq_ind_r" -> true
@@ -387,6 +381,13 @@ let rec mk_guards ctx vars tm =
 
 let program_wf_simpl tm =
   let is_name basename name = short_name name = basename in
+  (* projector, packing constructor, index of the packed field it selects *)
+  let proj_table =
+    [ "projT1", "existT", 2;
+      "projT2", "existT", 3;
+      "proj1_sig", "exist", 2;
+      "proj2_sig", "exist", 3 ]
+  in
   let rebuild_app head args =
     match args with
     | [] -> head
@@ -413,24 +414,12 @@ let program_wf_simpl tm =
     | _ ->
        begin
          match flatten_app tm with
-         | Const pname, [_; _; packed] when is_name "projT1" pname ->
+         | Const pname, [_; _; packed]
+           when List.exists (fun (p, _, _) -> is_name p pname) proj_table ->
+            let (_, ctor, idx) = List.find (fun (p, _, _) -> is_name p pname) proj_table in
             begin match flatten_app packed with
-            | Const cname, [_; _; x; _] when is_name "existT" cname -> simpl_rec x
-            | _ -> tm
-            end
-         | Const pname, [_; _; packed] when is_name "projT2" pname ->
-            begin match flatten_app packed with
-            | Const cname, [_; _; _; y] when is_name "existT" cname -> simpl_rec y
-            | _ -> tm
-            end
-         | Const pname, [_; _; packed] when is_name "proj1_sig" pname ->
-            begin match flatten_app packed with
-            | Const cname, [_; _; x; _] when is_name "exist" cname -> simpl_rec x
-            | _ -> tm
-            end
-         | Const pname, [_; _; packed] when is_name "proj2_sig" pname ->
-            begin match flatten_app packed with
-            | Const cname, [_; _; _; proof] when is_name "exist" cname -> simpl_rec proof
+            | Const cname, cargs when is_name ctor cname && List.length cargs = 4 ->
+               simpl_rec (List.nth cargs idx)
             | _ -> tm
             end
          | head, args -> rebuild_app head args
@@ -845,12 +834,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
   if not opt_split_case_axioms then
     legacy_case_lifting ()
   else
-    let short_constructor_name name =
-      try
-        let i = String.rindex name '.' in
-        String.sub name (i + 1) (String.length name - i - 1)
-      with Not_found -> name
-    in
     let rec get_branch cname cstrs brs =
       match cstrs, brs with
       | c :: cstrs2, b :: brs2 ->
@@ -889,14 +872,35 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       in
       hlp base_ctx args body
     in
-    let name_base name =
-      try
-        let i = String.rindex name '.' in
-        String.sub name (i + 1) (String.length name - i - 1)
-      with Not_found -> name
+    (* E3 refinement occurrence collapse: by the Coincidence lemma, matching a
+       subset value exposes the erased carrier itself, and the remaining proof
+       payload binders are erased. *)
+    let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
+      match constrs, branches with
+      | [cname], [(n, branch)] ->
+         let (_, args) = constructor_args params params_num cname in
+         if List.length args <> n then
+           raise Not_found
+         else
+           let body = simpl (mk_long_app branch (mk_vars args)) in
+           let rec subst_args ctx idx body = function
+             | [] -> body
+             | (arg_name, arg_ty) :: args2 ->
+                let body2 =
+                  if idx = carrier_idx then
+                    substvar arg_name matched_term body
+                  else if Coq_typing.check_prop ctx arg_ty then
+                    subst_proof arg_name arg_ty body
+                  else
+                    raise Not_found
+                in
+                subst_args ((arg_name, arg_ty) :: ctx) (idx + 1) body2 args2
+           in
+           subst_args (List.rev vars) 0 body args
+      | _ -> raise Not_found
     in
-    let is_eq_ind indname = name_base indname = "eq" in
-    let is_acc_ind indname = name_base indname = "Acc" in
+    let is_eq_ind indname = short_name indname = "eq" in
+    let is_acc_ind indname = short_name indname = "Acc" in
     let term_mentions_const names tm =
       fold_coqterm
         (fun _ acc tm ->
@@ -1028,31 +1032,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
               else
                 let params = get_params indty return_type params_num in
                 let collapse_subset_case carrier_idx =
-                  match constrs, branches with
-                  | [cname], [(n, branch)] ->
-                     let (_, args) = constructor_args params params_num cname in
-                     if List.length args <> n then
-                       raise Not_found
-                     else
-                       let body = simpl (mk_long_app branch (mk_vars args)) in
-                       let rec subst_args ctx idx body = function
-                         | [] -> body
-                         | (arg_name, arg_ty) :: args2 ->
-                            let body2 =
-                              if idx = carrier_idx then
-                                substvar arg_name matched_term body
-                              else if Coq_typing.check_prop ctx arg_ty then
-                                subst_proof arg_name arg_ty body
-                              else
-                                raise Not_found
-                            in
-                            subst_args ((arg_name, arg_ty) :: ctx) (idx + 1) body2 args2
-                       in
-                       (* E3 refinement occurrence collapse: by the Coincidence
-                          lemma, matching a subset value exposes the erased
-                          carrier itself; proof payload binders are erased. *)
-                       subst_args (List.rev vars) 0 body args
-                  | _ -> raise Not_found
+                  collapse_subset_case ~matched_term ~vars ~constrs ~branches
+                    ~params ~params_num carrier_idx
                 in
                 let regular_case () =
                   match matched_term with
@@ -1083,7 +1064,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          in
                          let lhs2 = substvar scrutinee pattern lhs
                          and body2 = substvar scrutinee pattern branch_body
-                         and axname2 = axname ^ "$" ^ short_constructor_name cname
+                         and axname2 = axname ^ "$" ^ short_name cname
                          and vars2 = List.filter (fun (name, _) -> name <> scrutinee) vars @ args
                          in
                          compile_case ?premise lhs2 vars2 axname2 body2
@@ -1171,32 +1152,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                  let vars = fvars @ lvars in
                  let params = get_params indty return_type params_num in
                  let collapse_subset_case carrier_idx =
-                   match constrs, branches with
-                   | [cname], [(n, branch)] ->
-                      let (_, args) = constructor_args params params_num cname in
-                      if List.length args <> n then
-                        raise Not_found
-                      else
-                        let body = simpl (mk_long_app branch (mk_vars args)) in
-                        let rec subst_args ctx idx body = function
-                          | [] -> body
-                          | (arg_name, arg_ty) :: args2 ->
-                             let body2 =
-                               if idx = carrier_idx then
-                                 substvar arg_name matched_term body
-                               else if Coq_typing.check_prop ctx arg_ty then
-                                 subst_proof arg_name arg_ty body
-                               else
-                                 raise Not_found
-                             in
-                             subst_args ((arg_name, arg_ty) :: ctx) (idx + 1) body2 args2
-                        in
-                        (* E3 refinement occurrence collapse: by the Coincidence
-                           lemma, a whole match on a subset scrutinee continues
-                           with the scrutinee as the carrier value and erases the
-                           remaining proof payload binders. *)
-                        subst_args (List.rev vars) 0 body args
-                   | _ -> raise Not_found
+                   collapse_subset_case ~matched_term ~vars ~constrs ~branches
+                     ~params ~params_num carrier_idx
                  in
                  let lifted_case () =
                    let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
@@ -1813,21 +1770,18 @@ and add_def_eq_axiom (name, value, ty, srt) =
   let axname = "$_def_" ^ name
   in
   let emit_transport_definition () =
-    if is_transport_constant name then
-      try
-        let vars = Coq_typing.get_type_args ty in
-        match Hhlib.drop 3 vars with
-        | (proof_name, _) :: _ ->
-           (* E1 transport erasure for the standard transport family itself:
-              the erasure clause maps the transport to its carried proof/value;
-              by the transport/UIP limitation this remains the same debt as user
-              constants whose bodies are eq_rect/eq_rec/eq_ind wrappers. *)
-           emit_definition_equation axname name [] vars (Var(proof_name)) >>
-           return ()
-        | [] -> return ()
-      with _ ->
-        return ()
-    else
+    try
+      let vars = Coq_typing.get_type_args ty in
+      match Hhlib.drop 3 vars with
+      | (proof_name, _) :: _ ->
+         (* E1 transport erasure for the standard transport family itself:
+            the erasure clause maps the transport to its carried proof/value;
+            by the transport/UIP limitation this remains the same debt as user
+            constants whose bodies are eq_rect/eq_rec/eq_ind wrappers. *)
+         emit_definition_equation axname name [] vars (Var(proof_name)) >>
+         return ()
+      | [] -> return ()
+    with _ ->
       return ()
   in
   if is_transport_constant name then

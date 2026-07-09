@@ -123,6 +123,13 @@ let is_logop c = is_bin_logop c || c = "~" || c = "?" || c = "!" || c = "="
 
 let strip_suffix name = try String.sub name 0 (String.rindex name '$') with Not_found -> name
 
+(* the last dot-separated segment of a (possibly qualified) name *)
+let short_name name =
+  try
+    let i = String.rindex name '.' in
+    String.sub name (i + 1) (String.length name - i - 1)
+  with Not_found -> name
+
 let rec mk_long f varlst body =
   match varlst with
   | (var, varty) :: t ->

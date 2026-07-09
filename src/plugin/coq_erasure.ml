@@ -47,20 +47,10 @@ let rec subst_params formals params tm =
 let safe_check_prop ctx tm =
   try Coq_typing.check_prop ctx tm with _ -> false
 
-let is_prop_sort = function
-  | SortProp -> true
-  | _ -> false
-
-let base_name name =
-  try
-    let i = String.rindex name '.' in
-    String.sub name (i + 1) (String.length name - i - 1)
-  with Not_found -> name
-
-let is_ex_ind name = base_name name = "ex"
+let is_ex_ind name = short_name name = "ex"
 
 let is_instance_dependent_decl name =
-  match base_name name with
+  match short_name name with
   | "prod" | "sum" | "sigT" -> true
   | _ -> false
 
@@ -215,7 +205,7 @@ let classify ctx indname params =
         let shape =
           try Hashtbl.find memo (indname, mask) with Not_found ->
             let is_prop_ind =
-              is_prop_sort ind_sort || safe_check_prop ctx (mk_long_app (Const indname) params)
+              ind_sort = SortProp || safe_check_prop ctx (mk_long_app (Const indname) params)
             in
             let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
             Hashtbl.add memo (indname, mask) shape;
