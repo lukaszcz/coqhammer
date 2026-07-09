@@ -114,7 +114,7 @@ Lemma extraction_safe_pred_proof_irrel :
 Proof. hammer. Qed.
 
 Lemma extraction_tr_refl : forall (P : nat -> Set) a (e : a = a) x, tr P a a e x = x.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_posnat_payload : forall p : posnat, 0 < pval p.
 Proof. hammer. Qed.

@@ -529,6 +529,26 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
                         (set_eager_opts false
                            (set_brefl_opts true (hauto_s_opts ())))) with
                      s_directed_rewriting = false }))
+  and rhdauto_lq_dep =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_dep_opts true
+                      (set_quick_opts true
+                         (set_eager_opts false (hauto_s_opts ()))))))
+  and rhauto_dep =
+    usolve (use_deps <*>
+              sauto (mkopts (set_dep_opts true (hauto_s_opts ()))))
+  and rsdauto_lq_dep =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_dep_opts true
+                      (set_quick_opts true
+                         (set_eager_opts false (default_s_opts ()))))))
+  and rsauto_dep =
+    usolve (use_deps <*>
+              sauto (mkopts (set_dep_opts true (default_s_opts ()))))
   and rhbfcrush =
     usolve (use_deps <*> fcrush (mkopts (set_brefl_opts true (hauto_s_opts ()))))
   and rhbfcrush_nodrew =
@@ -646,6 +666,11 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
         (rhbfcrush_nodrew, "hfcrush brefl: on drew: off");
         (rhbauto_nodrew, "hauto brefl: on drew: off");
         (rhbauto_norew, "hauto brefl: on drew: off")
+      ];
+      [ (rhdauto_lq_dep, "hauto lq: on dep: on");
+        (rhauto_dep, "hauto dep: on");
+        (rsdauto_lq_dep, "sauto lq: on dep: on");
+        (rsauto_dep, "sauto dep: on")
       ];
   ]
   in

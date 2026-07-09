@@ -53,10 +53,9 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `extraction_vhead_cons`: vector-head equation on `Vector.cons`
 - `extraction_beq_correct`: `forall n m, beq n m = true <-> n = m` using the
   `Nat.eq_dec`/`sumbool`-driven definition and helper lemmas for reconstruction
-- `extraction_tr_refl`: transport reflexivity is ATP-provable from the
-  `Hammer_dump` problem `transport-tr-refl.p` and enforced by
-  `check-consistency.sh`; the lemma remains wrapped end-to-end until the Phase 5
-  reconstruction variants graduate the UIP/transport case
+- `extraction_tr_refl`: transport reflexivity passes end-to-end with `hammer`,
+  with the `Hammer_dump` problem `transport-tr-refl.p` still enforced by
+  `check-consistency.sh` to pin the ATP-level translation quality independently
 - `extraction_idiv_small`: Program `Fix_sub` division small-argument equation,
   using the proved `idiv_small_unfold` reconstruction helper while the
   translation-shape gates enforce the premised unfolding axiom
@@ -69,16 +68,13 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
 
-Phase 4 / TASK_16+TASK_17 landed: the bare `Fix`/`Fix_F` and Program
-`Fix_sub` WF-recursion fixtures are unwrapped and enforced.  Transport remains
-ATP-level until the Phase 5 reconstruction variants.
+Phase 5 / TASK_19 landed: the bare `Fix`/`Fix_F`, Program `Fix_sub`, and
+transport/UIP fixtures are unwrapped and enforced.  The transport ATP dump
+assertion remains as an independent translation-quality gate.
 
 ### Staged per phase
 
-Expected failures now, wrapped with `Fail hammer.` / `Abort.`:
-
-- Phase 5 / TASK_19: `extraction_tr_refl` remains ATP-level only until the
-  reconstruction variants graduate the UIP/transport case
+No dependent-types extraction goals remain wrapped before Phase 6.
 
 ## transl
 
@@ -113,5 +109,5 @@ structural assertions that hold with the current translator:
 
 ### Staged per phase
 
-No disabled translation assertion blocks remain before Phase 5; the remaining
-wrapped transport goal is enforced at the ATP-dump layer.
+No disabled translation assertion blocks remain before Phase 5; the transport
+ATP-dump layer remains as an independent translation-quality gate.

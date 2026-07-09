@@ -5,7 +5,7 @@
 
 Declare ML Module "coq-hammer-tactics.lib".
 
-From Stdlib Require Import Lia.
+From Stdlib Require Import Eqdep_dec Lia.
 From Stdlib.Program Require Import Equality.
 From Hammer Require Import Tactics.Reflect.
 
@@ -137,6 +137,20 @@ Ltac dep_destruct t :=
 Ltac sdepdestruct t := sdestruct t || dep_destruct t.
 
 Ltac ssubst := try subst.
+
+(* At decidable-equality types, [UIP_dec dec p eq_refl] gives the
+   UIP_refl-style fact needed to simplify transports exposed by dep search. *)
+Ltac uip_dec_rewrite_once :=
+  match goal with
+  | [ p : ?x = ?x |- _ ] =>
+      let A := type of x in
+      let dec := fresh "uip_eq_dec" in
+      assert (dec : forall x y : A, {x = y} + {x <> y}) by decide equality;
+      progress rewrite (UIP_dec dec p eq_refl) in *;
+      clear dec
+  end.
+
+Ltac uip_rewrite := repeat uip_dec_rewrite_once; simpl in *.
 
 Ltac subst_simpl := ssubst; simpl in *.
 
