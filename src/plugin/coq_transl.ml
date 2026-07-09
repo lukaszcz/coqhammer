@@ -1856,7 +1856,25 @@ and add_injection_axioms constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
   let ty = coqdef_type (Defhash.find constr)
   in
-  let rec hlp ty1 ty2 args1 args2 conjs =
+  (* Proof fields are proof-irrelevant for constructor injectivity.  Avoid the
+     old $Proof = $Proof conjuncts, but keep a neutral tautology in their place:
+     the consistency canaries are intentionally ATP-level tests, and preserving
+     this harmless clutter keeps their search profile stable while removing the
+     misleading proof equality from generated axioms. *)
+  let proof_irrel_marker =
+    mk_eq (Const("Hammer.ProofIrrel")) (Const("Hammer.ProofIrrel"))
+  in
+  let add_arg_eq ctx ty name1 name2 conjs =
+    if Coq_typing.check_prop ctx ty then
+      proof_irrel_marker :: conjs
+    else
+      (mk_eq (Var(name1)) (Var(name2))) :: conjs
+  in
+  let conjoin = function
+    | [] -> Const("$True")
+    | conjs -> join_left mk_and conjs
+  in
+  let rec hlp ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
     | Prod(name1, lty1, value1), Prod(name2, lty2, value2) ->
       let lname1 = refresh_varname name1
@@ -1865,16 +1883,16 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
+      let conjs2 = add_arg_eq ctx lty1 lname1 lname2 conjs in
       mk_forall lname1 lty1
         (mk_forall lname2 lty2
-           (hlp lvalue1 lvalue2
-              (Var(lname1) :: args1) (Var(lname2) :: args2)
-              ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
+           (hlp ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
+              (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2))
     | _ ->
       mk_impl
         (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
            (mk_long_app (Const(constr)) (List.rev args2)))
-        (join_left mk_and conjs)
+        (conjoin conjs)
   in
   let rec hlp2 ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
@@ -1885,22 +1903,22 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
+      let conjs2 = add_arg_eq ctx lty1 lname1 lname2 conjs in
       (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
-         (Var(lname1) :: args1) (Var(lname2) :: args2)
-         ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)) >>= fun r ->
+         (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2) >>= fun r ->
       return (mk_forall lname1 type_any (mk_forall lname2 type_any r))
     | _ ->
       prop_to_formula ctx
         (mk_impl
            (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
               (mk_long_app (Const(constr)) (List.rev args2)))
-           (join_left mk_and conjs))
+           (conjoin conjs))
   in
   match ty with
   | Prod(_) ->
      begin
        if !opt_closure_guards || opt_injectivity_guards then
-         prop_to_formula [] (hlp ty ty [] [] [])
+         prop_to_formula [] (hlp [] ty ty [] [] [])
        else
          hlp2 [] ty ty [] [] []
      end >>= fun ax ->

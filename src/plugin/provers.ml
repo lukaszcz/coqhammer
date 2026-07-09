@@ -47,9 +47,10 @@ let () =
     failwith "Provers.get_defs: lifted split-axiom suffix parsing regression"
 
 let get_typings lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 9 (String.length s - 9))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_typeof_") lst))
+  remove_duplicates
+    (List.filter is_good_dep
+       (List.map (fun s -> strip_dollar_suffix (String.sub s 9 (String.length s - 9)))
+          (List.filter (fun s -> Hhlib.string_begins_with s "$_typeof_") lst)))
 
 let get_cases lst =
   remove_duplicates
@@ -69,9 +70,13 @@ let () =
   let cases = get_cases ["$_case_Corelib.Init.Datatypes.nat$2$O";
                          "$_case_Corelib.Init.Datatypes.nat$2$link";
                          "$_case_$_case_Corelib.Init.Datatypes.nat$3$O"]
+  and typings = get_typings ["$_typeof_extraction_deptypes.h$conj";
+                             "$_typeof_extraction_deptypes.h"]
   in
   if cases <> ["Corelib.Init.Datatypes.nat"] then
-    failwith "Provers.get_cases: split case suffix parsing regression"
+    failwith "Provers.get_cases: split case suffix parsing regression";
+  if typings <> ["extraction_deptypes.h"] then
+    failwith "Provers.get_typings: split suffix parsing regression"
 
 let get_inversions lst =
   List.filter is_good_dep
@@ -134,6 +139,11 @@ let get_atp_info names =
     cases = get_cases names; inversions = get_inversions names;
     injections = get_injections names; discrims = get_discrims names;
     types = get_types names }
+
+let () =
+  let info = get_atp_info ["$_def_extraction_deptypes.h$conj"] in
+  if info.deps <> [] || info.defs <> ["extraction_deptypes.h"] then
+    failwith "Provers.get_atp_info: split definition attribution regression"
 
 let prn_atp_info info =
   let drop_prefixes x =

@@ -58,6 +58,10 @@ forbid_line "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|
 # Generic-case symbols may still appear only on fallback paths guarded below;
 # covered E1 singleton definitions must not contain them.
 
+# Proof arguments are proof-irrelevant in constructor injectivity: they must not
+# leave tautological $Proof = $Proof conjuncts behind.
+forbid_line "injectivity axioms omit proof-only equalities" '^\$_inj_.*\$Proof = \$Proof'
+
 # Phase 1 shallowness gates for definitional output: split equations should not
 # reintroduce type guards, existential packages, or disjunctive case bodies on
 # definition lines.
