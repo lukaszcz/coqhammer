@@ -297,7 +297,7 @@ PY
         | grep "file[(]'\|% SZS\|SZS status" > "$work/outputs/$name" || true
     fi
   done
-  if grep -R "SZS status Theorem" "$work/outputs" >/dev/null 2>&1; then
+  if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
     echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
     exit 1
   fi
