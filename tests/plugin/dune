@@ -2,9 +2,14 @@
  (alias runtest)
  (deps
   (sandbox always)
-  (source_tree .))
+  (source_tree .)
+  ../../coq-hammer.install
+  ../../coq-hammer-tactics.install)
  (action
   (bash "set -euo pipefail
+root=%{workspace_root}
+export COQPATH=\"$root/_build/install/default/lib/coq/user-contrib${COQPATH:+:$COQPATH}\"
+export OCAMLPATH=\"$root/_build/install/default/lib${OCAMLPATH:+:$OCAMLPATH}\"
 work=$(mktemp -d)
 trap 'rm -rf \"$work\"' EXIT
 cp -LR . \"$work/tests\"
