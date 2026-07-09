@@ -1,6 +1,8 @@
 COQC ?= rocq c
 
-all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo
+all: transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo extraction_transl.vo consistency-canary-dumps
+	./check-consistency.sh
+	@rm -f consistency-idiv.p consistency-h.p consistency-eq-rect.p consistency-nat-add.p
 
 test-extraction: extraction_matches.vo extraction_deptypes.vo extraction_transl.vo consistency-canary-dumps
 	./check-consistency.sh

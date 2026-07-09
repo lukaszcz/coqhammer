@@ -160,6 +160,61 @@ let coq_axioms = [
 
 let coqterm_hash = Hashing.create lift
 
+let short_name name =
+  try
+    let i = String.rindex name '.' in
+    String.sub name (i + 1) (String.length name - i - 1)
+  with Not_found -> name
+
+let is_transport_constant name =
+  match short_name name with
+  | "eq_rect" | "eq_rec" | "eq_ind" | "eq_rect_r" | "eq_rec_r" | "eq_ind_r" -> true
+  | _ -> false
+
+let erase_transport_head tm =
+  if opt_prop_case_erasure then
+    match flatten_app tm with
+    | Const name, args when is_transport_constant name && List.length args >= 4 ->
+       (* E1 transport erasure: the paper's Erasure clause maps casts to the
+          transported value; the Fundamental lemma validates the resulting
+          identity in the proof-irrelevant model. *)
+       Some (List.nth args 3)
+    | _ -> None
+  else
+    None
+
+let transport_erasure_premise tm =
+  if opt_erasure_guards then
+    match flatten_app tm with
+    | Const name, args when is_transport_constant name && List.length args >= 5 ->
+       let ty = List.nth args 0
+       and a = List.nth args 1
+       and b = List.nth args 4
+       in
+       (* Transport-debt note: transport erasure is not generally replayable as
+          a CIC source theorem (UIP), so the guarded option emits the converted
+          source equality as a premise. *)
+       Some (mk_long_app (Const "=") [ty; a; b])
+    | _ -> None
+  else
+    None
+
+let proof_like_after_erasure ctx tm =
+  match tm with
+  | Var name ->
+     (try Coq_typing.check_proof_var ctx name with _ -> false)
+  | _ ->
+     match flatten_app tm with
+     | Const name, args ->
+        begin match short_name name with
+        | "eq_refl" -> List.length args >= 2
+        | "eq_trans" -> List.length args >= 4
+        | "eq_sym" -> List.length args >= 3
+        | "JMeq_refl" -> List.length args >= 2
+        | _ -> false
+        end
+     | _ -> false
+
 (***************************************************************************************)
 (* Inversion axioms for inductive types *)
 
@@ -289,6 +344,11 @@ let rec mk_guards ctx vars tm =
 (* The following mutually recursively defined functions return
    (coqterm axioms_monad) or (unit axioms_monad). *)
 
+(* Per-translate WF-recursion marker introduced by the Phase-0 plumbing.  E1
+   singleton erasure sets it before falling back whenever an Acc/proof-recursive
+   path would otherwise emit an unsafe unconditional equation. *)
+let wf_mark = ref false
+
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
   (* Note: the correctness of calling `prop_to_formula' below
      depends on the implementation of `convert_term' (that it
@@ -330,7 +390,33 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
 (***************************************************************************************)
 (* Lambda-lifting, fix-lifting and case-lifting *)
 
-and lambda_lifting axname name fvars lvars1 tm =
+and emit_definition_equation ?premise axname name fvars lvars body =
+  close fvars
+    begin fun ctx ->
+      let mk_eqv =
+        if Coq_typing.check_prop (List.rev_append lvars ctx) body then
+          mk_equiv
+        else
+          mk_eq
+      in
+      let lhs = mk_long_app (Const(name)) (mk_vars (fvars @ lvars)) in
+      let eqv = mk_eqv lhs body in
+      let eqv =
+        match premise with
+        | Some prem -> mk_impl prem eqv
+        | None -> eqv
+      in
+      if !opt_closure_guards || opt_lambda_guards then
+        prop_to_formula ctx (mk_long_forall lvars eqv)
+      else
+        make_fol_forall ctx lvars eqv
+    end
+  >>=
+  (fun tm -> add_axiom (mk_axiom axname tm))
+  >>
+  convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
+
+and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
   debug 3 (fun () -> print_header "lambda_lifting" tm (fvars @ lvars1));
   let rec extract_lambdas tm acc =
     match tm with
@@ -341,36 +427,23 @@ and lambda_lifting axname name fvars lvars1 tm =
   in
   let lvars = lvars1 @ lvars2
   in
+  match erase_transport_head body2 with
+  | Some body3 ->
+     let premise = transport_erasure_premise body2 in
+     emit_definition_equation ?premise axname name fvars lvars body3
+  | None ->
   match body2 with
   | Fix(_) ->
-     fix_lifting axname name fvars lvars body2
+     fix_lifting wf_fix_names axname name fvars lvars body2
   | Case(_) ->
-     case_lifting axname name fvars lvars body2
+     case_lifting wf_fix_names axname name fvars lvars body2
   | _ ->
-     close fvars
-       begin fun ctx ->
-         let mk_eqv =
-           if Coq_typing.check_prop (List.rev_append lvars ctx) body2 then
-             mk_equiv
-           else
-             mk_eq
-         in
-         let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
-         in
-         if !opt_closure_guards || opt_lambda_guards then
-           prop_to_formula ctx (mk_long_forall lvars eqv)
-         else
-           make_fol_forall ctx lvars eqv
-       end
-     >>=
-     (fun tm -> add_axiom (mk_axiom axname tm))
-     >>
-     convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
+     emit_definition_equation axname name fvars lvars body2
 
-and fix_lifting axname dname fvars lvars tm =
+and fix_lifting wf_fix_names axname dname fvars lvars tm =
   debug 3 (fun () -> print_header "fix_lifting" tm (fvars @ lvars));
   match tm with
-  | Fix(cft, k, _recargs, names, types, bodies) ->
+  | Fix(cft, k, recargs, names, types, bodies) ->
       let fix_pref = "$_fix_" ^ unique_id () ^ "_"
       in
       let names1 = List.map ((^) fix_pref) names
@@ -396,17 +469,38 @@ and fix_lifting axname dname fvars lvars tm =
                            (if Coq_typing.check_prop [] ty2 then SortProp else SortType))
           with _ -> ())
         names2 types;
+      let recarg_is_prop recarg ty =
+        try
+          let args = Coq_typing.get_type_args ty in
+          let (_, recarg_ty) = List.nth args recarg in
+          Coq_typing.check_prop (List.rev (fvars @ lvars @ Hhlib.take recarg args)) recarg_ty
+        with _ ->
+          false
+      in
+      let recargs_available = List.length recargs = List.length names2 in
+      let wf_fix_names2 =
+        if cft <> CoqFix then
+          []
+        else if not recargs_available then
+          names2
+        else
+          List.fold_right
+            (fun (name2, (ty, recarg)) acc ->
+               if recarg_is_prop recarg ty then name2 :: acc else acc)
+            (List.combine names2 (List.combine types recargs)) []
+      in
+      let wf_fix_names = wf_fix_names2 @ wf_fix_names in
       listM_nth
         (List.map2
            (fun (axname2, name2) body ->
-             lambda_lifting axname2 name2 fvars lvars (prep body))
+             lambda_lifting wf_fix_names axname2 name2 fvars lvars (prep body))
            (List.combine axnames names2)
            bodies)
         k
   | _ ->
       failwith "fix_lifting"
 
-and case_lifting axname0 name0 fvars lvars tm =
+and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
   debug 3 (fun () -> print_header "case_lifting" tm (fvars @ lvars));
   let get_params indty rt params_num =
     let args = Coq_typing.get_type_args indty
@@ -417,16 +511,20 @@ and case_lifting axname0 name0 fvars lvars tm =
         if n = 0 then
           let (_, tyargs) = flatten_app ty
           in
-          assert (List.length tyargs >= params_num);
-          Hhlib.take params_num tyargs
+          if List.length tyargs < params_num then
+            raise Not_found
+          else
+            Hhlib.take params_num tyargs
         else
           pom (n - 1) body
-      | _ -> failwith "get_params"
+      | _ -> raise Not_found
     in
     let n = List.length args
     in
-    assert (n >= params_num);
-    pom (n - params_num) rt
+    if n < params_num then
+      raise Not_found
+    else
+      pom (n - params_num) rt
   in
   let generic_match () =
     let name = "$_generic_case_" ^ unique_id ()
@@ -580,8 +678,61 @@ and case_lifting axname0 name0 fvars lvars tm =
       in
       hlp base_ctx args body
     in
-    let emit_equation axname vars lhs rhs is_prop =
+    let name_base name =
+      try
+        let i = String.rindex name '.' in
+        String.sub name (i + 1) (String.length name - i - 1)
+      with Not_found -> name
+    in
+    let is_eq_ind indname = name_base indname = "eq" in
+    let is_acc_ind indname = name_base indname = "Acc" in
+    let term_mentions_const names tm =
+      fold_coqterm
+        (fun _ acc tm ->
+           acc ||
+           match tm with
+           | Const name -> List.mem name names
+           | _ -> false)
+        false tm
+    in
+    let collapse_prop_singleton vars indname constrs params params_num branches =
+      match constrs, branches with
+      | [cname], [(n, branch)] ->
+         let (_, args) = constructor_args params params_num cname in
+         if List.length args <> n then
+           raise Not_found
+         else
+           let body = simpl (mk_long_app branch (mk_vars args)) in
+           let body = subst_proof_args (List.rev vars) args body in
+           if wf_fix_names <> [] && is_acc_ind indname && term_mentions_const wf_fix_names body then
+             begin
+               (* WF guardrail: erasing an Acc proof on a recursive path would
+                  produce the forbidden unconditional WF-unfolding equation.
+                  Phase 4 reads this per-translate mark and emits premised
+                  equations; until then we keep the status-quo generic case. *)
+               wf_mark := true;
+               None
+             end
+           else
+             Some body
+      | _ -> raise Not_found
+    in
+    let erased_case_premise vars indname params =
+      if opt_erasure_guards && is_eq_ind indname then
+        (* Transport-debt note: transport erasure is validated semantically by
+           proof irrelevance, but is not generally a CIC source theorem (UIP);
+           the guarded variant keeps the converted source equality as premise. *)
+        Some (mk_long_app (Const indname) params)
+      else
+        None
+    in
+    let emit_equation ?premise axname vars lhs rhs is_prop =
       let mk_eqv = if is_prop then mk_equiv lhs rhs else mk_eq lhs rhs in
+      let mk_eqv =
+        match premise with
+        | Some prem -> mk_impl prem mk_eqv
+        | None -> mk_eqv
+      in
       (* Rule 5 and the rule-3/rule-4 linking equations (paper Body
          compilation, Soundness of compilation): split equations carry only
          computation.  With the default guard policy they are unguarded even for
@@ -596,9 +747,9 @@ and case_lifting axname0 name0 fvars lvars tm =
       end >>= fun r ->
       add_axiom (mk_axiom axname r)
     in
-    let emit_leaf axname vars lhs body =
+    let emit_leaf ?premise axname vars lhs body =
       let ctx = List.rev vars in
-      emit_equation axname vars lhs body (Coq_typing.check_prop ctx body)
+      emit_equation ?premise axname vars lhs body (Coq_typing.check_prop ctx body)
     in
     let case_aux_value vars indname matched_term return_type params_num branches indty =
       let params = get_params indty return_type params_num in
@@ -610,7 +761,7 @@ and case_lifting axname0 name0 fvars lvars tm =
           match ctm with
           | Lam(_, _, Case(indname2, _, _, _, _)) ->
              let name = "$_case_" ^ indname2 ^ "$" ^ unique_id () in
-             lambda_lifting name name (ctx_to_vars cctx) [] ctm
+             lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
           | _ -> failwith "case_lifting: case_aux_value"
         end >>= fun aux ->
       convert (List.rev vars) matched_term >>= fun mt ->
@@ -621,7 +772,7 @@ and case_lifting axname0 name0 fvars lvars tm =
        count.  Rule 3 strictly decreases because it replaces a non-variable
        scrutinee by a fresh variable in the hash-consed auxiliary case; rules 1,
        2, 4 and 5 recurse into proper bodies or delegate to value translation. *)
-    let rec compile_case lhs vars axname body =
+    let rec compile_case ?premise lhs vars axname body =
       match simpl body with
       | Case(indname, matched_term, return_type, params_num, branches) as case_body ->
          let df = try Defhash.find indname with _ -> raise Not_found
@@ -631,9 +782,29 @@ and case_lifting axname0 name0 fvars lvars tm =
            | (_, IndType(_, constrs, pnum), indty, _) ->
               assert (pnum = params_num);
               if Coq_typing.check_type_target_is_prop indty then
-                (* Phase 2 takes over Prop-scrutinee erasure; keep the
-                   status-quo generic-match-style leaf for this subtree. *)
-                emit_leaf axname vars lhs case_body
+                if not opt_prop_case_erasure then
+                  emit_leaf ?premise axname vars lhs case_body
+                else
+                  let params = get_params indty return_type params_num in
+                  begin
+                    match Coq_erasure.classify (List.rev vars) indname params with
+                    | Coq_erasure.CEmpty ->
+                       emit_leaf ?premise axname vars lhs case_body
+                    | Coq_erasure.CPropSingleton ->
+                       begin
+                         match collapse_prop_singleton vars indname constrs params params_num branches with
+                         | None -> emit_leaf ?premise axname vars lhs case_body
+                         | Some body2 ->
+                            let premise = erased_case_premise vars indname params in
+                            (* E1 singleton erasure: by the paper's Erasure
+                               clause and Fundamental lemma, the proof match
+                               computes as its unique branch after proof
+                               arguments are erased. *)
+                            compile_case ?premise lhs vars axname body2
+                       end
+                    | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
+                       emit_leaf ?premise axname vars lhs case_body
+                  end
               else
                 begin
                   match matched_term with
@@ -669,28 +840,28 @@ and case_lifting axname0 name0 fvars lvars tm =
                          and axname2 = axname ^ "$" ^ short_constructor_name cname
                          and vars2 = List.filter (fun (name, _) -> name <> scrutinee) vars @ args
                          in
-                         compile_case lhs2 vars2 axname2 body2
+                         compile_case ?premise lhs2 vars2 axname2 body2
                      in
                      List.fold_left compile_branch (return ()) constrs
                   | _ ->
                      case_aux_value vars indname matched_term return_type params_num branches indty
                      >>= fun rhs ->
-                     emit_equation (axname ^ "$link") vars lhs rhs
+                     emit_equation ?premise (axname ^ "$link") vars lhs rhs
                        (Coq_typing.check_prop (List.rev vars) case_body)
                 end
            | _ -> failwith "impossible"
          end
       | Lam(vname, vtype, body2) ->
          if Coq_typing.check_prop (List.rev vars) vtype then
-           compile_case lhs vars axname (subst_proof vname vtype body2)
+           compile_case ?premise lhs vars axname (subst_proof vname vtype body2)
          else
-           compile_case (App(lhs, Var(vname))) (vars @ [ (vname, vtype) ]) axname body2
+           compile_case ?premise (App(lhs, Var(vname))) (vars @ [ (vname, vtype) ]) axname body2
       | Fix(_) as fix_body ->
          (* Rule 4: the right-hand side is the ordinary value translation of the
             inner fix, which reuses the existing fix_lifting machinery. *)
-         emit_leaf axname vars lhs fix_body
+         emit_leaf ?premise axname vars lhs fix_body
       | body2 ->
-         emit_leaf axname vars lhs body2
+         emit_leaf ?premise axname vars lhs body2
     in
     try
       begin
@@ -702,10 +873,38 @@ and case_lifting axname0 name0 fvars lvars tm =
           in
           begin
             match df with
-            | (_, IndType(_, _constrs, pnum), indty, _) ->
+            | (_, IndType(_, constrs, pnum), indty, _) ->
                assert (pnum = params_num);
                if Coq_typing.check_type_target_is_prop indty then
-                 return (generic_match ())
+                 if not opt_prop_case_erasure then
+                   return (generic_match ())
+                 else
+                   let params = get_params indty return_type params_num in
+                   begin
+                     match Coq_erasure.classify (List.rev (fvars @ lvars)) indname params with
+                     | Coq_erasure.CPropSingleton ->
+                        begin
+                          match collapse_prop_singleton (fvars @ lvars) indname constrs params params_num branches with
+                          | None -> return (generic_match ())
+                          | Some body2 ->
+                             let premise = erased_case_premise (fvars @ lvars) indname params in
+                             (* E1 singleton erasure: by the paper's Erasure
+                                clause and Fundamental lemma, a whole defining
+                                body that matches on a proof emits the equation
+                                for the unique branch after proof erasure. *)
+                             if name0 = "" then
+                               convert (List.rev (fvars @ lvars)) body2
+                             else
+                               convert (List.rev fvars) (mk_long_app (Const(name0)) (mk_vars fvars))
+                               >>= fun case_replacement ->
+                               let lhs = mk_long_app case_replacement (mk_vars lvars) in
+                               compile_case ?premise lhs (fvars @ lvars) axname0 body2 >>
+                               return case_replacement
+                        end
+                     | Coq_erasure.CEmpty
+                     | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
+                        return (generic_match ())
+                   end
                else
                  let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
                  in
@@ -765,7 +964,13 @@ and convert ctx tm =
   | App(App(Const("$HasType"), x), y) ->
       convert ctx x >>= fun x2 ->
       make_guard ctx y x2
-  | App(x, y) ->
+  | App(_) ->
+      begin match erase_transport_head tm with
+      | Some tm2 -> convert ctx tm2
+      | None ->
+      begin
+      match tm with
+      | App(x, y) ->
       convert ctx x >>= fun x2 ->
       if x2 = Const("$Proof") then
         return (Const("$Proof"))
@@ -775,6 +980,9 @@ and convert ctx tm =
           return x2
         else
           return (App(x2, y2))
+      | _ -> failwith "convert: app"
+      end
+      end
   | Lam(_) ->
       remove_lambda ctx tm
   | Case(_) ->
@@ -810,6 +1018,9 @@ and convert ctx tm =
 
 and convert_term ctx tm =
   debug 3 (fun () -> print_header "convert_term" tm ctx);
+  if proof_like_after_erasure ctx tm then
+    return (Const("$Proof"))
+  else
   let should_lift =
     match tm with
     | Var(_) | Const(_) -> false
@@ -932,14 +1143,14 @@ and remove_lambda ctx tm =
     begin fun cctx ctm ->
       let name = "$_lam_" ^ unique_id ()
       in
-      lambda_lifting name name (ctx_to_vars cctx) [] ctm
+      lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
     end
 
 and remove_case ctx tm =
   debug 3 (fun () -> print_header "remove_case" tm ctx);
   Hashing.find_or_insert coqterm_hash ctx tm
     begin fun cctx ctm ->
-      case_lifting "" "" (ctx_to_vars cctx) [] ctm
+      case_lifting [] "" "" (ctx_to_vars cctx) [] ctm
     end
 (* TODO: for case lifting cctx should always include the proof
    variables tm may depend on; otherwise the resulting FOL problem
@@ -973,7 +1184,7 @@ and remove_fix ctx tm =
   debug 3 (fun () -> print_header "remove_fix" tm ctx);
   Hashing.find_or_insert coqterm_hash ctx tm
     begin fun cctx ctm ->
-      fix_lifting "" "" (ctx_to_vars cctx) [] ctm
+      fix_lifting [] "" "" (ctx_to_vars cctx) [] ctm
     end
 
 and remove_let ctx tm =
@@ -1085,10 +1296,13 @@ and add_def_eq_axiom (name, value, ty, srt) =
   in
   match value with
   | Lam(_) ->
-     lambda_lifting axname name [] [] value >>
+     lambda_lifting [] axname name [] [] value >>
      return ()
   | Fix(_) ->
-     fix_lifting axname name [] [] value >>
+     fix_lifting [] axname name [] [] value >>
+     return ()
+  | Case(_) ->
+     case_lifting [] axname name [] [] value >>
      return ()
   | Const(c) when c = name ->
      return ()
@@ -1319,11 +1533,6 @@ end
 
 (***************************************************************************************)
 (* Translation *)
-
-(* Phase-0 plumbing for later well-founded-recursion handling.  Later phases set this
-   during one [translate] call and inspect it before attaching premises; for now it is
-   intentionally inert and only reset here, so it cannot leak across constants. *)
-let wf_mark = ref false
 
 let wf_mark_for_testing () = !wf_mark
 let set_wf_mark_for_testing value = wf_mark := value

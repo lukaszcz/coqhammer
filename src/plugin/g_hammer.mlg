@@ -57,6 +57,10 @@ VERNAC COMMAND EXTEND Hammer_plugin_dump CLASSIFIED AS SIDEFF
 | [ "Hammer_dump" string(fname) ] -> { hammer_dump fname }
 END
 
+TACTIC EXTEND Hammer_plugin_dump_tac
+| [ "hammer_dump" string(fname) ] -> { hammer_dump_tac fname }
+END
+
 TACTIC EXTEND Hammer_plugin_transl_tac
 | [ "hammer_transl" ] -> { hammer_transl_tac () }
 END

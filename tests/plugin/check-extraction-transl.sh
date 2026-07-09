@@ -44,9 +44,8 @@ forbid_line "Hammer_transl lookup failures" '^Error: Not found:'
 # such as eq_refl/False_rect before the extraction phases remove those shapes.
 forbid_line "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|ex|all)\b'
 
-# The current printer should not expose generic case symbols as asserted axioms;
-# phase-specific guardrails below document where future tasks will tighten this.
-forbid_line "unexpected printed generic-case axiom" '\$_generic_case'
+# Generic-case symbols may still appear only on fallback paths guarded below;
+# covered E1 singleton definitions must not contain them.
 
 # Phase 1 shallowness gates for definitional output: split equations should not
 # reintroduce type guards, existential packages, or disjunctive case bodies on
@@ -95,16 +94,23 @@ require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
 require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
 require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
-# h: pre-refactor fallback has no definitional equation; only the type/spec-like
-# HasType axiom remains visible. Phase 2/3 staged checks below replace this.
+# Phase 2 E1 singleton erasure: the match on the conjunction proof in h
+# collapses to its unique branch.  Phase 3 will unbox exist; for this phase the
+# proof argument is already erased, so the definition is exist(..., z).
 require_line "h has a type axiom" '^\$_typeof_extraction_deptypes\.h:'
-forbid_line "h must not get a baseline definition equation" '^\$_def_extraction_deptypes\.h:'
+require_line "h has a collapsed singleton definition" '^\$_def_extraction_deptypes\.h:.*= \(\(\(Corelib\.Init\.Specif\.exist @ Corelib\.Init\.Datatypes\.nat\) @ .*\) @ 2_z\)'
+forbid_line "h singleton collapse must not leave generic case" '^\$_def_extraction_deptypes\.h:.*\$_generic_case'
 
-# safe_pred: baseline emits the dependent match as a disjunctive definition and
-# still exposes proof/refinement constructors.
+# safe_pred: the dependent match still splits on nat and now keeps a definition
+# for both branches while proof payloads in the live successor branch are erased.
 require_count_at_least "safe_pred has split definition axioms" '^\$_def_extraction_deptypes\.safe_pred[$]' 2
-require_line "safe_pred baseline still exposes exist" 'Corelib\.Init\.Specif\.exist'
-require_line "safe_pred baseline still exposes False_rect" 'Corelib\.Init\.Logic\.False_rect'
+require_line "safe_pred zero branch remains dead-code fallback" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Logic\.False_rect'
+require_line "safe_pred successor branch erases eq_refl proof payload" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
+forbid_line "safe_pred successor branch must not keep eq_refl" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Logic\.eq_refl'
+
+# Transport erasure: eq_rect/eq_rec/eq_ind-style casts are identities in the
+# proof-irrelevant erasure model (guarded by opt_erasure_guards when enabled).
+require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*= 4_x'
 
 # pval: non-primitive projection record fixture currently has an inversion-style
 # definition axiom.
@@ -117,18 +123,25 @@ require_count_at_least "beq has a linking definition axiom" '^\$_def_extraction_
 require_line "beq link mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq[$]link:.*Nat\.eq_dec'
 require_line "beq aux case mentions sumbool constructors" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$].*Corelib\.Init\.Specif\.(left|right)'
 
-# tag: prod-with-Prop fixture currently still contains the pair constructor and
-# proof payload.
+# tag: prod-with-Prop fixture still contains the pair constructor in Phase 2,
+# but the propositional eq_refl payload is erased.
 require_count_at_least "tag has a definition axiom" '^\$_def_extraction_deptypes\.tag:' 1
 require_line "tag baseline mentions pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
-require_line "tag baseline mentions eq_refl" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
+forbid_line "tag proof payload is erased" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
 
-# idiv: until Phase 4, there must be no unconditional unfolding equation for the
-# recursive body. The current safe baseline only links to Program's idiv_func.
+# WF guardrail: until Phase 4, the Acc/Fix_F packagings must not expose an
+# unconditional unfolding equation.  These assertions are part of make tests.
 require_count_at_least "idiv has a top-level linking definition" '^\$_def_extraction_deptypes\.idiv:' 1
 require_line "idiv baseline links to idiv_func" '^\$_def_extraction_deptypes\.idiv:.*extraction_deptypes\.idiv_func'
 forbid_line "idiv must not expose an unconditional le_lt_dec unfolding" '^\$_def_extraction_deptypes\.idiv:.*le_lt_dec'
 forbid_line "idiv must not expose an unconditional recursive sub-call unfolding" '^\$_def_extraction_deptypes\.idiv:.*Corelib\.Init\.Nat\.sub'
+require_count_at_least "idiv2 has only the safe Fix link" '^\$_def_extraction_deptypes\.idiv2:' 1
+forbid_line "idiv2 must not expose an unconditional le_lt_dec unfolding" '^\$_def_extraction_deptypes\.idiv2:.*le_lt_dec'
+forbid_line "idiv2 must not expose an unconditional recursive sub-call unfolding" '^\$_def_extraction_deptypes\.idiv2:.*Corelib\.Init\.Nat\.sub'
+require_count_at_least "idiv3 has only the safe Fix_F link" '^\$_def_extraction_deptypes\.idiv3:' 1
+forbid_line "idiv3 must not expose an unconditional le_lt_dec unfolding" '^\$_def_extraction_deptypes\.idiv3:.*le_lt_dec'
+forbid_line "idiv3 must not expose an unconditional recursive sub-call unfolding" '^\$_def_extraction_deptypes\.idiv3:.*Corelib\.Init\.Nat\.sub'
+forbid_line "Acc_rect must not get an unconditional definition equation" '^\$_def_Corelib\.Init\.Wf\.Acc_rect:'
 
 # -----------------------------------------------------------------------------
 # Stdlib regression constants: structural snapshots enforced now.

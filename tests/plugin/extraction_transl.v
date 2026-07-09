@@ -6,16 +6,18 @@
 From Hammer Require Import Hammer.
 
 From Stdlib Require Import Arith.PeanoNat Arith.Wf_nat Classes.RelationClasses
-  Streams Vectors.Vector Lists.List.
+  Streams Vectors.Vector Lists.List Strings.String.
 
 Require Import extraction_matches extraction_deptypes.
+
+Open Scope string_scope.
 
 Inductive sflag : SProp := sflag_intro : sflag.
 Parameter sprop_consumer : sflag -> nat.
 Definition sprop_arg_term (h : sflag) : nat := sprop_consumer h.
 
 Goal True.
-  Hammer_dump "hammer_dump_smoke.p".
+  hammer_dump "hammer_dump_smoke.p".
   exact I.
 Qed.
 
@@ -36,10 +38,13 @@ Hammer_transl "odd".
 (* Corpus constants from extraction_deptypes.v. *)
 Hammer_transl "h".
 Hammer_transl "safe_pred".
+Hammer_transl "tr".
 Hammer_transl "pval".
 Hammer_transl "beq".
 Hammer_transl "tag".
 Hammer_transl "idiv".
+Hammer_transl "idiv2".
+Hammer_transl "idiv3".
 
 (* Stdlib regression list. Keep these as structural snapshots, not golden files:
    they pin one representative per fallback/coverage row from PLAN.md §10 while
