@@ -812,31 +812,16 @@ let greedy_predictor_sequence () =
    ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
    ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
 
-let with_greedy_features hyps deps goal f =
-  let fname = Features.extract hyps deps goal in
-  let clean () = Features.clean fname in
-  try
-    let r = f fname clean in
-    clean (); r
-  with e -> clean (); raise e
-
 let greedy_selected_deps hyps deps goal pred_method preds_num fname =
   let predicted = Features.run_predict fname deps preds_num pred_method in
   Features.add_direct_goal_dependencies hyps deps goal predicted
 
-let first_dump_deps hyps deps goal =
-  match Hhlib.take !Opt.gs_mode
-          (List.filter (fun (_, enabled, _, _, _) -> enabled) (greedy_predictor_sequence ())) with
-  | (_, _, _, pred_method, preds_num) :: _ ->
-      with_greedy_features hyps deps goal
-        (fun fname _ -> greedy_selected_deps hyps deps goal pred_method preds_num fname)
-  | [] -> Features.predict hyps deps goal
-
 let dump_deps hyps deps goal =
-  if !Opt.gs_mode > 0 then
-    first_dump_deps hyps deps goal
-  else
-    Features.predict hyps deps goal
+  (* Dumping is parameterized by [Opt.predict_method] and
+     [Opt.predictions_num] (not by the greedy ATP search schedule), so callers
+     such as [hammer_hook] can generate distinct problem sets for each
+     requested predictor/count even when GSMode is enabled. *)
+  Features.predict hyps deps goal
 
 let do_predict tried hyps deps goal =
   if !Opt.gs_mode > 0 then
