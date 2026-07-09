@@ -71,6 +71,10 @@ VERNAC COMMAND EXTEND Hammer_plugin_objects CLASSIFIED AS QUERY
 | [ "Hammer_objects" ] -> { hammer_objects () }
 END
 
+VERNAC COMMAND EXTEND Hammer_plugin_prover_parse_test CLASSIFIED AS QUERY
+| [ "Hammer_prover_parse_test" ] -> { hammer_prover_parse_test () }
+END
+
 {
 let hammer_version () =
   Msg.info hammer_version_string

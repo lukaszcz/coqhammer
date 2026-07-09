@@ -2,6 +2,7 @@ From Hammer Require Import Hammer.
 
 Hammer_version.
 Hammer_objects.
+Hammer_prover_parse_test.
 
 Lemma lem_1 {A : Type} (P : A -> Prop) : forall x, P x -> P x.
 Proof.

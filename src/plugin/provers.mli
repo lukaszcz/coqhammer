@@ -14,6 +14,8 @@ type atp_info = {
 
 val prn_atp_info : atp_info -> string
 
+val classify_atp_names : string list -> atp_info
+
 val extract_eprover_data : string (* file name *) -> atp_info
 val extract_vampire_data : string (* file name *) -> atp_info
 val extract_z3_data : string (* file name *) -> atp_info
