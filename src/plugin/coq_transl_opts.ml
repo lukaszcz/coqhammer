@@ -52,7 +52,7 @@ let opt_split_case_axioms = true
 (* Erase propositional case analyses. *)
 let opt_prop_case_erasure = true
 (* Guard erased transports. *)
-let opt_erasure_guards = false
+let opt_erasure_guards = true
 (* Expand refinement types shallowly. *)
 let opt_refinement_types = true
 (* Skip redundant declaration-level subset axioms. *)
