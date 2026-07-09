@@ -190,7 +190,13 @@ run_prover() {
   rm -rf atp/i "atp/o/$prover" "atp/o/$prover-$premise"
   mkdir -p atp/i atp/o
   ln -s "$outdir/atp-problems/$premise" atp/i/f
-  make -C atp -k -j "$jobs" TIM="$tim" "$prover" > "$outdir/$prover-$premise.log" 2>&1
+  if make -C atp -k -j "$jobs" TIM="$tim" "$prover" > "$outdir/$prover-$premise.log" 2>&1; then
+    prover_status=0
+  else
+    prover_status=$?
+    echo "[prover] $label/$corpus/$prover/$premise exited with status $prover_status; keeping partial outputs"
+  fi
+  echo "prover_exit=$prover_status" > "$outdir/prover-$prover-$premise.status"
   rm -rf "$outdir/prover-outputs/$prover-$premise"
   mkdir -p "$outdir/prover-outputs" "atp/o/$prover"
   mv "atp/o/$prover" "$outdir/prover-outputs/$prover-$premise"

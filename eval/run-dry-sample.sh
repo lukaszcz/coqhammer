@@ -79,7 +79,14 @@ fi
 rm -rf atp/i atp/o/$prover atp/o/$prover-$premise
 mkdir -p atp/i atp/o
 ln -s ../problems/$premise atp/i/f
-make -C atp -k -j "$jobs" TIM=5 "$prover"
+if make -C atp -k -j "$jobs" TIM=5 "$prover"; then
+  prover_status=0
+else
+  prover_status=$?
+  echo "[prover] $prover/$premise exited with status $prover_status; keeping partial outputs"
+fi
+mkdir -p "atp/o/$prover"
+echo "prover_exit=$prover_status" > "atp/o/$prover.status"
 mv "atp/o/$prover" "atp/o/$prover-$premise"
 
 make clean-vo
