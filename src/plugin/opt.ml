@@ -192,23 +192,30 @@ let _ =
   in
   declare_bool_option gdopt
 
-(* Target directory for the files written by [Hammer_dump]. Empty by
-   default, in which case a dumped file is written to the name given
-   verbatim (i.e. relative to the current directory), as users expect. A
-   non-empty value redirects relative dump names into that directory. Set
-   it with [Set Hammer Dump Directory "..."]. The COQHAMMER_DUMP_DIR
-   environment variable provides the same redirection when the option is
-   unset -- this is what the test harness uses, since a fresh temporary
-   directory is only known at run time and cannot be baked into a script. *)
+(* Target directory for the files written by [Hammer_dump]. Unset by
+   default, in which case COQHAMMER_DUMP_DIR may redirect relative dump
+   names. Setting the option, even to the empty string, overrides the
+   environment; an empty configured directory writes relative names
+   verbatim (i.e. relative to the current directory), as users expect. *)
+let dump_directory_unset = "<unset>"
 let dump_directory = ref ""
+let dump_directory_is_set = ref false
 
 let _ =
   let gdopt=
     { optdepr=None;
       optstage = Interp;
       optkey=["Hammer";"Dump";"Directory"];
-      optread=(fun () -> !dump_directory);
-      optwrite=(fun s -> dump_directory := s)}
+      optread=(fun () -> if !dump_directory_is_set then !dump_directory else dump_directory_unset);
+      optwrite=
+        (fun s ->
+           if s = dump_directory_unset then
+             dump_directory_is_set := false
+           else
+             begin
+               dump_directory := s;
+               dump_directory_is_set := true
+             end)}
   in
   declare_string_option gdopt
 
@@ -218,8 +225,10 @@ let _ =
    otherwise (and always for absolute names) the name is used unchanged. *)
 let resolve_dump_path fname =
   let dir =
-    if !dump_directory <> "" then !dump_directory
-    else match Sys.getenv_opt "COQHAMMER_DUMP_DIR" with Some d -> d | None -> ""
+    if !dump_directory_is_set then
+      !dump_directory
+    else
+      match Sys.getenv_opt "COQHAMMER_DUMP_DIR" with Some d -> d | None -> ""
   in
   if dir <> "" && Filename.is_relative fname then
     Filename.concat dir fname
