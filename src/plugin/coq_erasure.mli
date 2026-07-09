@@ -35,15 +35,17 @@ type ind_class =
       (** A [Set]/[Type]-sorted singleton with exactly one informative
           constructor argument and at least one propositional payload argument,
           e.g. [sig] or [sig2] and per-instance cases such as [prod A P] when
-          [P : Prop].  Side conditions: the carrier type must not mention the
-          inductive itself (Letouzey's non-recursive-carrier condition), and a
-          purely informative one-field wrapper is kept [CRegular] instead of
-          being collapsed. *)
+          [P : Prop].  Side conditions: the inductive must be non-indexed, the
+          carrier type must not mention the inductive itself (Letouzey's
+          non-recursive-carrier condition), and a purely informative one-field
+          wrapper is kept [CRegular] instead of being collapsed. *)
   | CEnum of (string * coqterm list) list
-      (** All constructors have only propositional non-parameter arguments after
-          instantiation.  Extracted values are constructor tags; the listed
-          payload formulas are the specifications associated with each tag (for
-          example [sumbool A B]). *)
+      (** A non-indexed inductive whose constructors have only propositional
+          non-parameter arguments after instantiation.  Extracted values are
+          constructor tags; the listed payload formulas are the specifications
+          associated with each tag (for example [sumbool A B]).  Indexed enums
+          such as [reflect] stay [CRegular] until index constraints are represented
+          in the shallow guard. *)
   | CRegular
       (** No erasure-specific simplification is justified.  The existing
           constructor, inversion, and typing translation remains the sound

@@ -139,7 +139,18 @@ restored after a configuration build.
    generated ATP and reconstruction result lists next to each summary are the
    quick parse check for harness regressions.
 
-5. To verify that scripted configuration rebuilding changes translation output
+5. Run the Stage 2 confirmation grid (baseline versus the selected winner,
+   all standard `hammer_hook` premise-selector/count directories and all four
+   provers):
+
+   ```bash
+   ./run-confirmation-grid.sh -j 4 --tim 10 --consistency-tim 2
+   ```
+
+   The script writes resumable raw checkpoints under `results/stage2/` and the
+   committed summary artifacts under `artifacts/task23-stage2/`.
+
+6. To verify that scripted configuration rebuilding changes translation output
    and restores the tree, run for example:
 
    ```bash

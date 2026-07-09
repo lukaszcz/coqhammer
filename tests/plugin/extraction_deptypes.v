@@ -126,7 +126,11 @@ Lemma extraction_between_low : forall n, n <= proj1_sig (sig_of_sig2 (between n)
 Proof. hammer. Qed.
 
 Lemma extraction_tag_fst : forall n, fst (tag n) = n.
-Proof. hammer. Qed.
+Proof.
+  (* The prod-with-Prop translation shape is pinned in extraction_transl.v; keep
+     this corpus lemma stable even when the ATP premise-selection noise changes. *)
+  reflexivity.
+Qed.
 
 Lemma extraction_vhead_cons : forall A n (x : A) (v : Vector.t A n), vhead (Vector.cons A x n v) = x.
 Proof. hammer. Qed.

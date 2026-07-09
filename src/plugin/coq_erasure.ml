@@ -146,17 +146,24 @@ let instantiate_class indname ctor_infos = function
   | MEnum ctor_prop_indices -> validate_enum ctor_infos ctor_prop_indices
   | MRegular -> CRegular
 
-let classify_shape indname is_prop_ind ctor_infos =
+let classify_shape indname is_prop_ind has_indices ctor_infos =
   (* These syntactic classes mirror the named paper clauses used at emission:
      singleton proof matches are erased by the erasure clause, refinement and
      enum occurrences are expanded by G/F plus Coincidence, and anything not
-     recognized stays on the status-quo path for totality. *)
+     recognized stays on the status-quo path for totality.
+
+     Indexed Set/Type families need their indices reflected in every enum/subset
+     guard.  The current shallow expansion records constructor payloads but not
+     result-index constraints, so classifying such families as CEnum/CSubset would
+     be too weak (e.g. reflect P false could be guarded as ReflectT P).  Keep
+     them on the status-quo path until index constraints are represented. *)
   match ctor_infos with
   | [] -> MEmpty
   | _ when is_ex_ind indname -> MRegular
   | [ctor] when is_prop_ind && List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args ->
       MPropSingleton
   | _ when is_prop_ind -> MRegular
+  | _ when has_indices -> MRegular
   | [ctor] ->
       let informative = List.filter (fun info -> not info.arg_is_prop) ctor.ctor_args in
       let prop_args = List.filter (fun info -> info.arg_is_prop) ctor.ctor_args in
@@ -199,7 +206,9 @@ let classify ctx indname params =
   try
     match get_inductive indname with
     | None -> CRegular
-    | Some (constrs, params_num, _, ind_sort) ->
+    | Some (constrs, params_num, ind_ty, ind_sort) ->
+        let all_formals = Coq_typing.get_type_args ind_ty in
+        let has_indices = List.length all_formals > params_num in
         let params = Hhlib.take params_num params in
         let mask = List.map (safe_check_prop ctx) params in
         let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
@@ -208,7 +217,7 @@ let classify ctx indname params =
             let is_prop_ind =
               is_prop_sort ind_sort || safe_check_prop ctx (mk_long_app (Const indname) params)
             in
-            let shape = classify_shape indname is_prop_ind ctor_infos in
+            let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
             Hashtbl.add memo (indname, mask) shape;
             shape
         in

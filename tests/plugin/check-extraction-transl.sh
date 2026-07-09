@@ -224,8 +224,10 @@ require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
 require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'
-require_line "sig has an inversion axiom with decl-skip default off" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
-require_line "sig constructor injectivity remains with decl-skip default off" '^\$_inj_Corelib\.Init\.Specif\.exist:'
+require_line "indexed reflect stays on regular guard path" '^Corelib\.ssr\.ssrbool\.introT:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
+forbid_line "indexed reflect guard must not be enum-expanded without index constraints" '^Corelib\.ssr\.ssrbool\.introT:.*Corelib\.Init\.Datatypes\.ReflectT'
+forbid_line "sig inversion axiom is skipped with decl-skip default on" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
+forbid_line "sig constructor injectivity is skipped with decl-skip default on" '^\$_inj_Corelib\.Init\.Specif\.exist:'
 require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
 require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1

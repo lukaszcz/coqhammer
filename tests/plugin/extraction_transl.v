@@ -7,6 +7,7 @@ From Hammer Require Import Hammer.
 
 From Stdlib Require Import Arith.PeanoNat Arith.Wf_nat Classes.RelationClasses
   Streams Vectors.Vector Lists.List Strings.String.
+From Corelib.ssr Require Import ssrbool.
 
 Require Import extraction_matches extraction_deptypes.
 
@@ -67,6 +68,8 @@ Hammer_transl "proj1".
 Hammer_transl "Acc_rect".
 Hammer_transl "Nat.eq_dec".
 Hammer_transl "sumbool".
+Hammer_transl "reflect".
+Hammer_transl "introT".
 Hammer_transl "sig".
 Hammer_transl "prod".
 Hammer_transl "Vector.hd".

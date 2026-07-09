@@ -55,8 +55,8 @@ let opt_prop_case_erasure = true
 let opt_erasure_guards = false
 (* Phase 3: expand refinement types shallowly. *)
 let opt_refinement_types = true
-(* Phase 3c: optionally skip redundant declaration-level subset axioms. *)
-let opt_refinement_decl_skips = false
+(* Phase 3c: skip redundant declaration-level subset axioms. *)
+let opt_refinement_decl_skips = true
 (* Phase 4 (D4): emit guarded equations for well-founded recursion. *)
 let opt_wf_recursion_eqs = true
 

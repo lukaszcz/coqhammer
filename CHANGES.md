@@ -17,7 +17,11 @@ Overview of changes
 * Added the extraction-factored first-order translation: per-constructor match
   equations, proof/singleton erasure, shallow refinement/specification
   expansion, and premised well-founded-recursion equations are enabled by
-  compile-time translation constants and covered by the normal plugin tests.
+  compile-time translation constants and covered by the normal plugin tests.  In
+  the Phase 6 confirmation grid, the final defaults improved ATP success from
+  196/440 (44.5%) to 385/440 (87.5%) with 100% reconstruction of ATP successes
+  and zero inconsistency-scan hits; indexed enum/subset refinements without
+  index constraints conservatively stay on the regular fallback path.
 * Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2
