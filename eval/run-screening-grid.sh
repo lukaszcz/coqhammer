@@ -113,12 +113,74 @@ require_prover() {
 base_path="$PATH"
 base_ocamlpath="${OCAMLPATH:-}"
 
+manifest_get() {
+  local file="$1" key="$2"
+  awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit } END { if (!found) exit 1 }' "$file"
+}
+
+expect_manifest_value() {
+  local manifest="$1" key="$2" expected="$3" actual
+  actual=$(manifest_get "$manifest" "$key") || return 1
+  [ "$actual" = "$expected" ]
+}
+
+validate_refactor_options() {
+  local manifest="$1" config="$2" core decl_skips split prop erasure refinement wf
+  core="$config"
+  decl_skips=false
+  case "$core" in
+    *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
+  esac
+  split=true; prop=true; erasure=true; refinement=true; wf=true
+  case "$core" in
+    all-off) split=false; prop=false; erasure=false; refinement=false; wf=false ;;
+    all-on) ;;
+    loo-split-case-axioms) split=false ;;
+    loo-prop-case-erasure) prop=false ;;
+    loo-erasure-guards) erasure=false ;;
+    loo-refinement-types) refinement=false ;;
+    loo-wf-recursion-eqs) wf=false ;;
+    *) return 1 ;;
+  esac
+  expect_manifest_value "$manifest" opt_split_case_axioms "$split" &&
+    expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
+    expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
+    expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
+    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips" &&
+    expect_manifest_value "$manifest" opt_wf_recursion_eqs "$wf"
+}
+
+manifest_matches_label() {
+  local label="$1" prefix="$2" manifest="$prefix/manifest.env" expected_commit expected_config
+  [ -f "$manifest" ] || return 1
+  if [ "$label" = baseline-merge-base ]; then
+    expected_commit=$(git merge-base HEAD rocq-9.2)
+    expect_manifest_value "$manifest" kind baseline &&
+      expect_manifest_value "$manifest" commit "$expected_commit"
+  else
+    expected_commit=$(git rev-parse HEAD)
+    expected_config="${label_config[$label]}"
+    expect_manifest_value "$manifest" kind refactor-config &&
+      expect_manifest_value "$manifest" config "$expected_config" &&
+      expect_manifest_value "$manifest" commit "$expected_commit" &&
+      validate_refactor_options "$manifest" "$expected_config"
+  fi
+}
+
 build_label() {
   local label="$1"
   local prefix="$eval_dir/_installs/$label"
   if [ -f "$prefix/manifest.env" ]; then
-    echo "[build] $label already installed"
-    return 0
+    if manifest_matches_label "$label" "$prefix"; then
+      echo "[build] $label already installed"
+      return 0
+    fi
+    if [ "$skip_builds" = true ]; then
+      echo "Install prefix for $label is stale or mismatched: $prefix" >&2
+      exit 1
+    fi
+    echo "[build] $label install is stale or mismatched; rebuilding"
+    rm -rf "$prefix"
   fi
   if [ "$skip_builds" = true ]; then
     echo "Missing install prefix for $label: $prefix" >&2
