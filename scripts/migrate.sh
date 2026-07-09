@@ -19,10 +19,10 @@
 #      `rocq-<X.Y>` development branch from `master` -- the same tokens the
 #      sync merge driver (scripts/sync-merge-driver.sh) normalizes, so a later
 #      `just sync` is a no-op on them:
-#        * the two *.opam files: version "<X.Y>.dev" and the Rocq dependency
-#          lines `"rocq-core" {>= "<X.Y>" & < "<next>~"}`, the matching
-#          `"rocq-runtime"`, and `"rocq-stdlib"` (the deprecated `coq` package
-#          is no longer used);
+#        * the two *.opam files: version "<X.Y>.dev" and the Rocq/Coq
+#          dependency lines (split `rocq-core`/`rocq-runtime`/`rocq-stdlib`
+#          packages for Rocq >= 9.0, or the legacy `coq` package for older
+#          Coq branches);
 #        * the README title line, the CI-badge branch, and the requirement
 #          label + homepage URL;
 #        * the docker image tag in the Docker CI workflow, plus the `rocq-*` /
@@ -166,21 +166,23 @@ else
   info "toolchain:       source build, Rocq ref '$ROCQ_REF', stdlib ref '$STDLIB_REF'"
 fi
 
-# Lower bound for the rocq-stdlib opam-file dependency. Normally the target Rocq
-# <X.Y>, but rocq-stdlib usually lags rocq-core on opam; when <X.Y> is not yet
-# published, fall back to the newest available stdlib line so the constraint
-# stays satisfiable -- an older stdlib builds and loads against the newer core,
-# and opam CI resolves rocq-hammer's deps against the published packages. rocq-core
-# keeps the exact <X.Y> lower bound (that package is published). Defaults to <X.Y>
-# when opam is unavailable (a source build ignores the opam constraints anyway).
+# Lower bound for the rocq-stdlib opam-file dependency. For Rocq >= 9.0 it is
+# normally the target Rocq <X.Y>, but rocq-stdlib usually lags rocq-core on opam;
+# when <X.Y> is not yet published, fall back to the newest available stdlib line
+# so the constraint stays satisfiable. Older Coq branches keep the legacy `coq`
+# dependency and do not mention the split Rocq packages.
 STDLIB_LB="$V"
-if [ -z "$(opam_newest_matching rocq-stdlib "$V" || true)" ]; then
-  _stdlib_newest="$(opam_newest rocq-stdlib || true)"
-  if [ -n "$_stdlib_newest" ]; then
-    STDLIB_LB="$(printf '%s\n' "$_stdlib_newest" | grep -oE '^[0-9]+\.[0-9]+')"
+if [ "$CORE_PKG" = "rocq-core" ]; then
+  if [ -z "$(opam_newest_matching rocq-stdlib "$V" || true)" ]; then
+    _stdlib_newest="$(opam_newest rocq-stdlib || true)"
+    if [ -n "$_stdlib_newest" ]; then
+      STDLIB_LB="$(printf '%s\n' "$_stdlib_newest" | grep -oE '^[0-9]+\.[0-9]+')"
+    fi
   fi
+  info "opam constraints: rocq-core/rocq-runtime >= $V, rocq-stdlib >= $STDLIB_LB (all < ${NEXT}~)"
+else
+  info "opam constraints: coq >= $V (all < ${NEXT}~)"
 fi
-info "opam constraints: rocq-core/rocq-runtime >= $V, rocq-stdlib >= $STDLIB_LB (all < ${NEXT}~)"
 
 # ---------------------------------------------------------------------------
 # 2. Build the new branch by rewriting the version tokens, without a worktree.
@@ -204,15 +206,19 @@ transform_opam() {
   # Replace whatever Rocq/Coq dependency line(s) the source flavor carries --
   # master's single "rocq-stdlib" line, an older branch's single "coq" line, or
   # the current "rocq-core"/"rocq-runtime"/"rocq-stdlib" form -- with the
-  # canonical dependency block for the target Rocq <X.Y>. rocq-stdlib takes the
-  # lower bound $STDLIB_LB (<X.Y>, or an older published line when <X.Y> lags on opam).
+  # canonical dependency block for the target <X.Y>. Rocq >= 9 uses the split
+  # packages; older Coq branches keep the legacy `coq` package.
   # (`nxt`, not `next`, since `next` is an awk statement.)
-  awk -v v="$V" -v nxt="$NEXT" -v slb="$STDLIB_LB" '
+  awk -v v="$V" -v nxt="$NEXT" -v slb="$STDLIB_LB" -v core="$CORE_PKG" '
     /^[[:space:]]*"(rocq-core|rocq-runtime|rocq-stdlib|coq)"[[:space:]]*[{]/ {
       if (!done) {
-        print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
-        print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
-        print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
+        if (core == "rocq-core") {
+          print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
+          print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
+          print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
+        } else {
+          print "  \"coq\" {>= \"" v "\" & < \"" nxt "~\"}"
+        }
         done = 1
       }
       next

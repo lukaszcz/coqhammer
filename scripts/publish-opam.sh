@@ -14,10 +14,10 @@
 # (coq/opam-coq-archive). Each new opam file is derived from the most recent
 # existing entry of the same package by updating exactly four things:
 #
-#   * the Rocq dependency                (rocq-core/rocq-runtime >= <ROCQ> &
-#                                         rocq-stdlib >= <ROCQ-or-newest-published>,
-#                                         all < <next>~; a legacy "coq" line in an
-#                                         older template is replaced)
+#   * the Rocq/Coq dependency            (rocq-core/rocq-runtime >= <ROCQ> &
+#                                         rocq-stdlib >= <ROCQ-or-newest-published>
+#                                         for Rocq >= 9.0, or legacy coq for older
+#                                         branches, all < <next>~)
 #   * the "date:" tag                    (today)
 #   * the release tarball URL            (.../tags/v<CVER>+<ROCQ>.tar.gz)
 #   * the sha512 checksum                (computed from that tarball)
@@ -41,18 +41,16 @@ esac
 CVER="${VERSTR%%+*}"
 ROCQ="${VERSTR##*+}"
 ROCQ_NEXT="$(next_rocq "$ROCQ")"
+ROCQ_MAJOR="${ROCQ%%.*}"
 TAG="v${VERSTR}"
 TODAY="$(date +%F)"
 
-# Lower bound for the rocq-stdlib dependency: normally <ROCQ>, but rocq-stdlib
-# usually lags rocq-core on opam. If <ROCQ> is not yet published, fall back to
-# the newest available stdlib line so the published constraint is satisfiable
-# (an older stdlib builds and loads against the newer core). rocq-core keeps the
-# exact <ROCQ> lower bound. Defaults to <ROCQ> when opam or the rocq packages
-# are unavailable.
+# Lower bound for the rocq-stdlib dependency on Rocq >= 9.0: normally <ROCQ>,
+# but rocq-stdlib usually lags rocq-core on opam. Older Coq releases keep the
+# legacy `coq` dependency and do not mention the split Rocq packages.
 STDLIB_LB="$ROCQ"
-if command -v opam >/dev/null 2>&1; then
-  _stdlib_all="$(opam show rocq-stdlib -f all-versions 2>/dev/null | tr ' ,' '\n\n' | grep -E '^[0-9]')"
+if [ "$ROCQ_MAJOR" -ge 9 ] 2>/dev/null && command -v opam >/dev/null 2>&1; then
+  _stdlib_all="$(opam show rocq-stdlib -f all-versions 2>/dev/null | tr ' ,' '\n\n' | grep -E '^[0-9]' || true)"
   if ! printf '%s\n' "$_stdlib_all" | grep -qE "^${ROCQ//./\\.}(\.|$)"; then
     _stdlib_newest="$(printf '%s\n' "$_stdlib_all" | sort -V | tail -1)"
     [ -n "$_stdlib_newest" ] && STDLIB_LB="$(printf '%s\n' "$_stdlib_newest" | grep -oE '^[0-9]+\.[0-9]+')"
@@ -117,14 +115,19 @@ add_package() {
 
   # Replace whatever Rocq/Coq dependency line(s) the template carries -- an old
   # entry's single "coq" line or a newer entry's "rocq-core"/"rocq-runtime"/
-  # "rocq-stdlib" form -- with the canonical dependency block for this release's Rocq <X.Y>.
+  # "rocq-stdlib" form -- with the canonical dependency block for this release.
+  # Rocq >= 9 uses the split packages; older Coq branches keep `coq`.
   # (`nxt`, not `next`, since `next` is an awk statement.)
-  awk -v v="$ROCQ" -v nxt="$ROCQ_NEXT" -v slb="$STDLIB_LB" '
+  awk -v v="$ROCQ" -v nxt="$ROCQ_NEXT" -v slb="$STDLIB_LB" -v major="$ROCQ_MAJOR" '
     /^[[:space:]]*"(rocq-core|rocq-runtime|rocq-stdlib|coq)"[[:space:]]*[{]/ {
       if (!done) {
-        print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
-        print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
-        print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
+        if (major >= 9) {
+          print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
+          print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
+          print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
+        } else {
+          print "  \"coq\" {>= \"" v "\" & < \"" nxt "~\"}"
+        }
         done = 1
       }
       next
