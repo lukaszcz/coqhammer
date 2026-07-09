@@ -704,11 +704,7 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
   in
   let rec hlp k lst =
     match lst with
-    | [] ->
-       begin
-         msg_fail ();
-         Proofview.tclZERO (Failure "reconstruction failed")
-       end
+    | [] -> msg_fail ()
     | tacs :: ts ->
        msg_batch k;
        run !Opt.reconstr_timelimit tacs
@@ -957,48 +953,27 @@ let hammer_main_tac env sigma gl mode =
       | _ -> "clear " ^ String.concat " " (List.map Id.to_string clear_ids) ^ ".\n\t"
     in
     Msg.info ("Reconstructing the proof...");
-    let reconstruct =
-      run_tactics clear_ids deps defs inverts
-        begin fun tac ->
-          Msg.info ("Tactic " ^ tac ^ " succeeded.");
-          Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
-                      tac ^ mk_lst_str " use:" sdeps ^
-                        mk_lst_str " unfold:" sdefs ^
-                          mk_lst_str " inv:" sinverts ^ ".")
-        end
-        begin fun () ->
-          raise (HammerFailure reconstruction_failure_msg)
-        end
-        begin fun k ->
-          Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
-        end
-    in
     let can_retry = retry_available tried in
-    let reconstruct =
-      if can_retry then
-        run_tactics clear_ids deps defs inverts
-          begin fun tac ->
-            Msg.info ("Tactic " ^ tac ^ " succeeded.");
-            Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
-                        tac ^ mk_lst_str " use:" sdeps ^
-                          mk_lst_str " unfold:" sdefs ^
-                            mk_lst_str " inv:" sinverts ^ ".")
+    run_tactics clear_ids deps defs inverts
+      begin fun tac ->
+        Msg.info ("Tactic " ^ tac ^ " succeeded.");
+        Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
+                    tac ^ mk_lst_str " use:" sdeps ^
+                      mk_lst_str " unfold:" sdefs ^
+                        mk_lst_str " inv:" sinverts ^ ".")
+      end
+      begin fun () ->
+        if can_retry then
+          begin
+            Msg.info "Proof reconstruction failed for this ATP proof; trying another ATP proof...";
+            attempt tried
           end
-          (fun () -> ())
-          begin fun k ->
-            Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
-          end
-      else
-        reconstruct
-    in
-    if can_retry then
-      Proofview.tclORELSE reconstruct
-        begin fun _ ->
-          Msg.info "Proof reconstruction failed for this ATP proof; trying another ATP proof...";
-          attempt tried
-        end
-    else
-      reconstruct
+        else
+          raise (HammerFailure reconstruction_failure_msg)
+      end
+      begin fun k ->
+        Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
+      end
   in
   attempt []
 
