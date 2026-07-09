@@ -746,11 +746,19 @@ let run_gs_provers hyps deps goal clean seq =
     match split_batch !Opt.gs_mode candidates [] with
     | [], _ -> failure ()
     | enabled_seq, _ ->
+       let failed = ref [] in
+       let report_failed idx =
+         if not (List.mem idx !failed) then
+           failed := idx :: !failed
+       in
        let jobs =
          List.map
-           begin fun (idx, (pname, enabled, pref, select)) _ ->
+           begin fun (idx, (pname, enabled, pref, select)) progress ->
              if not enabled then
-               Unix._exit 1;
+               begin
+                 progress idx;
+                 Unix._exit 1
+               end;
              Opt.vampire_enabled := false;
              Opt.eprover_enabled := false;
              Opt.z3_enabled := false;
@@ -767,8 +775,10 @@ let run_gs_provers hyps deps goal clean seq =
              with
              | HammerError(msg) ->
                 Msg.error ("Hammer error: " ^ msg);
+                progress idx;
                 Unix._exit 1
              | _ ->
+                progress idx;
                 Unix._exit 1
            end
            enabled_seq
@@ -777,14 +787,14 @@ let run_gs_provers hyps deps goal clean seq =
        Msg.info ("Running provers (" ^ string_of_int (List.length enabled_seq) ^ " threads)...");
        let ret =
          try
-           Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
+           Parallel.run_parallel report_failed (fun _ -> ()) time jobs
          with e ->
            clean (); raise e
        in
        match ret with
        | None ->
           failure ()
-       | Some (_, info) ->
+       | Some (idx, info) ->
           begin
             let info =
               if List.length info.Provers.deps >= !Opt.minimize_threshold then
@@ -796,7 +806,7 @@ let run_gs_provers hyps deps goal clean seq =
             let msg = Provers.prn_atp_info info in
             if msg <> "" then
               Msg.info msg;
-            (List.map fst enabled_seq @ tried, info)
+            (idx :: (!failed @ tried), info)
           end
   in
   run_batches [] candidates
