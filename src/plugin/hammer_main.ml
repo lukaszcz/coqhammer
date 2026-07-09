@@ -1116,12 +1116,9 @@ let hammer_dump_tac fname =
       Tacticals.tclIDTAC
     end
 
-let hammer_dump fname =
-  ignore (Vernacstate.Declare.with_current_proof
-            begin fun proof ->
-              let proof, _, () = Proof.run_tactic (Global.env ()) (hammer_dump_tac fname) proof in
-              (proof, ())
-            end)
+let hammer_dump fname ~pstate =
+  let _, _, () = Proof.run_tactic (Global.env ()) (hammer_dump_tac fname) pstate in
+  ()
 
 let hammer_features name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in

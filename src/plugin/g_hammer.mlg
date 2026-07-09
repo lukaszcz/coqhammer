@@ -47,7 +47,7 @@ VERNAC COMMAND EXTEND Hammer_plugin_transl CLASSIFIED AS QUERY
 | [ "Hammer_transl" string(name) ] -> { hammer_transl name }
 END
 
-VERNAC COMMAND EXTEND Hammer_plugin_dump CLASSIFIED AS SIDEFF
+VERNAC COMMAND EXTEND Hammer_plugin_dump CLASSIFIED AS SIDEFF STATE proof_query
 | [ "Hammer_dump" string(fname) ] -> { hammer_dump fname }
 END
 
