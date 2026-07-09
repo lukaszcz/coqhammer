@@ -81,8 +81,13 @@ let validate_subset indname infos carrier_idx prop_indices =
            prop_names)
       prop_args
   in
+  let is_sort = function
+    | SortProp | SortSet | SortType -> true
+    | _ -> false
+  in
   match arg_at infos carrier_idx with
-  | Some carrier when not carrier.arg_is_prop && not (term_mentions_const indname carrier.arg_ty) ->
+  | Some carrier when not carrier.arg_is_prop && not (is_sort carrier.arg_ty) &&
+                       not (term_mentions_const indname carrier.arg_ty) ->
       let prop_args =
         List.fold_right
           (fun idx acc ->
