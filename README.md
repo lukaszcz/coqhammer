@@ -31,19 +31,10 @@ Requirements
   [Eprover](http://www.eprover.org), and/or
   [Z3](https://github.com/Z3Prover/z3/releases))
 
-Translation development options
--------------------------------
-The extraction-factored translator stages are controlled by compile-time
-constants in `src/plugin/coq_transl_opts.ml`: `opt_split_case_axioms`,
-`opt_prop_case_erasure`, `opt_erasure_guards`, `opt_refinement_types`,
-`opt_refinement_decl_skips`, and `opt_wf_recursion_eqs`.  They are intentionally
-not `Set Hammer` options; changing them requires rebuilding and reinstalling the
-plugin before running `hammer` again.
-
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2025, Lukasz Czajka.\
+Copyright (c) 2017-2026, Lukasz Czajka.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file
