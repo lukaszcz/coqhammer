@@ -122,7 +122,10 @@ let validate_subset indname infos carrier_idx prop_indices =
           prop_indices []
       in
       if List.length prop_args = List.length prop_indices && prop_args <> [] &&
-         no_erased_payload_dependencies prop_args
+         no_erased_payload_dependencies prop_args &&
+         List.for_all
+           (fun (prop_name, _) -> not (var_occurs prop_name carrier.arg_ty))
+           prop_args
       then
         CSubset { carrier_idx; carrier_name = carrier.arg_name; prop_args }
       else
