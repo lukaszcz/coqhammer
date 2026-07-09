@@ -137,8 +137,10 @@ Set Hammer SAutoLimit 0.
 Lemma extraction_vhead_cons : forall A n (x : A) (v : Vector.t A n), vhead (Vector.cons A x n v) = x.
 Proof. hammer. Qed.
 
+Set Hammer GSMode 24.
 Lemma extraction_refinement_hyp : forall s : {u : nat | 0 < u}, 1 <= proj1_sig s.
 Proof. hammer. Qed.
+Set Hammer GSMode 8.
 
 Lemma extraction_h_exists :
   forall x y z p, exists u, proj1_sig (h x y z p) = u /\ x = u.
