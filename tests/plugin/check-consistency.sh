@@ -292,12 +292,52 @@ assert_unprovable() {
   assert_unprovable_problem "$false_problem" "$timeout" "$source_problem"
 }
 
-assert_contains_fixed() {
-  problem=$1
-  needle=$2
+make_bad_successor_problem() {
+  source_problem=$1
+  bad_problem=$2
   label=$3
 
-  grep -Fq "$needle" "$problem" || fail "expected $label in $problem"
+  [ -f "$source_problem" ] || fail "missing dumped problem $source_problem"
+  conjectures=$(grep -Ec '^fof\(.*,[[:space:]]*conjecture,[[:space:]]*' "$source_problem" || true)
+  [ "$conjectures" -eq 1 ] || fail "expected exactly one conjecture in $source_problem, found $conjectures"
+
+  goal_line=$(grep '^fof(.*,[[:space:]]*conjecture,[[:space:]]*' "$source_problem")
+  lhs=$(printf '%s\n' "$goal_line" |
+    sed -n 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*(\([A-Za-z0-9_][A-Za-z0-9_]*(V[^)]*)\)[[:space:]]*=[[:space:]]*\([A-Za-z0-9_][A-Za-z0-9_]*\)).*$/\1/p')
+  zero_symbol=$(printf '%s\n' "$goal_line" |
+    sed -n 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*(\([A-Za-z0-9_][A-Za-z0-9_]*(V[^)]*)\)[[:space:]]*=[[:space:]]*\([A-Za-z0-9_][A-Za-z0-9_]*\)).*$/\2/p')
+  [ -n "$lhs" ] || fail "could not find the dumped conclusion function in $source_problem for $label"
+  [ -n "$zero_symbol" ] || fail "could not find the dumped zero constructor in $source_problem for $label"
+
+  successor_line=$(awk -v zero="$zero_symbol" 'index($0, " = " zero ") | ?[") { print; exit }' "$source_problem")
+  [ -n "$successor_line" ] || fail "could not find the successor constructor line in $source_problem for $label"
+  successor_symbol=$(printf '%s\n' "$successor_line" |
+    sed -n 's/.*& (.* = \([A-Za-z0-9_][A-Za-z0-9_]*\)(.*/\1/p')
+  [ -n "$successor_symbol" ] || fail "could not find the successor constructor symbol in $source_problem for $label"
+
+  function_symbol=${lhs%%(*}
+  arglist=${lhs#"$function_symbol("}
+  arglist=${arglist%)}
+  [ -n "$arglist" ] || fail "could not determine the arity of $function_symbol in $source_problem for $label"
+  arity=$(printf '%s\n' "$arglist" | awk -F, '{ print NF }')
+
+  args=
+  i=0
+  while [ "$i" -lt "$arity" ]; do
+    if [ "$i" -eq 0 ]; then
+      args=$zero_symbol
+    else
+      args=$args,$zero_symbol
+    fi
+    i=$((i + 1))
+  done
+
+  bad_term="$function_symbol($args)"
+  conjecture="fof(goal, conjecture, $bad_term = $successor_symbol($bad_term))."
+  awk -v conjecture="$conjecture" '
+    /^fof\(.*,[[:space:]]*conjecture,[[:space:]]*/ { print conjecture; next }
+    { print }
+  ' "$source_problem" >"$bad_problem"
 }
 
 assert_provable() {
@@ -337,30 +377,18 @@ assert_unprovable "$tmpdir/consistency-idiv2.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-idiv3.p" "$TIMEOUT"
 
 bad_idiv=$tmpdir/bad-idiv.p
-assert_contains_fixed "$tmpdir/consistency-idiv.p" \
-  "cextraction__deptypes_2eidiv___24a2" "idiv violated-premise symbol"
-assert_contains_fixed "$tmpdir/consistency-idiv.p" \
-  "cCorelib_2eInit_2eDatatypes_2eS___24a1" "successor constructor symbol"
-sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
-  "$tmpdir/consistency-idiv.p" >"$bad_idiv"
+make_bad_successor_problem "$tmpdir/consistency-idiv.p" "$bad_idiv" \
+  "idiv violated-premise unfolding instance"
 assert_unprovable_problem "$bad_idiv" "$TIMEOUT" "idiv violated-premise unfolding instance"
 
 bad_idiv2=$tmpdir/bad-idiv2.p
-assert_contains_fixed "$tmpdir/consistency-idiv2.p" \
-  "cextraction__deptypes_2eidiv2___24a2" "idiv2 violated-premise symbol"
-assert_contains_fixed "$tmpdir/consistency-idiv2.p" \
-  "cCorelib_2eInit_2eDatatypes_2eS___24a1" "successor constructor symbol"
-sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv2___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
-  "$tmpdir/consistency-idiv2.p" >"$bad_idiv2"
+make_bad_successor_problem "$tmpdir/consistency-idiv2.p" "$bad_idiv2" \
+  "idiv2 violated-premise unfolding instance"
 assert_unprovable_problem "$bad_idiv2" "$TIMEOUT" "idiv2 violated-premise unfolding instance"
 
 bad_idiv3=$tmpdir/bad-idiv3.p
-assert_contains_fixed "$tmpdir/consistency-idiv3.p" \
-  "cextraction__deptypes_2eidiv3___24a2" "idiv3 violated-premise symbol"
-assert_contains_fixed "$tmpdir/consistency-idiv3.p" \
-  "cCorelib_2eInit_2eDatatypes_2eS___24a1" "successor constructor symbol"
-sed 's/^fof(.*,[[:space:]]*conjecture,[[:space:]]*.*$/fof(goal, conjecture, cextraction__deptypes_2eidiv3___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO) = cCorelib_2eInit_2eDatatypes_2eS___24a1(cextraction__deptypes_2eidiv3___24a2(cCorelib_2eInit_2eDatatypes_2eO,cCorelib_2eInit_2eDatatypes_2eO)))./' \
-  "$tmpdir/consistency-idiv3.p" >"$bad_idiv3"
+make_bad_successor_problem "$tmpdir/consistency-idiv3.p" "$bad_idiv3" \
+  "idiv3 violated-premise unfolding instance"
 assert_unprovable_problem "$bad_idiv3" "$TIMEOUT" "idiv3 violated-premise unfolding instance"
 
 assert_unprovable "$tmpdir/consistency-h.p" "$TIMEOUT"
