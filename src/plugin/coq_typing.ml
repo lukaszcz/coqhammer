@@ -129,11 +129,12 @@ let eval (tm : coqterm) : coqvalue =
                     in
                     if List.length args > n + params_num then
                       begin
-                        print_coqterm tm;
-                        print_list print_string constrs;
-                        print_int i; print_newline ();
-                        print_int n; print_newline ();
-                        print_int params_num; print_newline ();
+                        debug 2 (fun () ->
+                          print_coqterm tm;
+                          print_list print_string constrs;
+                          print_int i; print_newline ();
+                          print_int n; print_newline ();
+                          print_int params_num; print_newline ());
                         failwith ("eval: bad number of constructor arguments: " ^ c)
                       end
                     else
@@ -205,8 +206,9 @@ let rec check_prop args ctx tm =
         try
           is_prop_tgt args (List.assoc x ctx)
         with Not_found ->
-          print_list (fun (name, _) -> print_string name) (List.rev ctx);
-          failwith ("check_prop: var not found: " ^ x)
+          failwith
+            ("check_prop: var not found: " ^ x ^ " in context ["
+             ^ String.concat "; " (List.map fst ctx) ^ "]")
       end
   | Const(c) ->
       begin

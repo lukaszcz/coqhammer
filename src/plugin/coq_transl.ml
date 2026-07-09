@@ -187,12 +187,12 @@ let specif_constant basename =
   and stdlib = "Stdlib.Init.Specif." ^ basename in
   if Defhash.mem core then core else if Defhash.mem coq then coq else stdlib
 
-let erase_false_rect_type_arg tm =
+let erase_false_rect_type_arg ctx tm =
   if opt_refinement_types then
     match flatten_app tm with
     | Const name, ty :: args
          when is_false_rect_constant name && args <> [] && ty <> type_any &&
-              Coq_erasure.has_erasable_content [] ty ->
+              Coq_erasure.has_erasable_content ctx ty ->
        (* E3 shallowness for impossible branches: by the Coincidence lemma, the
           eliminated result type may mention a collapsed refinement package, but
           the proof argument is erased and the branch is unreachable.  Keep the
@@ -1293,7 +1293,7 @@ and convert ctx tm =
       begin match erase_transport_head tm with
       | Some tm2 -> convert ctx tm2
       | None ->
-      begin match erase_false_rect_type_arg tm with
+      begin match erase_false_rect_type_arg ctx tm with
       | Some tm2 -> convert ctx tm2
       | None ->
       begin

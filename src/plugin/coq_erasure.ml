@@ -44,9 +44,6 @@ let rec subst_params formals params tm =
       let tm2 = subst_params formals2 params2 tm in
       if var_occurs name tm2 then substvar name param tm2 else tm2
 
-let safe_check_prop ctx tm =
-  try Coq_typing.check_prop ctx tm with _ -> false
-
 let is_ex_ind name = short_name name = "ex"
 
 let is_instance_dependent_decl name =
@@ -55,10 +52,13 @@ let is_instance_dependent_decl name =
   | _ -> false
 
 let get_inductive name =
-  match Defhash.find name with
-  | (_, IndType(_, constrs, params_num), ind_ty, ind_sort) ->
-      Some (constrs, params_num, ind_ty, ind_sort)
-  | _ -> None
+  if Defhash.mem name then
+    match Defhash.find name with
+    | (_, IndType(_, constrs, params_num), ind_ty, ind_sort) ->
+        Some (constrs, params_num, ind_ty, ind_sort)
+    | _ -> None
+  else
+    None
 
 let term_mentions_const name tm =
   fold_coqterm
@@ -186,48 +186,48 @@ let constructor_info ctx params params_num cname =
     | [] -> List.rev acc
     | (name, ty) :: args2 ->
         let ty = simpl ty in
-        let is_prop = safe_check_prop ctx ty in
+        let is_prop = Coq_typing.check_prop ctx ty in
         let info = { arg_index = idx; arg_name = name; arg_ty = ty; arg_is_prop = is_prop } in
         collect ((name, ty) :: ctx) (idx + 1) (info :: acc) args2
   in
   { ctor_name = cname; ctor_args = collect ctx 0 [] args }
 
 let classify ctx indname params =
-  try
-    match get_inductive indname with
-    | None -> CRegular
-    | Some (constrs, params_num, ind_ty, ind_sort) ->
-        let all_formals = Coq_typing.get_type_args ind_ty in
-        let has_indices = List.length all_formals > params_num in
-        let params = Hhlib.take params_num params in
-        let mask = List.map (safe_check_prop ctx) params in
-        let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
-        let shape =
-          try Hashtbl.find memo (indname, mask) with Not_found ->
-            let is_prop_ind =
-              ind_sort = SortProp || safe_check_prop ctx (mk_long_app (Const indname) params)
-            in
-            let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
-            Hashtbl.add memo (indname, mask) shape;
-            shape
-        in
-        instantiate_class indname ctor_infos shape
-  with _ ->
-    CRegular
+  match get_inductive indname with
+  | None -> CRegular
+  | Some (_, params_num, _, _) when List.length params < params_num ->
+      (* A partially applied inductive is not a classifiable instance: its
+         parameters are not all determined, so [constructor_info] could not
+         substitute them and [check_prop] would be handed unbound formals.
+         Such occurrences stay on the status-quo path. *)
+      CRegular
+  | Some (constrs, params_num, ind_ty, ind_sort) ->
+      let all_formals = Coq_typing.get_type_args ind_ty in
+      let has_indices = List.length all_formals > params_num in
+      let params = Hhlib.take params_num params in
+      let mask = List.map (Coq_typing.check_prop ctx) params in
+      let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
+      let shape =
+        try Hashtbl.find memo (indname, mask) with Not_found ->
+          let is_prop_ind =
+            ind_sort = SortProp || Coq_typing.check_prop ctx (mk_long_app (Const indname) params)
+          in
+          let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
+          Hashtbl.add memo (indname, mask) shape;
+          shape
+      in
+      instantiate_class indname ctor_infos shape
 
 let classify_decl indname =
   if is_instance_dependent_decl indname then
     None
   else
-    try
-      match get_inductive indname with
-      | None -> None
-      | Some (_, params_num, ind_ty, _) ->
-          let params = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
-          let ctx = List.rev params in
-          Some (classify ctx indname (mk_vars params))
-    with _ ->
-      None
+    match get_inductive indname with
+    | None -> None
+    | Some (_, params_num, ind_ty, _) ->
+        let params = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
+        let ctx = List.rev params in
+        Some (classify ctx indname (mk_vars params))
 
 let is_erasable_class = function
   | CRegular -> false
