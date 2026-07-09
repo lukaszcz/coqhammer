@@ -94,28 +94,34 @@ require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
 require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
 require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
-# Phase 2 E1 singleton erasure: the match on the conjunction proof in h
-# collapses to its unique branch.  Phase 3 will unbox exist; for this phase the
-# proof argument is already erased, so the definition is exist(..., z).
+# Phase 3a E3 refinement unboxing: the conjunction match in h collapses as in
+# Phase 2 and the subset constructor occurrence now erases to its carrier z.
 require_line "h has a type axiom" '^\$_typeof_extraction_deptypes\.h:'
-require_line "h has a collapsed singleton definition" '^\$_def_extraction_deptypes\.h:.*= \(\(\(Corelib\.Init\.Specif\.exist @ Corelib\.Init\.Datatypes\.nat\) @ .*\) @ 2_z\)'
-forbid_line "h singleton collapse must not leave generic case" '^\$_def_extraction_deptypes\.h:.*\$_generic_case'
+require_line "h has a refinement-unboxed definition" '^\$_def_extraction_deptypes\.h:.*= 2_z\)'
+forbid_line "h output must not mention erased exist constructors" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.exist'
+forbid_line "h singleton collapse must not leave generic case" '^.*extraction_deptypes\.h.*\$_generic_case'
 
 # safe_pred: the dependent match still splits on nat and now keeps a definition
 # for both branches while proof payloads in the live successor branch are erased.
 require_count_at_least "safe_pred has split definition axioms" '^\$_def_extraction_deptypes\.safe_pred[$]' 2
 require_line "safe_pred zero branch remains dead-code fallback" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Logic\.False_rect'
-require_line "safe_pred successor branch erases eq_refl proof payload" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
+require_line "safe_pred successor branch unboxes the subset result" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*= var_0_[$]Anonymous_[0-9]+\)'
 forbid_line "safe_pred successor branch must not keep eq_refl" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Logic\.eq_refl'
+forbid_line "safe_pred successor branch must not keep exist" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
 
 # Transport erasure: eq_rect/eq_rec/eq_ind-style casts are identities in the
 # proof-irrelevant erasure model (guarded by opt_erasure_guards when enabled).
 require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*= 4_x'
 
-# pval: non-primitive projection record fixture currently has an inversion-style
-# definition axiom.
-require_count_at_least "pval has a split definition axiom" '^\$_def_extraction_deptypes\.pval[$]' 1
-require_line "pval split mentions mkpos" '^\$_def_extraction_deptypes\.pval[$].*extraction_deptypes\.mkpos'
+# proj1_sig's own subset match collapses to the identity equation; no
+# per-occurrence delta unfolding is needed for users because this is a perfect
+# demodulator.
+require_line "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
+
+# pval: non-primitive projection over a proof-carrying record is the identity
+# after E3 subset-match collapse.
+require_line "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
+forbid_line "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
 
 # beq: sumbool-driven definition links through an auxiliary case symbol for
 # the compound Nat.eq_dec scrutinee.
@@ -123,10 +129,10 @@ require_count_at_least "beq has a linking definition axiom" '^\$_def_extraction_
 require_line "beq link mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq[$]link:.*Nat\.eq_dec'
 require_line "beq aux case mentions sumbool constructors" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$].*Corelib\.Init\.Specif\.(left|right)'
 
-# tag: prod-with-Prop fixture still contains the pair constructor in Phase 2,
-# but the propositional eq_refl payload is erased.
-require_count_at_least "tag has a definition axiom" '^\$_def_extraction_deptypes\.tag:' 1
-require_line "tag baseline mentions pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
+# tag: prod-with-Prop is a per-instance subset; pair erases to the informative
+# first component.
+require_line "tag has an unboxed definition axiom" '^\$_def_extraction_deptypes\.tag:.*= 0_n\)'
+forbid_line "tag definition must not mention pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
 forbid_line "tag proof payload is erased" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
 
 # WF guardrail: until Phase 4, the Acc/Fix_F packagings must not expose an
@@ -183,15 +189,11 @@ require_line "typeclass method projection is translated" '^Corelib\.Classes\.Rel
 #   expose unconditional unfolding equations.
 PHASE_2_SINGLETONS
 
-: <<'PHASE_3_REFINEMENTS'
-# TASK_15 / Phase 3: refinement unboxing and specification extraction.
-# - h: $_def_extraction_deptypes.h RHS is the bare z variable; $_typeof_h contains
-#   the payload x = h x y z and no $HasType(..., sig ...).
-# - h/safe_pred/pval/tag/beq output contains no Corelib.Init.Specif.sig,
-#   Corelib.Init.Specif.exist, or proj1_sig where the classified refinement/enum
-#   translation applies.
+: <<'PHASE_3B_SPECS'
+# TASK_14 / Phase 3b: specification extraction and enum guard expansion.
+# - $_typeof_h contains the payload x = h x y z and no $HasType(..., sig ...).
 # - beq/Nat.eq_dec sumbool guards are expanded shallowly.
-PHASE_3_REFINEMENTS
+PHASE_3B_SPECS
 
 : <<'PHASE_4_WF_RECURSION'
 # TASK_17 / Phase 4: premised WF-recursion equations.

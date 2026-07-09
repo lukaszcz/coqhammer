@@ -60,17 +60,17 @@ Definition idiv3 (b : nat) (Hb : b <> 0) (a : nat) : nat :=
        end) (lt_wf a).
 
 Lemma extraction_h_proj : forall x y z p, proj1_sig (h x y z p) = z.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_h_spec : forall x y z p, x = proj1_sig (h x y z p).
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_h_two_specs :
   forall a b c p q, proj1_sig (h a b c p) = proj1_sig (h c b a q) -> a = c.
 Proof. hammer. Qed.
 
 Lemma extraction_safe_pred_spec : forall n p, S (proj1_sig (safe_pred n p)) = n.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_safe_pred_proof_irrel :
   forall n p q, proj1_sig (safe_pred (S n) p) = proj1_sig (safe_pred (S n) q).
@@ -86,20 +86,20 @@ Lemma extraction_beq_correct : forall n m, beq n m = true <-> n = m.
 Proof. Fail hammer. Abort.
 
 Lemma extraction_between_low : forall n, n <= proj1_sig (sig_of_sig2 (between n)).
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_tag_fst : forall n, fst (tag n) = n.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_vhead_cons : forall A n (x : A) (v : Vector.t A n), vhead (Vector.cons A x n v) = x.
 Proof. hammer. Qed.
 
 Lemma extraction_refinement_hyp : forall s : {u : nat | 0 < u}, 1 <= proj1_sig s.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_h_exists :
   forall x y z p, exists u, proj1_sig (h x y z p) = u /\ x = u.
-Proof. Fail hammer. Abort.
+Proof. hammer. Qed.
 
 Lemma extraction_idiv_small : forall a b p, b <> 0 -> a < b -> idiv a b p = 0.
 Proof. Fail hammer. Abort.

@@ -39,6 +39,7 @@ Hammer_transl "odd".
 Hammer_transl "h".
 Hammer_transl "safe_pred".
 Hammer_transl "tr".
+Hammer_transl "proj1_sig".
 Hammer_transl "pval".
 Hammer_transl "beq".
 Hammer_transl "tag".

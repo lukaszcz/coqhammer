@@ -806,11 +806,37 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                        emit_leaf ?premise axname vars lhs case_body
                   end
               else
-                begin
+                let params = get_params indty return_type params_num in
+                let collapse_subset_case carrier_idx =
+                  match constrs, branches with
+                  | [cname], [(n, branch)] ->
+                     let (_, args) = constructor_args params params_num cname in
+                     if List.length args <> n then
+                       raise Not_found
+                     else
+                       let body = simpl (mk_long_app branch (mk_vars args)) in
+                       let rec subst_args ctx idx body = function
+                         | [] -> body
+                         | (arg_name, arg_ty) :: args2 ->
+                            let body2 =
+                              if idx = carrier_idx then
+                                substvar arg_name matched_term body
+                              else if Coq_typing.check_prop ctx arg_ty then
+                                subst_proof arg_name arg_ty body
+                              else
+                                raise Not_found
+                            in
+                            subst_args ((arg_name, arg_ty) :: ctx) (idx + 1) body2 args2
+                       in
+                       (* E3 refinement occurrence collapse: by the Coincidence
+                          lemma, matching a subset value exposes the erased
+                          carrier itself; proof payload binders are erased. *)
+                       subst_args (List.rev vars) 0 body args
+                  | _ -> raise Not_found
+                in
+                let regular_case () =
                   match matched_term with
                   | Var scrutinee when var_occurs scrutinee lhs ->
-                     let params = get_params indty return_type params_num
-                     in
                      let compile_branch acc cname =
                        acc >>
                        let (n, branch) = get_branch cname constrs branches
@@ -848,7 +874,20 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      >>= fun rhs ->
                      emit_equation ?premise (axname ^ "$link") vars lhs rhs
                        (Coq_typing.check_prop (List.rev vars) case_body)
-                end
+                in
+                if opt_refinement_types then
+                  match Coq_erasure.classify (List.rev vars) indname params with
+                  | Coq_erasure.CSubset { carrier_idx; _ } ->
+                     compile_case ?premise lhs vars axname (collapse_subset_case carrier_idx)
+                  | Coq_erasure.CEnum _ ->
+                     (* E3 discipline: enum scrutinees (e.g. sumbool) need no
+                        special collapse; split equations already operate on the
+                        erased constructor tags. *)
+                     regular_case ()
+                  | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
+                     regular_case ()
+                else
+                  regular_case ()
            | _ -> failwith "impossible"
          end
       | Lam(vname, vtype, body2) ->
@@ -906,17 +945,69 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                         return (generic_match ())
                    end
                else
-                 let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
+                 let vars = fvars @ lvars in
+                 let params = get_params indty return_type params_num in
+                 let collapse_subset_case carrier_idx =
+                   match constrs, branches with
+                   | [cname], [(n, branch)] ->
+                      let (_, args) = constructor_args params params_num cname in
+                      if List.length args <> n then
+                        raise Not_found
+                      else
+                        let body = simpl (mk_long_app branch (mk_vars args)) in
+                        let rec subst_args ctx idx body = function
+                          | [] -> body
+                          | (arg_name, arg_ty) :: args2 ->
+                             let body2 =
+                               if idx = carrier_idx then
+                                 substvar arg_name matched_term body
+                               else if Coq_typing.check_prop ctx arg_ty then
+                                 subst_proof arg_name arg_ty body
+                               else
+                                 raise Not_found
+                             in
+                             subst_args ((arg_name, arg_ty) :: ctx) (idx + 1) body2 args2
+                        in
+                        (* E3 refinement occurrence collapse: by the Coincidence
+                           lemma, a whole match on a subset scrutinee continues
+                           with the scrutinee as the carrier value and erases the
+                           remaining proof payload binders. *)
+                        subst_args (List.rev vars) 0 body args
+                   | _ -> raise Not_found
                  in
-                 let axname = if name0 = "" then fname else axname0
-                 in
-                 convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
-                 >>=
-                 fun case_replacement ->
-                   let lhs = mk_long_app case_replacement (mk_vars lvars)
+                 let lifted_case () =
+                   let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
                    in
-                   compile_case lhs (fvars @ lvars) axname tm >>
-                   return case_replacement
+                   let axname = if name0 = "" then fname else axname0
+                   in
+                   convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+                   >>=
+                   fun case_replacement ->
+                     let lhs = mk_long_app case_replacement (mk_vars lvars)
+                     in
+                     compile_case lhs vars axname tm >>
+                     return case_replacement
+                 in
+                 if opt_refinement_types then
+                   match Coq_erasure.classify (List.rev vars) indname params with
+                   | Coq_erasure.CSubset { carrier_idx; _ } ->
+                      let body2 = collapse_subset_case carrier_idx in
+                      if name0 = "" then
+                        convert (List.rev vars) body2
+                      else
+                        convert (List.rev fvars) (mk_long_app (Const(name0)) (mk_vars fvars))
+                        >>= fun case_replacement ->
+                        let lhs = mk_long_app case_replacement (mk_vars lvars) in
+                        compile_case lhs vars axname0 body2 >>
+                        return case_replacement
+                   | Coq_erasure.CEnum _ ->
+                      (* E3 discipline: enum scrutinees are already handled by
+                         the ordinary split path after proof-argument dropping. *)
+                      lifted_case ()
+                   | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
+                      lifted_case ()
+                 else
+                   lifted_case ()
             | _ ->
                failwith "impossible"
           end
@@ -965,8 +1056,80 @@ and convert ctx tm =
       convert ctx x >>= fun x2 ->
       make_guard ctx y x2
   | App(_) ->
+      let convert_extra_app base extras =
+        let rec hlp acc = function
+          | [] -> return acc
+          | arg :: args ->
+             if acc = Const("$Proof") then
+               return (Const("$Proof"))
+             else
+               convert_term ctx arg >>= fun arg2 ->
+               if arg2 = Const("$Proof") then
+                 hlp acc args
+               else
+                 hlp (App(acc, arg2)) args
+        in
+        hlp base extras
+      in
+      let subset_constructor_spine () =
+        try
+          match flatten_app tm with
+          | Const cname, args ->
+             let (target, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname)) in
+             begin
+               match target with
+               | Const indname ->
+                  begin
+                    match Defhash.find indname with
+                    | (_, IndType(_, constrs, params_num), _, _) when List.mem cname constrs && List.length args >= params_num ->
+                       let params = Hhlib.take params_num args in
+                       begin
+                         match Coq_erasure.classify ctx indname params with
+                         | Coq_erasure.CSubset { carrier_idx; _ } ->
+                            Some (cname, args, cargs, params_num, carrier_idx)
+                         | _ -> None
+                       end
+                    | _ -> None
+                  end
+               | _ -> None
+             end
+          | _ -> None
+        with _ -> None
+      in
+      let eta_expand_subset_constructor cname args cargs =
+        let provided = List.length args in
+        let missing = Hhlib.drop provided cargs in
+        let rec build actuals = function
+          | [] -> mk_long_app (Const cname) actuals
+          | (formal_name, formal_ty) :: rest ->
+             let var_name = refresh_varname formal_name in
+             let previous_formals = Hhlib.take (List.length actuals) cargs in
+             let var_ty = simpl (subst_params previous_formals actuals formal_ty) in
+             Lam(var_name, var_ty, build (actuals @ [Var var_name]) rest)
+        in
+        build args missing
+      in
       begin match erase_transport_head tm with
       | Some tm2 -> convert ctx tm2
+      | None ->
+      begin
+      match if opt_refinement_types then subset_constructor_spine () else None with
+      | Some (cname, args, cargs, params_num, carrier_idx) ->
+         let carrier_pos = params_num + carrier_idx in
+         if List.length args > carrier_pos then
+           let carrier_arg = List.nth args carrier_pos in
+           let extras = Hhlib.drop (List.length cargs) args in
+           (* E3 refinement occurrence collapse: by the Coincidence lemma,
+              subset constructors erase to their carrier at each occurrence.
+              Trailing applications are preserved on the translated carrier. *)
+           convert ctx carrier_arg >>= fun carrier ->
+           convert_extra_app carrier extras
+         else
+           (* Under-applied subset constructors are eta-expanded and then lifted;
+              the lifted symbol's equation may look like a bridge [F x = x],
+              which is legitimate only because it is generated at this partial
+              application occurrence by the same E3 collapse rule. *)
+           remove_lambda ctx (eta_expand_subset_constructor cname args cargs)
       | None ->
       begin
       match tm with
@@ -981,6 +1144,7 @@ and convert ctx tm =
         else
           return (App(x2, y2))
       | _ -> failwith "convert: app"
+      end
       end
       end
   | Lam(_) ->
