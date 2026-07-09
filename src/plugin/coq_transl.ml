@@ -1181,10 +1181,18 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          in
                          let branch_body = subst_proof_args (List.rev vars) args branch_body
                          in
+                         let rec split_scrutinee acc = function
+                           | [] -> raise Not_found
+                           | (name, _) :: vars_after when name = scrutinee ->
+                              (List.rev acc, vars_after)
+                           | var :: vars2 -> split_scrutinee (var :: acc) vars2
+                         in
+                         let vars_before, vars_after = split_scrutinee [] vars in
+                         let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
                          let lhs2 = substvar scrutinee pattern lhs
                          and body2 = substvar scrutinee pattern branch_body
                          and axname2 = axname ^ "$" ^ short_name cname
-                         and vars2 = List.filter (fun (name, _) -> name <> scrutinee) vars @ args
+                         and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
                          in
                          compile_case ?premise lhs2 vars2 axname2 body2
                      in
