@@ -180,18 +180,19 @@ let classify_shape indname is_prop_ind has_indices ctor_infos =
      can be expanded from their informative payloads.  Anything not recognized
      stays on the ordinary path for totality.
 
-     Indexed Set/Type families need their indices reflected in every enum/subset
-     guard.  The current shallow expansion records constructor payloads but not
-     result-index constraints, so classifying such families as CEnum/CSubset would
-     be too weak (e.g. reflect P false could be guarded as ReflectT P).  Keep
-     them on the ordinary path until index constraints are represented. *)
+     Indexed families need their indices reflected in the generated premises.
+     The current shallow expansion records constructor payloads but not result-
+     index constraints, so classifying indexed families as CEnum/CSubset or
+     CPropSingleton would be too weak (e.g. equality/transport could be reduced
+     without requiring the source equality).  Keep them on the ordinary path
+     until index constraints are represented. *)
   match ctor_infos with
   | [] -> MEmpty
   | _ when is_ex_ind indname -> MRegular
+  | _ when has_indices -> MRegular
   | [ctor] when is_prop_ind && List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args ->
       MPropSingleton
   | _ when is_prop_ind -> MRegular
-  | _ when has_indices -> MRegular
   | [ctor] ->
       let informative = List.filter (fun info -> not info.arg_is_prop) ctor.ctor_args in
       let prop_args = List.filter (fun info -> info.arg_is_prop) ctor.ctor_args in
