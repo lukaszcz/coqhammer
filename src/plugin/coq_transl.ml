@@ -270,9 +270,9 @@ let proof_like_after_erasure ctx tm =
         if is_init_logic_constant "eq_refl" name then
           List.length args >= 2
         else if is_init_logic_constant "eq_trans" name then
-          List.length args >= 4
+          List.length args >= 6
         else if is_init_logic_constant "eq_sym" name then
-          List.length args >= 3
+          List.length args >= 4
         else if is_jmeq_constant "JMeq_refl" name then
           List.length args >= 2
         else
