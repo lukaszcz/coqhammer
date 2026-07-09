@@ -1884,8 +1884,28 @@ and add_def_eq_axiom (name, value, ty, srt) =
      fix_lifting [] axname name [] [] value >>
      return ()
   | Case(_) ->
-     case_lifting [] axname name [] [] value >>
-     return ()
+     case_lifting [] axname name [] [] value >>= fun replacement ->
+     begin
+       match replacement with
+       | Const(c) when c = name ->
+          return ()
+       | _ ->
+          (* If case lifting has to fall back to an opaque generic match, keep
+             the original constant connected to that replacement.  Successful
+             lifting with a named definition already emits the defining
+             equations and returns [name]. *)
+          begin
+            match ty with
+            | SortProp ->
+               prop_to_formula [] replacement >>= fun r ->
+               add_axiom (mk_axiom axname (mk_equiv (Const(name)) r))
+            | SortType | SortSet ->
+               add_def_eq_type_axiom axname name [] replacement
+            | _ ->
+               convert [] replacement >>= fun r ->
+               add_axiom (mk_axiom axname (mk_eq (Const(name)) r))
+          end
+     end
   | Const(c) when c = name ->
      return ()
   | _ ->
