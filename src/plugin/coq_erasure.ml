@@ -42,43 +42,13 @@ exception Not_classifiable
 let check_prop ctx ty =
   try Coq_typing.check_prop ctx ty with _ -> raise Not_classifiable
 
-let rec subst_params formals params tm =
-  match formals, params with
-  | [], _ | _, [] -> tm
-  | (name, _) :: formals2, param :: params2 ->
-      let tm2 = subst_params formals2 params2 tm in
-      if var_occurs name tm2 then substvar name param tm2 else tm2
-
-let is_canonical_constant prefixes basename name =
-  List.exists (fun prefix -> name = prefix ^ "." ^ basename) prefixes
-
-let is_init_logic_ind basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Logic"; "Coq.Init.Logic"; "Stdlib.Init.Logic" ]
-    basename name
-
-let is_init_datatypes_ind basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Datatypes"; "Coq.Init.Datatypes"; "Stdlib.Init.Datatypes" ]
-    basename name
-
-let is_init_wf_ind basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Wf"; "Coq.Init.Wf"; "Stdlib.Init.Wf" ]
-    basename name
-
-let is_init_specif_ind basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Specif"; "Coq.Init.Specif"; "Stdlib.Init.Specif" ]
-    basename name
-
-let is_ex_ind name = is_init_logic_ind "ex" name
-let is_acc_ind name = is_init_wf_ind "Acc" name
+let is_ex_ind name = Coq_stdnames.is_init_logic "ex" name
+let is_acc_ind name = Coq_stdnames.is_init_wf "Acc" name
 
 let is_instance_dependent_decl name =
-  is_init_datatypes_ind "prod" name ||
-  is_init_datatypes_ind "sum" name ||
-  is_init_specif_ind "sigT" name
+  Coq_stdnames.is_init_datatypes "prod" name ||
+  Coq_stdnames.is_init_datatypes "sum" name ||
+  Coq_stdnames.is_init_specif "sigT" name
 
 let get_inductive name =
   if Defhash.mem name then
@@ -88,16 +58,6 @@ let get_inductive name =
     | _ -> None
   else
     None
-
-let term_mentions_const name tm =
-  fold_coqterm
-    (fun _ acc tm ->
-       acc ||
-       match tm with
-       | Const c -> c = name
-       | IndType(indname, constrs, _) -> indname = name || List.mem name constrs
-       | _ -> false)
-    false tm
 
 let arg_at infos idx =
   try Some (List.find (fun info -> info.arg_index = idx) infos) with Not_found -> None
@@ -118,7 +78,7 @@ let validate_subset indname infos carrier_idx prop_indices =
   in
   match arg_at infos carrier_idx with
   | Some carrier when not carrier.arg_is_prop && not (is_sort carrier.arg_ty) &&
-                       not (term_mentions_const indname carrier.arg_ty) ->
+                       not (term_mentions_const [indname] carrier.arg_ty) ->
       let prop_args =
         List.fold_right
           (fun idx acc ->

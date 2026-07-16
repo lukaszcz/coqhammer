@@ -160,50 +160,19 @@ let coq_axioms = [
 
 let coqterm_hash = Hashing.create lift
 
-let is_canonical_constant prefixes basename name =
-  List.exists (fun prefix -> name = prefix ^ "." ^ basename) prefixes
-
-let is_init_logic_constant basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Logic"; "Coq.Init.Logic"; "Stdlib.Init.Logic" ]
-    basename name
-
-let is_init_specif_constant basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Specif"; "Coq.Init.Specif"; "Stdlib.Init.Specif" ]
-    basename name
-
-let is_init_wf_constant basename name =
-  is_canonical_constant
-    [ "Corelib.Init.Wf"; "Coq.Init.Wf"; "Stdlib.Init.Wf" ]
-    basename name
-
-let is_jmeq_constant basename name =
-  is_canonical_constant
-    [ "Corelib.Logic.JMeq"; "Coq.Logic.JMeq"; "Stdlib.Logic.JMeq" ]
-    basename name
-
 let is_transport_constant name =
-  List.exists (fun basename -> is_init_logic_constant basename name)
+  List.exists (fun basename -> Coq_stdnames.is_init_logic basename name)
     [ "eq_rect"; "eq_rec"; "eq_ind"; "eq_rect_r"; "eq_rec_r"; "eq_ind_r" ]
 
-let is_false_rect_constant name = is_init_logic_constant "False_rect" name
+let is_false_rect_constant name = Coq_stdnames.is_init_logic "False_rect" name
 
-let is_wf_fix_constant name =
-  name = "Corelib.Init.Wf.Fix" || name = "Coq.Init.Wf.Fix" ||
-  name = "Stdlib.Init.Wf.Fix"
+let is_wf_fix_constant name = Coq_stdnames.is_init_wf "Fix" name
 
-let is_wf_fix_f_constant name =
-  name = "Corelib.Init.Wf.Fix_F" || name = "Coq.Init.Wf.Fix_F" ||
-  name = "Stdlib.Init.Wf.Fix_F"
+let is_wf_fix_f_constant name = Coq_stdnames.is_init_wf "Fix_F" name
 
-let is_program_fix_sub_constant name =
-  name = "Corelib.Program.Wf.Fix_sub" || name = "Coq.Program.Wf.Fix_sub" ||
-  name = "Stdlib.Program.Wf.Fix_sub"
+let is_program_fix_sub_constant name = Coq_stdnames.is_program_wf "Fix_sub" name
 
-let is_program_fix_f_sub_constant name =
-  name = "Corelib.Program.Wf.Fix_F_sub" || name = "Coq.Program.Wf.Fix_F_sub" ||
-  name = "Stdlib.Program.Wf.Fix_F_sub"
+let is_program_fix_f_sub_constant name = Coq_stdnames.is_program_wf "Fix_F_sub" name
 
 let specif_constant basename =
   let core = "Corelib.Init.Specif." ^ basename
@@ -267,13 +236,13 @@ let proof_like_after_erasure ctx tm =
   | _ ->
      match flatten_app tm with
      | Const name, args ->
-        if is_init_logic_constant "eq_refl" name then
+        if Coq_stdnames.is_init_logic "eq_refl" name then
           List.length args >= 2
-        else if is_init_logic_constant "eq_trans" name then
+        else if Coq_stdnames.is_init_logic "eq_trans" name then
           List.length args >= 6
-        else if is_init_logic_constant "eq_sym" name then
+        else if Coq_stdnames.is_init_logic "eq_sym" name then
           List.length args >= 4
-        else if is_jmeq_constant "JMeq_refl" name then
+        else if Coq_stdnames.is_jmeq "JMeq_refl" name then
           List.length args >= 2
         else
           false
@@ -305,17 +274,6 @@ let mk_inversion_conjs params_num args targs cacc =
   and ctx = List.rev (Hhlib.take params_num args)
   in
   mk_conjs ctx args2 targs cacc
-
-let rec subst_params lst prms tm =
-  match lst with
-  | [] -> tm
-  | (name, _) :: t ->
-    let tm2 = subst_params t (List.tl prms) tm
-    in
-    if var_occurs name tm2 then
-      substvar name (List.hd prms) tm2
-    else
-      tm2
 
 let mk_inversion params indname constrs matched_term f =
   let rec mk_disjs constrs acc =
@@ -447,12 +405,12 @@ let program_wf_simpl tm =
               try
                 let (_, ctor, idx) =
                   List.find
-                    (fun (p, _, _) -> is_init_specif_constant p pname)
+                    (fun (p, _, _) -> Coq_stdnames.is_init_specif p pname)
                     proj_table
                 in
                 begin match flatten_app packed with
                 | Const cname, cargs
-                    when is_init_specif_constant ctor cname && List.length cargs = 4 ->
+                    when Coq_stdnames.is_init_specif ctor cname && List.length cargs = 4 ->
                    simpl_rec (List.nth cargs idx)
                 | _ -> tm
                 end
@@ -962,17 +920,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            subst_args (List.rev vars) 0 body args
       | _ -> raise Not_found
     in
-    let is_eq_ind indname = is_init_logic_constant "eq" indname in
-    let is_acc_ind indname = is_init_wf_constant "Acc" indname in
-    let term_mentions_const names tm =
-      fold_coqterm
-        (fun _ acc tm ->
-           acc ||
-           match tm with
-           | Const name -> List.mem name names
-           | _ -> false)
-        false tm
-    in
+    let is_acc_ind indname = Coq_stdnames.is_init_wf "Acc" indname in
     let term_fvars_subset names tm =
       fold_coqterm
         (fun ctx acc tm ->
@@ -1005,21 +953,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            else
              Some body
       | _ -> raise Not_found
-    in
-    let erased_case_premise indty return_type params_num indname =
-      if opt_erasure_guards && is_eq_ind indname then
-        (* Transport/UIP debt note: transport erasure is validated semantically
-           by proof irrelevance, but is not generally a CIC source theorem; the
-           guarded variant keeps the converted source equality as premise. *)
-        begin
-          try
-            match get_case_type_args indty return_type params_num with
-            | [_; a; b] -> Some (mk_eq a b)
-            | _ -> None
-          with Not_found -> None
-        end
-      else
-        None
     in
     let combine_premises p1 p2 =
       match p1, p2 with
@@ -1124,8 +1057,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          match collapse_prop_singleton vars indname constrs params params_num branches with
                          | None -> emit_leaf ?premise axname vars lhs case_body
                          | Some body2 ->
-                            let case_premise = erased_case_premise indty return_type params_num indname in
-                            let premise = combine_premises premise case_premise in
                             (* Singleton erasure: the proof match computes as
                                its unique branch after proof arguments are erased. *)
                             compile_case ?premise lhs vars axname body2
@@ -1258,19 +1189,16 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                           match collapse_prop_singleton (fvars @ lvars) indname constrs params params_num branches with
                           | None -> return (generic_match ())
                           | Some body2 ->
-                             let premise = erased_case_premise indty return_type params_num indname in
                              (* Singleton erasure: a whole defining body that
                                 matches on a proof emits the equation for the
                                 unique branch after proof erasure. *)
                              if name0 = "" then
-                               (match premise with
-                               | Some _ -> return (generic_match ())
-                               | None -> convert (List.rev (fvars @ lvars)) body2)
+                               convert (List.rev (fvars @ lvars)) body2
                              else
                                convert (List.rev fvars) (mk_long_app (Const(name0)) (mk_vars fvars))
                                >>= fun case_replacement ->
                                let lhs = mk_long_app case_replacement (mk_vars lvars) in
-                               compile_case ?premise lhs (fvars @ lvars) axname0 body2 >>
+                               compile_case lhs (fvars @ lvars) axname0 body2 >>
                                return case_replacement
                         end
                      | Coq_erasure.CEmpty

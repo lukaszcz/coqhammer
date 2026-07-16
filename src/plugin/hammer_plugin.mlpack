@@ -2,6 +2,7 @@ Hh_term
 Msg
 Timeout
 Coq_transl_opts
+Coq_stdnames
 Coqterms
 Defhash
 Coq_typing

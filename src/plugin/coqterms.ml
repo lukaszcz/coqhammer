@@ -313,6 +313,17 @@ let map_coqterm f = map_coqterm0 (fun _ ctx x -> f ctx x)
 let fold_coqterm0 g acc tm = snd (map_fold_coqterm0 (fun n ctx acc x -> (x, g n ctx acc x)) acc tm)
 let fold_coqterm g acc = fold_coqterm0 (fun _ ctx acc x -> g ctx acc x) acc
 
+let term_mentions_const names tm =
+  fold_coqterm
+    (fun _ acc tm ->
+       acc ||
+       match tm with
+       | Const c -> List.mem c names
+       | IndType(indname, constrs, _) ->
+           List.mem indname names || List.exists (fun c -> List.mem c names) constrs
+       | _ -> false)
+    false tm
+
 let get_const_names tm =
   let lst =
     fold_coqterm
@@ -452,6 +463,16 @@ let dsubst lst tm =
          tm)
 
 let substvar vname tm = dsubst [(vname, lazy tm)]
+
+let rec subst_params formals params tm =
+  match formals with
+  | [] -> tm
+  | (name, _) :: formals2 ->
+      match params with
+      | [] -> failwith "subst_params: not enough parameters"
+      | param :: params2 ->
+          let tm2 = subst_params formals2 params2 tm in
+          if var_occurs name tm2 then substvar name param tm2 else tm2
 
 let refresh_bvars = substvar "dummy" (Var("dummy"))
 

@@ -6,6 +6,8 @@ src/plugin/hh_term.ml
 src/plugin/msg.ml
 src/plugin/timeout.ml
 src/plugin/coq_transl_opts.ml
+src/plugin/coq_stdnames.mli
+src/plugin/coq_stdnames.ml
 src/plugin/coqterms.ml
 src/plugin/defhash.mli
 src/plugin/defhash.ml
