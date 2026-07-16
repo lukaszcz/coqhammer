@@ -1,3 +1,15 @@
+CoqHammer v. 1.4.0
+==================
+
+Rocq versions compatibility: 9.2.
+
+Overview of changes
+-------------------
+* Extraction-factored first-order translation: per-constructor match
+  equations, proof/singleton erasure, shallow refinement/specification
+  expansion, and premised well-founded-recursion equations.
+* `Hammer_dump`/`hammer_dump` for writing the current goal's TPTP problem.
+
 CoqHammer v. 1.3.3
 ==================
 
@@ -10,21 +22,7 @@ Overview of changes
 * Fixed `dune` build.
 * Fixed deprecation warnings.
 * The `unfold`, `unfold!` and `unfolding` options accept notations (e.g. `unfold: "#"`).
-* Fixed temporary file leaks: all temporary files of a `hammer`/`predict`
-  invocation are now placed in a private per-invocation directory that is
-  removed as a whole on completion, interruption, or ATP worker kill (no
-  more racy globbing over the shared temp directory).
-* Added the extraction-factored first-order translation: per-constructor match
-  equations, proof/singleton erasure, shallow refinement/specification
-  expansion, and premised well-founded-recursion equations are enabled by
-  compile-time translation constants and covered by the normal plugin tests.  In
-  the confirmation grid, the final defaults improved ATP success from
-  196/440 (44.5%) to 385/440 (87.5%) with broad reconstruction coverage
-  and zero inconsistency-scan hits; indexed enum/subset refinements without
-  index constraints conservatively stay on the regular fallback path.
-* Added `Hammer_dump`/`hammer_dump` for writing the current goal's TPTP problem,
-  with `Set Hammer Dump Directory` and `COQHAMMER_DUMP_DIR` support for redirecting
-  relative dump names.
+* Fixed temporary file leaks.
 * Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2
