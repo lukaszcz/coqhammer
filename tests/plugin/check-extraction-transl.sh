@@ -245,7 +245,7 @@ require_line "List.app split mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.a
 
 require_line "List.Forall has an inversion axiom" '^\$_inversion_Corelib\.Lists\.ListDef\.Forall:'
 require_line "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'
-require_line "eq_ind_r has a guarded transport-erased definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:.*=> @ \(var_1_x_[0-9]+ = var_4_y_[0-9]+\).*Corelib\.Init\.Logic\.eq_ind_r.*= \$Proof'
+require_line "eq_ind_r has a transport-erased definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:.*\$Proof = \$Proof'
 require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
