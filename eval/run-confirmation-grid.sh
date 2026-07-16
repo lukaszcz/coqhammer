@@ -116,25 +116,23 @@ expect_manifest_value() {
 }
 
 validate_refactor_options() {
-  local manifest="$1" config="$2" core decl_skips split prop erasure refinement wf
+  local manifest="$1" config="$2" core decl_skips prop erasure refinement wf
   core="$config"
   decl_skips=false
   case "$core" in
     *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
   esac
-  split=true; prop=true; erasure=true; refinement=true; wf=true
+  prop=true; erasure=true; refinement=true; wf=true
   case "$core" in
-    all-off) split=false; prop=false; erasure=false; refinement=false; wf=false ;;
+    all-off) prop=false; erasure=false; refinement=false; wf=false ;;
     all-on) ;;
-    loo-split-case-axioms) split=false ;;
     loo-prop-case-erasure) prop=false ;;
     loo-erasure-guards) erasure=false ;;
     loo-refinement-types) refinement=false ;;
     loo-wf-recursion-eqs) wf=false ;;
     *) return 1 ;;
   esac
-  expect_manifest_value "$manifest" opt_split_case_axioms "$split" &&
-    expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
+  expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
     expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
     expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
     expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips" &&

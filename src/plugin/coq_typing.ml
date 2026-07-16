@@ -86,7 +86,7 @@ let eval (tm : coqterm) : coqvalue =
       PROD(delay_subst env tm, eval_abstr env a)
     | Let(value, (vname, ty, body)) ->
       eval ((vname, delay_eval env value) :: env) body
-    | Case(indname, matched_term, return_type, params_num, branches) ->
+    | Case(indname, matched_term, return_type, raw_return_type, params_num, branches) ->
       let rec eval_valapp v args =
         match args with
         | h :: t ->
@@ -141,14 +141,14 @@ let eval (tm : coqterm) : coqvalue =
                       eval_valapp (eval env b) (Hhlib.drop params_num args)
                  | _ ->
                     N (TERM (delay_subst env
-                               (Case(indname, reify mt2, return_type, params_num, branches))))
+                               (Case(indname, reify mt2, return_type, raw_return_type, params_num, branches))))
                end
             | _ ->
                failwith "impossible"
           end
         with Not_found ->
           N (TERM (delay_subst env
-                     (Case(indname, reify mt2, return_type, params_num, branches))))
+                     (Case(indname, reify mt2, return_type, raw_return_type, params_num, branches))))
       end
     | Fix(cft, k, recargs, names, types, bodies) ->
       let rec mkenv m lst acc =
@@ -234,7 +234,7 @@ let rec check_prop args ctx tm =
         false
   | Cast(v, ty2) ->
       is_prop_tgt args ty2
-  | Case(indname, matched_term, return_type, params_num, branches) ->
+  | Case(indname, matched_term, return_type, _, params_num, branches) ->
       (* NOTE: this is incorrect if `params_num' is smaller than the
          number of arguments of the inductive type `indname' *)
       is_prop_tgt args (App(return_type, matched_term))

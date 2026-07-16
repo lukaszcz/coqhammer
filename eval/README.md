@@ -104,11 +104,13 @@ restored after a configuration build.
    ./rebuild-config.sh all-on --label refactor-all-on
    ```
 
-   Named configurations are `all-off`, `all-on`, and the five leave-one-out
-   ablations `loo-split-case-axioms`, `loo-prop-case-erasure`,
-   `loo-erasure-guards`, `loo-refinement-types`, and
-   `loo-wf-recursion-eqs`. Append `-decl-skips` to any of them to enable
-   declaration-level refinement skips for the rebuild.
+   Named configurations are `all-off`, `all-on`, and the four leave-one-out
+   ablations `loo-prop-case-erasure`, `loo-erasure-guards`,
+   `loo-refinement-types`, and `loo-wf-recursion-eqs`. Append `-decl-skips`
+   to any of them to enable declaration-level refinement skips for the
+   rebuild. `loo-prop-case-erasure` also omits the lower/upper specification
+   bounds for proposition-valued matches, leaving their occurrence-lifted
+   symbols uninterpreted.
 
 3. Prepare one corpus in `eval/problems`:
 

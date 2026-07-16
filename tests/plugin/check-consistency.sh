@@ -418,5 +418,7 @@ assert_unprovable_problem "$bad_idiv3" "$TIMEOUT" "idiv3 violated-premise unfold
 assert_unprovable "$tmpdir/consistency-h.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-eq-rect.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-nat-add.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-prop-or-match.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-false-case-prop.p" "$TIMEOUT"
 
 echo "consistency canaries passed"

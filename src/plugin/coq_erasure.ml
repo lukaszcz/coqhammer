@@ -43,6 +43,7 @@ let check_prop ctx ty =
   try Coq_typing.check_prop ctx ty with _ -> raise Not_classifiable
 
 let is_ex_ind name = Coq_stdnames.is_init_logic "ex" name
+let is_eq_ind name = Coq_stdnames.is_init_logic "eq" name
 let is_acc_ind name = Coq_stdnames.is_init_wf "Acc" name
 
 let is_instance_dependent_decl name =
@@ -167,9 +168,10 @@ let classify_shape indname is_prop_ind has_indices ctor_infos =
   match ctor_infos with
   | [] -> MEmpty
   | _ when is_ex_ind indname -> MRegular
-  | _ when has_indices && not (is_acc_ind indname) -> MRegular
+  | _ when is_eq_ind indname -> MPropSingleton
   | [ctor] when is_prop_ind && List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args ->
       MPropSingleton
+  | _ when has_indices && not (is_acc_ind indname) -> MRegular
   | _ when is_prop_ind -> MRegular
   | [ctor] ->
       let informative = List.filter (fun info -> not info.arg_is_prop) ctor.ctor_args in
@@ -226,7 +228,7 @@ let classify ctx indname params =
         let mask = List.map (check_prop ctx) params in
         let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
         let is_prop_ind =
-          ind_sort = SortProp || check_prop ctx (mk_long_app (Const indname) params)
+          ind_sort = SortProp || Coq_typing.check_type_target_is_prop ind_ty
         in
         let ctor_prop_mask =
           List.map (fun ctor -> List.map (fun info -> info.arg_is_prop) ctor.ctor_args) ctor_infos
@@ -280,7 +282,7 @@ let rec has_erasable_content ctx tm =
   | Let (value, (name, ty, body)) ->
       has_erasable_content ctx value || has_erasable_content ctx ty ||
       has_erasable_content ((name, ty) :: ctx) body
-  | Case (_, matched_term, return_type, _, branches) ->
+  | Case (_, matched_term, return_type, _, _, branches) ->
       has_erasable_content ctx matched_term || has_erasable_content ctx return_type ||
       List.exists (fun (_, branch) -> has_erasable_content ctx branch) branches
   | Cast (term, ty) -> has_erasable_content ctx term || has_erasable_content ctx ty

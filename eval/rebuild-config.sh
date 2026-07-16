@@ -11,8 +11,7 @@ checkout into a switchable prefix, then restore the committed option constants.
 
 Core configs:
   all-off                  baseline-equivalent: all new extraction constants off
-  all-on                   all five extraction constants on, decl-level skips off
-  loo-split-case-axioms    all-on except opt_split_case_axioms=false
+  all-on                   all extraction constants on, decl-level skips off
   loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false
   loo-refinement-types     all-on except opt_refinement_types=false
@@ -35,7 +34,7 @@ fi
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
-      for base in all-off all-on loo-split-case-axioms loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-wf-recursion-eqs; do
+      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-wf-recursion-eqs; do
         echo "$base"
         echo "$base-decl-skips"
       done
@@ -82,15 +81,13 @@ case "$core" in
     ;;
 esac
 
-split=true
 prop=true
 erasure=true
 refinement=true
 wf=true
 case "$core" in
-  all-off) split=false; prop=false; erasure=false; refinement=false; wf=false ;;
+  all-off) prop=false; erasure=false; refinement=false; wf=false ;;
   all-on) ;;
-  loo-split-case-axioms) split=false ;;
   loo-prop-case-erasure) prop=false ;;
   loo-erasure-guards) erasure=false ;;
   loo-refinement-types) refinement=false ;;
@@ -107,19 +104,18 @@ restore_opts() {
 }
 trap restore_opts EXIT INT TERM
 
-python3 - "$opts" "$split" "$prop" "$erasure" "$refinement" "$decl_skips" "$wf" <<'PY'
+python3 - "$opts" "$prop" "$erasure" "$refinement" "$decl_skips" "$wf" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
 values = {
-    "opt_split_case_axioms": sys.argv[2],
-    "opt_prop_case_erasure": sys.argv[3],
-    "opt_erasure_guards": sys.argv[4],
-    "opt_refinement_types": sys.argv[5],
-    "opt_refinement_decl_skips": sys.argv[6],
-    "opt_wf_recursion_eqs": sys.argv[7],
+    "opt_prop_case_erasure": sys.argv[2],
+    "opt_erasure_guards": sys.argv[3],
+    "opt_refinement_types": sys.argv[4],
+    "opt_refinement_decl_skips": sys.argv[5],
+    "opt_wf_recursion_eqs": sys.argv[6],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -157,7 +153,6 @@ kind=refactor-config
 config=$config
 commit=$(git rev-parse HEAD)
 prefix=$prefix
-opt_split_case_axioms=$split
 opt_prop_case_erasure=$prop
 opt_erasure_guards=$erasure
 opt_refinement_types=$refinement

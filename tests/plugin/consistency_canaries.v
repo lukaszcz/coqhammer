@@ -14,6 +14,23 @@ Open Scope string_scope.
 Set Hammer SAutoLimit 0.
 Set Hammer Predictions 1024.
 
+Definition prop_or_match (P Q : Prop) (h : P \/ Q) : P \/ Q :=
+  match h with
+  | or_introl p => or_introl p
+  | or_intror q => or_intror q
+  end.
+
+Definition false_case_prop (h : False) : Prop :=
+  match h with end.
+
+Goal forall (P Q : Prop) (h : P \/ Q), prop_or_match P Q h = h.
+  hammer_dump "consistency-prop-or-match.p".
+Abort.
+
+Goal forall h : False, false_case_prop h.
+  hammer_dump "consistency-false-case-prop.p".
+Abort.
+
 Goal forall a b p, b <> 0 -> a < b -> idiv a b p = 0.
   hammer_dump "consistency-idiv.p".
 Abort.

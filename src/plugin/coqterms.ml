@@ -11,10 +11,12 @@ type coqterm =
 | App of coqterm * coqterm
 | Lam of coqabstraction
 | Case of string (* name of inductive type matched on *) * coqterm (* matched term *) *
-    coqterm
-(* return type: a lambda-abstraction that takes as its arguments the
+    coqterm (* normalized return type *) *
+    coqterm (* raw CIC return type, before logical lowering *)
+(* Both return-type forms are lambda-abstractions that take as their arguments the
    non-parameter arguments of the inductive definition and the term
-   matched on *) *
+   matched on.  Translation uses the normalized form for formulas and guards,
+   and the raw form to recover instantiated parameters and indices. *) *
   int (* params_num: number of parameters *) *
   (int * coqterm) list
 (* case branches: pairs (num of args (n), branch term); m-th branch on
@@ -218,10 +220,12 @@ let map_fold_coqterm0 f acc tm =
       let tm2 = Lam(name, ty2, body2)
       in
       f n ctx acc3 tm2
-    | Case(indname, x, ty, npar, lst) ->
+    | Case(indname, x, ty, raw_ty, npar, lst) ->
       let (x2, acc2) = do_map_fold n ctx acc x
       in
       let (ty2, acc3) = do_map_fold n ctx acc2 ty
+      in
+      let (raw_ty2, acc4) = do_map_fold n ctx acc3 raw_ty
       in
       let (lst2, acc4) =
         map_fold_lst
@@ -230,9 +234,9 @@ let map_fold_coqterm0 f acc tm =
             in
             ((nargs, x2), acc2)
           end
-          n ctx lst acc3
+          n ctx lst acc4
       in
-      let tm2 = Case(indname, x2, ty2, npar, lst2)
+      let tm2 = Case(indname, x2, ty2, raw_ty2, npar, lst2)
       in
       f n ctx acc4 tm2
     | Cast(x, y) ->
@@ -519,7 +523,7 @@ let write_coqterm out tm =
       out "]: (";
       write tm;
       out ")"
-    | Case(indname, mtm, rt, nparams, branches) ->
+    | Case(indname, mtm, rt, _, nparams, branches) ->
       out "(match ";
       write mtm;
       out " : ";

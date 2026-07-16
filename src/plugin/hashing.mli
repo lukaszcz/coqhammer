@@ -11,11 +11,16 @@ type 'a lift_fun = (coqterm -> coqterm) -> ('a -> 'a)
 (* a hash table for coqterms which hashes up to alpha-equivalence; 'a
    = f coqterm for some functor f; the second element of the pair is
    the functor lifting function (fmap) *)
-type 'a coqterms_hash = (coqcontext * coqterm, 'a) Hashtbl.t * ('a lift_fun)
+type 'a coqterms_hash = (string * coqcontext * coqterm, 'a) Hashtbl.t * ('a lift_fun)
 
 val create : 'a lift_fun -> 'a coqterms_hash
 val clear : 'a coqterms_hash -> unit
 (* find_or_insert h ctx tm mk *)
 val find_or_insert : 'a coqterms_hash -> coqcontext -> coqterm ->
   (coqcontext -> coqterm -> 'a) (* function creating new value, called if tm not found *) ->
+  'a
+(* [find_or_insert_keyed key ...] additionally separates otherwise
+   alpha-equivalent entries by an occurrence-identity key. *)
+val find_or_insert_keyed : string -> 'a coqterms_hash -> coqcontext -> coqterm ->
+  (coqcontext -> coqterm -> 'a) ->
   'a

@@ -47,8 +47,6 @@ let opt_precise_inversion = true
 let opt_type_lifting = true
 (* should translate Set to Type? *)
 let opt_set_to_type = true
-(* Emit per-constructor case equations. *)
-let opt_split_case_axioms = true
 (* Erase propositional case analyses. *)
 let opt_prop_case_erasure = true
 (* Guard erased transports. *)

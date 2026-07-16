@@ -18,6 +18,23 @@ let logic_eq = lazy (Hhutils.lib_ref_name "core.eq.type")
 let logic_ex = lazy (Hhutils.lib_ref_name "core.ex.type")
 let logic_all = lazy (Hhutils.lib_ref_name "core.all")
 
+(* A case predicate is type-level CIC data.  In particular, its scrutinee binder
+   records the instantiated inductive type.  Do not lower logical
+   inductives to FOL syntax while converting it, or case compilation loses the
+   parameters of matches on [ex], [or], and similar propositions. *)
+let preserving_case_predicate = ref false
+
+let with_case_predicate f =
+  let previous = !preserving_case_predicate in
+  preserving_case_predicate := true;
+  try
+    let result = f () in
+    preserving_case_predicate := previous;
+    result
+  with e ->
+    preserving_case_predicate := previous;
+    raise e
+
 (***************************************************************************************)
 (* Check input *)
 
@@ -41,44 +58,52 @@ let rec to_coqterm tm =
   and is_cofix = function Id "$CoFix" -> true | _ -> false
   in
   match tm with
-  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_True ->
+  | Comb(Comb(Id "$Ind", Id name), _)
+      when not !preserving_case_predicate && name = Lazy.force logic_True ->
     Const("$True")
 
-  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_False ->
+  | Comb(Comb(Id "$Ind", Id name), _)
+      when not !preserving_case_predicate && name = Lazy.force logic_False ->
     Const("$False")
 
-  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_and ->
+  | Comb(Comb(Id "$Ind", Id name), _)
+      when not !preserving_case_predicate && name = Lazy.force logic_and ->
     Const("&")
 
-  | Comb(Comb(Id "$Ind", Id name), _) when name = Lazy.force logic_or ->
+  | Comb(Comb(Id "$Ind", Id name), _)
+      when not !preserving_case_predicate && name = Lazy.force logic_or ->
     Const("|")
 
-  | Comb(Id "$Const", Id name) when name = Lazy.force logic_not ->
+  | Comb(Id "$Const", Id name)
+      when not !preserving_case_predicate && name = Lazy.force logic_not ->
     Const("~")
 
-  | Comb(Id "$Const", Id name) when name = Lazy.force logic_iff ->
+  | Comb(Id "$Const", Id name)
+      when not !preserving_case_predicate && name = Lazy.force logic_iff ->
     Const("<=>")
 
   | Comb(Comb(Id "$Ind", Id name), _)
-      when opt_translate_eq && name = Lazy.force logic_eq ->
+      when not !preserving_case_predicate && opt_translate_eq && name = Lazy.force logic_eq ->
     Const("=")
 
   | Comb(Comb(Id "$App", Comb(Comb(Id "$Ind", Id name), _)),
          Comb(Comb(Id "$ConstrArray", _),
               Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body)))
-      when name = Lazy.force logic_ex ->
+      when not !preserving_case_predicate && name = Lazy.force logic_ex ->
     Quant("?", (varname, to_coqterm vartype, to_coqterm body))
 
   | Comb(Comb(Id "$App", Comb(Id "$Const", Id name)),
          Comb(Comb(Id "$ConstrArray", _),
               Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body)))
-      when name = Lazy.force logic_all ->
+      when not !preserving_case_predicate && name = Lazy.force logic_all ->
     Quant("!", (varname, to_coqterm vartype, to_coqterm body))
 
-  | Comb(Id "$App", Comb(Comb(Id "$Ind", Id name), _)) when name = Lazy.force logic_ex ->
+  | Comb(Id "$App", Comb(Comb(Id "$Ind", Id name), _))
+      when not !preserving_case_predicate && name = Lazy.force logic_ex ->
     Const("?")
 
-  | Comb(Id "$Const", Id name) when name = Lazy.force logic_all ->
+  | Comb(Id "$Const", Id name)
+      when not !preserving_case_predicate && name = Lazy.force logic_all ->
     Const("!")
 
   | Comb(Id "$Rel", Id num) ->
@@ -110,7 +135,7 @@ let rec to_coqterm tm =
 
   | Comb(Comb(Comb(Comb(Id "$Case", Comb(Comb(Comb(Comb(Id "$CaseInfo",
                                                    Comb(Comb(Id "$Ind", Id indname), _)),
-                                                   Id npar), ndecls_arr), nargs_arr)),
+                                                   Id npar), _ndecls_arr), nargs_arr)),
                    return_type_lam),
               matched_term), cases) ->
     let rec parse_cases cases nargs_arr acc =
@@ -122,7 +147,8 @@ let rec to_coqterm tm =
     in
     check_name indname;
     Case(indname, to_coqterm matched_term, to_coqterm return_type_lam,
-         int_of_string npar, parse_cases cases ndecls_arr [])
+         to_case_predicate return_type_lam, int_of_string npar,
+         parse_cases cases nargs_arr [])
 
   | Comb(Comb(Comb(Comb(Id "$LetIn", Comb(Id "$Name", Id varname)), value), vartype), body) ->
     check_name varname;
@@ -193,6 +219,14 @@ let rec to_coqterm tm =
   | _ ->
      print_endline (string_of_hhterm tm);
      failwith ("to_coqterm")
+
+and to_case_predicate tm =
+  match tm with
+  | Comb(Comb(Comb(Id "$Lambda", Comb(Id "$Name", Id varname)), vartype), body) ->
+     check_name varname;
+     Lam(varname, with_case_predicate (fun () -> to_coqterm vartype),
+         to_case_predicate body)
+  | _ -> to_coqterm tm
 
 let to_coqdef (def : hhdef) (lst : hhdef list) =
   let rec parse_constrs lst cacc =

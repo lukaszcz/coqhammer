@@ -148,6 +148,7 @@ require_line "h has the specification-extracted axiom shape" '^\$_typeof_extract
 forbid_line "h type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.h:.*Corelib\.Init\.Specif\.sig'
 forbid_line "h output must not mention erased sig/exist/proj1_sig" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.(sig|exist|proj1_sig)'
 forbid_line "h singleton collapse must not leave generic case" '^.*extraction_deptypes\.h.*\$_generic_case'
+forbid_line "default extraction output contains no opaque generic case symbol" '\$_generic_case_'
 
 # safe_pred: the dependent match still splits on nat and now keeps a definition
 # for both branches while proof payloads in the live successor branch are erased.
