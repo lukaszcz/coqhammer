@@ -60,3 +60,6 @@ _opam/
 .claude
 .codex
 .pi
+
+# python files
+__pycache__

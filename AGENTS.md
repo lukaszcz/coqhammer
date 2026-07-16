@@ -81,4 +81,5 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 
 ## Instructions
 
+- Do not edit CHANGES.md
 - When finished, verify with `just check`
