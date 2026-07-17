@@ -1,13 +1,4 @@
-LOCAL_ROCQLIB ?= ../../_check-install/coq
-ifeq ($(USE_LOCAL_INSTALL),1)
-ifneq ($(wildcard $(LOCAL_ROCQLIB)/theories),)
-COQC ?= rocq c -coqlib $(LOCAL_ROCQLIB)
-else
-$(error USE_LOCAL_INSTALL=1 but LOCAL_ROCQLIB=$(LOCAL_ROCQLIB) has no theories directory)
-endif
-else
 COQC ?= rocq c
-endif
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo
 PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo $(EXTRACTION_VOS)

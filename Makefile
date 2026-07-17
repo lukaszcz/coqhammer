@@ -1,31 +1,8 @@
 
 BINDIR ?= $(if $(COQBIN),$(COQBIN),`rocq c -where | xargs dirname | xargs dirname`/bin/)
 DUNE ?= dune
-DUNE_ENV ?= env -u OPAMSWITCH -u OPAM_SWITCH_PREFIX -u OCAMLPATH -u OCAMLTOP_INCLUDE_PATH -u OCAML_TOPLEVEL_PATH
-LOCAL_INSTALL ?= $(CURDIR)/_check-install
-LOCAL_ROCQLIB ?= $(LOCAL_INSTALL)/coq
-LOCAL_COQLIBINSTALL ?= $(LOCAL_ROCQLIB)/user-contrib
-LOCAL_COQPLUGININSTALL ?= $(LOCAL_INSTALL)
-USE_LOCAL_INSTALL ?= 0
-ifeq ($(USE_LOCAL_INSTALL),1)
-ifneq ($(wildcard $(LOCAL_COQPLUGININSTALL)),)
-export OCAMLPATH := $(LOCAL_COQPLUGININSTALL)$(if $(OCAMLPATH),:$(OCAMLPATH))
-export PATH := $(LOCAL_INSTALL)/bin:$(PATH)
-endif
-ifneq ($(wildcard $(LOCAL_ROCQLIB)/theories),)
-export COQC ?= rocq c -coqlib $(LOCAL_ROCQLIB)
-endif
-endif
 
 default: all
-
-prepare-local-install:
-	mkdir -p $(LOCAL_ROCQLIB)/user-contrib
-	ln -sfn $$(rocq c -where)/theories $(LOCAL_ROCQLIB)/theories
-	ln -sfn $$(rocq c -where)/user-contrib/Stdlib $(LOCAL_ROCQLIB)/user-contrib/Stdlib
-	rm -rf $(LOCAL_INSTALL)/rocq-runtime
-	mkdir -p $(LOCAL_INSTALL)/rocq-runtime
-	for f in $$(dirname $$(rocq c -where))/rocq-runtime/*; do ln -sfn $$f $(LOCAL_INSTALL)/rocq-runtime/$$(basename $$f); done
 
 all:
 	$(MAKE) tactics
@@ -74,25 +51,25 @@ Makefile.coq.tactics: _CoqProject.tactics
 Makefile.coq.mathcomp: _CoqProject.mathcomp
 	rocq makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
-tests: tests-plugin tests-tactics
+tests: install tests-plugin tests-tactics
 
-tests-plugin:
+tests-plugin: install
 	$(MAKE) -B -C tests/plugin
 
-tests-tactics:
+tests-tactics: install
 	$(MAKE) -B -C tests/tactics
 
-quicktest: test-plugin test-tactics
+quicktest: install test-plugin test-tactics
 
-test-plugin:
+test-plugin: install
 	$(MAKE) -B -C tests/plugin plugin_test.vo
 
 test-plugin-release: test-plugin test-extraction
 
-test-extraction:
+test-extraction: install
 	$(MAKE) -B -C tests/plugin test-extraction
 
-test-tactics:
+test-tactics: install
 	$(MAKE) -B -C tests/tactics tactics_test.vo
 
 clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefile.coq.mathcomp
@@ -105,35 +82,35 @@ clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefi
 dune: dune-tactics dune-plugin
 
 dune-tactics:
-	$(DUNE_ENV) $(DUNE) build -p coq-hammer-tactics
+	$(DUNE) build -p coq-hammer-tactics
 
 dune-plugin:
-	$(DUNE_ENV) $(DUNE) build -p coq-hammer-tactics,coq-hammer
+	$(DUNE) build -p coq-hammer-tactics,coq-hammer
 
-dune-test-plugin:
-	$(DUNE_ENV) $(DUNE) build @tests/plugin/runtest
+dune-test-plugin: install
+	$(DUNE) build @tests/plugin/runtest
 
 dune-install: dune-install-tactics dune-install-plugin
 
 dune-install-tactics: dune-tactics
-	$(DUNE_ENV) $(DUNE) install coq-hammer-tactics
+	$(DUNE) install coq-hammer-tactics
 
 dune-install-plugin: dune-plugin
-	$(DUNE_ENV) $(DUNE) install coq-hammer
+	$(DUNE) install coq-hammer
 
 dune-uninstall:
-	$(DUNE_ENV) $(DUNE) uninstall coq-hammer coq-hammer-tactics
+	$(DUNE) uninstall coq-hammer coq-hammer-tactics
 
 dune-uninstall-tactics:
-	$(DUNE_ENV) $(DUNE) uninstall coq-hammer-tactics
+	$(DUNE) uninstall coq-hammer-tactics
 
 dune-uninstall-plugin:
-	$(DUNE_ENV) $(DUNE) uninstall coq-hammer
+	$(DUNE) uninstall coq-hammer
 
 dune-clean:
-	$(DUNE_ENV) $(DUNE) clean
+	$(DUNE) clean
 	$(MAKE) -C eval clean
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
 
-.PHONY: default prepare-local-install all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-plugin-release test-tactics test-extraction clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-plugin-release test-tactics test-extraction clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin

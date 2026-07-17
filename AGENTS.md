@@ -31,7 +31,12 @@ make dune-install
 make clean
 ```
 
-The plugin build cannot proceed without an installed coq-hammer-tactics (see `Makefile.coq.plugin.local`, which links against the `coq-hammer-tactics.lib` findlib package) — hence `make` interleaves `install-tactics` between the two builds.
+`make install` is the expected workflow: it builds both packages and installs
+them into the active workspace-local opam switch under `_opam/`. The plugin
+build cannot proceed without an installed coq-hammer-tactics (see
+`Makefile.coq.plugin.local`, which links against the
+`coq-hammer-tactics.lib` findlib package) — hence `make` interleaves
+`install-tactics` between the two builds.
 
 Two small standalone binaries are built alongside the plugin and installed into the Rocq bin directory: `predict` (C++, machine-learning premise selection: kNN, naive Bayes, random forest — `src/predict/`) and `htimeout` (C, `src/htimeout/`).
 
@@ -65,6 +70,12 @@ make quicktest        # just plugin_test.vo and tactics_test.vo
 make test-plugin
 make test-tactics
 ```
+
+The Make test targets depend on `make install`; when running a single test file
+directly, run `make install` first. The Make and Dune test commands use the
+installed Rocq and CoqHammer packages from the workspace's `_opam/` switch;
+they do not create a separate test installation.
+`make dune-test-plugin` performs `make install` first for the same reason.
 
 Run a single test file directly:
 
