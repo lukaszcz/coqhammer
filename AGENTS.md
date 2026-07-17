@@ -35,6 +35,26 @@ The plugin build cannot proceed without an installed coq-hammer-tactics (see `Ma
 
 Two small standalone binaries are built alongside the plugin and installed into the Rocq bin directory: `predict` (C++, machine-learning premise selection: kNN, naive Bayes, random forest — `src/predict/`) and `htimeout` (C, `src/htimeout/`).
 
+## Workspace-local opam switch
+
+Each AGM workspace uses its own temporary opam switch. The setup
+script creates the switch when it is missing and installs the branch's OCaml,
+Rocq, and CoqHammer dependencies.
+
+By default, the switch is tied to the current checkout:
+
+```text
+COQHAMMER_OPAM_SWITCH=$REPO_DIR
+opam prefix:              $REPO_DIR/_opam
+```
+
+The `_opam/` directory is ignored by Git and must remain available for normal
+builds, installs, and tests.
+
+Do not install CoqHammer into the default/global opam switch as a substitute;
+the plugin and tactics packages are expected to be installed into this
+workspace's `_opam` prefix.
+
 ## Tests
 
 Tests are `.v` files compiled with the **installed** plugin (`rocq c` with no `-Q`/`-R` flags), so install before testing.
@@ -90,6 +110,6 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 
 ## Instructions
 
-- Don't worry about installing CoqHammer development version into the current opam switch - this temporary switch has been specifically created for the worktreen you're in.
 - Do not edit CHANGES.md
+- NEVER run `git clean`, never remove `.agent-files` or `_opam`
 - When finished, verify with `just check`
