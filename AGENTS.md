@@ -65,10 +65,17 @@ workspace's `_opam` prefix.
 Tests are `.v` files compiled with the **installed** plugin (`rocq c` with no `-Q`/`-R` flags), so install before testing.
 
 ```bash
-make tests            # full test suite (tests/plugin + tests/tactics)
-make quicktest        # just plugin_test.vo and tactics_test.vo
-make test-plugin
-make test-tactics
+make tests             # full Make-based plugin and tactics suites
+make tests-plugin      # complete plugin suite and ATP consistency canaries
+make tests-tactics     # complete tactics suite
+make quicktest         # focused plugin_test.vo and tactics_test.vo checks
+make test-plugin       # compile only plugin_test.v
+make test-tactics      # compile only tactics_test.v
+make test-extraction   # extraction tests and ATP consistency canaries
+make test-plugin-release # focused plugin test plus extraction tests
+make dune-test-plugin  # complete plugin suite via Dune
+just check             # install both packages and run quicktest
+just check-extra       # clean, then run the complete Dune plugin suite
 ```
 
 The Make test targets depend on `make install`; when running a single test file
