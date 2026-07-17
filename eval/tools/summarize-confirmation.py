@@ -25,8 +25,7 @@ PREMISES = (
 PROVERS = ("eprover", "vampire", "z3", "cvc4")
 CONSISTENCY_PROVERS = ("eprover", "vampire")
 CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
-BASELINE = "baseline-merge-base"
-WINNER = "selected-config"
+CURRENT = "current"
 ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
 
 
@@ -110,7 +109,7 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
         label_dir = root / label
         if not label_dir.is_dir():
             raise ValueError(f"required label checkpoints are missing: {label_dir}")
-        config = "baseline" if label == BASELINE else "loo-erasure-guards-decl-skips"
+        config = "current" if label == CURRENT else label.removeprefix("confirmation-")
         for corpus in CORPORA:
             corpus_dir = label_dir / corpus
             if not corpus_dir.is_dir():
@@ -271,13 +270,6 @@ def attempt_maps(root: Path, label: str) -> tuple[set[tuple[str, str, str, str]]
     return atp, recon
 
 
-def defs_by_label(rows: list[dict[str, object]]) -> dict[str, set[str]]:
-    out: dict[str, set[str]] = defaultdict(set)
-    for row in rows:
-        out[str(row["label"])].update(row["def_constant_names"])  # type: ignore[arg-type]
-    return out
-
-
 def special_problem_summary(root: Path, label: str, problem_stem: str) -> dict[str, object]:
     atp, recon = attempt_maps(root, label)
     atp_problem = {k for k in atp if k[3] == f"{problem_stem}.p"}
@@ -296,23 +288,9 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
     by_corpus = aggregate(rows, "label", "corpus")
     by_prover = aggregate(rows, "label", "prover")
     by_premise = aggregate(rows, "label", "premise")
-
-    baseline = next((r for r in by_label if r["label"] == BASELINE), None)
-    winner = next((r for r in by_label if r["label"] == WINNER), None)
-
-    baseline_atp, baseline_recon = attempt_maps(root, BASELINE)
-    winner_atp, winner_recon = attempt_maps(root, WINNER)
-    newly_found = winner_atp - baseline_atp
-    newly_reconstructed = newly_found & winner_recon
-
-    defs = defs_by_label(rows)
-    gained_defs = defs.get(WINNER, set()) - defs.get(BASELINE, set())
-    lost_defs = defs.get(BASELINE, set()) - defs.get(WINNER, set())
-
-    eq_rect_rows = [special_problem_summary(root, label, "dep_eq_rect_refl") for label in (BASELINE, WINNER)]
-    idiv_rows = [special_problem_summary(root, label, "dep_idiv_zero") for label in (BASELINE, WINNER)]
-
-    consistency_hits = sum(int(r["consistency_hits"]) for r in rows)
+    eq_rect_rows = [special_problem_summary(root, str(row["label"]), "dep_eq_rect_refl") for row in by_label]
+    idiv_rows = [special_problem_summary(root, str(row["label"]), "dep_idiv_zero") for row in by_label]
+    consistency_hits = sum(int(row["consistency_hits"]) for row in rows)
 
     lines = [
         "# Extraction confirmation analysis",
@@ -342,41 +320,16 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
         "",
         md_table(eq_rect_rows + idiv_rows, ["label", "problem", "atp_successes", "recon_successes", "recon_rate_on_atp"]),
         "",
-        "## Newly found winner proofs",
-        "",
-        f"Winner ATP successes absent from baseline: {len(newly_found)}.",
-        f"Reconstructed among those: {len(newly_reconstructed)} ({(100*len(newly_reconstructed)/len(newly_found)) if newly_found else 0.0:.1f}%).",
-        "",
-        "## Definitional-equation footprint",
-        "",
-        f"Unique `$_def_*` constants in baseline problems: {len(defs.get(BASELINE, set()))}.",
-        f"Unique `$_def_*` constants in winner problems: {len(defs.get(WINNER, set()))}.",
-        f"Winner-only constants gaining `$_def_*` equations: {len(gained_defs)}.",
-        "Sample winner-only constants: " + (", ".join(sorted(gained_defs)[:25]) if gained_defs else "none") + ".",
-        f"Baseline-only constants absent from winner generated problems: {len(lost_defs)}.",
-        "",
-        "## Verdict inputs",
-        "",
     ]
-
-    if baseline and winner:
-        delta = winner["success_rate"] - baseline["success_rate"]
-        lines.append(f"Overall ATP delta (winner - baseline): {100*delta:+.1f} percentage points.")
-        lines.append(f"Overall reconstruction-on-ATP delta: {100*(winner['recon_rate_on_atp'] - baseline['recon_rate_on_atp']):+.1f} percentage points.")
-    dep_rows = {r["label"]: r for r in by_corpus if r["corpus"] == "dependent-slice"}
-    if BASELINE in dep_rows and WINNER in dep_rows:
-        dep_delta = dep_rows[WINNER]["success_rate"] - dep_rows[BASELINE]["success_rate"]
-        lines.append(f"Dependent-slice ATP delta: {100*dep_delta:+.1f} percentage points.")
-    std_rows = {r["label"]: r for r in by_corpus if r["corpus"] == "stdlib-regression"}
-    if BASELINE in std_rows and WINNER in std_rows:
-        std_delta = std_rows[WINNER]["success_rate"] - std_rows[BASELINE]["success_rate"]
-        lines.append(f"Stdlib-regression ATP delta: {100*std_delta:+.1f} percentage points.")
-    ext_rows = {r["label"]: r for r in by_corpus if r["corpus"] == "external-equations"}
-    if BASELINE in ext_rows and WINNER in ext_rows:
-        ext_delta = ext_rows[WINNER]["success_rate"] - ext_rows[BASELINE]["success_rate"]
-        lines.append(f"External Program/WF ATP delta: {100*ext_delta:+.1f} percentage points.")
-    lines.append("")
-
+    current = next((row for row in by_label if row["label"] == CURRENT), None)
+    if current:
+        lines.extend([
+            "## Current configuration",
+            "",
+            f"ATP success rate: {100*current['success_rate']:.1f}%.",
+            f"Reconstruction-on-ATP rate: {100*current['recon_rate_on_atp']:.1f}%.",
+            "",
+        ])
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines))
 
@@ -389,7 +342,7 @@ def main() -> int:
         )
         return 2
     root = Path(sys.argv[1])
-    labels = sys.argv[4:] or [BASELINE, WINNER]
+    labels = sys.argv[4:] or [CURRENT]
     try:
         rows = load_rows(root, labels)
     except ValueError as error:

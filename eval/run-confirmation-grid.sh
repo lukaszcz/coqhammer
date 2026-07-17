@@ -5,10 +5,9 @@ usage() {
   cat <<'USAGE'
 Usage: ./run-confirmation-grid.sh [options]
 
-Run the extraction confirmation grid:
+Run the extraction confirmation grid for the current checkout:
   all standard hammer_hook premise-selector/count directories
-  ({knn,nbayes} x {32,64,128,256,1024}) x all four provers
-  for baseline vs the selected screening configuration only.
+  ({knn,nbayes} x {32,64,128,256,1024}) x all four provers.
 
 Results are checkpointed under eval/results/confirmation/ and summarized under
   eval/artifacts/extraction-confirmation/{summary.tsv,analysis.md}. Checkpoints
@@ -82,11 +81,10 @@ premises=(knn-32 knn-64 knn-128 knn-256 knn-1024 nbayes-32 nbayes-64 nbayes-128 
 provers=(eprover vampire z3 cvc4)
 consistency_provers=(eprover vampire)
 corpora=(stdlib-regression dependent-slice external-equations)
-labels=(baseline-merge-base selected-config)
+labels=(current)
 
 declare -A label_config
-label_config[baseline-merge-base]=baseline
-label_config[selected-config]=loo-erasure-guards-decl-skips
+label_config[current]=current
 
 if [ -n "$only_label" ] && ! array_contains "$only_label" "${labels[@]}"; then
   echo "Unknown confirmation label: $only_label" >&2
@@ -162,46 +160,14 @@ expect_manifest_value() {
   [ "$actual" = "$expected" ]
 }
 
-validate_refactor_options() {
-  local manifest="$1" config="$2" core decl_skips prop erasure refinement wf
-  core="$config"
-  decl_skips=false
-  case "$core" in
-    *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
-  esac
-  prop=true; erasure=true; refinement=true; wf=true
-  case "$core" in
-    all-off) prop=false; erasure=false; refinement=false; wf=false ;;
-    all-on) ;;
-    loo-prop-case-erasure) prop=false ;;
-    loo-erasure-guards) erasure=false ;;
-    loo-refinement-types) refinement=false ;;
-    loo-wf-recursion-eqs) wf=false ;;
-    *) return 1 ;;
-  esac
-  expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
-    expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
-    expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
-    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips" &&
-    expect_manifest_value "$manifest" opt_wf_recursion_eqs "$wf"
-}
-
 manifest_matches_label() {
-  local label="$1" prefix="$2" expected_commit expected_config
+  local label="$1" prefix="$2" expected_commit
   local manifest="$prefix/manifest.env"
-  [ -f "$manifest" ] || return 1
-  if [ "$label" = baseline-merge-base ]; then
-    expected_commit=$(git merge-base HEAD rocq-9.2)
-    expect_manifest_value "$manifest" kind baseline &&
-      expect_manifest_value "$manifest" commit "$expected_commit"
-  else
-    expected_commit=$(git rev-parse HEAD)
-    expected_config="${label_config[$label]}"
-    expect_manifest_value "$manifest" kind refactor-config &&
-      expect_manifest_value "$manifest" config "$expected_config" &&
-      expect_manifest_value "$manifest" commit "$expected_commit" &&
-      validate_refactor_options "$manifest" "$expected_config"
-  fi
+  [ "$label" = current ] && [ -f "$manifest" ] || return 1
+  expected_commit=$(git rev-parse HEAD)
+  expect_manifest_value "$manifest" kind current &&
+    expect_manifest_value "$manifest" config current &&
+    expect_manifest_value "$manifest" commit "$expected_commit"
 }
 
 prepare_corpus() {
@@ -301,8 +267,8 @@ build_label() {
   else
     unset OCAMLPATH
   fi
-  if [ "$label" = baseline-merge-base ]; then
-    (cd "$eval_dir" && ./build-baseline.sh --label "$label")
+  if [ "$label" = current ]; then
+    (cd "$eval_dir" && ./rebuild-config.sh current --label "$label")
   else
     (cd "$eval_dir" && ./rebuild-config.sh "${label_config[$label]}" --label "$label")
   fi

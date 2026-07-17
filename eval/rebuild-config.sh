@@ -6,11 +6,13 @@ usage() {
 Usage: ./rebuild-config.sh --list
        ./rebuild-config.sh CONFIG [--label LABEL] [--prefix PREFIX]
 
-Patch src/plugin/coq_transl_opts.ml to CONFIG, rebuild and reinstall the current
-checkout into a switchable prefix, then restore the committed option constants.
+Build and install the current checkout into a switchable prefix. `current`
+uses the option values in the checkout; other configurations temporarily change
+src/plugin/coq_transl_opts.ml while building and restore it afterwards.
 
 Core configs:
-  all-off                  baseline-equivalent: all new extraction constants off
+  current                  the current CoqHammer configuration
+  all-off                  all extraction constants off
   all-on                   all extraction constants on, decl-level skips off
   loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false
@@ -34,6 +36,7 @@ fi
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
+      echo current
       for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-wf-recursion-eqs; do
         echo "$base"
         echo "$base-decl-skips"
@@ -60,7 +63,11 @@ if [ -z "$config" ]; then
   exit 2
 fi
 if [ -z "$label" ]; then
-  label="refactor-$config"
+  if [ "$config" = current ]; then
+    label=current
+  else
+    label="config-$config"
+  fi
 fi
 
 repo=$(git rev-parse --show-toplevel)
@@ -74,6 +81,10 @@ fi
 
 core="$config"
 decl_skips=false
+patch_needed=true
+if [ "$core" = current ]; then
+  patch_needed=false
+fi
 case "$core" in
   *-decl-skips)
     decl_skips=true
@@ -86,6 +97,7 @@ erasure=true
 refinement=true
 wf=true
 case "$core" in
+  current) ;;
   all-off) prop=false; erasure=false; refinement=false; wf=false ;;
   all-on) ;;
   loo-prop-case-erasure) prop=false ;;
@@ -104,6 +116,7 @@ restore_opts() {
 }
 trap restore_opts EXIT INT TERM
 
+if [ "$patch_needed" = true ]; then
 python3 - "$opts" "$prop" "$erasure" "$refinement" "$decl_skips" "$wf" <<'PY'
 import pathlib
 import re
@@ -124,6 +137,7 @@ for name, value in values.items():
         raise SystemExit(f"did not patch exactly one binding for {name} (patched {n})")
 path.write_text(text)
 PY
+fi
 
 prepare_prefix() {
   local p="$1"
@@ -175,19 +189,27 @@ if [ "$prop" = false ]; then
   validate_prop_case_ablation
 fi
 
+kind=configuration
+if [ "$config" = current ]; then
+  kind=current
+fi
 cat > "$prefix/manifest.env" <<MANIFEST
 label=$label
-kind=refactor-config
+kind=$kind
 config=$config
 commit=$(git rev-parse HEAD)
 prefix=$prefix
+MANIFEST
+if [ "$patch_needed" = true ]; then
+  cat >> "$prefix/manifest.env" <<MANIFEST
 opt_prop_case_erasure=$prop
 opt_erasure_guards=$erasure
 opt_refinement_types=$refinement
 opt_refinement_decl_skips=$decl_skips
 opt_wf_recursion_eqs=$wf
-built_at=$(date -u +%Y-%m-%dT%H:%M:%SZ)
 MANIFEST
+fi
+printf 'built_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$prefix/manifest.env"
 
 restore_opts
 trap - EXIT INT TERM
@@ -202,5 +224,5 @@ Configuration installed.
   label:  $label
   config: $config
   prefix: $prefix
-Tree constants restored to the committed values.
+$(if [ "$patch_needed" = true ]; then echo "Tree constants restored to the committed values."; else echo "Built from the current tree constants."; fi)
 EOF2

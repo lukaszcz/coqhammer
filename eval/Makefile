@@ -1,7 +1,8 @@
 # input files
 FFILES=$(shell find problems/ -name "*.v" | sort -R)
 OFILES=$(patsubst problems/%.v,problems/%.vo,$(FFILES))
-COQC=rocq c $(shell find problems/ -name "*.conf" -exec cat {} + | tr "\n" " ")
+COQFLAGS=
+COQC=rocq c $(COQFLAGS) $(shell find problems/ -name "*.conf" -exec cat {} + | tr "\n" " ")
 
 all:
 	@echo "See README on how to invoke make."

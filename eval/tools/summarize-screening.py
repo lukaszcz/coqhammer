@@ -18,7 +18,6 @@ from pathlib import Path
 PREMISES = ("knn-64", "knn-256", "knn-1024")
 PROVERS = ("eprover", "vampire")
 CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
-BASELINE = "baseline-merge-base"
 ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
 CONSISTENCY_HIT_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable|ContradictoryAxioms)\b|^unsat$", re.M)
 
@@ -33,33 +32,13 @@ def read_list(path: Path) -> list[Path]:
     return files
 
 
-def generation_status(corpus_dir: Path) -> tuple[bool, dict[str, int]]:
+def generation_status(corpus_dir: Path) -> None:
     path = corpus_dir / "generation.status"
-    if not path.is_file():
-        raise ValueError(f"required generation status is missing: {path}")
-    failed = False
-    succeeded = False
-    counts: dict[str, int] = {}
-    for line in path.read_text(errors="replace").splitlines():
-        if line == "generation_failed=1":
-            failed = True
-            continue
-        if line == "generation_failed=0":
-            succeeded = True
-            continue
-        parts = line.split()
-        if len(parts) == 3 and parts[0] == "generated_count":
-            try:
-                counts[parts[1]] = int(parts[2])
-            except ValueError:
-                pass
-    if failed == succeeded:
-        raise ValueError(f"malformed generation status: {path}")
-    return failed, counts
-
-
-def baseline_generated_count(root: Path, corpus: str, premise: str) -> int:
-    return len(read_list(root / BASELINE / corpus / f"generated-{premise}.lst"))
+    if not path.is_file() or path.read_text(errors="replace").splitlines() != [
+        "generation_failed=0",
+        "generation_exit=0",
+    ]:
+        raise ValueError(f"incomplete generation status: {path}")
 
 
 def status_count(files: list[Path], status_re: re.Pattern[str]) -> int:
@@ -123,7 +102,7 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
         label_dir = root / label
         if not label_dir.is_dir():
             raise ValueError(f"required label checkpoints are missing: {label_dir}")
-        config = "baseline" if label == BASELINE else label.removeprefix("screening-")
+        config = "current" if label == "current" else label.removeprefix("screening-")
         decl_skips = config.endswith("-decl-skips")
         if decl_skips:
             config_core = config.removesuffix("-decl-skips")
@@ -133,31 +112,23 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
             corpus_dir = label_dir / corpus
             if not corpus_dir.is_dir():
                 raise ValueError(f"required corpus checkpoints are missing: {corpus_dir}")
-            generation_failed, generated_counts = generation_status(corpus_dir)
+            generation_status(corpus_dir)
             for premise in PREMISES:
                 generated = read_list(corpus_dir / f"generated-{premise}.lst")
                 def_count, total_bytes, avg_bytes, max_bytes, avg_lines, max_lines = problem_metrics(generated)
                 for prover in PROVERS:
-                    if generation_failed:
-                        prover_outputs = []
-                        consistency_outputs = []
-                    else:
-                        prover_outputs = read_list(
-                            corpus_dir / f"prover-outputs-{prover}-{premise}.lst"
+                    prover_outputs = read_list(
+                        corpus_dir / f"prover-outputs-{prover}-{premise}.lst"
+                    )
+                    if premise == "knn-64":
+                        consistency_outputs = read_list(
+                            corpus_dir / f"consistency-outputs-{prover}-knn-64.lst"
                         )
-                        if premise == "knn-64":
-                            consistency_outputs = read_list(
-                                corpus_dir / f"consistency-outputs-{prover}-knn-64.lst"
-                            )
-                        else:
-                            consistency_outputs = []
+                    else:
+                        consistency_outputs = []
                     theorems = status_theorem_count(prover_outputs)
                     consistency_hits = consistency_hit_count(consistency_outputs)
                     generated_n = len(generated)
-                    if generation_failed and generated_n == 0:
-                        generated_n = generated_counts.get(
-                            premise, baseline_generated_count(root, corpus, premise)
-                        )
                     rows.append(
                         {
                             "label": label,
@@ -255,51 +226,29 @@ def md_table(rows: list[dict[str, object]], columns: list[str], limit: int | Non
     return "\n".join(lines)
 
 
-def find_generation_failures(root: Path, labels: list[str]) -> list[str]:
-    failures: list[str] = []
-    for label in labels:
-        for status in sorted((root / label).glob("*/generation.status")):
-            text = status.read_text(errors="replace")
-            if "generation_failed=1" in text:
-                failures.append(f"{label}/{status.parent.name}")
-    return failures
-
-
-def write_analysis(
-    rows: list[dict[str, object]], root: Path, out: Path, labels: list[str]
-) -> None:
+def write_analysis(rows: list[dict[str, object]], out: Path) -> None:
     by_label = aggregate(rows, "label", "config", "decl_skips")
     by_label_sorted = sorted(by_label, key=lambda r: (-float(r["success_rate"]), str(r["label"])))
     by_corpus = aggregate(rows, "label", "config", "decl_skips", "corpus")
     by_prover = aggregate(rows, "label", "config", "decl_skips", "prover")
-
-    baseline_rate = next((r["success_rate"] for r in by_label if r["label"] == BASELINE), 0.0)
-    non_baseline = [r for r in by_label_sorted if r["label"] != BASELINE]
-    winner = non_baseline[0] if non_baseline else None
+    current = next((r for r in by_label if r["label"] == "current"), None)
     all_on = next((r for r in by_label if r["label"] == "screening-all-on"), None)
 
     flagged: list[str] = []
     if all_on is not None:
-        for r in by_label:
-            if str(r["label"]).startswith("screening-loo-") and not str(r["label"]).endswith("decl-skips"):
-                if r["success_rate"] > all_on["success_rate"]:
-                    flagged.append(f"{r['config']} improved over all-on ({100*r['success_rate']:.1f}% vs {100*all_on['success_rate']:.1f}%)")
+        for row in by_label:
+            if str(row["label"]).startswith("screening-loo-") and not str(row["label"]).endswith("decl-skips"):
+                if row["success_rate"] > all_on["success_rate"]:
+                    flagged.append(
+                        f"{row['config']} exceeds all-on ({100*row['success_rate']:.1f}% vs "
+                        f"{100*all_on['success_rate']:.1f}%)"
+                    )
 
-    dep_rows = [r for r in by_corpus if r["corpus"] == "dependent-slice"]
-    dep_baseline = next((r for r in dep_rows if r["label"] == BASELINE), None)
-    dep_winner = next((r for r in dep_rows if winner and r["label"] == winner["label"]), None)
-    dep_delta = None
-    if dep_baseline and dep_winner:
-        dep_delta = dep_winner["success_rate"] - dep_baseline["success_rate"]
-
-    generation_failures = find_generation_failures(root, labels)
     lines = [
         "# Extraction screening analysis",
         "",
         f"Rows summarized: {len(rows)}.",
-        f"Baseline sanity success rate: {100*baseline_rate:.1f}% overall.",
         f"Consistency hits: {sum(int(r['consistency_hits']) for r in rows)}.",
-        "Generation failures recorded as screened regressions: " + (", ".join(generation_failures) if generation_failures else "none") + ".",
         "",
         "## Overall configuration ranking",
         "",
@@ -313,19 +262,17 @@ def write_analysis(
         "",
         md_table(by_prover, ["label", "prover", "generated", "theorems", "success_rate", "consistency_hits"]),
         "",
+        "## Current configuration",
+        "",
     ]
-    if winner:
-        lines.extend([
-            "## Decision inputs",
-            "",
-            f"Winner by screening ATP success rate: `{winner['label']}` ({100*winner['success_rate']:.1f}%).",
-        ])
-    if dep_delta is not None:
-        lines.append(f"Dependent-slice delta for winner vs baseline: {100*dep_delta:+.1f} percentage points.")
-    if flagged:
-        lines.append("Flagged options: " + "; ".join(flagged) + ".")
+    if current:
+        lines.append(f"Current ATP success rate: {100*current['success_rate']:.1f}% overall.")
     else:
-        lines.append("Flagged options: none by leave-one-out ATP success rate.")
+        lines.append("The current configuration was not included in this partial run.")
+    if flagged:
+        lines.append("Leave-one-out configurations exceeding all-on: " + "; ".join(flagged) + ".")
+    else:
+        lines.append("No leave-one-out configuration exceeded all-on.")
     lines.append("")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines))
@@ -350,7 +297,7 @@ def main() -> int:
         print(f"incomplete checkpoint grid: expected {expected_rows} rows, found {len(rows)}", file=sys.stderr)
         return 1
     write_tsv(rows, Path(sys.argv[2]))
-    write_analysis(rows, root, Path(sys.argv[3]), labels)
+    write_analysis(rows, Path(sys.argv[3]))
     return 0
 
 

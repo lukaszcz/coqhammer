@@ -5,10 +5,11 @@ usage() {
   cat <<'USAGE'
 Usage: ./run-screening-grid.sh [options]
 
-Run the extraction screening grid in a resumable layout:
+Run the extraction screening grid for the current checkout in a resumable
+layout:
   premise counts {64,256,1024} x {Vampire,E prover} x
-  {baseline, all-on, four leave-one-out ablations} x {decl-skips off,on for refactor configs}
-  over the three prepared corpora.
+  {current, all-on, four leave-one-out configurations} x
+  {decl-skips off,on for configuration variants} over the three prepared corpora.
 
 Results are checkpointed under eval/results/screening/ and summarized under
   eval/artifacts/extraction-screening/summary.tsv. Checkpoints are reused only
@@ -93,9 +94,9 @@ configs=(
   loo-wf-recursion-eqs
 )
 
-labels=(baseline-merge-base)
+labels=(current)
 declare -A label_config
-label_config[baseline-merge-base]=baseline
+label_config[current]=current
 for cfg in "${configs[@]}"; do
   label="screening-$cfg"
   labels+=("$label")
@@ -177,7 +178,7 @@ expect_manifest_value() {
   [ "$actual" = "$expected" ]
 }
 
-validate_refactor_options() {
+validate_config_options() {
   local manifest="$1" config="$2" core decl_skips prop erasure refinement wf
   core="$config"
   decl_skips=false
@@ -205,17 +206,18 @@ manifest_matches_label() {
   local label="$1" prefix="$2" expected_commit expected_config
   local manifest="$prefix/manifest.env"
   [ -f "$manifest" ] || return 1
-  if [ "$label" = baseline-merge-base ]; then
-    expected_commit=$(git merge-base HEAD rocq-9.2)
-    expect_manifest_value "$manifest" kind baseline &&
+  if [ "$label" = current ]; then
+    expected_commit=$(git rev-parse HEAD)
+    expect_manifest_value "$manifest" kind current &&
+      expect_manifest_value "$manifest" config current &&
       expect_manifest_value "$manifest" commit "$expected_commit"
   else
     expected_commit=$(git rev-parse HEAD)
     expected_config="${label_config[$label]}"
-    expect_manifest_value "$manifest" kind refactor-config &&
+    expect_manifest_value "$manifest" kind configuration &&
       expect_manifest_value "$manifest" config "$expected_config" &&
       expect_manifest_value "$manifest" commit "$expected_commit" &&
-      validate_refactor_options "$manifest" "$expected_config"
+      validate_config_options "$manifest" "$expected_config"
   fi
 }
 
@@ -232,23 +234,12 @@ prepare_corpus() {
 }
 
 validate_generation() {
-  local outdir="$1" premise failed=false
+  local outdir="$1" premise
+  status_has "$outdir/generation.status" generation_failed=0 || return 1
+  status_has "$outdir/generation.status" generation_exit=0 || return 1
   [ -s "$outdir/prepared-files.lst" ] || return 1
-  if status_has "$outdir/generation.status" generation_failed=1; then
-    failed=true
-    grep -Eq '^generation_exit=[1-9][0-9]*$' "$outdir/generation.status" || return 1
-    [ -f "$outdir/gen-atp.full.log" ] &&
-      ! log_has_crash_or_infrastructure_error "$outdir/gen-atp.full.log" || return 1
-  elif ! status_has "$outdir/generation.status" generation_failed=0 ||
-       ! status_has "$outdir/generation.status" generation_exit=0; then
-    return 1
-  fi
   for premise in "${premises[@]}"; do
-    if [ "$failed" = true ]; then
-      grep -Eq "^generated_count $premise [1-9][0-9]*$" "$outdir/generation.status" || return 1
-    else
-      list_is_nonempty_and_complete "$outdir/generated-$premise.lst" || return 1
-    fi
+    list_is_nonempty_and_complete "$outdir/generated-$premise.lst" || return 1
   done
 }
 
@@ -297,15 +288,15 @@ build_label() {
   else
     unset OCAMLPATH
   fi
-  if [ "$label" = baseline-merge-base ]; then
-    (cd "$eval_dir" && ./build-baseline.sh --label "$label")
+  if [ "$label" = current ]; then
+    (cd "$eval_dir" && ./rebuild-config.sh current --label "$label")
   else
     (cd "$eval_dir" && ./rebuild-config.sh "${label_config[$label]}" --label "$label")
   fi
 }
 
 run_generation() {
-  local label="$1" corpus="$2" prefix="$3" baseline_outdir baseline_prefix
+  local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
   mkdir -p "$outdir"
   local marker="$outdir/generate"
@@ -337,53 +328,10 @@ run_generation() {
   fi
 
   echo gen-atp > coqhammer.opt
-  if make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
-    generation_status=0
-  else
-    generation_status=$?
+  if ! make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
     grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
-    if log_has_crash_or_infrastructure_error "$outdir/gen-atp.full.log"; then
-      echo "ATP generation crashed or hit an infrastructure error for $label/$corpus; see $outdir/gen-atp.full.log" >&2
-      return 1
-    fi
-    if [ "$label" = baseline-merge-base ]; then
-      echo "Baseline ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
-      exit 1
-    fi
-    baseline_outdir="$results_root/baseline-merge-base/$corpus"
-    baseline_prefix="$eval_dir/_installs/baseline-merge-base"
-    if [ ! -f "$baseline_prefix/manifest.env" ] || \
-        ! checkpoint_matches "$baseline_outdir/generate" generation baseline-merge-base \
-          "$corpus" "$baseline_prefix" || ! validate_generation "$baseline_outdir"; then
-      echo "A current, successful baseline generation checkpoint is required to record $label/$corpus as a regression" >&2
-      return 1
-    fi
-    {
-      echo "generation_failed=1"
-      echo "generation_exit=$generation_status"
-      for premise in "${premises[@]}"; do
-        baseline_list="$results_root/baseline-merge-base/$corpus/generated-$premise.lst"
-        if [ -f "$baseline_list" ]; then
-          count=$(grep -cve '^[[:space:]]*$' "$baseline_list")
-        else
-          count=0
-        fi
-        echo "generated_count $premise $count"
-      done
-    } > "$outdir/generation.status"
-    echo "ATP generation failed for $label/$corpus; recording as a screened regression" >&2
-    rm -rf "$outdir/atp-problems"
-    mkdir -p "$outdir/atp-problems"
-    for premise in "${premises[@]}"; do
-      mkdir -p "$outdir/atp-problems/$premise"
-      : > "$outdir/generated-$premise.lst"
-    done
-    if ! validate_generation "$outdir"; then
-      echo "Could not record complete generation-failure counts for $label/$corpus" >&2
-      return 1
-    fi
-    mark_checkpoint "$marker" generation "$label" "$corpus" "$prefix"
-    return 0
+    echo "ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
+    return 1
   fi
   grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
   if [ -s "$outdir/gen-atp.log" ]; then
@@ -562,10 +510,6 @@ for label in "${labels[@]}"; do
       continue
     fi
     run_generation "$label" "$corpus" "$prefix"
-    if status_has "$results_root/$label/$corpus/generation.status" generation_failed=1; then
-      echo "[grid] skipping prover runs after recorded generation regression for $label/$corpus"
-      continue
-    fi
     for premise in "${premises[@]}"; do
       for prover in "${provers[@]}"; do
         run_prover "$label" "$corpus" "$premise" "$prover" "$prefix"
