@@ -9,6 +9,7 @@ Overview of changes
   equations, proof/singleton erasure, shallow refinement/specification
   expansion, and premised well-founded-recursion equations.
 * `Hammer_dump`/`hammer_dump` for writing the current goal's TPTP problem.
+* Fixed temporary file leaks.
 
 CoqHammer v. 1.3.3
 ==================
@@ -22,7 +23,6 @@ Overview of changes
 * Fixed `dune` build.
 * Fixed deprecation warnings.
 * The `unfold`, `unfold!` and `unfolding` options accept notations (e.g. `unfold: "#"`).
-* Fixed temporary file leaks.
 * Fixed issues #86, #118, #119, #130, #134, #138, #140, #141, #144, #180, #183, #202.
 
 CoqHammer v. 1.3.2
