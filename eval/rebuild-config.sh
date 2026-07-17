@@ -147,6 +147,34 @@ make install \
   BINDIR="$prefix/bin/" \
   COQFLAGS="-coqlib $prefix/coq"
 
+validate_prop_case_ablation() {
+  local tmp out
+  tmp=$(mktemp -d)
+  out="$tmp/prop-case-ablation.out"
+  cat > "$tmp/prop_case_ablation.v" <<'EOF'
+From Hammer Require Import Hammer.
+Definition prop_case_ablation (n : nat) : Prop :=
+  match n with O => True | S _ => False end.
+Hammer_transl "prop_case_ablation".
+EOF
+  if ! (cd "$tmp" && rocq c -coqlib "$prefix/coq" prop_case_ablation.v) >"$out" 2>&1; then
+    cat "$out" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  if grep -Eq '^\$_def_.*prop_case_ablation\$(lower|upper):' "$out"; then
+    echo "opt_prop_case_erasure=false still emitted proposition-case bounds" >&2
+    cat "$out" >&2
+    rm -rf "$tmp"
+    return 1
+  fi
+  rm -rf "$tmp"
+}
+
+if [ "$prop" = false ]; then
+  validate_prop_case_ablation
+fi
+
 cat > "$prefix/manifest.env" <<MANIFEST
 label=$label
 kind=refactor-config

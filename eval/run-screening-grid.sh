@@ -7,7 +7,7 @@ Usage: ./run-screening-grid.sh [options]
 
 Run the extraction screening grid in a resumable layout:
   premise counts {64,256,1024} x {Vampire,E prover} x
-  {baseline, all-on, five leave-one-out ablations} x {decl-skips off,on for refactor configs}
+  {baseline, all-on, four leave-one-out ablations} x {decl-skips off,on for refactor configs}
   over the three prepared corpora.
 
 Results are checkpointed under eval/results/screening/ and summarized under
@@ -408,7 +408,9 @@ for label in "${labels[@]}"; do
   done
 done
 
-python3 "$eval_dir/tools/summarize-screening.py" "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
+python3 "$eval_dir/tools/summarize-screening.py" \
+  "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
+  "${labels[@]}"
 
 echo "Extraction screening complete."
 echo "  raw checkpoints: $results_root"

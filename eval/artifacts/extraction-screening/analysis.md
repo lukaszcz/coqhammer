@@ -1,9 +1,9 @@
 # Extraction screening analysis
 
-Rows summarized: 234.
+Rows summarized: 198.
 Baseline sanity success rate: 43.9% overall.
 Consistency hits: 0.
-Generation failures recorded as screened regressions: screening-loo-split-case-axioms/external-equations, screening-loo-split-case-axioms-decl-skips/external-equations.
+Generation failures recorded as screened regressions: none.
 
 ## Overall configuration ranking
 
@@ -18,8 +18,6 @@ Generation failures recorded as screened regressions: screening-loo-split-case-a
 | screening-loo-refinement-types-decl-skips | loo-refinement-types | true | 66 | 41 | 62.1% | 217.0 | 751963.6 | 0 |
 | screening-loo-prop-case-erasure | loo-prop-case-erasure | false | 66 | 38 | 57.6% | 216.7 | 927259.9 | 0 |
 | screening-all-on | all-on | false | 66 | 37 | 56.1% | 217.0 | 865369.1 | 0 |
-| screening-loo-split-case-axioms-decl-skips | loo-split-case-axioms | true | 54 | 29 | 53.7% | 179.6 | 588864.4 | 0 |
-| screening-loo-split-case-axioms | loo-split-case-axioms | false | 54 | 27 | 50.0% | 179.6 | 590084.1 | 0 |
 | screening-loo-wf-recursion-eqs | loo-wf-recursion-eqs | false | 66 | 33 | 50.0% | 216.8 | 863198.2 | 0 |
 | baseline-merge-base | baseline | false | 66 | 29 | 43.9% | 215.2 | 717443.9 | 0 |
 
@@ -32,14 +30,14 @@ Generation failures recorded as screened regressions: screening-loo-split-case-a
 | baseline-merge-base | stdlib-regression | 18 | 17 | 94.4% | 226.0 | 540081.9 | 0 |
 | screening-all-on | dependent-slice | 36 | 18 | 50.0% | 313.0 | 1461371.9 | 0 |
 | screening-all-on | external-equations | 12 | 7 | 58.3% | 111.7 | 578435.8 | 0 |
-| screening-all-on | stdlib-regression | 18 | 12 | 66.7% | 226.3 | 556299.4 | 0 |
+| screening-all-on | stdlib-regression | 18 | 12 | 66.7% | 226.3 | 556299.5 | 0 |
 | screening-all-on-decl-skips | dependent-slice | 36 | 23 | 63.9% | 313.0 | 1459139.5 | 0 |
 | screening-all-on-decl-skips | external-equations | 12 | 12 | 100.0% | 111.7 | 574689.7 | 0 |
 | screening-all-on-decl-skips | stdlib-regression | 18 | 15 | 83.3% | 226.3 | 554861.1 | 0 |
 | screening-loo-erasure-guards | dependent-slice | 36 | 24 | 66.7% | 313.0 | 1461284.3 | 0 |
 | screening-loo-erasure-guards | external-equations | 12 | 7 | 58.3% | 111.7 | 578399.5 | 0 |
-| screening-loo-erasure-guards | stdlib-regression | 18 | 12 | 66.7% | 226.3 | 556299.4 | 0 |
-| screening-loo-erasure-guards-decl-skips | dependent-slice | 36 | 29 | 80.6% | 313.0 | 1459051.9 | 0 |
+| screening-loo-erasure-guards | stdlib-regression | 18 | 12 | 66.7% | 226.3 | 556299.5 | 0 |
+| screening-loo-erasure-guards-decl-skips | dependent-slice | 36 | 29 | 80.6% | 313.0 | 1459052.0 | 0 |
 | screening-loo-erasure-guards-decl-skips | external-equations | 12 | 12 | 100.0% | 111.7 | 574653.3 | 0 |
 | screening-loo-erasure-guards-decl-skips | stdlib-regression | 18 | 15 | 83.3% | 226.3 | 554861.1 | 0 |
 | screening-loo-prop-case-erasure | dependent-slice | 36 | 18 | 50.0% | 312.3 | 1506812.5 | 0 |
@@ -54,15 +52,9 @@ Generation failures recorded as screened regressions: screening-loo-split-case-a
 | screening-loo-refinement-types-decl-skips | dependent-slice | 36 | 18 | 50.0% | 313.0 | 1155217.2 | 0 |
 | screening-loo-refinement-types-decl-skips | external-equations | 12 | 6 | 50.0% | 111.7 | 569150.2 | 0 |
 | screening-loo-refinement-types-decl-skips | stdlib-regression | 18 | 17 | 94.4% | 226.3 | 531523.3 | 0 |
-| screening-loo-split-case-axioms | dependent-slice | 36 | 13 | 36.1% | 312.3 | 1199980.3 | 0 |
-| screening-loo-split-case-axioms | external-equations | 0 | 0 | 0.0% | 0.0 | 0.0 | 0 |
-| screening-loo-split-case-axioms | stdlib-regression | 18 | 14 | 77.8% | 226.3 | 570272.0 | 0 |
-| screening-loo-split-case-axioms-decl-skips | dependent-slice | 36 | 14 | 38.9% | 312.3 | 1197759.4 | 0 |
-| screening-loo-split-case-axioms-decl-skips | external-equations | 0 | 0 | 0.0% | 0.0 | 0.0 | 0 |
-| screening-loo-split-case-axioms-decl-skips | stdlib-regression | 18 | 15 | 83.3% | 226.3 | 568833.7 | 0 |
 | screening-loo-wf-recursion-eqs | dependent-slice | 36 | 18 | 50.0% | 312.7 | 1460132.7 | 0 |
 | screening-loo-wf-recursion-eqs | external-equations | 12 | 3 | 25.0% | 111.3 | 573162.3 | 0 |
-| screening-loo-wf-recursion-eqs | stdlib-regression | 18 | 12 | 66.7% | 226.3 | 556299.4 | 0 |
+| screening-loo-wf-recursion-eqs | stdlib-regression | 18 | 12 | 66.7% | 226.3 | 556299.5 | 0 |
 | screening-loo-wf-recursion-eqs-decl-skips | dependent-slice | 36 | 23 | 63.9% | 312.7 | 1457900.3 | 0 |
 | screening-loo-wf-recursion-eqs-decl-skips | external-equations | 12 | 6 | 50.0% | 111.3 | 569377.8 | 0 |
 | screening-loo-wf-recursion-eqs-decl-skips | stdlib-regression | 18 | 15 | 83.3% | 226.3 | 554861.1 | 0 |
@@ -89,10 +81,6 @@ Generation failures recorded as screened regressions: screening-loo-split-case-a
 | screening-loo-refinement-types | vampire | 33 | 21 | 63.6% | 0 |
 | screening-loo-refinement-types-decl-skips | eprover | 33 | 20 | 60.6% | 0 |
 | screening-loo-refinement-types-decl-skips | vampire | 33 | 21 | 63.6% | 0 |
-| screening-loo-split-case-axioms | eprover | 27 | 15 | 55.6% | 0 |
-| screening-loo-split-case-axioms | vampire | 27 | 12 | 44.4% | 0 |
-| screening-loo-split-case-axioms-decl-skips | eprover | 27 | 14 | 51.9% | 0 |
-| screening-loo-split-case-axioms-decl-skips | vampire | 27 | 15 | 55.6% | 0 |
 | screening-loo-wf-recursion-eqs | eprover | 33 | 21 | 63.6% | 0 |
 | screening-loo-wf-recursion-eqs | vampire | 33 | 12 | 36.4% | 0 |
 | screening-loo-wf-recursion-eqs-decl-skips | eprover | 33 | 21 | 63.6% | 0 |

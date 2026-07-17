@@ -165,19 +165,34 @@ let coqterm_hash = Hashing.create lift
    dependencies are delivered with the declaration that introduced them. *)
 let translation_owner = ref ""
 
+(* The ordinal separates erased proof-case occurrences within one declaration.
+   Structurally identical occurrences at the same ordinal in other declarations
+   may still share a cached lift, avoiding owner-specific cache growth. *)
+let proof_case_counter = ref 0
+
+let fresh_proof_case_key () =
+  incr proof_case_counter;
+  "$proof-case\000" ^ string_of_int !proof_case_counter
+
 let case_occurrence_key ctx tm =
+  let proof_scrutinee =
+    match tm with
+    | Case(_, (Cast(Const("$Proof"), _) | Const("$Proof")), _, _, _, _) -> true
+    | _ -> false
+  in
   let proof_dependencies =
     List.fold_right
-      (fun (name, ty) acc ->
+      (fun (name, _) acc ->
          if var_occurs name tm &&
-            (try Coq_typing.check_prop ctx ty with _ -> false)
+            (try Coq_typing.check_proof_var ctx name with _ -> false)
          then name :: acc
          else acc)
       ctx []
   in
-  match proof_dependencies with
-  | [] -> ""
-  | _ -> !translation_owner ^ "\000" ^ String.concat "\000" proof_dependencies
+  match proof_scrutinee, proof_dependencies with
+  | true, _ -> fresh_proof_case_key ()
+  | false, [] -> ""
+  | false, _ -> !translation_owner ^ "\000" ^ String.concat "\000" proof_dependencies
 
 (* Split equations are meaningful together with the structural theory of the
    type they inspect.  Keep that semantic dependency separately from ordinary
@@ -192,6 +207,50 @@ module Case_dependencies = struct
   let find owner = try Hashtbl.find table owner with Not_found -> []
   let remove owner = Hashtbl.remove table owner
 end
+
+(* Hash-consed lifts replay their exact case dependencies on cache hits.  A
+   scoped collector records dependencies while constructing a cache miss;
+   nested lifts propagate their dependencies to the enclosing cached lift. *)
+module Lift_dependencies = struct
+  let table = Hashtbl.create 128
+  let collectors = ref []
+  let clear () = Hashtbl.clear table; collectors := []
+  let record indname =
+    match !collectors with
+    | dependencies :: _ -> dependencies := indname :: !dependencies
+    | [] -> ()
+  let find name = try Hashtbl.find table name with Not_found -> []
+  let add name dependencies =
+    let previous = find name in
+    Hashtbl.replace table name
+      (Hhlib.sort_uniq String.compare (dependencies @ previous))
+end
+
+let with_lift_dependencies make =
+  let dependencies = ref [] in
+  let previous_collectors = !(Lift_dependencies.collectors) in
+  Lift_dependencies.collectors := dependencies :: previous_collectors;
+  let result =
+    try make ()
+    with e ->
+      Lift_dependencies.collectors := previous_collectors;
+      raise e
+  in
+  Lift_dependencies.collectors := previous_collectors;
+  let delivered =
+    match flatten_app (fst result) with
+    | Const name, _
+         when String.length name >= 2 && String.sub name 0 2 = "$_" ->
+       if !dependencies <> [] then Lift_dependencies.add name !dependencies;
+       Lift_dependencies.find name
+    | _ -> Hhlib.sort_uniq String.compare !dependencies
+  in
+  List.iter
+    (fun dependency ->
+       Case_dependencies.add !translation_owner dependency;
+       Lift_dependencies.record dependency)
+    delivered;
+  result
 
 let is_transport_constant name =
   List.exists (fun basename -> Coq_stdnames.is_init_logic basename name)
@@ -992,7 +1051,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
        lifted predicate is bounded from below by all branches and from above
        by one constructor branch; the inhabitation guard keeps both bounds
        vacuous on junk values and empty propositions. *)
-    let emit_prop_case axname vars lhs indname indty params params_num actual_tyargs
+    let emit_prop_case axname vars lhs indname indty params params_num
         constrs matched_term branches =
       let ctx = List.rev vars in
       let scrutinee, scrutinee_ty =
@@ -1006,6 +1065,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            raise (Hammer_errors.HammerError
                     "internal translation error: propositional case was not normalized")
       in
+      let (_, actual_tyargs) = flatten_app scrutinee_ty in
       let close_fol body =
         let rec close ctx = function
           | (name, ty) :: rest ->
@@ -1098,24 +1158,89 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       close_fol (mk_impl (mk_and inhabitation predicate) upper_disjs) >>= fun upper ->
       add_axiom (mk_axiom (axname ^ "$upper") upper)
     in
+    let rec infer_term_type ctx = function
+      | Var name ->
+         begin try Some (List.assoc name ctx) with Not_found -> None end
+      | Const name ->
+         begin
+           try Some (coqdef_type (Defhash.find name)) with Not_found -> None
+         end
+      | App(fn, arg) ->
+         begin match infer_term_type ctx fn with
+         | Some fn_ty ->
+            begin
+              try
+                match simpl fn_ty with
+                | Prod(name, _, body) -> Some (simpl (substvar name arg body))
+                | _ -> None
+              with _ -> None
+            end
+         | None -> None
+         end
+      | Lam(name, ty, body) ->
+         begin match infer_term_type ((name, ty) :: ctx) body with
+         | Some body_ty -> Some (Prod(name, ty, body_ty))
+         | None -> None
+         end
+      | Case(_, matched, _, raw_return_type, params_num, _) ->
+         begin match infer_term_type ctx matched with
+         | Some matched_ty ->
+            let (_, actual_tyargs) = flatten_app matched_ty in
+            if List.length actual_tyargs < params_num then
+              None
+            else
+              let indices = Hhlib.drop params_num actual_tyargs in
+              Some (simpl (mk_long_app raw_return_type (indices @ [matched])))
+         | None -> None
+         end
+      | Cast(_, ty) -> Some ty
+      | Fix(_, k, _, _, types, _) ->
+         begin try Some (List.nth types k) with _ -> None end
+      | Let(value, (name, ty, body)) ->
+         begin match infer_term_type ((name, ty) :: ctx) body with
+         | Some body_ty -> Some (simpl (substvar name value body_ty))
+         | None -> None
+         end
+      | _ -> None
+    in
     let case_aux_value vars indname matched_term return_type raw_return_type params_num branches indty =
       let z = refresh_varname "case" in
-      let scrutinee_ty = get_case_scrutinee_type indty return_type params_num in
+      let ctx = List.rev vars in
+      let fallback_scrutinee_ty =
+        get_case_scrutinee_type indty return_type params_num
+      in
+      let scrutinee_ty =
+        if Coq_typing.check_prop ctx fallback_scrutinee_ty then
+          match infer_term_type ctx matched_term with
+          | Some ty -> ty
+          | None -> fallback_scrutinee_ty
+        else
+          fallback_scrutinee_ty
+      in
+      let scrutinee_is_prop = Coq_typing.check_prop ctx scrutinee_ty in
       let aux_case = Lam(z, scrutinee_ty,
                          Case(indname, Var(z), return_type, raw_return_type,
                               params_num, branches)) in
-      let ctx = List.rev vars in
-      Hashing.find_or_insert_keyed (case_occurrence_key ctx aux_case)
-        coqterm_hash ctx aux_case
-        begin fun cctx ctm ->
-          match ctm with
-          | Lam(_, _, Case(indname2, _, _, _, _, _)) ->
-             let name = "$_case_" ^ indname2 ^ "$" ^ unique_id () in
-             lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
-          | _ -> internal_error "case auxiliary lifting lost its normalized case body"
-        end >>= fun aux ->
-      convert (List.rev vars) matched_term >>= fun mt ->
-      return (App(aux, mt))
+      let occurrence_key =
+        if scrutinee_is_prop then
+          fresh_proof_case_key ()
+        else
+          case_occurrence_key ctx aux_case
+      in
+      with_lift_dependencies (fun () ->
+        Hashing.find_or_insert_keyed occurrence_key coqterm_hash ctx aux_case
+          begin fun cctx ctm ->
+            match ctm with
+            | Lam(_, _, Case(indname2, _, _, _, _, _)) ->
+               let name = "$_case_" ^ indname2 ^ "$" ^ unique_id () in
+               lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
+            | _ -> internal_error "case auxiliary lifting lost its normalized case body"
+          end) >>= fun aux ->
+      if scrutinee_is_prop then
+        return aux
+      else
+        convert ctx matched_term >>= fun mt ->
+        return (App(aux, mt))
     in
     (* Termination follows the structure of the generated statement: first the
        number of root case/lambda/fix nodes remaining to compile, then the node
@@ -1161,17 +1286,19 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                    raw_logic_head || Coq_typing.check_prop ctx target
               in
               if return_target_is_prop (List.rev vars) return_type then
-                begin match matched_term with
-                | Var _ ->
-                   let actual_tyargs =
-                     get_case_type_args indty raw_return_type params_num
-                   in
-                   emit_prop_case axname vars lhs indname indty params params_num actual_tyargs
-                     constrs matched_term branches
-                | _ ->
-                   case_aux_value vars indname matched_term return_type raw_return_type
-                     params_num branches indty
-                   >>= fun rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
+                if not opt_prop_case_erasure then begin
+                  log 2 ("case-axiom-omitted: prop-case-erasure " ^ axname);
+                  return ()
+                end
+                else begin
+                  match matched_term with
+                  | Var _ ->
+                     emit_prop_case axname vars lhs indname indty params params_num
+                       constrs matched_term branches
+                  | _ ->
+                     case_aux_value vars indname matched_term return_type raw_return_type
+                       params_num branches indty
+                     >>= fun rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
                 end
               else if Coq_typing.check_type_target_is_prop indty then
                 if not opt_prop_case_erasure then begin
@@ -1220,6 +1347,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      emit_equation ?premise (axname ^ "$link") vars lhs rhs false
                 end
               else begin
+                Lift_dependencies.record indname;
                 if dependency_owner <> "" then
                   Case_dependencies.add dependency_owner indname;
                 if !translation_owner <> "" && !translation_owner <> dependency_owner then
@@ -1806,19 +1934,21 @@ and close vars cont =
 
 and remove_lambda ctx tm =
   debug 3 (fun () -> print_header "remove_lambda" tm ctx);
-  Hashing.find_or_insert coqterm_hash ctx tm
-    begin fun cctx ctm ->
-      let name = "$_lam_" ^ unique_id ()
-      in
-      lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
-    end
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert coqterm_hash ctx tm
+      begin fun cctx ctm ->
+        let name = "$_lam_" ^ unique_id ()
+        in
+        lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
+      end)
 
 and remove_case ctx tm =
   debug 3 (fun () -> print_header "remove_case" tm ctx);
-  Hashing.find_or_insert_keyed (case_occurrence_key ctx tm) coqterm_hash ctx tm
-    begin fun cctx ctm ->
-      case_lifting [] "" "" (ctx_to_vars cctx) [] ctm
-    end
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert_keyed (case_occurrence_key ctx tm) coqterm_hash ctx tm
+      begin fun cctx ctm ->
+        case_lifting [] "" "" (ctx_to_vars cctx) [] ctm
+      end)
 
 and remove_cast ctx tm =
   debug 3 (fun () -> print_header "remove_cast" tm ctx);
@@ -1846,10 +1976,11 @@ and remove_cast ctx tm =
 
 and remove_fix ctx tm =
   debug 3 (fun () -> print_header "remove_fix" tm ctx);
-  Hashing.find_or_insert coqterm_hash ctx tm
-    begin fun cctx ctm ->
-      fix_lifting [] "" "" (ctx_to_vars cctx) [] ctm
-    end
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert coqterm_hash ctx tm
+      begin fun cctx ctm ->
+        fix_lifting [] "" "" (ctx_to_vars cctx) [] ctm
+      end)
 
 and remove_let ctx tm =
   debug 3 (fun () -> print_header "remove_let" tm ctx);
@@ -1878,14 +2009,15 @@ and remove_let ctx tm =
 
 and remove_type ctx ty =
   debug 3 (fun () -> print_header "remove_type" ty ctx);
-  Hashing.find_or_insert coqterm_hash ctx ty
-    begin fun cctx cty ->
-      let name = "$_type_" ^ unique_id ()
-      and vars = ctx_to_vars cctx
-      in
-      add_def_eq_type_axiom name name vars cty >>
-      convert cctx (mk_long_app (Const(name)) (mk_vars vars))
-    end
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert coqterm_hash ctx ty
+      begin fun cctx cty ->
+        let name = "$_type_" ^ unique_id ()
+        and vars = ctx_to_vars cctx
+        in
+        add_def_eq_type_axiom name name vars cty >>
+        convert cctx (mk_long_app (Const(name)) (mk_vars vars))
+      end)
 
 and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
@@ -2287,6 +2419,7 @@ end
 
 let translate name =
   wf_mark := false;
+  proof_case_counter := 0;
   log 1 ("translate: " ^ name);
   let previous_owner = !translation_owner in
   translation_owner := name;
@@ -2311,7 +2444,8 @@ let get_axioms lst =
   retranslate structural;
   coq_axioms @
     Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y))
-    (List.concat (List.map Axhash.find (Hhlib.sort_uniq String.compare (lst @ structural))))
+      (List.concat
+         (List.map Axhash.find (Hhlib.sort_uniq String.compare (lst @ structural))))
 
 let remove_def name =
   Defhash.remove name;
@@ -2323,6 +2457,7 @@ let cleanup () =
   Axhash.clear ();
   Coq_erasure.clear ();
   Case_dependencies.clear ();
+  Lift_dependencies.clear ();
   translation_owner := "";
   Hashing.clear coqterm_hash
 

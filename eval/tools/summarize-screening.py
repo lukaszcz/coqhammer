@@ -3,6 +3,7 @@
 
 The input tree is produced by eval/run-screening-grid.sh.  The script is kept
 separate so partially completed runs can be re-summarized without rerunning ATPs.
+Callers supply the active labels so obsolete checkpoint directories are ignored.
 """
 
 from __future__ import annotations
@@ -106,10 +107,12 @@ def problem_metrics(files: list[Path]) -> tuple[int, int, float, int, float, int
     return len(defs), total_bytes, total_bytes / n, max_bytes, total_lines / n, max_lines
 
 
-def load_rows(root: Path) -> list[dict[str, object]]:
+def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    for label_dir in sorted(p for p in root.iterdir() if p.is_dir()):
-        label = label_dir.name
+    for label in labels:
+        label_dir = root / label
+        if not label_dir.is_dir():
+            continue
         config = "baseline" if label == BASELINE else label.removeprefix("screening-")
         decl_skips = config.endswith("-decl-skips")
         if decl_skips:
@@ -183,7 +186,7 @@ def write_tsv(rows: list[dict[str, object]], out: Path) -> None:
         "consistency_hits",
     ]
     with out.open("w", newline="") as f:
-        writer = csv.DictWriter(f, delimiter="\t", fieldnames=fieldnames)
+        writer = csv.DictWriter(f, delimiter="\t", fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             formatted = dict(row)
@@ -234,16 +237,19 @@ def md_table(rows: list[dict[str, object]], columns: list[str], limit: int | Non
     return "\n".join(lines)
 
 
-def find_generation_failures(root: Path) -> list[str]:
+def find_generation_failures(root: Path, labels: list[str]) -> list[str]:
     failures: list[str] = []
-    for status in sorted(root.glob("*/*/generation.status")):
-        text = status.read_text(errors="replace")
-        if "generation_failed=1" in text:
-            failures.append(f"{status.parents[1].name}/{status.parent.name}")
+    for label in labels:
+        for status in sorted((root / label).glob("*/generation.status")):
+            text = status.read_text(errors="replace")
+            if "generation_failed=1" in text:
+                failures.append(f"{label}/{status.parent.name}")
     return failures
 
 
-def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None:
+def write_analysis(
+    rows: list[dict[str, object]], root: Path, out: Path, labels: list[str]
+) -> None:
     by_label = aggregate(rows, "label", "config", "decl_skips")
     by_label_sorted = sorted(by_label, key=lambda r: (-float(r["success_rate"]), str(r["label"])))
     by_corpus = aggregate(rows, "label", "config", "decl_skips", "corpus")
@@ -268,7 +274,7 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
     if dep_baseline and dep_winner:
         dep_delta = dep_winner["success_rate"] - dep_baseline["success_rate"]
 
-    generation_failures = find_generation_failures(root)
+    generation_failures = find_generation_failures(root, labels)
     lines = [
         "# Extraction screening analysis",
         "",
@@ -308,16 +314,20 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
 
 
 def main() -> int:
-    if len(sys.argv) != 4:
-        print("usage: summarize-screening.py RESULTS_ROOT SUMMARY_TSV ANALYSIS_MD", file=sys.stderr)
+    if len(sys.argv) < 5:
+        print(
+            "usage: summarize-screening.py RESULTS_ROOT SUMMARY_TSV ANALYSIS_MD LABEL...",
+            file=sys.stderr,
+        )
         return 2
     root = Path(sys.argv[1])
-    rows = load_rows(root)
+    labels = sys.argv[4:]
+    rows = load_rows(root, labels)
     if not rows:
-        print(f"no rows found under {root}", file=sys.stderr)
+        print(f"no rows found for active labels under {root}", file=sys.stderr)
         return 1
     write_tsv(rows, Path(sys.argv[2]))
-    write_analysis(rows, root, Path(sys.argv[3]))
+    write_analysis(rows, root, Path(sys.argv[3]), labels)
     return 0
 
 
