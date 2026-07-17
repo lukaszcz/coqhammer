@@ -5,7 +5,17 @@ CoqHammer is an automated reasoning tool for Rocq (Coq), written mostly in OCaml
 1. **coq-hammer-tactics** — the `sauto` general proof search tactic and friends (`hauto`, `qauto`, `sfirstorder`, ...). Sources: `src/lib/`, `src/tactics/`, `theories/Tactics/`.
 2. **coq-hammer** — the `hammer` tool: premise selection by machine learning, translation of goals to FOL, invocation of external ATPs (Vampire, CVC4, Eprover, Z3), and proof reconstruction with `sauto`. Sources: `src/plugin/`, `theories/Plugin/`. Depends on coq-hammer-tactics being **installed**.
 
-Each git branch targets one Rocq/Coq version. Never branch from or merge with `master` for release work — `master` tracks unstable Rocq development.
+## Branch naming conventions
+
+- **`master`** — the development branch that tracks the unstable upstream Rocq
+  `master` branch.
+- **`rocq-X.Y`** — the CoqHammer development branch targeting Rocq version
+  `X.Y` (for example, `rocq-9.2`). These branches are normally created by
+  migrating from `master`; they are not release branches.
+- **`vX.Y.Z-rocqA.B`** — a release branch for CoqHammer version `X.Y.Z`
+  targeting Rocq version `A.B` (for example, `v1.3.0-rocq9.2`). Release work
+  must start from the corresponding `rocq-A.B` development branch, not from
+  `master`.
 
 ## Build commands
 
@@ -51,8 +61,7 @@ The `justfile` wraps the build/release/branch workflow. Run `just` with no
 arguments to list all recipes.
 
 Release conventions and the underlying scripts live in `scripts/` (see
-`scripts/release-lib.sh` for branch/tag/version naming). Never run release work
-from `master` — it tracks unstable Rocq (see Overview).
+`scripts/release-lib.sh` for branch/tag/version naming).
 
 ## Architecture
 
@@ -81,5 +90,6 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 
 ## Instructions
 
+- Don't worry about installing CoqHammer development version into the current opam switch - this temporary switch has been specifically created for the worktreen you're in.
 - Do not edit CHANGES.md
 - When finished, verify with `just check`
