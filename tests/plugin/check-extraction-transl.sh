@@ -105,6 +105,17 @@ require_line "box_arg_collision split keeps outer and constructor a distinct" '^
 require_line "depbox_project unboxes an instance-dependent user subset" '^\$_def_extraction_transl\.depbox_project:.*= 1_b\)'
 require_line "depbox_project type axiom expands the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(& @ \(\(\$HasType @ var_1_b_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_P_[0-9]+ @ var_1_b_[0-9]+\)'
 
+# A mutually recursive pair of apparent refinement carriers is not collapsible.
+# Translation must terminate and retain its ordinary nominal guard.
+require_line "mutual refinement carrier cycle translation terminates" '^\$_def_extraction_transl\.mutual_ref_identity:'
+require_line "mutual refinement carrier cycle falls back to a nominal guard" '^\$_type_[0-9]+:.*\$HasType.*extraction_transl\.mutual_ref_a.*\$HasType.*extraction_transl\.mutual_ref_a'
+
+# [poly_ref A] changes classification when [A] is instantiated by a Prop, so
+# formal-instance subset classification must not suppress declaration structure.
+require_line "parameter-dependent refinement keeps constructor injectivity" '^\$_inj_extraction_transl\.poly_ref_intro:'
+forbid_line "erased constructor injectivity does not infer parameter equality" '^\$_inj_extraction_transl\.poly_ref_intro:.*var_0_A_[0-9]+ = var_0_A_[0-9]+'
+require_line "parameter-dependent refinement keeps inversion" '^\$_inversion_extraction_transl\.poly_ref:'
+
 # Split equations: variable-scrutinee definitions are emitted as one guard-free
 # unit equation per constructor.
 require_line "myadd zero split equation" '^\$_def_extraction_matches\.myadd[$]O:.*extraction_matches\.myadd @ Corelib\.Init\.Datatypes\.O'
@@ -253,8 +264,8 @@ require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arit
 require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'
 require_line "indexed reflect stays on regular guard path" '^Corelib\.ssr\.ssrbool\.introT:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
 forbid_line "indexed reflect guard must not be enum-expanded without index constraints" '^Corelib\.ssr\.ssrbool\.introT:.*Corelib\.Init\.Datatypes\.ReflectT'
-forbid_line "sig inversion axiom is skipped with decl-skip default on" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
-forbid_line "sig constructor injectivity is skipped with decl-skip default on" '^\$_inj_Corelib\.Init\.Specif\.exist:'
+require_line "parameter-dependent sig keeps its inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
+require_line "parameter-dependent sig keeps constructor injectivity" '^\$_inj_Corelib\.Init\.Specif\.exist:'
 require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
 require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1

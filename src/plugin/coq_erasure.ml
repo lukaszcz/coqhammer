@@ -46,11 +46,6 @@ let is_ex_ind name = Coq_stdnames.is_init_logic "ex" name
 let is_eq_ind name = Coq_stdnames.is_init_logic "eq" name
 let is_acc_ind name = Coq_stdnames.is_init_wf "Acc" name
 
-let is_instance_dependent_decl name =
-  Coq_stdnames.is_init_datatypes "prod" name ||
-  Coq_stdnames.is_init_datatypes "sum" name ||
-  Coq_stdnames.is_init_specif "sigT" name
-
 let get_inductive name =
   if Defhash.mem name then
     match Defhash.find name with
@@ -62,6 +57,76 @@ let get_inductive name =
 
 let arg_at infos idx =
   try Some (List.find (fun info -> info.arg_index = idx) infos) with Not_found -> None
+
+(* Letouzey's non-recursive-carrier condition applies to the whole inductive
+   dependency graph, not just direct self references.  Serialized declarations
+   do not retain mutual-block metadata, so follow inductive occurrences through
+   constructor telescopes.  The visited set also makes ordinary recursive
+   carriers such as [nat] terminate without being mistaken for a cycle back to
+   the refinement currently being classified. *)
+let rec carrier_reaches_inductive target visited ty =
+  if term_mentions_const [target] ty then
+    true
+  else
+    match flatten_app ty with
+    | Const name, args ->
+       List.exists (carrier_reaches_inductive target visited) args ||
+       if List.mem name visited then
+         false
+       else
+         begin match get_inductive name with
+         | None -> false
+         | Some (constrs, params_num, _, _) ->
+            let params = Hhlib.take params_num args in
+            List.exists
+              (fun cname ->
+                 try
+                   let (_, _, cargs) =
+                     Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+                   in
+                   let cparams = Hhlib.take params_num cargs in
+                   List.exists
+                     (fun (_, field_ty) ->
+                        let field_ty =
+                          if List.length params = params_num then
+                            subst_params cparams params field_ty
+                          else
+                            field_ty
+                        in
+                        carrier_reaches_inductive target (name :: visited) field_ty)
+                     (Hhlib.drop params_num cargs)
+                 with _ ->
+                   (* A malformed or unavailable telescope cannot justify
+                      refinement collapse. *)
+                   true)
+              constrs
+         end
+    | _ ->
+       match ty with
+       | Var _ | Const _ | SortProp | SortSet | SortType | IndType _ -> false
+       | App (x, y) | Equal (x, y) ->
+          carrier_reaches_inductive target visited x ||
+          carrier_reaches_inductive target visited y
+       | Lam (_, ty, body) | Prod (_, ty, body) | Quant (_, (_, ty, body)) ->
+          carrier_reaches_inductive target visited ty ||
+          carrier_reaches_inductive target visited body
+       | Let (value, (_, ty, body)) ->
+          carrier_reaches_inductive target visited value ||
+          carrier_reaches_inductive target visited ty ||
+          carrier_reaches_inductive target visited body
+       | Case (_, matched, return_ty, raw_return_ty, _, branches) ->
+          carrier_reaches_inductive target visited matched ||
+          carrier_reaches_inductive target visited return_ty ||
+          carrier_reaches_inductive target visited raw_return_ty ||
+          List.exists
+            (fun (_, branch) -> carrier_reaches_inductive target visited branch)
+            branches
+       | Cast (term, ty) ->
+          carrier_reaches_inductive target visited term ||
+          carrier_reaches_inductive target visited ty
+       | Fix (_, _, _, _, types, bodies) ->
+          List.exists (carrier_reaches_inductive target visited) types ||
+          List.exists (carrier_reaches_inductive target visited) bodies
 
 let validate_subset indname infos carrier_idx prop_indices =
   let no_erased_payload_dependencies prop_args =
@@ -79,7 +144,7 @@ let validate_subset indname infos carrier_idx prop_indices =
   in
   match arg_at infos carrier_idx with
   | Some carrier when not carrier.arg_is_prop && not (is_sort carrier.arg_ty) &&
-                       not (term_mentions_const [indname] carrier.arg_ty) ->
+                       not (carrier_reaches_inductive indname [indname] carrier.arg_ty) ->
       let prop_args =
         List.fold_right
           (fun idx acc ->
@@ -244,12 +309,29 @@ let classify ctx indname params =
   with Not_classifiable -> CRegular
 
 let classify_decl indname =
-  if is_instance_dependent_decl indname then
-    None
-  else
-    match get_inductive indname with
-    | None -> None
-    | Some (_, params_num, ind_ty, _) ->
+  let constructor_fields_depend_on_params params_num cname =
+    try
+      let (_, _, cargs) =
+        Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+      in
+      let param_names = List.map fst (Hhlib.take params_num cargs) in
+      List.exists
+        (fun (_, ty) -> List.exists (fun name -> var_occurs name ty) param_names)
+        (Hhlib.drop params_num cargs)
+    with _ ->
+      true
+  in
+  match get_inductive indname with
+  | None -> None
+  | Some (constrs, params_num, ind_ty, _) ->
+      (* A formal parameter can later be instantiated by a proposition or a
+         proposition-valued family.  If constructor fields mention parameters,
+         their proof/content masks (and therefore subset classification) are not
+         declaration invariants.  Declaration-level skips are optional, so use
+         the conservative occurrence-independent subset only. *)
+      if List.exists (constructor_fields_depend_on_params params_num) constrs then
+        None
+      else
         let params = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
         let ctx = List.rev params in
         Some (classify ctx indname (mk_vars params))

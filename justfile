@@ -17,12 +17,15 @@
 _default:
     @just --list
 
-# Install both packages locally, then run the full installed test suite.
+# Build and install both packages, then run the quick plugin and tactics tests.
 check:
-    rm -rf _check-install
-    make prepare-local-install
-    make install USE_LOCAL_INSTALL=1 COQLIBINSTALL="$PWD/_check-install/coq/user-contrib" COQPLUGININSTALL="$PWD/_check-install" BINDIR="$PWD/_check-install/bin/" COQFLAGS="-coqlib $PWD/_check-install/coq"
-    make tests USE_LOCAL_INSTALL=1 COQC="rocq c -coqlib $PWD/_check-install/coq"
+    make install
+    make quicktest
+
+# Run the complete plugin suite and consistency canaries once via isolated Dune.
+check-extra:
+    make clean
+    make dune-test-plugin
 
 # Bump the CoqHammer version (patch|minor|major, or none to keep it) and publish
 # a GitHub release for this branch's Rocq. `none` ports the current release to a

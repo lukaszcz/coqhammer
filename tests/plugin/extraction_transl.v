@@ -64,8 +64,24 @@ Definition depbox_project (P : nat -> Prop) (b : depbox nat P) : nat :=
   | depbox_intro _ _ x _ => x
   end.
 
+(* The two apparent refinement carriers form a cycle through their mutual
+   declarations.  They must stay regular rather than recursively expanding
+   each other's guards forever. *)
+Inductive mutual_ref_a : Type :=
+| mutual_ref_a_intro (b : mutual_ref_b) (pf : True)
+with mutual_ref_b : Type :=
+| mutual_ref_b_intro (a : mutual_ref_a) (pf : True).
+
+Definition mutual_ref_identity (a : mutual_ref_a) : mutual_ref_a := a.
+
+(* The formal [A] field looks informative, but [A] can be instantiated by a
+   proposition.  Its declaration-level structural axioms therefore cannot be
+   skipped based on the formal instance. *)
+Inductive poly_ref (A : Type) : Type :=
+| poly_ref_intro (x : A) (pf : True).
+
 Goal True.
-  hammer_dump "hammer_dump_smoke.p".
+  Hammer_dump "hammer_dump_smoke.p".
   exact I.
 Qed.
 
@@ -97,6 +113,11 @@ Hammer_transl "box_arg_collision".
 (* Instance-dependent user inductives must be classified from actual parameters,
    not from a declaration-level cache entry produced for formal parameters. *)
 Hammer_transl "depbox_project".
+
+(* Recursive carrier cycles fall back, and parameter-dependent declarations
+   retain their structural axioms. *)
+Hammer_transl "mutual_ref_identity".
+Hammer_transl "poly_ref".
 
 (* Corpus constants from extraction_matches.v. *)
 Hammer_transl "myadd".

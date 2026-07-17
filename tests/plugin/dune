@@ -1,22 +1,32 @@
 (rule
  (alias runtest)
  (deps
-  (sandbox always)
+  (sandbox none)
   (source_tree .)
   ../../coq-hammer.install
   ../../coq-hammer-tactics.install)
  (action
   (bash "set -euo pipefail
-root=%{workspace_root}
-export COQPATH=\"$root/_build/install/default/lib/coq/user-contrib${COQPATH:+:$COQPATH}\"
-export OCAMLPATH=\"$root/_build/install/default/lib${OCAMLPATH:+:$OCAMLPATH}\"
-export PATH=\"$root/_build/install/default/bin:$PATH\"
+context=$(realpath %{workspace_root})
+install=$(realpath \"$context/../install/default\")
 work=$(mktemp -d)
 trap 'rm -rf \"$work\"' EXIT
+rocqlib=\"$work/coq\"
+base=$(%{bin:rocq} c -where)
+mkdir -p \"$rocqlib/user-contrib\" \"$work/rocq-runtime\"
+ln -s \"$base/theories\" \"$rocqlib/theories\"
+ln -s \"$base/user-contrib/Stdlib\" \"$rocqlib/user-contrib/Stdlib\"
+ln -s \"$install/lib/coq/user-contrib/Hammer\" \"$rocqlib/user-contrib/Hammer\"
+for f in \"$base\"/../rocq-runtime/*; do
+  ln -s \"$f\" \"$work/rocq-runtime/$(basename \"$f\")\"
+done
+unset COQPATH ROCQPATH
+export OCAMLPATH=\"$install/lib${OCAMLPATH:+:$OCAMLPATH}\"
+export PATH=\"$install/bin:$PATH\"
 cp -LR . \"$work/tests\"
 chmod -R u+w \"$work/tests\"
 cd \"$work/tests\"
-make -B all COQC='%{bin:rocq} c'")))
+make -B all COQC=\"%{bin:rocq} c -coqlib $rocqlib\"")))
 
 (alias
  (name extraction)

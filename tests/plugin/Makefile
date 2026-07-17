@@ -161,6 +161,12 @@ case_prop_transl.vo: case_prop_transl.v
 	  echo "case structural replay did not exercise a cache hit"; cat case_prop_transl.out; \
 	  cat "$$tmp/case-structural-cache-hit.p"; rm -f case_prop_transl.vo case_prop_transl.out; exit 1; \
 	fi; \
+	grep -Fq "'\$$_inversion_case_prop_transl.prop_case_box'" "$$tmp/prop-case-structural.p" || { \
+	  echo "proposition-valued case structural inversion delivery check FAILED"; \
+	  cat "$$tmp/prop-case-structural.p"; rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
+	grep -Fq "'\$$_discrim_case_prop_transl.prop_case_left\$$case_prop_transl.prop_case_right'" "$$tmp/prop-case-structural.p" || { \
+	  echo "proposition-valued case structural discrimination delivery check FAILED"; \
+	  cat "$$tmp/prop-case-structural.p"; rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
 	rm -f case_prop_transl.out
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
@@ -170,6 +176,11 @@ extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_depty
 	COQHAMMER_DUMP_DIR="$$tmp" $(COQC) extraction_transl.v > extraction_transl.out 2>&1 || { \
 	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; }; \
 	if ! ./check-extraction-transl.sh extraction_transl.out; then \
+	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; \
+	fi; \
+	dump_extractions=$$(grep -Fc 'Extracting features...' extraction_transl.out || true); \
+	if [ "$$dump_extractions" -ne 1 ]; then \
+	  echo "Hammer_dump ran feature extraction $$dump_extractions times (expected once)"; \
 	  cat extraction_transl.out; rm -f extraction_transl.vo extraction_transl.out; exit 1; \
 	fi; \
 	if ! grep -Eq '^fof\(.*conjecture' "$$tmp/hammer_dump_smoke.p"; then \

@@ -31,9 +31,13 @@ ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
 
 
 def read_list(path: Path) -> list[Path]:
-    if not path.exists():
-        return []
-    return [Path(line.strip()) for line in path.read_text().splitlines() if line.strip()]
+    if not path.is_file():
+        raise ValueError(f"required checkpoint list is missing: {path}")
+    files = [Path(line.strip()) for line in path.read_text().splitlines() if line.strip()]
+    missing = [item for item in files if not item.is_file()]
+    if missing:
+        raise ValueError(f"checkpoint list {path} names missing output: {missing[0]}")
+    return files
 
 
 def has_atp_theorem(path: Path) -> bool:
@@ -100,15 +104,17 @@ def reconstr_files(corpus_dir: Path, prover: str, premise: str, generated: list[
     return [odir / Path(path).name.replace(".p", ".out") for path in generated]
 
 
-def load_rows(root: Path) -> list[dict[str, object]]:
+def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
     rows: list[dict[str, object]] = []
-    for label_dir in sorted(p for p in root.iterdir() if p.is_dir()):
-        label = label_dir.name
+    for label in labels:
+        label_dir = root / label
+        if not label_dir.is_dir():
+            raise ValueError(f"required label checkpoints are missing: {label_dir}")
         config = "baseline" if label == BASELINE else "loo-erasure-guards-decl-skips"
         for corpus in CORPORA:
             corpus_dir = label_dir / corpus
-            if not corpus_dir.exists():
-                continue
+            if not corpus_dir.is_dir():
+                raise ValueError(f"required corpus checkpoints are missing: {corpus_dir}")
             for premise in PREMISES:
                 generated = read_list(corpus_dir / f"generated-{premise}.lst")
                 defs, total_bytes, avg_bytes, max_bytes, avg_lines, max_lines = problem_metrics(generated)
@@ -116,6 +122,11 @@ def load_rows(root: Path) -> list[dict[str, object]]:
                     prover_outputs = read_list(corpus_dir / f"prover-outputs-{prover}-{premise}.lst")
                     theorems = status_theorem_count(prover_outputs)
                     rfiles = reconstr_files(corpus_dir, prover, premise, generated)
+                    missing_reconstructions = [path for path in rfiles if not path.is_file()]
+                    if missing_reconstructions:
+                        raise ValueError(
+                            f"required reconstruction output is missing: {missing_reconstructions[0]}"
+                        )
                     recon_successes = reconstr_success_count(rfiles)
                     if prover in CONSISTENCY_PROVERS:
                         consistency_outputs = read_list(corpus_dir / f"consistency-outputs-{prover}-{premise}.lst")
@@ -371,13 +382,22 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
 
 
 def main() -> int:
-    if len(sys.argv) != 4:
-        print("usage: summarize-confirmation.py RESULTS_ROOT SUMMARY_TSV ANALYSIS_MD", file=sys.stderr)
+    if len(sys.argv) < 4:
+        print(
+            "usage: summarize-confirmation.py RESULTS_ROOT SUMMARY_TSV ANALYSIS_MD [LABEL ...]",
+            file=sys.stderr,
+        )
         return 2
     root = Path(sys.argv[1])
-    rows = load_rows(root)
-    if not rows:
-        print(f"no rows found under {root}", file=sys.stderr)
+    labels = sys.argv[4:] or [BASELINE, WINNER]
+    try:
+        rows = load_rows(root, labels)
+    except ValueError as error:
+        print(error, file=sys.stderr)
+        return 1
+    expected_rows = len(labels) * len(CORPORA) * len(PREMISES) * len(PROVERS)
+    if len(rows) != expected_rows:
+        print(f"incomplete checkpoint grid: expected {expected_rows} rows, found {len(rows)}", file=sys.stderr)
         return 1
     write_tsv(rows, Path(sys.argv[2]))
     write_analysis(rows, root, Path(sys.argv[3]))

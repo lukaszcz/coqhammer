@@ -697,7 +697,18 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
     Hhpartac.partac limit (List.map fst tacs)
       begin fun k tac ->
         if k >= 0 then
-          f_success (snd (List.nth tacs k)) tac
+          let name = snd (List.nth tacs k) in
+          (* The worker only reports which tactic succeeded. The tactic must be
+             replayed in the parent process to produce the proof term, and that
+             replay can still fail. Restore the original goal and continue with
+             the remaining reconstruction batches in that case. *)
+          Proofview.tclORELSE
+            (Proofview.tclBIND tac
+               begin fun result ->
+                 f_success name;
+                 Proofview.tclUNIT result
+               end)
+            (fun _ -> f_failure ())
         else
           f_failure ()
       end
@@ -707,20 +718,12 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
     | [] -> msg_fail ()
     | tacs :: ts ->
        msg_batch k;
-       run !Opt.reconstr_timelimit tacs
-         begin fun name tac ->
-           msg_success name;
-           tac
-         end
+       run !Opt.reconstr_timelimit tacs msg_success
          begin fun () ->
            hlp (k + 1) ts
          end
   in
-  run 1 pretactics
-    begin fun name tac ->
-      msg_success name;
-      tac
-    end
+  run 1 pretactics msg_success
     begin fun () ->
       hlp 1 tactics
     end

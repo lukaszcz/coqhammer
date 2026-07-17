@@ -141,16 +141,40 @@ restored after a configuration build.
    generated ATP and reconstruction result lists next to each summary are the
    quick parse check for harness regressions.
 
-5. Run the confirmation grid (baseline versus the selected screening configuration,
-   all standard `hammer_hook` premise-selector/count directories and all four
-   provers):
+5. Run the screening grid, or the confirmation grid (baseline versus the selected
+   screening configuration, all standard `hammer_hook` premise-selector/count
+   directories and all four provers):
 
    ```bash
+   ./run-screening-grid.sh -j 4 --tim 5 --consistency-tim 2
    ./run-confirmation-grid.sh -j 4 --tim 10 --consistency-tim 2
    ```
 
-   The script writes resumable raw checkpoints under `results/confirmation/` and the
-   committed summary artifacts under `artifacts/extraction-confirmation/`.
+   The scripts require a clean tracked worktree, write resumable raw checkpoints
+   under `results/screening/` and `results/confirmation/`, and generate summaries
+   under the corresponding `artifacts/extraction-*` directory only after a full
+   run. `--only-label` and `--only-corpus` update checkpoints without replacing
+   summaries. A `.done` file records the repository and
+   install commits, translator configuration, corpus mode/source/content, relevant
+   timeout, and stage input digest. It is reused only when that provenance and the
+   stage outputs still validate. Individual ATP commands may exit nonzero for
+   ordinary timeouts or failed proof attempts: those checkpoints are complete only
+   when every expected ATP result has an accepted terminal status (with an empty Z3
+   result allowed after `htimeout`) and every ATP theorem has a `Success` or
+   `Failure` reconstruction result. The aggregate reconstruction build itself must
+   finish successfully. Consistency scans likewise require
+   one recognized SZS terminal status per problem; `Timeout` and `GaveUp` are valid
+   outcomes even when the prover exits nonzero. Missing/malformed outputs and
+   crash or infrastructure-error logs invalidate the checkpoint and never produce
+   a `.done` file. Changing any provenance input reruns the affected checkpoint;
+   `--force` reruns all selected checkpoints. Screening configurations whose ATP
+   generation fails are recorded as regressions and do not launch empty prover
+   runs. Each complete run also writes `provenance.env` beside its summary, tying
+   the aggregate files to the checkpoint-marker set, source/install commits,
+   configurations, corpus hashes, scripts, and timeouts. Summary files are not
+   evidence for a later source revision: commit them only together with that
+   provenance. See `artifacts/extraction-confirmation/README.md` for the
+   currently invalidated confirmation results.
 
 6. To verify that scripted configuration rebuilding changes translation output
    and restores the tree, run for example:

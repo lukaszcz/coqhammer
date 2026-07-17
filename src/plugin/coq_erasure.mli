@@ -36,8 +36,9 @@ type ind_class =
           constructor argument and at least one propositional payload argument,
           e.g. [sig] or [sig2] and per-instance cases such as [prod A P] when
           [P : Prop].  Side conditions: the inductive must be non-indexed, the
-          carrier type must not mention the inductive itself (Letouzey's
-          non-recursive-carrier condition), and a purely informative one-field
+          carrier type must not lead back to the inductive through another
+          constructor telescope (Letouzey's non-recursive-carrier condition),
+          and a purely informative one-field
           wrapper is kept [CRegular] instead of being collapsed. *)
   | CEnum of (string * coqterm list) list
       (** A non-indexed inductive whose constructors have only propositional
@@ -64,9 +65,9 @@ val classify : coqcontext -> string -> coqterm list -> ind_class
 val classify_decl : string -> ind_class option
 (** Declaration-level classification when the result is independent of a
     particular parameter instance.  This is useful for optional declaration-level
-    skips: [False], [and], [eq], [Acc], [sig], [sig2], ... return their stable
-    class, whereas sort-ambiguous families such as [prod], [sum], and [sigT]
-    return [None] because their class depends on the actual parameters. *)
+    skips.  Parameterized declarations whose constructor fields mention their
+    parameters return [None], because later parameter instantiations may change
+    the proof/content classification. *)
 
 val has_erasable_content : coqcontext -> coqterm -> bool
 (** [has_erasable_content ctx ty] scans [ty] for an inductive instance whose

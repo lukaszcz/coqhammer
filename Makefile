@@ -110,6 +110,9 @@ dune-tactics:
 dune-plugin:
 	$(DUNE_ENV) $(DUNE) build -p coq-hammer-tactics,coq-hammer
 
+dune-test-plugin:
+	$(DUNE_ENV) $(DUNE) build @tests/plugin/runtest
+
 dune-install: dune-install-tactics dune-install-plugin
 
 dune-install-tactics: dune-tactics
@@ -133,4 +136,4 @@ dune-clean:
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
 
-.PHONY: default prepare-local-install all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-plugin-release test-tactics test-extraction clean dune dune-tactics dune-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
+.PHONY: default prepare-local-install all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-plugin-release test-tactics test-extraction clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin

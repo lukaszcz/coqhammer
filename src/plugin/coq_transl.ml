@@ -1270,6 +1270,16 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                 else
                   raw_params
               in
+              let record_case_dependency () =
+                (* Every emitted case equation relies on the structural theory
+                   of its scrutinee, including proposition-valued matches
+                   translated as lower/upper bounds. *)
+                Lift_dependencies.record indname;
+                if dependency_owner <> "" then
+                  Case_dependencies.add dependency_owner indname;
+                if !translation_owner <> "" && !translation_owner <> dependency_owner then
+                  Case_dependencies.add !translation_owner indname
+              in
               let rec return_target_is_prop ctx = function
                 | Lam(name, ty, body) -> return_target_is_prop ((name, ty) :: ctx) body
                 | SortProp -> true
@@ -1291,6 +1301,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   return ()
                 end
                 else begin
+                  record_case_dependency ();
                   match matched_term with
                   | Var _ ->
                      emit_prop_case axname vars lhs indname indty params params_num
@@ -1322,6 +1333,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                                equation; it never substitutes an opaque value. *)
                             return ()
                          | Some body2 ->
+                            record_case_dependency ();
                             (* Singleton erasure: the proof match computes as
                                its unique branch after proof arguments are erased.
                                The source proposition is load-bearing for indexed
@@ -1341,17 +1353,14 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                                  string_of_coqterm return_type))
                   end
                   | _ ->
+                     record_case_dependency ();
                      case_aux_value vars indname matched_term return_type raw_return_type
                        params_num branches indty
                      >>= fun rhs ->
                      emit_equation ?premise (axname ^ "$link") vars lhs rhs false
                 end
               else begin
-                Lift_dependencies.record indname;
-                if dependency_owner <> "" then
-                  Case_dependencies.add dependency_owner indname;
-                if !translation_owner <> "" && !translation_owner <> dependency_owner then
-                  Case_dependencies.add !translation_owner indname;
+                record_case_dependency ();
                 let collapse_subset_case carrier_idx =
                   collapse_subset_case ~matched_term ~vars ~constrs ~branches
                     ~params ~params_num carrier_idx
@@ -2171,7 +2180,7 @@ and skip_refinement_decl_axioms indname =
   | Some (Coq_erasure.CSubset _) -> true
   | _ -> false
 
-and add_injection_axioms constr =
+and add_injection_axioms params_num constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
   let ty = coqdef_type (Defhash.find constr)
   in
@@ -2184,8 +2193,15 @@ and add_injection_axioms constr =
   let proof_irrel_marker =
     mk_eq (Const("Hammer.ProofIrrel")) (Const("Hammer.ProofIrrel"))
   in
-  let add_arg_eq ctx ty name1 name2 conjs =
-    if Coq_typing.check_prop ctx ty then
+  let add_arg_eq is_param ctx ty name1 name2 conjs =
+    if is_param then
+      (* Constructor parameters are fixed by a homogeneous CIC equality; they
+         are not injective payloads.  More importantly, a parameter-dependent
+         declaration may collapse some constructor instances to their carrier,
+         so inferring parameter equality from the erased FOL premise would be
+         unsound. *)
+      conjs
+    else if Coq_typing.check_prop ctx ty then
       proof_irrel_marker :: conjs
     else
       (mk_eq (Var(name1)) (Var(name2))) :: conjs
@@ -2194,7 +2210,7 @@ and add_injection_axioms constr =
     | [] -> Const("$True")
     | conjs -> join_left mk_and conjs
   in
-  let rec hlp ctx ty1 ty2 args1 args2 conjs =
+  let rec hlp arg_index ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
     | Prod(name1, lty1, value1), Prod(name2, lty2, value2) ->
       let lname1 = refresh_varname name1
@@ -2203,18 +2219,20 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
-      let conjs2 = add_arg_eq ctx lty1 lname1 lname2 conjs in
+      let conjs2 =
+        add_arg_eq (arg_index < params_num) ctx lty1 lname1 lname2 conjs
+      in
       mk_forall lname1 lty1
         (mk_forall lname2 lty2
-           (hlp ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
-              (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2))
+           (hlp (arg_index + 1) ((lname1, lty1) :: (lname2, lty2) :: ctx)
+              lvalue1 lvalue2 (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2))
     | _ ->
       mk_impl
         (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
            (mk_long_app (Const(constr)) (List.rev args2)))
         (conjoin conjs)
   in
-  let rec hlp2 ctx ty1 ty2 args1 args2 conjs =
+  let rec hlp2 arg_index ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
     | Prod(name1, lty1, value1), Prod(name2, lty2, value2) ->
       let lname1 = refresh_varname name1
@@ -2223,9 +2241,12 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
-      let conjs2 = add_arg_eq ctx lty1 lname1 lname2 conjs in
-      (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
-         (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2) >>= fun r ->
+      let conjs2 =
+        add_arg_eq (arg_index < params_num) ctx lty1 lname1 lname2 conjs
+      in
+      (hlp2 (arg_index + 1) ((lname1, lty1) :: (lname2, lty2) :: ctx)
+         lvalue1 lvalue2 (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2)
+      >>= fun r ->
       return (mk_forall lname1 type_any (mk_forall lname2 type_any r))
     | _ ->
       prop_to_formula ctx
@@ -2238,9 +2259,9 @@ and add_injection_axioms constr =
   | Prod(_) ->
      begin
        if !opt_closure_guards || opt_injectivity_guards then
-         prop_to_formula [] (hlp [] ty ty [] [] [])
+         prop_to_formula [] (hlp 0 [] ty ty [] [] [])
        else
-         hlp2 [] ty ty [] [] []
+         hlp2 0 [] ty ty [] [] []
      end >>= fun ax ->
      add_axiom (mk_axiom ("$_inj_" ^ constr) ax)
   | _ ->
@@ -2340,7 +2361,7 @@ and add_inversion_axioms is_prop indname constrs =
 and add_def_axioms ((name, value, ty, srt) as def) =
   debug 2 (fun () -> print_endline ("add_def_axioms: " ^ name));
   match value with
-  | IndType(_, constrs, _) ->
+  | IndType(_, constrs, params_num) ->
      if srt = SortProp then
        (prop_to_formula [] ty) >>= fun r ->
        add_axiom (mk_axiom name r)
@@ -2369,7 +2390,9 @@ and add_def_axioms ((name, value, ty, srt) as def) =
             (if skip_refinement_decl then
                return ()
              else
-               List.fold_left (fun acc c -> add_injection_axioms c >> acc) (return ()) constrs) >>
+               List.fold_left
+                 (fun acc c -> add_injection_axioms params_num c >> acc)
+                 (return ()) constrs) >>
             List.fold_left (fun acc (c1, c2) -> add_discrim_axioms c1 c2) (return ()) (Hhlib.mk_pairs constrs) >>
             add_typing_axiom name ty >>
             if opt_inversion_axioms && not skip_refinement_decl then

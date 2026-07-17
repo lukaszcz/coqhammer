@@ -87,6 +87,25 @@ Definition delivery_cache_hit : nat :=
      | delivery_right n => S n
      end).
 
+Inductive prop_case_box : Type :=
+| prop_case_left
+| prop_case_right.
+
+Definition prop_case_only (b : prop_case_box) : Prop :=
+  match b with
+  | prop_case_left => True
+  | prop_case_right => False
+  end.
+
+(* The inspected inductive is hidden from this declaration's type and from the
+   dump goal, so its structural axioms can arrive only through case dependency
+   replay. *)
+Definition prop_case_closed : Prop :=
+  match prop_case_left with
+  | prop_case_left => True
+  | prop_case_right => False
+  end.
+
 Hammer_transl "case_prop".
 Hammer_transl "compound_case_prop".
 Hammer_transl "false_case_prop".
@@ -98,6 +117,8 @@ Hammer_transl "compound_eq_case_prop".
 Hammer_transl "nested_eq_case_prop".
 Hammer_transl "compound_false_case_prop".
 Hammer_transl "delivery_cache_warm".
+Hammer_transl "prop_case_only".
+Hammer_transl "prop_case_closed".
 
 Set Hammer Predictions 1024.
 Set Hammer SAutoLimit 0.
@@ -116,4 +137,10 @@ Set Hammer Predictions 0.
 
 Goal delivery_cache_hit = delivery_cache_hit.
   hammer_dump "case-structural-cache-hit.p".
+Abort.
+
+(* This goal does not expose [prop_case_box], but translating the selected
+   closed definition still needs its case structure. *)
+Goal prop_case_closed <-> prop_case_closed.
+  hammer_dump "prop-case-structural.p".
 Abort.

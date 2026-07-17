@@ -11,7 +11,9 @@ Run the extraction confirmation grid:
   for baseline vs the selected screening configuration only.
 
 Results are checkpointed under eval/results/confirmation/ and summarized under
-  eval/artifacts/extraction-confirmation/{summary.tsv,analysis.md}
+  eval/artifacts/extraction-confirmation/{summary.tsv,analysis.md}. Checkpoints
+  are reused only when their recorded commit, configuration, corpus, and timeout
+  provenance matches the current run.
 
 Options:
   -j, --jobs N          parallel jobs for Rocq/prover make invocations (default: 1)
@@ -54,8 +56,24 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
+for value in "$jobs" "$tim" "$consistency_tim"; do
+  if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Jobs and timeouts must be positive integers: $value" >&2
+    exit 2
+  fi
+done
+
 repo=$(git rev-parse --show-toplevel)
+if ! git -C "$repo" diff --quiet HEAD --; then
+  echo "Evaluation grids require a clean tracked worktree so build and checkpoint provenance is exact." >&2
+  exit 1
+fi
 eval_dir="$repo/eval"
+# shellcheck source=eval/grid-checkpoint-lib.sh
+source "$eval_dir/grid-checkpoint-lib.sh"
+repo_commit=$(git rev-parse HEAD)
+grid_script_digest=$(hash_file "${BASH_SOURCE[0]}")
+grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
 results_root="$eval_dir/results/confirmation"
 artifacts_dir="$eval_dir/artifacts/extraction-confirmation"
 mkdir -p "$results_root" "$artifacts_dir"
@@ -70,9 +88,38 @@ declare -A label_config
 label_config[baseline-merge-base]=baseline
 label_config[selected-config]=loo-erasure-guards-decl-skips
 
-have_done() {
-  [ "$force" = false ] && [ -f "$1.done" ]
-}
+if [ -n "$only_label" ] && ! array_contains "$only_label" "${labels[@]}"; then
+  echo "Unknown confirmation label: $only_label" >&2
+  exit 2
+fi
+if [ -n "$only_corpus" ] && ! array_contains "$only_corpus" "${corpora[@]}"; then
+  echo "Unknown corpus: $only_corpus" >&2
+  exit 2
+fi
+
+if [ "$sample_corpora" = true ]; then
+  corpus_mode=sample
+else
+  corpus_mode=full
+fi
+declare -A corpus_source corpus_digest
+for corpus in "${corpora[@]}"; do
+  if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
+    if [ ! -d "$external_source" ]; then
+      echo "External source directory not found: $external_source" >&2
+      exit 1
+    fi
+    source_dir=$(cd "$external_source" && pwd -P)
+    corpus_source[$corpus]="$source_dir"
+  else
+    source_dir="$eval_dir/corpora/$corpus"
+    if [ "$sample_corpora" = true ]; then
+      source_dir="$source_dir/sample"
+    fi
+    corpus_source[$corpus]="${source_dir#"$repo"/}"
+  fi
+  corpus_digest[$corpus]=$(hash_tree "$source_dir")
+done
 
 prepare_prefix_env() {
   local prefix="$1"
@@ -140,7 +187,8 @@ validate_refactor_options() {
 }
 
 manifest_matches_label() {
-  local label="$1" prefix="$2" manifest="$prefix/manifest.env" expected_commit expected_config
+  local label="$1" prefix="$2" expected_commit expected_config
+  local manifest="$prefix/manifest.env"
   [ -f "$manifest" ] || return 1
   if [ "$label" = baseline-merge-base ]; then
     expected_commit=$(git merge-base HEAD rocq-9.2)
@@ -166,6 +214,65 @@ prepare_corpus() {
     args+=(--source "$external_source")
   fi
   ./prepare-corpus.sh "${args[@]}"
+}
+
+validate_generation() {
+  local outdir="$1" premise
+  status_is "$outdir/generation.status" generation_failed=0 || return 1
+  [ -s "$outdir/prepared-files.lst" ] || return 1
+  for premise in "${premises[@]}"; do
+    list_is_nonempty_and_complete "$outdir/generated-$premise.lst" || return 1
+  done
+}
+
+validate_prover_run() {
+  local outdir="$1" prover="$2" premise="$3" prover_status
+  status_has_integer "$outdir/prover-$prover-$premise.status" prover_exit || return 1
+  list_is_nonempty_and_complete "$outdir/generated-$premise.lst" || return 1
+  expected_atp_outputs_are_complete \
+    "$outdir/generated-$premise.lst" "$outdir/atp-problems/$premise" \
+    "$outdir/prover-outputs/$prover-$premise" "$prover" \
+    "$outdir/prover-outputs-$prover-$premise.lst" "$outdir/$prover-$premise.log" || return 1
+  if [ "$prover" = z3 ] && find "$outdir/prover-outputs/$prover-$premise" -type f -size 0 -print -quit | grep -q .; then
+    prover_status=$(status_integer_value "$outdir/prover-$prover-$premise.status" prover_exit)
+    [ "$prover_status" -ne 0 ]
+  fi
+}
+
+validate_reconstruction_run() {
+  local outdir="$1" premise prover problem atp_output recon_output
+  local expected_count=0 actual_count reconstruction_status
+  status_has_integer "$outdir/reconstruction.status" reconstruction_exit || return 1
+  [ -s "$outdir/reconstr-prepared-files.lst" ] || return 1
+  list_is_complete "$outdir/reconstr-outputs.lst" || return 1
+  [ -f "$outdir/reconstr.full.log" ] && ! log_has_crash_or_error "$outdir/reconstr.full.log" || return 1
+  for premise in "${premises[@]}"; do
+    for prover in "${provers[@]}"; do
+      while IFS= read -r problem; do
+        [ -n "$problem" ] || continue
+        atp_output="$outdir/prover-outputs/$prover-$premise/$(basename "$problem")"
+        if grep -Eq 'SZS status Theorem' "$atp_output"; then
+          recon_output="$outdir/reconstr-outputs/$prover-$premise/$(basename "${problem%.p}").out"
+          [ -f "$recon_output" ] && grep -Eq '^(Success|Failure)( |$)' "$recon_output" || return 1
+          grep -Fqx "$recon_output" "$outdir/reconstr-outputs.lst" || return 1
+          expected_count=$((expected_count + 1))
+        fi
+      done < "$outdir/generated-$premise.lst"
+    done
+  done
+  actual_count=$(list_nonempty_count "$outdir/reconstr-outputs.lst")
+  [ "$actual_count" -eq "$expected_count" ] || return 1
+  reconstruction_status=$(status_integer_value "$outdir/reconstruction.status" reconstruction_exit)
+  [ "$reconstruction_status" -eq 0 ]
+}
+
+validate_consistency_run() {
+  local outdir="$1" prover="$2" premise="$3" work
+  work="$outdir/consistency/$prover-$premise"
+  status_is "$outdir/consistency-$prover-$premise.status" consistency_exit=0 &&
+    consistency_outputs_are_complete \
+      "$outdir/generated-$premise.lst" "$work/outputs" "$work/raw" "$work/status" \
+      "$outdir/consistency-outputs-$prover-$premise.lst"
 }
 
 build_label() {
@@ -205,11 +312,17 @@ run_generation() {
   local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
   mkdir -p "$outdir"
-  if have_done "$outdir/generate"; then
-    echo "[gen] $label/$corpus already done"
-    return 0
+  local marker="$outdir/generate"
+  if checkpoint_done "$marker" generation "$label" "$corpus" "$prefix"; then
+    if validate_generation "$outdir"; then
+      echo "[gen] $label/$corpus already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "generation artifacts are incomplete or invalid"
   fi
 
+  rm -f "$outdir/generation.status" "$marker.done"
+  clear_downstream_results "$outdir"
   echo "[gen] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
@@ -248,20 +361,34 @@ run_generation() {
     fi
     cp -R "atp/problems/$premise" "$outdir/atp-problems/$premise"
     find "$outdir/atp-problems/$premise" -name '*.p' | sort > "$outdir/generated-$premise.lst"
+    if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
+      echo "No generated ATP problems for $premise in $label/$corpus" >&2
+      exit 1
+    fi
   done
   echo "generation_failed=0" > "$outdir/generation.status"
-  touch "$outdir/generate.done"
+  mark_checkpoint "$marker" generation "$label" "$corpus" "$prefix"
 }
 
 run_prover() {
   local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
   local outdir="$results_root/$label/$corpus"
-  local marker="$outdir/prover-$prover-$premise"
-  if have_done "$marker"; then
-    echo "[prover] $label/$corpus/$prover/$premise already done"
-    return 0
+  local marker="$outdir/prover-$prover-$premise" input_digest
+  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
+  if checkpoint_done "$marker" prover "$label" "$corpus" "$prefix" \
+      "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"; then
+    if validate_prover_run "$outdir" "$prover" "$premise"; then
+      echo "[prover] $label/$corpus/$prover/$premise already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "prover status or outputs are incomplete or invalid"
   fi
 
+  rm -f "$marker.done" "$outdir/prover-$prover-$premise.status"
+  if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
+    echo "Cannot run $prover: no generated problems for $label/$corpus/$premise" >&2
+    return 1
+  fi
   echo "[prover] $label/$corpus/$prover/$premise"
   prepare_prefix_env "$prefix"
   require_prover "$prover"
@@ -279,23 +406,30 @@ run_prover() {
   rm -rf "$outdir/prover-outputs/$prover-$premise"
   mkdir -p "$outdir/prover-outputs" "atp/o/$prover"
   mv "atp/o/$prover" "$outdir/prover-outputs/$prover-$premise"
-  while IFS= read -r problem; do
-    [ -n "$problem" ] || continue
-    touch "$outdir/prover-outputs/$prover-$premise/$(basename "$problem")"
-  done < "$outdir/generated-$premise.lst"
   find "$outdir/prover-outputs/$prover-$premise" -type f | sort > "$outdir/prover-outputs-$prover-$premise.lst"
-  touch "$marker.done"
+  if ! validate_prover_run "$outdir" "$prover" "$premise"; then
+    echo "Prover run produced incomplete, malformed, or crashed outputs for $label/$corpus/$prover/$premise" >&2
+    return 1
+  fi
+  mark_checkpoint "$marker" prover "$label" "$corpus" "$prefix" \
+    "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"
 }
 
 run_reconstruction() {
   local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
-  local marker="$outdir/reconstruction"
-  if have_done "$marker"; then
-    echo "[reconstr] $label/$corpus already done"
-    return 0
+  local marker="$outdir/reconstruction" input_digest reconstruction_status
+  input_digest=$(hash_tree "$outdir/prover-outputs")
+  if checkpoint_done "$marker" reconstruction "$label" "$corpus" "$prefix" \
+      "prover_timeout=$tim" "input_sha256=$input_digest"; then
+    if validate_reconstruction_run "$outdir"; then
+      echo "[reconstr] $label/$corpus already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "reconstruction status or outputs are incomplete or invalid"
   fi
 
+  rm -f "$marker.done" "$outdir/reconstruction.status"
   echo "[reconstr] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
@@ -309,31 +443,52 @@ run_reconstruction() {
   done
   echo reconstr > coqhammer.opt
   coqc_cmd="rocq c -coqlib $prefix/coq"
-  make -k -j "$jobs" reconstr COQC="$coqc_cmd" > "$outdir/reconstr.full.log" 2>&1 || true
+  if make -k -j "$jobs" reconstr COQC="$coqc_cmd" > "$outdir/reconstr.full.log" 2>&1; then
+    reconstruction_status=0
+  else
+    reconstruction_status=$?
+  fi
+  echo "reconstruction_exit=$reconstruction_status" > "$outdir/reconstruction.status"
   rm -rf "$outdir/reconstr-outputs"
   mkdir -p "$outdir/reconstr-outputs"
   if [ -d out ]; then
     cp -R out/. "$outdir/reconstr-outputs/"
   fi
   find "$outdir/reconstr-outputs" -type f | sort > "$outdir/reconstr-outputs.lst"
-  touch "$marker.done"
+  if ! validate_reconstruction_run "$outdir"; then
+    echo "Reconstruction produced incomplete or invalid outputs for $label/$corpus; see $outdir/reconstr.full.log" >&2
+    return 1
+  fi
+  mark_checkpoint "$marker" reconstruction "$label" "$corpus" "$prefix" \
+    "prover_timeout=$tim" "input_sha256=$input_digest"
 }
 
 run_consistency() {
   local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
   local outdir="$results_root/$label/$corpus"
-  local marker="$outdir/consistency-$prover-$premise"
-  if have_done "$marker"; then
-    echo "[consistency] $label/$corpus/$prover/$premise already done"
-    return 0
+  local marker="$outdir/consistency-$prover-$premise" input_digest
+  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
+  if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
+      "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
+      "input_sha256=$input_digest"; then
+    if validate_consistency_run "$outdir" "$prover" "$premise"; then
+      echo "[consistency] $label/$corpus/$prover/$premise already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "consistency status or outputs are incomplete or invalid"
   fi
 
+  rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status"
+  if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
+    echo "Cannot run consistency check: no problems for $label/$corpus/$premise" >&2
+    return 1
+  fi
   echo "[consistency] $label/$corpus/$prover/$premise"
   prepare_prefix_env "$prefix"
   require_prover "$prover"
   local work="$outdir/consistency/$prover-$premise"
   rm -rf "$work"
-  mkdir -p "$work/problems" "$work/outputs"
+  mkdir -p "$work/problems" "$work/outputs" "$work/raw" "$work/status"
 
   python3 - "$outdir/atp-problems/$premise" "$work/problems" <<'PY'
 import pathlib
@@ -353,25 +508,50 @@ PY
 
   local problems=("$work/problems"/*.p)
   if [ ! -e "${problems[0]}" ]; then
-    problems=()
+    echo "Consistency check generated no false-conjecture problems for $label/$corpus/$premise" >&2
+    return 1
   fi
   for problem in "${problems[@]}"; do
-    local name
+    local name command_status
     name=$(basename "$problem")
     if [ "$prover" = eprover ]; then
-      (eprover -s --cpu-limit="$consistency_tim" --auto-schedule -R --print-statistics -p --tstp-format "$problem" || true) \
-        | grep "file[(]'\|# SZS\|SZS status" > "$work/outputs/$name" || true
+      if eprover -s --cpu-limit="$consistency_tim" --auto-schedule -R --print-statistics -p --tstp-format "$problem" \
+          > "$work/raw/$name" 2>&1; then
+        command_status=0
+      else
+        command_status=$?
+      fi
+      grep "file[(]'\|# SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
     else
-      (htimeout "$consistency_tim" vampire --mode casc -t "$consistency_tim" --proof tptp --output_axiom_names on "$problem" || true) \
-        | grep "file[(]'\|% SZS\|SZS status" > "$work/outputs/$name" || true
+      if htimeout "$consistency_tim" vampire --mode casc -t "$consistency_tim" --proof tptp \
+          --output_axiom_names on "$problem" > "$work/raw/$name" 2>&1; then
+        command_status=0
+      else
+        command_status=$?
+      fi
+      grep "file[(]'\|% SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
+    fi
+    echo "command_exit=$command_status" > "$work/status/$name.status"
+    if log_has_crash_or_error "$work/raw/$name" || ! szs_terminal_status "$work/outputs/$name"; then
+      echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
+      echo "Consistency prover crashed or produced no terminal status for $label/$corpus/$prover/$premise/$name" >&2
+      return 1
     fi
   done
   if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
+    echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
     echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
-    exit 1
+    return 1
   fi
   find "$work/outputs" -type f | sort > "$outdir/consistency-outputs-$prover-$premise.lst"
-  touch "$marker.done"
+  echo "consistency_exit=0" > "$outdir/consistency-$prover-$premise.status"
+  if ! validate_consistency_run "$outdir" "$prover" "$premise"; then
+    echo "Consistency check produced incomplete outputs for $label/$corpus/$prover/$premise" >&2
+    return 1
+  fi
+  mark_checkpoint "$marker" consistency "$label" "$corpus" "$prefix" \
+    "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
+    "input_sha256=$input_digest"
 }
 
 for label in "${labels[@]}"; do
@@ -400,9 +580,18 @@ for label in "${labels[@]}"; do
   done
 done
 
-python3 "$eval_dir/tools/summarize-confirmation.py" "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
-
-echo "Extraction confirmation complete."
+echo "Extraction confirmation checkpoints complete."
 echo "  raw checkpoints: $results_root"
-echo "  summary:         $artifacts_dir/summary.tsv"
-echo "  analysis:        $artifacts_dir/analysis.md"
+if [ -n "$only_label" ] || [ -n "$only_corpus" ]; then
+  echo "  summary:         not updated by a partial run"
+else
+  summarizer="$eval_dir/tools/summarize-confirmation.py"
+  python3 "$summarizer" \
+    "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
+    "${labels[@]}"
+  write_grid_provenance "$artifacts_dir/provenance.env" confirmation \
+    "$summarizer" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
+  echo "  summary:         $artifacts_dir/summary.tsv"
+  echo "  analysis:        $artifacts_dir/analysis.md"
+  echo "  provenance:      $artifacts_dir/provenance.env"
+fi

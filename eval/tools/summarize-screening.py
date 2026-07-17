@@ -24,20 +24,28 @@ CONSISTENCY_HIT_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable|Contradi
 
 
 def read_list(path: Path) -> list[Path]:
-    if not path.exists():
-        return []
-    return [Path(line.strip()) for line in path.read_text().splitlines() if line.strip()]
+    if not path.is_file():
+        raise ValueError(f"required checkpoint list is missing: {path}")
+    files = [Path(line.strip()) for line in path.read_text().splitlines() if line.strip()]
+    missing = [item for item in files if not item.is_file()]
+    if missing:
+        raise ValueError(f"checkpoint list {path} names missing output: {missing[0]}")
+    return files
 
 
 def generation_status(corpus_dir: Path) -> tuple[bool, dict[str, int]]:
     path = corpus_dir / "generation.status"
-    if not path.exists():
-        return False, {}
+    if not path.is_file():
+        raise ValueError(f"required generation status is missing: {path}")
     failed = False
+    succeeded = False
     counts: dict[str, int] = {}
     for line in path.read_text(errors="replace").splitlines():
         if line == "generation_failed=1":
             failed = True
+            continue
+        if line == "generation_failed=0":
+            succeeded = True
             continue
         parts = line.split()
         if len(parts) == 3 and parts[0] == "generated_count":
@@ -45,6 +53,8 @@ def generation_status(corpus_dir: Path) -> tuple[bool, dict[str, int]]:
                 counts[parts[1]] = int(parts[2])
             except ValueError:
                 pass
+    if failed == succeeded:
+        raise ValueError(f"malformed generation status: {path}")
     return failed, counts
 
 
@@ -112,7 +122,7 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
     for label in labels:
         label_dir = root / label
         if not label_dir.is_dir():
-            continue
+            raise ValueError(f"required label checkpoints are missing: {label_dir}")
         config = "baseline" if label == BASELINE else label.removeprefix("screening-")
         decl_skips = config.endswith("-decl-skips")
         if decl_skips:
@@ -121,19 +131,27 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
             config_core = config
         for corpus in CORPORA:
             corpus_dir = label_dir / corpus
-            if not corpus_dir.exists():
-                continue
+            if not corpus_dir.is_dir():
+                raise ValueError(f"required corpus checkpoints are missing: {corpus_dir}")
             generation_failed, generated_counts = generation_status(corpus_dir)
             for premise in PREMISES:
                 generated = read_list(corpus_dir / f"generated-{premise}.lst")
                 def_count, total_bytes, avg_bytes, max_bytes, avg_lines, max_lines = problem_metrics(generated)
                 for prover in PROVERS:
-                    prover_outputs = read_list(corpus_dir / f"prover-outputs-{prover}-{premise}.lst")
-                    theorems = status_theorem_count(prover_outputs)
-                    if premise == "knn-64":
-                        consistency_outputs = read_list(corpus_dir / f"consistency-outputs-{prover}-knn-64.lst")
-                    else:
+                    if generation_failed:
+                        prover_outputs = []
                         consistency_outputs = []
+                    else:
+                        prover_outputs = read_list(
+                            corpus_dir / f"prover-outputs-{prover}-{premise}.lst"
+                        )
+                        if premise == "knn-64":
+                            consistency_outputs = read_list(
+                                corpus_dir / f"consistency-outputs-{prover}-knn-64.lst"
+                            )
+                        else:
+                            consistency_outputs = []
+                    theorems = status_theorem_count(prover_outputs)
                     consistency_hits = consistency_hit_count(consistency_outputs)
                     generated_n = len(generated)
                     if generation_failed and generated_n == 0:
@@ -322,9 +340,14 @@ def main() -> int:
         return 2
     root = Path(sys.argv[1])
     labels = sys.argv[4:]
-    rows = load_rows(root, labels)
-    if not rows:
-        print(f"no rows found for active labels under {root}", file=sys.stderr)
+    try:
+        rows = load_rows(root, labels)
+    except ValueError as error:
+        print(error, file=sys.stderr)
+        return 1
+    expected_rows = len(labels) * len(CORPORA) * len(PREMISES) * len(PROVERS)
+    if len(rows) != expected_rows:
+        print(f"incomplete checkpoint grid: expected {expected_rows} rows, found {len(rows)}", file=sys.stderr)
         return 1
     write_tsv(rows, Path(sys.argv[2]))
     write_analysis(rows, root, Path(sys.argv[3]), labels)
