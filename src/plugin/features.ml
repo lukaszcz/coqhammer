@@ -296,28 +296,10 @@ let clean fname =
     List.iter Sys.remove [fname; (fname ^ "fea"); (fname ^ "dep"); (fname ^ "seq");
                           (fname ^ "conj")]
 
-let direct_goal_dependencies (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : Hhlib.StringSet.t =
-  let ndefs = List.filter is_nontrivial defs in
-  let names = Hhlib.strset_from_lst (List.map get_hhdef_name ndefs) in
-  let filter_deps deps = List.filter (fun a -> Hhlib.StringSet.mem a names) deps in
-  Hhlib.strset_from_lst
-    (filter_deps (get_deps goal) @
-       List.concat (List.map (fun h -> filter_deps (get_deps h)) hyps))
-
-let add_direct_goal_dependencies hyps defs goal predicted =
-  let direct_deps = direct_goal_dependencies hyps defs goal in
-  let selected =
-    List.fold_left
-      (fun acc def -> Hhlib.StringSet.add (get_hhdef_name def) acc)
-      direct_deps predicted
-  in
-  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) selected) defs
-
 let predict (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : hhdef list =
   let fname = extract hyps defs goal in
   try
-    let predicted = run_predict fname defs !Opt.predictions_num !Opt.predict_method in
-    let r = add_direct_goal_dependencies hyps defs goal predicted in
+    let r = run_predict fname defs !Opt.predictions_num !Opt.predict_method in
     clean fname;
     r
   with e ->
