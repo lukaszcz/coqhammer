@@ -9,6 +9,9 @@ all: $(PLUGIN_VOS)
 test-extraction: $(EXTRACTION_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
 
+test-consistency: extraction_deptypes.vo
+	COQC="$(COQC)" ./check-consistency.sh
+
 transl.vo: transl.v
 	$(COQC) transl.v > transl.out 2>&1
 	@if grep -q 'Init\.Logic\.' transl.out; then \
@@ -183,4 +186,4 @@ extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_depty
 clean:
 	-rm -f *.vo *.glob *.out .*.aux
 
-.PHONY: all test-extraction clean
+.PHONY: all test-extraction test-consistency clean

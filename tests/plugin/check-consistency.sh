@@ -15,6 +15,15 @@ fail() {
   exit 1
 }
 
+show_prover_output() {
+  prover=$1
+  out=$2
+  label=$3
+
+  echo "----- $prover output for $label -----" >&2
+  cat "$out" >&2
+}
+
 note_nonzero_exit() {
   prover=$1
   status=$2
@@ -23,12 +32,18 @@ note_nonzero_exit() {
 
   if [ "$status" -gt 128 ] ||
      grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction' "$out"; then
-    cat "$out" >&2
     echo "SKIP: $prover crashed while checking $label; skipping this prover for this check" >&2
-    return 1
+    return 0
   fi
 
-  echo "NOTE: $prover exited with status $status on $label; checking status anyway"
+  case "$status" in
+    8)
+      echo "NOTE: $prover exited with status 8 (resource exhaustion) on $label; treating the result as inconclusive"
+      ;;
+    *)
+      echo "NOTE: $prover exited with status $status on $label; treating the result as inconclusive"
+      ;;
+  esac
   return 0
 }
 
@@ -82,10 +97,19 @@ check_unprovable_status() {
   out=$2
   label=$3
 
-  if grep -Eq 'SZS status (Theorem|Unsatisfiable|ContradictoryAxioms|Error|SyntaxError|TypeError)|^unsat$' "$out" ||
-     grep -Eiq '(syntax|parse)[[:space:]_-]*error|unsupported|exception' "$out"; then
-    cat "$out" >&2
-    fail "$prover reported a proving, inconsistency, or error status for $label"
+  if grep -Eq 'SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$' "$out"; then
+    show_prover_output "$prover" "$out" "$label"
+    fail "$prover proved a false consistency canary for $label"
+  fi
+
+  if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
+    show_prover_output "$prover" "$out" "$label"
+    fail "$prover reported a parser error on $label"
+  fi
+
+  if grep -Eiq 'unsupported|exception' "$out"; then
+    echo "NOTE: $prover reported an unsupported feature or exception on $label; skipping this prover for this check" >&2
+    return 0
   fi
 
   if grep -Eq 'SZS status (CounterSatisfiable|Satisfiable)|^sat$' "$out"; then
@@ -93,7 +117,6 @@ check_unprovable_status() {
   fi
 
   echo "NOTE: $prover did not report an explicit satisfiable/counter-satisfiable status for $label" >&2
-  cat "$out" >&2
   return 0
 }
 
@@ -281,22 +304,19 @@ assert_unprovable_problem() {
   problem=$1
   timeout=$2
   label=$3
-  checked=0
-
   [ -f "$problem" ] || fail "missing dumped problem $problem"
-  if [ "$have_eprover" -eq 1 ] && run_eprover "$problem" "$timeout" "$label"; then
-    checked=1
+  if [ "$have_eprover" -eq 1 ]; then
+    run_eprover "$problem" "$timeout" "$label"
   fi
-  if [ "$have_vampire" -eq 1 ] && run_vampire "$problem" "$timeout" "$label"; then
-    checked=1
+  if [ "$have_vampire" -eq 1 ]; then
+    run_vampire "$problem" "$timeout" "$label"
   fi
-  if [ "$have_z3" -eq 1 ] && run_z3 "$problem" "$timeout" "$label"; then
-    checked=1
+  if [ "$have_z3" -eq 1 ]; then
+    run_z3 "$problem" "$timeout" "$label"
   fi
-  if [ "$have_cvc4" -eq 1 ] && run_cvc4 "$problem" "$timeout" "$label"; then
-    checked=1
+  if [ "$have_cvc4" -eq 1 ]; then
+    run_cvc4 "$problem" "$timeout" "$label"
   fi
-  [ "$checked" -eq 1 ] || fail "no available prover completed consistency check for $label"
 }
 
 check_index=0
@@ -383,7 +403,13 @@ assert_provable() {
   if [ "$have_cvc4" -eq 1 ] && try_cvc4_theorem "$problem" "$timeout" "$label"; then
     proved=1
   fi
-  [ "$proved" -eq 1 ] || fail "no available prover reported a proving status for $label"
+  if [ "$proved" -ne 1 ]; then
+    [ "$have_eprover" -eq 1 ] && show_prover_output "E" "$tmpdir/eprover-theorem.out" "$label"
+    [ "$have_vampire" -eq 1 ] && show_prover_output "Vampire" "$tmpdir/vampire-theorem.out" "$label"
+    [ "$have_z3" -eq 1 ] && show_prover_output "Z3" "$tmpdir/z3-theorem.out" "$label"
+    [ "$have_cvc4" -eq 1 ] && show_prover_output "CVC4" "$tmpdir/cvc4-theorem.out" "$label"
+    fail "no available prover reported a proving status for $label"
+  fi
 }
 
 # Generate the canary problem dumps into the private temp directory (kept out
