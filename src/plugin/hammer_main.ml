@@ -795,10 +795,24 @@ let run_gs_provers hyps deps goal clean seq =
            clean (); raise e
        in
        match ret with
-       | None ->
+       | None, _ ->
           failure ()
-       | Some (idx, info) ->
+       | Some (idx, info), unfinished ->
           begin
+            let unfinished_idx =
+              List.map
+                (fun pos -> fst (List.nth enabled_seq pos))
+                unfinished
+            in
+            (* Explicit failure reports take precedence because [unfinished]
+               is deliberately an over-approximation. *)
+            let preempted =
+              List.filter
+                (fun unfinished_idx ->
+                   unfinished_idx <> idx &&
+                   not (List.mem unfinished_idx !failed))
+                unfinished_idx
+            in
             let info =
               if List.length info.Provers.deps >= !Opt.minimize_threshold then
                 Provers.minimize info hyps deps goal
@@ -809,7 +823,7 @@ let run_gs_provers hyps deps goal clean seq =
             let msg = Provers.prn_atp_info info in
             if msg <> "" then
               Msg.info msg;
-            (idx :: (!failed @ tried), info)
+            (idx :: (!failed @ tried), preempted, info)
           end
   in
   run_batches [] candidates
@@ -866,7 +880,7 @@ let do_predict tried hyps deps goal =
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
-    ([], Provers.predict deps1 hyps deps goal)
+    ([], [], Provers.predict deps1 hyps deps goal)
 
 let do_choice tried hyps deps goal lems =
   (* ATP premises are selected from [deps], so append any requested lemmas
@@ -892,7 +906,7 @@ let do_choice tried hyps deps goal lems =
     in
     run_gs_provers hyps deps goal (fun () -> ()) seq
   else (* Opts.gs_mode = 0 *)
-    ([], Provers.predict deps1 hyps deps goal)
+    ([], [], Provers.predict deps1 hyps deps goal)
 
 let try_sauto () =
   if !Opt.sauto_timelimit = 0 then
@@ -939,8 +953,10 @@ let hammer_main_tac env sigma gl mode =
   if !Opt.debug_mode then
     Msg.info ("Found " ^ string_of_int (List.length defs) ^
                 " accessible Coq objects.");
-  let rec attempt tried =
-    let (attempt_ids, info) =
+  (* Every round adds at least its winner to [tried], and a candidate is
+     launched at most twice: once fresh and once more after preemption. *)
+  let rec attempt round tried once =
+    let (attempt_ids, preempted, info) =
       Opt.with_temp_dir
         begin fun () ->
           match mode with
@@ -952,7 +968,17 @@ let hammer_main_tac env sigma gl mode =
              do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
         end
     in
-    let tried = attempt_ids @ tried in
+    let promoted =
+      List.filter (fun idx -> List.mem idx once) preempted
+    in
+    let tried' = promoted @ attempt_ids @ tried in
+    let once' =
+      List.filter
+        (fun idx ->
+           not (List.mem idx promoted) && not (List.mem idx attempt_ids))
+        once @
+      List.filter (fun idx -> not (List.mem idx once)) preempted
+    in
     let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
     let clear_ids = hyps_to_clear env sigma gl used_ids in
     let sdeps = List.map (Utils.constr_to_string sigma) deps
@@ -964,7 +990,8 @@ let hammer_main_tac env sigma gl mode =
       | _ -> "clear " ^ String.concat " " (List.map Id.to_string clear_ids) ^ ".\n\t"
     in
     Msg.info ("Reconstructing the proof...");
-    let can_retry = retry_available tried in
+    let retry_exists = retry_available tried' in
+    let can_retry = retry_exists && round < !Opt.reconstr_retries in
     run_tactics clear_ids deps defs inverts
       begin fun tac ->
         Msg.info ("Tactic " ^ tac ^ " succeeded.");
@@ -977,16 +1004,23 @@ let hammer_main_tac env sigma gl mode =
         if can_retry then
           begin
             Msg.info "Proof reconstruction failed for this ATP proof; trying another ATP proof...";
-            attempt tried
+            attempt (round + 1) tried' once'
           end
         else
-          raise (HammerFailure reconstruction_failure_msg)
+          let msg =
+            if retry_exists && round >= !Opt.reconstr_retries then
+              reconstruction_failure_msg ^
+              "\nYou may allow more ATP-proof retries with 'Set Hammer ReconstrRetries N' (default: 3)."
+            else
+              reconstruction_failure_msg
+          in
+          raise (HammerFailure msg)
       end
       begin fun k ->
         Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
       end
   in
-  attempt []
+  attempt 0 [] []
 
 let hammer_tac mode =
   Proofview.Goal.enter

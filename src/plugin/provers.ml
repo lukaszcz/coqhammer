@@ -397,8 +397,8 @@ let call_provers_par fname ofname =
   let time = float_of_int !Opt.atp_timelimit
   in
   match Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs with
-  | None -> raise (HammerFailure "ATPs failed to find a proof")
-  | Some x -> x
+  | None, _ -> raise (HammerFailure "ATPs failed to find a proof")
+  | Some x, _ -> x
 
 (******************************************************************************)
 (* Main functions *)
@@ -458,7 +458,7 @@ let minimize info hyps deps goal =
     let time = (float_of_int !Opt.atp_timelimit)
     in
     match Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs with
-    | None ->
+    | None, _ ->
        begin
          if !Opt.debug_mode then
            begin
@@ -470,7 +470,7 @@ let minimize info hyps deps goal =
          clean ();
          info
        end
-    | Some (pname2, info2) -> clean (); pom pname2 info2
+    | Some (pname2, info2), _ -> clean (); pom pname2 info2
   in
   pom "" info
 

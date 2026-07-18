@@ -60,6 +60,21 @@ let _ =
   in
   declare_int_option gdopt
 
+let reconstr_retries = ref 3
+
+let _ =
+  let gdopt=
+    { optdepr=None;
+      optstage = Interp;
+      optkey=["Hammer";"ReconstrRetries"];
+      optread=(fun ()->Some !reconstr_retries);
+      optwrite=
+   (function
+        None -> reconstr_retries := 3
+      | Some i -> reconstr_retries := (max i 0))}
+  in
+  declare_int_option gdopt
+
 let minimize_threshold = ref 8
 
 let _ =
