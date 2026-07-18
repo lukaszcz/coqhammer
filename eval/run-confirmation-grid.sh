@@ -498,7 +498,8 @@ PY
       grep "file[(]'\|% SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
     fi
     echo "command_exit=$command_status" > "$work/status/$name.status"
-    if log_has_crash_or_error "$work/raw/$name" || ! szs_terminal_status "$work/outputs/$name"; then
+    if log_has_crash_or_error_ignoring_strategy_aborts "$work/raw/$name" ||
+        ! szs_terminal_status "$work/outputs/$name"; then
       echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
       echo "Consistency prover crashed or produced no terminal status for $label/$corpus/$prover/$premise/$name" >&2
       return 1

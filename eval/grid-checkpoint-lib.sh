@@ -245,6 +245,29 @@ log_has_crash_or_infrastructure_error() {
   grep -Eiq '(segmentation fault|segfault|core dumped|bus error|floating point exception|aborted|anomaly|assertion[^[:cntrl:]]*failed|uncaught exception|traceback|command not found|no such file or directory|no rule to make target|permission denied|cannot execute|exec[^[:cntrl:]]*failed|(^|[^[:alpha:]])killed([^[:alpha:]]|$)|out of memory|cannot allocate memory|no space left on device|input/output error|stack overflow|broken pipe|(^|[^[:alpha:]])(fatal|internal|system)[[:space:]_-]+(error|exception)([[:space:]:]|$))' "$log"
 }
 
+# Portfolio provers report the death of an individual child strategy in their
+# own output and then carry on with the remaining schedule.  Vampire prints
+# "% Aborted by signal SIGSEGV on FILE" for such a strategy; the run as a whole
+# still terminates with a regular SZS status.  Callers that separately require a
+# terminal SZS status use this to scan a raw prover log without mistaking a
+# recovered per-strategy abort for a crash of the prover invocation.
+strip_portfolio_strategy_aborts() {
+  grep -Ev "^% Aborted by signal [[:upper:]]+ on " "$1" || true
+}
+
+log_has_crash_or_error_ignoring_strategy_aborts() {
+  local log="$1" filtered
+  [ -f "$log" ] || return 0
+  filtered=$(mktemp)
+  strip_portfolio_strategy_aborts "$log" > "$filtered"
+  if log_has_crash_or_error "$filtered"; then
+    rm -f "$filtered"
+    return 0
+  fi
+  rm -f "$filtered"
+  return 1
+}
+
 log_has_crash_or_error() {
   local log="$1"
   log_has_crash_or_infrastructure_error "$log" && return 0
@@ -256,7 +279,7 @@ expected_atp_outputs_are_complete() {
   local generated="$1" problem_root="$2" output_dir="$3" prover="$4" output_list="$5" log="$6"
   local problem relative output expected_count=0 actual_count
   [ -f "$generated" ] && [ -f "$output_list" ] && [ -f "$log" ] || return 1
-  log_has_crash_or_error "$log" && return 1
+  log_has_crash_or_error_ignoring_strategy_aborts "$log" && return 1
   while IFS= read -r problem; do
     [ -n "$problem" ] || continue
     case "$problem" in
@@ -283,7 +306,7 @@ consistency_outputs_are_complete() {
     output="$output_dir/$name"
     raw="$raw_dir/$name"
     command_status="$status_dir/$name.status"
-    [ -f "$raw" ] && ! log_has_crash_or_error "$raw" || return 1
+    [ -f "$raw" ] && ! log_has_crash_or_error_ignoring_strategy_aborts "$raw" || return 1
     szs_terminal_status "$output" || return 1
     status_has_integer "$command_status" command_exit || return 1
     grep -Fqx "$output" "$output_list" || return 1
