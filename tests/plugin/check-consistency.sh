@@ -24,6 +24,128 @@ show_prover_output() {
   cat "$out" >&2
 }
 
+positive_integer() {
+  case "$1" in
+    ''|*[!0-9]*|0) return 1 ;;
+    *) return 0 ;;
+  esac
+}
+
+detect_workers() {
+  cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+  case "$cores" in
+    ''|*[!0-9]*|0) cores=1 ;;
+  esac
+
+  if [ -n "${CONSISTENCY_JOBS:-}" ]; then
+    positive_integer "$CONSISTENCY_JOBS" || fail "CONSISTENCY_JOBS must be a positive integer"
+    if [ "$CONSISTENCY_JOBS" -lt "$cores" ]; then
+      cores=$CONSISTENCY_JOBS
+    fi
+    echo "$cores"
+    return
+  fi
+
+  per_job_mb=${CONSISTENCY_MEMORY_PER_JOB_MB:-4096}
+  reserve_mb=${CONSISTENCY_RESERVE_MB:-4096}
+  positive_integer "$per_job_mb" || fail "CONSISTENCY_MEMORY_PER_JOB_MB must be a positive integer"
+  positive_integer "$reserve_mb" || fail "CONSISTENCY_RESERVE_MB must be a positive integer"
+
+  available_kb=$(awk '$1 == "MemAvailable:" { print $2; exit }' /proc/meminfo 2>/dev/null || true)
+  case "$available_kb" in
+    ''|*[!0-9]*) echo "$cores"; return ;;
+  esac
+
+  reserve_kb=$((reserve_mb * 1024))
+  per_job_kb=$((per_job_mb * 1024))
+  if [ "$available_kb" -le "$reserve_kb" ]; then
+    echo 1
+    return
+  fi
+
+  memory_workers=$(( (available_kb - reserve_kb) / per_job_kb ))
+  [ "$memory_workers" -ge 1 ] || memory_workers=1
+  if [ "$memory_workers" -lt "$cores" ]; then
+    echo "$memory_workers"
+  else
+    echo "$cores"
+  fi
+}
+
+WORKERS=$(detect_workers)
+echo "INFO: using $WORKERS ATP workers"
+
+next_job_id=0
+job_pids=
+job_count=0
+job_successes=0
+job_mode=
+job_failure_label=
+
+run_job() {
+  trap - EXIT HUP INT TERM
+  mode=$1
+  prover=$2
+  problem=$3
+  timeout=$4
+  label=$5
+  out=$6
+
+  case "$mode:$prover" in
+    negative:E) run_eprover "$problem" "$timeout" "$label" "$out" ;;
+    negative:Vampire) run_vampire "$problem" "$timeout" "$label" "$out" ;;
+    negative:Z3) run_z3 "$problem" "$timeout" "$label" "$out" ;;
+    negative:CVC4) run_cvc4 "$problem" "$timeout" "$label" "$out" ;;
+    positive:E) try_eprover_theorem "$problem" "$timeout" "$label" "$out" ;;
+    positive:Vampire) try_vampire_theorem "$problem" "$timeout" "$label" "$out" ;;
+    positive:Z3) try_z3_theorem "$problem" "$timeout" "$label" "$out" ;;
+    positive:CVC4) try_cvc4_theorem "$problem" "$timeout" "$label" "$out" ;;
+    *) echo "consistency canary FAILED: unknown ATP job $mode:$prover" >&2; exit 1 ;;
+  esac
+}
+
+reap_jobs() {
+  batch_failed=0
+  for pid in $job_pids; do
+    if wait "$pid"; then
+      job_successes=$((job_successes + 1))
+    else
+      status=$?
+      if [ "$job_mode" = negative ] || [ "$status" -eq 2 ]; then
+        batch_failed=1
+      fi
+    fi
+  done
+  job_pids=
+  job_count=0
+
+  if [ "$batch_failed" -ne 0 ]; then
+    fail "a consistency prover check failed for $job_failure_label"
+  fi
+}
+
+start_job() {
+  mode=$1
+  prover=$2
+  problem=$3
+  label=$4
+  out=$5
+  job_mode=$mode
+  job_failure_label=$label
+
+  job_dir="$tmpdir/jobs/$next_job_id"
+  next_job_id=$((next_job_id + 1))
+  mkdir -p "$job_dir"
+  [ -n "$out" ] || out="$job_dir/$prover.out"
+
+  run_job "$mode" "$prover" "$problem" "$TIMEOUT" "$label" "$out" &
+  job_pids="$job_pids $!"
+  job_count=$((job_count + 1))
+  if [ "$job_count" -ge "$WORKERS" ]; then
+    reap_jobs
+  fi
+}
+
 note_nonzero_exit() {
   prover=$1
   status=$2
@@ -120,11 +242,25 @@ check_unprovable_status() {
   return 0
 }
 
+check_provable_status() {
+  prover=$1
+  out=$2
+  label=$3
+
+  if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
+    show_prover_output "$prover" "$out" "$label"
+    echo "consistency canary FAILED: $prover reported a parser error on $label" >&2
+    return 2
+  fi
+
+  grep -Eq 'SZS status Theorem' "$out"
+}
+
 run_eprover() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/eprover.out
+  out=$4
 
   echo "CHECK: E consistency on $label"
   if eprover -s --cpu-limit="$timeout" --auto-schedule -R --print-statistics -p --tstp-format "$problem" >"$out" 2>&1; then
@@ -142,7 +278,7 @@ run_vampire() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/vampire.out
+  out=$4
 
   echo "CHECK: Vampire consistency on $label"
   if vampire --mode casc -t "$timeout" --proof tptp --output_axiom_names on "$problem" >"$out" 2>&1; then
@@ -160,7 +296,7 @@ run_z3() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/z3.out
+  out=$4
 
   echo "CHECK: Z3 consistency on $label"
   if [ "$z3_style" = z3_tptp ]; then
@@ -189,7 +325,7 @@ run_cvc4() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/cvc4.out
+  out=$4
 
   echo "CHECK: CVC4 consistency on $label"
   if command -v timeout >/dev/null 2>&1; then
@@ -213,7 +349,7 @@ try_eprover_theorem() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/eprover-theorem.out
+  out=$4
 
   echo "CHECK: E proves $label"
   if eprover -s --cpu-limit="$timeout" --auto-schedule -R --print-statistics -p --tstp-format "$problem" >"$out" 2>&1; then
@@ -224,14 +360,14 @@ try_eprover_theorem() {
       return 1
     fi
   fi
-  grep -q 'SZS status Theorem' "$out"
+  check_provable_status "E" "$out" "$label"
 }
 
 try_vampire_theorem() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/vampire-theorem.out
+  out=$4
 
   echo "CHECK: Vampire proves $label"
   if vampire --mode casc -t "$timeout" --proof tptp --output_axiom_names on "$problem" >"$out" 2>&1; then
@@ -242,14 +378,14 @@ try_vampire_theorem() {
       return 1
     fi
   fi
-  grep -q 'SZS status Theorem' "$out"
+  check_provable_status "Vampire" "$out" "$label"
 }
 
 try_z3_theorem() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/z3-theorem.out
+  out=$4
 
   echo "CHECK: Z3 proves $label"
   if [ "$z3_style" = z3_tptp ]; then
@@ -271,6 +407,11 @@ try_z3_theorem() {
       fi
     fi
   fi
+  if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
+    show_prover_output "Z3" "$out" "$label"
+    echo "consistency canary FAILED: Z3 reported a parser error on $label" >&2
+    return 2
+  fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
 }
 
@@ -278,7 +419,7 @@ try_cvc4_theorem() {
   problem=$1
   timeout=$2
   label=$3
-  out=$tmpdir/cvc4-theorem.out
+  out=$4
 
   echo "CHECK: CVC4 proves $label"
   if command -v timeout >/dev/null 2>&1; then
@@ -295,6 +436,11 @@ try_cvc4_theorem() {
       return 1
     fi
   fi
+  if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
+    show_prover_output "CVC4" "$out" "$label"
+    echo "consistency canary FAILED: CVC4 reported a parser error on $label" >&2
+    return 2
+  fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
 }
 
@@ -305,17 +451,18 @@ assert_unprovable_problem() {
   timeout=$2
   label=$3
   [ -f "$problem" ] || fail "missing dumped problem $problem"
+  job_mode=negative
   if [ "$have_eprover" -eq 1 ]; then
-    run_eprover "$problem" "$timeout" "$label"
+    start_job negative E "$problem" "$label" ""
   fi
   if [ "$have_vampire" -eq 1 ]; then
-    run_vampire "$problem" "$timeout" "$label"
+    start_job negative Vampire "$problem" "$label" ""
   fi
   if [ "$have_z3" -eq 1 ]; then
-    run_z3 "$problem" "$timeout" "$label"
+    start_job negative Z3 "$problem" "$label" ""
   fi
   if [ "$have_cvc4" -eq 1 ]; then
-    run_cvc4 "$problem" "$timeout" "$label"
+    start_job negative CVC4 "$problem" "$label" ""
   fi
 }
 
@@ -388,26 +535,34 @@ assert_provable() {
   problem=$1
   timeout=$2
   label=$3
-  proved=0
+  job_successes=0
+  job_mode=positive
+  positive_eprover_out="$tmpdir/jobs/positive-eprover.out"
+  positive_vampire_out="$tmpdir/jobs/positive-vampire.out"
+  positive_z3_out="$tmpdir/jobs/positive-z3.out"
+  positive_cvc4_out="$tmpdir/jobs/positive-cvc4.out"
 
   [ -f "$problem" ] || fail "missing dumped problem $problem"
-  if [ "$have_eprover" -eq 1 ] && try_eprover_theorem "$problem" "$timeout" "$label"; then
-    proved=1
+  if [ "$have_eprover" -eq 1 ]; then
+    start_job positive E "$problem" "$label" "$positive_eprover_out"
   fi
-  if [ "$have_vampire" -eq 1 ] && try_vampire_theorem "$problem" "$timeout" "$label"; then
-    proved=1
+  if [ "$have_vampire" -eq 1 ]; then
+    start_job positive Vampire "$problem" "$label" "$positive_vampire_out"
   fi
-  if [ "$have_z3" -eq 1 ] && try_z3_theorem "$problem" "$timeout" "$label"; then
-    proved=1
+  if [ "$have_z3" -eq 1 ]; then
+    start_job positive Z3 "$problem" "$label" "$positive_z3_out"
   fi
-  if [ "$have_cvc4" -eq 1 ] && try_cvc4_theorem "$problem" "$timeout" "$label"; then
-    proved=1
+  if [ "$have_cvc4" -eq 1 ]; then
+    start_job positive CVC4 "$problem" "$label" "$positive_cvc4_out"
   fi
-  if [ "$proved" -ne 1 ]; then
-    [ "$have_eprover" -eq 1 ] && show_prover_output "E" "$tmpdir/eprover-theorem.out" "$label"
-    [ "$have_vampire" -eq 1 ] && show_prover_output "Vampire" "$tmpdir/vampire-theorem.out" "$label"
-    [ "$have_z3" -eq 1 ] && show_prover_output "Z3" "$tmpdir/z3-theorem.out" "$label"
-    [ "$have_cvc4" -eq 1 ] && show_prover_output "CVC4" "$tmpdir/cvc4-theorem.out" "$label"
+  if [ "$job_count" -gt 0 ]; then
+    reap_jobs
+  fi
+  if [ "$job_successes" -eq 0 ]; then
+    [ "$have_eprover" -eq 1 ] && show_prover_output "E" "$positive_eprover_out" "$label"
+    [ "$have_vampire" -eq 1 ] && show_prover_output "Vampire" "$positive_vampire_out" "$label"
+    [ "$have_z3" -eq 1 ] && show_prover_output "Z3" "$positive_z3_out" "$label"
+    [ "$have_cvc4" -eq 1 ] && show_prover_output "CVC4" "$positive_cvc4_out" "$label"
     fail "no available prover reported a proving status for $label"
   fi
 }
@@ -446,5 +601,9 @@ assert_unprovable "$tmpdir/consistency-eq-rect.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-nat-add.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-prop-or-match.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-false-case-prop.p" "$TIMEOUT"
+
+if [ "$job_count" -gt 0 ]; then
+  reap_jobs
+fi
 
 echo "consistency canaries passed"
