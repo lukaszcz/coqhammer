@@ -46,7 +46,7 @@ detect_workers() {
     return
   fi
 
-  per_job_mb=${CONSISTENCY_MEMORY_PER_JOB_MB:-4096}
+  per_job_mb=${CONSISTENCY_MEMORY_PER_JOB_MB:-2048}
   reserve_mb=${CONSISTENCY_RESERVE_MB:-4096}
   positive_integer "$per_job_mb" || fail "CONSISTENCY_MEMORY_PER_JOB_MB must be a positive integer"
   positive_integer "$reserve_mb" || fail "CONSISTENCY_RESERVE_MB must be a positive integer"

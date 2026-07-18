@@ -488,6 +488,35 @@ run_reconstruction() {
     "prover_timeout=$tim" "input_sha256=$input_digest"
 }
 
+# Run one false-conjecture problem and record its raw log, filtered output, and
+# exit status.  Kept separate so the consistency pool can run it in background
+# workers; it must not depend on any state the parent mutates concurrently.
+run_consistency_problem() {
+  local prover="$1" problem="$2" work="$3"
+  local name command_status
+  name=$(basename "$problem")
+  if [ "$prover" = eprover ]; then
+    if eprover -s --cpu-limit="$consistency_tim" --auto-schedule -R --print-statistics -p --tstp-format "$problem" \
+        > "$work/raw/$name" 2>&1; then
+      command_status=0
+    else
+      command_status=$?
+    fi
+    grep "file[(]'\|# SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
+  else
+    # Give the external kill a grace margin over Vampire's own deadline, so a
+    # loaded machine cannot SIGKILL it before it reports its SZS status.
+    if htimeout "$((consistency_tim + 5))" vampire --mode casc -t "$consistency_tim" --proof tptp \
+        --output_axiom_names on "$problem" > "$work/raw/$name" 2>&1; then
+      command_status=0
+    else
+      command_status=$?
+    fi
+    grep "file[(]'\|% SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
+  fi
+  echo "command_exit=$command_status" > "$work/status/$name.status"
+}
+
 run_consistency() {
   local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
   local outdir="$results_root/$label/$corpus"
@@ -536,29 +565,29 @@ PY
     echo "Consistency check generated no false-conjecture problems for $label/$corpus/$premise" >&2
     return 1
   fi
+  # Every problem here is independent, so run them through a worker pool rather
+  # than one at a time: this phase covers the same problem set as the prover
+  # phase, and serialised it dominated the whole grid.  The pool follows
+  # tests/plugin/check-consistency.sh -- fill up to $jobs background jobs, then
+  # wait for the batch.  Crash and missing-status detection moves to a scan
+  # after the joins, since a worker cannot abort the loop from a subshell.
+  local job_pids=() running=0 problem name
   for problem in "${problems[@]}"; do
-    local name command_status
-    name=$(basename "$problem")
-    if [ "$prover" = eprover ]; then
-      if eprover -s --cpu-limit="$consistency_tim" --auto-schedule -R --print-statistics -p --tstp-format "$problem" \
-          > "$work/raw/$name" 2>&1; then
-        command_status=0
-      else
-        command_status=$?
-      fi
-      grep "file[(]'\|# SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
-    else
-      # Give the external kill a grace margin over Vampire's own deadline, so a
-      # loaded machine cannot SIGKILL it before it reports its SZS status.
-      if htimeout "$((consistency_tim + 5))" vampire --mode casc -t "$consistency_tim" --proof tptp \
-          --output_axiom_names on "$problem" > "$work/raw/$name" 2>&1; then
-        command_status=0
-      else
-        command_status=$?
-      fi
-      grep "file[(]'\|% SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
+    run_consistency_problem "$prover" "$problem" "$work" &
+    job_pids+=("$!")
+    running=$((running + 1))
+    if [ "$running" -ge "$jobs" ]; then
+      wait "${job_pids[@]}" || true
+      job_pids=()
+      running=0
     fi
-    echo "command_exit=$command_status" > "$work/status/$name.status"
+  done
+  if [ "$running" -gt 0 ]; then
+    wait "${job_pids[@]}" || true
+  fi
+
+  for problem in "${problems[@]}"; do
+    name=$(basename "$problem")
     if log_has_crash_or_error_ignoring_strategy_aborts "$work/raw/$name" ||
         ! szs_terminal_status "$work/outputs/$name"; then
       echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
