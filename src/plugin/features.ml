@@ -296,10 +296,45 @@ let clean fname =
     List.iter Sys.remove [fname; (fname ^ "fea"); (fname ^ "dep"); (fname ^ "seq");
                           (fname ^ "conj")]
 
+(* Temporary measure: the predictor sometimes misses definitions the goal or
+   the hypotheses mention directly, which makes such goals unprovable. Add a
+   few of them to the predictions. The number is capped so that the premise
+   count stays close to the requested one. *)
+let max_direct_deps = 6
+
+let add_direct_goal_dependencies hyps defs goal predicted =
+  let ndefs = List.filter is_nontrivial defs in
+  let names = Hhlib.strset_from_lst (List.map get_hhdef_name ndefs) in
+  let predicted_names = Hhlib.strset_from_lst (List.map get_hhdef_name predicted) in
+  let filter_deps deps =
+    List.filter
+      (fun a -> Hhlib.StringSet.mem a names && not (Hhlib.StringSet.mem a predicted_names))
+      deps
+  in
+  (* The goal and the hypotheses are local to the current proof, so their
+     dependencies must not be cached under their names. *)
+  let deps =
+    filter_deps (get_deps goal) @
+      List.concat (List.map (fun h -> filter_deps (get_deps h)) hyps)
+  in
+  let selected =
+    List.fold_left
+      begin fun (acc, n) name ->
+        if n >= max_direct_deps || Hhlib.StringSet.mem name acc then
+          (acc, n)
+        else
+          (Hhlib.StringSet.add name acc, n + 1)
+      end
+      (predicted_names, 0) deps
+  in
+  let selected = fst selected in
+  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) selected) defs
+
 let predict (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : hhdef list =
   let fname = extract hyps defs goal in
   try
-    let r = run_predict fname defs !Opt.predictions_num !Opt.predict_method in
+    let predicted = run_predict fname defs !Opt.predictions_num !Opt.predict_method in
+    let r = add_direct_goal_dependencies hyps defs goal predicted in
     clean fname;
     r
   with e ->

@@ -839,6 +839,10 @@ let greedy_predictor_sequence () =
    ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
    ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
 
+let greedy_selected_deps hyps deps goal pred_method preds_num fname =
+  let predicted = Features.run_predict fname deps preds_num pred_method in
+  Features.add_direct_goal_dependencies hyps deps goal predicted
+
 let dump_deps hyps deps goal =
   (* Dumping is parameterized by [Opt.predict_method] and
      [Opt.predictions_num] (not by the greedy ATP search schedule), so callers
@@ -854,7 +858,7 @@ let do_predict tried hyps deps goal =
         begin fun idx (pname, enabled, pref, pred_method, preds_num) ->
           (idx,
            (pname, enabled && not (List.mem idx tried), pref,
-            fun () -> Features.run_predict fname deps preds_num pred_method))
+            fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname))
         end
         (greedy_predictor_sequence ())
     in
