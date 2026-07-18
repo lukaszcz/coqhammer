@@ -97,7 +97,7 @@ let evalf fname =
   with _ -> 0
 ;;
 
-let ans = Array.init atpno (fun atp -> Array.create fsno 0);;
+let ans = Array.init atpno (fun atp -> Array.make fsno 0);;
 for uatpno = 0 to Array.length unmerged_atps - 1 do
   let uatpn = unmerged_atps.(uatpno) in
   let matpno = Hashtbl.find replnoh uatpno in
@@ -147,7 +147,7 @@ done;;
 
 let addl e l = if List.mem e l then l else e :: l;;
 
-let uniq = Array.create atpno 0;;
+let uniq = Array.make atpno 0;;
 for f = 0 to fsno - 1 do
   let conf1, conf2 = ref [], ref [] in
   for atp = 0 to atpno - 1 do
@@ -165,7 +165,7 @@ for f = 0 to fsno - 1 do
     (String.concat "," (List.map (fun a -> atps.(a)) !conf2))
 done;;
 
-let sotac = Array.create atpno 0.;;
+let sotac = Array.make atpno 0.;;
 let counter_sotac = false;;
 for f = 0 to fsno - 1 do
   let sum = ref 0 in
@@ -220,7 +220,7 @@ let arraymaxes f a =
     if fa = !cm then ci := i :: !ci
   done; (!ci, !cm);;
 
-let current = Array.create fsno 0;;
+let current = Array.make fsno 0;;
 let sofar = ref 0;;
 
 let greed_reset () = Array.fill current 0 (Array.length current) 0; sofar := 0;;

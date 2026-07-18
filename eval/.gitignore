@@ -13,3 +13,9 @@
 /atp/i/
 /atp/o/
 /atp/problems/
+
+# Built by eval/tools/Makefile.
+/tools/coqnames
+/tools/fixreqs
+/tools/rmcomments
+/tools/stat
