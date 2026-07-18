@@ -1,3 +1,4 @@
+open Hammer_lib
 open Goptions
 
 let predictions_num = ref 1024
@@ -250,15 +251,17 @@ let resolve_dump_path fname =
   else
     fname
 
-(* Per-invocation temporary directory. All temporary files created
-   during a single hammer/predict invocation are placed inside a fresh,
-   private directory (see [temp_file]) which is removed as a whole when
-   the invocation finishes -- even on interruption or when an ATP worker
-   is killed mid-run. This makes cleanup deterministic and race-free: no
-   process globs over the shared temp directory, so concurrent hammer
-   invocations never delete each other's files. In debug mode no such
-   directory is used, so the intermediate files are left in the system
-   temp directory for inspection. *)
+(* Per-invocation temporary directories live under a private 0700
+   [coqhammer-<uid>] directory in the system temporary directory. Each
+   [inv-<pid>-<random>] directory is created atomically with [mkdir] and
+   is removed when its hammer/predict invocation finishes. Once per
+   process, stale invocation directories whose creator is dead (or whose
+   mtime is more than 24 hours old, as a backstop for pid reuse) are
+   removed. The sweep is confined to the private per-user parent and only
+   considers names of that form, so concurrent invocations do not delete
+   each other's files. In debug mode no invocation directory is used, so
+   intermediate files are left in the system temporary directory for
+   inspection. *)
 
 let temp_dir_ref = ref None
 
@@ -280,6 +283,99 @@ let remove_temp_dir dir =
    with _ -> ());
   (try Sys.rmdir dir with _ -> ())
 
+let temp_parent_dir () =
+  let dir =
+    Filename.concat (Filename.get_temp_dir_name ())
+      ("coqhammer-" ^ string_of_int (Unix.getuid ()))
+  in
+  (try Sys.mkdir dir 0o700 with Sys_error _ -> ());
+  let unsafe () =
+    raise (Hammer_errors.HammerError ("unsafe temporary directory: " ^ dir))
+  in
+  let st =
+    try Unix.lstat dir with Unix.Unix_error _ -> unsafe ()
+  in
+  if st.Unix.st_kind <> Unix.S_DIR || st.Unix.st_uid <> Unix.geteuid ()
+     || st.Unix.st_perm land 0o777 <> 0o700
+  then
+    unsafe ();
+  dir
+
+let make_temp_dir parent =
+  let rng =
+    Random.State.make
+      [| Unix.getpid (); int_of_float (Unix.gettimeofday () *. 1e6) |]
+  in
+  let rec go attempts =
+    if attempts = 0 then
+      raise
+        (Hammer_errors.HammerError "cannot create a temporary directory");
+    let name =
+      Filename.concat parent
+        (Printf.sprintf "inv-%d-%06x" (Unix.getpid ())
+           (Random.State.int rng 0x1000000))
+    in
+    try
+      Sys.mkdir name 0o700;
+      name
+    with Sys_error _ -> go (attempts - 1)
+  in
+  go 100
+
+let parse_inv_pid entry =
+  let prefix = "inv-" in
+  let prefix_len = String.length prefix in
+  if String.length entry <= prefix_len
+     || String.sub entry 0 prefix_len <> prefix
+  then
+    None
+  else
+    match String.index_from_opt entry prefix_len '-' with
+    | None -> None
+    | Some separator ->
+       if separator = prefix_len || separator = String.length entry - 1 then
+         None
+       else
+         match
+           int_of_string_opt
+             (String.sub entry prefix_len (separator - prefix_len))
+         with
+         | Some pid when pid > 0 -> Some pid
+         | _ -> None
+
+let swept_temp_dirs = ref false
+
+let sweep_stale_temp_dirs parent =
+  if not !swept_temp_dirs then
+    begin
+      swept_temp_dirs := true;
+      try
+        Array.iter
+          (fun entry ->
+             try
+               match parse_inv_pid entry with
+               | None -> ()
+               | Some pid ->
+                  let dir = Filename.concat parent entry in
+                  let st = Unix.lstat dir in
+                  if st.Unix.st_kind = Unix.S_DIR then
+                    begin
+                      let dead =
+                        try
+                          Unix.kill pid 0;
+                          false
+                        with
+                        | Unix.Unix_error (Unix.ESRCH, _, _) -> true
+                        | _ -> false
+                      in
+                      let ancient = Unix.time () -. st.Unix.st_mtime > 86400. in
+                      if dead || ancient then remove_temp_dir dir
+                    end
+             with _ -> ())
+          (Sys.readdir parent)
+      with _ -> ()
+    end
+
 (* Run [f] with a fresh invocation directory active, removing it (and
    everything left inside it) afterwards. In debug mode, or when a
    directory is already active (nested call), [f] is run as-is. *)
@@ -288,9 +384,9 @@ let with_temp_dir (f : unit -> 'a) : 'a =
     f ()
   else
     begin
-      let base = Filename.temp_file "coqhammer" "" in
-      Sys.remove base;
-      Sys.mkdir base 0o700;
+      let parent = temp_parent_dir () in
+      let base = make_temp_dir parent in
+      sweep_stale_temp_dirs parent;
       temp_dir_ref := Some base;
       Fun.protect
         ~finally:(fun () -> temp_dir_ref := None; remove_temp_dir base)
