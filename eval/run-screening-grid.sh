@@ -91,7 +91,6 @@ configs=(
   loo-prop-case-erasure
   loo-erasure-guards
   loo-refinement-types
-  loo-wf-recursion-eqs
 )
 
 labels=(current)
@@ -179,27 +178,25 @@ expect_manifest_value() {
 }
 
 validate_config_options() {
-  local manifest="$1" config="$2" core decl_skips prop erasure refinement wf
+  local manifest="$1" config="$2" core decl_skips prop erasure refinement
   core="$config"
   decl_skips=false
   case "$core" in
     *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
   esac
-  prop=true; erasure=true; refinement=true; wf=true
+  prop=true; erasure=true; refinement=true
   case "$core" in
-    all-off) prop=false; erasure=false; refinement=false; wf=false ;;
+    all-off) prop=false; erasure=false; refinement=false ;;
     all-on) ;;
     loo-prop-case-erasure) prop=false ;;
     loo-erasure-guards) erasure=false ;;
     loo-refinement-types) refinement=false ;;
-    loo-wf-recursion-eqs) wf=false ;;
     *) return 1 ;;
   esac
   expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
     expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
     expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
-    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips" &&
-    expect_manifest_value "$manifest" opt_wf_recursion_eqs "$wf"
+    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips"
 }
 
 manifest_matches_label() {

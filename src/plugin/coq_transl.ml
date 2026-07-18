@@ -577,7 +577,7 @@ and emit_definition_equation ?premise axname name fvars lvars body =
     | None -> eqv
   in
   let closed =
-    if !wf_mark && opt_wf_recursion_eqs then
+    if !wf_mark then
       (* WF-recursion model note: these equations are not read as
          delta-unfolding in the term model.  They are Coq theorems only with
          the erased PI premises (Fix_eq), and semantically describe a total
@@ -617,7 +617,7 @@ and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
      emit_definition_equation ?premise axname name fvars lvars body3
   | None ->
   let wf_recursion_equation tm =
-    if not opt_wf_recursion_eqs || name = "" then
+    if name = "" then
       None
     else
       let rec_call_args xname yname lvars_ext =
@@ -964,10 +964,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                (* WF guardrail: erasing an Acc proof on a recursive path would
                   produce the forbidden unconditional WF-unfolding equation.
                   Fix_eq justifies only the premised equation, and the total-
-                  extension model accounts for values outside the premise; with
-                  the option off the occurrence-lifted symbol stays unconstrained. *)
+                  extension model accounts for values outside the premise. *)
                wf_mark := true;
-               if opt_wf_recursion_eqs then Some body else None
+               Some body
              end
            else
              Some body
@@ -1030,7 +1029,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          the old packaged case split is dropped.  When ClosureGuards is enabled
          we use the ordinary guarded closure machinery uniformly. *)
       begin
-        if !wf_mark && opt_wf_recursion_eqs then
+        if !wf_mark then
           (* WF-recursion model note: premised equations are read through the
              total-extension model outside the erased PI premises, not as
              unconditional delta-unfolding; Fix_eq justifies only the premised

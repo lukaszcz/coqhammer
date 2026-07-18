@@ -55,8 +55,6 @@ let opt_erasure_guards = false
 let opt_refinement_types = true
 (* Skip redundant declaration-level subset axioms. *)
 let opt_refinement_decl_skips = true
-(* Emit guarded equations for well-founded recursion. *)
-let opt_wf_recursion_eqs = true
 
 (***************************************************************************************)
 (* Debugging *)

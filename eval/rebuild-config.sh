@@ -17,7 +17,6 @@ Core configs:
   loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false
   loo-refinement-types     all-on except opt_refinement_types=false
-  loo-wf-recursion-eqs     all-on except opt_wf_recursion_eqs=false
 
 Decl-skip variants:
   append -decl-skips to any core config to set opt_refinement_decl_skips=true.
@@ -37,7 +36,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
       echo current
-      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-wf-recursion-eqs; do
+      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types; do
         echo "$base"
         echo "$base-decl-skips"
       done
@@ -95,15 +94,13 @@ esac
 prop=true
 erasure=true
 refinement=true
-wf=true
 case "$core" in
   current) ;;
-  all-off) prop=false; erasure=false; refinement=false; wf=false ;;
+  all-off) prop=false; erasure=false; refinement=false ;;
   all-on) ;;
   loo-prop-case-erasure) prop=false ;;
   loo-erasure-guards) erasure=false ;;
   loo-refinement-types) refinement=false ;;
-  loo-wf-recursion-eqs) wf=false ;;
   *) echo "Unknown configuration: $config" >&2; usage >&2; exit 2 ;;
 esac
 
@@ -117,7 +114,7 @@ restore_opts() {
 trap restore_opts EXIT INT TERM
 
 if [ "$patch_needed" = true ]; then
-python3 - "$opts" "$prop" "$erasure" "$refinement" "$decl_skips" "$wf" <<'PY'
+python3 - "$opts" "$prop" "$erasure" "$refinement" "$decl_skips" <<'PY'
 import pathlib
 import re
 import sys
@@ -128,7 +125,6 @@ values = {
     "opt_erasure_guards": sys.argv[3],
     "opt_refinement_types": sys.argv[4],
     "opt_refinement_decl_skips": sys.argv[5],
-    "opt_wf_recursion_eqs": sys.argv[6],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -206,7 +202,6 @@ opt_prop_case_erasure=$prop
 opt_erasure_guards=$erasure
 opt_refinement_types=$refinement
 opt_refinement_decl_skips=$decl_skips
-opt_wf_recursion_eqs=$wf
 MANIFEST
 fi
 printf 'built_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$prefix/manifest.env"
