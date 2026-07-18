@@ -5,11 +5,20 @@
 
 Declare ML Module "coq-hammer-tactics.lib".
 
-From Stdlib Require Import Eqdep_dec Lia.
+From Stdlib Require Import Eqdep_dec Eqdep Lia.
+From Stdlib Require List BinPos.
 From Stdlib.Program Require Import Equality.
 From Hammer Require Import Tactics.Reflect.
 
 Create HintDb shints discriminated.
+Create HintDb hammer_eqdec discriminated.
+
+Global Hint Resolve PeanoNat.Nat.eq_dec : hammer_eqdec.
+Global Hint Resolve Bool.bool_dec : hammer_eqdec.
+Global Hint Resolve BinInt.Z.eq_dec : hammer_eqdec.
+Global Hint Resolve BinNat.N.eq_dec : hammer_eqdec.
+Global Hint Resolve BinPos.Pos.eq_dec : hammer_eqdec.
+Global Hint Resolve List.list_eq_dec : hammer_eqdec.
 
 Ltac notHyp P :=
   match goal with
@@ -138,19 +147,34 @@ Ltac sdepdestruct t := sdestruct t || dep_destruct t.
 
 Ltac ssubst := try subst.
 
-(* At decidable-equality types, [UIP_dec dec p eq_refl] gives the
-   UIP_refl-style fact needed to simplify transports exposed by dep search. *)
-Ltac uip_dec_rewrite_once :=
+(* Fires only when [p] is actually used: [context [p]] catches transports
+   (eq_rect/eq_rec/eq_ind/eq_ind_r) and user wrappers alike; a dangling
+   [p : x = x] triggers nothing. *)
+Ltac uip_hyp_used p :=
+  first
+    [ match goal with |- context [p] => idtac end
+    | match goal with H : context [p] |- _ => idtac end ].
+
+(* At decidable-equality types (extensible [hammer_eqdec] database),
+   [UIP_dec dec p eq_refl] keeps the proof axiom-free; otherwise fall back
+   to [UIP_refl] (axiom [eq_rect_eq]) -- [dep:] already admits UIP-strength
+   axioms via [dependent destruction]/[JMeq_eq]. Never synthesizes
+   decidability with [decide equality]. *)
+Ltac uip_rewrite_once :=
   match goal with
   | [ p : ?x = ?x |- _ ] =>
-      let A := type of x in
-      let dec := fresh "uip_eq_dec" in
-      assert (dec : forall x y : A, {x = y} + {x <> y}) by decide equality;
-      progress rewrite (UIP_dec dec p eq_refl) in *;
-      clear dec
+      uip_hyp_used p;
+      first
+        [ let A := type of x in
+          let dec := fresh "uip_eq_dec" in
+          assert (dec : forall a b : A, {a = b} + {a <> b})
+            by (solve [ auto with hammer_eqdec nocore ]);
+          progress rewrite (UIP_dec dec p eq_refl) in *;
+          clear dec
+        | progress rewrite (UIP_refl _ _ p) in * ]
   end.
 
-Ltac uip_rewrite := repeat uip_dec_rewrite_once; simpl in *.
+Ltac uip_rewrite := repeat uip_rewrite_once; simpl in *.
 
 Ltac subst_simpl := ssubst; simpl in *.
 

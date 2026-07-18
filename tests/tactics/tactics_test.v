@@ -1298,6 +1298,52 @@ Qed.
 
 (* Dependent types *)
 
+Lemma uip_transport_nat :
+  forall (P : nat -> Set) (a : nat) (e : a = a) (x : P a),
+    eq_rect a P x a e = x.
+Proof.
+  sauto dep: on.
+Qed.
+
+Section AbstractTransport.
+Variable A : Type.
+
+Lemma uip_transport_abstract :
+  forall (P : A -> Set) (a : A) (e : a = a) (x : P a),
+    eq_rect a P x a e = x.
+Proof.
+  sauto dep: on.
+Qed.
+End AbstractTransport.
+
+Lemma uip_unused_gate (a b : nat) (e : a = a) : b = b.
+Proof.
+  Fail uip_rewrite_once.
+  sauto dep: on.
+Qed.
+
+Inductive uip_hint_type := UipHintLeft | UipHintRight.
+
+Definition uip_hint_eq_dec (x y : uip_hint_type) : {x = y} + {x <> y}.
+Proof.
+  decide equality.
+Defined.
+
+Global Hint Resolve uip_hint_eq_dec : hammer_eqdec.
+
+Lemma uip_hint_registered :
+  forall x y : uip_hint_type, {x = y} + {x <> y}.
+Proof.
+  auto with hammer_eqdec nocore.
+Qed.
+
+Lemma uip_transport_hint :
+  forall (P : uip_hint_type -> Set) (a : uip_hint_type)
+    (e : a = a) (x : P a), eq_rect a P x a e = x.
+Proof.
+  sauto dep: on.
+Qed.
+
 Inductive type := Nat | Bool.
 
 Inductive expr : type -> Type :=
