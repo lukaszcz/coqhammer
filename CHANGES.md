@@ -8,6 +8,7 @@ Overview of changes
 * Extraction-factored first-order translation: per-constructor match
   equations, proof/singleton erasure, shallow refinement/specification
   expansion, and premised well-founded-recursion equations.
+* `hammer_eqdec` - extensible hint database of equality deciders used for axiom-free UIP rewriting, with fallback to UIP_refl (eq_rect_eq) when no decider is registered
 * `Hammer_dump`/`hammer_dump` for writing the current goal's TPTP problem.
 * Fixed temporary file leaks.
 
