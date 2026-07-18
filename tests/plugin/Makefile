@@ -1,6 +1,6 @@
 COQC ?= rocq c
 
-EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo
+EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
 PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo $(EXTRACTION_VOS)
 
 all: $(PLUGIN_VOS)
@@ -55,6 +55,9 @@ extraction_matches.vo: extraction_matches.v
 
 extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
+
+erasure_blacklist.vo: erasure_blacklist.v
+	$(COQC) erasure_blacklist.v
 
 case_prop_transl.vo: case_prop_transl.v
 	@set -e; \

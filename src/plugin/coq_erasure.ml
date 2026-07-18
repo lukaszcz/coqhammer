@@ -306,7 +306,7 @@ let classify ctx indname params =
             shape
         in
         instantiate_class indname ctor_infos shape
-  with Not_classifiable -> CRegular
+  with Not_classifiable | Failure _ -> CRegular
 
 let classify_decl indname =
   let constructor_fields_depend_on_params params_num cname =
@@ -332,9 +332,11 @@ let classify_decl indname =
       if List.exists (constructor_fields_depend_on_params params_num) constrs then
         None
       else
-        let params = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
-        let ctx = List.rev params in
-        Some (classify ctx indname (mk_vars params))
+        (try
+           let params = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
+           let ctx = List.rev params in
+           Some (classify ctx indname (mk_vars params))
+         with Failure _ -> None)
 
 let is_erasable_class = function
   | CRegular -> false

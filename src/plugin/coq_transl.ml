@@ -855,7 +855,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
     in
     let constructor_args params params_num cname =
       let cdef =
-        try Defhash.find cname with Not_found ->
+        try Defhash.find cname with Failure _ ->
           internal_error ("missing constructor declaration: " ^ cname)
       in
       let (_, targs, cargs) = Coq_typing.destruct_type_app (coqdef_type cdef)
@@ -1163,7 +1163,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          begin try Some (List.assoc name ctx) with Not_found -> None end
       | Const name ->
          begin
-           try Some (coqdef_type (Defhash.find name)) with Not_found -> None
+           try Some (coqdef_type (Defhash.find name)) with Failure _ -> None
          end
       | App(fn, arg) ->
          begin match infer_term_type ctx fn with
@@ -1251,7 +1251,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       match simpl body with
       | Case(indname, matched_term, return_type, raw_return_type, params_num, branches) as case_body ->
          let df =
-           try Defhash.find indname with Not_found ->
+           try Defhash.find indname with Failure _ ->
              internal_error ("missing inductive declaration: " ^ indname)
          in
          begin
@@ -2182,6 +2182,11 @@ and skip_refinement_decl_axioms indname =
 
 and add_injection_axioms params_num constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
+  if not (Defhash.mem constr) then
+    (* Search filters can omit a constructor independently of its inductive;
+       without its telescope the optional injectivity axiom must be omitted. *)
+    return ()
+  else
   let ty = coqdef_type (Defhash.find constr)
   in
   (* Status quo structural axiom: constructor injectivity is pre-existing.  For
@@ -2269,6 +2274,11 @@ and add_injection_axioms params_num constr =
 
 and add_discrim_axioms constr1 constr2 =
   debug 2 (fun () -> print_endline ("add_discrim_axioms: " ^ constr1 ^ ", " ^ constr2));
+  if not (Defhash.mem constr1 && Defhash.mem constr2) then
+    (* Search filters can omit constructors independently of their inductive;
+       without both telescopes the optional discrimination axiom is omitted. *)
+    return ()
+  else
   let ty1 = coqdef_type (Defhash.find constr1)
   and ty2 = coqdef_type (Defhash.find constr2)
   in
@@ -2327,6 +2337,12 @@ and add_discrim_axioms constr1 constr2 =
 
 and add_inversion_axioms is_prop indname constrs =
   debug 2 (fun () -> print_endline ("add_inversion_axioms: " ^ indname));
+  if not (List.for_all Defhash.mem constrs) then
+    (* Search filters can omit constructors independently of their inductive.
+       Exhaustiveness over a partial constructor list would be unsound, so omit
+       the inversion axiom unless every constructor telescope is available. *)
+    return ()
+  else
   let df = Defhash.find indname
   in
   match df with
