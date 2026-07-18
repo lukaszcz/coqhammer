@@ -232,8 +232,12 @@ szs_terminal_status() {
 atp_output_is_complete() {
   local prover="$1" output="$2"
   [ -f "$output" ] || return 1
-  if [ "$prover" = z3 ] && [ ! -s "$output" ]; then
-    # htimeout can kill z3_tptp before it prints a status.
+  if [ ! -s "$output" ]; then
+    # The htimeout backstop is the enforced limit: a prover's own deadline is
+    # advisory and not all of them honour it (CVC4 can overrun --tlimit several
+    # times over on a hard problem).  A prover killed before it printed a status
+    # found no proof within the budget, which is a result, not a broken run.
+    # The empty output records that; it never counts as a success downstream.
     return 0
   fi
   szs_terminal_status "$output"
@@ -268,6 +272,29 @@ log_has_crash_or_error_ignoring_strategy_aborts() {
   return 1
 }
 
+# When htimeout kills a prover that overran its own deadline, the shell reports
+# "Killed" and make reports the resulting 137 (128 + SIGKILL) exit.  That is the
+# backstop doing its job, and the prover's empty output already records that it
+# produced no result; see atp_output_is_complete.  Drop just those two lines so
+# the remaining scan still catches genuine infrastructure failures.
+strip_backstop_kill_reports() {
+  grep -Ev "^(Killed|make(\[[0-9]+\])?: \*\*\* \[[^]]*\] Error 137)$" "$1" || true
+}
+
+log_has_crash_or_error_ignoring_backstop_kills() {
+  local log="$1" filtered status
+  [ -f "$log" ] || return 0
+  filtered=$(mktemp)
+  strip_backstop_kill_reports "$log" | strip_portfolio_strategy_aborts /dev/stdin > "$filtered"
+  if log_has_crash_or_error "$filtered"; then
+    status=0
+  else
+    status=1
+  fi
+  rm -f "$filtered"
+  return "$status"
+}
+
 log_has_crash_or_error() {
   local log="$1"
   log_has_crash_or_infrastructure_error "$log" && return 0
@@ -279,7 +306,7 @@ expected_atp_outputs_are_complete() {
   local generated="$1" problem_root="$2" output_dir="$3" prover="$4" output_list="$5" log="$6"
   local problem relative output expected_count=0 actual_count
   [ -f "$generated" ] && [ -f "$output_list" ] && [ -f "$log" ] || return 1
-  log_has_crash_or_error_ignoring_strategy_aborts "$log" && return 1
+  log_has_crash_or_error_ignoring_backstop_kills "$log" && return 1
   while IFS= read -r problem; do
     [ -n "$problem" ] || continue
     case "$problem" in
