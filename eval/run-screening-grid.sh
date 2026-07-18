@@ -465,7 +465,9 @@ PY
       fi
       grep "file[(]'\|# SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
     else
-      if htimeout "$consistency_tim" vampire --mode casc -t "$consistency_tim" --proof tptp \
+      # Give the external kill a grace margin over Vampire's own deadline, so a
+      # loaded machine cannot SIGKILL it before it reports its SZS status.
+      if htimeout "$((consistency_tim + 5))" vampire --mode casc -t "$consistency_tim" --proof tptp \
           --output_axiom_names on "$problem" > "$work/raw/$name" 2>&1; then
         command_status=0
       else
