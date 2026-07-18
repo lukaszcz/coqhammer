@@ -15,13 +15,19 @@ Results are checkpointed under eval/results/confirmation/ and summarized under
   provenance matches the current run.
 
 Options:
-  -j, --jobs N          parallel jobs for Rocq/prover make invocations (default: 1)
+  -j, --jobs N          parallel jobs for Rocq/prover make invocations
+                        (default: sized from cores and available memory)
   --tim SEC             ATP timeout per problem for confirmation prover runs (default: 10)
   --consistency-tim S   ATP timeout per false-conjecture consistency run (default: 2)
   --skip-builds         require install prefixes to already exist; do not build them
   --only-label LABEL    run only one install label (debug/resume convenience)
   --only-corpus CORPUS  run only one corpus (debug/resume convenience)
-  --full-corpus         use full committed corpora instead of sample subdirectories
+  --sample-corpus       use the small committed smoke corpora instead of the
+                        full corpora built from the installed libraries
+  --full-corpus         use the full corpora (default)
+  --stdlib-modules "A B"
+                        Stdlib modules for the stdlib-regression corpus
+                        (default: Arith Bool Vectors Lists NArith)
   --external-source DIR
                         use DIR as the source for the external-equations corpus
   --force               rerun checkpoints even when done markers exist
@@ -29,13 +35,14 @@ Options:
 USAGE
 }
 
-jobs=1
+jobs=
 tim=10
 consistency_tim=2
 skip_builds=false
 only_label=
 only_corpus=
-sample_corpora=true
+sample_corpora=false
+stdlib_modules=${STDLIB_CORPUS_MODULES:-"Arith Bool Vectors Lists NArith"}
 external_source=
 force=false
 
@@ -48,6 +55,8 @@ while [ "$#" -gt 0 ]; do
     --only-label) only_label="$2"; shift 2 ;;
     --only-corpus) only_corpus="$2"; shift 2 ;;
     --full-corpus) sample_corpora=false; shift ;;
+    --sample-corpus) sample_corpora=true; shift ;;
+    --stdlib-modules) stdlib_modules="$2"; shift 2 ;;
     --external-source) external_source="$2"; shift 2 ;;
     --force) force=true; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -55,9 +64,9 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-for value in "$jobs" "$tim" "$consistency_tim"; do
+for value in "$tim" "$consistency_tim"; do
   if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Jobs and timeouts must be positive integers: $value" >&2
+    echo "Timeouts must be positive integers: $value" >&2
     exit 2
   fi
 done
@@ -70,6 +79,17 @@ fi
 eval_dir="$repo/eval"
 # shellcheck source=eval/grid-checkpoint-lib.sh
 source "$eval_dir/grid-checkpoint-lib.sh"
+
+# An unset -j means "use the machine": one job by default wasted almost all of
+# it, which is the difference between a smoke test and an evaluation.
+if [ -z "$jobs" ]; then
+  jobs=$(detect_jobs) || exit 2
+  echo "[jobs] using $jobs parallel jobs"
+fi
+if [[ ! "$jobs" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Jobs must be a positive integer: $jobs" >&2
+  exit 2
+fi
 repo_commit=$(git rev-parse HEAD)
 grid_script_digest=$(hash_file "${BASH_SOURCE[0]}")
 grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
@@ -101,23 +121,60 @@ else
   corpus_mode=full
 fi
 declare -A corpus_source corpus_digest
-for corpus in "${corpora[@]}"; do
+
+if [ -n "$external_source" ] && [ ! -d "$external_source" ]; then
+  echo "External source directory not found: $external_source" >&2
+  exit 1
+fi
+
+# The full corpora are generated from the installed libraries rather than read
+# out of eval/corpora, so their provenance is the library the run installed.
+# That is only known once the label prefix exists, hence computing this per
+# corpus at run time instead of once at startup.
+compute_corpus_provenance() {
+  local corpus="$1" prefix="$2" source_dir module digests=
   if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
-    if [ ! -d "$external_source" ]; then
-      echo "External source directory not found: $external_source" >&2
-      exit 1
-    fi
     source_dir=$(cd "$external_source" && pwd -P)
     corpus_source[$corpus]="$source_dir"
-  else
-    source_dir="$eval_dir/corpora/$corpus"
-    if [ "$sample_corpora" = true ]; then
-      source_dir="$source_dir/sample"
-    fi
-    corpus_source[$corpus]="${source_dir#"$repo"/}"
+    corpus_digest[$corpus]=$(hash_tree "$source_dir")
+    return 0
   fi
-  corpus_digest[$corpus]=$(hash_tree "$source_dir")
-done
+  if [ "$sample_corpora" = true ]; then
+    source_dir="$eval_dir/corpora/$corpus/sample"
+    corpus_source[$corpus]="${source_dir#"$repo"/}"
+    corpus_digest[$corpus]=$(hash_tree "$source_dir")
+    return 0
+  fi
+  case "$corpus" in
+    stdlib-regression)
+      corpus_source[$corpus]="installed-Stdlib modules=$stdlib_modules"
+      for module in $stdlib_modules; do
+        source_dir="$prefix/coq/user-contrib/Stdlib/$module"
+        if [ ! -d "$source_dir" ]; then
+          echo "Installed Stdlib module not found: $source_dir" >&2
+          return 1
+        fi
+        digests+=$(hash_tree "$source_dir")
+      done
+      corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
+      ;;
+    external-equations)
+      source_dir="$prefix/coq/user-contrib/Equations"
+      if [ ! -d "$source_dir" ]; then
+        echo "Installed Equations library not found: $source_dir" >&2
+        echo "Install rocq-equations into the switch, or pass --external-source DIR." >&2
+        return 1
+      fi
+      corpus_source[$corpus]="installed-Equations"
+      corpus_digest[$corpus]=$(hash_tree "$source_dir")
+      ;;
+    *)
+      source_dir="$eval_dir/corpora/$corpus"
+      corpus_source[$corpus]="${source_dir#"$repo"/}"
+      corpus_digest[$corpus]=$(hash_tree "$source_dir")
+      ;;
+  esac
+}
 
 prepare_prefix_env() {
   local prefix="$1"
@@ -171,10 +228,12 @@ manifest_matches_label() {
 }
 
 prepare_corpus() {
-  local corpus="$1"
-  local args=("$corpus")
+  local corpus="$1" prefix="$2"
+  local args=("$corpus" --coqlib "$prefix/coq")
   if [ "$sample_corpora" = true ]; then
     args+=(--sample)
+  else
+    args+=(--modules "$stdlib_modules")
   fi
   if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
     args+=(--source "$external_source")
@@ -292,7 +351,7 @@ run_generation() {
   echo "[gen] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
-  prepare_corpus "$corpus" > "$outdir/prepared-files.lst"
+  prepare_corpus "$corpus" "$prefix" > "$outdir/prepared-files.lst"
   rm -rf logs atp/problems atp/i atp/o out statistics.html check.log gen-atp.log gen-atp.log.bak coqhammer.opt
   mkdir -p atp/o out
 
@@ -399,7 +458,7 @@ run_reconstruction() {
   echo "[reconstr] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
-  prepare_corpus "$corpus" > "$outdir/reconstr-prepared-files.lst"
+  prepare_corpus "$corpus" "$prefix" > "$outdir/reconstr-prepared-files.lst"
   rm -rf logs/reconstr atp/o out coqhammer.opt
   mkdir -p atp/o out
   for premise in "${premises[@]}"; do
@@ -533,6 +592,7 @@ for label in "${labels[@]}"; do
     if [ -n "$only_corpus" ] && [ "$corpus" != "$only_corpus" ]; then
       continue
     fi
+    compute_corpus_provenance "$corpus" "$prefix"
     run_generation "$label" "$corpus" "$prefix"
     for premise in "${premises[@]}"; do
       for prover in "${provers[@]}"; do

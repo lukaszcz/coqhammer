@@ -28,17 +28,28 @@ commands. They create resumable checkpoints under `results/` and write
 summaries and provenance under `artifacts/` after a complete run.
 
 The standard evaluation uses the prepared source files in `problems/`. The
-extraction evaluation uses three committed corpora:
+extraction evaluation uses three corpora:
 
-- `stdlib-regression`: representative Rocq standard-library problems;
-- `dependent-slice`: dependent elimination, finite maps, and well-founded
-  recursion fixtures;
-- `external-equations`: selected Program/Equations-heavy development. See
-  `corpora/external-equations/CANDIDATES.md` for its candidates. A full run can
-  use `--external-source /path/to/Coq-Equations`.
+- `stdlib-regression`: built from the installed Rocq standard library. The
+  installed library ships a `.glob` beside every `.v`, which is all `coqnames`
+  needs to place the `hammer_hook` calls, so this needs no stdlib rebuild.
+  The default slice is `Arith Bool Vectors Lists NArith`, about 1200 goals
+  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`.
+- `dependent-slice`: committed dependent elimination, finite map, and
+  well-founded recursion fixtures;
+- `external-equations`: built from the installed `rocq-equations` library, or
+  from a checkout passed with `--external-source /path/to/Coq-Equations`. See
+  `corpora/external-equations/CANDIDATES.md` for how it was chosen.
 
-By default extraction commands use the small committed samples. Pass
-`--full-corpus` for the complete committed corpora.
+Generating the corpora from the installed libraries keeps them in step with the
+Rocq the evaluation actually runs against, instead of committing a snapshot
+that silently drifts. Pass `--sample-corpus` to use the small committed smoke
+wrappers instead; those are for dry runs in minimal images, not for evidence.
+
+Jobs default to a pool sized from the core count and capped so the concurrent
+ATP processes fit in available memory. `EVAL_JOBS` pins it, and
+`EVAL_MEMORY_PER_JOB_MB` / `EVAL_RESERVE_MB` tune the memory model; `-j`
+overrides all of them.
 
 ## Preparing a library
 

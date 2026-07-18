@@ -1,6 +1,50 @@
 #!/usr/bin/env bash
 # Shared checkpoint provenance and artifact validation for extraction grids.
 
+# Size a job pool from the machine rather than defaulting to one job.  Follows
+# tests/plugin/check-consistency.sh: take the core count, then cap it so the
+# concurrent ATP processes fit in available memory, since a prover on a large
+# problem is far more likely to exhaust RAM than CPU.  EVAL_JOBS pins the value
+# outright; EVAL_MEMORY_PER_JOB_MB and EVAL_RESERVE_MB tune the memory model.
+detect_jobs() {
+  local cores available_kb reserve_kb per_job_kb memory_jobs
+  local per_job_mb=${EVAL_MEMORY_PER_JOB_MB:-2048}
+  local reserve_mb=${EVAL_RESERVE_MB:-4096}
+
+  cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
+  case "$cores" in
+    ''|*[!0-9]*|0) cores=1 ;;
+  esac
+
+  if [ -n "${EVAL_JOBS:-}" ]; then
+    case "$EVAL_JOBS" in
+      ''|*[!0-9]*|0) echo "EVAL_JOBS must be a positive integer" >&2; return 1 ;;
+    esac
+    echo "$EVAL_JOBS"
+    return 0
+  fi
+
+  available_kb=$(awk '$1 == "MemAvailable:" { print $2; exit }' /proc/meminfo 2>/dev/null || true)
+  case "$available_kb" in
+    ''|*[!0-9]*) echo "$cores"; return 0 ;;
+  esac
+
+  reserve_kb=$((reserve_mb * 1024))
+  per_job_kb=$((per_job_mb * 1024))
+  if [ "$available_kb" -le "$reserve_kb" ]; then
+    echo 1
+    return 0
+  fi
+
+  memory_jobs=$(( (available_kb - reserve_kb) / per_job_kb ))
+  [ "$memory_jobs" -ge 1 ] || memory_jobs=1
+  if [ "$memory_jobs" -lt "$cores" ]; then
+    echo "$memory_jobs"
+  else
+    echo "$cores"
+  fi
+}
+
 hash_tree() {
   local root="$1"
   python3 - "$root" <<'PY'

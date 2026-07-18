@@ -17,7 +17,8 @@ Results are checkpointed under eval/results/screening/ and summarized under
   matches the current run.
 
 Options:
-  -j, --jobs N          parallel jobs for Rocq/prover make invocations (default: 1)
+  -j, --jobs N          parallel jobs for Rocq/prover make invocations
+                        (default: sized from cores and available memory)
   --tim SEC            ATP timeout per problem for screening prover runs (default: 5)
   --consistency-tim S  ATP timeout per false-conjecture consistency run (default: 2)
   --skip-builds        require install prefixes to already exist; do not build them
@@ -35,7 +36,7 @@ finishes successfully.
 USAGE
 }
 
-jobs=1
+jobs=
 tim=5
 consistency_tim=2
 skip_builds=false
@@ -61,9 +62,9 @@ while [ "$#" -gt 0 ]; do
   esac
 done
 
-for value in "$jobs" "$tim" "$consistency_tim"; do
+for value in "$tim" "$consistency_tim"; do
   if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Jobs and timeouts must be positive integers: $value" >&2
+    echo "Timeouts must be positive integers: $value" >&2
     exit 2
   fi
 done
@@ -76,6 +77,17 @@ fi
 eval_dir="$repo/eval"
 # shellcheck source=eval/grid-checkpoint-lib.sh
 source "$eval_dir/grid-checkpoint-lib.sh"
+
+# An unset -j means "use the machine": one job by default wasted almost all of
+# it, which is the difference between a smoke test and an evaluation.
+if [ -z "$jobs" ]; then
+  jobs=$(detect_jobs) || exit 2
+  echo "[jobs] using $jobs parallel jobs"
+fi
+if [[ ! "$jobs" =~ ^[1-9][0-9]*$ ]]; then
+  echo "Jobs must be a positive integer: $jobs" >&2
+  exit 2
+fi
 repo_commit=$(git rev-parse HEAD)
 grid_script_digest=$(hash_file "${BASH_SOURCE[0]}")
 grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
