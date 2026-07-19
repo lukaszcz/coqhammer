@@ -4,6 +4,18 @@ set -eu
 TIMEOUT=${CONSISTENCY_TIMEOUT:-15}
 TMPDIR_BASE=${TMPDIR:-/tmp}
 
+# The cleanup trap below cannot run when the script is hard-killed (SIGKILL, or
+# a session teardown that kills the process group), and each run leaves over a
+# hundred megabytes of TPTP problems behind.  Sweep our own leftovers first, as
+# src/plugin/opt.ml does for invocation directories.  The sweep is confined to
+# directories of this name form that we own and that nothing has touched for a
+# day, so a concurrent run is never disturbed.
+sweep_stale_tmpdirs() {
+  find "$TMPDIR_BASE" -maxdepth 1 -type d -name 'coqhammer-consistency.*' \
+    -user "$(id -u)" -mtime +0 -exec rm -rf {} + 2>/dev/null || true
+}
+sweep_stale_tmpdirs
+
 tmpdir=$(mktemp -d "$TMPDIR_BASE/coqhammer-consistency.XXXXXX")
 cleanup() {
   rm -rf "$tmpdir"

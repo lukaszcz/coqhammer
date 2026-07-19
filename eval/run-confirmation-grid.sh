@@ -544,13 +544,37 @@ run_consistency() {
   rm -rf "$work"
   mkdir -p "$work/problems" "$work/outputs" "$work/raw" "$work/status"
 
-  python3 - "$outdir/atp-problems/$premise" "$work/problems" <<'PY'
+  # Restrict the check to lemmas whose hypotheses are known to be satisfiable.
+  # The rewritten problems keep the goal's own hypotheses as axioms, so a
+  # vacuously true lemma is refutable no matter how faithful the translation
+  # is; see the corpus list for the worked stdlib example.
+  local lemma_list="$eval_dir/corpora/$corpus/consistency-lemmas.txt"
+  if [ ! -f "$lemma_list" ]; then
+    # No curated list means this corpus cannot be checked yet.  Skip it rather
+    # than abort the grid, but leave no checkpoint, so the check runs as soon
+    # as a list exists.  The skip is recorded so a summary never reads as if
+    # the corpus had passed.
+    echo "consistency_skipped=no_lemma_list" > "$outdir/consistency-$prover-$premise.status"
+    echo "[consistency] SKIPPED $label/$corpus/$prover/$premise: no curated lemma list" >&2
+    echo "  Create $lemma_list to enable the check for this corpus." >&2
+    return 0
+  fi
+
+  python3 - "$outdir/atp-problems/$premise" "$work/problems" "$lemma_list" <<'PY'
 import pathlib
 import re
 import sys
 src = pathlib.Path(sys.argv[1])
 dst = pathlib.Path(sys.argv[2])
-for path in sorted(src.glob('*.p')):
+listed = []
+for line in pathlib.Path(sys.argv[3]).read_text().splitlines():
+    line = line.strip()
+    if line and not line.startswith('#'):
+        listed.append(line)
+for name in listed:
+    path = src / (name + '.p')
+    if not path.exists():
+        continue
     text = path.read_text()
     text, n = re.subn(r"fof\(([^,]+),\s*conjecture,\s*.*?\)\.\s*$",
                       r"fof(\1, conjecture, $false).",
@@ -562,7 +586,8 @@ PY
 
   local problems=("$work/problems"/*.p)
   if [ ! -e "${problems[0]}" ]; then
-    echo "Consistency check generated no false-conjecture problems for $label/$corpus/$premise" >&2
+    echo "No listed consistency lemma is present in $label/$corpus/$premise" >&2
+    echo "Check $lemma_list against the generated problem names." >&2
     return 1
   fi
   # Every problem here is independent, so run them through a worker pool rather

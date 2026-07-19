@@ -1,0 +1,91 @@
+# Lemmas used for the false-conjecture consistency check on this corpus.
+#
+# The check replaces each conjecture with $false and expects the remaining
+# axioms to be unrefutable.  Those axioms include the goal's own hypotheses,
+# so a lemma with contradictory hypotheses is refutable for reasons that have
+# nothing to do with the translation.  Stdlib has such lemmas: PeanoNat's
+#
+#   Lemma testbit_neg_r a n (H:n<0) : testbit a n = false.
+#   Proof. inversion H. Qed.
+#
+# is vacuously true for nat and exists only to implement the NZBitsSpec
+# interface shared with Z and N.  Checking it proves False from n < 0, which
+# is correct translation of a correct Coq proof.
+#
+# So the check runs against this curated list of lemmas whose hypotheses are
+# known to be satisfiable, rather than against every goal in the corpus.  The
+# list does not need to be large -- it exists to catch a translation that
+# makes consistent premises inconsistent, and a broad sample across the
+# corpus modules does that.  Every entry below was verified to yield no
+# refutation from its axioms alone.
+#
+# One fully qualified lemma name per line; blank lines and # comments ignored.
+# Names must match the generated problem file names without the .p suffix.
+
+# Lists
+Stdlib.Lists.List.app_assoc
+Stdlib.Lists.List.app_comm_cons
+Stdlib.Lists.List.app_eq_nil
+Stdlib.Lists.List.app_inv_head
+Stdlib.Lists.List.app_inv_tail
+Stdlib.Lists.List.app_nil_l
+Stdlib.Lists.List.app_nil_r
+Stdlib.Lists.List.concat_app
+Stdlib.Lists.List.Exists_exists
+Stdlib.Lists.List.filter_In
+Stdlib.Lists.List.fold_left_app
+Stdlib.Lists.List.fold_right_app
+Stdlib.Lists.List.Forall_forall
+Stdlib.Lists.List.in_app_iff
+Stdlib.Lists.List.in_cons
+Stdlib.Lists.List.in_eq
+Stdlib.Lists.List.in_or_app
+Stdlib.Lists.List.length_app
+Stdlib.Lists.List.length_map
+Stdlib.Lists.List.length_rev
+Stdlib.Lists.List.map_app
+Stdlib.Lists.List.map_id
+Stdlib.Lists.List.map_map
+Stdlib.Lists.List.NoDup_cons_iff
+Stdlib.Lists.List.rev_app_distr
+Stdlib.Lists.List.rev_involutive
+Stdlib.Lists.List.rev_unit
+Stdlib.Lists.ListSet.set_mem_correct1
+
+# Bool
+Stdlib.Bool.Bool.absorption_andb
+Stdlib.Bool.Bool.absorption_orb
+Stdlib.Bool.Bool.andb_assoc
+Stdlib.Bool.Bool.andb_comm
+Stdlib.Bool.Bool.andb_diag
+Stdlib.Bool.Bool.andb_false_iff
+Stdlib.Bool.Bool.andb_true_iff
+Stdlib.Bool.Bool.eqb_true_iff
+Stdlib.Bool.Bool.negb_involutive
+Stdlib.Bool.Bool.orb_assoc
+Stdlib.Bool.Bool.orb_comm
+Stdlib.Bool.Bool.orb_diag
+Stdlib.Bool.Bool.orb_false_iff
+Stdlib.Bool.Bool.orb_true_iff
+Stdlib.Bool.Bool.xorb_assoc_reverse
+Stdlib.Bool.Bool.xorb_comm
+
+# Arith
+Stdlib.Arith.PeanoNat.Nat.add_0_l
+Stdlib.Arith.PeanoNat.Nat.add_succ_l
+Stdlib.Arith.PeanoNat.Nat.div2_Even
+Stdlib.Arith.PeanoNat.Nat.div_mod
+Stdlib.Arith.PeanoNat.Nat.double_twice
+Stdlib.Arith.PeanoNat.Nat.eqb_eq
+
+# NArith
+Stdlib.NArith.BinNat.N.add_0_l
+Stdlib.NArith.BinNat.N.add_succ_l
+Stdlib.NArith.BinNat.N.div_mod
+Stdlib.NArith.BinNat.N.double_add
+
+# Vectors
+Stdlib.Vectors.Fin.eqb_eq
+Stdlib.Vectors.VectorEq.eqb_eq
+Stdlib.Vectors.VectorSpec.append_comm_cons
+Stdlib.Vectors.VectorSpec.append_const

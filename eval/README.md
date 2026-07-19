@@ -130,6 +130,16 @@ Every complete grid writes `provenance.env` beside its summary. Checkpoints
 are reused only when their source commit, installed package, configuration,
 corpus content, scripts, and timeout settings still match.
 
+The confirmation run also checks that the translated axioms stay consistent: it
+replaces each conjecture with `$false` and expects no refutation. Those axioms
+include the goal's own hypotheses, so a vacuously true lemma is refutable no
+matter how faithful the translation is — stdlib's `Nat.testbit_neg_r`, proved
+by `inversion H` from `n < 0`, is one. The check therefore runs against the
+curated list in `corpora/<corpus>/consistency-lemmas.txt`, whose entries are
+known to have satisfiable hypotheses; the list is a sample across the corpus
+modules, not an enumeration of it. A corpus with no such file is skipped with a
+warning and left unchecked rather than reported as passing.
+
 ## Other tools
 
 - `diff-transl-configs.sh CONFIG_A CONFIG_B [CONSTANT]` compares translation
