@@ -294,9 +294,13 @@ validate_reconstruction_run() {
 validate_consistency_run() {
   local outdir="$1" prover="$2" premise="$3" work
   work="$outdir/consistency/$prover-$premise"
+  # Completeness is measured against the lemmas actually selected for this
+  # cell, not every generated problem: the check deliberately covers only the
+  # curated list.
   status_is "$outdir/consistency-$prover-$premise.status" consistency_exit=0 &&
     consistency_outputs_are_complete \
-      "$outdir/generated-$premise.lst" "$work/outputs" "$work/raw" "$work/status" \
+      "$outdir/consistency-selected-$prover-$premise.lst" \
+      "$work/outputs" "$work/raw" "$work/status" \
       "$outdir/consistency-outputs-$prover-$premise.lst"
 }
 
@@ -521,9 +525,16 @@ run_consistency() {
   local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
   local outdir="$results_root/$label/$corpus"
   local marker="$outdir/consistency-$prover-$premise" input_digest
+  # Restrict the check to lemmas whose hypotheses are known to be satisfiable.
+  # The rewritten problems keep the goal's own hypotheses as axioms, so a
+  # vacuously true lemma is refutable no matter how faithful the translation
+  # is; see the corpus list for the worked stdlib example.
+  local lemma_list="$eval_dir/corpora/$corpus/consistency-lemmas.txt" lemmas_digest=none
+  [ -f "$lemma_list" ] && lemmas_digest=$(hash_file "$lemma_list")
   input_digest=$(hash_tree "$outdir/atp-problems/$premise")
   if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
       "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
+      "lemmas_sha256=$lemmas_digest" \
       "input_sha256=$input_digest"; then
     if validate_consistency_run "$outdir" "$prover" "$premise"; then
       echo "[consistency] $label/$corpus/$prover/$premise already done"
@@ -544,11 +555,6 @@ run_consistency() {
   rm -rf "$work"
   mkdir -p "$work/problems" "$work/outputs" "$work/raw" "$work/status"
 
-  # Restrict the check to lemmas whose hypotheses are known to be satisfiable.
-  # The rewritten problems keep the goal's own hypotheses as axioms, so a
-  # vacuously true lemma is refutable no matter how faithful the translation
-  # is; see the corpus list for the worked stdlib example.
-  local lemma_list="$eval_dir/corpora/$corpus/consistency-lemmas.txt"
   if [ ! -f "$lemma_list" ]; then
     # No curated list means this corpus cannot be checked yet.  Skip it rather
     # than abort the grid, but leave no checkpoint, so the check runs as soon
@@ -583,6 +589,21 @@ for name in listed:
         raise SystemExit(f"did not rewrite exactly one conjecture in {path}")
     (dst / path.name).write_text(text)
 PY
+
+  # Record which lemmas this cell is expected to cover, derived from the
+  # curated list and the problems actually generated for this premise.  The
+  # validator compares outputs against this, so a lemma that was selected but
+  # produced nothing is still caught.
+  local selected_list="$outdir/consistency-selected-$prover-$premise.lst"
+  local lemma
+  : > "$selected_list"
+  while IFS= read -r lemma; do
+    lemma=${lemma%%#*}
+    lemma=$(printf '%s' "$lemma" | tr -d '[:space:]')
+    [ -n "$lemma" ] || continue
+    [ -f "$outdir/atp-problems/$premise/$lemma.p" ] || continue
+    echo "$work/problems/$lemma.p" >> "$selected_list"
+  done < "$lemma_list"
 
   local problems=("$work/problems"/*.p)
   if [ ! -e "${problems[0]}" ]; then
@@ -633,6 +654,7 @@ PY
   fi
   mark_checkpoint "$marker" consistency "$label" "$corpus" "$prefix" \
     "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
+    "lemmas_sha256=$lemmas_digest" \
     "input_sha256=$input_digest"
 }
 
