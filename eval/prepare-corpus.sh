@@ -94,7 +94,7 @@ build_stdlib_corpus() {
       exit 1
     fi
     mkdir -p "problems/$module"
-    find "$stdlib_dir/$module" -name '*.v' -print | while IFS= read -r file; do
+    find -L "$stdlib_dir/$module" -name '*.v' -print | while IFS= read -r file; do
       local rel base glob
       rel=${file#"$stdlib_dir"/}
       base=${file%.v}
@@ -125,12 +125,21 @@ build_equations_corpus() {
     exit 1
   fi
   mkdir -p problems/Equations
-  find "$lib_dir" -name '*.v' -print | while IFS= read -r file; do
+  # -L because the installed library is reached through a symlink in the
+  # evaluation prefix, and find does not descend into a symlinked directory
+  # named as its own starting point.
+  find -L "$lib_dir" -name '*.v' -print | while IFS= read -r file; do
     local rel base glob
     rel=${file#"$lib_dir"/}
     base=${file%.v}
     glob="$base.glob"
     [ -f "$glob" ] || continue
+    # Files with no theorems contribute no goals, only compile time -- and the
+    # library's interface modules are exactly the ones that Register their own
+    # fully qualified names (Equations.Signature.Signature and friends), which
+    # cannot resolve here because the corpus is compiled with no logical path
+    # mapping.  Skipping them drops nothing measurable.
+    grep -q '^prf ' "$glob" || continue
     mkdir -p "problems/Equations/$(dirname "$rel")"
     cp "$file" "problems/Equations/$rel"
     cp "$glob" "problems/Equations/${rel%.v}.glob"

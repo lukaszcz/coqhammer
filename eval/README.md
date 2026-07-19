@@ -140,6 +140,12 @@ known to have satisfiable hypotheses; the list is a sample across the corpus
 modules, not an enumeration of it. A corpus with no such file is skipped with a
 warning and left unchecked rather than reported as passing.
 
+`tools/curate-consistency-lemmas.sh PROBLEM_DIR OUT` regenerates such a list
+from a corpus's generated problems. It runs both provers at a longer timeout
+than the check uses, so a lemma whose refutation is merely slow cannot pass
+curation and then fire during a run. Use it when adding a corpus or after a
+library update changes which goals exist.
+
 ## Other tools
 
 - `diff-transl-configs.sh CONFIG_A CONFIG_B [CONSTANT]` compares translation

@@ -142,7 +142,18 @@ prepare_prefix() {
   rm -rf "$p"
   mkdir -p "$p/bin" "$p/coq/user-contrib" "$p/rocq-runtime"
   ln -sfn "$coqlib/theories" "$p/coq/theories"
-  ln -sfn "$coqlib/user-contrib/Stdlib" "$p/coq/user-contrib/Stdlib"
+  # Borrow every installed library except Hammer, which this prefix installs
+  # itself and must not shadow with the switch's copy.  Linking only Stdlib
+  # left external corpora unbuildable: the external-equations corpus is built
+  # from the installed Equations library and its hooked files then have to
+  # resolve Require Import Equations against this prefix.
+  for lib in "$coqlib"/user-contrib/*; do
+    [ -e "$lib" ] || continue
+    case "$(basename "$lib")" in
+      Hammer) continue ;;
+    esac
+    ln -sfn "$lib" "$p/coq/user-contrib/$(basename "$lib")"
+  done
   for f in "$(dirname "$coqlib")"/rocq-runtime/*; do
     ln -sfn "$f" "$p/rocq-runtime/$(basename "$f")"
   done

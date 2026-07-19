@@ -300,7 +300,12 @@ log_has_crash_or_infrastructure_error() {
 # terminal SZS status use this to scan a raw prover log without mistaking a
 # recovered per-strategy abort for a crash of the prover invocation.
 strip_portfolio_strategy_aborts() {
-  grep -Ev "^% Aborted by signal [[:upper:]]+ on " "$1" || true
+  # Vampire's portfolio reports each child strategy that dies while the run
+  # itself continues and still ends with a terminal SZS status.  The strategies
+  # write concurrently, so the notice frequently lands in the middle of another
+  # line rather than on one of its own -- match it anywhere, not just at the
+  # start, or the interleaved copies read as a crash.
+  sed -E 's/% Aborted by signal [[:upper:]]+ on [^[:space:]]*//g' "$1"
 }
 
 log_has_crash_or_error_ignoring_strategy_aborts() {
