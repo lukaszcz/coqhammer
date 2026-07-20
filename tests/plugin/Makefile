@@ -57,7 +57,21 @@ extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
 
 erasure_blacklist.vo: erasure_blacklist.v
-	$(COQC) erasure_blacklist.v
+	@set -e; \
+	$(COQC) erasure_blacklist.v > erasure_blacklist.out 2>&1 || { \
+	  cat erasure_blacklist.out; rm -f erasure_blacklist.vo erasure_blacklist.out; exit 1; }; \
+	grep -Eq '^\$$_def_erasure_blacklist\.blkt_id:' erasure_blacklist.out || { \
+	  echo "blacklisted constructor: definition axiom check FAILED"; cat erasure_blacklist.out; \
+	  rm -f erasure_blacklist.vo erasure_blacklist.out; exit 1; }; \
+	grep -Eq '^\$$_typeof_erasure_blacklist\.blkt_id:' erasure_blacklist.out || { \
+	  echo "blacklisted constructor: typing axiom check FAILED"; cat erasure_blacklist.out; \
+	  rm -f erasure_blacklist.vo erasure_blacklist.out; exit 1; }; \
+	if grep -Eq '\$$_inj_|\$$_discrim_|\$$_inversion_' erasure_blacklist.out; then \
+	  echo "blacklisted constructor: constructor-derived axioms must be skipped, but some were emitted"; \
+	  cat erasure_blacklist.out; \
+	  rm -f erasure_blacklist.vo erasure_blacklist.out; exit 1; \
+	fi; \
+	rm -f erasure_blacklist.out
 
 case_prop_transl.vo: case_prop_transl.v
 	@set -e; \
