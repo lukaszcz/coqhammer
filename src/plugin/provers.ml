@@ -28,7 +28,7 @@ let unmangle_primes s = String.map (function '\\' -> '\'' | c -> c) s
 
 (* Read the single-quoted atom that opens at ln.[i], resolving the backslash
    escapes as they are read.  A Coq name containing a prime is emitted by
-   tptp_out as 'Nat.shiftl_spec_high\'', so slicing to the closing quote and
+   tptp_out as e.g. 'Nat.shiftl_spec_high\'', so slicing to the closing quote and
    unescaping afterwards mis-parses the name; scanning with the escapes in
    view is what lets such names survive the round trip. *)
 let read_quoted_atom ln i =
@@ -59,7 +59,7 @@ let quoted_atom_of_line ln = read_quoted_atom ln (String.index ln '\'')
 (* EProver and Vampire print a proof, where the premise name is the second
    argument of the trailing file(SOURCE, NAME).  Both forms of NAME occur:
    EProver always quotes it, while Vampire quotes only when TPTP requires it
-   and writes file('...p',beq_refl) otherwise.  Reading only quoted atoms
+   and writes e.g. file('...p',beq_refl) otherwise.  Reading only quoted atoms
    would take the source path for the name of every unquoted premise, and
    slicing to the last quote drops them instead. *)
 let axiom_name_of_line ln =
