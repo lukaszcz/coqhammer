@@ -98,9 +98,17 @@ def problem_metrics(files: list[Path]) -> tuple[set[str], int, float, int, float
     return defs, total_bytes, total_bytes / n, max_bytes, total_lines / n, max_lines
 
 
-def reconstr_files(corpus_dir: Path, prover: str, premise: str, generated: list[Path]) -> list[Path]:
+def reconstr_files(corpus_dir: Path, prover: str, premise: str, prover_outputs: list[Path]) -> list[Path]:
+    # Reconstruction runs on what the ATP proved, not on every problem: a goal
+    # the prover gave up on leaves no premise list to replay, so it has no
+    # output here and its absence is not a gap.  This matches the metric the
+    # rows report, which divides reconstruction successes by theorems.
     odir = corpus_dir / "reconstr-outputs" / f"{prover}-{premise}"
-    return [odir / Path(path).name.replace(".p", ".out") for path in generated]
+    return [
+        odir / Path(path).with_suffix(".out").name
+        for path in prover_outputs
+        if has_atp_theorem(path)
+    ]
 
 
 def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
@@ -120,7 +128,7 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
                 for prover in PROVERS:
                     prover_outputs = read_list(corpus_dir / f"prover-outputs-{prover}-{premise}.lst")
                     theorems = status_theorem_count(prover_outputs)
-                    rfiles = reconstr_files(corpus_dir, prover, premise, generated)
+                    rfiles = reconstr_files(corpus_dir, prover, premise, prover_outputs)
                     missing_reconstructions = [path for path in rfiles if not path.is_file()]
                     if missing_reconstructions:
                         raise ValueError(
@@ -298,7 +306,7 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
         f"Rows summarized: {len(rows)}.",
         "Grid: {knn,nbayes} x {32,64,128,256,1024} x {E prover,Vampire,Z3,CVC4} over the three committed extraction corpora.",
         f"Consistency hits: {consistency_hits}.",
-        "Consistency scope: exhaustive scan of every generated confirmation problem in the committed corpora with E prover and Vampire after rewriting the conjecture to `$false`.",
+        "Consistency scope: the lemmas listed in each corpus's consistency-lemmas.txt, run with E prover and Vampire after rewriting the conjecture to `$false`. The list is curated rather than exhaustive because a vacuously true lemma is refutable however faithful the translation is: the rewritten problem keeps the goal's own hypotheses as axioms, so only lemmas with satisfiable hypotheses can distinguish a sound translation from an unsound one.",
         "",
         "## Overall rates",
         "",
