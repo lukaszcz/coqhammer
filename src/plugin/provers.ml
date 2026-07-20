@@ -61,14 +61,18 @@ let read_quoted_atom ln i =
   in
   unmangle_primes (scan (i + 1))
 
-(* CVC4 is asked for an unsat core rather than a proof, and prints one quoted
-   premise name per line with no enclosing term.  Every line of the core that
-   is not a comment carries a name, so a missing quote is a parse failure and
-   not a line to pass over. *)
-let quoted_atom_of_line ln =
-  match String.index_opt ln '\'' with
-  | Some i -> read_quoted_atom ln i
-  | None -> raise (Parse_error ln)
+(* CVC4 is asked for an unsat core rather than a proof, and prints one premise
+   name per line with no enclosing term.  Like Vampire it quotes the name only
+   when TPTP requires it, so a line carrying a bare lower word such as
+   beq_refl is a name in full and not a line to pass over. *)
+let core_atom_of_line ln =
+  let s = String.trim ln in
+  if s = "" then
+    raise (Parse_error ln)
+  else if s.[0] = '\'' then
+    read_quoted_atom s 0
+  else
+    s
 
 (* EProver and Vampire print a proof, where the premise name is the second
    argument of the trailing file(SOURCE, NAME).  Both forms of NAME occur:
@@ -401,7 +405,7 @@ let extract_cvc4_data outfile =
         if (String.get ln 0 = '%') then
           pom acc
         else
-          let name = quoted_atom_of_line ln in
+          let name = core_atom_of_line ln in
           if name <> "HAMMER_GOAL" then
             pom (name :: acc)
           else
