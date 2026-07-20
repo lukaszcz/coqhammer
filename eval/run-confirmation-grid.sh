@@ -337,6 +337,32 @@ build_label() {
   fi
 }
 
+# A plugin that reports its own bug has not done its job, whatever Rocq's exit
+# status says: hammer_hook swallows the failure per goal and carries on, so a
+# run that loses a third of the corpus still finishes with every file compiled
+# and no Error line anywhere.  Scanning for the plugin's own wording as well is
+# what makes that shortfall visible instead of silently shrinking the corpus.
+# Succeeds (returns 0) when something was found, so callers read as a guard.
+collect_failures() {
+  local source="$1" filtered="$2"
+  grep -rE 'Error|Anomaly|CoqHammer bug|internal translation error' "$source" \
+    > "$filtered" 2>/dev/null || true
+  [ -s "$filtered" ]
+}
+
+# Generation writes one log per corpus file under logs/atp, and that is the only
+# place the hook's diagnostics appear -- gen-atp.full.log holds just the make
+# command lines.  Every corpus starts by clearing logs/, so keep a copy beside
+# the checkpoint it belongs to.
+save_hook_logs() {
+  local outdir="$1"
+  rm -rf "$outdir/hook-logs"
+  if [ -d logs/atp ]; then
+    mkdir -p "$outdir/hook-logs"
+    cp -R logs/atp/. "$outdir/hook-logs/"
+  fi
+}
+
 run_generation() {
   local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
@@ -363,21 +389,27 @@ run_generation() {
   make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1
   echo check > coqhammer.opt
   make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1
-  grep Error "$outdir/check.full.log" > "$outdir/check.log" || true
-  if [ -s "$outdir/check.log" ]; then
+  if collect_failures "$outdir/check.full.log" "$outdir/check.log"; then
     echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
     exit 1
   fi
 
   echo gen-atp > coqhammer.opt
   if ! make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
-    grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
+    collect_failures "$outdir/gen-atp.full.log" "$outdir/gen-atp.log" || true
+    save_hook_logs "$outdir"
     echo "ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
     exit 1
   fi
-  grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
-  if [ -s "$outdir/gen-atp.log" ]; then
+  # The per-file logs hold what the hook actually reported; the next corpus
+  # wipes logs/, so they have to be kept here to be of any use afterwards.
+  save_hook_logs "$outdir"
+  if collect_failures "$outdir/gen-atp.full.log" "$outdir/gen-atp.log"; then
     echo "ATP-generation errors for $label/$corpus; see $outdir/gen-atp.log" >&2
+    exit 1
+  fi
+  if collect_failures "$outdir/hook-logs" "$outdir/gen-atp-hook.log"; then
+    echo "Hook errors for $label/$corpus; see $outdir/gen-atp-hook.log" >&2
     exit 1
   fi
 

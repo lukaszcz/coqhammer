@@ -94,24 +94,9 @@ build_stdlib_corpus() {
       exit 1
     fi
     mkdir -p "problems/$module"
-    find -L "$stdlib_dir/$module" -name '*.v' -print | while IFS= read -r file; do
-      local rel base glob
-      rel=${file#"$stdlib_dir"/}
-      base=${file%.v}
-      glob="$base.glob"
-      # Without the .glob there are no theorem names to hook, so the file would
-      # contribute nothing but compile time.
-      [ -f "$glob" ] || continue
-      mkdir -p "problems/$(dirname "$rel")"
-      cp "$file" "problems/$rel"
-      cp "$glob" "problems/${rel%.v}.glob"
-    done
+    copy_hookable_sources "$stdlib_dir" "$stdlib_dir/$module" problems
   done
-  count=$(find problems -name '*.v' | wc -l)
-  if [ "$count" -eq 0 ]; then
-    echo "No stdlib sources with .glob files found under $stdlib_dir" >&2
-    exit 1
-  fi
+  require_hookable_sources "$stdlib_dir"
   insert_hooks
 }
 
@@ -125,29 +110,8 @@ build_equations_corpus() {
     exit 1
   fi
   mkdir -p problems/Equations
-  # -L because the installed library is reached through a symlink in the
-  # evaluation prefix, and find does not descend into a symlinked directory
-  # named as its own starting point.
-  find -L "$lib_dir" -name '*.v' -print | while IFS= read -r file; do
-    local rel base glob
-    rel=${file#"$lib_dir"/}
-    base=${file%.v}
-    glob="$base.glob"
-    [ -f "$glob" ] || continue
-    # Files with no theorems contribute no goals, only compile time -- and the
-    # library's interface modules are exactly the ones that Register their own
-    # fully qualified names (Equations.Signature.Signature and friends), which
-    # cannot resolve here because the corpus is compiled with no logical path
-    # mapping.  Skipping them drops nothing measurable.
-    grep -q '^prf ' "$glob" || continue
-    mkdir -p "problems/Equations/$(dirname "$rel")"
-    cp "$file" "problems/Equations/$rel"
-    cp "$glob" "problems/Equations/${rel%.v}.glob"
-  done
-  if [ -z "$(find problems -name '*.v' -print -quit)" ]; then
-    echo "No Equations sources with .glob files found under $lib_dir" >&2
-    exit 1
-  fi
+  copy_hookable_sources "$lib_dir" "$lib_dir" problems/Equations true
+  require_hookable_sources "$lib_dir"
   insert_hooks
 }
 
@@ -155,6 +119,47 @@ insert_hooks() {
   (cd problems && "$eval_dir/tools/mkhooks.sh" > /dev/null 2>&1)
   # rmcomments leaves a .bak beside every rewritten file; they are not sources.
   find problems -name '*.v.bak' -delete
+}
+
+# Copy the sources that can actually be hooked.  coqnames reads the module
+# prefix and the theorem names out of the .glob beside each .v, so a source
+# without one contributes compile time and no goals.  Paths under $dest keep
+# their layout relative to $root, while $start selects the subtree to walk, so
+# a corpus can take part of a library without flattening it.  With
+# $require_proofs, a .glob must also declare a proof: that skips the interface
+# modules which only Register their own fully qualified names, which cannot
+# resolve in a corpus compiled with no logical path mapping.
+copy_hookable_sources() {
+  local root="$1" start="$2" dest="$3" require_proofs="${4:-false}"
+  # -L because an installed library is reached through a symlink in the
+  # evaluation prefix, and find does not descend into a symlinked directory
+  # named as its own starting point.
+  find -L "$start" \( -name '_build' -o -name '.git' \) -prune -o -name '*.v' -print |
+    while IFS= read -r file; do
+      local rel glob
+      rel=${file#"$root"/}
+      glob="${file%.v}.glob"
+      [ -f "$glob" ] || continue
+      if [ "$require_proofs" = true ]; then
+        grep -q '^prf ' "$glob" || continue
+      fi
+      mkdir -p "$dest/$(dirname "$rel")"
+      cp "$file" "$dest/$rel"
+      cp "$glob" "$dest/${rel%.v}.glob"
+    done
+}
+
+# A corpus with no hookable source is a corpus with no goals, and the usual
+# cause is a checkout that was never built: .glob files appear only after
+# compilation.  Say so rather than letting the run proceed to an empty grid.
+require_hookable_sources() {
+  local where="$1"
+  if [ -z "$(find problems -name '*.v' -print -quit)" ]; then
+    echo "No sources with .glob files found under $where" >&2
+    echo "A .glob is produced by compiling a file, so build the library or" >&2
+    echo "checkout first; without one there are no theorem names to hook." >&2
+    exit 1
+  fi
 }
 
 case "$corpus" in
@@ -175,11 +180,8 @@ case "$corpus" in
         exit 1
       fi
       mkdir -p problems/external-equations
-      find "$source_dir" \( -path '*/_build' -o -path '*/.git' \) -prune -o -name '*.v' -print | while IFS= read -r file; do
-        rel=${file#"$source_dir"/}
-        mkdir -p "problems/external-equations/$(dirname "$rel")"
-        cp "$file" "problems/external-equations/$rel"
-      done
+      copy_hookable_sources "$source_dir" "$source_dir" problems/external-equations true
+      require_hookable_sources "$source_dir"
       if [ -f "$source_dir/_CoqProject" ]; then
         awk '
           function relocated(path) {
@@ -191,6 +193,7 @@ case "$corpus" in
           $1 == "-I" && NF >= 2 { print $1, relocated($2); next }
         ' "$source_dir/_CoqProject" > problems/external-equations.conf || true
       fi
+      insert_hooks
     elif [ "$sample" = true ]; then
       copy_committed external-equations
     else
