@@ -18,6 +18,15 @@ type atp_info = {
 
 let unescape s = Scanf.unescaped (Scanf.unescaped s)
 
+(* Raised when a line that has already been recognised as carrying a premise
+   name cannot be parsed.  That is always a bug in the parser rather than a
+   property of the proof, so it must reach the user instead of being skipped
+   with the line: a parser that silently drops names turns its own breakage
+   into what looks like a weak translation.  Failing to recognise a line as
+   carrying a name at all is a different matter and stays caught, since the
+   provers interleave other output with their proofs. *)
+exception Parse_error of string
+
 (* EProver does not honour the \' escape inside a single-quoted atom: given
    'Nat.shiftl_spec_high\'' it reads the backslash as an ordinary character
    and reports the name back as 'Nat.shiftl_spec_high\\'.  A Coq identifier
@@ -36,7 +45,7 @@ let read_quoted_atom ln i =
   let buf = Buffer.create 32 in
   let rec scan i =
     if i >= n then
-      raise Not_found
+      raise (Parse_error ln)
     else if ln.[i] = '\\' && i + 1 < n then
       begin
         Buffer.add_char buf ln.[i + 1];
@@ -53,8 +62,13 @@ let read_quoted_atom ln i =
   unmangle_primes (scan (i + 1))
 
 (* CVC4 is asked for an unsat core rather than a proof, and prints one quoted
-   premise name per line with no enclosing term. *)
-let quoted_atom_of_line ln = read_quoted_atom ln (String.index ln '\'')
+   premise name per line with no enclosing term.  Every line of the core that
+   is not a comment carries a name, so a missing quote is a parse failure and
+   not a line to pass over. *)
+let quoted_atom_of_line ln =
+  match String.index_opt ln '\'' with
+  | Some i -> read_quoted_atom ln i
+  | None -> raise (Parse_error ln)
 
 (* EProver and Vampire print a proof, where the premise name is the second
    argument of the trailing file(SOURCE, NAME).  Both forms of NAME occur:
@@ -64,17 +78,21 @@ let quoted_atom_of_line ln = read_quoted_atom ln (String.index ln '\'')
    slicing to the last quote drops them instead. *)
 let axiom_name_of_line ln =
   let n = String.length ln in
-  let start = ref (String.rindex ln ',' + 1) in
+  let start =
+    match String.rindex_opt ln ',' with
+    | Some i -> ref (i + 1)
+    | None -> raise (Parse_error ln)
+  in
   while !start < n && (ln.[!start] = ' ' || ln.[!start] = '\t') do incr start done;
   if !start >= n then
-    raise Not_found
+    raise (Parse_error ln)
   else if ln.[!start] = '\'' then
     read_quoted_atom ln !start
   else
     let stop = ref !start in
     while !stop < n && ln.[!stop] <> ')' && ln.[!stop] <> ',' do incr stop done;
     let name = String.trim (String.sub ln !start (!stop - !start)) in
-    if name = "" then raise Not_found else name
+    if name = "" then raise (Parse_error ln) else name
 
 let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
 
@@ -270,14 +288,18 @@ let extract_eprover_data outfile =
       | End_of_file ->
          acc
       (* One unreadable name must not discard the rest of a found proof. *)
-      | Not_found | Invalid_argument(_) | Scanf.Scan_failure(_) ->
+      | Not_found | Invalid_argument(_) ->
          pom acc
     in
     let names = pom []
     in
     close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in EProver output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract EProver data")
 
 type z3_binary = Z3Tptp | Z3
@@ -315,7 +337,11 @@ let extract_z3_data outfile =
     let names = List.map unescape (Str.split (Str.regexp "'| |'") s) in
     close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in Z3 output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract Z3 data")
 
 let call_vampire infile outfile =
@@ -344,14 +370,18 @@ let extract_vampire_data outfile =
       with
       | End_of_file ->
          acc
-      | Not_found | Invalid_argument(_) | Scanf.Scan_failure(_) ->
+      | Not_found | Invalid_argument(_) ->
          pom acc
     in
     let names = pom []
     in
     close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in Vampire output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract Vampire data")
 
 let call_cvc4 infile outfile =
@@ -379,14 +409,18 @@ let extract_cvc4_data outfile =
       with
       | End_of_file ->
          acc
-      | Not_found | Invalid_argument(_) | Scanf.Scan_failure(_) ->
+      | Not_found | Invalid_argument(_) ->
          pom acc
     in
     let names = pom []
     in
     close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in CVC4 output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract CVC4 data")
 
 (******************************************************************************)
