@@ -26,13 +26,42 @@ let unescape s = Scanf.unescaped (Scanf.unescaped s)
    that do honour the escape yield the prime directly and are unaffected. *)
 let unmangle_primes s = String.map (function '\\' -> '\'' | c -> c) s
 
-(* The premise name is the second argument of the trailing file(SOURCE, NAME).
-   Both forms of NAME occur: EProver always quotes it, while Vampire quotes
-   only when TPTP requires it and writes file('...p',beq_refl) otherwise.  A
-   quoted name is read with its backslash escapes in view, since a Coq name
-   containing a prime is emitted as 'Nat.shiftl_spec_high\''.  Reading only
-   quoted atoms would take the source path for the name of every unquoted
-   premise, and slicing to the last quote drops them instead. *)
+(* Read the single-quoted atom that opens at ln.[i], resolving the backslash
+   escapes as they are read.  A Coq name containing a prime is emitted by
+   tptp_out as 'Nat.shiftl_spec_high\'', so slicing to the closing quote and
+   unescaping afterwards mis-parses the name; scanning with the escapes in
+   view is what lets such names survive the round trip. *)
+let read_quoted_atom ln i =
+  let n = String.length ln in
+  let buf = Buffer.create 32 in
+  let rec scan i =
+    if i >= n then
+      raise Not_found
+    else if ln.[i] = '\\' && i + 1 < n then
+      begin
+        Buffer.add_char buf ln.[i + 1];
+        scan (i + 2)
+      end
+    else if ln.[i] = '\'' then
+      Buffer.contents buf
+    else
+      begin
+        Buffer.add_char buf ln.[i];
+        scan (i + 1)
+      end
+  in
+  unmangle_primes (scan (i + 1))
+
+(* CVC4 is asked for an unsat core rather than a proof, and prints one quoted
+   premise name per line with no enclosing term. *)
+let quoted_atom_of_line ln = read_quoted_atom ln (String.index ln '\'')
+
+(* EProver and Vampire print a proof, where the premise name is the second
+   argument of the trailing file(SOURCE, NAME).  Both forms of NAME occur:
+   EProver always quotes it, while Vampire quotes only when TPTP requires it
+   and writes file('...p',beq_refl) otherwise.  Reading only quoted atoms
+   would take the source path for the name of every unquoted premise, and
+   slicing to the last quote drops them instead. *)
 let axiom_name_of_line ln =
   let n = String.length ln in
   let start = ref (String.rindex ln ',' + 1) in
@@ -40,24 +69,7 @@ let axiom_name_of_line ln =
   if !start >= n then
     raise Not_found
   else if ln.[!start] = '\'' then
-    let buf = Buffer.create 32 in
-    let rec scan i =
-      if i >= n then
-        raise Not_found
-      else if ln.[i] = '\\' && i + 1 < n then
-        begin
-          Buffer.add_char buf ln.[i + 1];
-          scan (i + 2)
-        end
-      else if ln.[i] = '\'' then
-        Buffer.contents buf
-      else
-        begin
-          Buffer.add_char buf ln.[i];
-          scan (i + 1)
-        end
-    in
-    unmangle_primes (scan (!start + 1))
+    read_quoted_atom ln !start
   else
     let stop = ref !start in
     while !stop < n && ln.[!stop] <> ')' && ln.[!stop] <> ',' do incr stop done;
@@ -359,7 +371,7 @@ let extract_cvc4_data outfile =
         if (String.get ln 0 = '%') then
           pom acc
         else
-          let name = axiom_name_of_line ln in
+          let name = quoted_atom_of_line ln in
           if name <> "HAMMER_GOAL" then
             pom (name :: acc)
           else
