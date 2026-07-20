@@ -18,43 +18,6 @@ type atp_info = {
 
 let unescape s = Scanf.unescaped (Scanf.unescaped s)
 
-(* Collect the single-quoted TPTP atoms of a line, resolving the backslash
-   escapes as they are read.  A Coq name containing a prime, such as
-   Nat.shiftl_spec_high', is emitted by tptp_out as 'Nat.shiftl_spec_high\'',
-   so taking the slice up to the last quote and unescaping it afterwards
-   mis-parses the name and then fails on the trailing backslash.  Scanning
-   with the escapes in view is what lets such names survive the round trip. *)
-let quoted_atoms ln =
-  let n = String.length ln in
-  let buf = Buffer.create 32 in
-  let rec outside i acc =
-    if i >= n then
-      List.rev acc
-    else if ln.[i] = '\'' then
-      begin
-        Buffer.clear buf;
-        inside (i + 1) acc
-      end
-    else
-      outside (i + 1) acc
-  and inside i acc =
-    if i >= n then
-      List.rev acc
-    else if ln.[i] = '\\' && i + 1 < n then
-      begin
-        Buffer.add_char buf ln.[i + 1];
-        inside (i + 2) acc
-      end
-    else if ln.[i] = '\'' then
-      outside (i + 1) (Buffer.contents buf :: acc)
-    else
-      begin
-        Buffer.add_char buf ln.[i];
-        inside (i + 1) acc
-      end
-  in
-  outside 0 []
-
 (* EProver does not honour the \' escape inside a single-quoted atom: given
    'Nat.shiftl_spec_high\'' it reads the backslash as an ordinary character
    and reports the name back as 'Nat.shiftl_spec_high\\'.  A Coq identifier
@@ -63,12 +26,43 @@ let quoted_atoms ln =
    that do honour the escape yield the prime directly and are unaffected. *)
 let unmangle_primes s = String.map (function '\\' -> '\'' | c -> c) s
 
-(* The name of a used axiom is the last quoted atom of its line: the proof
-   lines end with file(SOURCE, NAME). *)
-let last_quoted_atom ln =
-  match List.rev (quoted_atoms ln) with
-  | name :: _ -> unmangle_primes name
-  | [] -> raise Not_found
+(* The premise name is the second argument of the trailing file(SOURCE, NAME).
+   Both forms of NAME occur: EProver always quotes it, while Vampire quotes
+   only when TPTP requires it and writes file('...p',beq_refl) otherwise.  A
+   quoted name is read with its backslash escapes in view, since a Coq name
+   containing a prime is emitted as 'Nat.shiftl_spec_high\''.  Reading only
+   quoted atoms would take the source path for the name of every unquoted
+   premise, and slicing to the last quote drops them instead. *)
+let axiom_name_of_line ln =
+  let n = String.length ln in
+  let start = ref (String.rindex ln ',' + 1) in
+  while !start < n && (ln.[!start] = ' ' || ln.[!start] = '\t') do incr start done;
+  if !start >= n then
+    raise Not_found
+  else if ln.[!start] = '\'' then
+    let buf = Buffer.create 32 in
+    let rec scan i =
+      if i >= n then
+        raise Not_found
+      else if ln.[i] = '\\' && i + 1 < n then
+        begin
+          Buffer.add_char buf ln.[i + 1];
+          scan (i + 2)
+        end
+      else if ln.[i] = '\'' then
+        Buffer.contents buf
+      else
+        begin
+          Buffer.add_char buf ln.[i];
+          scan (i + 1)
+        end
+    in
+    unmangle_primes (scan (!start + 1))
+  else
+    let stop = ref !start in
+    while !stop < n && ln.[!stop] <> ')' && ln.[!stop] <> ',' do incr stop done;
+    let name = String.trim (String.sub ln !start (!stop - !start)) in
+    if name = "" then raise Not_found else name
 
 let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
 
@@ -257,7 +251,7 @@ let extract_eprover_data outfile =
         if String.get ln 0 = '#' then
           pom acc
         else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
-          pom (last_quoted_atom ln :: acc)
+          pom (axiom_name_of_line ln :: acc)
         else
           pom acc
       with
@@ -330,7 +324,7 @@ let extract_vampire_data outfile =
         if String.get ln 0 = '%' then
           pom acc
         else
-          let name = last_quoted_atom ln in
+          let name = axiom_name_of_line ln in
           if name <> "HAMMER_GOAL" then
             pom (name :: acc)
           else
@@ -365,7 +359,7 @@ let extract_cvc4_data outfile =
         if (String.get ln 0 = '%') then
           pom acc
         else
-          let name = last_quoted_atom ln in
+          let name = axiom_name_of_line ln in
           if name <> "HAMMER_GOAL" then
             pom (name :: acc)
           else
