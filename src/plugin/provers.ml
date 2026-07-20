@@ -582,22 +582,7 @@ let predict deps1 hyps deps goal =
   try
     let (pname, info) = call fname ofname in
     clean ();
-    if !Opt.gs_mode = 0 then
-      begin
-        Msg.info(pname ^ " succeeded");
-        let info =
-          if List.length info.deps >= !Opt.minimize_threshold then
-            minimize info hyps deps goal
-          else
-            info
-        in
-        let msg = prn_atp_info info in
-        if msg <> "" then
-          Msg.info msg;
-        info
-      end
-    else
-      info
+    (pname, info)
   with e ->
     clean ();
     raise e

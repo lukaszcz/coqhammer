@@ -28,9 +28,13 @@ val minimize : atp_info ->
   hhdef list (* hyps *) -> hhdef list (* all deps *) -> hhdef (* goal *) ->
   atp_info
 
+(* Runs the enabled ATPs and returns the name of the one that succeeded
+   together with what it used.  Reporting is left to the caller: the greedy
+   schedule runs each prover in a forked child, so only the parent knows which
+   result was actually taken. *)
 val predict : hhdef list (* filtered deps *) -> hhdef list (* hyps *) ->
   hhdef list (* all deps *) -> hhdef (* goal *) ->
-  atp_info
+  string (* prover that succeeded *) * atp_info
 
 (* Detect ATPs and set the hammer options in opt.ml (?_enabled)
    accordingly. Returns true if at least one prover found, false

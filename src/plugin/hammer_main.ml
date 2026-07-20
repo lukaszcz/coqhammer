@@ -732,6 +732,23 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
    premises returned by its selection function. Each element of `seq`
    is: (index, (prover description, enabled, enabled option ref,
    selection function)). *)
+(* Reports the prover that succeeded and what it used.  Both prover paths end
+   here so that the message, the minimization and the dependency listing stay
+   in step; the greedy schedule reports from the parent, once the winner is
+   known, rather than from each child that happened to finish. *)
+let report_success pname info hyps deps goal =
+  Msg.info (pname ^ " succeeded");
+  let info =
+    if List.length info.Provers.deps >= !Opt.minimize_threshold then
+      Provers.minimize info hyps deps goal
+    else
+      info
+  in
+  let msg = Provers.prn_atp_info info in
+  if msg <> "" then
+    Msg.info msg;
+  info
+
 let run_gs_provers hyps deps goal clean seq =
   let candidates = List.filter (fun (_, (_, enabled, _, _)) -> enabled) seq in
   let rec split_batch n lst acc =
@@ -772,9 +789,10 @@ let run_gs_provers hyps deps goal clean seq =
                let deps1 = select () in
                (* All hypotheses are always passed to the ATPs (only deps
                   are subject to premise selection) *)
-               let info = Provers.predict deps1 hyps deps goal in
-               Msg.info (pname ^ " succeeded");
-               (idx, info)
+               (* The schedule's own label names the premise selection this
+                  slot used, which the prover itself knows nothing about. *)
+               let (_, info) = Provers.predict deps1 hyps deps goal in
+               (idx, pname, info)
              with
              | HammerError(msg) ->
                 Msg.error ("Hammer error: " ^ msg);
@@ -797,7 +815,7 @@ let run_gs_provers hyps deps goal clean seq =
        match ret with
        | None, _ ->
           failure ()
-       | Some (idx, info), unfinished ->
+       | Some (idx, pname, info), unfinished ->
           begin
             let unfinished_idx =
               List.map
@@ -813,16 +831,8 @@ let run_gs_provers hyps deps goal clean seq =
                    not (List.mem unfinished_idx !failed))
                 unfinished_idx
             in
-            let info =
-              if List.length info.Provers.deps >= !Opt.minimize_threshold then
-                Provers.minimize info hyps deps goal
-              else
-                info
-            in
             clean ();
-            let msg = Provers.prn_atp_info info in
-            if msg <> "" then
-              Msg.info msg;
+            let info = report_success pname info hyps deps goal in
             (idx :: (!failed @ tried), preempted, info)
           end
   in
@@ -880,7 +890,8 @@ let do_predict tried hyps deps goal =
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
-    ([], [], Provers.predict deps1 hyps deps goal)
+    let (pname, info) = Provers.predict deps1 hyps deps goal in
+    ([], [], report_success pname info hyps deps goal)
 
 let do_choice tried hyps deps goal lems =
   (* ATP premises are selected from [deps], so append any requested lemmas
@@ -906,7 +917,8 @@ let do_choice tried hyps deps goal lems =
     in
     run_gs_provers hyps deps goal (fun () -> ()) seq
   else (* Opts.gs_mode = 0 *)
-    ([], [], Provers.predict deps1 hyps deps goal)
+    let (pname, info) = Provers.predict deps1 hyps deps goal in
+    ([], [], report_success pname info hyps deps goal)
 
 let try_sauto () =
   if !Opt.sauto_timelimit = 0 then
