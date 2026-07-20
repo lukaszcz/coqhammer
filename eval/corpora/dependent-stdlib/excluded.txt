@@ -1,0 +1,5 @@
+# See eval/corpora/stdpp/excluded.txt for why a library source can fail to
+# compile as a standalone problem file.  MSetWeakList reports "No primitive
+# equality found".  Verified 2026-07-20 against Rocq 9.2.0; the remaining 95
+# of 96 compile.
+MSets/MSetWeakList.v

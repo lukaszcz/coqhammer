@@ -43,6 +43,10 @@ only_label=
 only_corpus=
 sample_corpora=false
 stdlib_modules=${STDLIB_CORPUS_MODULES:-"Arith Bool Vectors Lists NArith"}
+# Kept in step with the default in prepare-corpus.sh, which owns the corpus
+# definitions; this copy exists so the provenance records which modules a run
+# actually covered.
+dependent_stdlib_modules=${DEPENDENT_STDLIB_MODULES:-"Logic Wellfounded MSets Structures Sorting Program"}
 external_source=
 force=false
 
@@ -100,7 +104,8 @@ mkdir -p "$results_root" "$artifacts_dir"
 premises=(knn-32 knn-64 knn-128 knn-256 knn-1024 nbayes-32 nbayes-64 nbayes-128 nbayes-256 nbayes-1024)
 provers=(eprover vampire z3 cvc4)
 consistency_provers=(eprover vampire)
-corpora=(stdlib-regression dependent-slice external-equations)
+corpora=(stdlib-regression dependent-stdlib stdpp color-vector
+         dependent-slice equations-examples external-equations)
 labels=(current)
 
 declare -A label_config
@@ -145,10 +150,25 @@ compute_corpus_provenance() {
     corpus_digest[$corpus]=$(hash_tree "$source_dir")
     return 0
   fi
+  # A corpus built from an installed library is the library's sources filtered
+  # by the exclusion list in the tree, so that list goes into the digest too: an
+  # edit to it changes which goals the run covers just as surely as a different
+  # library version does.  Only that file -- the consistency lemma list lives
+  # beside it but selects nothing, and is digested where it is used, so folding
+  # the whole directory in here would make writing a lemma list invalidate the
+  # generation that produced the problems it names.
+  local exclusions="$eval_dir/corpora/$corpus/excluded.txt"
+  if [ -f "$exclusions" ]; then
+    digests+=$(hash_file "$exclusions")
+  fi
   case "$corpus" in
-    stdlib-regression)
-      corpus_source[$corpus]="installed-Stdlib modules=$stdlib_modules"
-      for module in $stdlib_modules; do
+    stdlib-regression|dependent-stdlib)
+      local modules="$stdlib_modules"
+      if [ "$corpus" = dependent-stdlib ]; then
+        modules="$dependent_stdlib_modules"
+      fi
+      corpus_source[$corpus]="installed-Stdlib modules=$modules"
+      for module in $modules; do
         source_dir="$prefix/coq/user-contrib/Stdlib/$module"
         if [ ! -d "$source_dir" ]; then
           echo "Installed Stdlib module not found: $source_dir" >&2
@@ -158,15 +178,34 @@ compute_corpus_provenance() {
       done
       corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
       ;;
-    external-equations)
-      source_dir="$prefix/coq/user-contrib/Equations"
+    stdpp|color-vector|external-equations)
+      local lib subtree
+      case "$corpus" in
+        stdpp) lib=stdpp; subtree= ;;
+        color-vector) lib=CoLoR; subtree=/Util/Vector ;;
+        external-equations) lib=Equations; subtree= ;;
+      esac
+      source_dir="$prefix/coq/user-contrib/$lib$subtree"
       if [ ! -d "$source_dir" ]; then
-        echo "Installed Equations library not found: $source_dir" >&2
-        echo "Install rocq-equations into the switch, or pass --external-source DIR." >&2
+        echo "Installed library not found: $source_dir" >&2
+        echo "Install it into the switch, or pass --external-source DIR." >&2
         return 1
       fi
-      corpus_source[$corpus]="installed-Equations"
-      corpus_digest[$corpus]=$(hash_tree "$source_dir")
+      corpus_source[$corpus]="installed-$lib$subtree"
+      digests+=$(hash_tree "$source_dir")
+      corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
+      ;;
+    equations-examples)
+      source_dir=${external_source:-$eval_dir/_external/Coq-Equations/_build/default/examples}
+      if [ ! -d "$source_dir" ]; then
+        echo "Equations examples not found: $source_dir" >&2
+        echo "Build the Coq-Equations checkout, or pass --external-source DIR." >&2
+        return 1
+      fi
+      source_dir=$(cd "$source_dir" && pwd -P)
+      corpus_source[$corpus]="$source_dir"
+      digests+=$(hash_tree "$source_dir")
+      corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
       ;;
     *)
       source_dir="$eval_dir/corpora/$corpus"
@@ -232,7 +271,10 @@ prepare_corpus() {
   local args=("$corpus" --coqlib "$prefix/coq")
   if [ "$sample_corpora" = true ]; then
     args+=(--sample)
-  else
+  elif [ "$corpus" = stdlib-regression ]; then
+    # --modules names the slice of whichever stdlib corpus is being built, so it
+    # must not be passed for dependent-stdlib: that would silently rebuild the
+    # regression slice under the dependent corpus's name.
     args+=(--modules "$stdlib_modules")
   fi
   if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then

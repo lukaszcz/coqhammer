@@ -24,7 +24,15 @@ PREMISES = (
 )
 PROVERS = ("eprover", "vampire", "z3", "cvc4")
 CONSISTENCY_PROVERS = ("eprover", "vampire")
-CORPORA = ("stdlib-regression", "dependent-slice", "external-equations")
+CORPORA = (
+    "stdlib-regression",
+    "dependent-stdlib",
+    "stdpp",
+    "color-vector",
+    "dependent-slice",
+    "equations-examples",
+    "external-equations",
+)
 CURRENT = "current"
 ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
 
