@@ -874,20 +874,31 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       in
       (targs2, cargs2)
     in
-    let subst_proof_args base_ctx args body =
-      let rec hlp ctx args body =
+    (* Substituting a constructor argument away has to reach the types of the
+       arguments that follow it: those types are carried into the [$Proof] casts
+       that replace erased payloads, so an argument still mentioned there would
+       be left with nothing to bind it.  [replacement] returns [None] for the
+       arguments that stay. *)
+    let subst_telescope_args base_ctx args body replacement =
+      let rec hlp ctx idx args body =
         match args with
         | [] -> body
         | (name, ty) :: args2 ->
-           let body2 =
-             if Coq_typing.check_prop ctx ty then
-               subst_proof name ty body
-             else
-               body
+           let (args2, body) =
+             match replacement ctx idx ty with
+             | None -> (args2, body)
+             | Some value ->
+                (List.map (fun (n, t) -> (n, simple_subst name value t)) args2,
+                 simple_subst name value body)
            in
-           hlp ((name, ty) :: ctx) args2 body2
+           hlp ((name, ty) :: ctx) (idx + 1) args2 body
       in
-      hlp base_ctx args body
+      hlp base_ctx 0 args body
+    in
+    let subst_proof_args base_ctx args body =
+      subst_telescope_args base_ctx args body
+        (fun ctx _ ty ->
+           if Coq_typing.check_prop ctx ty then Some (mk_proof_cast ty) else None)
     in
     let refresh_case_args vars args =
       let refresh_name used name =
@@ -923,32 +934,17 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          else
            let args = refresh_case_args vars args in
            let body = simpl (mk_long_app branch (mk_vars args)) in
-           let rec subst_args ctx idx body = function
-             | [] -> body
-             | (arg_name, arg_ty) :: args2 ->
-                let body2 =
-                  if idx = carrier_idx then
-                    substvar arg_name matched_term body
-                  else if Coq_typing.check_prop ctx arg_ty then
-                    subst_proof arg_name arg_ty body
-                  else
-                    internal_error "subset constructor has an unexpected informative payload"
-                in
-                subst_args ((arg_name, arg_ty) :: ctx) (idx + 1) body2 args2
-           in
-           subst_args (List.rev vars) 0 body args
+           subst_telescope_args (List.rev vars) args body
+             (fun ctx idx arg_ty ->
+                if idx = carrier_idx then
+                  Some matched_term
+                else if Coq_typing.check_prop ctx arg_ty then
+                  Some (mk_proof_cast arg_ty)
+                else
+                  internal_error "subset constructor has an unexpected informative payload")
       | _ -> internal_error "subset case is not a singleton constructor case"
     in
     let is_acc_ind indname = Coq_stdnames.is_init_wf "Acc" indname in
-    let term_fvars_subset names tm =
-      fold_coqterm
-        (fun ctx acc tm ->
-           acc &&
-           match tm with
-           | Var name when not (List.mem_assoc name ctx) -> List.mem name names
-           | _ -> true)
-        true tm
-    in
     let collapse_prop_singleton vars indname constrs params params_num branches =
       match constrs, branches with
       | [cname], [(n, branch)] ->
@@ -1087,7 +1083,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                loop ((name, ty) :: ctx) rest >>= fun r ->
                return (if lower then mk_impl premise r else mk_and premise r)
              else
-               make_guard ctx ty (Var name) >>= fun guard ->
+               make_guard ((name, ty) :: ctx) ty (Var name) >>= fun guard ->
                loop ((name, ty) :: ctx) rest >>= fun r ->
                let connective = if lower then mk_impl guard r else mk_and guard r in
                return ((if lower then mk_forall else mk_exists) name type_any connective)
@@ -1215,6 +1211,21 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
           | None -> fallback_scrutinee_ty
         else
           fallback_scrutinee_ty
+      in
+      (* get_case_scrutinee_type reads the type off the return predicate, so for
+         an indexed family it mentions the predicate's own index binders, which
+         nothing here binds.  The binder standing for the scrutinee must be typed
+         in the scope of [vars] alone, or the lifted case is hash-consed against
+         a context too short for it; the scrutinee's inferred type is that same
+         type with the indices instantiated. *)
+      let is_closed ty = term_fvars_subset (List.map fst vars) ty in
+      let scrutinee_ty =
+        if is_closed scrutinee_ty then
+          scrutinee_ty
+        else
+          match infer_term_type ctx matched_term with
+          | Some ty when is_closed ty -> ty
+          | _ -> internal_error "case scrutinee type escapes the normalized scope"
       in
       let scrutinee_is_prop = Coq_typing.check_prop ctx scrutinee_ty in
       let aux_case = Lam(z, scrutinee_ty,
@@ -1500,7 +1511,7 @@ and convert ctx tm =
        (prop_to_formula ctx (subst_proof name ty body)) >>= fun x2 ->
        return (mk x1 x2)
      else
-       (make_guard ctx ty (Var(name))) >>= fun x1 ->
+       (make_guard ((name, ty) :: ctx) ty (Var(name))) >>= fun x1 ->
        (prop_to_formula ((name, ty) :: ctx) body) >>= fun x2 ->
        return (Quant(op, (name, type_any, mk x1 x2)))
   | Equal(x, y) ->
@@ -1738,7 +1749,7 @@ and prop_to_formula ctx tm =
        prop_to_formula ctx (subst_proof vname ty1 ty2) >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
-       make_guard ctx ty1 (Var(vname)) >>= fun tm1 ->
+       make_guard ((vname, ty1) :: ctx) ty1 (Var(vname)) >>= fun tm1 ->
        prop_to_formula ((vname, ty1) :: ctx) ty2 >>= fun tm2 ->
        return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
@@ -1762,89 +1773,89 @@ and guard_leaf ctx ty x =
     | [] -> Const("$True")
     | fs -> join_right mk_and fs
   in
+  (* Decide the shape of the guard before building any formula.  An inductive,
+     constructor or telescope which is unavailable or malformed simply carries
+     no refinement structure, and such a leaf legitimately degrades to plain
+     typing; the lookups below are therefore the only failures allowed to mean
+     "no refinement here".  Payload translation is kept outside, so a bug in it
+     surfaces instead of quietly weakening the guard. *)
+  let classify_leaf ty_nf =
+    match flatten_app ty_nf with
+    | Const indname, args ->
+       begin match Defhash.find indname with
+       | (_, IndType(_, constrs, params_num), _, _) ->
+          let params = Hhlib.take params_num args
+          in
+          begin match Coq_erasure.classify ctx indname params with
+          | Coq_erasure.CSubset { carrier_idx; carrier_name; prop_args } ->
+             begin match constrs with
+             | [cname] ->
+                let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+                in
+                let cparams = Hhlib.take params_num cargs
+                in
+                let cargs =
+                  List.map
+                    (fun (name, ty) -> (name, subst_params cparams params ty))
+                    (Hhlib.drop params_num cargs)
+                in
+                let (_, carrier_ty) = List.nth cargs carrier_idx
+                in
+                Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
+             | _ -> None
+             end
+          | Coq_erasure.CEnum ctors -> Some (`Enum (params, ctors))
+          | Coq_erasure.CEmpty -> Some `Empty
+          | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
+          end
+       | _ -> None
+       end
+    | _ -> None
+  in
   if not opt_refinement_types then
     fallback ()
   else
     let ty_nf = simpl (Coq_typing.reify (Coq_typing.eval ty))
     in
-    try
-      match flatten_app ty_nf with
-      | Const indname, args ->
-         begin match Defhash.find indname with
-         | (_, IndType(_, constrs, params_num), _, _) ->
-            let params = Hhlib.take params_num args
-            in
-            begin match Coq_erasure.classify ctx indname params with
-            | Coq_erasure.CSubset { carrier_idx; carrier_name; prop_args } ->
-               begin match constrs with
-               | [cname] ->
-                  let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
-                  in
-                  let cparams = Hhlib.take params_num cargs
-                  in
-                  let cargs =
-                    List.map
-                      (fun (name, ty) -> (name, subst_params cparams params ty))
-                      (Hhlib.drop params_num cargs)
-                  in
-                  let (_, carrier_ty) = List.nth cargs carrier_idx
-                  in
-                  (* A refinement guard is expanded at the occurrence itself:
-                     the carrier guard is conjoined with the translated payload.
-                     The same leaf is used in hypotheses and conclusions.
-                     Substitute the erased carrier before translating the payload
-                     so beta-redexes in predicate parameters disappear shallowly. *)
-                  let carrier_ty = simpl carrier_ty in
-                  let payload_ctx =
-                    match x with
-                    | Var name when not (List.mem_assoc name ctx) -> (name, carrier_ty) :: ctx
-                    | _ -> ctx
-                  in
-                  convert payload_ctx x >>= fun carrier ->
-                  make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
-                  let payload_ctx =
-                    match carrier with
-                    | Var name when not (List.mem_assoc name ctx) -> (name, carrier_ty) :: ctx
-                    | _ -> payload_ctx
-                  in
-                  formulas payload_ctx
-                    (List.map
-                       (fun (_, prop_ty) -> simpl (substvar carrier_name carrier prop_ty))
-                       prop_args) >>= fun payloads ->
-                  return (conjoin (carrier_guard :: payloads))
-               | _ -> fallback ()
-               end
-            | Coq_erasure.CEnum ctors ->
-               let one_ctor (cname, payloads) =
-                 convert ctx (mk_long_app (Const cname) params) >>= fun ctor ->
-                 formulas ctx payloads >>= fun payloads ->
-                 return (mk_and (mk_eq x ctor) (conjoin payloads))
-               in
-               let rec disjs = function
-                 | [] -> return []
-                 | ctor :: ctors ->
-                    one_ctor ctor >>= fun f ->
-                    disjs ctors >>= fun fs ->
-                    return (f :: fs)
-               in
-               (* A CEnum guard reuses the existing inversion scheme as a
-                  self-contained disjunction of constructor tags and their
-                  propositional payload formulas; non-guard occurrences still use
-                  the ordinary inversion axiom. *)
-               disjs ctors >>= fun fs ->
-               return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
-            | Coq_erasure.CEmpty ->
-               (* The guard for an empty classified type is false, matching the
-                  zero-constructor inversion scheme. *)
-               return (Const("$False"))
-            | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
-               fallback ()
-            end
-         | _ -> fallback ()
-         end
-      | _ -> fallback ()
-    with _ ->
-      fallback ()
+    match (try classify_leaf ty_nf with _ -> None) with
+    | None ->
+       fallback ()
+    | Some (`Subset (carrier_ty, carrier_name, prop_args)) ->
+       (* A refinement guard is expanded at the occurrence itself: the carrier
+          guard is conjoined with the translated payload.  The same leaf is used
+          in hypotheses and conclusions.  Substitute the erased carrier before
+          translating the payload so beta-redexes in predicate parameters
+          disappear shallowly. *)
+       convert ctx x >>= fun carrier ->
+       make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
+       formulas ctx
+         (List.map
+            (fun (_, prop_ty) -> simpl (substvar carrier_name carrier prop_ty))
+            prop_args) >>= fun payloads ->
+       return (conjoin (carrier_guard :: payloads))
+    | Some (`Enum (params, ctors)) ->
+       let one_ctor (cname, payloads) =
+         convert ctx (mk_long_app (Const cname) params) >>= fun ctor ->
+         formulas ctx payloads >>= fun payloads ->
+         return (mk_and (mk_eq x ctor) (conjoin payloads))
+       in
+       let rec disjs = function
+         | [] -> return []
+         | ctor :: ctors ->
+            one_ctor ctor >>= fun f ->
+            disjs ctors >>= fun fs ->
+            return (f :: fs)
+       in
+       (* A CEnum guard reuses the existing inversion scheme as a self-contained
+          disjunction of constructor tags and their propositional payload
+          formulas; non-guard occurrences still use the ordinary inversion
+          axiom. *)
+       disjs ctors >>= fun fs ->
+       return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
+    | Some `Empty ->
+       (* The guard for an empty classified type is false, matching the
+          zero-constructor inversion scheme. *)
+       return (Const("$False"))
 
 (* `x' does not get converted *)
 and make_guard ctx ty x =
@@ -1874,7 +1885,7 @@ and type_to_guard ctx ty x =
        type_to_guard ctx (subst_proof vname ty1 ty2) x >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
-       make_guard ctx ty1 (Var(vname)) >>= fun tm1 ->
+       make_guard ((vname, ty1) :: ctx) ty1 (Var(vname)) >>= fun tm1 ->
        type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname)))) >>= fun tm2 ->
        return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
@@ -1915,7 +1926,7 @@ and make_guarded_forall ctx vars cont =
     match vars with
     | (name, ty) :: vars2 ->
        begin
-         make_guard ctx ty (Var(name)) >>= fun guard ->
+         make_guard ((name, ty) :: ctx) ty (Var(name)) >>= fun guard ->
          hlp ((name, ty) :: ctx) vars2 >>= fun r ->
          return (mk_forall name type_any (mk_impl guard r))
        end
@@ -2034,7 +2045,10 @@ and add_def_eq_type_axiom axname name fvars ty =
   close fvars
     begin fun ctx ->
       convert ctx (mk_long_app (Const(name)) (mk_vars fvars)) >>= fun tp ->
-      type_to_guard ctx ty (Var(vname)) >>= fun guard ->
+      (* The axiom quantifies [vname] over the inhabitants of [ty], so [ty] is
+         its type: the guard is built in a context that binds it, as every
+         subject of a guard must be bound in the context it is translated in. *)
+      type_to_guard ((vname, ty) :: ctx) ty (Var(vname)) >>= fun guard ->
       return (mk_forall vname type_any
                 (mk_equiv (mk_hastype (Var(vname)) tp) guard))
     end >>= fun r ->

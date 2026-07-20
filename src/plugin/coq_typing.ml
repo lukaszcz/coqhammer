@@ -256,16 +256,20 @@ let check_prop ctx tm =
   | _ -> check_prop [] ctx tm
 
 let check_proof_var ctx name =
-  let rec pom ctx name =
-    match ctx with
-    | (n, ty) :: ctx2 when n = name ->
-      check_prop ctx2 ty
-    | _ :: ctx2 ->
-      pom ctx2 name
+  let rec pom ctx2 =
+    match ctx2 with
+    | (n, ty) :: ctx3 when n = name ->
+      check_prop ctx3 ty
+    | _ :: ctx3 ->
+      pom ctx3
     | _ ->
-      failwith "check_proof_var"
+      (* Reaching this means a term was translated in a context that does not
+         bind all of its free variables. *)
+      failwith
+        ("check_proof_var: " ^ name ^ " is not bound in ["
+         ^ String.concat "; " (List.map fst ctx) ^ "]")
   in
-  pom ctx name
+  pom ctx
 
 let check_type_target_is_prop ty =
   let rec hlp v =

@@ -47,14 +47,16 @@ let rec can_aux n t =
     | Quant(q,(x,t1,t2))    -> let v = var n in Quant(q,(v,f t1,can_aux (n+1) (sub v x t2)))
     | Equal(t1,t2)          -> Equal(f t1,f t2)
 
+(* The context renaming has to be simultaneous.  Lifted definitions reintroduce
+   canonical names into the terms they are built from, so a context may already
+   bind a variable literally called [v_CANONICAL_k]; renaming one entry at a
+   time would make an earlier entry's new name collide with that variable and
+   the next step would then rename both together. *)
 let canonical ctx tm =
-  let rec can_ctx_aux acc subacc n ctx tm =
-    match ctx with
-    | []            -> (acc, can_aux n tm, subacc)
-    | (x,tp) :: rest ->
-       can_ctx_aux ((var n, tp) :: acc) ((var n, x) :: subacc) (n+1)
-         (List.map (fun (y, t1) -> (y, sub (var n) x t1)) rest) (sub (var n) x tm)
-  in can_ctx_aux [] [] 0 (List.rev ctx) tm
+  let vars = List.rev ctx in
+  let subst = List.mapi (fun n (x, _) -> (var n, x)) vars in
+  let cctx = List.rev (List.mapi (fun n (_, tp) -> (var n, subs subst tp)) vars) in
+  (cctx, can_aux (List.length vars) (subs subst tm), List.rev subst)
 
 type 'a lift_fun = (coqterm -> coqterm) -> 'a -> 'a
 type 'a coqterms_hash = (string * coqcontext * coqterm, 'a) Hashtbl.t * 'a lift_fun
@@ -66,6 +68,19 @@ let clear tbl = Hashtbl.clear (fst tbl)
 let find_or_insert_keyed key tbl ctx tm mk =
   debug 4 (fun () -> print_header "find_or_insert" tm ctx);
   let (tbl, lift) = tbl in
+  (* [get_fvars] silently keeps only the free variables the context binds, so a
+     term that escaped its binders would be canonicalized against a context too
+     short for it and the fresh canonical binders would capture the variables
+     left out.  The escape is the bug; report it here, where the term still
+     shows which variable got loose. *)
+  let escaped =
+    List.filter (fun name -> not (List.mem_assoc name ctx)) (get_free_varnames tm)
+  in
+  if escaped <> [] then
+    raise (Hammer_errors.HammerError
+             ("internal translation error: free variables " ^
+              String.concat ", " escaped ^ " escape the context of " ^
+              string_of_coqterm tm));
   let ctx' = vars_to_ctx (get_fvars ctx tm) in
   let (cctx,ctm,sigma) = canonical ctx' tm in
   debug 4 begin fun () ->

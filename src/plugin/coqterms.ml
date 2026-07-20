@@ -379,6 +379,26 @@ let get_fvars ctx tm =
   in
   hlp ctx tm []
 
+(* [get_fvars] reports only the free variables the context happens to bind.
+   The two below report the free variables of the term itself, which is what a
+   scoping check needs: a term whose free variables are not all bound by the
+   context it is translated in has escaped its binders. *)
+let get_free_varnames tm =
+  Hhlib.sort_uniq (Stdlib.compare)
+    (fold_coqterm
+       begin fun ctx acc tm ->
+         match tm with
+         | Var(name) when not (List.mem_assoc name ctx) ->
+             name :: acc
+         | _ ->
+             acc
+       end
+       []
+       tm)
+
+let term_fvars_subset names tm =
+  List.for_all (fun name -> List.mem name names) (get_free_varnames tm)
+
 let vars_to_ctx = List.rev
 let ctx_to_vars = List.rev
 
@@ -489,7 +509,11 @@ let simple_subst vname value =
       | _ -> tm
     end
 
-let subst_proof name ty = simple_subst name (Cast(Const("$Proof"), refresh_bvars ty))
+(* The opaque proof of `ty'.  The type is retained on the cast, so it must stay
+   meaningful in the context the cast is placed in. *)
+let mk_proof_cast ty = Cast(Const("$Proof"), refresh_bvars ty)
+
+let subst_proof name ty = simple_subst name (mk_proof_cast ty)
 
 let simpl =
   map_coqterm
