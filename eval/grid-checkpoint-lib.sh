@@ -304,8 +304,14 @@ strip_portfolio_strategy_aborts() {
   # itself continues and still ends with a terminal SZS status.  The strategies
   # write concurrently, so the notice frequently lands in the middle of another
   # line rather than on one of its own -- match it anywhere, not just at the
-  # start, or the interleaved copies read as a crash.
-  sed -E 's/% Aborted by signal [[:upper:]]+ on [^[:space:]]*//g' "$1"
+  # start, or the interleaved copies read as a crash.  A crashed strategy also
+  # prints a fixed hint pointing at --traceback; that hint belongs to the same
+  # recovered abort, and the word "traceback" in it trips the crash scan on its
+  # own, so drop it as well.
+  sed -E \
+    -e 's/% Aborted by signal [[:upper:]]+ on [^[:space:]]*//g' \
+    -e "s/use '--traceback on' to invoke a debugger and get a human-readable stack trace//g" \
+    "$1"
 }
 
 log_has_crash_or_error_ignoring_strategy_aborts() {
