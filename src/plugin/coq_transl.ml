@@ -924,7 +924,13 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       hlp (List.map fst vars) [] [] args
     in
     (* Refinement occurrence collapse: matching a subset value exposes the
-       erased carrier itself, and the remaining proof payload binders are erased. *)
+       erased carrier itself, and the remaining proof payload binders are erased.
+       [Coq_erasure.validate_subset] only classifies a constructor as [CSubset]
+       when every non-carrier field is a proposition that stays propositional
+       once the carrier binder is replaced by the (opaque) subset value -- in
+       particular the carrier never heads a proof-payload type.  So the
+       [check_prop] below cannot fail on a well-classified subset, and the
+       informative-payload internal error is an unreachable consistency check. *)
     let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
       match constrs, branches with
       | [cname], [(n, branch)] ->

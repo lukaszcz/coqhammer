@@ -142,6 +142,28 @@ let validate_subset indname infos carrier_idx prop_indices =
     | SortProp | SortSet | SortType -> true
     | _ -> false
   in
+  (* Refinement collapse exposes the erased carrier itself in place of the
+     carrier binder, so every remaining proof payload has to stay a proposition
+     once the carrier is replaced by a value of the subset type.  A proof field
+     whose type applies the carrier in head position (as in a dependent record
+     [{ P : A -> Prop & forall x, P x }], where the "carrier" is really a
+     predicate the proof asserts) loses its propositional target under that
+     substitution: the subset value is not a predicate and cannot head a Prop.
+     Such an inductive is a genuine dependent pair, not a subset, so it stays on
+     the ordinary (sound) path.  A carrier occurring only as an *argument* of a
+     separate predicate (the ordinary [sig]/[{x | P x}] shape) is unaffected. *)
+  let carrier_heads_a_proof carrier_name prop_args =
+    let rec strip = function
+      | Prod(_, _, body) -> strip body
+      | ty -> ty
+    in
+    List.exists
+      (fun (_, ty) ->
+         match fst (flatten_app (strip ty)) with
+         | Var v -> v = carrier_name
+         | _ -> false)
+      prop_args
+  in
   match arg_at infos carrier_idx with
   | Some carrier when not carrier.arg_is_prop && not (is_sort carrier.arg_ty) &&
                        not (carrier_reaches_inductive indname [indname] carrier.arg_ty) ->
@@ -155,6 +177,7 @@ let validate_subset indname infos carrier_idx prop_indices =
       in
       if List.length prop_args = List.length prop_indices && prop_args <> [] &&
          no_erased_payload_dependencies prop_args &&
+         not (carrier_heads_a_proof carrier.arg_name prop_args) &&
          List.for_all
            (fun (prop_name, _) -> not (var_occurs prop_name carrier.arg_ty))
            prop_args
