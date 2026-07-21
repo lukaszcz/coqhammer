@@ -26,10 +26,17 @@ type atp_info = {
 exception Parse_error of string
 
 (* Reverse the encoding tptp_out applies to a premise name: a prime is written
-   ~q and a literal tilde ~t, so that the emitted single-quoted atom needs no
-   TPTP backslash escape (which z3_tptp rejects and EProver mangles).  A tilde
-   that opens no known escape is kept as-is, so a name that never went through
-   the encoder passes through unchanged. *)
+   ~q, a literal tilde ~t, and every other byte outside the safe printable-ASCII
+   range (notably the non-ASCII bytes of a Unicode identifier) is written ~ then
+   two lowercase hex digits, so that the emitted single-quoted atom needs no
+   TPTP backslash escape (which z3_tptp rejects and EProver mangles) and carries
+   no byte z3_tptp refuses.  A tilde that opens no known escape is kept as-is, so
+   a name that never went through the encoder passes through unchanged. *)
+let hex_digit c =
+  match c with
+  | '0' .. '9' -> Char.code c - Char.code '0'
+  | 'a' .. 'f' -> Char.code c - Char.code 'a' + 10
+  | _ -> -1
 let decode_thm_name s =
   let n = String.length s in
   let buf = Buffer.create n in
@@ -37,11 +44,14 @@ let decode_thm_name s =
     if i >= n then
       Buffer.contents buf
     else if s.[i] = '~' && i + 1 < n then
-      begin
-        Buffer.add_char buf
-          (match s.[i + 1] with 'q' -> '\'' | 't' -> '~' | c -> c);
-        go (i + 2)
-      end
+      match s.[i + 1] with
+      | 'q' -> Buffer.add_char buf '\''; go (i + 2)
+      | 't' -> Buffer.add_char buf '~'; go (i + 2)
+      | _ when i + 2 < n && hex_digit s.[i + 1] >= 0 && hex_digit s.[i + 2] >= 0 ->
+          Buffer.add_char buf
+            (Char.chr (hex_digit s.[i + 1] * 16 + hex_digit s.[i + 2]));
+          go (i + 3)
+      | c -> Buffer.add_char buf c; go (i + 2)
     else
       begin
         Buffer.add_char buf s.[i];
