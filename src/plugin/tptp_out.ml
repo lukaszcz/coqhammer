@@ -211,9 +211,17 @@ let is_primed name =
 let add_prime s =
   if is_primed s then s else "\'" ^ s ^ "\'"
 
+(* A premise name is emitted as a single-quoted TPTP atom.  TPTP would have a
+   prime inside it written as the escape \', but z3_tptp does not implement the
+   backslash escapes and rejects the whole problem when one appears, and EProver
+   reads the backslash back as an ordinary character.  A Coq identifier can
+   contain a prime but never a tilde or a backslash, so encode the prime, and
+   the tilde marker itself, with a tilde escape that every prover's TPTP reader
+   accepts verbatim; provers.ml reverses it when reading a name back out of a
+   proof. *)
 let escape_special_thm s =
-  Str.global_replace (Str.regexp_string "'") "\\'"
-    (Str.global_replace (Str.regexp_string "\\") "\\\\" s)
+  Str.global_replace (Str.regexp_string "'") "~q"
+    (Str.global_replace (Str.regexp_string "~") "~t" s)
 
 let escape_var s = "V" ^ escape_to_hex s
 let escape_const s = "c" ^ escape_to_hex s

@@ -16,8 +16,6 @@ type atp_info = {
 
 (******************************************************************************)
 
-let unescape s = Scanf.unescaped (Scanf.unescaped s)
-
 (* Raised when a line that has already been recognised as carrying a premise
    name cannot be parsed.  That is always a bug in the parser rather than a
    property of the proof, so it must reach the user instead of being skipped
@@ -27,30 +25,40 @@ let unescape s = Scanf.unescaped (Scanf.unescaped s)
    provers interleave other output with their proofs. *)
 exception Parse_error of string
 
-(* EProver does not honour the \' escape inside a single-quoted atom: given
-   'Nat.shiftl_spec_high\'' it reads the backslash as an ordinary character
-   and reports the name back as 'Nat.shiftl_spec_high\\'.  A Coq identifier
-   can never contain a backslash, so a backslash in a name read back from a
-   proof is always a prime that survived the round trip this way.  Provers
-   that do honour the escape yield the prime directly and are unaffected. *)
-let unmangle_primes s = String.map (function '\\' -> '\'' | c -> c) s
+(* Reverse the encoding tptp_out applies to a premise name: a prime is written
+   ~q and a literal tilde ~t, so that the emitted single-quoted atom needs no
+   TPTP backslash escape (which z3_tptp rejects and EProver mangles).  A tilde
+   that opens no known escape is kept as-is, so a name that never went through
+   the encoder passes through unchanged. *)
+let decode_thm_name s =
+  let n = String.length s in
+  let buf = Buffer.create n in
+  let rec go i =
+    if i >= n then
+      Buffer.contents buf
+    else if s.[i] = '~' && i + 1 < n then
+      begin
+        Buffer.add_char buf
+          (match s.[i + 1] with 'q' -> '\'' | 't' -> '~' | c -> c);
+        go (i + 2)
+      end
+    else
+      begin
+        Buffer.add_char buf s.[i];
+        go (i + 1)
+      end
+  in
+  go 0
 
-(* Read the single-quoted atom that opens at ln.[i], resolving the backslash
-   escapes as they are read.  A Coq name containing a prime is emitted by
-   tptp_out as e.g. 'Nat.shiftl_spec_high\'', so slicing to the closing quote and
-   unescaping afterwards mis-parses the name; scanning with the escapes in
-   view is what lets such names survive the round trip. *)
+(* Read the single-quoted atom that opens at ln.[i].  The emitted atom carries
+   no backslash escape and no embedded quote, so the first quote closes it; the
+   prime, encoded as ~q, is restored by decode_thm_name afterwards. *)
 let read_quoted_atom ln i =
   let n = String.length ln in
   let buf = Buffer.create 32 in
   let rec scan i =
     if i >= n then
       raise (Parse_error ln)
-    else if ln.[i] = '\\' && i + 1 < n then
-      begin
-        Buffer.add_char buf ln.[i + 1];
-        scan (i + 2)
-      end
     else if ln.[i] = '\'' then
       Buffer.contents buf
     else
@@ -59,7 +67,7 @@ let read_quoted_atom ln i =
         scan (i + 1)
       end
   in
-  unmangle_primes (scan (i + 1))
+  decode_thm_name (scan (i + 1))
 
 (* CVC4 is asked for an unsat core rather than a proof, and prints one premise
    name per line with no enclosing term.  Like Vampire it quotes the name only
@@ -338,7 +346,7 @@ let extract_z3_data outfile =
     ignore (input_line ic);
     let ln = String.trim (input_line ic) in
     let s = String.sub ln 13 (String.length ln - 2 - 13) in
-    let names = List.map unescape (Str.split (Str.regexp "'| |'") s) in
+    let names = List.map decode_thm_name (Str.split (Str.regexp "'| |'") s) in
     close_in ic;
     get_atp_info names
   with
