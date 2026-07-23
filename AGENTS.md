@@ -130,4 +130,5 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 
 - Do not edit CHANGES.md
 - NEVER run `git clean`, never remove `.agent-files` or `_opam`
+- Do not include session links or coding agent attribution in commit messages
 - When finished, verify with `just check`
