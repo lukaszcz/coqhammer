@@ -132,8 +132,55 @@ and hhterm_of_precdeclaration (a,b,c) =
 let get_type_of env evmap t =
   EConstr.to_constr evmap (Retyping.get_type_of env evmap (EConstr.of_constr t))
 
+(* A primitive projection [c.(p)] has no representation the case translation
+   understands: [Coq_convert] turns it into an [unsupported__] atom, which then
+   stands as the scrutinee of the surrounding dependent match and makes the case
+   scrutinee type escape its normalized scope.  Put every projection back in its
+   compatibility form -- the projection constant applied to the record's
+   parameters and value -- before encoding.  Retyping reads the parameters off
+   the record value's type, so the value has to be typed in its own local
+   context: thread the context through the binders and expand bottom up. *)
+let expand_projections env sigma c =
+  let rec aux env c =
+    match EConstr.kind sigma c with
+    | Constr.Proj (p, _, s) ->
+       (* [expand_projection] reconstructs the record's inductive arguments from
+          the type of [s]; those arguments may themselves contain projections,
+          so re-traverse the whole compatibility application. *)
+       aux env (Retyping.expand_projection env sigma p (aux env s) [])
+    | _ ->
+       Termops.map_constr_with_full_binders env sigma
+         EConstr.push_rel aux env c
+  in
+  aux env c
+
+let without_projections env evmap t =
+  try EConstr.to_constr evmap (expand_projections env evmap (EConstr.of_constr t))
+  with _ -> t
+
+(* A primitive projection's own compatibility constant is defined by that very
+   projection ([fun params r => r.(p)]), so expanding it would rewrite the
+   constant to a reference to itself and loop.  Detect exactly that shape -- a
+   run of lambdas ending in [p] applied to the last bound variable, with [p]'s
+   compatibility constant being the very constant [c] we are defining.  Such a
+   constant is treated as opaque (see [hhproof_of]): its body is the projection
+   and carries no first-order content, and unfolding it into a match scrutinee
+   position would only reintroduce the unsupported projection the expansion is
+   meant to eliminate.  A body that merely happens to head with some other
+   projection is still expanded, so projections nested deeper inside it are not
+   left behind. *)
+let rec strip_lambda t =
+  match Constr.kind t with
+  | Constr.Lambda (_, _, b) -> strip_lambda b
+  | _ -> t
+
+let is_self_projection env c b =
+  match Constr.kind (strip_lambda b) with
+  | Constr.Proj (p, _, _) -> Environ.QConstant.equal env (Projection.constant p) c
+  | _ -> false
+
 (* only for constants *)
-let hhproof_of c =
+let hhproof_of env sigma c =
   (* [body_of_constant] may raise [Not_found] when the opaque proof body
      is not accessible in the current process. This happens with parallel
      proof processing in an IDE (e.g. CoqIDE), where opaque proofs are
@@ -141,7 +188,9 @@ let hhproof_of c =
      here (issue #86). A constant whose body cannot be accessed is treated
      as an axiom. *)
   begin match Utils.body_of_constant c with
-  | Some (b, _, _) -> hhterm_of b
+  | Some (b, _, _) ->
+     if is_self_projection env c b then mk_id "$Axiom"
+     else hhterm_of (without_projections env sigma b)
   | None -> mk_id "$Axiom"
   | exception Not_found -> mk_id "$Axiom"
   end
@@ -163,7 +212,7 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
     | Names.GlobRef.VarRef v -> Id.to_string v
   in
   let term = match glob_ref with
-    | Names.GlobRef.ConstRef c -> lazy (hhproof_of c)
+    | Names.GlobRef.ConstRef c -> lazy (hhproof_of env sigma c)
     | _ -> lazy (mk_id "$Axiom")
   in
   let opaque = match glob_ref with
@@ -174,13 +223,13 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
      let l = Str.split (Str.regexp "\\.") filename_aux in
      Filename.dirname (String.concat "/" l)
   in
-  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of ty), term))
+  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of (without_projections env sigma ty)), term))
 
 let hhdef_of_hyp env sigma (id, maybe_body, ty) =
   let kind = get_type_of env sigma ty in
   let body =
     match maybe_body with
-    | Some b -> lazy (hhterm_of b)
+    | Some b -> lazy (hhterm_of (without_projections env sigma b))
     | None -> lazy (mk_id "$Axiom")
   in
   let opaque =
@@ -188,7 +237,8 @@ let hhdef_of_hyp env sigma (id, maybe_body, ty) =
     | Some b -> false
     | None -> true
   in
-  (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind, lazy (hhterm_of ty), body)
+  (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind,
+   lazy (hhterm_of (without_projections env sigma ty)), body)
 
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
@@ -203,10 +253,11 @@ let get_hyps gl =
   List.map (Hhlib.comp (hhdef_of_hyp env sigma) make_good) (Proofview.Goal.hyps gl)
 
 let get_goal gl =
+  let env = Proofview.Goal.env gl and sigma = Proofview.Goal.sigma gl in
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    true,
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (hhterm_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))),
+   lazy (hhterm_of (without_projections env sigma (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
