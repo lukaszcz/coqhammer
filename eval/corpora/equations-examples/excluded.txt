@@ -1,0 +1,22 @@
+# Sources excluded from the equations-examples corpus.
+#
+# These two files exercise translation frontiers that are out of scope for the
+# current pipeline; each aborts generation before any hammer runs, so it
+# measures nothing and would only abort the grid.
+#
+# MoreDep.v -- length-indexed GADTs whose match scrutinees carry more actual
+#   type-index arguments than the inductive declares, so constructor result
+#   indices cannot be aligned with the case predicate
+#   (coq_transl.ml "constructor result indices do not align").  This is the
+#   indexed-family / fording frontier, not the primitive-projection handling
+#   fixed in "Expand primitive projections before FOL encoding".
+#
+# general_recursion.v -- the deliberately non-terminating `nonterm` example,
+#   defined by well-founded recursion on `fun _ _ => True` via a 10-level
+#   `Acc_intro_generator` witness.  Translating its transparent accessibility
+#   body drives coq_transl into a super-linear blow-up (feature extraction
+#   completes; the cost is in the FOL translation itself) that the grid records
+#   as a stack overflow.  Reducing the Acc depth removes the blow-up.  Pre-dates
+#   and is independent of the projection fix.
+MoreDep.v
+general_recursion.v

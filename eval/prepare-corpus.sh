@@ -268,6 +268,7 @@ case "$corpus" in
     fi
     mkdir -p problems/equations-examples
     copy_hookable_sources "$source_dir" "$source_dir" problems/equations-examples true
+    apply_exclusions "$corpus" problems/equations-examples
     require_hookable_sources "$source_dir"
     drop_intra_corpus_dependents problems/equations-examples
     insert_hooks
