@@ -2055,8 +2055,18 @@ and add_def_eq_type_axiom axname name fvars ty =
          its type: the guard is built in a context that binds it, as every
          subject of a guard must be bound in the context it is translated in. *)
       type_to_guard ((vname, ty) :: ctx) ty (Var(vname)) >>= fun guard ->
+      (* [ty] is a function/product type, so [guard] is its extensional
+         unfolding: [vname] applied across the domain lands in the codomain.
+         Membership implies that behaviour, but the converse is unsound: over an
+         empty domain the unfolding holds vacuously of every object, so an
+         equivalence would let any term (e.g. a non-function) inhabit the arrow
+         type, and a functional-extensionality premise would then collapse
+         equality (deriving [$false] from ContradictoryAxioms).  The typing of
+         genuine inhabitants is always asserted directly at their binder or
+         [$_typeof_] axiom, so the forward implication alone loses no provable
+         function application. *)
       return (mk_forall vname type_any
-                (mk_equiv (mk_hastype (Var(vname)) tp) guard))
+                (mk_impl (mk_hastype (Var(vname)) tp) guard))
     end >>= fun r ->
   add_axiom (mk_axiom axname r)
 
