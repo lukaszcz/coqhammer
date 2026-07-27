@@ -52,8 +52,13 @@ run_one() {
 export -f run_one
 export curate_tim
 
-find "$work/problems" -name '*.p' | { [ "$limit" -gt 0 ] && head -n "$limit" || cat; } |
-  xargs -P "$jobs" -I{} bash -c 'run_one "$@"' _ {} > "$work/verdicts.txt"
+# NUL-delimit the file list: some lemma names contain a single quote (e.g.
+# small_drinkers'_paradox), which the default whitespace/quote-processing xargs
+# rejects with "unmatched single quote".  -print0 | xargs -0 passes each path
+# verbatim; head -z keeps the optional limit NUL-aware.
+{ [ "$limit" -gt 0 ] && find "$work/problems" -name '*.p' -print0 | head -z -n "$limit" \
+    || find "$work/problems" -name '*.p' -print0; } |
+  xargs -0 -P "$jobs" -I{} bash -c 'run_one "$@"' _ {} > "$work/verdicts.txt"
 
 echo "kept:     $(grep -c '^KEEP ' "$work/verdicts.txt" || true)"
 echo "vacuous:  $(grep -c '^VACUOUS ' "$work/verdicts.txt" || true)"
