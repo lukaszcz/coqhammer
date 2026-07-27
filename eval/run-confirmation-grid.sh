@@ -706,15 +706,42 @@ PY
     wait "${job_pids[@]}" || true
   fi
 
+  # A worker can fail transiently rather than because the axioms are at fault:
+  # under the full grid's load the outer htimeout can SIGKILL Vampire after its
+  # portfolio strategies have crashed but before it prints a terminal SZS status
+  # (large problems trigger hundreds of recovered strategy SIGSEGVs, widening
+  # that window), leaving no status through no fault of the problem.  Collect the
+  # affected problems and rerun just those off the hot batch, where the reduced
+  # contention lets them finish; only a problem that still yields no terminal
+  # status after several tries is a genuine failure worth aborting the grid on.
+  local failed=() attempt still
   for problem in "${problems[@]}"; do
     name=$(basename "$problem")
     if log_has_crash_or_error_ignoring_strategy_aborts "$work/raw/$name" ||
         ! szs_terminal_status "$work/outputs/$name"; then
-      echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
-      echo "Consistency prover crashed or produced no terminal status for $label/$corpus/$prover/$premise/$name" >&2
-      return 1
+      failed+=("$problem")
     fi
   done
+  for attempt in 1 2 3; do
+    [ "${#failed[@]}" -gt 0 ] || break
+    echo "[consistency] $label/$corpus/$prover/$premise: rerunning ${#failed[@]} transient failure(s) (attempt $attempt)" >&2
+    still=()
+    for problem in "${failed[@]}"; do
+      run_consistency_problem "$prover" "$problem" "$work"
+      name=$(basename "$problem")
+      if log_has_crash_or_error_ignoring_strategy_aborts "$work/raw/$name" ||
+          ! szs_terminal_status "$work/outputs/$name"; then
+        still+=("$problem")
+      fi
+    done
+    failed=("${still[@]}")
+  done
+  if [ "${#failed[@]}" -gt 0 ]; then
+    name=$(basename "${failed[0]}")
+    echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
+    echo "Consistency prover crashed or produced no terminal status for $label/$corpus/$prover/$premise/$name (persisted across reruns)" >&2
+    return 1
+  fi
   if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
     echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
     echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
