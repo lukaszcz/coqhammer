@@ -178,13 +178,25 @@ let get_deps_cached (def : hhdef) : string list =
       Hashtbl.add deps_cache name deps;
       deps
 
+(* A name is under one of [prefixes] if it begins with any of them.  Each
+   filtered module is listed under both its legacy [Stdlib.*] name and its
+   current [Corelib.*] (or bare) name: after the Rocq stdlib/corelib split the
+   problematic definitions are emitted as e.g. [Corelib.Classes.Morphisms.Proper]
+   and [Hurkens.TypeNeqSmallType.paradox], so a single legacy prefix silently
+   matched nothing and the filter became a no-op. *)
+let begins_with_any name prefixes =
+  List.exists (fun p -> Hhlib.string_begins_with name p) prefixes
+
+let filter_program_prefixes = ["Stdlib.Program."; "Corelib.Program."]
+let filter_classes_prefixes = ["Stdlib.Classes."; "Corelib.Classes."]
+let filter_hurkens_prefixes = ["Stdlib.Logic.Hurkens."; "Corelib.Logic.Hurkens."; "Hurkens."]
+
 let is_nontrivial (def : hhdef) : bool =
   let name = get_hhdef_name def in
   name <> "" && not (is_logic_name name) &&
-    (if !Opt.filter_program then not (Hhlib.string_begins_with name "Stdlib.Program.") else true) &&
-    (if !Opt.filter_classes then not (Hhlib.string_begins_with name "Stdlib.Classes.") else true) &&
-    (if !Opt.filter_hurkens then
-        not (Hhlib.string_begins_with name "Stdlib.Logic.Hurkens.") else true)
+    (if !Opt.filter_program then not (begins_with_any name filter_program_prefixes) else true) &&
+    (if !Opt.filter_classes then not (begins_with_any name filter_classes_prefixes) else true) &&
+    (if !Opt.filter_hurkens then not (begins_with_any name filter_hurkens_prefixes) else true)
 
 let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
@@ -328,7 +340,12 @@ let add_direct_goal_dependencies hyps defs goal predicted =
       (predicted_names, 0) deps
   in
   let selected = fst selected in
-  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) selected) defs
+  (* Return from [ndefs], not [defs]: [predicted] seeds [selected] and may carry
+     a filtered name (the predictor ranks a candidate the extract filter dropped),
+     so filtering the full [defs] here would re-admit a definition the filters are
+     meant to exclude.  Restricting to [ndefs] makes this function respect the
+     filters unconditionally. *)
+  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) selected) ndefs
 
 let predict (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : hhdef list =
   let fname = extract hyps defs goal in
