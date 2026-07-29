@@ -307,12 +307,13 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
     eq_rect_rows = [special_problem_summary(root, str(row["label"]), "dep_eq_rect_refl") for row in by_label]
     idiv_rows = [special_problem_summary(root, str(row["label"]), "dep_idiv_zero") for row in by_label]
     consistency_hits = sum(int(row["consistency_hits"]) for row in rows)
+    corpus_names = sorted({str(row["corpus"]) for row in rows})
 
     lines = [
         "# Extraction confirmation analysis",
         "",
         f"Rows summarized: {len(rows)}.",
-        "Grid: {knn,nbayes} x {32,64,128,256,1024} x {E prover,Vampire,Z3,CVC4} over the three committed extraction corpora.",
+        f"Grid: {{knn,nbayes}} x {{32,64,128,256,1024}} x {{E prover,Vampire,Z3,CVC4}} over {len(corpus_names)} extraction corpora ({', '.join(corpus_names)}).",
         f"Consistency hits: {consistency_hits}.",
         "Consistency scope: the lemmas listed in each corpus's consistency-lemmas.txt, run with E prover and Vampire after rewriting the conjecture to `$false`. The list is curated rather than exhaustive because a vacuously true lemma is refutable however faithful the translation is: the rewritten problem keeps the goal's own hypotheses as axioms, so only lemmas with satisfiable hypotheses can distinguish a sound translation from an unsound one.",
         "",
