@@ -12,7 +12,9 @@ to. Treat the summaries as valid only together with that provenance file.
   timeout 2s, all seven corpora in `full` mode.
 
 Regenerate from the raw checkpoints under `eval/results/confirmation` with
-`../../evaluate.sh confirmation` from `eval/` (or re-run the grid).
+`../../evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
+switch, add `--setup` (or run `eval/install-external-libs.sh` first) to install
+the external libraries the full corpora need.
 
 ## Headline: soundness
 

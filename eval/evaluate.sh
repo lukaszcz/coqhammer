@@ -26,6 +26,12 @@ screening and confirmation accept the options shown by:
   ./run-screening-grid.sh --help
   ./run-confirmation-grid.sh --help
 
+screening and confirmation options:
+  --setup                install the external libraries the full corpora need
+                         (rocq-stdpp, rocq-color, rocq-equations, and the
+                         Coq-Equations examples checkout) before running; see
+                         ./install-external-libs.sh
+
 All modes build or use the current checkout. No other repository revision is
 required.
 USAGE
@@ -44,6 +50,24 @@ eval_dir="$repo/eval"
 build_current() {
   (cd "$eval_dir" && ./rebuild-config.sh current --label current)
 }
+
+setup_external() {
+  (cd "$eval_dir" && ./install-external-libs.sh)
+}
+
+# --setup is an evaluate.sh preflight, not a grid option: strip it from the
+# arguments forwarded to the grid scripts, which would reject it.
+run_setup=false
+args=()
+for arg in ${1+"$@"}; do
+  if [ "$arg" = --setup ]; then run_setup=true; else args+=("$arg"); fi
+done
+set -- ${args[@]+"${args[@]}"}
+
+if [ "$run_setup" = true ] && [ "$mode" != screening ] && [ "$mode" != confirmation ]; then
+  echo "--setup is only valid for screening and confirmation" >&2
+  exit 2
+fi
 
 case "$mode" in
   sample)
@@ -83,9 +107,11 @@ case "$mode" in
       exec ./run-eval.sh "$@"
     ;;
   screening)
+    [ "$run_setup" = true ] && setup_external
     exec "$eval_dir/run-screening-grid.sh" "$@"
     ;;
   confirmation)
+    [ "$run_setup" = true ] && setup_external
     exec "$eval_dir/run-confirmation-grid.sh" "$@"
     ;;
   *)
