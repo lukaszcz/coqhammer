@@ -286,11 +286,14 @@ let remove_temp_dir dir =
 let temp_parent_dir () =
   let dir =
     Filename.concat (Filename.get_temp_dir_name ())
-      ("coqhammer-" ^ string_of_int (Unix.getuid ()))
+      ("coqhammer-" ^ string_of_int (Unix.geteuid ()))
   in
   (try Sys.mkdir dir 0o700 with Sys_error _ -> ());
   let unsafe () =
-    raise (Hammer_errors.HammerError ("unsafe temporary directory: " ^ dir))
+    raise (Hammer_errors.HammerError
+             ("unsafe temporary directory: " ^ dir ^
+                " (expected a directory owned by the current user with \
+                 permissions 0700; remove it or run 'chmod 700' on it)"))
   in
   let st =
     try Unix.lstat dir with Unix.Unix_error _ -> unsafe ()
