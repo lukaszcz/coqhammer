@@ -69,12 +69,7 @@ make tests             # all tests except the deprecated legacy tactics ones
 make tests-plugin      # complete plugin suite and ATP consistency canaries
 make tests-tactics     # complete tactics suite
 make quicktest         # the fast prover-free check: unit, plugin and tactics
-make test-unit         # OCaml unit tests only (no install, no ATP needed)
-make test-plugin       # plugin tests needing no external ATP -- what CI runs
-make test-tactics      # compile only tactics_test.v
-make test-extraction   # extraction tests and ATP consistency canaries
 make dune-test-plugin  # complete plugin suite via Dune
-make -C tests/tactics legacy-tests   # deprecated Reconstr tactics, opt-in
 just check             # install both packages and run quicktest
 just check-extra       # clean, then run the complete Dune plugin suite
 ```
