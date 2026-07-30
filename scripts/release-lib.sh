@@ -96,6 +96,78 @@ next_rocq() {
   echo "${maj}.$((min + 1))"
 }
 
+# rocq_core_pkg <X.Y>: the opam core/meta package name for Rocq <X.Y>. Since
+# the Rocq rename (Rocq >= 9.0) it is rocq-core; the deprecated `coq`
+# meta-package is used only for the older Coq (< 9.0) branches.
+rocq_core_pkg() {
+  [ "${1%%.*}" -ge 9 ] 2>/dev/null && echo rocq-core || echo coq
+}
+
+# opam_pkg_versions <pkg>: all released opam versions of <pkg>, one per line.
+opam_pkg_versions() {
+  command -v opam >/dev/null || return 1
+  opam show "$1" -f all-versions 2>/dev/null | tr ' ,' '\n\n' | grep -E '^[0-9]'
+}
+
+# opam_newest_matching <pkg> <X.Y>: newest opam version of <pkg> in the <X.Y>
+# line (e.g. 9.2.1 for rocq-core 9.2); empty if none.
+opam_newest_matching() {
+  opam_pkg_versions "$1" | grep -E "^${2//./\\.}(\.|$)" | sort -V | tail -1
+}
+
+# opam_newest <pkg>: newest opam version of <pkg> overall; empty if none.
+opam_newest() {
+  opam_pkg_versions "$1" | sort -V | tail -1
+}
+
+# stdlib_lower_bound <rocq>: lower bound for the rocq-stdlib opam-file
+# dependency targeting Rocq <rocq>. Normally <rocq> itself, but rocq-stdlib
+# usually lags rocq-core on opam; if <rocq> is not yet published for
+# rocq-stdlib, fall back to the newest available stdlib major.minor line so
+# the constraint stays satisfiable. Echoes <rocq> unchanged for pre-9 Coq
+# branches (which keep the legacy `coq` dependency instead) or when opam is
+# unavailable.
+stdlib_lower_bound() {
+  local v="$1" newest
+  if [ "$(rocq_core_pkg "$v")" = "rocq-core" ] \
+     && [ -z "$(opam_newest_matching rocq-stdlib "$v" || true)" ]; then
+    newest="$(opam_newest rocq-stdlib || true)"
+    if [ -n "$newest" ]; then
+      printf '%s\n' "$newest" | grep -oE '^[0-9]+\.[0-9]+'
+      return 0
+    fi
+  fi
+  echo "$v"
+}
+
+# rewrite_opam_deps <opam-file> <rocq> <next-rocq> <stdlib-lb>
+# Replaces whatever Rocq/Coq dependency line(s) <opam-file> carries -- an old
+# entry's single "coq" line, a dev branch's single "rocq-stdlib" line, or the
+# current "rocq-core"/"rocq-runtime"/"rocq-stdlib" form -- with the canonical
+# dependency block for <rocq>: the split packages (>= <rocq>, rocq-stdlib >=
+# <stdlib-lb>, all < <next-rocq>~) for Rocq >= 9, or legacy `coq` for older
+# Coq branches. (`nxt`, not `next`, since `next` is an awk statement.)
+rewrite_opam_deps() {
+  local file="$1" v="$2" nxt="$3" slb="$4" core
+  core="$(rocq_core_pkg "$v")"
+  awk -v v="$v" -v nxt="$nxt" -v slb="$slb" -v core="$core" '
+    /^[[:space:]]*"(rocq-core|rocq-runtime|rocq-stdlib|coq)"[[:space:]]*[{]/ {
+      if (!done) {
+        if (core == "rocq-core") {
+          print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
+          print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
+          print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
+        } else {
+          print "  \"coq\" {>= \"" v "\" & < \"" nxt "~\"}"
+        }
+        done = 1
+      }
+      next
+    }
+    { print }
+  ' "$file" > "$file.tmp" && mv "$file.tmp" "$file"
+}
+
 # changes_section <cver> <rocq>
 # Prints the GitHub release notes for the given version: a plain
 # "CoqHammer v. <CVER> for Rocq <ROCQ>" line followed by the bullet list

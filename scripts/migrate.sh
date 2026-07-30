@@ -80,30 +80,6 @@ info "new branch:      $NEW_BRANCH"
 # 1. Resolve the toolchain for the new branch: opam package vs from-source.
 # ---------------------------------------------------------------------------
 
-# rocq_core_pkg: the opam core/meta package name for Rocq <X.Y>. Since the Rocq
-# rename (Rocq >= 9.0) it is rocq-core; the deprecated `coq` meta-package is used
-# only for the older Coq (< 9.0) branches.
-rocq_core_pkg() {
-  [ "${V%%.*}" -ge 9 ] 2>/dev/null && echo rocq-core || echo coq
-}
-
-# opam_pkg_versions <pkg>: all released opam versions of <pkg>, one per line.
-opam_pkg_versions() {
-  command -v opam >/dev/null || return 1
-  opam show "$1" -f all-versions 2>/dev/null | tr ' ,' '\n\n' | grep -E '^[0-9]'
-}
-
-# opam_newest_matching <pkg> <X.Y>: newest opam version of <pkg> in the <X.Y>
-# line (e.g. 9.2.1 for rocq-core 9.2); empty if none.
-opam_newest_matching() {
-  opam_pkg_versions "$1" | grep -E "^${2//./\\.}(\.|$)" | sort -V | tail -1
-}
-
-# opam_newest <pkg>: newest opam version of <pkg> overall; empty if none.
-opam_newest() {
-  opam_pkg_versions "$1" | sort -V | tail -1
-}
-
 # resolve_source_ref <repo-url>: print a git ref for a source build of <X.Y>,
 # preferring the latest stable release tag V<X.Y>.<z>, then the version branch
 # v<X.Y>, then the latest pre-release tag V<X.Y>+<...>. Non-zero if none found.
@@ -124,7 +100,7 @@ resolve_source_ref() {
 }
 
 TOOLCHAIN=""            # "opam" or "source"
-CORE_PKG="$(rocq_core_pkg)"
+CORE_PKG="$(rocq_core_pkg "$V")"
 CORE_OPAM_VER=""        # newest opam <X.Y> version of the core package
 ROCQ_OPAM_PACKAGES=""   # explicit pin list for env.sh; empty => rely on constraints
 STDLIB_OPAM_GUESSED=0   # 1 if an older-than-<X.Y> stdlib had to be pinned
@@ -171,14 +147,8 @@ fi
 # when <X.Y> is not yet published, fall back to the newest available stdlib line
 # so the constraint stays satisfiable. Older Coq branches keep the legacy `coq`
 # dependency and do not mention the split Rocq packages.
-STDLIB_LB="$V"
+STDLIB_LB="$(stdlib_lower_bound "$V")"
 if [ "$CORE_PKG" = "rocq-core" ]; then
-  if [ -z "$(opam_newest_matching rocq-stdlib "$V" || true)" ]; then
-    _stdlib_newest="$(opam_newest rocq-stdlib || true)"
-    if [ -n "$_stdlib_newest" ]; then
-      STDLIB_LB="$(printf '%s\n' "$_stdlib_newest" | grep -oE '^[0-9]+\.[0-9]+')"
-    fi
-  fi
   info "opam constraints: rocq-core/rocq-runtime >= $V, rocq-stdlib >= $STDLIB_LB (all < ${NEXT}~)"
 else
   info "opam constraints: coq >= $V (all < ${NEXT}~)"
@@ -208,23 +178,7 @@ transform_opam() {
   # the current "rocq-core"/"rocq-runtime"/"rocq-stdlib" form -- with the
   # canonical dependency block for the target <X.Y>. Rocq >= 9 uses the split
   # packages; older Coq branches keep the legacy `coq` package.
-  # (`nxt`, not `next`, since `next` is an awk statement.)
-  awk -v v="$V" -v nxt="$NEXT" -v slb="$STDLIB_LB" -v core="$CORE_PKG" '
-    /^[[:space:]]*"(rocq-core|rocq-runtime|rocq-stdlib|coq)"[[:space:]]*[{]/ {
-      if (!done) {
-        if (core == "rocq-core") {
-          print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
-          print "  \"rocq-runtime\" {>= \"" v "\" & < \"" nxt "~\"}"
-          print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
-        } else {
-          print "  \"coq\" {>= \"" v "\" & < \"" nxt "~\"}"
-        }
-        done = 1
-      }
-      next
-    }
-    { print }
-  ' "$1" > "$1.mig" && mv "$1.mig" "$1"
+  rewrite_opam_deps "$1" "$V" "$NEXT" "$STDLIB_LB"
 }
 
 transform_readme() {
