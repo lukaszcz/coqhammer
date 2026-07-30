@@ -49,7 +49,7 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `extraction_between_low`: `forall n, n <= proj1_sig (sig_of_sig2 (between n))`
 - `extraction_tag_fst`: `forall n, fst (tag n) = n`
 - `extraction_refinement_hyp`: `forall s : {u : nat | 0 < u}, 1 <= proj1_sig s`
-- `extraction_h_exists`: `forall x y z p, exists u, proj1_sig (h x y z p) = u /\\ x = u`
+- `extraction_h_exists`: `forall x y z p, exists u, proj1_sig (h x y z p) = u /\ x = u`
 - `extraction_vhead_cons`: vector-head equation on `Vector.cons`
 - `extraction_beq_correct`: `forall n m, beq n m = true <-> n = m` using the
   `Nat.eq_dec`/`sumbool`-driven definition and helper lemmas for reconstruction
