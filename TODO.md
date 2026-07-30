@@ -148,9 +148,10 @@ Problems
 
    * forall x y z, x = y /\ y = z -> x = h(x, y, z)
 
-   Currently, no function definition for h is generated. Neither is
-   the specification axiom. Only an unusable typing axiom for h is
-   generated.
+   Originally, no function definition for h was generated, nor the
+   specification axiom -- only an unusable typing axiom for h was generated.
+   This is now handled; see `extraction_h_proj`/`extraction_h_spec` in
+   `tests/plugin/EXPECTED-extraction.md`.
 
    A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
    but there the goal is only code extraction, so there is no need to

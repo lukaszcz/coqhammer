@@ -16,8 +16,8 @@
 #   nat index -- and the lockstep walk over (actual, constructor, formal)
 #   indices reports "constructor result indices do not align with the case
 #   predicate (1 actual, 0 constructor, 0 formal arguments remain)".
-#   The scrutinee type needs head-normalizing to an application of the matched
-#   inductive, and the head needs checking, before any index guard is emitted.
+#   The scrutinee type must be head-normalized to an application of the matched
+#   inductive, and the head must be checked, before any index guard is emitted.
 #   Unrelated to the indexed-family/fording frontier: rtree's own indices align
 #   fine.  Also unrelated to the primitive-projection handling fixed in "Expand
 #   primitive projections before FOL encoding", which is what cleared the other
