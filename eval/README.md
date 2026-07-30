@@ -27,6 +27,12 @@ confirmation modes also accept the options printed by their individual help
 commands. They create resumable checkpoints under `results/` and write
 summaries and provenance under `artifacts/` after a complete run.
 
+The confirmation grid runs all seven full corpora (`stdlib-regression`,
+`dependent-stdlib`, `stdpp`, `color-vector`, `dependent-slice`,
+`equations-examples`, `external-equations`); run `./install-external-libs.sh`
+first to install the libraries and build the Coq-Equations checkout that some
+of them need.
+
 The standard evaluation uses the prepared source files in `problems/`. The
 extraction evaluation uses three corpora:
 
