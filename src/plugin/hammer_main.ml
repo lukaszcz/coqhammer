@@ -156,7 +156,7 @@ let expand_projections env sigma c =
 
 let without_projections env evmap t =
   try EConstr.to_constr evmap (expand_projections env evmap (EConstr.of_constr t))
-  with _ -> t
+  with e when CErrors.noncritical e -> t
 
 (* A primitive projection's own compatibility constant is defined by that very
    projection ([fun params r => r.(p)]), so expanding it would rewrite the
