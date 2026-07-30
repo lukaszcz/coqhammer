@@ -115,6 +115,9 @@ variants used to understand the current translator:
 
 Append `-decl-skips` to a variant to enable declaration-level refinement
 skips. Configuration builds restore `coq_transl_opts.ml` after installation.
+Each build wipes its install prefix first, so `--prefix` is accepted only for a
+dedicated install directory: outside the checkout or under `eval/_installs`,
+and, if it already exists, created by an earlier `rebuild-config.sh` run.
 To inspect the available names:
 
 ```bash

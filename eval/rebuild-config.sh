@@ -108,6 +108,41 @@ if [ -z "$prefix" ]; then
   prefix="$repo/eval/_installs/$label"
 fi
 
+# prepare_prefix wipes the prefix with `rm -rf`, so a mistyped --prefix would
+# erase the checkout or an unrelated directory.  Accept only a dedicated
+# install directory: never the repository or one of its parents, inside the
+# repository only under eval/_installs, and, when it already exists, only a
+# directory a previous run created (marker file, or manifest.env for prefixes
+# built before the marker existed).
+prefix_marker=.coqhammer-eval-prefix
+
+validate_prefix() {
+  local p="$1"
+  case "$p" in
+    /|"${HOME:-}")
+      echo "Refusing to use $p as the install prefix" >&2
+      exit 1
+      ;;
+  esac
+  if [ "$p" = "$repo" ] || [ "${repo#"$p"/}" != "$repo" ]; then
+    echo "Install prefix $p is the repository or contains it; refusing to erase it" >&2
+    exit 1
+  fi
+  if [ "${p#"$repo"/}" != "$p" ] && [ "${p#"$repo"/eval/_installs/}" = "$p" ]; then
+    echo "Install prefix $p is inside the checkout but not under eval/_installs" >&2
+    exit 1
+  fi
+  if [ -e "$p" ] && [ ! -e "$p/$prefix_marker" ] && [ ! -e "$p/manifest.env" ]; then
+    echo "Install prefix $p exists but was not created by rebuild-config.sh; refusing to erase it" >&2
+    exit 1
+  fi
+}
+
+# Resolve first: the prefix is later used from other working directories
+# (-coqlib in validate_prop_case_ablation), so it has to be absolute.
+prefix=$(realpath -m -- "$prefix")
+validate_prefix "$prefix"
+
 restore_opts() {
   git checkout HEAD -- "$opts" >/dev/null 2>&1 || true
 }
@@ -141,6 +176,7 @@ prepare_prefix() {
   coqlib=$(rocq c -where)
   rm -rf "$p"
   mkdir -p "$p/bin" "$p/coq/user-contrib" "$p/rocq-runtime"
+  : > "$p/$prefix_marker"
   ln -sfn "$coqlib/theories" "$p/coq/theories"
   # Borrow every installed library except Hammer, which this prefix installs
   # itself and must not shadow with the switch's copy.  Linking only Stdlib
