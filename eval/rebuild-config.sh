@@ -32,6 +32,14 @@ if [ "$#" -eq 0 ]; then
   exit 2
 fi
 
+need_value() {
+  if [ "$#" -lt 2 ]; then
+    echo "Missing value for $1" >&2
+    usage >&2
+    exit 2
+  fi
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
@@ -42,8 +50,8 @@ while [ "$#" -gt 0 ]; do
       done
       exit 0
       ;;
-    --label) label="$2"; shift 2 ;;
-    --prefix) prefix="$2"; shift 2 ;;
+    --label) need_value "$@"; label="$2"; shift 2 ;;
+    --prefix) need_value "$@"; prefix="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     --*) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
     *)
@@ -90,6 +98,18 @@ case "$core" in
     core=${core%-decl-skips}
     ;;
 esac
+
+# current-decl-skips cannot be built correctly: patching only decl_skips would
+# still fall back to the generic prop/erasure/refinement defaults below,
+# silently overriding whatever the tree's current constants actually are
+# (right now opt_erasure_guards=false, so this would build all-on-decl-skips
+# mislabeled as current-decl-skips). opt_refinement_decl_skips already
+# defaults to true in src/plugin/coq_transl_opts.ml, so `current` alone
+# already has declaration-level skips enabled and the suffix is redundant.
+if [ "$core" = current ] && [ "$decl_skips" = true ]; then
+  echo "current-decl-skips is not a supported configuration: declaration-level skips are already enabled by default in the current tree (opt_refinement_decl_skips); use 'current' instead." >&2
+  exit 2
+fi
 
 prop=true
 erasure=true
