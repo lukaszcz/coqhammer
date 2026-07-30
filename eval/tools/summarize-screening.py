@@ -103,7 +103,11 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
         if not label_dir.is_dir():
             raise ValueError(f"required label checkpoints are missing: {label_dir}")
         config = "current" if label == "current" else label.removeprefix("screening-")
-        decl_skips = config.endswith("-decl-skips")
+        # opt_refinement_decl_skips defaults to true in the checked-in
+        # src/plugin/coq_transl_opts.ml, and rebuild-config.sh builds "current"
+        # from that value unpatched, so "current" is always the enabled case
+        # even though its config label carries no "-decl-skips" suffix.
+        decl_skips = config == "current" or config.endswith("-decl-skips")
         if decl_skips:
             config_core = config.removesuffix("-decl-skips")
         else:
