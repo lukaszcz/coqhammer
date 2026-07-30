@@ -91,8 +91,6 @@ next_job_id=0
 job_pids=
 job_count=0
 job_successes=0
-job_mode=
-job_failure_label=
 
 run_job() {
   trap - EXIT HUP INT TERM
@@ -116,15 +114,25 @@ run_job() {
   esac
 }
 
+# Each pending job is recorded as a "pid:job_dir" token so that reap_jobs can
+# recover the mode and label of the job that actually failed from that job's
+# own directory, rather than a single global shared by every pending job
+# (which a later start_job call could clobber before the earlier jobs it
+# queued were reaped).
 reap_jobs() {
   batch_failed=0
-  for pid in $job_pids; do
+  failed_label=
+  for entry in $job_pids; do
+    pid=${entry%%:*}
+    dir=${entry#*:}
     if wait "$pid"; then
       job_successes=$((job_successes + 1))
     else
       status=$?
-      if [ "$job_mode" = negative ] || [ "$status" -eq 2 ]; then
+      mode=$(cat "$dir/mode" 2>/dev/null || true)
+      if [ "$mode" = negative ] || [ "$status" -eq 2 ]; then
         batch_failed=1
+        failed_label=$(cat "$dir/label" 2>/dev/null || true)
       fi
     fi
   done
@@ -132,7 +140,7 @@ reap_jobs() {
   job_count=0
 
   if [ "$batch_failed" -ne 0 ]; then
-    fail "a consistency prover check failed for $job_failure_label"
+    fail "a consistency prover check failed for $failed_label"
   fi
 }
 
@@ -142,16 +150,16 @@ start_job() {
   problem=$3
   label=$4
   out=$5
-  job_mode=$mode
-  job_failure_label=$label
 
   job_dir="$tmpdir/jobs/$next_job_id"
   next_job_id=$((next_job_id + 1))
   mkdir -p "$job_dir"
+  printf '%s\n' "$mode" >"$job_dir/mode"
+  printf '%s\n' "$label" >"$job_dir/label"
   [ -n "$out" ] || out="$job_dir/$prover.out"
 
   run_job "$mode" "$prover" "$problem" "$TIMEOUT" "$label" "$out" &
-  job_pids="$job_pids $!"
+  job_pids="$job_pids $!:$job_dir"
   job_count=$((job_count + 1))
   if [ "$job_count" -ge "$WORKERS" ]; then
     reap_jobs
@@ -463,7 +471,6 @@ assert_unprovable_problem() {
   timeout=$2
   label=$3
   [ -f "$problem" ] || fail "missing dumped problem $problem"
-  job_mode=negative
   if [ "$have_eprover" -eq 1 ]; then
     start_job negative E "$problem" "$label" ""
   fi
@@ -548,7 +555,6 @@ assert_provable() {
   timeout=$2
   label=$3
   job_successes=0
-  job_mode=positive
   positive_eprover_out="$tmpdir/jobs/positive-eprover.out"
   positive_vampire_out="$tmpdir/jobs/positive-vampire.out"
   positive_z3_out="$tmpdir/jobs/positive-z3.out"
