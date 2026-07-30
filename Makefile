@@ -66,10 +66,11 @@ quicktest: install test-unit test-plugin test-tactics
 test-unit:
 	$(MAKE) -B -C tests/unit
 
+# The plugin tests that need no external ATP; this is what CI runs (see
+# coq-hammer.opam).  The ATP-dependent ones are reached through tests,
+# tests-plugin and test-extraction.
 test-plugin: install
-	$(MAKE) -B -C tests/plugin plugin_test.vo
-
-test-plugin-release: test-unit test-plugin test-extraction
+	$(MAKE) -B -C tests/plugin test-no-provers
 
 test-extraction: install
 	$(MAKE) -B -C tests/plugin test-extraction
@@ -122,4 +123,4 @@ dune-clean:
 	$(MAKE) -C tests/tactics clean
 	$(MAKE) -C tests/unit clean
 
-.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-unit test-plugin test-plugin-release test-tactics test-extraction test-consistency clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-unit test-plugin test-tactics test-extraction test-consistency clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin

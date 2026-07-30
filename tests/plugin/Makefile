@@ -3,8 +3,21 @@ COQC ?= rocq c
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
 PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo $(EXTRACTION_VOS)
 
+# The tests that pass with no ATP installed, so that CI can run them without
+# depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
+# but only trivial ones the sauto pretactic phase closes before any ATP is
+# consulted; erasure_blacklist.vo asserts on the axioms the translation emits
+# and proves nothing.  Everything else either sets SAutoLimit to 0, which
+# disables that phase and hands the goal to the ATPs, or requires a file that
+# does.  prover_selection.vo also passes without an ATP, but only vacuously: it
+# checks that `hammer` fails when every prover is disabled, which is equally
+# true when no prover exists, so running it here would not test detection.
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo
+
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
+
+test-no-provers: $(NO_PROVER_VOS)
 
 test-extraction: $(EXTRACTION_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -203,4 +216,4 @@ extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_depty
 clean:
 	-rm -f *.vo *.glob *.out .*.aux
 
-.PHONY: all test-extraction test-consistency clean
+.PHONY: all test-no-provers test-extraction test-consistency clean

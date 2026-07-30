@@ -68,12 +68,11 @@ Tests are `.v` files compiled with the **installed** plugin (`rocq c` with no `-
 make tests             # ALL tests: unit, complete plugin and tactics suites
 make tests-plugin      # complete plugin suite and ATP consistency canaries
 make tests-tactics     # complete tactics suite
-make quicktest         # unit tests plus focused plugin_test.vo and tactics_test.vo
+make quicktest         # the fast prover-free check: unit, plugin and tactics
 make test-unit         # OCaml unit tests only (no install, no ATP needed)
-make test-plugin       # compile only plugin_test.v
+make test-plugin       # plugin tests needing no external ATP -- what CI runs
 make test-tactics      # compile only tactics_test.v
 make test-extraction   # extraction tests and ATP consistency canaries
-make test-plugin-release # focused plugin test plus extraction tests
 make dune-test-plugin  # complete plugin suite via Dune
 just check             # install both packages and run quicktest
 just check-extra       # clean, then run the complete Dune plugin suite
