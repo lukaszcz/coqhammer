@@ -19,14 +19,22 @@ prover=eprover
 premise=knn-32
 jobs=1
 
+need_value() {
+  if [ "$#" -lt 2 ]; then
+    echo "Missing value for $1" >&2
+    usage >&2
+    exit 2
+  fi
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    --label) label="$2"; shift 2 ;;
-    --corpus) corpus="$2"; shift 2 ;;
-    --prefix) prefix="$2"; shift 2 ;;
-    --prover) prover="$2"; shift 2 ;;
-    --premise) premise="$2"; shift 2 ;;
-    -j|--jobs) jobs="$2"; shift 2 ;;
+    --label) need_value "$@"; label="$2"; shift 2 ;;
+    --corpus) need_value "$@"; corpus="$2"; shift 2 ;;
+    --prefix) need_value "$@"; prefix="$2"; shift 2 ;;
+    --prover) need_value "$@"; prover="$2"; shift 2 ;;
+    --premise) need_value "$@"; premise="$2"; shift 2 ;;
+    -j|--jobs) need_value "$@"; jobs="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -37,6 +45,28 @@ if [ -z "$label" ] || [ -z "$corpus" ]; then
   exit 2
 fi
 
+# label/corpus/prover/premise all end up in derived paths (results/, atp/o/,
+# atp/i/f) and prover additionally names a `make -C atp` target, so they are
+# restricted to known-safe shapes before anything is deleted or built from
+# them: no traversal segments, no globbing, no word splitting.
+name_re='^[A-Za-z0-9][A-Za-z0-9._-]*$'
+if ! [[ "$label" =~ $name_re ]]; then
+  echo "Invalid --label: $label" >&2
+  exit 2
+fi
+if ! [[ "$corpus" =~ $name_re ]]; then
+  echo "Invalid --corpus: $corpus" >&2
+  exit 2
+fi
+case "$prover" in
+  eprover|vampire|z3|cvc4) ;;
+  *) echo "Invalid --prover: $prover (expected one of: eprover, vampire, z3, cvc4)" >&2; exit 2 ;;
+esac
+if ! [[ "$premise" =~ ^(knn|nbayes)-[0-9]+$ ]]; then
+  echo "Invalid --premise: $premise (expected knn-N or nbayes-N)" >&2
+  exit 2
+fi
+
 repo=$(git rev-parse --show-toplevel)
 eval_dir="$repo/eval"
 if [ -z "$prefix" ]; then
@@ -44,6 +74,16 @@ if [ -z "$prefix" ]; then
 fi
 if [ ! -d "$prefix" ]; then
   echo "Install prefix does not exist: $prefix" >&2
+  exit 1
+fi
+if [ ! -e "$prefix/manifest.env" ]; then
+  echo "Install prefix $prefix has no manifest.env; it was not built by rebuild-config.sh, so its freshness cannot be checked. Rebuild it with rebuild-config.sh first." >&2
+  exit 1
+fi
+prefix_commit=$(sed -n 's/^commit=//p' "$prefix/manifest.env")
+current_commit=$(git -C "$repo" rev-parse HEAD)
+if [ "$prefix_commit" != "$current_commit" ]; then
+  echo "Install prefix $prefix was built from commit ${prefix_commit:-<unknown>}, but this checkout is at $current_commit; rebuild it with rebuild-config.sh before running the dry sample." >&2
   exit 1
 fi
 
@@ -76,9 +116,9 @@ if [ ! -d "atp/problems/$premise" ]; then
   exit 1
 fi
 
-rm -rf atp/i atp/o/$prover atp/o/$prover-$premise
+rm -rf atp/i "atp/o/$prover" "atp/o/$prover-$premise"
 mkdir -p atp/i atp/o
-ln -s ../problems/$premise atp/i/f
+ln -s "../problems/$premise" atp/i/f
 if make -C atp -k -j "$jobs" TIM=5 "$prover"; then
   prover_status=0
 else
@@ -97,8 +137,8 @@ make -k -j "$reconstr_jobs" reconstr COQC="$coqc_cmd"
 result_dir="results/$label/$corpus"
 rm -rf "$result_dir"
 mkdir -p "$result_dir"
-find atp/problems/$premise -name '*.p' | sort > "$result_dir/generated.lst"
-find atp/o/$prover-$premise -type f | sort > "$result_dir/prover-outputs.lst"
+find "atp/problems/$premise" -name '*.p' | sort > "$result_dir/generated.lst"
+find "atp/o/$prover-$premise" -type f | sort > "$result_dir/prover-outputs.lst"
 find out -type f | sort > "$result_dir/reconstruction-outputs.lst"
 {
   echo "label=$label"
@@ -108,7 +148,7 @@ find out -type f | sort > "$result_dir/reconstruction-outputs.lst"
   echo "premise=$premise"
   echo "generated=$(wc -l < "$result_dir/generated.lst")"
   echo "prover_outputs=$(wc -l < "$result_dir/prover-outputs.lst")"
-  echo "theorems=$( (grep -R "SZS status Theorem" atp/o/$prover-$premise 2>/dev/null || true) | wc -l )"
+  echo "theorems=$( (grep -R "SZS status Theorem" "atp/o/$prover-$premise" 2>/dev/null || true) | wc -l )"
   echo "reconstruction_outputs=$(wc -l < "$result_dir/reconstruction-outputs.lst")"
   echo "reconstruction_successes=$( (grep -R "^Success" out 2>/dev/null || true) | wc -l )"
 } | tee "$result_dir/summary.txt"
