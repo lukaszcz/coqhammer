@@ -106,9 +106,11 @@ require_line "depbox_project unboxes an instance-dependent user subset" '^\$_def
 require_line "depbox_project type axiom expands the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(& @ \(\(\$HasType @ var_1_b_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_P_[0-9]+ @ var_1_b_[0-9]+\)'
 
 # A mutually recursive pair of apparent refinement carriers is not collapsible.
-# Translation must terminate and retain its ordinary nominal guard.
+# Translation must terminate and retain its ordinary nominal guard.  The guard
+# lives in the unfolding axiom of the canonical arrow former, since
+# [mutual_ref_a -> mutual_ref_a] is a non-dependent product.
 require_line "mutual refinement carrier cycle translation terminates" '^\$_def_extraction_transl\.mutual_ref_identity:'
-require_line "mutual refinement carrier cycle falls back to a nominal guard" '^\$_type_[0-9]+:.*\$HasType.*extraction_transl\.mutual_ref_a.*\$HasType.*extraction_transl\.mutual_ref_a'
+require_line "mutual refinement carrier cycle falls back to a nominal guard" '^\$_arrow_[0-9]+:.*\$HasType.*extraction_transl\.mutual_ref_a.*\$HasType.*extraction_transl\.mutual_ref_a'
 
 # [poly_ref A] changes classification when [A] is instantiated by a Prop, so
 # formal-instance subset classification must not suppress declaration structure.

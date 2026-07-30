@@ -1,18 +1,19 @@
 COQC ?= rocq c
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo $(EXTRACTION_VOS)
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
 # but only trivial ones the sauto pretactic phase closes before any ATP is
-# consulted; erasure_blacklist.vo asserts on the axioms the translation emits
-# and proves nothing.  Everything else either sets SAutoLimit to 0, which
-# disables that phase and hands the goal to the ATPs, or requires a file that
-# does.  prover_selection.vo also passes without an ATP, but only vacuously: it
-# checks that `hammer` fails when every prover is disabled, which is equally
-# true when no prover exists, so running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo
+# consulted; erasure_blacklist.vo and arrow_transl.vo assert on the axioms the
+# translation emits and prove nothing.  Everything else either sets SAutoLimit
+# to 0, which disables that phase and hands the goal to the ATPs, or requires a
+# file that does.  prover_selection.vo also passes without an ATP, but only
+# vacuously: it checks that `hammer` fails when every prover is disabled, which
+# is equally true when no prover exists, so running it here would not test
+# detection.
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -192,6 +193,66 @@ case_prop_transl.vo: case_prop_transl.v
 	  echo "proposition-valued case structural discrimination delivery check FAILED"; \
 	  cat "$$tmp/prop-case-structural.p"; rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
 	rm -f case_prop_transl.out
+
+arrow_transl.vo: arrow_transl.v
+	@set -e; \
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	COQHAMMER_DUMP_DIR="$$tmp" $(COQC) arrow_transl.v > arrow_transl.out 2>&1 || { \
+	  cat arrow_transl.out; rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	grep -Eq '^\$$_typeof_arrow_transl\.f: \(\(\$$HasType @ arrow_transl\.f\) @ \(\(\$$_arrow @ arrow_transl\.A\) @ arrow_transl\.B\)\)$$' arrow_transl.out || { \
+	  echo "instance-position arrow former check FAILED"; cat arrow_transl.out; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	grep -Eq '^arrow_transl\.map_len:.*\(\(\$$HasType @ 2_g\) @ \(\(\$$_arrow @ 0_X\) @ 1_Y\)\)' arrow_transl.out || { \
+	  echo "quantified premise arrow former check FAILED"; cat arrow_transl.out; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	grep -Eq '^\$$_typeof_arrow_transl\.dep: \(\(\$$HasType @ arrow_transl\.dep\) @ \$$_type_[0-9]+\)$$' arrow_transl.out || { \
+	  echo "dependent product lifting check FAILED"; cat arrow_transl.out; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	grep -Eq '^\$$_typeof_arrow_transl\.propdom: \(\(\$$HasType @ arrow_transl\.propdom\) @ \$$_type_[0-9]+\)$$' arrow_transl.out || { \
+	  echo "proposition-domain product lifting check FAILED"; cat arrow_transl.out; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	grep -Eq '^\$$_typeof_arrow_transl\.nested: \(\(\$$HasType @ arrow_transl\.nested\) @ \(\(\$$_arrow @ arrow_transl\.A\) @ \(\(\$$_arrow @ arrow_transl\.B\) @ arrow_transl\.A\)\)\)$$' arrow_transl.out || { \
+	  echo "nested arrow canonicalization check FAILED"; cat arrow_transl.out; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	arrow_axioms=$$(grep -Ec '^\$$_arrow_[0-9]+:' arrow_transl.out || true); \
+	if [ "$$arrow_axioms" -lt 1 ]; then \
+	  echo "no arrow unfolding axiom was emitted, so the equivalence guard is vacuous"; \
+	  cat arrow_transl.out; rm -f arrow_transl.vo arrow_transl.out; exit 1; \
+	fi; \
+	if grep -E '^\$$_arrow_[0-9]+:' arrow_transl.out | grep -q '<=>'; then \
+	  echo "arrow unfolding axiom is an equivalence, which is unsound over empty domains"; \
+	  cat arrow_transl.out; rm -f arrow_transl.vo arrow_transl.out; exit 1; \
+	fi; \
+	grep -Fq "fof('\$$_typeof_h', axiom, c_24__arrow___24t(cX,cY,ch))." "$$tmp/arrow_transl.p" || { \
+	  echo "dumped instance-position arrow guard check FAILED"; \
+	  grep -F "'\$$_typeof_h'" "$$tmp/arrow_transl.p" || true; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	grep -E 'c_24__arrow___24t\(V[A-Za-z0-9_]+,V[A-Za-z0-9_]+,V[A-Za-z0-9_]+\)' "$$tmp/arrow_transl.p" | \
+	  grep -qv '^fof(.\$$' || { \
+	  echo "dumped quantified premise arrow guard check FAILED"; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	tdef_arrows=$$(grep -Fc "fof('\$$tdef_\$$_arrow'," "$$tmp/arrow_transl.p" || true); \
+	if [ "$$tdef_arrows" -ne 1 ]; then \
+	  echo "expected exactly one \$$tdef_\$$_arrow axiom, found $$tdef_arrows"; \
+	  grep -F "tdef_\$$_arrow" "$$tmp/arrow_transl.p" || true; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; \
+	fi; \
+	grep -Fq "fof('\$$tdef_\$$_arrow', axiom, ![V_24X1,V_24X2,V_24Y]:(c_24__arrow___24t(V_24X1,V_24X2,V_24Y) <=> t(V_24Y, c_24__arrow___24a2(V_24X1,V_24X2))))." "$$tmp/arrow_transl.p" || { \
+	  echo "arrow former arity check FAILED"; \
+	  grep -F "tdef_\$$_arrow" "$$tmp/arrow_transl.p" || true; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
+	dumped_arrow_axioms=$$(grep -Ec '^fof\(.\$$_arrow_[0-9]+.' "$$tmp/arrow_transl.p" || true); \
+	if [ "$$dumped_arrow_axioms" -lt 1 ]; then \
+	  echo "the dumped problem has no arrow unfolding axiom, so its equivalence guard is vacuous"; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; \
+	fi; \
+	if grep -E '^fof\(.\$$_arrow_[0-9]+.' "$$tmp/arrow_transl.p" | grep -q '<=>'; then \
+	  echo "dumped arrow unfolding axiom is an equivalence, which is unsound over empty domains"; \
+	  grep -E '^fof\(.\$$_arrow_[0-9]+.' "$$tmp/arrow_transl.p" | grep '<=>' || true; \
+	  rm -f arrow_transl.vo arrow_transl.out; exit 1; \
+	fi; \
+	rm -f arrow_transl.out
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
 	@set -e; \

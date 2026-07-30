@@ -2034,23 +2034,60 @@ and remove_let ctx tm =
 
 and remove_type ctx ty =
   debug 3 (fun () -> print_header "remove_type" ty ctx);
+  (* A non-dependent product with a non-Prop domain is translated structurally,
+     as an application of the single former [$_arrow], instead of being lifted
+     to a constant minted per occurrence shape.  Two occurrences of one arrow
+     type then denote the same term up to their arguments -- a goal-side
+     [A -> B] over local constants and a premise-side one under [forall A B]
+     unify directly -- whereas per-occurrence names left them unrelated, with
+     nothing to bridge them since the unfolding axiom is only an implication.
+     Prop domains keep the lifted name: [type_to_guard] prunes proof binders
+     from the term spine, so [P -> B] is not a function object and its
+     unfolding is not the one [$_arrow] stands for.  Dependent products have
+     no canonical former yet. *)
+  let eligible =
+    match ty with
+    | Prod(vname, ty1, ty2) ->
+       not (var_occurs vname ty2) && not (Coq_typing.check_prop ctx ty1)
+    | _ -> false
+  in
   with_lift_dependencies (fun () ->
     Hashing.find_or_insert coqterm_hash ctx ty
       begin fun cctx cty ->
-        let name = "$_type_" ^ unique_id ()
-        and vars = ctx_to_vars cctx
-        in
-        add_def_eq_type_axiom name name vars cty >>
-        convert cctx (mk_long_app (Const(name)) (mk_vars vars))
+        match cty with
+        | Prod(_, ty1, ty2) when eligible ->
+           (* The subject is built once and used both as the result and as the
+              axiom's subject: converting it twice could mint two different
+              symbols for a lift inside it that is not hash-consed. *)
+           let subject = convert cctx (mk_long_app (Const("$_arrow")) [ty1; ty2])
+           in
+           add_type_unfolding_axiom ("$_arrow_" ^ unique_id ())
+             (ctx_to_vars cctx) cty subject >>
+           subject
+        | _ ->
+           let name = "$_type_" ^ unique_id ()
+           and vars = ctx_to_vars cctx
+           in
+           add_def_eq_type_axiom name name vars cty >>
+           convert cctx (mk_long_app (Const(name)) (mk_vars vars))
       end)
 
 and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
+  add_type_unfolding_axiom axname fvars ty
+    (convert (vars_to_ctx fvars) (mk_long_app (Const(name)) (mk_vars fvars)))
+
+(* [subject] is the translated object standing for the type [ty] -- a lifted
+   constant applied to [fvars], or the canonical [$_arrow] application.  It is
+   translated in the context [close] hands to the continuation below, which is
+   [vars_to_ctx fvars] in either closure mode. *)
+and add_type_unfolding_axiom axname fvars ty subject =
+  debug 2 (fun () -> print_header "add_type_unfolding_axiom" ty fvars);
   let vname = "var_" ^ unique_id ()
   in
   close fvars
     begin fun ctx ->
-      convert ctx (mk_long_app (Const(name)) (mk_vars fvars)) >>= fun tp ->
+      subject >>= fun tp ->
       (* The axiom quantifies [vname] over the inhabitants of [ty], so [ty] is
          its type: the guard is built in a context that binds it, as every
          subject of a guard must be bound in the context it is translated in. *)
@@ -2064,7 +2101,9 @@ and add_def_eq_type_axiom axname name fvars ty =
          equality (deriving [$false] from ContradictoryAxioms).  The typing of
          genuine inhabitants is always asserted directly at their binder or
          [$_typeof_] axiom, so the forward implication alone loses no provable
-         function application. *)
+         function application.  This holds for a canonical [$_arrow] subject
+         exactly as for a lifted name: canonicalization changes which object the
+         unfolding speaks about, never its direction or strength. *)
       return (mk_forall vname type_any
                 (mk_impl (mk_hastype (Var(vname)) tp) guard))
     end >>= fun r ->
