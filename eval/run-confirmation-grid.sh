@@ -23,7 +23,10 @@ Options:
   --only-label LABEL    run only one install label (debug/resume convenience)
   --only-corpus CORPUS  run only one corpus (debug/resume convenience)
   --sample-corpus       use the small committed smoke corpora instead of the
-                        full corpora built from the installed libraries
+                        full corpora built from the installed libraries; only
+                        the three corpora with a committed sample fixture
+                        (stdlib-regression, dependent-slice,
+                        external-equations) are run in this mode
   --full-corpus         use the full corpora (default)
   --stdlib-modules "A B"
                         Stdlib modules for the stdlib-regression corpus
@@ -111,6 +114,15 @@ labels=(current)
 declare -A label_config
 label_config[current]=current
 
+# Only these corpora have a committed eval/corpora/<name>/sample fixture; the
+# rest are built from an installed library or an external checkout and cannot
+# honour --sample (prepare-corpus.sh rejects the combination).  A dry run in a
+# minimal image covers what it can rather than failing on the first corpus
+# that has no fixture.
+if [ "$sample_corpora" = true ]; then
+  corpora=(stdlib-regression dependent-slice external-equations)
+fi
+
 if [ -n "$only_label" ] && ! array_contains "$only_label" "${labels[@]}"; then
   echo "Unknown confirmation label: $only_label" >&2
   exit 2
@@ -196,10 +208,15 @@ compute_corpus_provenance() {
       corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
       ;;
     equations-examples)
-      source_dir=${external_source:-$eval_dir/_external/Coq-Equations/_build/default/examples}
+      # --external-source only overrides the external-equations corpus (see
+      # prepare_corpus and the option's help text); equations-examples always
+      # generates from the built Coq-Equations checkout, so its provenance
+      # must be pinned to that path rather than an override that prepare_corpus
+      # never forwards for this corpus.
+      source_dir="$eval_dir/_external/Coq-Equations/_build/default/examples"
       if [ ! -d "$source_dir" ]; then
         echo "Equations examples not found: $source_dir" >&2
-        echo "Build the Coq-Equations checkout, or pass --external-source DIR." >&2
+        echo "Build the Coq-Equations checkout under eval/_external." >&2
         return 1
       fi
       source_dir=$(cd "$source_dir" && pwd -P)
@@ -428,9 +445,16 @@ run_generation() {
   mkdir -p atp/o out
 
   coqc_cmd="rocq c -coqlib $prefix/coq"
-  make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1
+  if ! make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1; then
+    echo "Init failed for $label/$corpus; see $outdir/init.log" >&2
+    exit 1
+  fi
   echo check > coqhammer.opt
-  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1
+  # The exit code alone cannot decide pass/fail here (see collect_failures
+  # above), so the make invocation must not trip set -e itself: that would
+  # abort before the collect_failures check below runs and reports where the
+  # diagnostics are.
+  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1 || true
   if collect_failures "$outdir/check.full.log" "$outdir/check.log"; then
     echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
     exit 1
