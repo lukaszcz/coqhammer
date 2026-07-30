@@ -120,7 +120,7 @@ case_prop_transl.vo: case_prop_transl.v
 	  echo "indexed proposition case leaked its erased proof variable"; cat case_prop_transl.out; \
 	  rm -f case_prop_transl.vo case_prop_transl.out; exit 1; \
 	fi; \
-	two_false_line=$$(grep -E '^\$$_def_case_prop_transl\.two_false_case_props:' case_prop_transl.out); \
+	two_false_line=$$(grep -E '^\$$_def_case_prop_transl\.two_false_case_props:' case_prop_transl.out || true); \
 	false_case_occurrences=$$(printf '%s\n' "$$two_false_line" | \
 	  grep -Eo '\$$_case_Corelib\.Init\.Logic\.False[$$][0-9]+' | wc -l); \
 	false_case_symbols=$$(printf '%s\n' "$$two_false_line" | \
@@ -178,7 +178,7 @@ case_prop_transl.vo: case_prop_transl.v
 	  echo "cached case structural discrimination replay check FAILED"; cat "$$tmp/case-structural-cache-hit.p"; \
 	  rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
 	warm_case_id=$$(grep -E '^\$$_def_case_prop_transl\.delivery_cache_warm:' case_prop_transl.out | \
-	  grep -Eo '\$$_case_case_prop_transl\.delivery_box[$$][0-9]+' | head -n 1 | grep -Eo '[0-9]+'); \
+	  grep -Eo '\$$_case_case_prop_transl\.delivery_box[$$][0-9]+' | head -n 1 | grep -Eo '[0-9]+' || true); \
 	hit_case_id=$$(grep -F "fof('\$$_def_case_prop_transl.delivery_cache_hit'" "$$tmp/case-structural-cache-hit.p" | \
 	  grep -Eo 'delivery__box_24[0-9]+' | head -n 1 | sed 's/.*_24//'); \
 	if [ -z "$$warm_case_id" ] || [ "$$warm_case_id" != "$$hit_case_id" ]; then \
