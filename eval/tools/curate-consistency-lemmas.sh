@@ -38,7 +38,7 @@ jobs=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)
 # The check runs both provers, so a lemma has to survive both to be listed:
 # one of them refuting is enough to fail a real run.
 run_one() {
-  local p="$1" name eout vout
+  local p="$1" name eout vout e_ok v_ok
   name=$(basename "$p" .p)
   eout=$(eprover -s --cpu-limit="$curate_tim" --auto-schedule -R --print-statistics \
          -p --tstp-format "$p" 2>&1 | grep -E "SZS status" | head -1 || true)
@@ -46,7 +46,16 @@ run_one() {
          --output_axiom_names on "$p" 2>&1 | grep -E "SZS status" | tail -1 || true)
   case "$eout$vout" in
     *ContradictoryAxioms*|*"status Theorem"*|*Unsatisfiable*) echo "VACUOUS $name" ;;
-    *) if [ -z "$eout" ] || [ -z "$vout" ]; then echo "NORESULT $name"; else echo "KEEP $name"; fi ;;
+    *)
+      # KEEP requires a conclusive satisfiability verdict from both provers;
+      # timeouts and other inconclusive statuses (ResourceOut, GaveUp, ...)
+      # must not let a possibly-vacuous lemma slip into the consistency list.
+      # Matches both Satisfiable and CounterSatisfiable; the outer case
+      # already ruled out Unsatisfiable and Theorem for this branch.
+      case "$eout" in *Satisfiable*) e_ok=1 ;; *) e_ok=0 ;; esac
+      case "$vout" in *Satisfiable*) v_ok=1 ;; *) v_ok=0 ;; esac
+      if [ "$e_ok" = 1 ] && [ "$v_ok" = 1 ]; then echo "KEEP $name"; else echo "NORESULT $name"; fi
+      ;;
   esac
 }
 export -f run_one
@@ -56,14 +65,23 @@ export curate_tim
 # small_drinkers'_paradox), which the default whitespace/quote-processing xargs
 # rejects with "unmatched single quote".  -print0 | xargs -0 passes each path
 # verbatim; head -z keeps the optional limit NUL-aware.
-{ [ "$limit" -gt 0 ] && find "$work/problems" -name '*.p' -print0 | head -z -n "$limit" \
-    || find "$work/problems" -name '*.p' -print0; } |
+#
+# The limited and unlimited cases are kept as separate commands rather than
+# combined with &&/|| : once "head -z -n limit" has read enough and exits,
+# "find" gets SIGPIPE on its next write, and under pipefail that makes the
+# "find | head" pipeline itself report failure -- which would trigger the
+# "||" fallback and append the full, unlimited file list on top.
+if [ "$limit" -gt 0 ]; then
+  find "$work/problems" -name '*.p' -print0 | head -z -n "$limit"
+else
+  find "$work/problems" -name '*.p' -print0
+fi |
   xargs -0 -P "$jobs" -I{} bash -c 'run_one "$@"' _ {} > "$work/verdicts.txt"
 
 echo "kept:     $(grep -c '^KEEP ' "$work/verdicts.txt" || true)"
 echo "vacuous:  $(grep -c '^VACUOUS ' "$work/verdicts.txt" || true)"
 echo "noresult: $(grep -c '^NORESULT ' "$work/verdicts.txt" || true)"
 
-grep '^KEEP ' "$work/verdicts.txt" | awk '{print $2}' | sort > "$out_file.kept"
+grep '^KEEP ' "$work/verdicts.txt" | awk '{print $2}' | sort > "$out_file"
 grep '^VACUOUS ' "$work/verdicts.txt" | awk '{print $2}' | sort > "$out_file.vacuous"
-echo "wrote $out_file.kept and $out_file.vacuous"
+echo "wrote $out_file and $out_file.vacuous"
