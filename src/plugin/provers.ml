@@ -52,7 +52,7 @@ let decode_thm_name s =
           Buffer.add_char buf
             (Char.chr (hex_digit s.[i + 1] * 16 + hex_digit s.[i + 2]));
           go (i + 3)
-      | c -> Buffer.add_char buf c; go (i + 2)
+      | _ -> Buffer.add_char buf '~'; go (i + 1)
     else
       begin
         Buffer.add_char buf s.[i];
