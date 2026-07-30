@@ -27,34 +27,26 @@ let case_name_subject s =
     if i > 0 then String.sub s 0 i else "$none"
   with Not_found -> "$none"
 
+(* Keep the names carrying [prefix], strip it, and recover the constant behind
+   each one with [subject]. *)
+let get_prefixed prefix subject lst =
+  let n = String.length prefix in
+  List.filter is_good_dep
+    (List.map (fun s -> subject (String.sub s n (String.length s - n)))
+       (List.filter (fun s -> Hhlib.string_begins_with s prefix) lst))
+
 let get_defs lst =
-  remove_duplicates
-    (List.filter is_good_dep
-       (List.map (fun s -> strip_dollar_suffix (String.sub s 6 (String.length s - 6)))
-          (List.filter (fun s -> Hhlib.string_begins_with s "$_def_") lst)))
+  remove_duplicates (get_prefixed "$_def_" strip_dollar_suffix lst)
 
 let get_typings lst =
-  remove_duplicates
-    (List.filter is_good_dep
-       (List.map (fun s -> strip_dollar_suffix (String.sub s 9 (String.length s - 9)))
-          (List.filter (fun s -> Hhlib.string_begins_with s "$_typeof_") lst)))
+  remove_duplicates (get_prefixed "$_typeof_" strip_dollar_suffix lst)
 
 let get_cases lst =
-  remove_duplicates
-    (List.filter is_good_dep
-       (List.map
-          (fun s -> case_name_subject (String.sub s 7 (String.length s - 7)))
-          (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst)))
+  remove_duplicates (get_prefixed "$_case_" case_name_subject lst)
 
-let get_inversions lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 12 (String.length s - 12))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_inversion_") lst))
+let get_inversions lst = get_prefixed "$_inversion_" (fun s -> s) lst
 
-let get_injections lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 6 (String.length s - 6))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_inj_") lst))
+let get_injections lst = get_prefixed "$_inj_" (fun s -> s) lst
 
 let get_discrims lst =
   List.filter (fun (x, y) -> is_good_dep x && is_good_dep y)
