@@ -1,6 +1,17 @@
 #!/usr/bin/env bash
 # Shared checkpoint provenance and artifact validation for extraction grids.
 
+# Shared by detect_jobs for its three tunables (EVAL_JOBS,
+# EVAL_MEMORY_PER_JOB_MB, EVAL_RESERVE_MB): all three must be positive
+# integers, since any of them being zero or non-numeric would otherwise reach
+# an arithmetic context below and fail with an opaque shell error.
+validate_positive_int() {
+  local name="$1" value="$2"
+  case "$value" in
+    ''|*[!0-9]*|0) echo "$name must be a positive integer" >&2; return 1 ;;
+  esac
+}
+
 # Size a job pool from the machine rather than defaulting to one job.  Follows
 # tests/plugin/check-consistency.sh: take the core count, then cap it so the
 # concurrent ATP processes fit in available memory, since a prover on a large
@@ -17,12 +28,13 @@ detect_jobs() {
   esac
 
   if [ -n "${EVAL_JOBS:-}" ]; then
-    case "$EVAL_JOBS" in
-      ''|*[!0-9]*|0) echo "EVAL_JOBS must be a positive integer" >&2; return 1 ;;
-    esac
+    validate_positive_int EVAL_JOBS "$EVAL_JOBS" || return 1
     echo "$EVAL_JOBS"
     return 0
   fi
+
+  validate_positive_int EVAL_MEMORY_PER_JOB_MB "$per_job_mb" || return 1
+  validate_positive_int EVAL_RESERVE_MB "$reserve_mb" || return 1
 
   available_kb=$(awk '$1 == "MemAvailable:" { print $2; exit }' /proc/meminfo 2>/dev/null || true)
   case "$available_kb" in
@@ -282,6 +294,10 @@ atp_output_is_complete() {
     # times over on a hard problem).  A prover killed before it printed a status
     # found no proof within the budget, which is a result, not a broken run.
     # The empty output records that; it never counts as a success downstream.
+    # E prover is not run under htimeout (see eval/atp/Makefile): nothing
+    # external kills it before it reports its own SZS status, so an empty
+    # output from it is not that backstop outcome but a broken run.
+    [ "$prover" = eprover ] && return 1
     return 0
   fi
   szs_terminal_status "$output"
