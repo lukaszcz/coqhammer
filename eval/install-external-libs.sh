@@ -55,8 +55,20 @@ run() {
 command -v opam >/dev/null 2>&1 || { echo "opam not found on PATH" >&2; exit 1; }
 command -v git  >/dev/null 2>&1 || { echo "git not found on PATH" >&2; exit 1; }
 
+repo_root=$(cd "$eval_dir/.." && pwd)
+expected_switch="${COQHAMMER_OPAM_SWITCH:-$repo_root}"
+expected_prefix="$expected_switch/_opam"
+
 prefix=$(opam var prefix 2>/dev/null || true)
 [ -n "$prefix" ] || { echo "No active opam switch (opam var prefix is empty)." >&2; exit 1; }
+if ! [ "$prefix" -ef "$expected_prefix" ]; then
+  echo "Active opam switch prefix ($prefix) is not the repository-local switch" >&2
+  echo "($expected_prefix); refusing to install into the wrong switch." >&2
+  echo "Select the repository-local switch first, e.g.:" >&2
+  echo "  eval \$(opam env --switch=\"$expected_switch\" --set-switch)" >&2
+  echo "(override the expected switch dir with COQHAMMER_OPAM_SWITCH)." >&2
+  exit 1
+fi
 log "target switch prefix: $prefix"
 
 installed_version() {
@@ -75,10 +87,14 @@ install_pkg() {
 }
 
 # --- 1. released repo ------------------------------------------------------
-if opam repo list --all 2>/dev/null | grep -q "$RELEASED_REPO_NAME"; then
-  log "$RELEASED_REPO_NAME repo already attached"
-else
+repo_url=$(opam repo list --all 2>/dev/null | awk -v name="$RELEASED_REPO_NAME" '$1 == name { print $2 }')
+if [ -z "$repo_url" ]; then
   run opam repo add "$RELEASED_REPO_NAME" "$RELEASED_REPO_URL"
+elif [ "$repo_url" = "$RELEASED_REPO_URL" ]; then
+  log "$RELEASED_REPO_NAME repo already attached at $RELEASED_REPO_URL"
+else
+  log "$RELEASED_REPO_NAME repo attached at $repo_url, want $RELEASED_REPO_URL; updating"
+  run opam repo set-url "$RELEASED_REPO_NAME" "$RELEASED_REPO_URL"
 fi
 
 # --- 2. stdpp and CoLoR ----------------------------------------------------
@@ -103,7 +119,7 @@ fi
 
 # --- 4. install rocq-equations from the checkout ---------------------------
 if [ "$(installed_version rocq-equations)" = dev ] \
-   && opam pin list 2>/dev/null | grep -q "rocq-equations.*$checkout"; then
+   && opam pin list 2>/dev/null | grep "rocq-equations.*$checkout" >/dev/null; then
   log "rocq-equations already pinned to the checkout and installed"
 else
   run opam pin add -y rocq-equations "git+file://$checkout#HEAD"
@@ -113,7 +129,7 @@ fi
 # --root . keeps dune inside the checkout: it is nested under the coqhammer
 # repo, which is itself a dune project, so a bare `dune build` would ascend to
 # the outer root and fail with "Don't know how to build examples".
-run sh -c "cd '$checkout' && opam exec -- dune build --root . examples"
+run sh -c 'cd "$1" && opam exec -- dune build --root . examples' sh "$checkout"
 
 log "done."
 log "External corpora ready. Run the grid with:  ./evaluate.sh confirmation"
