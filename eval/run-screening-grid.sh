@@ -8,7 +8,7 @@ Usage: ./run-screening-grid.sh [options]
 Run the extraction screening grid for the current checkout in a resumable
 layout:
   premise counts {64,256,1024} x {Vampire,E prover} x
-  {current, all-on, four leave-one-out configurations} x
+  {current, all-off, all-on, three leave-one-out configurations} x
   {decl-skips off,on for configuration variants} over the three prepared corpora.
 
 Results are checkpointed under eval/results/screening/ and summarized under
@@ -25,6 +25,8 @@ Options:
   --only-label LABEL   run only one install label (debug/resume convenience)
   --only-corpus CORPUS run only one corpus (debug/resume convenience)
   --full-corpus        use full committed corpora instead of sample subdirectories
+                        (dependent-slice has no full-corpus fixture and
+                        always stays on its sample subdirectory)
   --external-source DIR
                        use DIR as the source for the external-equations corpus
   --force              rerun checkpoints even when done markers exist
@@ -99,6 +101,7 @@ premises=(knn-64 knn-256 knn-1024)
 provers=(eprover vampire)
 corpora=(stdlib-regression dependent-slice external-equations)
 configs=(
+  all-off
   all-on
   loo-prop-case-erasure
   loo-erasure-guards
@@ -142,7 +145,11 @@ for corpus in "${corpora[@]}"; do
     corpus_source[$corpus]="$source_dir"
   else
     source_dir="$eval_dir/corpora/$corpus"
-    if [ "$sample_corpora" = true ]; then
+    # dependent-slice has no full-corpus source tree committed, only the
+    # sample fixture (eval/corpora/dependent-slice/sample); --full-corpus
+    # must not silently point it at the parent directory, which has no .v
+    # files of its own and would just bury the same fixture one level deeper.
+    if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
       source_dir="$source_dir/sample"
     fi
     corpus_source[$corpus]="${source_dir#"$repo"/}"
@@ -233,7 +240,9 @@ manifest_matches_label() {
 prepare_corpus() {
   local corpus="$1"
   local args=("$corpus")
-  if [ "$sample_corpora" = true ]; then
+  # See the matching comment in the corpus_source loop above: dependent-slice
+  # is always taken from its committed sample fixture, --full-corpus or not.
+  if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
     args+=(--sample)
   fi
   if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
