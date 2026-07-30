@@ -236,6 +236,22 @@ require_hookable_sources() {
   fi
 }
 
+# stdlib-regression, dependent-slice and external-equations are the only
+# corpora with a committed eval/corpora/<name>/sample fixture; the rest are
+# always built from an installed library or an external checkout, so a
+# --sample request for them would otherwise be silently ignored and the full
+# corpus built instead, contradicting what --sample promises.  Fail loudly
+# rather than let that mismatch pass unnoticed.
+case "$corpus" in
+  dependent-stdlib|stdpp|color-vector|equations-examples)
+    if [ "$sample" = true ]; then
+      echo "No committed sample for corpus '$corpus': it is always built from" >&2
+      echo "an installed library or checkout, not eval/corpora/$corpus/sample." >&2
+      exit 1
+    fi
+    ;;
+esac
+
 case "$corpus" in
   stdlib-regression)
     if [ "$sample" = true ]; then
