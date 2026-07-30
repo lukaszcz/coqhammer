@@ -1,7 +1,7 @@
 # Extraction screening artifacts
 
 No screening metrics for the current source tree are committed here. Run
-`../../evaluate.sh screening` from `eval/` to generate `summary.tsv`,
+`./evaluate.sh screening` from `eval/` to generate `summary.tsv`,
 `analysis.md`, and `provenance.env` after a complete run.
 
 The generated provenance records the current repository commit, configuration
