@@ -914,6 +914,16 @@ let greedy_predictor_sequence () =
    ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
    ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
 
+(* The order fixes the indices [do_choice] launches its jobs under, so
+   [retry_available] must compute retry availability from this very sequence:
+   a membership or order mismatch would test indices that no longer correspond
+   to the launched jobs. *)
+let choice_prover_sequence () =
+  [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled);
+   ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled);
+   ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
+   ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
+
 let greedy_selected_deps hyps deps goal pred_method preds_num fname =
   let predicted = Features.run_predict fname deps preds_num pred_method in
   Features.add_direct_goal_dependencies hyps deps goal predicted
@@ -961,10 +971,7 @@ let do_choice tried hyps deps goal lems =
       List.mapi
         (fun idx (pname, enabled, pref) ->
            (idx, (pname, enabled && not (List.mem idx tried), pref, fun () -> deps1)))
-        [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled);
-         ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled);
-         ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
-         ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
+        (choice_prover_sequence ())
     in
     run_gs_provers hyps deps goal (fun () -> ()) seq
   else (* Opts.gs_mode = 0 *)
@@ -1006,10 +1013,7 @@ let hammer_main_tac env sigma gl mode =
       | Choice _ ->
          List.mapi
            (fun idx (_, enabled, _) -> (idx, enabled))
-           [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled);
-            ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled);
-            ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
-            ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
+           (choice_prover_sequence ())
     in
     List.exists (fun (idx, enabled) -> enabled && not (List.mem idx tried)) candidates
   in
