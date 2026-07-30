@@ -35,6 +35,13 @@ CORPORA = (
 )
 CURRENT = "current"
 ATP_SUCCESS_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable)\b")
+# The grid attempts reconstruction only when the prover reported "Theorem"
+# (validate_reconstruction_run in grid-checkpoint-lib.sh mirrors provers.ml's
+# own success predicate); "Unsatisfiable" is a legitimate ATP success but is
+# never handed to reconstruction, so it must not drive reconstruction file
+# selection or the reconstruction denominator.
+RECONSTRUCTABLE_RE = re.compile(r"\bSZS status Theorem\b")
+CONSISTENCY_HIT_RE = re.compile(r"\bSZS status (?:Theorem|Unsatisfiable|ContradictoryAxioms)\b|^unsat$", re.M)
 
 
 def read_list(path: Path) -> list[Path]:
@@ -47,16 +54,32 @@ def read_list(path: Path) -> list[Path]:
     return files
 
 
-def has_atp_theorem(path: Path) -> bool:
+def matches(regex: re.Pattern[str], path: Path) -> bool:
     try:
         text = path.read_text(errors="replace")
     except FileNotFoundError:
         return False
-    return ATP_SUCCESS_RE.search(text) is not None
+    return regex.search(text) is not None
+
+
+def has_atp_theorem(path: Path) -> bool:
+    return matches(ATP_SUCCESS_RE, path)
+
+
+def is_reconstructable(path: Path) -> bool:
+    return matches(RECONSTRUCTABLE_RE, path)
+
+
+def has_consistency_hit(path: Path) -> bool:
+    return matches(CONSISTENCY_HIT_RE, path)
 
 
 def status_theorem_count(files: list[Path]) -> int:
     return sum(1 for path in files if has_atp_theorem(path))
+
+
+def consistency_hit_count(files: list[Path]) -> int:
+    return sum(1 for path in files if has_consistency_hit(path))
 
 
 def reconstr_success_count(files: list[Path]) -> int:
@@ -107,15 +130,20 @@ def problem_metrics(files: list[Path]) -> tuple[set[str], int, float, int, float
 
 
 def reconstr_files(corpus_dir: Path, prover: str, premise: str, prover_outputs: list[Path]) -> list[Path]:
-    # Reconstruction runs on what the ATP proved, not on every problem: a goal
-    # the prover gave up on leaves no premise list to replay, so it has no
-    # output here and its absence is not a gap.  This matches the metric the
-    # rows report, which divides reconstruction successes by theorems.
+    # Reconstruction runs on what the grid actually attempted, not on every ATP
+    # success: a goal the prover gave up on leaves no premise list to replay,
+    # so it has no output here and its absence is not a gap.  Nor does an
+    # "Unsatisfiable" success -- validate_reconstruction_run in
+    # grid-checkpoint-lib.sh (mirroring provers.ml's own success predicate)
+    # only ever reconstructs "Theorem" outputs, so selecting on the broader
+    # ATP_SUCCESS_RE here would expect reconstruction outputs the grid never
+    # produces.  This matches the metric the rows report, which divides
+    # reconstruction successes by this same reconstructable count.
     odir = corpus_dir / "reconstr-outputs" / f"{prover}-{premise}"
     return [
         odir / Path(path).with_suffix(".out").name
         for path in prover_outputs
-        if has_atp_theorem(path)
+        if is_reconstructable(path)
     ]
 
 
@@ -143,11 +171,12 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
                             f"required reconstruction output is missing: {missing_reconstructions[0]}"
                         )
                     recon_successes = reconstr_success_count(rfiles)
+                    reconstructable = len(rfiles)
                     if prover in CONSISTENCY_PROVERS:
                         consistency_outputs = read_list(corpus_dir / f"consistency-outputs-{prover}-{premise}.lst")
                     else:
                         consistency_outputs = []
-                    consistency_hits = status_theorem_count(consistency_outputs)
+                    consistency_hits = consistency_hit_count(consistency_outputs)
                     generated_n = len(generated)
                     rows.append(
                         {
@@ -159,8 +188,9 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
                             "generated": generated_n,
                             "theorems": theorems,
                             "success_rate": (theorems / generated_n) if generated_n else 0.0,
+                            "reconstructable": reconstructable,
                             "recon_successes": recon_successes,
-                            "recon_rate_on_atp": (recon_successes / theorems) if theorems else 0.0,
+                            "recon_rate_on_atp": (recon_successes / reconstructable) if reconstructable else 0.0,
                             "def_constants": len(defs),
                             "def_constant_names": defs,
                             "total_bytes": total_bytes,
@@ -198,7 +228,7 @@ def write_tsv(rows: list[dict[str, object]], out: Path) -> None:
         "consistency_hits",
     ]
     with out.open("w", newline="") as f:
-        writer = csv.DictWriter(f, delimiter="\t", fieldnames=fieldnames)
+        writer = csv.DictWriter(f, delimiter="\t", fieldnames=fieldnames, lineterminator="\n")
         writer.writeheader()
         for row in rows:
             formatted = {k: row[k] for k in fieldnames}
@@ -217,6 +247,7 @@ def aggregate(rows: list[dict[str, object]], *keys: str) -> list[dict[str, objec
     for key, rs in sorted(groups.items()):
         generated = sum(int(r["generated"] or 0) for r in rs)
         theorems = sum(int(r["theorems"] or 0) for r in rs)
+        reconstructable = sum(int(r["reconstructable"] or 0) for r in rs)
         recon_successes = sum(int(r["recon_successes"] or 0) for r in rs)
         defs: set[str] = set()
         for r in rs:
@@ -228,7 +259,7 @@ def aggregate(rows: list[dict[str, object]], *keys: str) -> list[dict[str, objec
                 "theorems": theorems,
                 "success_rate": (theorems / generated) if generated else 0.0,
                 "recon_successes": recon_successes,
-                "recon_rate_on_atp": (recon_successes / theorems) if theorems else 0.0,
+                "recon_rate_on_atp": (recon_successes / reconstructable) if reconstructable else 0.0,
                 "def_constants": len(defs),
                 "def_constants_mean": statistics.mean(float(r["def_constants"]) for r in rs),
                 "avg_bytes_mean": statistics.mean(float(r["avg_bytes"]) for r in rs),
