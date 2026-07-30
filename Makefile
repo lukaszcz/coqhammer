@@ -51,7 +51,7 @@ Makefile.coq.tactics: _CoqProject.tactics
 Makefile.coq.mathcomp: _CoqProject.mathcomp
 	rocq makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
-tests: install tests-plugin tests-tactics
+tests: install test-unit tests-plugin tests-tactics
 
 tests-plugin: install
 	$(MAKE) -B -C tests/plugin
@@ -59,12 +59,17 @@ tests-plugin: install
 tests-tactics: install
 	$(MAKE) -B -C tests/tactics
 
-quicktest: install test-plugin test-tactics
+quicktest: install test-unit test-plugin test-tactics
+
+# OCaml unit tests: compiled from the sources, so they need no installation
+# and no external prover.
+test-unit:
+	$(MAKE) -B -C tests/unit
 
 test-plugin: install
 	$(MAKE) -B -C tests/plugin plugin_test.vo
 
-test-plugin-release: test-plugin test-extraction
+test-plugin-release: test-unit test-plugin test-extraction
 
 test-extraction: install
 	$(MAKE) -B -C tests/plugin test-extraction
@@ -90,7 +95,7 @@ dune-tactics:
 dune-plugin:
 	$(DUNE) build -p coq-hammer-tactics,coq-hammer
 
-dune-test-plugin: install
+dune-test-plugin: install test-unit
 	$(DUNE) build @tests/plugin/runtest
 
 dune-install: dune-install-tactics dune-install-plugin
@@ -115,5 +120,6 @@ dune-clean:
 	$(MAKE) -C eval clean
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
+	$(MAKE) -C tests/unit clean
 
-.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-plugin-release test-tactics test-extraction test-consistency clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-unit test-plugin test-plugin-release test-tactics test-extraction test-consistency clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin

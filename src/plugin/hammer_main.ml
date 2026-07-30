@@ -1239,35 +1239,6 @@ let hammer_features_cached name =
   with Not_found ->
     Msg.error ("Not found: " ^ name)
 
-let hammer_prover_parse_test () =
-  let assert_equal label expected actual =
-    if expected <> actual then
-      CErrors.user_err
-        Pp.(str
-              (label ^ ": expected [" ^ String.concat "; " expected ^ "], got [" ^
-               String.concat "; " actual ^ "]"))
-  in
-  let info =
-    Provers.classify_atp_names
-      [ "$_def_$_lam_1$Corelib.Init.Datatypes.O";
-        "$_def_$_case_Corelib.Init.Datatypes.nat$2$O";
-        "$_def_Corelib.Init.Nat.add$S";
-        "$_case_Corelib.Init.Datatypes.nat$2$O";
-        "$_case_Corelib.Init.Datatypes.nat$2$link";
-        "$_case_$_case_Corelib.Init.Datatypes.nat$3$O";
-        "$_typeof_extraction_deptypes.h$conj";
-        "$_typeof_extraction_deptypes.h";
-        "$_def_extraction_deptypes.h$conj" ]
-  in
-  assert_equal "defs" ["Corelib.Init.Nat.add"; "extraction_deptypes.h"] info.Provers.defs;
-  assert_equal "cases" ["Corelib.Init.Datatypes.nat"] info.Provers.cases;
-  assert_equal "typings" ["extraction_deptypes.h"] info.Provers.typings;
-  assert_equal "deps" [] info.Provers.deps;
-  let nested_info =
-    Provers.classify_atp_names [ "$_case_$_case_Corelib.Init.Datatypes.nat$3$O" ]
-  in
-  assert_equal "nested cases" ["Corelib.Init.Datatypes.nat"] nested_info.Provers.cases
-
 let hammer_objects () =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   Msg.info ("Found " ^ string_of_int (List.length (get_defs env sigma)) ^ " accessible Coq objects.")

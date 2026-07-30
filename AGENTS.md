@@ -65,10 +65,11 @@ workspace's `_opam` prefix.
 Tests are `.v` files compiled with the **installed** plugin (`rocq c` with no `-Q`/`-R` flags), so install before testing.
 
 ```bash
-make tests             # full Make-based plugin and tactics suites
+make tests             # ALL tests: unit, complete plugin and tactics suites
 make tests-plugin      # complete plugin suite and ATP consistency canaries
 make tests-tactics     # complete tactics suite
-make quicktest         # focused plugin_test.vo and tactics_test.vo checks
+make quicktest         # unit tests plus focused plugin_test.vo and tactics_test.vo
+make test-unit         # OCaml unit tests only (no install, no ATP needed)
 make test-plugin       # compile only plugin_test.v
 make test-tactics      # compile only tactics_test.v
 make test-extraction   # extraction tests and ATP consistency canaries
