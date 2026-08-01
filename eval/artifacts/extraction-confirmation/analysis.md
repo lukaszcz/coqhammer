@@ -9,43 +9,43 @@ Consistency scope: the lemmas listed in each corpus's consistency-lemmas.txt, ru
 
 | label | config | generated | theorems | success_rate | recon_successes | recon_rate_on_atp | def_constants | avg_bytes_mean | max_bytes | consistency_outputs | consistency_hits |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| current | current | 205960 | 67286 | 32.7% | 57708 | 85.8% | 6483 | 728341.2 | 15887295 | 14660 | 0 |
+| current | current | 205960 | 68442 | 33.2% | 58964 | 86.2% | 6483 | 727928.3 | 15985909 | 14660 | 0 |
 
 ## Per-prover ATP and reconstruction rates
 
 | label | prover | generated | theorems | success_rate | recon_successes | recon_rate_on_atp | consistency_hits |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| current | cvc4 | 51490 | 19340 | 37.6% | 16548 | 85.6% | 0 |
-| current | eprover | 51490 | 15242 | 29.6% | 13037 | 85.5% | 0 |
-| current | vampire | 51490 | 18996 | 36.9% | 16251 | 85.5% | 0 |
-| current | z3 | 51490 | 13708 | 26.6% | 11872 | 86.6% | 0 |
+| current | cvc4 | 51490 | 19676 | 38.2% | 16926 | 86.0% | 0 |
+| current | eprover | 51490 | 15881 | 30.8% | 13637 | 85.9% | 0 |
+| current | vampire | 51490 | 19982 | 38.8% | 17186 | 86.0% | 0 |
+| current | z3 | 51490 | 12903 | 25.1% | 11215 | 86.9% | 0 |
 
 ## Per-corpus rates
 
 | label | corpus | generated | theorems | success_rate | recon_successes | recon_rate_on_atp | def_constants | avg_bytes_mean | consistency_hits |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| current | color-vector | 12480 | 3504 | 28.1% | 3180 | 90.8% | 1771 | 413020.2 | 0 |
-| current | dependent-slice | 240 | 199 | 82.9% | 199 | 100.0% | 819 | 1018154.9 | 0 |
-| current | dependent-stdlib | 69720 | 21477 | 30.8% | 16279 | 75.8% | 2718 | 848835.4 | 0 |
-| current | equations-examples | 2840 | 578 | 20.4% | 396 | 68.5% | 1725 | 949254.5 | 0 |
-| current | external-equations | 1960 | 612 | 31.2% | 376 | 61.4% | 1482 | 841814.2 | 0 |
-| current | stdlib-regression | 44840 | 24888 | 55.5% | 23361 | 93.9% | 1565 | 406040.6 | 0 |
-| current | stdpp | 73880 | 16028 | 21.7% | 13917 | 86.8% | 3153 | 621268.5 | 0 |
+| current | color-vector | 12480 | 3437 | 27.5% | 3120 | 90.8% | 1771 | 413566.8 | 0 |
+| current | dependent-slice | 240 | 199 | 82.9% | 199 | 100.0% | 819 | 1018103.6 | 0 |
+| current | dependent-stdlib | 69720 | 22063 | 31.6% | 16950 | 76.8% | 2718 | 844939.1 | 0 |
+| current | equations-examples | 2840 | 573 | 20.2% | 395 | 68.9% | 1725 | 961108.2 | 0 |
+| current | external-equations | 1960 | 602 | 30.7% | 366 | 60.8% | 1482 | 836591.7 | 0 |
+| current | stdlib-regression | 44840 | 25454 | 56.8% | 23885 | 93.8% | 1565 | 405267.0 | 0 |
+| current | stdpp | 73880 | 16114 | 21.8% | 14049 | 87.2% | 3153 | 615921.8 | 0 |
 
 ## Per-premise-selector/count rates
 
 | label | premise | generated | theorems | success_rate | recon_successes | recon_rate_on_atp |
 | --- | --- | --- | --- | --- | --- | --- |
-| current | knn-1024 | 20596 | 5660 | 27.5% | 4844 | 85.6% |
-| current | knn-128 | 20596 | 7102 | 34.5% | 6075 | 85.5% |
-| current | knn-256 | 20596 | 6674 | 32.4% | 5718 | 85.7% |
-| current | knn-32 | 20596 | 7132 | 34.6% | 6131 | 86.0% |
-| current | knn-64 | 20596 | 7294 | 35.4% | 6252 | 85.7% |
-| current | nbayes-1024 | 20596 | 5698 | 27.7% | 4930 | 86.5% |
-| current | nbayes-128 | 20596 | 7062 | 34.3% | 6048 | 85.6% |
-| current | nbayes-256 | 20596 | 6720 | 32.6% | 5735 | 85.3% |
-| current | nbayes-32 | 20596 | 6855 | 33.3% | 5898 | 86.0% |
-| current | nbayes-64 | 20596 | 7089 | 34.4% | 6077 | 85.7% |
+| current | knn-1024 | 20596 | 5744 | 27.9% | 4935 | 85.9% |
+| current | knn-128 | 20596 | 7280 | 35.3% | 6255 | 85.9% |
+| current | knn-256 | 20596 | 6713 | 32.6% | 5773 | 86.0% |
+| current | knn-32 | 20596 | 7357 | 35.7% | 6345 | 86.2% |
+| current | knn-64 | 20596 | 7541 | 36.6% | 6488 | 86.0% |
+| current | nbayes-1024 | 20596 | 5672 | 27.5% | 4914 | 86.6% |
+| current | nbayes-128 | 20596 | 7158 | 34.8% | 6178 | 86.3% |
+| current | nbayes-256 | 20596 | 6646 | 32.3% | 5716 | 86.0% |
+| current | nbayes-32 | 20596 | 7051 | 34.2% | 6086 | 86.3% |
+| current | nbayes-64 | 20596 | 7280 | 35.3% | 6274 | 86.2% |
 
 ## Eq_rect / WF watch points
 
@@ -56,5 +56,5 @@ Consistency scope: the lemmas listed in each corpus's consistency-lemmas.txt, ru
 
 ## Current configuration
 
-ATP success rate: 32.7%.
-Reconstruction-on-ATP rate: 85.8%.
+ATP success rate: 33.2%.
+Reconstruction-on-ATP rate: 86.2%.
