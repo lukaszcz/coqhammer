@@ -615,6 +615,8 @@ make_bad_successor_problem "$tmpdir/consistency-idiv3.p" "$bad_idiv3" \
 assert_unprovable_problem "$bad_idiv3" "$TIMEOUT" "idiv3 violated-premise unfolding instance"
 
 assert_unprovable "$tmpdir/consistency-h.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-dsize.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-dheight.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-eq-rect.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-nat-add.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-prop-or-match.p" "$TIMEOUT"

@@ -523,6 +523,81 @@ let simpl =
       | _ -> tm
     end
 
+(* Head-normalize `tm' far enough to expose the head of its weak head normal
+   form -- typically an application of an inductive type.  `unfold' resolves a
+   global constant to its definition value, `None' when the constant is opaque
+   or absent; this module cannot reach the definition hash itself, hence the
+   callback.  Only head steps are taken -- beta, delta, iota and let
+   substitution -- with no reduction under binders and no recursion into
+   arguments, the scrutinee of a `Case' being the sole exception since iota
+   needs it.  All steps share the `budget' fuel counter and the current term is
+   returned unreduced once it runs out: an unbounded type-level unfolder is a
+   known blow-up hazard here.  `Fix' is deliberately not reduced.  It is the
+   caller, not the reducer, that decides whether a stuck head is a refusal. *)
+let whnf_head ~budget ~unfold tm =
+  let fuel = ref budget
+  in
+  let step () =
+    if !fuel <= 0 then
+      false
+    else
+      begin
+        decr fuel;
+        true
+      end
+  in
+  let find_branch constrs branches cname =
+    let rec hlp i constrs =
+      match constrs with
+      | [] -> None
+      | c :: constrs2 -> if c = cname then List.nth_opt branches i else hlp (i + 1) constrs2
+    in
+    hlp 0 constrs
+  in
+  let rec whnf tm args =
+    match tm with
+    | App(x, y) ->
+      whnf x (y :: args)
+    | Lam(vname, _, body) when args <> [] && step () ->
+      whnf (substvar vname (List.hd args) body) (List.tl args)
+    | Let(value, (vname, _, body)) when step () ->
+      whnf (substvar vname value body) args
+    | Const(c) ->
+      begin
+        match unfold c with
+        (* an inductive's own entry must not be unfolded: that would destroy
+           the head we are trying to expose; self-referential entries (e.g. the
+           logical operators above) must not loop *)
+        | Some(IndType(_)) | None -> mk_long_app tm args
+        | Some(value) when value <> tm && step () -> whnf value args
+        | Some(_) -> mk_long_app tm args
+      end
+    | Case(indname, matched, _, _, params_num, branches) ->
+      begin
+        match iota indname matched params_num branches with
+        | Some(tm2) -> whnf tm2 args
+        | None -> mk_long_app tm args
+      end
+    | _ ->
+      mk_long_app tm args
+  and iota indname matched params_num branches =
+    match unfold indname with
+    | Some(IndType(_, constrs, _)) ->
+      begin
+        match flatten_app (whnf matched []) with
+        | (Const(cname), cargs) ->
+          begin
+            match find_branch constrs branches cname with
+            | Some(n, br) when List.length cargs = params_num + n && step () ->
+              Some(mk_long_app br (Hhlib.drop params_num cargs))
+            | _ -> None
+          end
+        | _ -> None
+      end
+    | _ -> None
+  in
+  whnf tm []
+
 (***************************************************************************************)
 (* Printing *)
 

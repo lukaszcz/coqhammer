@@ -220,6 +220,34 @@ forbid_line "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extra
 require_line "vhead has a cons split equation" '^\$_def_extraction_deptypes\.vhead[$]cons:.*= var_1_h_[0-9]+\)'
 forbid_line "vhead split equations are existential-free" '^\$_def_extraction_deptypes\.vhead[$].*\?\['
 
+# Type-level function scrutinees: the index guard of a split equation is read
+# off the matched family, never off the scrutinee's declared type.  dsize's
+# scrutinee is declared at [dres dred n], convertible to [dtree n] but not an
+# application of [dtree], so the guard must equate [dtree]'s single index with
+# each constructor's result index and must not mention [dres]'s own arguments.
+# These are shape assertions, not golden output: the guard is pinned, the rest
+# of the equation is not.
+require_line "dsize leaf guard equates the dtree index with the constructor result" '^\$_def_extraction_deptypes\.dsize[$]dleaf:.*=> @ \(0_n = Corelib\.Init\.Datatypes\.O\)'
+require_line "dsize node guard equates the dtree index with the constructor result" '^\$_def_extraction_deptypes\.dsize[$]dnode:.*=> @ \(0_n = \(Corelib\.Init\.Datatypes\.S @ var_[0-9]+_n_[0-9]+\)\)'
+forbid_line "dsize split equations must not read the type-level function arguments" '^\$_def_extraction_deptypes\.dsize[$].*extraction_deptypes\.(dres|dred|dblack|dpair)'
+
+# dheight is the same hazard with the argument counts aligned, so a
+# declared-type reading yields a well-formed but wrong guard instead of an
+# error: [dswap n dred] would put the colour where [dbox]'s nat index belongs.
+# [dred] stays legitimate as [dbox]'s parameter inside the constructor pattern,
+# hence the forbidden pattern is positional.
+require_line "dheight zero guard equates the dbox index with the constructor result" '^\$_def_extraction_deptypes\.dheight[$]dbox_zero:.*=> @ \(0_n = Corelib\.Init\.Datatypes\.O\)'
+require_line "dheight successor guard equates the dbox index with the constructor result" '^\$_def_extraction_deptypes\.dheight[$]dbox_succ:.*=> @ \(0_n = \(Corelib\.Init\.Datatypes\.S @ var_[0-9]+_n_[0-9]+\)\)'
+forbid_line "dheight guards must not put the permuted colour argument in an index position" '^\$_def_extraction_deptypes\.dheight[$][^:]*:.*=> @ \(extraction_deptypes\.(dred|dblack) ='
+forbid_line "dheight split equations must not mention the type-level function" '^\$_def_extraction_deptypes\.dheight[$].*extraction_deptypes\.dswap'
+
+# dstack_size matches through a type-level *fixpoint*, which head reduction
+# deliberately does not unfold, so no index guard is computable.  Omitting the
+# guard alone would assert each branch equation for every index, so the whole
+# case is refused: the symbol keeps its typing axiom and stays uninterpreted.
+forbid_line "an unresolvable case scrutinee type emits no definition axiom" '^\$_def_extraction_deptypes\.dstack_size[$:]'
+require_line "a refused case still declares its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
+
 # Corpus-wide shallowness gates for the covered constants.  WF-gated idiv
 # definitions and explicit stdlib structural snapshots are checked separately.
 forbid_line "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'

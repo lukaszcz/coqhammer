@@ -55,6 +55,9 @@ let opt_erasure_guards = false
 let opt_refinement_types = true
 (* Skip redundant declaration-level subset axioms. *)
 let opt_refinement_decl_skips = true
+(* Head-reduction step budget when exposing the inductive type of a case
+   scrutinee. *)
+let opt_whnf_budget = 64
 
 (***************************************************************************************)
 (* Debugging *)

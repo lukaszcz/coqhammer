@@ -65,12 +65,21 @@ Passing end-to-end `hammer` goals in `extraction_deptypes.v`:
 - `extraction_idiv3_small`: direct `Fix_F` packaging of the same equation, using
   the proved `idiv3_small_unfold` reconstruction helper while the translation
   gates enforce the premised unfolding axiom
+- `extraction_dsize_leaf` / `extraction_dsize_node`: split equations of a match
+  whose scrutinee is declared at the type-level function `dres dred n`, merely
+  convertible to the matched family `dtree n`
+- `extraction_dheight_succ`: the same shape with the declared type's arity equal
+  to the matched family's telescope, only permuted, so a declared-type reading
+  yields a well-formed but wrong index guard instead of an error
 - `canary`: `False` with the full file environment and `Set Hammer ATPLimit 5`
   remains wrapped as `Fail hammer` and that failure is enforced by compilation
 
 The bare `Fix`/`Fix_F`, Program `Fix_sub`, and transport/UIP fixtures are
 unwrapped and enforced.  The transport ATP dump assertion remains as an
-independent translation-quality gate.
+independent translation-quality gate.  The two type-level-function scrutinee
+fixtures are additionally dumped as `consistency-dsize.p` and
+`consistency-dheight.p` and ATP-checked by `check-consistency.sh`, since a
+misread index guard is soundness-relevant rather than merely lossy.
 
 ### Documented deviations
 
@@ -99,6 +108,14 @@ structural assertions that hold with the current translator:
   equations for Program `idiv`, bare `Fix` `idiv2`, and direct `Fix_F` `idiv3`;
   all three are checked to carry the converted `b <> 0` premise on link and case
   equations, with corpus-wide guards against unpremised WF unfolding equations.
+- Case index guards: `dsize` and `dheight` are checked to equate the matched
+  family's own index with each constructor's result index, and not to expose the
+  arguments of the type-level function their scrutinees are declared at
+  (`dres`/`dred` for `dsize`, `dswap`'s permuted colour for `dheight`);
+  `dstack_size`, whose scrutinee type is a type-level fixpoint that head
+  reduction does not unfold, is checked to emit no definition axiom at all while
+  keeping its typing axiom, so an uncomputable guard degrades to an
+  uninterpreted symbol rather than to an unguarded equation.
 - Stdlib regression constants: split-equation checks for `Nat.add`, `List.app`,
   and `Streams.hd`; structural checks for `List.Forall`, `eq_ind_r`, `proj1`,
   `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `sumbool`, `sig`, `prod`, `Vector.hd`, a

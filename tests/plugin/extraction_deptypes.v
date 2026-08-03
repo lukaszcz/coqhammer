@@ -153,6 +153,78 @@ Proof. hammer [idiv2_small_unfold]. Qed.
 Lemma extraction_idiv3_small : forall b Hb a, b <> 0 -> a < b -> idiv3 b Hb a = 0.
 Proof. hammer [idiv3_small_unfold]. Qed.
 
+(* Type-level function scrutinees.  A scrutinee's declared type need only be
+   *convertible* to an application of the matched family: [dres dred n] reduces
+   to [dtree n] but is not syntactically an application of [dtree].  Reading the
+   index arguments off the declared type would hand [dres]'s own arguments to
+   [dtree], whose single index would then be matched against [dred].  This is
+   the shape Equations produces for a type-level function returning a different
+   family per branch; Equations is not available to this suite, so the function
+   is spelled as the plain match Equations compiles it to.  The emitted index
+   guards are pinned in extraction_transl.v. *)
+Inductive dcolor := dred | dblack.
+
+Inductive dtree : nat -> Set :=
+| dleaf : dtree 0
+| dnode : forall n, nat -> dtree n -> dtree (S n).
+
+Inductive dpair : nat -> Set :=
+| dpack : forall n, nat -> nat -> dpair n.
+
+Definition dres (c : dcolor) (n : nat) : Set :=
+  match c with dred => dtree n | dblack => dpair n end.
+
+Definition dsize {n} (r : dres dred n) : nat :=
+  match r with
+  | dleaf => 0
+  | dnode m _ _ => S m
+  end.
+
+(* The same hazard without the arity mismatch that makes it loud: [dswap] takes
+   exactly as many arguments as [dbox]'s telescope, only permuted, so a
+   declared-type reading produces a well-formed guard relating [dbox]'s index to
+   [dswap]'s colour argument instead. *)
+Inductive dbox (c : dcolor) : nat -> Set :=
+| dbox_zero : dbox c 0
+| dbox_succ : forall n, dbox c n -> dbox c (S n).
+
+Definition dswap (n : nat) (c : dcolor) : Set := dbox c n.
+
+Definition dheight {n} (b : dswap n dred) : nat :=
+  match b with
+  | dbox_zero _ => 0
+  | dbox_succ _ m _ => S m
+  end.
+
+(* A type-level function the head-normalizer cannot see through: it is a
+   fixpoint, and fixpoint unfolding is deliberately not one of the head steps
+   taken.  Rocq's own conversion still accepts the match, so the case is
+   translatable in principle -- but its index guard is not computable, and an
+   unguarded branch equation would be asserted for every index.  The case must
+   therefore be refused outright, leaving [dstack_size] uninterpreted. *)
+Fixpoint dstack (k n : nat) : Set :=
+  match k with
+  | 0 => dtree n
+  | S k' => dstack k' n
+  end.
+
+Definition dstack_size (n : nat) (r : dstack 0 n) : nat :=
+  match r with
+  | dleaf => 0
+  | dnode m _ _ => S m
+  end.
+
+Lemma extraction_dsize_leaf : dsize dleaf = 0.
+Proof. hammer. Qed.
+
+Lemma extraction_dsize_node :
+  forall n (x : nat) (t : dtree n), dsize (dnode n x t) = S n.
+Proof. hammer. Qed.
+
+Lemma extraction_dheight_succ :
+  forall n (b : dbox dred n), dheight (dbox_succ dred n b) = S n.
+Proof. hammer. Qed.
+
 Set Hammer ATPLimit 5.
 Lemma canary : False.
 Proof. Fail hammer. Abort.

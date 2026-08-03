@@ -140,6 +140,15 @@ Hammer_transl "idiv".
 Hammer_transl "idiv2".
 Hammer_transl "idiv3".
 
+(* Case index guards must be read off the matched family, not off the scrutinee's
+   declared type: dsize crashes the guard walk when the type-level function's
+   arguments are counted as indices, dheight silently mistakes one for an index
+   when the counts happen to agree, and dstack_size has no computable guard at
+   all and must be refused rather than emitted unguarded. *)
+Hammer_transl "dsize".
+Hammer_transl "dheight".
+Hammer_transl "dstack_size".
+
 (* Stdlib regression list. Keep these as structural snapshots, not golden files;
    they pin representative fallback and coverage cases while remaining robust
    across Rocq point releases. *)

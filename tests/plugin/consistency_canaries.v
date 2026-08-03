@@ -47,6 +47,19 @@ Goal forall x y z p, proj1_sig (h x y z p) = z.
   hammer_dump "consistency-h.p".
 Abort.
 
+(* Case index guards read off a type-level function's own arguments relate
+   unrelated symbols, so the guarded branch equations they protect are asserted
+   at the wrong indices.  Both scrutinee shapes are dumped: dsize's declared
+   type has a different arity than the matched family's telescope, dheight's has
+   the same arity permuted. *)
+Goal forall n (x : nat) (t : dtree n), dsize (dnode n x t) = S n.
+  hammer_dump "consistency-dsize.p".
+Abort.
+
+Goal forall n (b : dbox dred n), dheight (dbox_succ dred n b) = S n.
+  hammer_dump "consistency-dheight.p".
+Abort.
+
 Goal forall (P : nat -> Set) a (e : a = a) x, tr P a a e x = x.
   hammer_dump "transport-tr-refl.p".
 Abort.

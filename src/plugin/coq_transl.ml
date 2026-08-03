@@ -520,6 +520,61 @@ let program_wf_simpl tm =
    unsafe unconditional equation. *)
 let wf_mark = ref false
 
+(* The number of arguments the telescope of `ty' takes.  Substituting into the
+   bodies would not change the count, so nothing is substituted. *)
+let rec telescope_length ty =
+  match ty with
+  | Prod(_, _, body) -> 1 + telescope_length body
+  | Let(_, (_, _, body)) -> telescope_length body
+  | _ -> 0
+
+(* The scrutinee's declared type need only be *convertible* to an application
+   of the matched inductive: a binder `r : insResult Red n', where `insResult'
+   is a type-level function, is matched as an `rtree'.  Reading index arguments
+   off the declared type would then take `insResult''s own arguments for
+   `rtree''s indices, so expose the inductive first and verify the head and the
+   arity before anything is emitted.  `None' means the invariant could not be
+   established; it is a refusal, never an omission (see `refuse_case').
+
+   A family declaring no indices carries no such obligation: no index guard is
+   read off the scrutinee's type at all, so its shape cannot mislead and is
+   passed on untouched.  That distinction is load-bearing, because outside a
+   case predicate `coq_convert' lowers the logical inductives to the FOL formers
+   `$True', `$False', `&' and `|', and a scrutinee typed by one of them is no
+   longer an application of the inductive in any syntactic sense.  `eq' is the
+   one lowered family that does declare an index; its case translation reads the
+   guard off the lowered equation instead (see `emit_prop_case'). *)
+let scrutinee_ind_args indname ty =
+  match (try Some (Defhash.find indname) with Failure _ -> None) with
+  | Some (_, IndType(_, _, params_num), indty, _) ->
+     (* the telescope is counted here rather than by `Coq_typing.get_type_args',
+        which refreshes every binder name and would thus renumber the symbols of
+        every axiom emitted afterwards *)
+     let expected = telescope_length indty in
+     if expected <= params_num then
+       Some (snd (flatten_app ty))
+     else
+       (* the arity check is against the inductive's declared telescope, so a
+          reduced but partially applied type is rejected too *)
+       let unfold c = try Some (coqdef_value (Defhash.find c)) with Failure _ -> None in
+       begin
+         match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
+         | Const(c), args when c = indname && List.length args = expected -> Some args
+         | _ -> None
+       end
+  | _ -> None
+
+(* A case whose scrutinee type cannot be exposed as an application of the
+   matched inductive has no computable index guard.  The index premise sits in
+   antecedent position, so omitting it alone would assert every branch equation
+   unconditionally -- for `Leaf : rbtree Black 0' that is
+   `forall c n. f c n Leaf = b1 c n', true only at the `Black'/`0' instance, and
+   in the untyped target it constrains junk applications and can contradict the
+   other branches.  The whole case is therefore refused. *)
+let refuse_case axname indname =
+  log 2 ("case-axiom-omitted: case-index-refusal " ^ axname ^ " (" ^ indname ^ ")");
+  return ()
+
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
   (* Note: the correctness of calling `prop_to_formula' below
      depends on the implementation of `convert_term' (that it
@@ -1010,6 +1065,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            | [] -> None
            | _ -> Some (join_right mk_and acc)
            end
+        (* an internal assertion: `scrutinee_ind_args' establishes that the
+           actual arguments come from the matched inductive itself, so all three
+           lists have the same length by construction *)
         | _ ->
            internal_error
              ("constructor result indices do not align with the case predicate (" ^
@@ -1066,7 +1124,18 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            raise (Hammer_errors.HammerError
                     "internal translation error: propositional case was not normalized")
       in
-      let (_, actual_tyargs) = flatten_app scrutinee_ty in
+      (* An `eq' scrutinee reads no index argument off its type: its guard is
+         the lowered equation itself (see `one_branch' below), which is also the
+         only form the type has left after logical lowering.  Everywhere else
+         the index arguments must come from the matched inductive. *)
+      match
+        if Coq_stdnames.is_init_logic "eq" indname then
+          Some []
+        else
+          scrutinee_ind_args indname scrutinee_ty
+      with
+      | None -> refuse_case axname indname
+      | Some actual_tyargs ->
       let close_fol body =
         let rec close ctx = function
           | (name, ty) :: rest ->
@@ -1183,15 +1252,17 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          | Some body_ty -> Some (Prod(name, ty, body_ty))
          | None -> None
          end
-      | Case(_, matched, _, raw_return_type, params_num, _) ->
+      | Case(indname, matched, _, raw_return_type, params_num, _) ->
          begin match infer_term_type ctx matched with
          | Some matched_ty ->
-            let (_, actual_tyargs) = flatten_app matched_ty in
-            if List.length actual_tyargs < params_num then
-              None
-            else
-              let indices = Hhlib.drop params_num actual_tyargs in
-              Some (simpl (mk_long_app raw_return_type (indices @ [matched])))
+            begin match scrutinee_ind_args indname matched_ty with
+            | Some actual_tyargs when List.length actual_tyargs >= params_num ->
+               (* the length test still has work to do for an index-free family,
+                  whose arguments are passed through unchecked *)
+               let indices = Hhlib.drop params_num actual_tyargs in
+               Some (simpl (mk_long_app raw_return_type (indices @ [matched])))
+            | _ -> None
+            end
          | None -> None
          end
       | Cast(_, ty) -> Some ty
@@ -1223,16 +1294,22 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          nothing here binds.  The binder standing for the scrutinee must be typed
          in the scope of [vars] alone, or the lifted case is hash-consed against
          a context too short for it; the scrutinee's inferred type is that same
-         type with the indices instantiated. *)
+         type with the indices instantiated.  When inference cannot recover such
+         a type -- it now refuses rather than guess when the scrutinee's type does
+         not expose the matched inductive -- the case is refused by the caller
+         instead of lifted against a context too short for it. *)
       let is_closed ty = term_fvars_subset (List.map fst vars) ty in
       let scrutinee_ty =
         if is_closed scrutinee_ty then
-          scrutinee_ty
+          Some scrutinee_ty
         else
           match infer_term_type ctx matched_term with
-          | Some ty when is_closed ty -> ty
-          | _ -> internal_error "case scrutinee type escapes the normalized scope"
+          | Some ty when is_closed ty -> Some ty
+          | _ -> None
       in
+      match scrutinee_ty with
+      | None -> return None
+      | Some scrutinee_ty ->
       let scrutinee_is_prop = Coq_typing.check_prop ctx scrutinee_ty in
       let aux_case = Lam(z, scrutinee_ty,
                          Case(indname, Var(z), return_type, raw_return_type,
@@ -1253,10 +1330,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
             | _ -> internal_error "case auxiliary lifting lost its normalized case body"
           end) >>= fun aux ->
       if scrutinee_is_prop then
-        return aux
+        return (Some aux)
       else
         convert ctx matched_term >>= fun mt ->
-        return (App(aux, mt))
+        return (Some (App(aux, mt)))
     in
     (* Termination follows the structure of the generated statement: first the
        number of root case/lambda/fix nodes remaining to compile, then the node
@@ -1325,7 +1402,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   | _ ->
                      case_aux_value vars indname matched_term return_type raw_return_type
                        params_num branches indty
-                     >>= fun rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
+                     >>= function
+                     | None -> refuse_case axname indname
+                     | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
                 end
               else if Coq_typing.check_type_target_is_prop indty then
                 if not opt_prop_case_erasure then begin
@@ -1372,8 +1451,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      record_case_dependency ();
                      case_aux_value vars indname matched_term return_type raw_return_type
                        params_num branches indty
-                     >>= fun rhs ->
-                     emit_equation ?premise (axname ^ "$link") vars lhs rhs false
+                     >>= function
+                     | None -> refuse_case axname indname
+                     | Some rhs ->
+                        emit_equation ?premise (axname ^ "$link") vars lhs rhs false
                 end
               else begin
                 record_case_dependency ();
@@ -1388,7 +1469,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                        try List.assoc scrutinee vars with Not_found ->
                          internal_error "case scrutinee is absent from the normalized context"
                      in
-                     let (_, actual_tyargs) = flatten_app scrutinee_ty in
+                     begin match scrutinee_ind_args indname scrutinee_ty with
+                     | None -> refuse_case axname indname
+                     | Some actual_tyargs ->
                      let rec split_scrutinee acc = function
                        | [] -> internal_error "case scrutinee is absent from the normalized context"
                        | (name, _) :: vars_after when name = scrutinee ->
@@ -1450,12 +1533,15 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                        (fun acc (premise, lhs2, vars2, axname2, body2) ->
                           acc >> compile_case ?premise lhs2 vars2 axname2 body2)
                        (return ()) prepared
+                     end
                   | _ ->
                      case_aux_value vars indname matched_term return_type raw_return_type
                        params_num branches indty
-                     >>= fun rhs ->
-                     emit_equation ?premise (axname ^ "$link") vars lhs rhs
-                       (Coq_typing.check_prop (List.rev vars) case_body)
+                     >>= function
+                     | None -> refuse_case axname indname
+                     | Some rhs ->
+                        emit_equation ?premise (axname ^ "$link") vars lhs rhs
+                          (Coq_typing.check_prop (List.rev vars) case_body)
                 in
                 if opt_refinement_types then
                   match Coq_erasure.classify (List.rev vars) indname params with
