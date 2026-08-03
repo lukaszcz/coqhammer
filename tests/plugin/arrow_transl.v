@@ -25,6 +25,16 @@ Parameter propdom : True -> A.
 
 Parameter nested : A -> B -> A.
 
+(* A long arrow telescope.  Each codomain is itself an arrow, so canonicalizing
+   one canonicalizes the next; the translation of the subject must therefore be
+   used once and not re-run, or the work doubles at every level and a telescope
+   this deep never finishes.  The Makefile bounds this file's compilation. *)
+Parameter deep :
+  A -> A -> A -> A -> A -> A -> A -> A -> A -> A ->
+  A -> A -> A -> A -> A -> A -> A -> A -> A -> A ->
+  A -> A -> A -> A -> A -> A -> A -> A -> A -> A ->
+  A -> A -> A -> A -> A -> A -> A -> A -> A -> A -> A.
+
 Lemma map_len :
   forall (X Y : Type) (g : X -> Y) (l : list X), length (map g l) = length l.
 Proof.
@@ -43,6 +53,7 @@ Hammer_transl "propdom".
 
 (* Nested arrows canonicalize recursively. *)
 Hammer_transl "nested".
+Hammer_transl "deep".
 
 Section ArrowGoal.
 

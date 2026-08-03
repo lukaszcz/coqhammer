@@ -2142,14 +2142,18 @@ and remove_type ctx ty =
       begin fun cctx cty ->
         match cty with
         | Prod(_, ty1, ty2) when eligible ->
-           (* The subject is built once and used both as the result and as the
-              axiom's subject: converting it twice could mint two different
-              symbols for a lift inside it that is not hash-consed. *)
-           let subject = convert cctx (mk_long_app (Const("$_arrow")) [ty1; ty2])
-           in
+           (* The subject is converted once and used both as the result and as
+              the axiom's subject: converting it twice could mint two different
+              symbols for a lift inside it that is not hash-consed.  Bind the
+              conversion here rather than passing it on unbound and using it
+              again: a translation is a computation that emits axioms, so using
+              one twice runs it twice, and since the domain and codomain of an
+              arrow are themselves translated through this branch, the doubling
+              compounds to 2^n on a telescope of n nested arrows. *)
+           convert cctx (mk_long_app (Const("$_arrow")) [ty1; ty2]) >>= fun subject ->
            add_type_unfolding_axiom ("$_arrow_" ^ unique_id ())
-             (ctx_to_vars cctx) cty subject >>
-           subject
+             (ctx_to_vars cctx) cty (return subject) >>
+           return subject
         | _ ->
            let name = "$_type_" ^ unique_id ()
            and vars = ctx_to_vars cctx

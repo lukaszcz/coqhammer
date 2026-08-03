@@ -198,7 +198,9 @@ arrow_transl.vo: arrow_transl.v
 	@set -e; \
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \
-	COQHAMMER_DUMP_DIR="$$tmp" $(COQC) arrow_transl.v > arrow_transl.out 2>&1 || { \
+	COQHAMMER_DUMP_DIR="$$tmp" timeout 600 $(COQC) arrow_transl.v > arrow_transl.out 2>&1 || { \
+	  echo "arrow_transl.v failed or timed out; a deep arrow telescope must not"; \
+	  echo "translate in time exponential in its depth"; \
 	  cat arrow_transl.out; rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
 	grep -Eq '^\$$_typeof_arrow_transl\.f: \(\(\$$HasType @ arrow_transl\.f\) @ \(\(\$$_arrow @ arrow_transl\.A\) @ arrow_transl\.B\)\)$$' arrow_transl.out || { \
 	  echo "instance-position arrow former check FAILED"; cat arrow_transl.out; \
