@@ -2,30 +2,13 @@
 #
 # Each aborts generation, so it measures nothing and would only abort the grid.
 #
-# MoreDep.v -- generation reaches the third hooked goal, `depth_max'`, and then
-#   blows up on the 1024-premise set: the FOL translation of that premise
-#   selection grows without bound (57 GB resident and still climbing after 41
-#   minutes; capped runs are killed at 8 GB in about a minute).  `gen-atp'
-#   wraps neither `dump_deps' nor `write_atp_file' in a timeout
-#   (hammer_main.ml), so the blow-up stalls the corpus run instead of skipping
-#   one problem.  The knn-32/64/128/256 problems for that same goal are emitted
-#   normally, as are the two goals before it.
-#   This is NOT the case-index defect that used to exclude this file.  That
-#   defect -- index arguments read off the scrutinee's declared type without
-#   checking its head, so `insResult''s own arguments were taken for `rtree''s
-#   indices -- is fixed: `present_balance1' now translates cleanly through all
-#   ten premise sets where it used to abort with "constructor result indices do
-#   not align with the case predicate".  The blow-up reproduces identically
-#   with the stock plugin, so it pre-dates the fix and was simply never
-#   observed while this file was excluded for the other reason.
-#   Remove this exclusion once gen-atp bounds per-problem translation.
-#
-# general_recursion.v -- the deliberately non-terminating `nonterm` example,
-#   defined by well-founded recursion on `fun _ _ => True` via a 10-level
-#   `Acc_intro_generator` witness.  Translating its transparent accessibility
+# general_recursion.v -- the deliberately non-terminating `nonterm' example,
+#   defined by well-founded recursion on `fun _ _ => True' via a 10-level
+#   `Acc_intro_generator' witness.  Translating its transparent accessibility
 #   body drives coq_transl into a super-linear blow-up (feature extraction
 #   completes; the cost is in the FOL translation itself) that the grid records
 #   as a stack overflow.  Reducing the Acc depth removes the blow-up.  Pre-dates
-#   and is independent of the projection fix.
-MoreDep.v
+#   and is independent of the projection fix, and is not the arrow-telescope
+#   blow-up that used to exclude MoreDep.v: that one is fixed and the file is
+#   back in the corpus.
 general_recursion.v
