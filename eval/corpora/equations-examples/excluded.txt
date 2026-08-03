@@ -1,27 +1,24 @@
 # Sources excluded from the equations-examples corpus.
 #
-# Each aborts generation before any hammer runs, so it measures nothing and
-# would only abort the grid.
+# Each aborts generation, so it measures nothing and would only abort the grid.
 #
-# MoreDep.v -- a known translation defect, not a missing feature.  Five goals
-#   (present_balance1, present_balance2, present_ins, present_insert_Red,
-#   present_insert_Black) reach a match whose scrutinee is a binder of type
-#   `insResult Red n`, where insResult is a type-level Equations function with
-#   `insResult Red n := rtree n`.  That type is convertible to an application of
-#   the matched inductive but is not syntactically one, and the case translation
-#   reads the actual index arguments off the scrutinee's declared type with
-#   `flatten_app`, discarding the head without comparing it to the matched
-#   inductive.  So insResult's own arguments are taken for rtree's indices --
-#   two arguments, the first of them `Red : color`, for a family declaring one
-#   nat index -- and the lockstep walk over (actual, constructor, formal)
-#   indices reports "constructor result indices do not align with the case
-#   predicate (1 actual, 0 constructor, 0 formal arguments remain)".
-#   The scrutinee type must be head-normalized to an application of the matched
-#   inductive, and the head must be checked, before any index guard is emitted.
-#   Unrelated to the indexed-family/fording frontier: rtree's own indices align
-#   fine.  Also unrelated to the primitive-projection handling fixed in "Expand
-#   primitive projections before FOL encoding", which is what cleared the other
-#   MoreDep failures.  Remove this exclusion once the defect is fixed.
+# MoreDep.v -- generation reaches the third hooked goal, `depth_max'`, and then
+#   blows up on the 1024-premise set: the FOL translation of that premise
+#   selection grows without bound (57 GB resident and still climbing after 41
+#   minutes; capped runs are killed at 8 GB in about a minute).  `gen-atp'
+#   wraps neither `dump_deps' nor `write_atp_file' in a timeout
+#   (hammer_main.ml), so the blow-up stalls the corpus run instead of skipping
+#   one problem.  The knn-32/64/128/256 problems for that same goal are emitted
+#   normally, as are the two goals before it.
+#   This is NOT the case-index defect that used to exclude this file.  That
+#   defect -- index arguments read off the scrutinee's declared type without
+#   checking its head, so `insResult''s own arguments were taken for `rtree''s
+#   indices -- is fixed: `present_balance1' now translates cleanly through all
+#   ten premise sets where it used to abort with "constructor result indices do
+#   not align with the case predicate".  The blow-up reproduces identically
+#   with the stock plugin, so it pre-dates the fix and was simply never
+#   observed while this file was excluded for the other reason.
+#   Remove this exclusion once gen-atp bounds per-problem translation.
 #
 # general_recursion.v -- the deliberately non-terminating `nonterm` example,
 #   defined by well-founded recursion on `fun _ _ => True` via a 10-level
