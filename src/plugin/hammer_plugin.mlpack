@@ -8,6 +8,7 @@ Defhash
 Coq_typing
 Coq_erasure
 Hashing
+Lift_stats
 Coq_convert
 Tptp_out
 Coq_transl

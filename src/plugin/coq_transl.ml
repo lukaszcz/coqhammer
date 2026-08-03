@@ -252,6 +252,139 @@ let with_lift_dependencies make =
     delivered;
   result
 
+(***************************************************************************************)
+(* Lift-sharing diagnostic *)
+
+(* Lifting mints one symbol per occurrence shape, so one Coq object reached at
+   two shapes gets two unrelated names and nothing in the problem relates them.
+   Whether sharing those lifts across instantiation is worth its risk is a
+   question about corpora, and these counters answer it: they report how many
+   symbols each lift kind mints and how many of them an instance match would
+   relate, without emitting anything.  Behind COQHAMMER_LIFT_STATS, so a
+   default build neither counts nor pays for the matching. *)
+
+let () =
+  Lift_stats.add_source
+    begin fun () ->
+      List.concat_map
+        begin fun (kind, c) ->
+          let open Hashing in
+          List.map (fun (field, n) -> ("hash." ^ kind ^ "." ^ field, n))
+            [ ("registered", c.lc_registered); ("queried", c.lc_queried);
+              ("linked_fwd", c.lc_linked_fwd); ("linked_rev", c.lc_linked_rev);
+              ("attempts", c.lc_attempts); ("filtered", c.lc_filtered);
+              ("truncated", c.lc_truncated);
+              ("noconst_dropped", c.lc_noconst_dropped) ]
+        end
+        (Hashing.all_counters ())
+    end
+
+let count_lift kind field =
+  if Lift_stats.enabled () then Lift_stats.count (kind ^ "." ^ field)
+
+(* [<kind>.minted] counts every symbol the kind mints and the outcome fields
+   partition it.  [remove_lambda] adds a fifth outcome, [unnamed], for a lift
+   which does not name itself and so neither registers nor links: folding those
+   into [unlinked] would report a missing partner where there is no name to
+   link one to. *)
+let link_outcome link =
+  match link with
+  | Some l when l.Hashing.ll_new_is_schema -> "linked_rev"
+  | Some _ -> "linked_fwd"
+  | None -> "unlinked"
+
+(* Looks for a lift this one is related to by instantiation, registers this
+   lift, and returns the link so the caller can emit its equation.  Called
+   exactly once per minted symbol: registering twice would make a lift a
+   candidate partner of itself under a second name. *)
+let link_lift kind name cctx ctm =
+  let link = Hashing.find_lift_link kind cctx ctm in
+  count_lift kind "minted";
+  count_lift kind (link_outcome link);
+  Hashing.register_lift kind name cctx ctm;
+  link
+
+(* Type and lambda lifts link unconditionally: the equation they emit needs the
+   registry whether or not the diagnostic is on.  The kinds which do not emit
+   link equations yet register only for the diagnostic, so a default build pays
+   nothing for them. *)
+let record_lift_stats kind name cctx ctm =
+  if Lift_stats.enabled () then ignore (link_lift kind name cctx ctm)
+
+(* Stage 2 of the plan would translate a dependent product as
+   [$_prod(A, F)], and its codomain object [F] is canonical only when
+   [fun x : A => B] eta-contracts to a term not mentioning [x].  Separating the
+   two shapes is what decides whether that stage is worth writing. *)
+let codomain_eta_contracts vname ty =
+  match ty with
+  | App(cod, Var(x)) when x = vname -> not (var_occurs vname cod)
+  | _ -> false
+
+let record_type_lift_shape eligible cctx cty =
+  if Lift_stats.enabled () then
+    let shape =
+      if eligible then
+        (* translated structurally as [$_arrow], so no name is minted *)
+        "arrow"
+      else
+        match cty with
+        | Prod(vname, ty1, ty2) ->
+           if (try Coq_typing.check_prop cctx ty1 with _ -> false) then
+             "prop_domain"
+           else if not (var_occurs vname ty2) then
+             (* a non-dependent non-Prop-domain product which the eligibility
+                test nevertheless rejected: a canary, expected to stay at 0 *)
+             "nondep_other"
+           else if codomain_eta_contracts vname ty2 then
+             "dep_eta"
+           else
+             "dep_noneta"
+        | _ ->
+           "other"
+    in
+    Lift_stats.count ("type.shape." ^ shape)
+
+(* A structural former identifies a type by its *translated* parts, so two Coq
+   types differing only in erased content share one object -- [T eq_refl -> nat]
+   and [T q -> nat] with [q] an erased proof variable are both
+   [$_arrow(cT, cnat)] -- while [guard_leaf] may classify only one of them as a
+   refinement.  One object then carries two different unfolding axioms.  That is
+   not unsound: every identification [convert] makes is an equality valid under
+   proof irrelevance, so the several guards are simultaneously true of the same
+   object.  What it does mean is that sharing propagates any per-type guard bug
+   to every occurrence, so census how often the guards actually differ.  Nothing
+   emitted changes. *)
+let type_unfolding_hash : (coqterm, coqterm) Hashtbl.t = Hashtbl.create 128
+
+(* Every binder of an unfolding axiom is minted fresh -- the subject variable
+   and, through [make_guard], each variable the guard quantifies -- so two
+   structurally identical unfoldings differ as built.  Compare them
+   alpha-normalized.  The context to canonicalize against is the free variables
+   the formula actually mentions, not the lift's whole context: canonical
+   numbering continues past the context, a lift's context may bind variables
+   its type never mentions, and their count would otherwise shift the number of
+   every bound variable.  Subjects need no normalization -- they are built from
+   the canonical variables already, so one object is one term.
+
+   Normalizing and comparing whole formulas is not free, so it is done only
+   when someone is looking: with the diagnostic on, or in a debug build. *)
+let record_unfolding_sharing axname fvars subject fla =
+  if Lift_stats.enabled () || opt_debug_level >= 1 then
+    let names = get_free_varnames fla in
+    let ctx = vars_to_ctx (List.filter (fun (x, _) -> List.mem x names) fvars) in
+    let (_, fla, _) = Hashing.canonical ctx fla in
+    match Hashtbl.find_opt type_unfolding_hash subject with
+    | None -> Hashtbl.add type_unfolding_hash subject fla
+    | Some fla0 ->
+       if fla0 = fla then
+         Lift_stats.count "type.guard_shared"
+       else
+         begin
+           Lift_stats.count "type.guard_heterogeneous";
+           log 1 ("heterogeneous unfolding for the shared type object " ^
+                  string_of_coqterm subject ^ " in " ^ axname)
+         end
+
 let is_transport_constant name =
   List.exists (fun basename -> Coq_stdnames.is_init_logic basename name)
     [ "eq_rect"; "eq_rec"; "eq_ind"; "eq_rect_r"; "eq_rec_r"; "eq_ind_r" ]
@@ -1326,6 +1459,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
             match ctm with
             | Lam(_, _, Case(indname2, _, _, _, _, _)) ->
                let name = "$_case_" ^ indname2 ^ "$" ^ unique_id () in
+               record_lift_stats "case_aux" name cctx ctm;
                lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
             | _ -> internal_error "case auxiliary lifting lost its normalized case body"
           end) >>= fun aux ->
@@ -2050,7 +2184,38 @@ and remove_lambda ctx tm =
       begin fun cctx ctm ->
         let name = "$_lam_" ^ unique_id ()
         in
-        lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
+        (* A lambda lift's definition equation relates [name] and its body only
+           when both are applied to the lambda-bound arguments; the unapplied
+           object this returns is not identified by it, and identifying two
+           pointwise equal functions in general needs functional
+           extensionality.  A link equation is not that: it says the two lifts'
+           canonical terms are related by syntactic instantiation, so the two
+           symbols name one and the same Coq lambda term.  Like the type-lift
+           links it is true by construction, and needs no extensionality.
+
+           The link is looked up before the lift is built, so this lift -- which
+           registers itself only below -- cannot match itself. *)
+        let link = Hashing.find_lift_link "lam" cctx ctm in
+        count_lift "lam" "minted";
+        lambda_lifting [] name name (ctx_to_vars cctx) [] ctm >>= fun result ->
+        (* [lambda_lifting] does not always name the lift [name]: a [Fix] body
+           it delegates to [fix_lifting] and a [Case] body to [case_lifting],
+           which mint their own symbols, and only its [emit_definition_equation]
+           paths return [name] applied to the lift's context.  An equation about
+           [name] is meaningful only in that last case, so read the head of what
+           was actually returned rather than predicting it from the body's shape
+           -- a [Fix] does come back under [name] when [fix_lifting] reaches its
+           own [lambda_lifting] for the selected component.  With an empty
+           context the result is the bare [Const name]. *)
+        match fst (flatten_app result) with
+        | Const cname when cname = name ->
+           count_lift "lam" (link_outcome link);
+           Hashing.register_lift "lam" name cctx ctm;
+           add_link_axiom name cctx link >>
+           return result
+        | _ ->
+           count_lift "lam" "unnamed";
+           return result
       end)
 
 and remove_case ctx tm =
@@ -2058,6 +2223,10 @@ and remove_case ctx tm =
   with_lift_dependencies (fun () ->
     Hashing.find_or_insert_keyed (case_occurrence_key ctx tm) coqterm_hash ctx tm
       begin fun cctx ctm ->
+        (* [case_lifting] mints its symbols internally, so the diagnostic
+           identifies the entry by a fresh name of its own; it uses the name
+           only to tell registry entries apart. *)
+        record_lift_stats "case" ("$_case_" ^ unique_id ()) cctx ctm;
         case_lifting [] "" "" (ctx_to_vars cctx) [] ctm
       end)
 
@@ -2090,6 +2259,7 @@ and remove_fix ctx tm =
   with_lift_dependencies (fun () ->
     Hashing.find_or_insert coqterm_hash ctx tm
       begin fun cctx ctm ->
+        record_lift_stats "fix" ("$_fix_" ^ unique_id ()) cctx ctm;
         fix_lifting [] "" "" (ctx_to_vars cctx) [] ctm
       end)
 
@@ -2140,6 +2310,7 @@ and remove_type ctx ty =
   with_lift_dependencies (fun () ->
     Hashing.find_or_insert coqterm_hash ctx ty
       begin fun cctx cty ->
+        record_type_lift_shape eligible cctx cty;
         match cty with
         | Prod(_, ty1, ty2) when eligible ->
            (* The subject is converted once and used both as the result and as
@@ -2158,9 +2329,55 @@ and remove_type ctx ty =
            let name = "$_type_" ^ unique_id ()
            and vars = ctx_to_vars cctx
            in
+           let link = link_lift "type" name cctx cty in
+           (* The instance's own unfolding axiom stays: the schema's axiom read
+              through the link is sound but need not be the same statement,
+              since [guard_leaf] classifies the unnormalized Coq type.  Both are
+              individually true of the one object, so keeping both is correct. *)
            add_def_eq_type_axiom name name vars cty >>
+           add_link_axiom name cctx link >>
            convert cctx (mk_long_app (Const(name)) (mk_vars vars))
       end)
+
+(* A lifted symbol names a Coq term, so when one lift's term is a syntactic
+   instance of another's the two symbols denote the same Coq object at the
+   matching arguments and this equation is true by construction -- both sides
+   are images of one Coq term.  Being an equality it bridges in both
+   directions, which the unfolding axiom cannot do: that one is only an
+   implication (commit 951862d) and nothing else relates two names minted for
+   the same type at two occurrence shapes.
+
+   The equation is emitted inside the [mk] of the lift minted *second*, so it
+   lives in that lift's monadic prepender and travels with it into every
+   declaration which uses the lift.  A problem holding only one side is still
+   sound: the absent side is then an alias with no axioms of its own.
+
+   Uniformly, the equation is closed over the instance side's canonical
+   context, applies the instance's symbol to that context's own variables and
+   the schema's symbol to the matching substitution. *)
+and add_link_axiom name cctx link =
+  match link with
+  | None -> return ()
+  | Some link ->
+     let open Hashing in
+     let (inst_name, inst_ctx, schema_name) =
+       if link.ll_new_is_schema then
+         (* the partner is the instance of the lift just minted *)
+         (link.ll_name, link.ll_ctx, name)
+       else
+         (name, cctx, link.ll_name)
+     in
+     let vars = ctx_to_vars inst_ctx
+     in
+     (* Built through the same path [add_def_eq_type_axiom] uses, so arity and
+        [$HasType] handling are unchanged. *)
+     close vars
+       begin fun ctx ->
+         convert ctx (mk_long_app (Const(inst_name)) (mk_vars vars)) >>= fun lhs ->
+         convert ctx (mk_long_app (Const(schema_name)) link.ll_subst) >>= fun rhs ->
+         return (mk_eq lhs rhs)
+       end >>= fun r ->
+     add_axiom (mk_axiom ("$_link_" ^ unique_id ()) r)
 
 and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
@@ -2194,8 +2411,11 @@ and add_type_unfolding_axiom axname fvars ty subject =
          function application.  This holds for a canonical [$_arrow] subject
          exactly as for a lifted name: canonicalization changes which object the
          unfolding speaks about, never its direction or strength. *)
-      return (mk_forall vname type_any
-                (mk_impl (mk_hastype (Var(vname)) tp) guard))
+      let fla =
+        mk_forall vname type_any (mk_impl (mk_hastype (Var(vname)) tp) guard)
+      in
+      record_unfolding_sharing axname fvars tp fla;
+      return fla
     end >>= fun r ->
   add_axiom (mk_axiom axname r)
 
@@ -2655,6 +2875,7 @@ let cleanup () =
   Coq_erasure.clear ();
   Case_dependencies.clear ();
   Lift_dependencies.clear ();
+  Hashtbl.clear type_unfolding_hash;
   translation_owner := "";
   Hashing.clear coqterm_hash
 

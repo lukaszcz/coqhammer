@@ -17,6 +17,8 @@ src/plugin/coq_erasure.mli
 src/plugin/coq_erasure.ml
 src/plugin/hashing.mli
 src/plugin/hashing.ml
+src/plugin/lift_stats.mli
+src/plugin/lift_stats.ml
 src/plugin/coq_convert.mli
 src/plugin/coq_convert.ml
 src/plugin/tptp_out.mli

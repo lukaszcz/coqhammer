@@ -1,19 +1,20 @@
 COQC ?= rocq c
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo $(EXTRACTION_VOS)
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
 # but only trivial ones the sauto pretactic phase closes before any ATP is
-# consulted; erasure_blacklist.vo and arrow_transl.vo assert on the axioms the
-# translation emits and prove nothing.  Everything else either sets SAutoLimit
-# to 0, which disables that phase and hands the goal to the ATPs, or requires a
-# file that does.  prover_selection.vo also passes without an ATP, but only
-# vacuously: it checks that `hammer` fails when every prover is disabled, which
-# is equally true when no prover exists, so running it here would not test
-# detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo
+# consulted; erasure_blacklist.vo, arrow_transl.vo and type_sharing_transl.vo
+# assert on the axioms the translation emits and prove nothing -- the last one
+# only translates declarations and dumps a problem for an aborted goal.
+# Everything else either sets SAutoLimit to 0, which disables that phase and
+# hands the goal to the ATPs, or requires a file that does.  prover_selection.vo
+# also passes without an ATP, but only vacuously: it checks that `hammer` fails
+# when every prover is disabled, which is equally true when no prover exists, so
+# running it here would not test detection.
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -255,6 +256,72 @@ arrow_transl.vo: arrow_transl.v
 	  rm -f arrow_transl.vo arrow_transl.out; exit 1; \
 	fi; \
 	rm -f arrow_transl.out
+
+type_sharing_transl.vo: type_sharing_transl.v
+	@set -e; \
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	fail() { \
+	  echo "$$1"; cat type_sharing_transl.out; \
+	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; \
+	}; \
+	COQHAMMER_DUMP_DIR="$$tmp" $(COQC) type_sharing_transl.v > type_sharing_transl.out 2>&1 || \
+	  fail "type_sharing_transl.v failed to compile"; \
+	dep_link=$$(grep -E '^\$$_link_[0-9]+: \(\$$_type_[0-9]+ = \(\(\$$_type_[0-9]+ @ type_sharing_transl\.X\) @ type_sharing_transl\.Pi\)\)$$' type_sharing_transl.out || true); \
+	[ -n "$$dep_link" ] || fail "dependent product link equation check FAILED"; \
+	dep_lhs=$$(printf '%s\n' "$$dep_link" | grep -Eo '\$$_type_[0-9]+' | head -n 1); \
+	dep_rhs=$$(printf '%s\n' "$$dep_link" | grep -Eo '\$$_type_[0-9]+' | sed -n 2p); \
+	dep_sym=$$(grep -E '^\$$_typeof_type_sharing_transl\.dep_inst:' type_sharing_transl.out | \
+	  grep -Eo '\$$_type_[0-9]+' | head -n 1); \
+	[ "$$dep_lhs" = "$$dep_sym" ] || \
+	  fail "the dependent link does not relate the instance's own lifted symbol"; \
+	[ "$$dep_lhs" != "$$dep_rhs" ] || \
+	  fail "the dependent link relates a lifted symbol to itself, so it says nothing"; \
+	grep -Eq '^\$$_link_[0-9]+: !\[v_CANONICAL_0 : \$$Any\]: \(\(\(\$$_type_[0-9]+ @ v_CANONICAL_0\) = \(\(\$$_type_[0-9]+ @ v_CANONICAL_0\) @ \(type_sharing_transl\.Fam @ v_CANONICAL_0\)\)\)\)$$' type_sharing_transl.out || \
+	  fail "open dependent instance link equation check FAILED"; \
+	prop_link=$$(grep -E '^\$$_link_[0-9]+: \(\$$_type_[0-9]+ = \(\$$_type_[0-9]+ @ type_sharing_transl\.A\)\)$$' type_sharing_transl.out || true); \
+	[ -n "$$prop_link" ] || fail "proposition-domain product link equation check FAILED"; \
+	prop_lhs=$$(printf '%s\n' "$$prop_link" | grep -Eo '\$$_type_[0-9]+' | head -n 1); \
+	prop_sym=$$(grep -E '^\$$_typeof_type_sharing_transl\.prop_inst:' type_sharing_transl.out | \
+	  grep -Eo '\$$_type_[0-9]+' | head -n 1); \
+	[ "$$prop_lhs" = "$$prop_sym" ] || \
+	  fail "the Prop-domain link does not relate the instance's own lifted symbol"; \
+	lam_link=$$(grep -E '^\$$_link_[0-9]+: \(\$$_lam_[0-9]+ = \(\(\$$_lam_[0-9]+ @ type_sharing_transl\.X\) @ type_sharing_transl\.gg\)\)$$' type_sharing_transl.out || true); \
+	[ -n "$$lam_link" ] || fail "lambda link equation check FAILED"; \
+	lam_lhs=$$(printf '%s\n' "$$lam_link" | grep -Eo '\$$_lam_[0-9]+' | head -n 1); \
+	lam_rhs=$$(printf '%s\n' "$$lam_link" | grep -Eo '\$$_lam_[0-9]+' | sed -n 2p); \
+	lam_inst_sym=$$(grep -E '^\$$_def_type_sharing_transl\.lam_inst:' type_sharing_transl.out | \
+	  grep -Eo '\$$_lam_[0-9]+' | head -n 1); \
+	lam_schema_sym=$$(grep -E '^\$$_def_type_sharing_transl\.lam_schema:' type_sharing_transl.out | \
+	  grep -Eo '\$$_lam_[0-9]+' | head -n 1); \
+	[ "$$lam_lhs" = "$$lam_inst_sym" ] || \
+	  fail "the lambda link does not relate the instance's own lifted lambda"; \
+	[ "$$lam_rhs" = "$$lam_schema_sym" ] || \
+	  fail "the lambda link does not relate the schema's own lifted lambda"; \
+	[ "$$lam_lhs" != "$$lam_rhs" ] || \
+	  fail "the lambda link relates a lifted lambda to itself, so it says nothing"; \
+	arrow_axioms=$$(grep -Ec '^\$$_arrow_[0-9]+:' type_sharing_transl.out || true); \
+	type_axioms=$$(grep -Ec '^\$$_type_[0-9]+:' type_sharing_transl.out || true); \
+	if [ "$$arrow_axioms" -lt 1 ] || [ "$$type_axioms" -lt 1 ]; then \
+	  fail "no arrow or type unfolding axiom was emitted, so the equivalence guard is vacuous"; \
+	fi; \
+	if grep -E '^\$$_(arrow|type|link)_[0-9]+:' type_sharing_transl.out | grep -q '<=>'; then \
+	  fail "a lifted-type axiom is an equivalence, which is unsound over empty domains"; \
+	fi; \
+	grep -Eq "^fof\(.\\\$$_link_[0-9]+., axiom, \(c_24__type__[0-9]+ = c_24__type__[0-9]+___24a2\(ctype__sharing__transl_2eX,cQs\)\)\)\.$$" "$$tmp/type_sharing_transl.p" || { \
+	  echo "dumped link equation check FAILED"; \
+	  grep -E "^fof\(.\\\$$_link_" "$$tmp/type_sharing_transl.p" || true; \
+	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; }; \
+	grep -Eq '^fof\(.\$$_link_[0-9]+., axiom, \(c_24__lam__[0-9]+ = c_24__lam__[0-9]+___24a2\(ctype__sharing__transl_2eX,ctype__sharing__transl_2egg\)\)\)\.$$' "$$tmp/type_sharing_transl.p" || { \
+	  echo "dumped lambda link equation check FAILED"; \
+	  grep -E "^fof\(.\\\$$_link_" "$$tmp/type_sharing_transl.p" || true; \
+	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; }; \
+	if grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | grep -q '<=>'; then \
+	  echo "a dumped lifted-type axiom is an equivalence, which is unsound over empty domains"; \
+	  grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | grep '<=>' || true; \
+	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; \
+	fi; \
+	rm -f type_sharing_transl.out
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
 	@set -e; \
