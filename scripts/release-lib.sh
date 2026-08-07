@@ -120,18 +120,32 @@ opam_newest() {
   opam_pkg_versions "$1" | sort -V | tail -1
 }
 
+# opam_newest_below <pkg> <X.Y>: newest opam version of <pkg> whose major.minor
+# line is strictly older than <X.Y> (e.g. 9.1.0 for bound 9.2); empty if none.
+opam_newest_below() {
+  opam_pkg_versions "$1" \
+    | awk -v b="$2" '
+        { split($0, ver, "."); split(b, bnd, ".")
+          if (ver[1] + 0 < bnd[1] + 0 ||
+              (ver[1] + 0 == bnd[1] + 0 && ver[2] + 0 < bnd[2] + 0)) print }' \
+    | sort -V | tail -1
+}
+
 # stdlib_lower_bound <rocq>: lower bound for the rocq-stdlib opam-file
 # dependency targeting Rocq <rocq>. Normally <rocq> itself, but rocq-stdlib
 # usually lags rocq-core on opam; if <rocq> is not yet published for
-# rocq-stdlib, fall back to the newest available stdlib major.minor line so
-# the constraint stays satisfiable. Echoes <rocq> unchanged for pre-9 Coq
-# branches (which keep the legacy `coq` dependency instead) or when opam is
-# unavailable.
+# rocq-stdlib, fall back to the newest available stdlib major.minor line below
+# the release's own upper bound so the constraint stays satisfiable. The bound
+# matters because releases are not always made for the newest Rocq line: when a
+# stdlib line >= <next-rocq> is already published, taking the newest line
+# overall would emit an empty range (e.g. >= 9.3 & < 9.3~). Echoes <rocq>
+# unchanged for pre-9 Coq branches (which keep the legacy `coq` dependency
+# instead) or when opam is unavailable.
 stdlib_lower_bound() {
   local v="$1" newest
   if [ "$(rocq_core_pkg "$v")" = "rocq-core" ] \
      && [ -z "$(opam_newest_matching rocq-stdlib "$v" || true)" ]; then
-    newest="$(opam_newest rocq-stdlib || true)"
+    newest="$(opam_newest_below rocq-stdlib "$(next_rocq "$v")" || true)"
     if [ -n "$newest" ]; then
       printf '%s\n' "$newest" | grep -oE '^[0-9]+\.[0-9]+'
       return 0
