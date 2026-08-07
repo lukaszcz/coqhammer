@@ -453,10 +453,20 @@ run_generation() {
   # The exit code alone cannot decide pass/fail here (see collect_failures
   # above), so the make invocation must not trip set -e itself: that would
   # abort before the collect_failures check below runs and reports where the
-  # diagnostics are.
-  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1 || true
+  # diagnostics are.  Keep the status rather than discard it, though: a check
+  # that make itself reports as failed is not a check that passed, and its
+  # wording ("No rule to make target", a signalled coqc) need not contain any
+  # of the scanned words.  So scan first, for the diagnostics, then fail on
+  # either verdict.
+  local check_status=0
+  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1 \
+    || check_status=$?
   if collect_failures "$outdir/check.full.log" "$outdir/check.log"; then
     echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
+    exit 1
+  fi
+  if [ "$check_status" -ne 0 ]; then
+    echo "Check failed for $label/$corpus; see $outdir/check.full.log" >&2
     exit 1
   fi
 
