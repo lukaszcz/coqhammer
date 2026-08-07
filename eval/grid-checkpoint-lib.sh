@@ -4,11 +4,14 @@
 # Shared by detect_jobs for its three tunables (EVAL_JOBS,
 # EVAL_MEMORY_PER_JOB_MB, EVAL_RESERVE_MB): all three must be positive
 # integers, since any of them being zero or non-numeric would otherwise reach
-# an arithmetic context below and fail with an opaque shell error.
+# an arithmetic context below and fail with an opaque shell error.  A leading
+# zero is rejected too: "00" is zero and would divide by zero, and the shell
+# reads "010" in an arithmetic context as octal, silently using a different
+# value than the one written.
 validate_positive_int() {
   local name="$1" value="$2"
   case "$value" in
-    ''|*[!0-9]*|0) echo "$name must be a positive integer" >&2; return 1 ;;
+    ''|*[!0-9]*|0*) echo "$name must be a positive integer" >&2; return 1 ;;
   esac
 }
 
