@@ -289,19 +289,23 @@ let temp_parent_dir () =
       ("coqhammer-" ^ string_of_int (Unix.geteuid ()))
   in
   (try Sys.mkdir dir 0o700 with Sys_error _ -> ());
-  let unsafe () =
+  (* Each rejection names its own remedy: only wrong permissions can be
+     repaired in place, since chmod cannot change the owner of a directory
+     (and a directory owned by someone else cannot be chmod'ed at all). *)
+  let unsafe reason =
     raise (Hammer_errors.HammerError
-             ("unsafe temporary directory: " ^ dir ^
-                " (expected a directory owned by the current user with \
-                 permissions 0700; remove it or run 'chmod 700' on it)"))
+             ("unsafe temporary directory: " ^ dir ^ " (" ^ reason ^ ")"))
   in
   let st =
-    try Unix.lstat dir with Unix.Unix_error _ -> unsafe ()
+    try Unix.lstat dir
+    with Unix.Unix_error _ -> unsafe "cannot be inspected; remove it"
   in
-  if st.Unix.st_kind <> Unix.S_DIR || st.Unix.st_uid <> Unix.geteuid ()
-     || st.Unix.st_perm land 0o777 <> 0o700
-  then
-    unsafe ();
+  if st.Unix.st_kind <> Unix.S_DIR then
+    unsafe "expected a directory; remove it"
+  else if st.Unix.st_uid <> Unix.geteuid () then
+    unsafe "expected a directory owned by the current user; remove it"
+  else if st.Unix.st_perm land 0o777 <> 0o700 then
+    unsafe "expected permissions 0700; run 'chmod 700' on it or remove it";
   dir
 
 let make_temp_dir parent =
