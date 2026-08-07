@@ -50,8 +50,10 @@ let dump () =
     try
       let fname = Filename.concat out_dir ("lift-stats-" ^ string_of_int (Unix.getpid ()) ^ ".txt") in
       let oc = open_out fname in
-      List.iter (fun (name, n) -> output_string oc (name ^ "=" ^ string_of_int n ^ "\n")) (collect ());
-      close_out oc
+      Fun.protect ~finally:(fun () -> close_out_noerr oc)
+        begin fun () ->
+          List.iter (fun (name, n) -> output_string oc (name ^ "=" ^ string_of_int n ^ "\n")) (collect ())
+        end
     with _ ->
       (* A diagnostic that aborts the translation it measures is worse than no
          diagnostic; an unwritable directory is the user's problem to notice in

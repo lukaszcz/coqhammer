@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import csv
+import functools
 import re
 import statistics
 import sys
@@ -297,6 +298,10 @@ def md_table(rows: list[dict[str, object]], columns: list[str], limit: int | Non
 AttemptKey = tuple[str, str, str, str]
 
 
+# Cached because every watch-point row rescans the same label: the scan walks
+# each generated problem of every corpus/premise/prover, and write_analysis asks
+# for two problems per label out of that one traversal.
+@functools.cache
 def attempt_maps(root: Path, label: str) -> tuple[set[AttemptKey], set[AttemptKey], set[AttemptKey]]:
     # Three separate sets because ATP success and reconstruction attempt are not
     # the same event: an "Unsatisfiable" output is a genuine ATP success but is

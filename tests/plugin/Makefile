@@ -233,8 +233,8 @@ arrow_transl.vo: arrow_transl.v
 	  echo "dumped instance-position arrow guard check FAILED"; \
 	  grep -F "'\$$_typeof_h'" "$$tmp/arrow_transl.p" || true; \
 	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
-	grep -E 'c_24__arrow___24t\(V[A-Za-z0-9_]+,V[A-Za-z0-9_]+,V[A-Za-z0-9_]+\)' "$$tmp/arrow_transl.p" | \
-	  grep -qv '^fof(.\$$' || { \
+	grep -Eq '^fof\(.[^$$][^,]*, axiom, !\[[^]]*\]:.*c_24__arrow___24t\(V[A-Za-z0-9_]+,V[A-Za-z0-9_]+,V[A-Za-z0-9_]+\)' \
+	  "$$tmp/arrow_transl.p" || { \
 	  echo "dumped quantified premise arrow guard check FAILED"; \
 	  rm -f arrow_transl.vo arrow_transl.out; exit 1; }; \
 	tdef_arrows=$$(grep -Fc "fof('\$$tdef_\$$_arrow'," "$$tmp/arrow_transl.p" || true); \
@@ -320,13 +320,12 @@ type_sharing_transl.vo: type_sharing_transl.v
 	  echo "dumped lambda link equation check FAILED"; \
 	  grep -E "^fof\(.\\\$$_link_" "$$tmp/type_sharing_transl.p" || true; \
 	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; }; \
-	if grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
-	   awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
-	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
+	equivalences=$$(grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
+	  awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
+	         if (j > 0 && (i == 0 || j < i)) print }'); \
+	if [ -n "$$equivalences" ]; then \
 	  echo "a dumped lifted-type axiom is an equivalence, which is unsound over empty domains"; \
-	  grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
-	    awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
-	           if (j > 0 && (i == 0 || j < i)) print }' || true; \
+	  printf '%s\n' "$$equivalences"; \
 	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; \
 	fi; \
 	rm -f type_sharing_transl.out
@@ -353,7 +352,9 @@ membership_transl.vo: membership_transl.v
 	printf '%s\n' "$$endo_def" | \
 	  grep -Eq '\(=> @ \(\(\$$HasType @ var_[0-9]+\) @ membership_transl\.endo\)\)' || \
 	  fail "transparent product definition: the unfolding must be stated as an implication"; \
-	if printf '%s\n' "$$endo_def" | grep -q '<=>'; then \
+	if printf '%s\n' "$$endo_def" | \
+	   awk '{ i = index($$0, "(=> @"); j = index($$0, "(<=> @"); \
+	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
 	  fail "transparent product definition is an equivalence, which is unsound over empty domains"; \
 	fi; \
 	product_axioms=$$(grep -Ec '^\$$_(arrow|type)_[0-9]+:' membership_transl.out || true); \

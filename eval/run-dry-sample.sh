@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# shellcheck source=eval/cli-lib.sh
+source "$(dirname "${BASH_SOURCE[0]}")/cli-lib.sh"
+
 usage() {
   cat <<'USAGE'
 Usage: ./run-dry-sample.sh --label LABEL --corpus CORPUS [--prefix PREFIX]
@@ -18,14 +21,6 @@ prefix=
 prover=eprover
 premise=knn-32
 jobs=1
-
-need_value() {
-  if [ "$#" -lt 2 ]; then
-    echo "Missing value for $1" >&2
-    usage >&2
-    exit 2
-  fi
-}
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
