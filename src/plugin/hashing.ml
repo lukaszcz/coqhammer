@@ -211,7 +211,7 @@ type lift_counters = {
   lc_linked_fwd : int;      (* links found with the partner as schema *)
   lc_linked_rev : int;      (* links found with the new lift as schema *)
   lc_attempts : int;        (* candidate match attempts *)
-  lc_filtered : int;        (* candidates rejected by the pre-filters *)
+  lc_filtered : int;        (* examined candidates rejected by the pre-filters *)
   lc_truncated : int;       (* find_lift_link calls that hit the candidate cap *)
   lc_noconst_dropped : int; (* entries dropped from the capped constant-free list *)
 }
@@ -406,37 +406,58 @@ let find_lift_link kind cctx ctm =
      reverse-viable when the new term may be the schema of the partner.  A
      candidate viable in neither direction cannot match either way, so it is
      dropped before the cap and before the attempt counter. *)
-  let candidates =
-    List.filter_map
-      begin fun e ->
-        if Hashtbl.mem seen e.le_name || (e.le_ctx = cctx && e.le_tm = ctm) then
-          None
-        else
-          begin
-            Hashtbl.add seen e.le_name ();
-            let fwd = e.le_size <= size && is_subset e.le_consts consts
-            and rev = size <= e.le_size && is_subset consts e.le_consts in
-            if fwd || rev then
-              Some (e, fwd, rev)
-            else
-              begin
-                incr filtered;
-                None
-              end
-          end
-      end
-      (List.concat
-         (List.map
-            (fun c -> try Hashtbl.find reg.lr_index (tag, c) with Not_found -> [])
-            consts) @
-       List.filter (fun e -> top_tag e.le_tm = tag) reg.lr_noconst)
+  (* The buckets are walked entry by entry and the walk stops at the cap, so
+     the cap bounds the cost of the lookup itself: a bucket is the whole set of
+     entries containing one constant and grows with the translation, so
+     concatenating and filtering every bucket before applying the cap would be
+     unbounded work.  The constant-free list is capped at registration and is
+     pre-filtered by tag as a whole.  Order is the one the concatenation gave:
+     the buckets of the query's constants in order, then the constant-free
+     entries. *)
+  let buckets =
+    List.map
+      (fun c -> try Hashtbl.find reg.lr_index (tag, c) with Not_found -> [])
+      consts @
+    [List.filter (fun e -> top_tag e.le_tm = tag) reg.lr_noconst]
   in
-  let truncated = List.length candidates > max_match_candidates in
+  let acc = ref [] in
+  let acc_len = ref 0 in
+  let truncated = ref false in
+  let rec collect buckets =
+    match buckets with
+    | [] -> ()
+    | [] :: bs -> collect bs
+    | (e :: es) :: bs ->
+      if !acc_len >= max_match_candidates then
+        (* entries are left unexamined: the exact number of viable candidates
+           is unknown *)
+        truncated := true
+      else
+        begin
+          if not (Hashtbl.mem seen e.le_name || (e.le_ctx = cctx && e.le_tm = ctm))
+          then
+            begin
+              Hashtbl.add seen e.le_name ();
+              let fwd = e.le_size <= size && is_subset e.le_consts consts
+              and rev = size <= e.le_size && is_subset consts e.le_consts in
+              if fwd || rev then
+                begin
+                  acc := (e, fwd, rev) :: !acc;
+                  incr acc_len
+                end
+              else
+                incr filtered
+            end;
+          collect (es :: bs)
+        end
+  in
+  collect buckets;
+  let truncated = !truncated in
   if truncated then
-    log 1 ("hashing: " ^ string_of_int (List.length candidates) ^ " viable candidate " ^
-           kind ^ " lifts, examining the first " ^
-           string_of_int max_match_candidates);
-  let candidates = Hhlib.take max_match_candidates candidates in
+    log 1 ("hashing: more candidate " ^ kind ^ " lifts than the cap of " ^
+           string_of_int max_match_candidates ^ ", examining the first " ^
+           string_of_int max_match_candidates ^ " viable ones");
+  let candidates = List.rev !acc in
   let attempts = ref 0 in
   let mk_link e new_is_schema subst =
     { ll_name = e.le_name; ll_ctx = e.le_ctx; ll_tm = e.le_tm;
