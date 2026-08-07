@@ -11,7 +11,9 @@
    otherwise every entry point here is a no-op, so a default build pays
    nothing.  Each process writes its own file, since problem generation
    compiles many files in parallel and appending to a shared one would
-   interleave. *)
+   interleave.  Parallelism here is between processes only -- the translation
+   runs on the domain Rocq calls the plugin from, and the provers are forked
+   ([Parallel.run_parallel]) -- so the table below needs no synchronization. *)
 
 let out_dir =
   match Sys.getenv_opt "COQHAMMER_LIFT_STATS" with
