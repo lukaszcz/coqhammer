@@ -227,25 +227,28 @@ let extract_eprover_data outfile =
   try
     let ic = open_in outfile
     in
-    let rec pom acc =
-      try
-        let ln = input_line ic in
-        if String.get ln 0 = '#' then
-          pom acc
-        else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
-          pom (axiom_name_of_line ln :: acc)
-        else
-          pom acc
-      with
-      | End_of_file ->
-         acc
-      (* One unreadable name must not discard the rest of a found proof. *)
-      | Not_found | Invalid_argument(_) ->
-         pom acc
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          let rec pom acc =
+            try
+              let ln = input_line ic in
+              if String.get ln 0 = '#' then
+                pom acc
+              else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
+                pom (axiom_name_of_line ln :: acc)
+              else
+                pom acc
+            with
+            | End_of_file ->
+               acc
+            (* One unreadable name must not discard the rest of a found proof. *)
+            | Not_found | Invalid_argument(_) ->
+               pom acc
+          in
+          pom []
+        end
     in
-    let names = pom []
-    in
-    close_in ic;
     get_atp_info names
   with
   | Parse_error ln ->
@@ -283,11 +286,15 @@ let extract_z3_data outfile =
   try
     let ic = open_in outfile
     in
-    ignore (input_line ic);
-    let ln = String.trim (input_line ic) in
-    let s = String.sub ln 13 (String.length ln - 2 - 13) in
-    let names = List.map decode_thm_name (Str.split (Str.regexp "'| |'") s) in
-    close_in ic;
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          ignore (input_line ic);
+          let ln = String.trim (input_line ic) in
+          let s = String.sub ln 13 (String.length ln - 2 - 13) in
+          List.map decode_thm_name (Str.split (Str.regexp "'| |'") s)
+        end
+    in
     get_atp_info names
   with
   | Parse_error ln ->
@@ -308,26 +315,29 @@ let extract_vampire_data outfile =
   try
     let ic = open_in outfile
     in
-    let rec pom acc =
-      try
-        let ln = input_line ic in
-        if String.get ln 0 = '%' then
-          pom acc
-        else
-          let name = axiom_name_of_line ln in
-          if name <> "HAMMER_GOAL" then
-            pom (name :: acc)
-          else
-            pom acc
-      with
-      | End_of_file ->
-         acc
-      | Not_found | Invalid_argument(_) ->
-         pom acc
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          let rec pom acc =
+            try
+              let ln = input_line ic in
+              if String.get ln 0 = '%' then
+                pom acc
+              else
+                let name = axiom_name_of_line ln in
+                if name <> "HAMMER_GOAL" then
+                  pom (name :: acc)
+                else
+                  pom acc
+            with
+            | End_of_file ->
+               acc
+            | Not_found | Invalid_argument(_) ->
+               pom acc
+          in
+          pom []
+        end
     in
-    let names = pom []
-    in
-    close_in ic;
     get_atp_info names
   with
   | Parse_error ln ->
@@ -347,26 +357,29 @@ let call_cvc4 infile outfile =
 let extract_cvc4_data outfile =
   try
     let ic = open_in outfile in
-    let rec pom acc =
-      try
-        let ln = input_line ic in
-        if (String.get ln 0 = '%') then
-          pom acc
-        else
-          let name = core_atom_of_line ln in
-          if name <> "HAMMER_GOAL" then
-            pom (name :: acc)
-          else
-            pom acc
-      with
-      | End_of_file ->
-         acc
-      | Not_found | Invalid_argument(_) ->
-         pom acc
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          let rec pom acc =
+            try
+              let ln = input_line ic in
+              if (String.get ln 0 = '%') then
+                pom acc
+              else
+                let name = core_atom_of_line ln in
+                if name <> "HAMMER_GOAL" then
+                  pom (name :: acc)
+                else
+                  pom acc
+            with
+            | End_of_file ->
+               acc
+            | Not_found | Invalid_argument(_) ->
+               pom acc
+          in
+          pom []
+        end
     in
-    let names = pom []
-    in
-    close_in ic;
     get_atp_info names
   with
   | Parse_error ln ->
