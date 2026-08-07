@@ -2971,6 +2971,7 @@ let remove_def name =
 
 let cleanup () =
   Defhash.clear ();
+  Coq_typing.clear_constructor_hash ();
   Axhash.clear ();
   Coq_erasure.clear ();
   Case_dependencies.clear ();

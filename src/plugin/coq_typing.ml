@@ -11,7 +11,10 @@ type coqvalue =
   N of coqneutral
 | PROD of coqterm Lazy.t * coqvalue_abstr
 | LAM of coqterm Lazy.t * coqvalue_abstr
-| FIX of coqterm Lazy.t * coqvalue Lazy.t
+(* The integer is the position of the recursive argument, as declared by the
+   fixpoint itself; -1 stands for a fixpoint with no guard to check (a cofix,
+   or a declaration whose recursive index did not survive conversion). *)
+| FIX of coqterm Lazy.t * coqvalue Lazy.t * int
 and coqneutral =
 | VAR of string
 | CONST of string
@@ -31,7 +34,84 @@ let rec reify v =
   | N x -> reify_neutral x
   | PROD(t, _) -> Lazy.force t
   | LAM(t, _) -> Lazy.force t
-  | FIX(t, _) -> Lazy.force t
+  | FIX(t, _, _) -> Lazy.force t
+
+(* A constructor and an axiom have the same declaration shape -- both are
+   opaque constants standing for themselves -- so constructorhood is read off
+   the target of the declared type, which for a constructor is always a literal
+   telescope ending in an application of its own inductive.  An inductive that
+   is not in the hash cannot vouch for the name, and the answer is then `no':
+   the sole caller uses it to decide whether a fixpoint may be unfolded, and
+   leaving a fixpoint folded is always safe. *)
+let constructor_hash : (string, bool) Hashtbl.t = Hashtbl.create 257
+
+let is_constructor name =
+  match Hashtbl.find_opt constructor_hash name with
+  | Some b -> b
+  | None ->
+     let rec target ty =
+       match ty with
+       | Prod(_, _, ty2) -> target ty2
+       | _ -> ty
+     in
+     let b =
+       match (try Some (Defhash.find name) with _ -> None) with
+       | Some (_, Const c, ty, _) when c = name ->
+          begin match flatten_app (target ty) with
+          | Const indname, _ ->
+             begin match (try Some (Defhash.find indname) with _ -> None) with
+             | Some (_, IndType(_, constrs, _), _, _) -> List.mem name constrs
+             | _ -> false
+             end
+          | _ -> false
+          end
+       | _ -> false
+     in
+     Hashtbl.add constructor_hash name b;
+     b
+
+let clear_constructor_hash () = Hashtbl.clear constructor_hash
+
+(* Iota for a fixpoint fires only when its recursive argument has a constructor
+   at the head.  Unfolding it unconditionally is not a conversion, and on a
+   definition by well-founded recursion it does not even terminate: the
+   recursive call of `Fix_F' is guarded by `Acc_inv' applied to the
+   accessibility proof, which stays stuck on an abstract proof, so each
+   unfolding hands back a fixpoint applied to another stuck argument.  Nothing
+   in the term bounds that, and the fuel an `Acc_intro_generator' witness
+   supplies bounds only closed computation, not this. *)
+let is_constructor_headed v =
+  let rec head n =
+    match n with
+    | APP(x, _) -> head x
+    | _ -> n
+  in
+  match v with
+  | N n -> begin match head n with CONST c -> is_constructor c | _ -> false end
+  | _ -> false
+
+(* Apply a value to a whole argument spine.  A fixpoint whose guard does not
+   hold -- because the recursive argument is not a constructor application, or
+   because the spine does not even reach it -- is left folded and turned into
+   the head of a neutral, exactly as an opaque constant would be. *)
+let rec apply_args v args =
+  match args with
+  | [] -> v
+  | y :: rest ->
+     begin
+       match v with
+       | LAM(_, (_, _, f)) -> apply_args (f y) rest
+       | FIX(t, body, recarg) ->
+          if recarg >= 0 &&
+             (recarg >= List.length args ||
+              not (is_constructor_headed (Lazy.force (List.nth args recarg))))
+          then
+            apply_args (N (TERM t)) args
+          else
+            apply_args (Lazy.force body) args
+       | N n -> apply_args (N (APP(n, y))) rest
+       | _ -> failwith "apply"
+     end
 
 (* evaluation to normal form *)
 let eval (tm : coqterm) : coqvalue =
@@ -69,15 +149,13 @@ let eval (tm : coqterm) : coqvalue =
           | _ ->
               eval [] tm2
       end
-    | App(x, y) ->
-      let rec apply x y =
-        match x with
-        | LAM(_, (_, _, f)) -> f y
-        | FIX(_, v) -> apply (Lazy.force v) y
-        | N x2 -> N (APP(x2, y))
-        | _ -> failwith "apply"
+    | App(_, _) ->
+      (* The spine is applied as a whole: the guard of a fixpoint is a
+         condition on one particular argument, which a one-argument-at-a-time
+         application cannot see. *)
+      let (hd, args) = flatten_app tm
       in
-      apply (eval env x) (delay_eval env y)
+      apply_args (eval env hd) (List.map (delay_eval env) args)
     | Cast(x, y) ->
       eval env x
     | Lam a ->
@@ -87,16 +165,7 @@ let eval (tm : coqterm) : coqvalue =
     | Let(value, (vname, ty, body)) ->
       eval ((vname, delay_eval env value) :: env) body
     | Case(indname, matched_term, return_type, raw_return_type, params_num, branches) ->
-      let rec eval_valapp v args =
-        match args with
-        | h :: t ->
-          begin
-            match v with
-            | LAM(_, (_, _, f)) -> eval_valapp (f h) t
-            | N n -> eval_valapp (N (APP(n, h))) t
-            | _ -> failwith "eval_app"
-          end
-        | [] -> v
+      let eval_valapp = apply_args
       and flatten_valapp v =
         let rec hlp n acc =
           match n with
@@ -151,6 +220,15 @@ let eval (tm : coqterm) : coqvalue =
                      (Case(indname, reify mt2, return_type, raw_return_type, params_num, branches))))
       end
     | Fix(cft, k, recargs, names, types, bodies) ->
+      (* A cofix has no recursive argument to guard on, and neither has a
+         fixpoint whose declared index is missing; both keep the unconditional
+         unfolding they had. *)
+      let recarg m =
+        if cft = CoqFix then
+          match List.nth_opt recargs m with Some i -> i | None -> -1
+        else
+          -1
+      in
       let rec mkenv m lst acc =
         match lst with
         | h :: t ->
@@ -158,7 +236,7 @@ let eval (tm : coqterm) : coqvalue =
             in
             let v =
               if cft = CoqFix then
-                lazy (FIX(delay_subst env fx, delay_eval env fx))
+                lazy (FIX(delay_subst env fx, delay_eval env fx, recarg m))
               else
                 lazy (N (TERM (delay_subst env fx)))
             in
@@ -166,7 +244,7 @@ let eval (tm : coqterm) : coqvalue =
         | [] ->
             acc
       in
-      FIX(delay_subst env tm, lazy (eval (mkenv 0 names env) (List.nth bodies k)))
+      FIX(delay_subst env tm, lazy (eval (mkenv 0 names env) (List.nth bodies k)), recarg k)
     | _ ->
       N (TERM (delay_subst env tm))
   in
@@ -187,7 +265,7 @@ let rec check_prop args ctx tm =
             | _ ->
                 false
           end
-      | FIX(_, v2) ->
+      | FIX(_, v2, _) ->
           hlp args (Lazy.force v2)
       | N (TERM tm) ->
           if args = [] then
@@ -276,7 +354,7 @@ let check_type_target_is_prop ty =
     match v with
     | PROD(_, (name, _, f)) ->
       hlp (f (lazy (N (VAR name))))
-    | FIX(_, v2) ->
+    | FIX(_, v2, _) ->
       hlp (Lazy.force v2)
     | N (TERM tm) ->
       Lazy.force tm = SortProp
@@ -290,7 +368,7 @@ let check_type_target_is_type ty =
     match v with
     | PROD(_, (name, _, f)) ->
       hlp (f (lazy (N (VAR name))))
-    | FIX(_, v2) ->
+    | FIX(_, v2, _) ->
       hlp (Lazy.force v2)
     | N (TERM tm) ->
       let tm2 = Lazy.force tm
@@ -309,7 +387,7 @@ let destruct_type_eval ty =
       in
       hlp (f (lazy (N (VAR name2))))
         ((name2, refresh_bvars (Lazy.force ty)) :: acc)
-    | FIX(_, v2) -> hlp (Lazy.force v2) acc
+    | FIX(_, v2, _) -> hlp (Lazy.force v2) acc
     | _ -> (v, List.rev acc)
   in
   hlp (eval ty) []

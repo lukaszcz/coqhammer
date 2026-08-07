@@ -202,11 +202,14 @@ drop_intra_corpus_dependents() {
 # Drop the sources listed in the corpus's excluded.txt.  A file belongs there
 # when it cannot yield measurements at all -- see the list's own comments for
 # the reason.  Excluding it is a statement about the corpus, so it is recorded
-# in the tree and reported here rather than being dropped quietly.  (The
-# stdpp and dependent-stdlib lists are gone: their files failed only because
-# the hook preamble used to import the full Hammer theory, whose tactic
-# grammar captured stdpp's csimpl and whose ssreflect dependency shifted
-# hint-sensitive proofs; the HammerHook preamble ended both.)
+# in the tree and reported here rather than being dropped quietly.  No corpus
+# carries such a list any more, and every one that did was excluding for a
+# defect of ours: the stdpp and dependent-stdlib files failed only because the
+# hook preamble used to import the full Hammer theory, whose tactic grammar
+# captured stdpp's csimpl and whose ssreflect dependency shifted hint-sensitive
+# proofs, and equations-examples excluded general_recursion.v only because the
+# translation's normalizer unfolded a fixpoint past its guard and so never
+# terminated on a definition by well-founded recursion.
 apply_exclusions() {
   local corpus="$1" dest="$2" list="corpora/$corpus/excluded.txt" rel dropped=0
   [ -f "$list" ] || return 0
