@@ -199,14 +199,14 @@ drop_intra_corpus_dependents() {
   done
 }
 
-# Drop the sources listed in the corpus's excluded.txt.  A corpus file is
-# compiled on its own against the installed libraries, which for a library taken
-# from user-contrib means it is compiled alongside the installed copy of itself:
-# its definitions and instances are then present twice, and a proof whose
-# tactics depend on the exact shape of a goal can break.  Such a file fails
-# before the hammer runs at all, so it measures nothing and would only be noise
-# in the grid.  Excluding it is a statement about the corpus, so it is recorded
-# in the tree and reported here rather than being dropped quietly.
+# Drop the sources listed in the corpus's excluded.txt.  A file belongs there
+# when it cannot yield measurements at all -- see the list's own comments for
+# the reason.  Excluding it is a statement about the corpus, so it is recorded
+# in the tree and reported here rather than being dropped quietly.  (The
+# stdpp and dependent-stdlib lists are gone: their files failed only because
+# the hook preamble used to import the full Hammer theory, whose tactic
+# grammar captured stdpp's csimpl and whose ssreflect dependency shifted
+# hint-sensitive proofs; the HammerHook preamble ended both.)
 apply_exclusions() {
   local corpus="$1" dest="$2" list="corpora/$corpus/excluded.txt" rel dropped=0
   [ -f "$list" ] || return 0

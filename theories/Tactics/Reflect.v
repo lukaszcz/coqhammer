@@ -7,23 +7,22 @@ From Stdlib Require Export Bool.
 Require Import Setoid.
 From Stdlib Require Import Lia.
 From Stdlib Require Import BinInt BinNat PeanoNat.
-Require Import ssreflect ssrbool.
 
 (* bool *)
 
 Lemma andE : forall b1 b2, b1 && b2 <-> b1 /\ b2.
 Proof.
-  split; move /andP; done.
+  intros; unfold is_true; apply Bool.andb_true_iff.
 Qed.
 
 Lemma orE : forall b1 b2, b1 || b2 <-> b1 \/ b2.
 Proof.
-  split; move /orP; done.
+  intros; unfold is_true; apply Bool.orb_true_iff.
 Qed.
 
 Lemma negE : forall b, negb b <-> ~b.
 Proof.
-  split; move /negP; done.
+  intros; unfold is_true; destruct b; simpl; split; intros; congruence.
 Qed.
 
 Lemma implE : forall b1 b2, implb b1 b2 <-> (b1 -> b2).
@@ -49,26 +48,26 @@ Proof. intros; unfold is_true; now rewrite Z.eqb_eq. Qed.
 
 Lemma Z_gtb_gt: forall a b: Z, Z.gtb a b <-> Z.gt a b.
 Proof.
-  split.
-  - rewrite /is_true Z.gtb_lt. now apply Z.lt_gt.
-  - rewrite /is_true Z.gtb_lt. now apply Z.gt_lt.
+  split; unfold is_true.
+  - rewrite Z.gtb_lt. now apply Z.lt_gt.
+  - rewrite Z.gtb_lt. now apply Z.gt_lt.
 Qed.
 
 Lemma Z_geb_ge: forall a b: Z, Z.geb a b <-> Z.ge a b.
 Proof.
-  split.
-  - rewrite /is_true Z.geb_le. now apply Z.le_ge.
-  - rewrite /is_true Z.geb_le. now apply Z.ge_le.
+  split; unfold is_true.
+  - rewrite Z.geb_le. now apply Z.le_ge.
+  - rewrite Z.geb_le. now apply Z.ge_le.
 Qed.
 
 Lemma Z_ltb_lt: forall a b: Z, Z.ltb a b <-> Z.lt a b.
 Proof.
-  split; now rewrite /is_true Z.ltb_lt.
+  split; unfold is_true; now rewrite Z.ltb_lt.
 Qed.
 
 Lemma Z_leb_le: forall a b: Z, Z.leb a b <-> Z.le a b.
 Proof.
-  split; now rewrite /is_true Z.leb_le.
+  split; unfold is_true; now rewrite Z.leb_le.
 Qed.
 
 (* N *)
@@ -78,12 +77,12 @@ Proof. intros; unfold is_true; now rewrite N.eqb_eq. Qed.
 
 Lemma N_ltb_lt: forall a b, N.ltb a b <-> N.lt a b.
 Proof.
-  split; now rewrite /is_true N.ltb_lt.
+  split; unfold is_true; now rewrite N.ltb_lt.
 Qed.
 
 Lemma N_leb_le: forall a b, N.leb a b <-> N.le a b.
 Proof.
-  split; now rewrite /is_true N.leb_le.
+  split; unfold is_true; now rewrite N.leb_le.
 Qed.
 
 Lemma N_gt_ltb: forall a b, N.gt a b <-> N.ltb b a.
@@ -103,12 +102,12 @@ Proof. intros; unfold is_true; now rewrite Nat.eqb_eq. Qed.
 
 Lemma Nat_ltb_lt: forall a b, Nat.ltb a b <-> a < b.
 Proof.
-  split; now rewrite /is_true Nat.ltb_lt.
+  split; unfold is_true; now rewrite Nat.ltb_lt.
 Qed.
 
 Lemma Nat_leb_le: forall a b, Nat.leb a b <-> a <= b.
 Proof.
-  split; now rewrite /is_true Nat.leb_le.
+  split; unfold is_true; now rewrite Nat.leb_le.
 Qed.
 
 Lemma Nat_gt_ltb: forall a b, a > b <-> Nat.ltb b a.
@@ -317,8 +316,12 @@ Tactic Notation "bdestruct" constr(b) :=
 
 Tactic Notation "binvert" constr(b) :=
   lazymatch type of b with
-  | is_true (andb _ _) => move /andP: b; let H := fresh "H" in intro H; destruct H
-  | is_true (orb _ _) => move /orP: b; let H := fresh "H" in intro H; destruct H
+  | is_true (andb _ _) =>
+    generalize b; try clear b;
+    let H := fresh "H" in intro H; rewrite -> andE in H; destruct H
+  | is_true (orb _ _) =>
+    generalize b; try clear b;
+    let H := fresh "H" in intro H; rewrite -> orE in H; destruct H
   | is_true true => try clear b
   | is_true false => discriminate b
   | _ => fail
@@ -326,15 +329,19 @@ Tactic Notation "binvert" constr(b) :=
 
 Tactic Notation "binvert" constr(b) "as" simple_intropattern(pat) :=
   lazymatch type of b with
-  | is_true (andb _ _) => move /andP: b; intros pat
-  | is_true (orb _ _) => move /orP: b; intros pat
+  | is_true (andb _ _) =>
+    generalize b; try clear b;
+    let H := fresh "H" in intro H; rewrite -> andE in H; revert H; intros pat
+  | is_true (orb _ _) =>
+    generalize b; try clear b;
+    let H := fresh "H" in intro H; rewrite -> orE in H; revert H; intros pat
   | is_true true => try clear b
   | is_true false => discriminate b
   | _ => fail
   end.
 
-Ltac bleft := apply /orP; left.
-Ltac bright := apply /orP; right.
-Ltac bsplit := apply /andP; split.
+Ltac bleft := rewrite -> orE; left.
+Ltac bright := rewrite -> orE; right.
+Ltac bsplit := rewrite -> andE; split.
 Ltac blia := bsimpl in *; breflect in *; lia.
 Ltac bcongruence := breflect in *; congruence.

@@ -37,3 +37,4 @@ src/plugin/hammer_main.ml
 src/plugin/g_hammer.mlg
 src/plugin/hammer_plugin.mlpack
 theories/Plugin/Hammer.v
+theories/Plugin/HammerHook.v
