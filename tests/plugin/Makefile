@@ -1,21 +1,22 @@
 COQC ?= rocq c
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo $(EXTRACTION_VOS)
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
 # but only trivial ones the sauto pretactic phase closes before any ATP is
-# consulted; erasure_blacklist.vo, arrow_transl.vo, type_sharing_transl.vo and
-# membership_transl.vo assert on the axioms the translation emits and prove
-# nothing -- the middle two only translate declarations and dump a problem for
-# an aborted goal, the last one does not even dump.
+# consulted; erasure_blacklist.vo, arrow_transl.vo, type_sharing_transl.vo,
+# membership_transl.vo, link_erasure_transl.vo and defterm_transl.vo assert on
+# the axioms the translation emits and prove nothing -- arrow_transl.vo and
+# type_sharing_transl.vo also dump a problem for an aborted goal, the rest only
+# translate declarations.
 # Everything else either sets SAutoLimit to 0, which disables that phase and
 # hands the goal to the ATPs, or requires a file that does.  prover_selection.vo
 # also passes without an ATP, but only vacuously: it checks that `hammer` fails
 # when every prover is disabled, which is equally true when no prover exists, so
 # running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -386,6 +387,29 @@ link_erasure_transl.vo: link_erasure_transl.v
 	  fail "a link equation was emitted between lifts whose binder erasure differs; it equates a value with a function and collapses application to a projection"; \
 	fi; \
 	rm -f link_erasure_transl.out
+
+defterm_transl.vo: defterm_transl.v
+	@set -e; \
+	fail() { \
+	  echo "$$1"; cat defterm_transl.out; \
+	  rm -f defterm_transl.vo defterm_transl.out; exit 1; \
+	}; \
+	$(COQC) defterm_transl.v > defterm_transl.out 2>&1 || \
+	  fail "defterm_transl.v failed to compile"; \
+	grep -Fq '$$_def_defterm_transl.ltx: ![0_n : $$Any]: (![1_m : $$Any]: (((<=> @ ((defterm_transl.ltx @ 0_n) @ 1_m)) @ ((Corelib.Init.Peano.le @ (Corelib.Init.Datatypes.S @ 0_n)) @ 1_m))))' defterm_transl.out || \
+	  fail "atomic Prop body: the propositional equivalence is gone; the term equation is emitted alongside it, never in place of it"; \
+	grep -Fq '$$_def_defterm_transl.ltx$$term: ![0_n : $$Any]: (![1_m : $$Any]: ((((defterm_transl.ltx @ 0_n) @ 1_m) = ((Corelib.Init.Peano.le @ (Corelib.Init.Datatypes.S @ 0_n)) @ 1_m))))' defterm_transl.out || \
+	  fail "atomic Prop body: no term-level definitional equation, so the two spellings of this proposition stay distinct wherever it occurs as a term"; \
+	grep -Fq '$$_def_defterm_transl.conj2: ![0_P : $$Any]: (![1_Q : $$Any]: (((<=> @ ((defterm_transl.conj2 @ 0_P) @ 1_Q)) @ ((& @ 0_P) @ 1_Q))))' defterm_transl.out || \
+	  fail "the connective-headed body no longer translates to a conjunction, so the check that it gets no term equation is vacuous"; \
+	grep -Fq '$$_def_defterm_transl.allpos: ![0_P : $$Any]: (((<=> @ (defterm_transl.allpos @ 0_P)) @ ![1_n : $$Any]: (((=> @ (($$HasType @ 1_n) @ Corelib.Init.Datatypes.nat)) @ (0_P @ 1_n)))))' defterm_transl.out || \
+	  fail "the quantified body no longer translates to a quantified formula, so the check that it gets no term equation is vacuous"; \
+	grep -Fq '$$_def_defterm_transl.wfle: ![0_n : $$Any]: (![1_m : $$Any]: (((<=> @ ((defterm_transl.wfle @ 0_n) @ 1_m)) @ ((Corelib.Init.Peano.le @ 0_n) @ 1_m))))' defterm_transl.out || \
+	  fail "the well-founded definition no longer unfolds to an atomic body, so its equation is excluded for some reason other than being a Fix_eq theorem"; \
+	if grep -Eq '^\$$_def_defterm_transl\.(conj2|allpos|wfle)\$$term:' defterm_transl.out; then \
+	  fail "a term-level definitional equation was emitted for a definition whose equation is not a conversion between terms"; \
+	fi; \
+	rm -f defterm_transl.out
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
 	@set -e; \

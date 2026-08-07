@@ -727,6 +727,18 @@ let refuse_case axname indname =
   log 2 ("case-axiom-omitted: case-index-refusal " ^ axname ^ " (" ^ indname ^ ")");
   return ()
 
+(* True only for a proposition whose formula rendering is `p(t)' for a
+   Const-headed application `t': then, and only then, does the definitional
+   equivalence have a genuine term on each side and may be duplicated as a
+   term-level equation.  A logical connective, `$True'/`$False' or any head
+   other than a constant (a quantifier, a lambda, a case, an equality, or a
+   Var-headed diagonal like `Proper') renders as a compound formula, which is
+   not a term. *)
+let is_atomic_prop_body body =
+  match flatten_app body with
+  | (Const(c), _) -> not (is_logop c) && c <> "$True" && c <> "$False"
+  | _ -> false
+
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
   (* Note: the correctness of calling `prop_to_formula' below
      depends on the implementation of `convert_term' (that it
@@ -770,6 +782,8 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
 
 and emit_definition_equation ?premise axname name fvars lvars body =
   let vars = fvars @ lvars in
+  let lhs = mk_long_app (Const(name)) (mk_vars vars) in
+  let body_is_prop = Coq_typing.check_prop (List.rev vars) body in
   let mk_eqv ctx =
     let mk_eqv =
       if Coq_typing.check_prop ctx body then
@@ -777,33 +791,50 @@ and emit_definition_equation ?premise axname name fvars lvars body =
       else
         mk_eq
     in
-    let lhs = mk_long_app (Const(name)) (mk_vars vars) in
     let eqv = mk_eqv lhs body in
     match premise with
     | Some prem -> mk_impl prem eqv
     | None -> eqv
   in
-  let closed =
+  (* the equivalence and the term equation are closed the same way; each call
+     builds its own computation, since binding one twice would run it twice *)
+  let close_formula mk_body =
     if !wf_mark then
       (* WF-recursion model note: these equations are not read as
          delta-unfolding in the term model.  They are Coq theorems only with
          the erased PI premises (Fix_eq), and semantically describe a total
          extension outside those premises; the consistency canaries check this
          load-bearing path. *)
-      make_fol_forall_keep_prop_premises [] vars (mk_eqv (List.rev vars))
+      make_fol_forall_keep_prop_premises [] vars (mk_body (List.rev vars))
     else
       close fvars
         begin fun ctx ->
-          let eqv = mk_eqv (List.rev_append lvars ctx) in
+          let tm = mk_body (List.rev_append lvars ctx) in
           if !opt_closure_guards || opt_lambda_guards then
-            prop_to_formula ctx (mk_long_forall lvars eqv)
+            prop_to_formula ctx (mk_long_forall lvars tm)
           else
-            make_fol_forall ctx lvars eqv
+            make_fol_forall ctx lvars tm
         end
   in
-  closed
+  (* A transparent Prop-valued definition with an atomic body also occurs in
+     term position, where the equivalence identifies nothing; see
+     `opt_prop_def_term_eqs'.  A premised or WF-marked equation is not a
+     conversion, so it gets no term-level counterpart. *)
+  let term_eq =
+    opt_prop_def_term_eqs && premise = None && not !wf_mark &&
+    body_is_prop && is_atomic_prop_body body
+  in
+  close_formula mk_eqv
   >>=
   (fun tm -> add_axiom (mk_axiom axname tm))
+  >>
+  begin
+    if term_eq then
+      close_formula (fun _ -> mk_eq lhs body) >>=
+      (fun tm -> add_axiom (mk_axiom (axname ^ "$term") tm))
+    else
+      return ()
+  end
   >>
   convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
 
@@ -2603,7 +2634,14 @@ and add_def_eq_axiom (name, value, ty, srt) =
         | SortProp ->
            begin
              prop_to_formula [] value >>= fun r ->
-             add_axiom (mk_axiom axname (mk_equiv (Const(name)) r))
+             add_axiom (mk_axiom axname (mk_equiv (Const(name)) r)) >>
+             (* the definition also occurs in term position; see
+                `opt_prop_def_term_eqs' *)
+             if opt_prop_def_term_eqs && is_atomic_prop_body value then
+               convert [] value >>= fun r2 ->
+               add_axiom (mk_axiom (axname ^ "$term") (mk_eq (Const(name)) r2))
+             else
+               return ()
            end
         | SortType | SortSet ->
            add_def_eq_type_axiom axname name [] value
