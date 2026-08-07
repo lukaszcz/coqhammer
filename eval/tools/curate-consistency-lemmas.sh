@@ -66,13 +66,13 @@ export curate_tim
 # rejects with "unmatched single quote".  -print0 | xargs -0 passes each path
 # verbatim; head -z keeps the optional limit NUL-aware.
 #
-# The limited and unlimited cases are kept as separate commands rather than
-# combined with &&/|| : once "head -z -n limit" has read enough and exits,
-# "find" gets SIGPIPE on its next write, and under pipefail that makes the
-# "find | head" pipeline itself report failure -- which would trigger the
-# "||" fallback and append the full, unlimited file list on top.
+# In the limited case "head -z -n limit" exits as soon as it has read enough,
+# and "find" then dies of SIGPIPE on its next write; under pipefail that failure
+# would propagate and abort the whole bounded run.  Draining the rest of find's
+# output with "cat" after head returns keeps the producer's pipe open, so find
+# finishes normally and the pipeline succeeds.
 if [ "$limit" -gt 0 ]; then
-  find "$work/problems" -name '*.p' -print0 | head -z -n "$limit"
+  find "$work/problems" -name '*.p' -print0 | { head -z -n "$limit"; cat >/dev/null; }
 else
   find "$work/problems" -name '*.p' -print0
 fi |
