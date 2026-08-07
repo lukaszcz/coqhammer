@@ -19,7 +19,9 @@ Core configs:
   loo-refinement-types     all-on except opt_refinement_types=false
 
 Decl-skip variants:
-  append -decl-skips to any core config to set opt_refinement_decl_skips=true.
+  append -decl-skips to any core config other than `current` to set
+  opt_refinement_decl_skips=true.  `current` already builds with
+  declaration-level skips enabled, so `current-decl-skips` is rejected.
 USAGE
 }
 
@@ -132,9 +134,19 @@ fi
 # erase the checkout or an unrelated directory.  Accept only a dedicated
 # install directory: never the repository or one of its parents, inside the
 # repository only under eval/_installs, and, when it already exists, only a
-# directory a previous run created (marker file, or manifest.env for prefixes
-# built before the marker existed).
+# directory a previous run created (marker file, or a manifest.env naming this
+# very prefix, for prefixes built before the marker existed).
 prefix_marker=.coqhammer-eval-prefix
+
+# A manifest.env alone does not make a directory ours: an unrelated project may
+# ship a file of that name, and a manifest copied or moved elsewhere describes
+# the prefix it was written for, not the one being erased.  Every manifest this
+# script has ever written records that prefix, so compare it with the resolved
+# one and treat anything else as not ours.
+manifest_prefix() {
+  [ -f "$1/manifest.env" ] || return 0
+  sed -n 's/^prefix=//p' "$1/manifest.env" | head -n 1
+}
 
 validate_prefix() {
   local p="$1"
@@ -152,7 +164,7 @@ validate_prefix() {
     echo "Install prefix $p is inside the checkout but not under eval/_installs" >&2
     exit 1
   fi
-  if [ -e "$p" ] && [ ! -e "$p/$prefix_marker" ] && [ ! -e "$p/manifest.env" ]; then
+  if [ -e "$p" ] && [ ! -e "$p/$prefix_marker" ] && [ "$(manifest_prefix "$p")" != "$p" ]; then
     echo "Install prefix $p exists but was not created by rebuild-config.sh; refusing to erase it" >&2
     exit 1
   fi
