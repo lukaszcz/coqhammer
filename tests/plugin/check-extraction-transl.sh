@@ -72,8 +72,12 @@ forbid_line "definition axioms are disjunction-free" '^\$_def_.*[|]'
 # -----------------------------------------------------------------------------
 
 # SProp hypotheses are proof-like: the argument becomes a formula premise and is
-# pruned from the term-level definition equation.
-require_line "SProp argument is translated as a premise" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ Corelib\.Init\.Datatypes\.nat\)\)'
+# pruned from the term-level definition equation.  The unfolding is conjoined
+# with the membership that states the constant inhabits its own type, as
+# membership_transl.v pins for every product with erasable content.  The type is
+# a lifted name rather than an [$_arrow] application because an SProp domain is
+# proof-like, and remove_type canonicalizes only informative domains.
+require_line "SProp argument is translated as a premise" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(& @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ \$_type_[0-9]+\)\) @ \(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ Corelib\.Init\.Datatypes\.nat\)\)\)'
 require_line "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
 forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
 

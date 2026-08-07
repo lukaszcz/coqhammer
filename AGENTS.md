@@ -70,7 +70,7 @@ make tests-plugin      # complete plugin suite and ATP consistency canaries
 make tests-tactics     # complete tactics suite
 make quicktest         # the fast prover-free check: unit, plugin and tactics
 make dune-test-plugin  # complete plugin suite via Dune
-just check             # install both packages and run quicktest
+just check             # install both packages, run quicktest and the extraction assertions
 just check-extra       # clean, then run the complete Dune plugin suite
 ```
 

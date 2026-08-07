@@ -17,10 +17,16 @@
 _default:
     @just --list
 
-# Build and install both packages, then run the quick plugin and tactics tests.
+# Build and install both packages, then run the quick plugin and tactics tests
+# followed by the translation-shape assertions.  quicktest is the prover-free
+# subset CI runs; on its own it compiles none of the files that assert on the
+# emitted axioms, so a change to the translation can leave those assertions
+# stale without any target here going red.  test-extraction needs the ATPs,
+# which a development machine has.
 check:
     make install
     make quicktest
+    make test-extraction
 
 # Run the complete plugin suite and consistency canaries once via isolated Dune.
 check-extra:
