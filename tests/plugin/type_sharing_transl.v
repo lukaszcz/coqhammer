@@ -21,10 +21,22 @@
    related by syntactic instantiation, so the two symbols name one and the same
    Coq lambda term.
 
+   Being images of one Coq term is not on its own enough, though.  Matching is
+   syntactic on the unerased term while a lift's arity is settled after
+   erasure, so a schema whose binder type is a canonical variable can match an
+   instance whose binder is a proof; the two symbols are then applied at
+   different arities and the equation relates a value to a function.  What
+   keeps such a pair apart is the binder-erasure check in [add_link_axiom], and
+   [link_erasure_transl.v] is what pins it.
+
    Pinned here: the shapes lifting still splits, namely dependent products,
    Prop-domain products and lambdas, are linked; the link survives into a
    dumped problem; and no unfolding axiom became an equivalence in the
-   process. *)
+   process.  That last check is about the axiom's own connective and nothing
+   else: a guard may legitimately contain a translated Coq [iff] -- a subset
+   payload or a Prop-domain antecedent is an ordinary proposition -- so the
+   first connective is what is compared, not the presence of [<=>] anywhere in
+   the axiom. *)
 
 From Hammer Require Import Hammer.
 

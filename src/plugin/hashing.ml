@@ -200,6 +200,7 @@ let match_instance cctx_s ctm_s cctx_i ctm_i =
 type lift_link = {
   ll_name : string;        (* the registered partner symbol *)
   ll_ctx : coqcontext;     (* the partner's canonical context *)
+  ll_tm : coqterm;         (* the partner's canonical term *)
   ll_new_is_schema : bool; (* true: the partner is an instance of the new lift *)
   ll_subst : coqterm list; (* images of the schema's canonical variables, in order *)
 }
@@ -438,8 +439,8 @@ let find_lift_link kind cctx ctm =
   let candidates = Hhlib.take max_match_candidates candidates in
   let attempts = ref 0 in
   let mk_link e new_is_schema subst =
-    { ll_name = e.le_name; ll_ctx = e.le_ctx; ll_new_is_schema = new_is_schema;
-      ll_subst = subst }
+    { ll_name = e.le_name; ll_ctx = e.le_ctx; ll_tm = e.le_tm;
+      ll_new_is_schema = new_is_schema; ll_subst = subst }
   in
   (* Prefer the direction in which the partner is the more general term. *)
   let rev_link = ref None in

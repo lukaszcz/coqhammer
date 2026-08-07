@@ -1,7 +1,7 @@
 COQC ?= rocq c
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo $(EXTRACTION_VOS)
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
@@ -15,7 +15,7 @@ PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_s
 # also passes without an ATP, but only vacuously: it checks that `hammer` fails
 # when every prover is disabled, which is equally true when no prover exists, so
 # running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -368,6 +368,24 @@ membership_transl.vo: membership_transl.v
 	  fail "the premise is no longer guarded by the membership the typing axiom supplies, so the conjunct check above proves nothing"; \
 	rm -f membership_transl.out
 
+link_erasure_transl.vo: link_erasure_transl.v
+	@set -e; \
+	fail() { \
+	  echo "$$1"; cat link_erasure_transl.out; \
+	  rm -f link_erasure_transl.vo link_erasure_transl.out; exit 1; \
+	}; \
+	$(COQC) link_erasure_transl.v > link_erasure_transl.out 2>&1 || \
+	  fail "link_erasure_transl.v failed to compile"; \
+	sch_lam=$$(grep -Ec '^\$$_lam_[0-9]+: !\[v_CANONICAL_0 : \$$Any\]: \(!\[v_CANONICAL_1 : \$$Any\]: \(!\[v_CANONICAL_2 : \$$Any\]' link_erasure_transl.out || true); \
+	[ "$$sch_lam" -ge 1 ] || \
+	  fail "the schema lambda was not lifted at three arguments, so the arity mismatch this file pins is not being exercised"; \
+	inst_lam=$$(grep -Ec '^\$$_lam_[0-9]+: !\[v_CANONICAL_0 : \$$Any\]: \(\(\(\$$_lam_[0-9]+ @ v_CANONICAL_0\) = v_CANONICAL_0\)\)$$' link_erasure_transl.out || true); \
+	[ "$$inst_lam" -ge 1 ] || \
+	  fail "the instance lambda's proof binder no longer erases, so the two lifts no longer differ in arity and this file proves nothing"; \
+	if grep -q '\$$_link_' link_erasure_transl.out; then \
+	  fail "a link equation was emitted between lifts whose binder erasure differs; it equates a value with a function and collapses application to a projection"; \
+	fi; \
+	rm -f link_erasure_transl.out
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
 	@set -e; \

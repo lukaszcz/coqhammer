@@ -368,6 +368,25 @@ let type_unfolding_hash : (coqterm, coqterm) Hashtbl.t = Hashtbl.create 128
 
    Normalizing and comparing whole formulas is not free, so it is done only
    when someone is looking: with the diagnostic on, or in a debug build. *)
+(* Which of a term's leading lambda binders erase, outermost first.
+   [match_instance] is syntactic on unerased [coqterm]s, so a schema whose
+   binder type is a canonical variable matches an instance whose binder is a
+   proof.  The schema's binder survives translation and the instance's does
+   not, so the two lifts' symbols are applied at different arities: the
+   instance's link application then has exactly the shape of its own saturated
+   definition equation, and the two together equate a value with a function.
+   Comparing the profiles is what keeps a link between such a pair from being
+   emitted. *)
+let binder_erasure_profile ctx tm =
+  let rec collect ctx tm acc =
+    match tm with
+    | Lam(vname, ty, body) ->
+       let erased = try Coq_typing.check_prop ctx ty with _ -> false in
+       collect ((vname, ty) :: ctx) body (erased :: acc)
+    | _ -> List.rev acc
+  in
+  collect ctx tm []
+
 let record_unfolding_sharing axname fvars subject fla =
   if Lift_stats.enabled () || opt_debug_level >= 1 then
     let names = get_free_varnames fla in
@@ -2191,7 +2210,10 @@ and remove_lambda ctx tm =
            extensionality.  A link equation is not that: it says the two lifts'
            canonical terms are related by syntactic instantiation, so the two
            symbols name one and the same Coq lambda term.  Like the type-lift
-           links it is true by construction, and needs no extensionality.
+           links it is true by construction, and needs no extensionality --
+           provided the two symbols take the same number of arguments, which
+           [add_link_axiom] checks, matching being syntactic on the unerased
+           term while arity is settled after erasure.
 
            The link is looked up before the lift is built, so this lift -- which
            registers itself only below -- cannot match itself. *)
@@ -2211,7 +2233,7 @@ and remove_lambda ctx tm =
         | Const cname when cname = name ->
            count_lift "lam" (link_outcome link);
            Hashing.register_lift "lam" name cctx ctm;
-           add_link_axiom name cctx link >>
+           add_link_axiom name cctx ctm link >>
            return result
         | _ ->
            count_lift "lam" "unnamed";
@@ -2335,7 +2357,7 @@ and remove_type ctx ty =
               since [guard_leaf] classifies the unnormalized Coq type.  Both are
               individually true of the one object, so keeping both is correct. *)
            add_def_eq_type_axiom name name vars cty >>
-           add_link_axiom name cctx link >>
+           add_link_axiom name cctx cty link >>
            convert cctx (mk_long_app (Const(name)) (mk_vars vars))
       end)
 
@@ -2355,9 +2377,16 @@ and remove_type ctx ty =
    Uniformly, the equation is closed over the instance side's canonical
    context, applies the instance's symbol to that context's own variables and
    the schema's symbol to the matching substitution. *)
-and add_link_axiom name cctx link =
+and add_link_axiom name cctx ctm link =
   match link with
   | None -> return ()
+  | Some link when
+      binder_erasure_profile cctx ctm
+      <> binder_erasure_profile link.Hashing.ll_ctx link.Hashing.ll_tm ->
+     (* The two lifts translate to symbols of different arities, so no equation
+        between them at their own contexts is well-formed. *)
+     Lift_stats.count "link.erasure_mismatch";
+     return ()
   | Some link ->
      let open Hashing in
      let (inst_name, inst_ctx, schema_name) =

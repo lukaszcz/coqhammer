@@ -23,10 +23,16 @@ val match_instance : coqcontext -> coqterm -> coqcontext -> coqterm ->
    [new_symbol(new_vars) = ll_name(ll_subst)].  With [ll_new_is_schema = true]
    the new lift is the schema: [ll_subst] has the length of the new context and
    its terms live in [ll_ctx], so the caller may emit, closed over [ll_ctx]'s
-   variables, [ll_name(vars of ll_ctx) = new_symbol(ll_subst)]. *)
+   variables, [ll_name(vars of ll_ctx) = new_symbol(ll_subst)].
+
+   [ll_tm] is the partner's canonical term.  Matching is syntactic on unerased
+   [coqterm]s while the translated arity of a lift depends on which of its
+   binders erase, so the caller must compare the two terms' binder erasure
+   before emitting anything -- see [add_link_axiom]. *)
 type lift_link = {
   ll_name : string;
   ll_ctx : coqcontext;
+  ll_tm : coqterm;
   ll_new_is_schema : bool;
   ll_subst : coqterm list;
 }
