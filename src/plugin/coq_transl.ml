@@ -2410,9 +2410,24 @@ and add_type_unfolding_axiom axname fvars ty subject =
          [$_typeof_] axiom, so the forward implication alone loses no provable
          function application.  This holds for a canonical [$_arrow] subject
          exactly as for a lifted name: canonicalization changes which object the
-         unfolding speaks about, never its direction or strength. *)
+         unfolding speaks about, never its direction or strength.
+
+         All of that is about *products*.  [remove_type] is only ever reached on
+         a product, so a non-product [ty] here is the body of a transparent
+         type definition, and then [type_to_guard] falls through to
+         [guard_leaf]: the guard is not an extensional unfolding but another
+         membership statement -- plain typing at the body, or the subset/enum/
+         empty description of the very same type.  [tp] and [ty] are convertible
+         by delta, so the two memberships are equivalent by conversion and there
+         is no domain to be empty.  951862d weakened this case only as collateral
+         damage. *)
+      let connective =
+        match ty with
+        | Prod(_) -> mk_impl
+        | _ -> mk_equiv
+      in
       let fla =
-        mk_forall vname type_any (mk_impl (mk_hastype (Var(vname)) tp) guard)
+        mk_forall vname type_any (connective (mk_hastype (Var(vname)) tp) guard)
       in
       record_unfolding_sharing axname fvars tp fla;
       return fla
@@ -2429,7 +2444,25 @@ and add_typing_axiom name ty =
              applied forall-form directly through type_to_guard.  This bypasses
              type lifting/optimization so payloads are expanded per occurrence. *)
           type_to_guard [] (refresh_bvars ty) (Const(name)) >>= fun guard ->
-          add_axiom (mk_axiom ("$_typeof_" ^ name) guard)
+          (* That unfolding says how [name] behaves when applied, but not that it
+             inhabits its own type.  A premise quantifying over a function is
+             guarded by exactly that membership ([make_guard] lifts a product and
+             states it), so without it the premise cannot be instantiated at
+             [name] at all -- and every function into an enum or a refinement
+             lands here, [elt -> bool] being the common case.  The membership is
+             true by construction, [name] being declared at [ty]; it is the same
+             formula the branches below emit for a constant with no erasable
+             content.  Only products need it: for a leaf type the two guards
+             coincide, and under subset erasure [name] denotes its carrier. *)
+          begin
+            match ty with
+            | Prod(_) when opt_type_lifting ->
+               make_guard [] (refresh_bvars ty) (Const(name)) >>= fun memb ->
+               return (mk_and memb guard)
+            | _ ->
+               return guard
+          end >>= fun r ->
+          add_axiom (mk_axiom ("$_typeof_" ^ name) r)
         end
       else if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
         return ()

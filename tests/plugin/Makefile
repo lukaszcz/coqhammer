@@ -1,20 +1,21 @@
 COQC ?= rocq c
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo $(EXTRACTION_VOS)
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
 # but only trivial ones the sauto pretactic phase closes before any ATP is
-# consulted; erasure_blacklist.vo, arrow_transl.vo and type_sharing_transl.vo
-# assert on the axioms the translation emits and prove nothing -- the last one
-# only translates declarations and dumps a problem for an aborted goal.
+# consulted; erasure_blacklist.vo, arrow_transl.vo, type_sharing_transl.vo and
+# membership_transl.vo assert on the axioms the translation emits and prove
+# nothing -- the middle two only translate declarations and dump a problem for
+# an aborted goal, the last one does not even dump.
 # Everything else either sets SAutoLimit to 0, which disables that phase and
 # hands the goal to the ATPs, or requires a file that does.  prover_selection.vo
 # also passes without an ATP, but only vacuously: it checks that `hammer` fails
 # when every prover is disabled, which is equally true when no prover exists, so
 # running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -305,7 +306,9 @@ type_sharing_transl.vo: type_sharing_transl.v
 	if [ "$$arrow_axioms" -lt 1 ] || [ "$$type_axioms" -lt 1 ]; then \
 	  fail "no arrow or type unfolding axiom was emitted, so the equivalence guard is vacuous"; \
 	fi; \
-	if grep -E '^\$$_(arrow|type|link)_[0-9]+:' type_sharing_transl.out | grep -q '<=>'; then \
+	if grep -E '^\$$_(arrow|type|link)_[0-9]+:' type_sharing_transl.out | \
+	   awk '{ i = index($$0, "(=> @"); j = index($$0, "(<=> @"); \
+	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
 	  fail "a lifted-type axiom is an equivalence, which is unsound over empty domains"; \
 	fi; \
 	grep -Eq "^fof\(.\\\$$_link_[0-9]+., axiom, \(c_24__type__[0-9]+ = c_24__type__[0-9]+___24a2\(ctype__sharing__transl_2eX,cQs\)\)\)\.$$" "$$tmp/type_sharing_transl.p" || { \
@@ -316,12 +319,55 @@ type_sharing_transl.vo: type_sharing_transl.v
 	  echo "dumped lambda link equation check FAILED"; \
 	  grep -E "^fof\(.\\\$$_link_" "$$tmp/type_sharing_transl.p" || true; \
 	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; }; \
-	if grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | grep -q '<=>'; then \
+	if grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
+	   awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
+	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
 	  echo "a dumped lifted-type axiom is an equivalence, which is unsound over empty domains"; \
-	  grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | grep '<=>' || true; \
+	  grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
+	    awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
+	           if (j > 0 && (i == 0 || j < i)) print }' || true; \
 	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; \
 	fi; \
 	rm -f type_sharing_transl.out
+
+membership_transl.vo: membership_transl.v
+	@set -e; \
+	fail() { \
+	  echo "$$1"; cat membership_transl.out; \
+	  rm -f membership_transl.vo membership_transl.out; exit 1; \
+	}; \
+	$(COQC) membership_transl.v > membership_transl.out 2>&1 || \
+	  fail "membership_transl.v failed to compile"; \
+	grep -Eq '^\$$_typeof_membership_transl\.f: \(\(& @ \(\(\$$HasType @ membership_transl\.f\) @ \(\(\$$_arrow @ membership_transl\.elt\) @ Corelib\.Init\.Datatypes\.bool\)\)\) @ .*Corelib\.Init\.Datatypes\.true' membership_transl.out || \
+	  fail "enum codomain: the typing axiom lost its membership conjunct, so no premise quantifying over a function can be instantiated at it"; \
+	grep -Eq '^\$$_typeof_membership_transl\.r: \(\(& @ \(\(\$$HasType @ membership_transl\.r\) @ \(\(\$$_arrow @ membership_transl\.elt\) @ \(\(Corelib\.Init\.Specif\.sig @ Corelib\.Init\.Datatypes\.nat\) @ \$$_lam_[0-9]+\)\)\)\) @ .*Corelib\.Init\.Datatypes\.O' membership_transl.out || \
+	  fail "subset codomain: the typing axiom lost its membership conjunct"; \
+	grep -Eq '^\$$_typeof_membership_transl\.g: \(\(\$$HasType @ membership_transl\.g\) @ \(\(\$$_arrow @ membership_transl\.elt\) @ membership_transl\.A\)\)$$' membership_transl.out || \
+	  fail "no erasable content: the typing axiom must be the bare membership, with nothing conjoined to it"; \
+	grep -Eq '^\$$_def_membership_transl\.elt: !\[var_[0-9]+ : \$$Any\]: \(\(\(<=> @ \(\(\$$HasType @ var_[0-9]+\) @ membership_transl\.elt\)\) @ \(\(\$$HasType @ var_[0-9]+\) @ membership_transl\.A\)\)\)$$' membership_transl.out || \
+	  fail "transparent leaf definition: the two memberships are convertible, so the definition axiom must be an equivalence"; \
+	endo_def=$$(grep -E '^\$$_def_membership_transl\.endo:' membership_transl.out || true); \
+	[ -n "$$endo_def" ] || \
+	  fail "no definition axiom for the transparent product, so the implication check below is vacuous"; \
+	printf '%s\n' "$$endo_def" | \
+	  grep -Eq '\(=> @ \(\(\$$HasType @ var_[0-9]+\) @ membership_transl\.endo\)\)' || \
+	  fail "transparent product definition: the unfolding must be stated as an implication"; \
+	if printf '%s\n' "$$endo_def" | grep -q '<=>'; then \
+	  fail "transparent product definition is an equivalence, which is unsound over empty domains"; \
+	fi; \
+	product_axioms=$$(grep -Ec '^\$$_(arrow|type)_[0-9]+:' membership_transl.out || true); \
+	if [ "$$product_axioms" -lt 1 ]; then \
+	  fail "no product unfolding axiom was emitted, so the equivalence guard is vacuous"; \
+	fi; \
+	if grep -E '^\$$_(arrow|type)_[0-9]+:' membership_transl.out | \
+	   awk '{ i = index($$0, "(=> @"); j = index($$0, "(<=> @"); \
+	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
+	  fail "a product unfolding axiom is an equivalence, which is unsound over empty domains"; \
+	fi; \
+	grep -Eq '^membership_transl\.q_all: !\[[0-9]+_k : \$$Any\]: \(\(\(=> @ \(\(\$$HasType @ [0-9]+_k\) @ \(\(\$$_arrow @ membership_transl\.elt\) @ Corelib\.Init\.Datatypes\.bool\)\)\) @ \(membership_transl\.Q @ [0-9]+_k\)\)\)$$' membership_transl.out || \
+	  fail "the premise is no longer guarded by the membership the typing axiom supplies, so the conjunct check above proves nothing"; \
+	rm -f membership_transl.out
+
 
 extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
 	@set -e; \
