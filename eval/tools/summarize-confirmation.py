@@ -216,6 +216,7 @@ def write_tsv(rows: list[dict[str, object]], out: Path) -> None:
         "generated",
         "theorems",
         "success_rate",
+        "reconstructable",
         "recon_successes",
         "recon_rate_on_atp",
         "def_constants",
@@ -258,6 +259,7 @@ def aggregate(rows: list[dict[str, object]], *keys: str) -> list[dict[str, objec
                 "generated": generated,
                 "theorems": theorems,
                 "success_rate": (theorems / generated) if generated else 0.0,
+                "reconstructable": reconstructable,
                 "recon_successes": recon_successes,
                 "recon_rate_on_atp": (recon_successes / reconstructable) if reconstructable else 0.0,
                 "def_constants": len(defs),
@@ -292,9 +294,19 @@ def md_table(rows: list[dict[str, object]], columns: list[str], limit: int | Non
     return "\n".join(lines)
 
 
-def attempt_maps(root: Path, label: str) -> tuple[set[tuple[str, str, str, str]], set[tuple[str, str, str, str]]]:
-    atp: set[tuple[str, str, str, str]] = set()
-    recon: set[tuple[str, str, str, str]] = set()
+AttemptKey = tuple[str, str, str, str]
+
+
+def attempt_maps(root: Path, label: str) -> tuple[set[AttemptKey], set[AttemptKey], set[AttemptKey]]:
+    # Three separate sets because ATP success and reconstruction attempt are not
+    # the same event: an "Unsatisfiable" output is a genuine ATP success but is
+    # never handed to reconstruction (see reconstr_files), so it belongs in the
+    # ATP count and must stay out of the reconstruction denominator -- otherwise
+    # these watch-point rows report a lower rate than the reconstruction-on-ATP
+    # metric of the aggregate tables, which divides by the reconstructable count.
+    atp: set[AttemptKey] = set()
+    reconstructable: set[AttemptKey] = set()
+    recon: set[AttemptKey] = set()
     for corpus in CORPORA:
         corpus_dir = root / label / corpus
         if not corpus_dir.exists():
@@ -306,27 +318,35 @@ def attempt_maps(root: Path, label: str) -> tuple[set[tuple[str, str, str, str]]
                 pdir = corpus_dir / "prover-outputs" / f"{prover}-{premise}"
                 for name in names:
                     key = (corpus, premise, prover, name)
-                    if has_atp_theorem(pdir / name):
+                    output = pdir / name
+                    if has_atp_theorem(output):
                         atp.add(key)
+                    if is_reconstructable(output):
+                        reconstructable.add(key)
                         rpath = corpus_dir / "reconstr-outputs" / f"{prover}-{premise}" / name.replace(".p", ".out")
                         try:
                             if rpath.read_text(errors="replace").startswith("Success "):
                                 recon.add(key)
                         except FileNotFoundError:
                             pass
-    return atp, recon
+    return atp, reconstructable, recon
 
 
 def special_problem_summary(root: Path, label: str, problem_stem: str) -> dict[str, object]:
-    atp, recon = attempt_maps(root, label)
-    atp_problem = {k for k in atp if k[3] == f"{problem_stem}.p"}
-    recon_problem = {k for k in recon if k[3] == f"{problem_stem}.p"}
+    atp, reconstructable, recon = attempt_maps(root, label)
+    name = f"{problem_stem}.p"
+    atp_problem = {k for k in atp if k[3] == name}
+    reconstructable_problem = {k for k in reconstructable if k[3] == name}
+    recon_problem = {k for k in recon if k[3] == name}
     return {
         "label": label,
         "problem": problem_stem,
         "atp_successes": len(atp_problem),
+        "reconstructable": len(reconstructable_problem),
         "recon_successes": len(recon_problem),
-        "recon_rate_on_atp": (len(recon_problem) / len(atp_problem)) if atp_problem else 0.0,
+        "recon_rate_on_atp": (
+            (len(recon_problem) / len(reconstructable_problem)) if reconstructable_problem else 0.0
+        ),
     }
 
 
@@ -366,7 +386,7 @@ def write_analysis(rows: list[dict[str, object]], root: Path, out: Path) -> None
         "",
         "## Eq_rect / WF watch points",
         "",
-        md_table(eq_rect_rows + idiv_rows, ["label", "problem", "atp_successes", "recon_successes", "recon_rate_on_atp"]),
+        md_table(eq_rect_rows + idiv_rows, ["label", "problem", "atp_successes", "reconstructable", "recon_successes", "recon_rate_on_atp"]),
         "",
     ]
     current = next((row for row in by_label if row["label"] == CURRENT), None)
