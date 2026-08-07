@@ -2420,14 +2420,33 @@ and add_link_axiom name cctx ctm link =
      return ()
   | Some link ->
      let open Hashing in
-     let (inst_name, inst_ctx, schema_name) =
+     let (inst_name, inst_ctx, schema_name, schema_ctx) =
        if link.ll_new_is_schema then
          (* the partner is the instance of the lift just minted *)
-         (link.ll_name, link.ll_ctx, name)
+         (link.ll_name, link.ll_ctx, name, cctx)
        else
-         (name, cctx, link.ll_name)
+         (name, cctx, link.ll_name, link.ll_ctx)
      in
      let vars = ctx_to_vars inst_ctx
+     in
+     (* The arity a symbol is defined at counts the context variables which
+        survive erasure, and the left-hand side reproduces the instance's own
+        context, so only the right-hand side can miss it: the schema's symbol
+        is applied to the *images* of its context variables, and matching is
+        syntactic on unerased terms, so a schema variable which survives in the
+        schema's context -- one of type [v_CANONICAL_k] with [k] a [Type]
+        variable, say -- may be instantiated by a proof.  The image is then
+        dropped from the application and the schema's symbol appears one
+        argument short of its definition, which with that definition equates a
+        value with a function, exactly as a mismatched lambda binder would.
+        This is why the binder profiles alone do not settle it.  Count the
+        arguments the conversion kept and compare against the definition. *)
+     let schema_arity =
+       List.length
+         (List.filter
+            (fun (x, _) -> not (try Coq_typing.check_proof_var schema_ctx x with _ -> false))
+            (ctx_to_vars schema_ctx))
+     and kept_args = ref (-1)
      in
      (* Built through the same path [add_def_eq_type_axiom] uses, so arity and
         [$HasType] handling are unchanged. *)
@@ -2435,9 +2454,19 @@ and add_link_axiom name cctx ctm link =
        begin fun ctx ->
          convert ctx (mk_long_app (Const(inst_name)) (mk_vars vars)) >>= fun lhs ->
          convert ctx (mk_long_app (Const(schema_name)) link.ll_subst) >>= fun rhs ->
+         (* the conversion runs once and cannot be repeated to measure it (it
+            emits the axioms of the lifts inside the images), so read the arity
+            off here *)
+         kept_args := List.length (snd (flatten_app rhs));
          return (mk_eq lhs rhs)
        end >>= fun r ->
-     add_axiom (mk_axiom ("$_link_" ^ unique_id ()) r)
+     if !kept_args <> schema_arity then
+       begin
+         Lift_stats.count "link.arg_erasure_mismatch";
+         return ()
+       end
+     else
+       add_axiom (mk_axiom ("$_link_" ^ unique_id ()) r)
 
 and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
