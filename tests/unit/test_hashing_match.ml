@@ -292,6 +292,48 @@ let () =
      attempted on each of the 64 candidates examined *)
   check_int "candidate cap honoured" 128 (Hashing.counters "cap").Hashing.lc_attempts
 
+(* Entries the pre-filters reject never become candidates, so the candidate cap
+   alone would let a bucket of them be walked in full.  The walk is bounded by
+   the entries it examines as well: 512 of the 600 rejects here are looked at,
+   and the partner registered before them -- entries are prepended, so it is
+   last in the bucket -- is never reached. *)
+let mk_reject i = App(Const "shared", Const ("d_" ^ string_of_int i))
+let walk_query = App(Const "shared", Const "q")
+let walk_schema_ctx = mk_ctx [SortType]
+let walk_schema = App(Const "shared", Var(v 0))
+
+let () =
+  Hashing.clear_lifts ();
+  Hashing.register_lift "walk" "$_type_walk_schema" walk_schema_ctx walk_schema;
+  for i = 0 to 599 do
+    Hashing.register_lift "walk" ("$_type_walk_" ^ string_of_int i) [] (mk_reject i)
+  done;
+  check_bool "examined cap: partner out of reach" true
+    (Hashing.find_lift_link "walk" [] walk_query = None);
+  check_int "examined cap: rejects examined" 512
+    (Hashing.counters "walk").Hashing.lc_filtered;
+  check_int "examined cap counted" 1 (Hashing.counters "walk").Hashing.lc_truncated;
+  check_int "examined cap: nothing attempted" 0
+    (Hashing.counters "walk").Hashing.lc_attempts
+
+(* The same partner behind a stretch of rejects the walk does get through: it is
+   the bound that loses the link above, not the pre-filters. *)
+let () =
+  Hashing.clear_lifts ();
+  Hashing.register_lift "walk2" "$_type_walk2_schema" walk_schema_ctx walk_schema;
+  for i = 0 to 99 do
+    Hashing.register_lift "walk2" ("$_type_walk2_" ^ string_of_int i) [] (mk_reject i)
+  done;
+  begin match Hashing.find_lift_link "walk2" [] walk_query with
+  | None -> report "partner behind rejects" "a link" "None"
+  | Some l ->
+    check_bool "partner behind rejects: direction" false l.Hashing.ll_new_is_schema;
+    check_subst "partner behind rejects: subst"
+      (Some [Const "q"]) (Some l.Hashing.ll_subst)
+  end;
+  check_int "partner behind rejects: nothing truncated" 0
+    (Hashing.counters "walk2").Hashing.lc_truncated
+
 (* Entries with no constant at all are capped in number. *)
 let () =
   Hashing.clear_lifts ();

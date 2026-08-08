@@ -211,8 +211,9 @@ type lift_counters = {
   lc_linked_fwd : int;      (* links found with the partner as schema *)
   lc_linked_rev : int;      (* links found with the new lift as schema *)
   lc_attempts : int;        (* candidate match attempts *)
-  lc_filtered : int;        (* examined candidates rejected by the pre-filters *)
-  lc_truncated : int;       (* find_lift_link calls that hit the candidate cap *)
+  lc_filtered : int;        (* examined entries rejected by the pre-filters *)
+  lc_truncated : int;       (* find_lift_link calls that stopped at a cap,
+                               leaving entries unexamined *)
   lc_noconst_dropped : int; (* entries dropped from the capped constant-free list *)
 }
 
@@ -309,8 +310,22 @@ type lift_registry = {
 
 (* maximum number of constant-free entries kept per kind *)
 let max_noconst_entries = 256
-(* maximum number of candidates examined by one [find_lift_link] call *)
+(* maximum number of viable candidates collected by one [find_lift_link] call *)
 let max_match_candidates = 64
+(* Maximum number of entries one [find_lift_link] call looks at.  The candidate
+   cap bounds the match attempts but not the walk which feeds them: an entry
+   rejected by the pre-filters, already seen under another of the query's
+   constants, or equal to the query itself never becomes a candidate, so
+   without a second bound a bucket of such entries is walked in full and the
+   lookup cost still grows with the translation.
+
+   The bound is a multiple of the candidate cap rather than the cap itself
+   because a lookup does reach past a long stretch of rejects to a partner that
+   matches: over Stdlib translations with up to 8192 selected premises, single
+   lookups walked as many as 1339 entries, but the furthest entry a returned
+   link came from sat at position 430.  Cutting the walk at 512 costs none of
+   those links. *)
+let max_examined_entries = 8 * max_match_candidates
 
 let top_tag tm =
   match tm with
@@ -392,8 +407,9 @@ let is_identity_subst len_other subst =
 (* The index makes the lookup a filter, not a decision procedure, and it is
    deliberately incomplete in one direction: a constant-free query has no
    bucket to probe but the capped constant-free list, so an instance of it
-   which does contain constants is not found.  Missing a link only forgoes an
-   equation. *)
+   which does contain constants is not found -- as is a partner sitting past
+   the point where the caps below stop the walk.  Missing a link only forgoes
+   an equation. *)
 let find_lift_link kind cctx ctm =
   let reg = get_registry kind in
   let tag = top_tag ctm in
@@ -405,15 +421,17 @@ let find_lift_link kind cctx ctm =
      forward-viable when the partner may be the schema of the new term, and
      reverse-viable when the new term may be the schema of the partner.  A
      candidate viable in neither direction cannot match either way, so it is
-     dropped before the cap and before the attempt counter. *)
-  (* The buckets are walked entry by entry and the walk stops at the cap, so
-     the cap bounds the cost of the lookup itself: a bucket is the whole set of
-     entries containing one constant and grows with the translation, so
-     concatenating and filtering every bucket before applying the cap would be
-     unbounded work.  The constant-free list is capped at registration and is
-     pre-filtered by tag as a whole.  Order is the one the concatenation gave:
-     the buckets of the query's constants in order, then the constant-free
-     entries. *)
+     dropped before the candidate cap and before the attempt counter. *)
+  (* The buckets are walked entry by entry and the walk stops at whichever of
+     the two caps it reaches first, so the caps bound the cost of the lookup
+     itself: a bucket is the whole set of entries containing one constant and
+     grows with the translation, so concatenating and filtering every bucket
+     before capping would be unbounded work, and so would walking past
+     unboundedly many entries which the pre-filters reject before they can
+     count against the candidate cap.  The constant-free list is capped at
+     registration and is pre-filtered by tag as a whole.  Order is the one the
+     concatenation gave: the buckets of the query's constants in order, then
+     the constant-free entries. *)
   let buckets =
     List.map
       (fun c -> try Hashtbl.find reg.lr_index (tag, c) with Not_found -> [])
@@ -422,18 +440,23 @@ let find_lift_link kind cctx ctm =
   in
   let acc = ref [] in
   let acc_len = ref 0 in
+  let examined = ref 0 in
   let truncated = ref false in
   let rec collect buckets =
     match buckets with
     | [] -> ()
     | [] :: bs -> collect bs
     | (e :: es) :: bs ->
-      if !acc_len >= max_match_candidates then
-        (* entries are left unexamined: the exact number of viable candidates
-           is unknown *)
+      if !acc_len >= max_match_candidates || !examined >= max_examined_entries then
+        (* entries are left unexamined: neither the number of viable candidates
+           nor the number of rejects is known *)
         truncated := true
       else
         begin
+          (* every entry the walk reaches costs a [seen] probe and, for a fresh
+             one, the self-exclusion test and the pre-filters, so the entries
+             which never become candidates are counted too *)
+          incr examined;
           if not (Hashtbl.mem seen e.le_name || (e.le_ctx = cctx && e.le_tm = ctm))
           then
             begin
@@ -454,9 +477,11 @@ let find_lift_link kind cctx ctm =
   collect buckets;
   let truncated = !truncated in
   if truncated then
-    log 1 ("hashing: more candidate " ^ kind ^ " lifts than the cap of " ^
-           string_of_int max_match_candidates ^ ", examining the first " ^
-           string_of_int max_match_candidates ^ " viable ones");
+    log 1 ("hashing: more indexed " ^ kind ^ " lifts than one lookup examines; " ^
+           "stopped at " ^ string_of_int !acc_len ^ " viable candidate(s) in " ^
+           string_of_int !examined ^ " entries (caps " ^
+           string_of_int max_match_candidates ^ " and " ^
+           string_of_int max_examined_entries ^ ")");
   let candidates = List.rev !acc in
   let attempts = ref 0 in
   let mk_link e new_is_schema subst =

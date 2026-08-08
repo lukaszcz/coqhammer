@@ -56,8 +56,9 @@ type lift_counters = {
   lc_linked_fwd : int;      (* links found with the partner as schema *)
   lc_linked_rev : int;      (* links found with the new lift as schema *)
   lc_attempts : int;        (* candidate match attempts *)
-  lc_filtered : int;        (* examined candidates rejected by the constant/size pre-filters *)
-  lc_truncated : int;       (* find_lift_link calls that hit the candidate cap *)
+  lc_filtered : int;        (* examined entries rejected by the constant/size pre-filters *)
+  lc_truncated : int;       (* find_lift_link calls that stopped at a cap,
+                               leaving entries unexamined *)
   lc_noconst_dropped : int; (* entries dropped from the capped constant-free list *)
 }
 
