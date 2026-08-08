@@ -31,7 +31,7 @@ let adjust_varnames =
           Quant(op, rename_abs n a)
       | Let(value, a) ->
           Let(value, rename_abs n a)
-      | Fix(cft, m, names, types, bodies) ->
+      | Fix(cft, m, recargs, names, types, bodies) ->
           let names2 =
             List.rev
               (fst
@@ -40,7 +40,7 @@ let adjust_varnames =
                     ([], n)
                     names))
           in
-          Fix(cft, m, names2, types, bodies)
+          Fix(cft, m, recargs, names2, types, bodies)
       | _ ->
           tm
     end
@@ -113,29 +113,27 @@ let (>>) m1 m2 = bind m1 (fun _ -> m2)
 let lift f m = m >>= fun x -> return (f x)
 
 let listM_nth lst n =
-  let rec pom lst n acc x =
+  let rec hlp i selected lst =
     match lst with
-    | [] -> return x
+    | [] ->
+       begin
+         match selected with
+         | Some r -> return r
+         | None -> failwith "listM_nth"
+       end
     | h :: t ->
-       if n = 0 then
-         begin
-           acc >> h >>= fun r ->
-           pom t (n - 1) (return r) r
-         end
-       else
-         pom t (n - 1) (acc >> h) x
-  in
-  match lst with
-  | [] -> failwith "listM_nth"
-  | h :: t ->
-     begin
        h >>= fun r ->
-       pom t n (return r) r
-     end
+       hlp (i + 1) (if i = n then Some r else selected) t
+  in
+  hlp 0 None lst
 
 let add_axiom ax =
   log 3 ("add_axiom: " ^ fst ax);
-  ((), fun axs -> ax :: axs)
+  ((), fun axs ->
+    debug 1 (fun () ->
+      if List.exists (fun ax2 -> fst ax2 = fst ax) axs then
+        failwith ("duplicate axiom name: " ^ fst ax));
+    ax :: axs)
 
 let extract_axioms m = (snd m) []
 
@@ -161,6 +159,338 @@ let coq_axioms = [
 (* Coqterms hash *)
 
 let coqterm_hash = Hashing.create lift
+
+(* Nested anonymous lifts have no definition-style axiom name of their own.
+   Keep the enclosing declaration while translating so their structural case
+   dependencies are delivered with the declaration that introduced them. *)
+let translation_owner = ref ""
+
+(* The ordinal separates erased proof-case occurrences within one declaration.
+   Structurally identical occurrences at the same ordinal in other declarations
+   may still share a cached lift, avoiding owner-specific cache growth. *)
+let proof_case_counter = ref 0
+
+let fresh_proof_case_key () =
+  incr proof_case_counter;
+  "$proof-case\000" ^ string_of_int !proof_case_counter
+
+let case_occurrence_key ctx tm =
+  let proof_scrutinee =
+    match tm with
+    | Case(_, (Cast(Const("$Proof"), _) | Const("$Proof")), _, _, _, _) -> true
+    | _ -> false
+  in
+  let proof_dependencies =
+    List.fold_right
+      (fun (name, _) acc ->
+         if var_occurs name tm &&
+            (try Coq_typing.check_proof_var ctx name with _ -> false)
+         then name :: acc
+         else acc)
+      ctx []
+  in
+  match proof_scrutinee, proof_dependencies with
+  | true, _ -> fresh_proof_case_key ()
+  | false, [] -> ""
+  | false, _ -> !translation_owner ^ "\000" ^ String.concat "\000" proof_dependencies
+
+(* Split equations are meaningful together with the structural theory of the
+   type they inspect.  Keep that semantic dependency separately from ordinary
+   premise selection so [get_axioms] can deliver it unconditionally. *)
+module Case_dependencies = struct
+  let table = Hashtbl.create 128
+  let clear () = Hashtbl.clear table
+  let add owner indname =
+    let previous = try Hashtbl.find table owner with Not_found -> [] in
+    if not (List.mem indname previous) then
+      Hashtbl.replace table owner (indname :: previous)
+  let find owner = try Hashtbl.find table owner with Not_found -> []
+  let remove owner = Hashtbl.remove table owner
+end
+
+(* Hash-consed lifts replay their exact case dependencies on cache hits.  A
+   scoped collector records dependencies while constructing a cache miss;
+   nested lifts propagate their dependencies to the enclosing cached lift. *)
+module Lift_dependencies = struct
+  let table = Hashtbl.create 128
+  let collectors = ref []
+  let clear () = Hashtbl.clear table; collectors := []
+  let record indname =
+    match !collectors with
+    | dependencies :: _ -> dependencies := indname :: !dependencies
+    | [] -> ()
+  let find name = try Hashtbl.find table name with Not_found -> []
+  let add name dependencies =
+    let previous = find name in
+    Hashtbl.replace table name
+      (Hhlib.sort_uniq String.compare (dependencies @ previous))
+end
+
+let with_lift_dependencies make =
+  let dependencies = ref [] in
+  let previous_collectors = !(Lift_dependencies.collectors) in
+  Lift_dependencies.collectors := dependencies :: previous_collectors;
+  let result =
+    try make ()
+    with e ->
+      Lift_dependencies.collectors := previous_collectors;
+      raise e
+  in
+  Lift_dependencies.collectors := previous_collectors;
+  let delivered =
+    match flatten_app (fst result) with
+    | Const name, _
+         when String.length name >= 2 && String.sub name 0 2 = "$_" ->
+       if !dependencies <> [] then Lift_dependencies.add name !dependencies;
+       Lift_dependencies.find name
+    | _ -> Hhlib.sort_uniq String.compare !dependencies
+  in
+  List.iter
+    (fun dependency ->
+       Case_dependencies.add !translation_owner dependency;
+       Lift_dependencies.record dependency)
+    delivered;
+  result
+
+(***************************************************************************************)
+(* Lift-sharing diagnostic *)
+
+(* Lifting mints one symbol per occurrence shape, so one Coq object reached at
+   two shapes gets two unrelated names and nothing in the problem relates them.
+   Whether sharing those lifts across instantiation is worth its risk is a
+   question about corpora, and these counters answer it: they report how many
+   symbols each lift kind mints and how many of them an instance match would
+   relate, without emitting anything.  Behind COQHAMMER_LIFT_STATS, so a
+   default build neither counts nor pays for the matching. *)
+
+let () =
+  Lift_stats.add_source
+    begin fun () ->
+      List.concat_map
+        begin fun (kind, c) ->
+          let open Hashing in
+          List.map (fun (field, n) -> ("hash." ^ kind ^ "." ^ field, n))
+            [ ("registered", c.lc_registered); ("queried", c.lc_queried);
+              ("linked_fwd", c.lc_linked_fwd); ("linked_rev", c.lc_linked_rev);
+              ("attempts", c.lc_attempts); ("filtered", c.lc_filtered);
+              ("truncated", c.lc_truncated);
+              ("noconst_dropped", c.lc_noconst_dropped) ]
+        end
+        (Hashing.all_counters ())
+    end
+
+let count_lift kind field =
+  if Lift_stats.enabled () then Lift_stats.count (kind ^ "." ^ field)
+
+(* [<kind>.minted] counts every symbol the kind mints and the outcome fields
+   partition it.  [remove_lambda] adds a fifth outcome, [unnamed], for a lift
+   which does not name itself and so neither registers nor links: folding those
+   into [unlinked] would report a missing partner where there is no name to
+   link one to. *)
+let link_outcome link =
+  match link with
+  | Some l when l.Hashing.ll_new_is_schema -> "linked_rev"
+  | Some _ -> "linked_fwd"
+  | None -> "unlinked"
+
+(* Looks for a lift this one is related to by instantiation, registers this
+   lift, and returns the link so the caller can emit its equation.  Called
+   exactly once per minted symbol: registering twice would make a lift a
+   candidate partner of itself under a second name. *)
+let link_lift kind name cctx ctm =
+  let link = Hashing.find_lift_link kind cctx ctm in
+  count_lift kind "minted";
+  count_lift kind (link_outcome link);
+  Hashing.register_lift kind name cctx ctm;
+  link
+
+(* Type and lambda lifts link unconditionally: the equation they emit needs the
+   registry whether or not the diagnostic is on.  The kinds which do not emit
+   link equations yet register only for the diagnostic, so a default build pays
+   nothing for them. *)
+let record_lift_stats kind name cctx ctm =
+  if Lift_stats.enabled () then ignore (link_lift kind name cctx ctm)
+
+(* Stage 2 of the plan would translate a dependent product as
+   [$_prod(A, F)], and its codomain object [F] is canonical only when
+   [fun x : A => B] eta-contracts to a term not mentioning [x].  Separating the
+   two shapes is what decides whether that stage is worth writing. *)
+let codomain_eta_contracts vname ty =
+  match ty with
+  | App(cod, Var(x)) when x = vname -> not (var_occurs vname cod)
+  | _ -> false
+
+let record_type_lift_shape eligible cctx cty =
+  if Lift_stats.enabled () then
+    let shape =
+      if eligible then
+        (* translated structurally as [$_arrow], so no name is minted *)
+        "arrow"
+      else
+        match cty with
+        | Prod(vname, ty1, ty2) ->
+           if (try Coq_typing.check_prop cctx ty1 with _ -> false) then
+             "prop_domain"
+           else if not (var_occurs vname ty2) then
+             (* a non-dependent non-Prop-domain product which the eligibility
+                test nevertheless rejected: a canary, expected to stay at 0 *)
+             "nondep_other"
+           else if codomain_eta_contracts vname ty2 then
+             "dep_eta"
+           else
+             "dep_noneta"
+        | _ ->
+           "other"
+    in
+    Lift_stats.count ("type.shape." ^ shape)
+
+(* A structural former identifies a type by its *translated* parts, so two Coq
+   types differing only in erased content share one object -- [T eq_refl -> nat]
+   and [T q -> nat] with [q] an erased proof variable are both
+   [$_arrow(cT, cnat)] -- while [guard_leaf] may classify only one of them as a
+   refinement.  One object then carries two different unfolding axioms.  That is
+   not unsound: every identification [convert] makes is an equality valid under
+   proof irrelevance, so the several guards are simultaneously true of the same
+   object.  What it does mean is that sharing propagates any per-type guard bug
+   to every occurrence, so census how often the guards actually differ.  Nothing
+   emitted changes. *)
+let type_unfolding_hash : (coqterm, coqterm) Hashtbl.t = Hashtbl.create 128
+
+(* Every binder of an unfolding axiom is minted fresh -- the subject variable
+   and, through [make_guard], each variable the guard quantifies -- so two
+   structurally identical unfoldings differ as built.  Compare them
+   alpha-normalized.  The context to canonicalize against is the free variables
+   the formula actually mentions, not the lift's whole context: canonical
+   numbering continues past the context, a lift's context may bind variables
+   its type never mentions, and their count would otherwise shift the number of
+   every bound variable.  Subjects need no normalization -- they are built from
+   the canonical variables already, so one object is one term.
+
+   Normalizing and comparing whole formulas is not free, so it is done only
+   when someone is looking: with the diagnostic on, or in a debug build. *)
+(* Which of a term's leading lambda binders erase, outermost first.
+   [match_instance] is syntactic on unerased [coqterm]s, so a schema whose
+   binder type is a canonical variable matches an instance whose binder is a
+   proof.  The schema's binder survives translation and the instance's does
+   not, so the two lifts' symbols are applied at different arities: the
+   instance's link application then has exactly the shape of its own saturated
+   definition equation, and the two together equate a value with a function.
+   Comparing the profiles is what keeps a link between such a pair from being
+   emitted. *)
+let binder_erasure_profile ctx tm =
+  let rec collect ctx tm acc =
+    match tm with
+    | Lam(vname, ty, body) ->
+       let erased = try Coq_typing.check_prop ctx ty with _ -> false in
+       collect ((vname, ty) :: ctx) body (erased :: acc)
+    | _ -> List.rev acc
+  in
+  collect ctx tm []
+
+let record_unfolding_sharing axname fvars subject fla =
+  if Lift_stats.enabled () || opt_debug_level >= 1 then
+    let names = get_free_varnames fla in
+    let ctx = vars_to_ctx (List.filter (fun (x, _) -> List.mem x names) fvars) in
+    let (_, fla, _) = Hashing.canonical ctx fla in
+    match Hashtbl.find_opt type_unfolding_hash subject with
+    | None -> Hashtbl.add type_unfolding_hash subject fla
+    | Some fla0 ->
+       if fla0 = fla then
+         Lift_stats.count "type.guard_shared"
+       else
+         begin
+           Lift_stats.count "type.guard_heterogeneous";
+           log 1 ("heterogeneous unfolding for the shared type object " ^
+                  string_of_coqterm subject ^ " in " ^ axname)
+         end
+
+let is_transport_constant name =
+  List.exists (fun basename -> Coq_stdnames.is_init_logic basename name)
+    [ "eq_rect"; "eq_rec"; "eq_ind"; "eq_rect_r"; "eq_rec_r"; "eq_ind_r" ]
+
+let is_false_rect_constant name = Coq_stdnames.is_init_logic "False_rect" name
+
+let is_wf_fix_constant name = Coq_stdnames.is_init_wf "Fix" name
+
+let is_wf_fix_f_constant name = Coq_stdnames.is_init_wf "Fix_F" name
+
+let is_program_fix_sub_constant name = Coq_stdnames.is_program_wf "Fix_sub" name
+
+let is_program_fix_f_sub_constant name = Coq_stdnames.is_program_wf "Fix_F_sub" name
+
+let specif_constant basename =
+  let core = "Corelib.Init.Specif." ^ basename
+  and coq = "Coq.Init.Specif." ^ basename
+  and stdlib = "Stdlib.Init.Specif." ^ basename in
+  if Defhash.mem core then core else if Defhash.mem coq then coq else stdlib
+
+let erase_false_rect_type_arg ctx tm =
+  if opt_refinement_types then
+    match flatten_app tm with
+    | Const name, ty :: args
+         when is_false_rect_constant name && args <> [] && ty <> type_any &&
+              Coq_erasure.has_erasable_content ctx ty ->
+       (* Impossible branches may mention a collapsed refinement package in
+          the eliminated result type, but the proof argument is erased and the
+          branch is unreachable.  Keep the ordinary opaque eliminator and replace
+          only the type parameter by [$Any] so no sig/exist bridge leaks into a
+          definition axiom. *)
+       Some (mk_long_app (Const name) (type_any :: args))
+    | _ -> None
+  else
+    None
+
+let transport_full_arity = 6
+
+let erase_transport_head tm =
+  if opt_prop_case_erasure then
+    match flatten_app tm with
+    | Const name, args
+         when is_transport_constant name && List.length args >= transport_full_arity ->
+       (* Transport erasure maps fully applied casts to the transported value in
+          the proof-irrelevant model.  Preserve applications after the transport
+          spine, e.g. [(eq_rect ... f ... e) x] erases to [f x].
+          Reconstruction-sensitive cases are isolated by [opt_erasure_guards]. *)
+       Some (mk_long_app (List.nth args 3) (Hhlib.drop transport_full_arity args))
+    | _ -> None
+  else
+    None
+
+let transport_erasure_premise tm =
+  if opt_erasure_guards then
+    match flatten_app tm with
+    | Const name, args
+         when is_transport_constant name && List.length args >= transport_full_arity ->
+       let a = List.nth args 1
+       and b = List.nth args 4
+       in
+       (* Transport/UIP debt note: transport erasure is valid in the junk model
+          by proof irrelevance but is not generally replayable as a CIC source
+          theorem; the guarded option emits the converted source equality as a
+          premise. *)
+       Some (mk_eq a b)
+    | _ -> None
+  else
+    None
+
+let proof_like_after_erasure ctx tm =
+  match tm with
+  | Var name ->
+     (try Coq_typing.check_proof_var ctx name with _ -> false)
+  | _ ->
+     match flatten_app tm with
+     | Const name, args ->
+        if Coq_stdnames.is_init_logic "eq_refl" name then
+          List.length args >= 2
+        else if Coq_stdnames.is_init_logic "eq_trans" name then
+          List.length args >= 6
+        else if Coq_stdnames.is_init_logic "eq_sym" name then
+          List.length args >= 4
+        else if Coq_stdnames.is_jmeq "JMeq_refl" name then
+          List.length args >= 2
+        else
+          false
+     | _ -> false
 
 (***************************************************************************************)
 (* Inversion axioms for inductive types *)
@@ -188,17 +518,6 @@ let mk_inversion_conjs params_num args targs cacc =
   and ctx = List.rev (Hhlib.take params_num args)
   in
   mk_conjs ctx args2 targs cacc
-
-let rec subst_params lst prms tm =
-  match lst with
-  | [] -> tm
-  | (name, _) :: t ->
-    let tm2 = subst_params t (List.tl prms) tm
-    in
-    if var_occurs name tm2 then
-      substvar name (List.hd prms) tm2
-    else
-      tm2
 
 let mk_inversion params indname constrs matched_term f =
   let rec mk_disjs constrs acc =
@@ -291,6 +610,138 @@ let rec mk_guards ctx vars tm =
 (* The following mutually recursively defined functions return
    (coqterm axioms_monad) or (unit axioms_monad). *)
 
+let program_wf_simpl tm =
+  (* projector, packing constructor, index of the packed field it selects *)
+  let proj_table =
+    [ "projT1", "existT", 2;
+      "projT2", "existT", 3;
+      "proj1_sig", "exist", 2;
+      "proj2_sig", "exist", 3 ]
+  in
+  let rebuild_app head args =
+    match args with
+    | [] -> head
+    | _ -> mk_long_app head args
+  in
+  let rec simpl_rec tm =
+    let tm =
+      match tm with
+      | App(x, y) -> App(simpl_rec x, simpl_rec y)
+      | Lam(vname, vtype, body) -> Lam(vname, simpl_rec vtype, simpl_rec body)
+      | Prod(vname, vtype, body) -> Prod(vname, simpl_rec vtype, simpl_rec body)
+      | Quant(op, (vname, vtype, body)) -> Quant(op, (vname, simpl_rec vtype, simpl_rec body))
+      | Let(value, (vname, _, body)) -> simpl_rec (substvar vname (simpl_rec value) body)
+      | Case(indname, matched_term, return_type, raw_return_type, params_num, branches) ->
+         Case(indname, simpl_rec matched_term, simpl_rec return_type,
+              simpl_rec raw_return_type, params_num,
+              List.map (fun (n, branch) -> (n, simpl_rec branch)) branches)
+      | Cast(body, ty) -> Cast(simpl_rec body, simpl_rec ty)
+      | Fix(cft, k, recargs, names, types, bodies) ->
+         Fix(cft, k, recargs, names, List.map simpl_rec types, List.map simpl_rec bodies)
+      | _ -> tm
+    in
+    match tm with
+    | App(Lam(vname, _, body), x) -> simpl_rec (substvar vname x body)
+    | _ ->
+       begin
+         match flatten_app tm with
+         | Const pname, [_; _; packed] ->
+            begin
+              try
+                let (_, ctor, idx) =
+                  List.find
+                    (fun (p, _, _) -> Coq_stdnames.is_init_specif p pname)
+                    proj_table
+                in
+                begin match flatten_app packed with
+                | Const cname, cargs
+                    when Coq_stdnames.is_init_specif ctor cname && List.length cargs = 4 ->
+                   simpl_rec (List.nth cargs idx)
+                | _ -> tm
+                end
+              with Not_found ->
+                tm
+            end
+         | head, args -> rebuild_app head args
+       end
+  in
+  simpl_rec tm
+
+(* Per-translation WF-recursion marker.  Proof-only erasure sets it before
+   falling back whenever an Acc/proof-recursive path would otherwise emit an
+   unsafe unconditional equation. *)
+let wf_mark = ref false
+
+(* The number of arguments the telescope of `ty' takes.  Substituting into the
+   bodies would not change the count, so nothing is substituted. *)
+let rec telescope_length ty =
+  match ty with
+  | Prod(_, _, body) -> 1 + telescope_length body
+  | Let(_, (_, _, body)) -> telescope_length body
+  | _ -> 0
+
+(* The scrutinee's declared type need only be *convertible* to an application
+   of the matched inductive: a binder `r : insResult Red n', where `insResult'
+   is a type-level function, is matched as an `rtree'.  Reading index arguments
+   off the declared type would then take `insResult''s own arguments for
+   `rtree''s indices, so expose the inductive first and verify the head and the
+   arity before anything is emitted.  `None' means the invariant could not be
+   established; it is a refusal, never an omission (see `refuse_case').
+
+   A family declaring no indices is not required to expose its inductive, and
+   must not be: outside a case predicate `coq_convert' lowers the logical
+   inductives to the FOL formers `$True', `$False', `&' and `|', and a scrutinee
+   typed by one of them is no longer an application of the inductive in any
+   syntactic sense.  `eq' is the one lowered family that does declare an index;
+   its case translation reads the guard off the lowered equation instead (see
+   `emit_prop_case').  Its arguments are still truncated to the parameter
+   prefix, which is all a caller may read there -- the arguments past
+   `params_num' are the indices, and an index-free family has none.  A reducible
+   alias with arguments of its own -- `Al n A := option A' -- would otherwise
+   hand `n' over as an index of `option'. *)
+let scrutinee_ind_args indname ty =
+  match (try Some (Defhash.find indname) with Failure _ -> None) with
+  | Some (_, IndType(_, _, params_num), indty, _) ->
+     (* the telescope is counted here rather than by `Coq_typing.get_type_args',
+        which refreshes every binder name and would thus renumber the symbols of
+        every axiom emitted afterwards *)
+     let expected = telescope_length indty in
+     if expected <= params_num then
+       Some (Hhlib.take params_num (snd (flatten_app ty)))
+     else
+       (* the arity check is against the inductive's declared telescope, so a
+          reduced but partially applied type is rejected too *)
+       let unfold c = try Some (coqdef_value (Defhash.find c)) with Failure _ -> None in
+       begin
+         match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
+         | Const(c), args when c = indname && List.length args = expected -> Some args
+         | _ -> None
+       end
+  | _ -> None
+
+(* A case whose scrutinee type cannot be exposed as an application of the
+   matched inductive has no computable index guard.  The index premise sits in
+   antecedent position, so omitting it alone would assert every branch equation
+   unconditionally -- for `Leaf : rbtree Black 0' that is
+   `forall c n. f c n Leaf = b1 c n', true only at the `Black'/`0' instance, and
+   in the untyped target it constrains junk applications and can contradict the
+   other branches.  The whole case is therefore refused. *)
+let refuse_case axname indname =
+  log 2 ("case-axiom-omitted: case-index-refusal " ^ axname ^ " (" ^ indname ^ ")");
+  return ()
+
+(* True only for a proposition whose formula rendering is `p(t)' for a
+   Const-headed application `t': then, and only then, does the definitional
+   equivalence have a genuine term on each side and may be duplicated as a
+   term-level equation.  A logical connective, `$True'/`$False' or any head
+   other than a constant (a quantifier, a lambda, a case, an equality, or a
+   Var-headed diagonal like `Proper') renders as a compound formula, which is
+   not a term. *)
+let is_atomic_prop_body body =
+  match flatten_app body with
+  | (Const(c), _) -> not (is_logop c) && c <> "$True" && c <> "$False"
+  | _ -> false
+
 let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_term f =
   (* Note: the correctness of calling `prop_to_formula' below
      depends on the implementation of `convert_term' (that it
@@ -332,7 +783,65 @@ let rec add_inversion_axioms0 mkinv indname axname fvars lvars constrs matched_t
 (***************************************************************************************)
 (* Lambda-lifting, fix-lifting and case-lifting *)
 
-and lambda_lifting axname name fvars lvars1 tm =
+and emit_definition_equation ?premise axname name fvars lvars body =
+  let vars = fvars @ lvars in
+  let lhs = mk_long_app (Const(name)) (mk_vars vars) in
+  let body_is_prop = Coq_typing.check_prop (List.rev vars) body in
+  let mk_eqv ctx =
+    let mk_eqv =
+      if Coq_typing.check_prop ctx body then
+        mk_equiv
+      else
+        mk_eq
+    in
+    let eqv = mk_eqv lhs body in
+    match premise with
+    | Some prem -> mk_impl prem eqv
+    | None -> eqv
+  in
+  (* the equivalence and the term equation are closed the same way; each call
+     builds its own computation, since binding one twice would run it twice *)
+  let close_formula mk_body =
+    if !wf_mark then
+      (* WF-recursion model note: these equations are not read as
+         delta-unfolding in the term model.  They are Coq theorems only with
+         the erased PI premises (Fix_eq), and semantically describe a total
+         extension outside those premises; the consistency canaries check this
+         load-bearing path. *)
+      make_fol_forall_keep_prop_premises [] vars (mk_body (List.rev vars))
+    else
+      close fvars
+        begin fun ctx ->
+          let tm = mk_body (List.rev_append lvars ctx) in
+          if !opt_closure_guards || opt_lambda_guards then
+            prop_to_formula ctx (mk_long_forall lvars tm)
+          else
+            make_fol_forall ctx lvars tm
+        end
+  in
+  (* A transparent Prop-valued definition with an atomic body also occurs in
+     term position, where the equivalence identifies nothing; see
+     `opt_prop_def_term_eqs'.  A premised or WF-marked equation is not a
+     conversion, so it gets no term-level counterpart. *)
+  let term_eq =
+    opt_prop_def_term_eqs && premise = None && not !wf_mark &&
+    body_is_prop && is_atomic_prop_body body
+  in
+  close_formula mk_eqv
+  >>=
+  (fun tm -> add_axiom (mk_axiom axname tm))
+  >>
+  begin
+    if term_eq then
+      close_formula (fun _ -> mk_eq lhs body) >>=
+      (fun tm -> add_axiom (mk_axiom (axname ^ "$term") tm))
+    else
+      return ()
+  end
+  >>
+  convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
+
+and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
   debug 3 (fun () -> print_header "lambda_lifting" tm (fvars @ lvars1));
   let rec extract_lambdas tm acc =
     match tm with
@@ -343,36 +852,123 @@ and lambda_lifting axname name fvars lvars1 tm =
   in
   let lvars = lvars1 @ lvars2
   in
+  match erase_transport_head body2 with
+  | Some body3 ->
+     let premise = transport_erasure_premise body2 in
+     emit_definition_equation ?premise axname name fvars lvars body3
+  | None ->
+  let wf_recursion_equation tm =
+    if name = "" then
+      None
+    else
+      let rec_call_args xname yname lvars_ext =
+        List.map
+          (fun (vname, _) -> if vname = xname then Var(yname) else Var(vname))
+          (fvars @ lvars_ext)
+      in
+      let build a_ty rel f x lvars_ext =
+        match x with
+        | Var xname when List.mem_assoc xname lvars_ext ->
+           let yname = refresh_varname "wfarg" in
+           let hname = refresh_varname "wfproof" in
+           let rel_y_x = mk_long_app rel [ Var(yname); x ] in
+           let rec_fun =
+             Lam(yname, a_ty,
+                 Lam(hname, rel_y_x,
+                     mk_long_app (Const(name)) (rec_call_args xname yname lvars_ext)))
+           in
+           let unfolded = simpl (mk_long_app f [ x; rec_fun ]) in
+           Some(lvars_ext, unfolded)
+        | _ -> None
+      in
+      let build_program_sub helper_name a_ty rel f x =
+        let yname = refresh_varname "wfarg" in
+        let zname = refresh_varname "wfarg" in
+        let subset_pred = Lam(zname, a_ty, mk_long_app rel [ Var(zname); x ]) in
+        let proj1_sig = specif_constant "proj1_sig" in
+        let rec_arg = mk_long_app (Const(proj1_sig)) [ a_ty; subset_pred; Var(yname) ] in
+        let rec_fun = Lam(yname, type_any, mk_long_app (Const(helper_name)) [ rec_arg ]) in
+        Some(lvars, program_wf_simpl (mk_long_app f [ x; rec_fun ]))
+      in
+      let program_fix_sub_components tm =
+        match flatten_app tm with
+        | Const cname, args when is_program_fix_sub_constant cname && List.length args >= 5 ->
+           Some(List.nth args 0, List.nth args 1, List.nth args 4)
+        | Const cname, args when is_program_fix_f_sub_constant cname && List.length args >= 4 ->
+           Some(List.nth args 0, List.nth args 1, List.nth args 3)
+        | _ -> None
+      in
+      try
+        match flatten_app tm with
+        | Const helper_name, [x] ->
+           begin
+             try
+               match program_fix_sub_components (coqdef_value (Defhash.find helper_name)) with
+               | Some(a_ty, rel, f) -> build_program_sub helper_name a_ty rel f x
+               | None -> None
+             with _ -> None
+           end
+        | Const cname, args when is_program_fix_sub_constant cname && List.length args >= 6 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 4
+           and x = List.nth args 5
+           in
+           build_program_sub name a_ty rel f x
+        | Const cname, args when is_program_fix_f_sub_constant cname && List.length args >= 5 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 3
+           and x = List.nth args 4
+           in
+           build_program_sub name a_ty rel f x
+        | _ ->
+        match flatten_app tm with
+        | Const cname, args when is_wf_fix_constant cname && List.length args >= 5 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 4
+           and rest = Hhlib.drop 5 args
+           in
+           begin match rest with
+           | [] ->
+              let xname = refresh_varname "wfarg" in
+              build a_ty rel f (Var xname) (lvars @ [ (xname, a_ty) ])
+           | [Var xname as x] when List.mem_assoc xname lvars ->
+              build a_ty rel f x lvars
+           | _ -> None
+           end
+        | Const cname, args when is_wf_fix_f_constant cname && List.length args >= 6 ->
+           let a_ty = List.nth args 0
+           and rel = List.nth args 1
+           and f = List.nth args 3
+           and x = List.nth args 4
+           in
+           build a_ty rel f x lvars
+        | _ -> None
+      with _ -> None
+  in
+  match wf_recursion_equation body2 with
+  | Some(lvars, body3) ->
+     wf_mark := true;
+     begin match simpl body3 with
+     | Fix(_) -> fix_lifting wf_fix_names axname name fvars lvars body3
+     | Case(_) -> case_lifting wf_fix_names axname name fvars lvars body3
+     | _ -> emit_definition_equation axname name fvars lvars body3
+     end
+  | None ->
   match body2 with
   | Fix(_) ->
-     fix_lifting axname name fvars lvars body2
+     fix_lifting wf_fix_names axname name fvars lvars body2
   | Case(_) ->
-     case_lifting axname name fvars lvars body2
+     case_lifting wf_fix_names axname name fvars lvars body2
   | _ ->
-     close fvars
-       begin fun ctx ->
-         let mk_eqv =
-           if Coq_typing.check_prop (List.rev_append lvars ctx) body2 then
-             mk_equiv
-           else
-             mk_eq
-         in
-         let eqv = mk_eqv (mk_long_app (Const(name)) (mk_vars (fvars @ lvars))) body2
-         in
-         if !opt_closure_guards || opt_lambda_guards then
-           prop_to_formula ctx (mk_long_forall lvars eqv)
-         else
-           make_fol_forall ctx lvars eqv
-       end
-     >>=
-     (fun tm -> add_axiom (mk_axiom axname tm))
-     >>
-     convert (List.rev fvars) (mk_long_app (Const(name)) (mk_vars fvars))
+     emit_definition_equation axname name fvars lvars body2
 
-and fix_lifting axname dname fvars lvars tm =
+and fix_lifting wf_fix_names axname dname fvars lvars tm =
   debug 3 (fun () -> print_header "fix_lifting" tm (fvars @ lvars));
   match tm with
-  | Fix(cft, k, names, types, bodies) ->
+  | Fix(cft, k, recargs, names, types, bodies) ->
       let fix_pref = "$_fix_" ^ unique_id () ^ "_"
       in
       let names1 = List.map ((^) fix_pref) names
@@ -398,141 +994,785 @@ and fix_lifting axname dname fvars lvars tm =
                            (if Coq_typing.check_prop [] ty2 then SortProp else SortType))
           with _ -> ())
         names2 types;
+      let recarg_is_prop recarg ty =
+        try
+          let args = Coq_typing.get_type_args ty in
+          let (_, recarg_ty) = List.nth args recarg in
+          Coq_typing.check_prop (List.rev (fvars @ lvars @ Hhlib.take recarg args)) recarg_ty
+        with _ ->
+          false
+      in
+      let recargs_available = List.length recargs = List.length names2 in
+      let wf_fix_names2 =
+        if cft <> CoqFix then
+          (* Cofix unfolding is a status-quo axiom path: no new WF premise
+             discipline applies to cofixpoints in this refactor. *)
+          []
+        else if not recargs_available then
+          names2
+        else
+          List.fold_right
+            (fun (name2, (ty, recarg)) acc ->
+               if recarg_is_prop recarg ty then name2 :: acc else acc)
+            (List.combine names2 (List.combine types recargs)) []
+      in
+      if wf_fix_names2 <> [] then
+        wf_mark := true;
+      let wf_fix_names = wf_fix_names2 @ wf_fix_names in
       listM_nth
         (List.map2
            (fun (axname2, name2) body ->
-             lambda_lifting axname2 name2 fvars lvars (prep body))
+             lambda_lifting wf_fix_names axname2 name2 fvars lvars (prep body))
            (List.combine axnames names2)
            bodies)
         k
   | _ ->
       failwith "fix_lifting"
 
-and case_lifting axname0 name0 fvars lvars tm =
+and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
   debug 3 (fun () -> print_header "case_lifting" tm (fvars @ lvars));
-  let get_params indty rt params_num =
+  let internal_error msg =
+    raise (Hammer_errors.HammerError ("internal translation error: " ^ msg))
+  in
+  let dependency_owner =
+    let prefix = "$_def_" in
+    if String.length axname0 >= String.length prefix &&
+       String.sub axname0 0 (String.length prefix) = prefix
+    then String.sub axname0 (String.length prefix)
+           (String.length axname0 - String.length prefix)
+    else if axname0 <> "" then axname0 else !translation_owner
+  in
+  let get_case_type_args indty rt params_num =
     let args = Coq_typing.get_type_args indty
     in
     let rec pom n tm =
       match tm with
       | Lam(_, ty, body) ->
         if n = 0 then
-          let (_, tyargs) = flatten_app ty
-          in
-          assert (List.length tyargs >= params_num);
-          Hhlib.take params_num tyargs
+          let (_, tyargs) = flatten_app ty in
+          tyargs
         else
           pom (n - 1) body
-      | _ -> failwith "get_params"
+      | _ ->
+         internal_error
+           ("case return predicate is not eta-long: " ^ string_of_coqterm tm)
     in
     let n = List.length args
     in
-    assert (n >= params_num);
-    pom (n - params_num) rt
+    if n < params_num then
+      internal_error
+        ("case predicate has fewer arguments than its parameters: " ^ string_of_coqterm rt)
+    else
+      pom (n - params_num) rt
   in
-  let generic_match () =
-    let name = "$_generic_case_" ^ unique_id ()
-    in
-    let def = (name, Const(name), Const("$Any"), SortType)
-    in
-    Defhash.add def;
-    Const(name)
-  in
-  try
-    begin
+  let get_case_scrutinee_type indty rt params_num =
+    let rec pom n tm =
       match tm with
-      | Cast(Const("$Proof"), _) | Const("$Proof") ->
-         return (generic_match ())
-      | Case(indname, matched_term, return_type, params_num, branches) ->
-        let df = try Defhash.find indname with _ -> raise Not_found
-        in
-        begin
-          match df with
-          | (_, IndType(_, constrs, pnum), indty, _) ->
-             assert (pnum = params_num);
-             if Coq_typing.check_type_target_is_prop indty then
-               return (generic_match ())
-             else
-               let fname = if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
-               in
-               let axname = if name0 = "" then fname else axname0
-               in
-               convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
-               >>=
-               fun case_replacement ->
-                 let case_repl2 = mk_long_app case_replacement (mk_vars lvars)
-                 in
-                 let params = get_params indty return_type params_num
-                 in
-                 let rec hlp constrs branches params params_num vars tm =
-                   let rec get_branch cname cstrs brs =
-                     match cstrs, brs with
-                     | c :: cstrs2, b :: brs2 ->
-                        if c = cname then
-                          b
-                        else
-                          get_branch cname cstrs2 brs2
-                     | _ -> failwith "case_lifting: get_branch"
-                   in
-                   begin fun cname _ args eqt ->
-                   let (n, branch) = get_branch cname constrs branches
-                   in
-                   assert (List.length args <= n);
-                   (* We may have List.length args < n if there are some lets
-                      in the type and they get evaluated away. We do not
-                      properly deal with this (rare) situation: the generated
-                      formula will in this case not be correct (the branch
-                      (`cr' below) will miss arguments). *)
-                   let ctx = List.rev (vars @ args)
-                   in
-                   let ys = mk_vars args
-                   in
-                   let cr = simpl (mk_long_app branch ys)
-                   in
-                   match cr with
-                   | Case(indname2, mt2, return_type2, pnum2, branches2) ->
-                      let df = try Defhash.find indname2 with _ -> raise Not_found
-                      in
-                      begin
-                        match df with
-                        | (_, IndType(_, constrs2, pn), indty2, _) ->
-                           assert (pn = pnum2);
-                           if Coq_typing.check_type_target_is_prop indty2 then
-                             eqt
-                           else
-                             let params2 = get_params indty2 return_type2 pnum2
-                             in
-                             mk_guards []
-                               (get_fvars ctx mt2)
-                               (mk_and eqt (mk_inversion params2 indname constrs2 mt2
-                                              (hlp constrs2 branches2 params2 pnum2 (vars @ args) cr)))
-                        | _ ->
-                           failwith "impossible"
-                      end
-                   | _ ->
-                      let eqv =
-                        if Coq_typing.check_prop ctx cr then
-                          mk_equiv case_repl2 cr
-                        else
-                          mk_eq case_repl2 cr
-                      in
-                      mk_and eqt eqv
-                   end
-                 in
-                 add_inversion_axioms0
-                   (mk_inversion params) indname axname fvars lvars constrs matched_term
-                   (hlp constrs branches params params_num (fvars @ lvars) tm)
-                 >>
-                   return case_replacement
-          | _ ->
-             failwith "impossible"
-        end
+      | Lam(_, ty, body) ->
+         if n = 0 then ty else pom (n - 1) body
       | _ ->
-        failwith "case_lifting"
-    end
-  with Not_found ->
-    log 2 ("case exception: " ^ name0);
-    return (generic_match ())
+         internal_error "normalized case return predicate is not eta-long"
+    in
+    let n = List.length (Coq_typing.get_type_args indty) in
+    if n < params_num then
+      internal_error "normalized case predicate has fewer arguments than its parameters"
+    else
+      pom (n - params_num) rt
+  in
+  let get_params indty rt params_num =
+    let tyargs = get_case_type_args indty rt params_num in
+    if List.length tyargs < params_num then
+      internal_error
+        ("case predicate has fewer type arguments than its parameters: " ^
+         string_of_coqterm rt)
+    else
+      Hhlib.take params_num tyargs
+  in
+  let rec get_branch cname cstrs brs =
+      match cstrs, brs with
+      | c :: cstrs2, b :: brs2 ->
+         if c = cname then b else get_branch cname cstrs2 brs2
+      | _ -> internal_error "case branch does not match constructor telescope"
+    in
+    let constructor_args params params_num cname =
+      let cdef =
+        try Defhash.find cname with Failure _ ->
+          internal_error ("missing constructor declaration: " ^ cname)
+      in
+      let (_, targs, cargs) = Coq_typing.destruct_type_app (coqdef_type cdef)
+      in
+      let cargs1 = Hhlib.take params_num cargs
+      in
+      let cargs2 =
+        List.map
+          (fun (name, ty) -> (name, subst_params cargs1 params ty))
+          (Hhlib.drop params_num cargs)
+      in
+      let targs2 =
+        List.map
+          (fun tm -> subst_params cargs1 params tm)
+          (Hhlib.drop params_num targs)
+      in
+      (targs2, cargs2)
+    in
+    (* Substituting a constructor argument away has to reach the types of the
+       arguments that follow it: those types are carried into the [$Proof] casts
+       that replace erased payloads, so an argument still mentioned there would
+       be left with nothing to bind it.  [replacement] returns [None] for the
+       arguments that stay. *)
+    let subst_telescope_args base_ctx args body replacement =
+      let rec hlp ctx idx args body =
+        match args with
+        | [] -> body
+        | (name, ty) :: args2 ->
+           let (args2, body) =
+             match replacement ctx idx ty with
+             | None -> (args2, body)
+             | Some value ->
+                (List.map (fun (n, t) -> (n, simple_subst name value t)) args2,
+                 simple_subst name value body)
+           in
+           hlp ((name, ty) :: ctx) (idx + 1) args2 body
+      in
+      hlp base_ctx 0 args body
+    in
+    let subst_proof_args base_ctx args body =
+      subst_telescope_args base_ctx args body
+        (fun ctx _ ty ->
+           if Coq_typing.check_prop ctx ty then Some (mk_proof_cast ty) else None)
+    in
+    let refresh_case_args vars args =
+      let refresh_name used name =
+        if List.mem name used then
+          refresh_varname name
+        else
+          name
+      in
+      let subst_renamings renamings tm =
+        List.fold_left
+          (fun tm (name, name2) ->
+             if name = name2 then tm else substvar name (Var name2) tm)
+          tm renamings
+      in
+      let rec hlp used renamings acc args =
+        match args with
+        | [] -> List.rev acc
+        | (name, ty) :: args2 ->
+           let name2 = refresh_name used name in
+           let ty2 = subst_renamings renamings ty in
+           hlp (name2 :: used) ((name, name2) :: renamings) ((name2, ty2) :: acc) args2
+      in
+      hlp (List.map fst vars) [] [] args
+    in
+    (* Refinement occurrence collapse: matching a subset value exposes the
+       erased carrier itself, and the remaining proof payload binders are erased.
+       [Coq_erasure.validate_subset] only classifies a constructor as [CSubset]
+       when every non-carrier field is a proposition that stays propositional
+       once the carrier binder is replaced by the (opaque) subset value -- in
+       particular the carrier never heads a proof-payload type.  So the
+       [check_prop] below cannot fail on a well-classified subset, and the
+       informative-payload internal error is an unreachable consistency check. *)
+    let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
+      match constrs, branches with
+      | [cname], [(n, branch)] ->
+         let (_, args) = constructor_args params params_num cname in
+         if List.length args <> n then
+           internal_error "subset constructor telescope arity mismatch"
+         else
+           let args = refresh_case_args vars args in
+           let body = simpl (mk_long_app branch (mk_vars args)) in
+           subst_telescope_args (List.rev vars) args body
+             (fun ctx idx arg_ty ->
+                if idx = carrier_idx then
+                  Some matched_term
+                else if Coq_typing.check_prop ctx arg_ty then
+                  Some (mk_proof_cast arg_ty)
+                else
+                  internal_error "subset constructor has an unexpected informative payload")
+      | _ -> internal_error "subset case is not a singleton constructor case"
+    in
+    let is_acc_ind indname = Coq_stdnames.is_init_wf "Acc" indname in
+    let collapse_prop_singleton vars indname constrs params params_num branches =
+      match constrs, branches with
+      | [cname], [(n, branch)] ->
+         let (_, args) = constructor_args params params_num cname in
+         if List.length args <> n then
+           internal_error "propositional singleton constructor telescope arity mismatch"
+         else
+           let args = refresh_case_args vars args in
+           let body = simpl (mk_long_app branch (mk_vars args)) in
+           let body = subst_proof_args (List.rev vars) args body in
+           if wf_fix_names <> [] && is_acc_ind indname && term_mentions_const wf_fix_names body then
+             begin
+               (* WF guardrail: erasing an Acc proof on a recursive path would
+                  produce the forbidden unconditional WF-unfolding equation.
+                  Fix_eq justifies only the premised equation, and the total-
+                  extension model accounts for values outside the premise. *)
+               wf_mark := true;
+               Some body
+             end
+           else
+             Some body
+      | _ -> internal_error "propositional singleton has an unexpected constructor shape"
+    in
+    let combine_premises p1 p2 =
+      match p1, p2 with
+      | None, None -> None
+      | Some p, None | None, Some p -> Some p
+      | Some p1, Some p2 -> Some (mk_and p1 p2)
+    in
+    let constructor_index_premise indname indty params params_num actual_tyargs targs =
+      let type_args = Coq_typing.get_type_args indty in
+      let actual_args = Hhlib.drop params_num actual_tyargs
+      and index_formals = Hhlib.drop params_num type_args
+      and ctx = List.rev (Hhlib.take params_num type_args)
+      in
+      let targs =
+        if Coq_stdnames.is_init_logic "eq" indname && targs = [] &&
+           List.length actual_args = 1 && params <> []
+        then [List.hd (List.rev params)]
+        else targs
+      in
+      if index_formals = [] then
+        None
+      else
+      let rec conjs ctx actuals targs formals acc =
+        match actuals, targs, formals with
+        | actual :: actuals2, targ :: targs2, (name, ty) :: formals2 ->
+           let acc =
+             if Coq_typing.check_prop ctx ty then
+               acc
+             else
+               mk_eq actual targ :: acc
+           in
+           conjs ((name, ty) :: ctx) actuals2 targs2 formals2 acc
+        | [], [], [] ->
+           begin match acc with
+           | [] -> None
+           | _ -> Some (join_right mk_and acc)
+           end
+        (* an internal assertion: `scrutinee_ind_args' establishes that the
+           actual arguments come from the matched inductive itself, so all three
+           lists have the same length by construction *)
+        | _ ->
+           internal_error
+             ("constructor result indices do not align with the case predicate (" ^
+              string_of_int (List.length actuals) ^ " actual, " ^
+              string_of_int (List.length targs) ^ " constructor, " ^
+              string_of_int (List.length formals) ^ " formal arguments remain)")
+      in
+      conjs ctx actual_args targs index_formals []
+    in
+    let emit_equation ?premise axname vars lhs rhs is_prop =
+      let mk_eqv = if is_prop then mk_equiv lhs rhs else mk_eq lhs rhs in
+      let mk_eqv =
+        match premise with
+        | Some prem -> mk_impl prem mk_eqv
+        | None -> mk_eqv
+      in
+      (* Split equations carry only computation.  Constructor-pattern equations
+         need no guards, and inversion axioms still provide exhaustiveness after
+         the old packaged case split is dropped.  When ClosureGuards is enabled
+         we use the ordinary guarded closure machinery uniformly. *)
+      begin
+        if !wf_mark then
+          (* WF-recursion model note: premised equations are read through the
+             total-extension model outside the erased PI premises, not as
+             unconditional delta-unfolding; Fix_eq justifies only the premised
+             form and the canaries guard consistency. *)
+          make_fol_forall_keep_prop_premises [] vars mk_eqv
+        else if !opt_closure_guards then
+          close vars (fun ctx -> prop_to_formula ctx mk_eqv)
+        else
+          make_fol_forall [] vars mk_eqv
+      end >>= fun r ->
+      add_axiom (mk_axiom axname r)
+    in
+    let emit_leaf ?premise axname vars lhs body =
+      let ctx = List.rev vars in
+      emit_equation ?premise axname vars lhs body (Coq_typing.check_prop ctx body)
+    in
+    (* A propositional match denotes a formula, not a program value.  Its
+       lifted predicate is bounded from below by all branches and from above
+       by one constructor branch; the inhabitation guard keeps both bounds
+       vacuous on junk values and empty propositions. *)
+    let emit_prop_case axname vars lhs indname indty params params_num
+        constrs matched_term branches =
+      let ctx = List.rev vars in
+      let scrutinee, scrutinee_ty =
+        match matched_term with
+        | Var name ->
+           begin try (name, List.assoc name vars) with Not_found ->
+             raise (Hammer_errors.HammerError
+                      "internal translation error: case scrutinee is not in scope")
+           end
+        | _ ->
+           raise (Hammer_errors.HammerError
+                    "internal translation error: propositional case was not normalized")
+      in
+      (* An `eq' scrutinee reads no index argument off its type: its guard is
+         the lowered equation itself (see `one_branch' below), which is also the
+         only form the type has left after logical lowering.  Everywhere else
+         the index arguments must come from the matched inductive. *)
+      match
+        if Coq_stdnames.is_init_logic "eq" indname then
+          Some []
+        else
+          scrutinee_ind_args indname scrutinee_ty
+      with
+      | None -> refuse_case axname indname
+      | Some actual_tyargs ->
+      let close_fol body =
+        let rec close ctx = function
+          | (name, ty) :: rest ->
+             if Coq_typing.check_prop ctx ty then
+               prop_to_formula ctx ty >>= fun premise ->
+               close ((name, ty) :: ctx) rest >>= fun r ->
+               return (mk_impl premise r)
+             else
+               close ((name, ty) :: ctx) rest >>= fun r ->
+               return (mk_forall name type_any r)
+          | [] -> return body
+        in
+        close [] vars
+      in
+      let quantify lower args body =
+        let rec loop ctx = function
+          | (name, ty) :: rest ->
+             if Coq_typing.check_prop ctx ty then
+               prop_to_formula ctx ty >>= fun premise ->
+               loop ((name, ty) :: ctx) rest >>= fun r ->
+               return (if lower then mk_impl premise r else mk_and premise r)
+             else
+               make_guard ((name, ty) :: ctx) ty (Var name) >>= fun guard ->
+               loop ((name, ty) :: ctx) rest >>= fun r ->
+               let connective = if lower then mk_impl guard r else mk_and guard r in
+               return ((if lower then mk_forall else mk_exists) name type_any connective)
+          | [] -> return body
+        in
+        loop ctx args
+      in
+      let one_branch cname =
+        let n, branch = get_branch cname constrs branches in
+        let targs, args = constructor_args params params_num cname in
+        if List.length args <> n then
+          raise (Hammer_errors.HammerError
+                   "internal translation error: constructor telescope arity mismatch");
+        let args0 = args in
+        let args = refresh_case_args vars args in
+        let targs =
+          List.map
+            (fun tm ->
+               List.fold_left2
+                 (fun tm (name, _) (name2, _) ->
+                    if name = name2 then tm else substvar name (Var name2) tm)
+                 tm args0 args)
+            targs
+        in
+        let body = simpl (mk_long_app branch (mk_vars args)) in
+        let body = subst_proof_args ctx args body in
+        prop_to_formula (List.rev (vars @ args)) body >>= fun branch_formula ->
+        let pattern = mk_long_app (Const(cname)) (params @ mk_vars args) in
+        prop_to_formula (List.rev (vars @ args)) (mk_eq (Var scrutinee) pattern)
+        >>= fun scrutinee_formula ->
+        let index =
+          if Coq_stdnames.is_init_logic "eq" indname then
+            Some scrutinee_ty
+          else
+            constructor_index_premise indname indty params params_num actual_tyargs targs
+        in
+        begin match index with
+        | None -> return scrutinee_formula
+        | Some premise ->
+           prop_to_formula (List.rev (vars @ args)) premise >>= fun index_formula ->
+           return (mk_and scrutinee_formula index_formula)
+        end >>= fun branch_condition ->
+        quantify true args (mk_impl branch_condition branch_formula) >>= fun lower ->
+        quantify false args (mk_and branch_condition branch_formula) >>= fun upper ->
+        return (lower, upper)
+      in
+      let rec branches_fol = function
+        | cname :: rest ->
+           one_branch cname >>= fun branch ->
+           branches_fol rest >>= fun more ->
+           return (branch :: more)
+        | [] -> return []
+      in
+      begin
+        if Coq_typing.check_prop ctx scrutinee_ty then
+          prop_to_formula ctx scrutinee_ty
+        else
+          make_guard ctx scrutinee_ty (Var scrutinee)
+      end >>= fun inhabitation ->
+      convert ctx lhs >>= fun predicate ->
+      branches_fol constrs >>= fun bounds ->
+      let lowers = List.map fst bounds and uppers = List.map snd bounds in
+      let lower_conjs = match lowers with [] -> Const("$True") | _ -> join_right mk_and lowers in
+      let upper_disjs = match uppers with [] -> Const("$False") | _ -> join_right mk_or uppers in
+      close_fol (mk_impl (mk_and inhabitation lower_conjs) predicate) >>= fun lower ->
+      add_axiom (mk_axiom (axname ^ "$lower") lower) >>
+      close_fol (mk_impl (mk_and inhabitation predicate) upper_disjs) >>= fun upper ->
+      add_axiom (mk_axiom (axname ^ "$upper") upper)
+    in
+    let rec infer_term_type ctx = function
+      | Var name ->
+         begin try Some (List.assoc name ctx) with Not_found -> None end
+      | Const name ->
+         begin
+           try Some (coqdef_type (Defhash.find name)) with Failure _ -> None
+         end
+      | App(fn, arg) ->
+         begin match infer_term_type ctx fn with
+         | Some fn_ty ->
+            begin
+              try
+                match simpl fn_ty with
+                | Prod(name, _, body) -> Some (simpl (substvar name arg body))
+                | _ -> None
+              with _ -> None
+            end
+         | None -> None
+         end
+      | Lam(name, ty, body) ->
+         begin match infer_term_type ((name, ty) :: ctx) body with
+         | Some body_ty -> Some (Prod(name, ty, body_ty))
+         | None -> None
+         end
+      | Case(indname, matched, _, raw_return_type, params_num, _) ->
+         begin match infer_term_type ctx matched with
+         | Some matched_ty ->
+            begin match scrutinee_ind_args indname matched_ty with
+            | Some actual_tyargs when List.length actual_tyargs >= params_num ->
+               (* the length test still has work to do for an index-free family,
+                  whose type is not required to expose the inductive and may
+                  thus not supply the parameters either *)
+               let indices = Hhlib.drop params_num actual_tyargs in
+               Some (simpl (mk_long_app raw_return_type (indices @ [matched])))
+            | _ -> None
+            end
+         | None -> None
+         end
+      | Cast(_, ty) -> Some ty
+      | Fix(_, k, _, _, types, _) ->
+         begin try Some (List.nth types k) with _ -> None end
+      | Let(value, (name, ty, body)) ->
+         begin match infer_term_type ((name, ty) :: ctx) body with
+         | Some body_ty -> Some (simpl (substvar name value body_ty))
+         | None -> None
+         end
+      | _ -> None
+    in
+    let case_aux_value vars indname matched_term return_type raw_return_type params_num branches indty =
+      let z = refresh_varname "case" in
+      let ctx = List.rev vars in
+      let fallback_scrutinee_ty =
+        get_case_scrutinee_type indty return_type params_num
+      in
+      let scrutinee_ty =
+        if Coq_typing.check_prop ctx fallback_scrutinee_ty then
+          match infer_term_type ctx matched_term with
+          | Some ty -> ty
+          | None -> fallback_scrutinee_ty
+        else
+          fallback_scrutinee_ty
+      in
+      (* get_case_scrutinee_type reads the type off the return predicate, so for
+         an indexed family it mentions the predicate's own index binders, which
+         nothing here binds.  The binder standing for the scrutinee must be typed
+         in the scope of [vars] alone, or the lifted case is hash-consed against
+         a context too short for it; the scrutinee's inferred type is that same
+         type with the indices instantiated.  When inference cannot recover such
+         a type -- it now refuses rather than guess when the scrutinee's type does
+         not expose the matched inductive -- the case is refused by the caller
+         instead of lifted against a context too short for it. *)
+      let is_closed ty = term_fvars_subset (List.map fst vars) ty in
+      let scrutinee_ty =
+        if is_closed scrutinee_ty then
+          Some scrutinee_ty
+        else
+          match infer_term_type ctx matched_term with
+          | Some ty when is_closed ty -> Some ty
+          | _ -> None
+      in
+      match scrutinee_ty with
+      | None -> return None
+      | Some scrutinee_ty ->
+      let scrutinee_is_prop = Coq_typing.check_prop ctx scrutinee_ty in
+      let aux_case = Lam(z, scrutinee_ty,
+                         Case(indname, Var(z), return_type, raw_return_type,
+                              params_num, branches)) in
+      let occurrence_key =
+        if scrutinee_is_prop then
+          fresh_proof_case_key ()
+        else
+          case_occurrence_key ctx aux_case
+      in
+      with_lift_dependencies (fun () ->
+        Hashing.find_or_insert_keyed occurrence_key coqterm_hash ctx aux_case
+          begin fun cctx ctm ->
+            match ctm with
+            | Lam(_, _, Case(indname2, _, _, _, _, _)) ->
+               let name = "$_case_" ^ indname2 ^ "$" ^ unique_id () in
+               record_lift_stats "case_aux" name cctx ctm;
+               lambda_lifting [] name name (ctx_to_vars cctx) [] ctm
+            | _ -> internal_error "case auxiliary lifting lost its normalized case body"
+          end) >>= fun aux ->
+      if scrutinee_is_prop then
+        return (Some aux)
+      else
+        convert ctx matched_term >>= fun mt ->
+        return (Some (App(aux, mt)))
+    in
+    (* Termination follows the structure of the generated statement: first the
+       number of root case/lambda/fix nodes remaining to compile, then the node
+       count.  Non-variable scrutinees are replaced by fresh variables in
+       hash-consed auxiliary cases; the remaining branches recurse into proper
+       bodies or delegate to value translation. *)
+    let rec compile_case ?premise lhs vars axname body =
+      match simpl body with
+      | Case(indname, matched_term, return_type, raw_return_type, params_num, branches) as case_body ->
+         let df =
+           try Defhash.find indname with Failure _ ->
+             internal_error ("missing inductive declaration: " ^ indname)
+         in
+         begin
+           match df with
+           | (_, IndType(_, constrs, pnum), indty, _) ->
+              if pnum <> params_num then
+                internal_error "case parameter arity disagrees with its inductive declaration";
+              let raw_params = get_params indty raw_return_type params_num in
+              let normalized_scrutinee_ty =
+                get_case_scrutinee_type indty return_type params_num
+              in
+              let (_, normalized_tyargs) = flatten_app normalized_scrutinee_ty in
+              let params =
+                if List.length normalized_tyargs >= params_num then
+                  Hhlib.take params_num normalized_tyargs
+                else
+                  raw_params
+              in
+              let record_case_dependency () =
+                (* Every emitted case equation relies on the structural theory
+                   of its scrutinee, including proposition-valued matches
+                   translated as lower/upper bounds. *)
+                Lift_dependencies.record indname;
+                if dependency_owner <> "" then
+                  Case_dependencies.add dependency_owner indname;
+                if !translation_owner <> "" && !translation_owner <> dependency_owner then
+                  Case_dependencies.add !translation_owner indname
+              in
+              let rec return_target_is_prop ctx = function
+                | Lam(name, ty, body) -> return_target_is_prop ((name, ty) :: ctx) body
+                | SortProp -> true
+                | Quant(_) | Equal(_) -> true
+                | target ->
+                   let raw_logic_head =
+                     match flatten_app target with
+                     | Const name, _ ->
+                        List.exists
+                          (fun basename -> Coq_stdnames.is_init_logic basename name)
+                          [ "True"; "False"; "and"; "or"; "iff"; "eq"; "ex" ]
+                     | _ -> false
+                   in
+                   raw_logic_head || Coq_typing.check_prop ctx target
+              in
+              if return_target_is_prop (List.rev vars) return_type then
+                if not opt_prop_case_erasure then begin
+                  log 2 ("case-axiom-omitted: prop-case-erasure " ^ axname);
+                  return ()
+                end
+                else begin
+                  record_case_dependency ();
+                  match matched_term with
+                  | Var _ ->
+                     emit_prop_case axname vars lhs indname indty params params_num
+                       constrs matched_term branches
+                  | _ ->
+                     case_aux_value vars indname matched_term return_type raw_return_type
+                       params_num branches indty
+                     >>= function
+                     | None -> refuse_case axname indname
+                     | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
+                end
+              else if Coq_typing.check_type_target_is_prop indty then
+                if not opt_prop_case_erasure then begin
+                  log 2 ("case-axiom-omitted: prop-case-erasure " ^ axname);
+                  return ()
+                end
+                else begin
+                  match matched_term with
+                  | Var proof_name ->
+                  begin
+                    match Coq_erasure.classify (List.rev vars) indname params with
+                    | Coq_erasure.CEmpty ->
+                       (* An elimination from an empty proposition is unreachable.
+                          Its lifted denotation is intentionally unconstrained. *)
+                       return ()
+                    | Coq_erasure.CPropSingleton ->
+                       begin
+                         match collapse_prop_singleton vars indname constrs params params_num branches with
+                         | None ->
+                            (* The WF-recursion ablation deliberately omits this
+                               equation; it never substitutes an opaque value. *)
+                            return ()
+                         | Some body2 ->
+                            record_case_dependency ();
+                            (* Singleton erasure: the proof match computes as
+                               its unique branch after proof arguments are erased.
+                               The source proposition is load-bearing for indexed
+                               singletons such as equality and [eq_true]. *)
+                            let premise =
+                              try
+                                combine_premises premise (Some (List.assoc proof_name vars))
+                              with Not_found ->
+                                internal_error "singleton proof scrutinee is absent from the normalized context"
+                            in
+                            compile_case ?premise lhs vars axname body2
+                       end
+                    | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
+                       raise (Hammer_errors.HammerError
+                                ("internal translation error: informative elimination from a non-singleton proposition " ^
+                                 indname ^ " with return predicate " ^
+                                 string_of_coqterm return_type))
+                  end
+                  | _ ->
+                     record_case_dependency ();
+                     case_aux_value vars indname matched_term return_type raw_return_type
+                       params_num branches indty
+                     >>= function
+                     | None -> refuse_case axname indname
+                     | Some rhs ->
+                        emit_equation ?premise (axname ^ "$link") vars lhs rhs false
+                end
+              else begin
+                record_case_dependency ();
+                let collapse_subset_case carrier_idx =
+                  collapse_subset_case ~matched_term ~vars ~constrs ~branches
+                    ~params ~params_num carrier_idx
+                in
+                let regular_case () =
+                  match matched_term with
+                  | Var scrutinee when var_occurs scrutinee lhs ->
+                     let scrutinee_ty =
+                       try List.assoc scrutinee vars with Not_found ->
+                         internal_error "case scrutinee is absent from the normalized context"
+                     in
+                     begin match scrutinee_ind_args indname scrutinee_ty with
+                     | None -> refuse_case axname indname
+                     | Some actual_tyargs ->
+                     let rec split_scrutinee acc = function
+                       | [] -> internal_error "case scrutinee is absent from the normalized context"
+                       | (name, _) :: vars_after when name = scrutinee ->
+                          (List.rev acc, vars_after)
+                       | var :: vars2 -> split_scrutinee (var :: acc) vars2
+                     in
+                     let vars_before, vars_after = split_scrutinee [] vars in
+                     let prepare_branch cname =
+                       let (n, branch) = get_branch cname constrs branches
+                       in
+                       let (targs, args) = constructor_args params params_num cname
+                       in
+                       if List.length args <> n then
+                         internal_error
+                           ("constructor telescope arity mismatch for " ^ cname ^
+                            " in " ^ indname ^ ": branch binds " ^ string_of_int n ^
+                            " but normalized constructor has " ^
+                            string_of_int (List.length args))
+                       else
+                         let args0 = args in
+                         let args = refresh_case_args vars args in
+                         let refresh_terms tms =
+                           List.map
+                             (fun tm ->
+                                List.fold_left2
+                                  (fun tm (name, _) (name2, _) ->
+                                     if name = name2 then tm else substvar name (Var name2) tm)
+                                  tm args0 args)
+                             tms
+                         in
+                         let targs = refresh_terms targs in
+                         let bound_names = List.map fst (vars @ args) in
+                         if not (List.for_all (term_fvars_subset bound_names) (actual_tyargs @ targs)) then
+                           internal_error "case index arguments escape the normalized scope"
+                         else
+                         let index_premise =
+                           constructor_index_premise indname indty params params_num
+                             actual_tyargs targs
+                         in
+                         let premise = combine_premises premise index_premise in
+                         let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
+                         in
+                         let branch_body = simpl (mk_long_app branch (mk_vars args))
+                         in
+                         let branch_body = subst_proof_args (List.rev vars) args branch_body
+                         in
+                         let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
+                         let lhs2 = substvar scrutinee pattern lhs
+                         and body2 = substvar scrutinee pattern branch_body
+                         and axname2 = axname ^ "$" ^ short_name cname
+                         and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
+                         in
+                         (premise, lhs2, vars2, axname2, body2)
+                     in
+                     (* Validate every constructor telescope and index scope
+                        before the first split equation is emitted. *)
+                     let prepared = List.map prepare_branch constrs in
+                     List.fold_left
+                       (fun acc (premise, lhs2, vars2, axname2, body2) ->
+                          acc >> compile_case ?premise lhs2 vars2 axname2 body2)
+                       (return ()) prepared
+                     end
+                  | _ ->
+                     case_aux_value vars indname matched_term return_type raw_return_type
+                       params_num branches indty
+                     >>= function
+                     | None -> refuse_case axname indname
+                     | Some rhs ->
+                        emit_equation ?premise (axname ^ "$link") vars lhs rhs
+                          (Coq_typing.check_prop (List.rev vars) case_body)
+                in
+                if opt_refinement_types then
+                  match Coq_erasure.classify (List.rev vars) indname params with
+                  | Coq_erasure.CSubset { carrier_idx; _ } ->
+                     compile_case ?premise lhs vars axname (collapse_subset_case carrier_idx)
+                  | Coq_erasure.CEnum _ ->
+                     (* Enum scrutinees (e.g. sumbool) need no special collapse;
+                        split-form validity applies to the erased constructor tags,
+                        while enum guards reuse the existing inversion scheme. *)
+                     regular_case ()
+                  | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
+                     regular_case ()
+                else
+                  regular_case ()
+              end
+           | _ -> internal_error "case scrutinee declaration is not inductive"
+         end
+      | Lam(vname, vtype, body2) ->
+         if Coq_typing.check_prop (List.rev vars) vtype then
+           compile_case ?premise lhs vars axname (subst_proof vname vtype body2)
+         else
+           compile_case ?premise (App(lhs, Var(vname))) (vars @ [ (vname, vtype) ]) axname body2
+      | Fix(_) as fix_body ->
+         (* The right-hand side is the ordinary value translation of the inner
+            fix, reusing the existing fix_lifting machinery. *)
+         emit_leaf ?premise axname vars lhs fix_body
+      | body2 ->
+         emit_leaf ?premise axname vars lhs body2
+    in
+    match tm with
+    | Cast(Const("$Proof"), _) | Const("$Proof") ->
+       return (Const("$Proof"))
+    | Case(indname, _, _, _, _, _) ->
+       let fname =
+         if name0 = "" then "$_case_" ^ indname ^ "$" ^ unique_id () else name0
+       in
+       let axname = if name0 = "" then fname else axname0 in
+       convert (List.rev fvars) (mk_long_app (Const(fname)) (mk_vars fvars))
+       >>= fun replacement ->
+       compile_case (mk_long_app replacement (mk_vars lvars)) (fvars @ lvars) axname tm >>
+       return replacement
+    | _ ->
+       raise (Hammer_errors.HammerError "internal translation error: expected case expression")
 
 (*****************************************************************************************)
 (* Convert definitions to axioms *)
@@ -551,7 +1791,7 @@ and convert ctx tm =
        (prop_to_formula ctx (subst_proof name ty body)) >>= fun x2 ->
        return (mk x1 x2)
      else
-       (make_guard ctx ty (Var(name))) >>= fun x1 ->
+       (make_guard ((name, ty) :: ctx) ty (Var(name))) >>= fun x1 ->
        (prop_to_formula ((name, ty) :: ctx) body) >>= fun x2 ->
        return (Quant(op, (name, type_any, mk x1 x2)))
   | Equal(x, y) ->
@@ -571,7 +1811,139 @@ and convert ctx tm =
   | App(App(Const("$HasType"), x), y) ->
       convert ctx x >>= fun x2 ->
       make_guard ctx y x2
-  | App(x, y) ->
+  | App(_) ->
+      let convert_extra_app base extras =
+        let rec hlp acc = function
+          | [] -> return acc
+          | arg :: args ->
+             if acc = Const("$Proof") then
+               return (Const("$Proof"))
+             else
+               convert_term ctx arg >>= fun arg2 ->
+               if arg2 = Const("$Proof") then
+                 hlp acc args
+               else
+                 hlp (App(acc, arg2)) args
+        in
+        hlp base extras
+      in
+      let subset_constructor_spine () =
+        let align_actuals cargs args =
+          let is_prop_formal formals actuals ty =
+            try Coq_typing.check_prop ctx (simpl (subst_params (List.rev formals) (List.rev actuals) ty))
+            with _ -> false
+          in
+          let required_nonprop_count formals actuals rest_formals =
+            let rec count formals actuals acc = function
+              | [] -> acc
+              | (formal_name, formal_ty) :: formals2 ->
+                 if is_prop_formal formals actuals formal_ty then
+                   count ((formal_name, formal_ty) :: formals) (Const("$Proof") :: actuals) acc formals2
+                 else
+                   count ((formal_name, formal_ty) :: formals) (Var formal_name :: actuals) (acc + 1) formals2
+            in
+            count formals actuals 0 rest_formals
+          in
+          let rec hlp formals actuals rest_formals rest_args =
+            match rest_formals with
+            | [] -> (List.rev actuals, rest_args)
+            | (formal_name, formal_ty) :: formals2 ->
+               let formal_ty = simpl (subst_params (List.rev formals) (List.rev actuals) formal_ty) in
+               let formal_is_prop =
+                 try Coq_typing.check_prop ctx formal_ty with _ -> false
+               in
+               begin match rest_args with
+               | arg :: args2 ->
+                  if formal_is_prop &&
+                       not (proof_like_after_erasure ctx arg) &&
+                       List.length rest_args <=
+                         required_nonprop_count
+                           ((formal_name, formal_ty) :: formals)
+                           (Const("$Proof") :: actuals)
+                           formals2
+                  then
+                    (* [type_to_guard] prunes proof binders from the term spine.
+                       Keep a placeholder in the aligned spine so later
+                       informative arguments retain their constructor positions
+                       before subset constructors are erased to their carrier. *)
+                    hlp ((formal_name, formal_ty) :: formals) (Const("$Proof") :: actuals) formals2 rest_args
+                  else
+                    hlp ((formal_name, formal_ty) :: formals) (arg :: actuals) formals2 args2
+               | [] ->
+                  if formal_is_prop then
+                    hlp ((formal_name, formal_ty) :: formals) (Const("$Proof") :: actuals) formals2 []
+                  else
+                    (List.rev actuals, [])
+               end
+          in
+          hlp [] [] cargs args
+        in
+        try
+          match flatten_app tm with
+          | Const cname, args ->
+             let (target, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname)) in
+             begin
+               match target with
+               | Const indname ->
+                  begin
+                    match Defhash.find indname with
+                    | (_, IndType(_, constrs, params_num), _, _) when List.mem cname constrs && List.length args >= params_num ->
+                       let params = Hhlib.take params_num args in
+                       begin
+                         match Coq_erasure.classify ctx indname params with
+                         | Coq_erasure.CSubset { carrier_idx; _ } ->
+                            let actuals, extras = align_actuals cargs args in
+                            let carrier_pos = params_num + carrier_idx in
+                            if List.length actuals > carrier_pos then
+                              Some (`Carrier (List.nth actuals carrier_pos, extras))
+                            else
+                              Some (`UnderApplied (cname, args, cargs))
+                         | _ -> None
+                       end
+                    | _ -> None
+                  end
+               | _ -> None
+             end
+          | _ -> None
+        with _ -> None
+      in
+      let eta_expand_subset_constructor cname args cargs =
+        let provided = List.length args in
+        let missing = Hhlib.drop provided cargs in
+        let rec build actuals = function
+          | [] -> mk_long_app (Const cname) actuals
+          | (formal_name, formal_ty) :: rest ->
+             let var_name = refresh_varname formal_name in
+             let previous_formals = Hhlib.take (List.length actuals) cargs in
+             let var_ty = simpl (subst_params previous_formals actuals formal_ty) in
+             Lam(var_name, var_ty, build (actuals @ [Var var_name]) rest)
+        in
+        build args missing
+      in
+      begin match if opt_erasure_guards then None else erase_transport_head tm with
+      | Some tm2 -> convert ctx tm2
+      | None ->
+      begin match erase_false_rect_type_arg ctx tm with
+      | Some tm2 -> convert ctx tm2
+      | None ->
+      begin
+      match if opt_refinement_types then subset_constructor_spine () else None with
+      | Some (`Carrier (carrier_arg, extras)) ->
+         (* Refinement occurrence collapse: subset constructors erase to
+            their carrier at each occurrence.  Trailing applications are
+            preserved on the translated carrier. *)
+         convert ctx carrier_arg >>= fun carrier ->
+         convert_extra_app carrier extras
+      | Some (`UnderApplied (cname, args, cargs)) ->
+         (* Under-applied subset constructors are eta-expanded and then lifted;
+            the lifted symbol's equation may look like a bridge [F x = x],
+            which is legitimate only because it is generated at this partial
+            application occurrence by the same refinement-collapse rule. *)
+         remove_lambda ctx (eta_expand_subset_constructor cname args cargs)
+      | None ->
+      begin
+      match tm with
+      | App(x, y) ->
       convert ctx x >>= fun x2 ->
       if x2 = Const("$Proof") then
         return (Const("$Proof"))
@@ -581,6 +1953,11 @@ and convert ctx tm =
           return x2
         else
           return (App(x2, y2))
+      | _ -> failwith "convert: app"
+      end
+      end
+      end
+      end
   | Lam(_) ->
       remove_lambda ctx tm
   | Case(_) ->
@@ -616,6 +1993,9 @@ and convert ctx tm =
 
 and convert_term ctx tm =
   debug 3 (fun () -> print_header "convert_term" tm ctx);
+  if proof_like_after_erasure ctx tm then
+    return (Const("$Proof"))
+  else
   let should_lift =
     match tm with
     | Var(_) | Const(_) -> false
@@ -649,11 +2029,113 @@ and prop_to_formula ctx tm =
        prop_to_formula ctx (subst_proof vname ty1 ty2) >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
-       make_guard ctx ty1 (Var(vname)) >>= fun tm1 ->
+       make_guard ((vname, ty1) :: ctx) ty1 (Var(vname)) >>= fun tm1 ->
        prop_to_formula ((vname, ty1) :: ctx) ty2 >>= fun tm2 ->
        return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
     convert ctx tm
+
+(* `x' does not get converted *)
+and guard_leaf ctx ty x =
+  debug 3 (fun () -> print_header_nonl "guard_leaf" ty ctx; print_coqterm x; print_newline ());
+  let fallback () =
+    convert ctx ty >>= fun ty1 ->
+    return (mk_hastype x ty1)
+  in
+  let rec formulas ctx = function
+    | [] -> return []
+    | prop_ty :: prop_tys ->
+       prop_to_formula ctx prop_ty >>= fun f ->
+       formulas ctx prop_tys >>= fun fs ->
+       return (f :: fs)
+  in
+  let conjoin = function
+    | [] -> Const("$True")
+    | fs -> join_right mk_and fs
+  in
+  (* Decide the shape of the guard before building any formula.  An inductive,
+     constructor or telescope which is unavailable or malformed simply carries
+     no refinement structure, and such a leaf legitimately degrades to plain
+     typing; the lookups below are therefore the only failures allowed to mean
+     "no refinement here".  Payload translation is kept outside, so a bug in it
+     surfaces instead of quietly weakening the guard. *)
+  let classify_leaf ty_nf =
+    match flatten_app ty_nf with
+    | Const indname, args ->
+       begin match Defhash.find indname with
+       | (_, IndType(_, constrs, params_num), _, _) ->
+          let params = Hhlib.take params_num args
+          in
+          begin match Coq_erasure.classify ctx indname params with
+          | Coq_erasure.CSubset { carrier_idx; carrier_name; prop_args } ->
+             begin match constrs with
+             | [cname] ->
+                let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+                in
+                let cparams = Hhlib.take params_num cargs
+                in
+                let cargs =
+                  List.map
+                    (fun (name, ty) -> (name, subst_params cparams params ty))
+                    (Hhlib.drop params_num cargs)
+                in
+                let (_, carrier_ty) = List.nth cargs carrier_idx
+                in
+                Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
+             | _ -> None
+             end
+          | Coq_erasure.CEnum ctors -> Some (`Enum (params, ctors))
+          | Coq_erasure.CEmpty -> Some `Empty
+          | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
+          end
+       | _ -> None
+       end
+    | _ -> None
+  in
+  if not opt_refinement_types then
+    fallback ()
+  else
+    let ty_nf = simpl (Coq_typing.reify (Coq_typing.eval ty))
+    in
+    match (try classify_leaf ty_nf with _ -> None) with
+    | None ->
+       fallback ()
+    | Some (`Subset (carrier_ty, carrier_name, prop_args)) ->
+       (* A refinement guard is expanded at the occurrence itself: the carrier
+          guard is conjoined with the translated payload.  The same leaf is used
+          in hypotheses and conclusions.  Substitute the erased carrier before
+          translating the payload so beta-redexes in predicate parameters
+          disappear shallowly. *)
+       convert ctx x >>= fun carrier ->
+       make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
+       formulas ctx
+         (List.map
+            (fun (_, prop_ty) -> simpl (substvar carrier_name carrier prop_ty))
+            prop_args) >>= fun payloads ->
+       return (conjoin (carrier_guard :: payloads))
+    | Some (`Enum (params, ctors)) ->
+       let one_ctor (cname, payloads) =
+         convert ctx (mk_long_app (Const cname) params) >>= fun ctor ->
+         formulas ctx payloads >>= fun payloads ->
+         return (mk_and (mk_eq x ctor) (conjoin payloads))
+       in
+       let rec disjs = function
+         | [] -> return []
+         | ctor :: ctors ->
+            one_ctor ctor >>= fun f ->
+            disjs ctors >>= fun fs ->
+            return (f :: fs)
+       in
+       (* A CEnum guard reuses the existing inversion scheme as a self-contained
+          disjunction of constructor tags and their propositional payload
+          formulas; non-guard occurrences still use the ordinary inversion
+          axiom. *)
+       disjs ctors >>= fun fs ->
+       return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
+    | Some `Empty ->
+       (* The guard for an empty classified type is false, matching the
+          zero-constructor inversion scheme. *)
+       return (Const("$False"))
 
 (* `x' does not get converted *)
 and make_guard ctx ty x =
@@ -668,8 +2150,7 @@ and make_guard ctx ty x =
           e.g. Prod(x, Prod(x, ty1, ty2), ty3) *)
        type_to_guard ctx (refresh_bvars ty) x
   | _ ->
-     convert ctx ty >>= fun ty1 ->
-     return (mk_hastype x ty1)
+     guard_leaf ctx ty x
 
 (* `x' does not get converted *)
 and type_to_guard ctx ty x =
@@ -678,15 +2159,17 @@ and type_to_guard ctx ty x =
   | Prod(vname, ty1, ty2) ->
      if Coq_typing.check_prop ctx ty1 then
        prop_to_formula ctx ty1 >>= fun tm1 ->
+       (* Prop domains use pruned arity: proof arguments are formulas, not term
+          arguments, so [x] is deliberately left unapplied across the implication,
+          matching the erased program occurrence. *)
        type_to_guard ctx (subst_proof vname ty1 ty2) x >>= fun tm2 ->
        return (mk_impl tm1 tm2)
      else
-       make_guard ctx ty1 (Var(vname)) >>= fun tm1 ->
+       make_guard ((vname, ty1) :: ctx) ty1 (Var(vname)) >>= fun tm1 ->
        type_to_guard ((vname, ty1) :: ctx) ty2 (App(x, (Var(vname)))) >>= fun tm2 ->
        return (mk_forall vname type_any (mk_impl tm1 tm2))
   | _ ->
-     convert ctx ty >>= fun tm ->
-     return (mk_hastype x tm)
+     guard_leaf ctx ty x
 
 and make_fol_forall ctx vars tm =
   let rec hlp ctx vars tm =
@@ -702,12 +2185,28 @@ and make_fol_forall ctx vars tm =
   in
   hlp ctx vars tm
 
+and make_fol_forall_keep_prop_premises ctx vars tm =
+  let rec hlp ctx vars tm =
+    match vars with
+    | (name, ty) :: vars2 ->
+       if Coq_typing.check_prop ctx ty then
+         prop_to_formula ctx ty >>= fun premise ->
+         hlp ((name, ty) :: ctx) vars2 (subst_proof name ty tm) >>= fun r ->
+         return (mk_impl premise r)
+       else
+         hlp ((name, ty) :: ctx) vars2 tm >>= fun r ->
+         return (mk_forall name type_any r)
+    | [] ->
+       prop_to_formula ctx tm
+  in
+  hlp ctx vars tm
+
 and make_guarded_forall ctx vars cont =
   let rec hlp ctx vars =
     match vars with
     | (name, ty) :: vars2 ->
        begin
-         make_guard ctx ty (Var(name)) >>= fun guard ->
+         make_guard ((name, ty) :: ctx) ty (Var(name)) >>= fun guard ->
          hlp ((name, ty) :: ctx) vars2 >>= fun r ->
          return (mk_forall name type_any (mk_impl guard r))
        end
@@ -734,22 +2233,59 @@ and close vars cont =
 
 and remove_lambda ctx tm =
   debug 3 (fun () -> print_header "remove_lambda" tm ctx);
-  Hashing.find_or_insert coqterm_hash ctx tm
-    begin fun cctx ctm ->
-      let name = "$_lam_" ^ unique_id ()
-      in
-      lambda_lifting name name (ctx_to_vars cctx) [] ctm
-    end
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert coqterm_hash ctx tm
+      begin fun cctx ctm ->
+        let name = "$_lam_" ^ unique_id ()
+        in
+        (* A lambda lift's definition equation relates [name] and its body only
+           when both are applied to the lambda-bound arguments; the unapplied
+           object this returns is not identified by it, and identifying two
+           pointwise equal functions in general needs functional
+           extensionality.  A link equation is not that: it says the two lifts'
+           canonical terms are related by syntactic instantiation, so the two
+           symbols name one and the same Coq lambda term.  Like the type-lift
+           links it is true by construction, and needs no extensionality --
+           provided the two symbols take the same number of arguments, which
+           [add_link_axiom] checks, matching being syntactic on the unerased
+           term while arity is settled after erasure.
+
+           The link is looked up before the lift is built, so this lift -- which
+           registers itself only below -- cannot match itself. *)
+        let link = Hashing.find_lift_link "lam" cctx ctm in
+        count_lift "lam" "minted";
+        lambda_lifting [] name name (ctx_to_vars cctx) [] ctm >>= fun result ->
+        (* [lambda_lifting] does not always name the lift [name]: a [Fix] body
+           it delegates to [fix_lifting] and a [Case] body to [case_lifting],
+           which mint their own symbols, and only its [emit_definition_equation]
+           paths return [name] applied to the lift's context.  An equation about
+           [name] is meaningful only in that last case, so read the head of what
+           was actually returned rather than predicting it from the body's shape
+           -- a [Fix] does come back under [name] when [fix_lifting] reaches its
+           own [lambda_lifting] for the selected component.  With an empty
+           context the result is the bare [Const name]. *)
+        match fst (flatten_app result) with
+        | Const cname when cname = name ->
+           count_lift "lam" (link_outcome link);
+           Hashing.register_lift "lam" name cctx ctm;
+           add_link_axiom name cctx ctm link >>
+           return result
+        | _ ->
+           count_lift "lam" "unnamed";
+           return result
+      end)
 
 and remove_case ctx tm =
   debug 3 (fun () -> print_header "remove_case" tm ctx);
-  Hashing.find_or_insert coqterm_hash ctx tm
-    begin fun cctx ctm ->
-      case_lifting "" "" (ctx_to_vars cctx) [] ctm
-    end
-(* TODO: for case lifting cctx should always include the proof
-   variables tm may depend on; otherwise the resulting FOL problem
-   may be inconsistent *)
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert_keyed (case_occurrence_key ctx tm) coqterm_hash ctx tm
+      begin fun cctx ctm ->
+        (* [case_lifting] mints its symbols internally, so the diagnostic
+           identifies the entry by a fresh name of its own; it uses the name
+           only to tell registry entries apart. *)
+        record_lift_stats "case" ("$_case_" ^ unique_id ()) cctx ctm;
+        case_lifting [] "" "" (ctx_to_vars cctx) [] ctm
+      end)
 
 and remove_cast ctx tm =
   debug 3 (fun () -> print_header "remove_cast" tm ctx);
@@ -777,10 +2313,12 @@ and remove_cast ctx tm =
 
 and remove_fix ctx tm =
   debug 3 (fun () -> print_header "remove_fix" tm ctx);
-  Hashing.find_or_insert coqterm_hash ctx tm
-    begin fun cctx ctm ->
-      fix_lifting "" "" (ctx_to_vars cctx) [] ctm
-    end
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert coqterm_hash ctx tm
+      begin fun cctx ctm ->
+        record_lift_stats "fix" ("$_fix_" ^ unique_id ()) cctx ctm;
+        fix_lifting [] "" "" (ctx_to_vars cctx) [] ctm
+      end)
 
 and remove_let ctx tm =
   debug 3 (fun () -> print_header "remove_let" tm ctx);
@@ -809,25 +2347,183 @@ and remove_let ctx tm =
 
 and remove_type ctx ty =
   debug 3 (fun () -> print_header "remove_type" ty ctx);
-  Hashing.find_or_insert coqterm_hash ctx ty
-    begin fun cctx cty ->
-      let name = "$_type_" ^ unique_id ()
-      and vars = ctx_to_vars cctx
-      in
-      add_def_eq_type_axiom name name vars cty >>
-      convert cctx (mk_long_app (Const(name)) (mk_vars vars))
-    end
+  (* A non-dependent product with a non-Prop domain is translated structurally,
+     as an application of the single former [$_arrow], instead of being lifted
+     to a constant minted per occurrence shape.  Two occurrences of one arrow
+     type then denote the same term up to their arguments -- a goal-side
+     [A -> B] over local constants and a premise-side one under [forall A B]
+     unify directly -- whereas per-occurrence names left them unrelated, with
+     nothing to bridge them since the unfolding axiom is only an implication.
+     Prop domains keep the lifted name: [type_to_guard] prunes proof binders
+     from the term spine, so [P -> B] is not a function object and its
+     unfolding is not the one [$_arrow] stands for.  Dependent products have
+     no canonical former yet. *)
+  let eligible =
+    match ty with
+    | Prod(vname, ty1, ty2) ->
+       not (var_occurs vname ty2) && not (Coq_typing.check_prop ctx ty1)
+    | _ -> false
+  in
+  with_lift_dependencies (fun () ->
+    Hashing.find_or_insert coqterm_hash ctx ty
+      begin fun cctx cty ->
+        record_type_lift_shape eligible cctx cty;
+        match cty with
+        | Prod(_, ty1, ty2) when eligible ->
+           (* The subject is converted once and used both as the result and as
+              the axiom's subject: converting it twice could mint two different
+              symbols for a lift inside it that is not hash-consed.  Bind the
+              conversion here rather than passing it on unbound and using it
+              again: a translation is a computation that emits axioms, so using
+              one twice runs it twice, and since the domain and codomain of an
+              arrow are themselves translated through this branch, the doubling
+              compounds to 2^n on a telescope of n nested arrows. *)
+           convert cctx (mk_long_app (Const("$_arrow")) [ty1; ty2]) >>= fun subject ->
+           add_type_unfolding_axiom ("$_arrow_" ^ unique_id ())
+             (ctx_to_vars cctx) cty (return subject) >>
+           return subject
+        | _ ->
+           let name = "$_type_" ^ unique_id ()
+           and vars = ctx_to_vars cctx
+           in
+           let link = link_lift "type" name cctx cty in
+           (* The instance's own unfolding axiom stays: the schema's axiom read
+              through the link is sound but need not be the same statement,
+              since [guard_leaf] classifies the unnormalized Coq type.  Both are
+              individually true of the one object, so keeping both is correct. *)
+           add_def_eq_type_axiom name name vars cty >>
+           add_link_axiom name cctx cty link >>
+           convert cctx (mk_long_app (Const(name)) (mk_vars vars))
+      end)
+
+(* A lifted symbol names a Coq term, so when one lift's term is a syntactic
+   instance of another's the two symbols denote the same Coq object at the
+   matching arguments and this equation is true by construction -- both sides
+   are images of one Coq term.  Being an equality it bridges in both
+   directions, which the unfolding axiom cannot do: that one is only an
+   implication (commit 951862d) and nothing else relates two names minted for
+   the same type at two occurrence shapes.
+
+   The equation is emitted inside the [mk] of the lift minted *second*, so it
+   lives in that lift's monadic prepender and travels with it into every
+   declaration which uses the lift.  A problem holding only one side is still
+   sound: the absent side is then an alias with no axioms of its own.
+
+   Uniformly, the equation is closed over the instance side's canonical
+   context, applies the instance's symbol to that context's own variables and
+   the schema's symbol to the matching substitution. *)
+and add_link_axiom name cctx ctm link =
+  match link with
+  | None -> return ()
+  | Some link when
+      binder_erasure_profile cctx ctm
+      <> binder_erasure_profile link.Hashing.ll_ctx link.Hashing.ll_tm ->
+     (* The two lifts translate to symbols of different arities, so no equation
+        between them at their own contexts is well-formed. *)
+     Lift_stats.count "link.erasure_mismatch";
+     return ()
+  | Some link ->
+     let open Hashing in
+     let (inst_name, inst_ctx, schema_name, schema_ctx) =
+       if link.ll_new_is_schema then
+         (* the partner is the instance of the lift just minted *)
+         (link.ll_name, link.ll_ctx, name, cctx)
+       else
+         (name, cctx, link.ll_name, link.ll_ctx)
+     in
+     let vars = ctx_to_vars inst_ctx
+     in
+     (* The arity a symbol is defined at counts the context variables which
+        survive erasure, and the left-hand side reproduces the instance's own
+        context, so only the right-hand side can miss it: the schema's symbol
+        is applied to the *images* of its context variables, and matching is
+        syntactic on unerased terms, so a schema variable which survives in the
+        schema's context -- one of type [v_CANONICAL_k] with [k] a [Type]
+        variable, say -- may be instantiated by a proof.  The image is then
+        dropped from the application and the schema's symbol appears one
+        argument short of its definition, which with that definition equates a
+        value with a function, exactly as a mismatched lambda binder would.
+        This is why the binder profiles alone do not settle it.  Count the
+        arguments the conversion kept and compare against the definition. *)
+     let schema_arity =
+       List.length
+         (List.filter
+            (fun (x, _) -> not (try Coq_typing.check_proof_var schema_ctx x with _ -> false))
+            (ctx_to_vars schema_ctx))
+     and kept_args = ref (-1)
+     in
+     (* Built through the same path [add_def_eq_type_axiom] uses, so arity and
+        [$HasType] handling are unchanged. *)
+     close vars
+       begin fun ctx ->
+         convert ctx (mk_long_app (Const(inst_name)) (mk_vars vars)) >>= fun lhs ->
+         convert ctx (mk_long_app (Const(schema_name)) link.ll_subst) >>= fun rhs ->
+         (* the conversion runs once and cannot be repeated to measure it (it
+            emits the axioms of the lifts inside the images), so read the arity
+            off here *)
+         kept_args := List.length (snd (flatten_app rhs));
+         return (mk_eq lhs rhs)
+       end >>= fun r ->
+     if !kept_args <> schema_arity then
+       begin
+         Lift_stats.count "link.arg_erasure_mismatch";
+         return ()
+       end
+     else
+       add_axiom (mk_axiom ("$_link_" ^ unique_id ()) r)
 
 and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
+  add_type_unfolding_axiom axname fvars ty
+    (convert (vars_to_ctx fvars) (mk_long_app (Const(name)) (mk_vars fvars)))
+
+(* [subject] is the translated object standing for the type [ty] -- a lifted
+   constant applied to [fvars], or the canonical [$_arrow] application.  It is
+   translated in the context [close] hands to the continuation below, which is
+   [vars_to_ctx fvars] in either closure mode. *)
+and add_type_unfolding_axiom axname fvars ty subject =
+  debug 2 (fun () -> print_header "add_type_unfolding_axiom" ty fvars);
   let vname = "var_" ^ unique_id ()
   in
   close fvars
     begin fun ctx ->
-      convert ctx (mk_long_app (Const(name)) (mk_vars fvars)) >>= fun tp ->
-      type_to_guard ctx ty (Var(vname)) >>= fun guard ->
-      return (mk_forall vname type_any
-                (mk_equiv (mk_hastype (Var(vname)) tp) guard))
+      subject >>= fun tp ->
+      (* The axiom quantifies [vname] over the inhabitants of [ty], so [ty] is
+         its type: the guard is built in a context that binds it, as every
+         subject of a guard must be bound in the context it is translated in. *)
+      type_to_guard ((vname, ty) :: ctx) ty (Var(vname)) >>= fun guard ->
+      (* [ty] is a function/product type, so [guard] is its extensional
+         unfolding: [vname] applied across the domain lands in the codomain.
+         Membership implies that behaviour, but the converse is unsound: over an
+         empty domain the unfolding holds vacuously of every object, so an
+         equivalence would let any term (e.g. a non-function) inhabit the arrow
+         type, and a functional-extensionality premise would then collapse
+         equality (deriving [$false] from ContradictoryAxioms).  The typing of
+         genuine inhabitants is always asserted directly at their binder or
+         [$_typeof_] axiom, so the forward implication alone loses no provable
+         function application.  This holds for a canonical [$_arrow] subject
+         exactly as for a lifted name: canonicalization changes which object the
+         unfolding speaks about, never its direction or strength.
+
+         All of that is about *products*.  [remove_type] is only ever reached on
+         a product, so a non-product [ty] here is the body of a transparent
+         type definition, and then [type_to_guard] falls through to
+         [guard_leaf]: the guard is not an extensional unfolding but another
+         membership statement -- plain typing at the body, or the subset/enum/
+         empty description of the very same type.  [tp] and [ty] are convertible
+         by delta, so the two memberships are equivalent by conversion and there
+         is no domain to be empty.  951862d weakened this case only as collateral
+         damage. *)
+      let connective =
+        match ty with
+        | Prod(_) -> mk_impl
+        | _ -> mk_equiv
+      in
+      let fla =
+        mk_forall vname type_any (connective (mk_hastype (Var(vname)) tp) guard)
+      in
+      record_unfolding_sharing axname fvars tp fla;
+      return fla
     end >>= fun r ->
   add_axiom (mk_axiom axname r)
 
@@ -835,7 +2531,33 @@ and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
-      if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
+      if opt_refinement_types && Coq_erasure.has_erasable_content [] ty then
+        begin
+          (* When the type contains erasure-relevant refinements/enums, emit the
+             applied forall-form directly through type_to_guard.  This bypasses
+             type lifting/optimization so payloads are expanded per occurrence. *)
+          type_to_guard [] (refresh_bvars ty) (Const(name)) >>= fun guard ->
+          (* That unfolding says how [name] behaves when applied, but not that it
+             inhabits its own type.  A premise quantifying over a function is
+             guarded by exactly that membership ([make_guard] lifts a product and
+             states it), so without it the premise cannot be instantiated at
+             [name] at all -- and every function into an enum or a refinement
+             lands here, [elt -> bool] being the common case.  The membership is
+             true by construction, [name] being declared at [ty]; it is the same
+             formula the branches below emit for a constant with no erasable
+             content.  Only products need it: for a leaf type the two guards
+             coincide, and under subset erasure [name] denotes its carrier. *)
+          begin
+            match ty with
+            | Prod(_) when opt_type_lifting ->
+               make_guard [] (refresh_bvars ty) (Const(name)) >>= fun memb ->
+               return (mk_and memb guard)
+            | _ ->
+               return guard
+          end >>= fun r ->
+          add_axiom (mk_axiom ("$_typeof_" ^ name) r)
+        end
+      else if opt_omit_prop_typing_axioms && Coq_typing.check_type_target_is_prop ty then
         return ()
       else if opt_type_optimization &&
           (Coq_typing.check_type_target_is_type ty || Coq_typing.check_type_target_is_prop ty) then
@@ -889,13 +2611,54 @@ and add_def_eq_axiom (name, value, ty, srt) =
   debug 2 (fun () -> print_endline ("add_def_eq_axiom: " ^ name));
   let axname = "$_def_" ^ name
   in
+  let emit_transport_definition () =
+    try
+      let vars = Coq_typing.get_type_args ty in
+      match Hhlib.drop 3 vars with
+      | (proof_name, _) :: _ ->
+         (* Transport erasure for the standard transport family itself maps
+            the transport to its carried proof/value.  Reconstruction-sensitive
+            cases are the same as user constants whose bodies are eq_rect/eq_rec
+            or eq_ind wrappers. *)
+         let premise = transport_erasure_premise (mk_long_app (Const name) (mk_vars vars)) in
+         emit_definition_equation ?premise axname name [] vars (Var(proof_name)) >>
+         return ()
+      | [] -> return ()
+    with _ ->
+      return ()
+  in
+  if is_transport_constant name then
+    emit_transport_definition ()
+  else
   match value with
   | Lam(_) ->
-     lambda_lifting axname name [] [] value >>
+     lambda_lifting [] axname name [] [] value >>
      return ()
   | Fix(_) ->
-     fix_lifting axname name [] [] value >>
+     fix_lifting [] axname name [] [] value >>
      return ()
+  | Case(_) ->
+     case_lifting [] axname name [] [] value >>= fun replacement ->
+     begin
+       match replacement with
+       | Const(c) when c = name ->
+          return ()
+       | _ ->
+          (* Anonymous occurrences are lifted to a dependency-applied symbol.
+             Named definitions normally return [name] after emitting their
+             equations; this bridge is retained for the remaining value forms. *)
+          begin
+            match ty with
+            | SortProp ->
+               prop_to_formula [] replacement >>= fun r ->
+               add_axiom (mk_axiom axname (mk_equiv (Const(name)) r))
+            | SortType | SortSet ->
+               add_def_eq_type_axiom axname name [] replacement
+            | _ ->
+               convert [] replacement >>= fun r ->
+               add_axiom (mk_axiom axname (mk_eq (Const(name)) r))
+          end
+     end
   | Const(c) when c = name ->
      return ()
   | _ ->
@@ -904,7 +2667,14 @@ and add_def_eq_axiom (name, value, ty, srt) =
         | SortProp ->
            begin
              prop_to_formula [] value >>= fun r ->
-             add_axiom (mk_axiom axname (mk_equiv (Const(name)) r))
+             add_axiom (mk_axiom axname (mk_equiv (Const(name)) r)) >>
+             (* the definition also occurs in term position; see
+                `opt_prop_def_term_eqs' *)
+             if opt_prop_def_term_eqs && is_atomic_prop_body value then
+               convert [] value >>= fun r2 ->
+               add_axiom (mk_axiom (axname ^ "$term") (mk_eq (Const(name)) r2))
+             else
+               return ()
            end
         | SortType | SortSet ->
            add_def_eq_type_axiom axname name [] value
@@ -915,11 +2685,48 @@ and add_def_eq_axiom (name, value, ty, srt) =
            end
       end
 
-and add_injection_axioms constr =
+and skip_refinement_decl_axioms indname =
+  opt_refinement_types && opt_refinement_decl_skips &&
+  match Coq_erasure.classify_decl indname with
+  | Some (Coq_erasure.CSubset _) -> true
+  | _ -> false
+
+and add_injection_axioms params_num constr =
   debug 2 (fun () -> print_endline ("add_injection_axioms: " ^ constr));
+  if not (Defhash.mem constr) then
+    (* Search filters can omit a constructor independently of its inductive;
+       without its telescope the optional injectivity axiom must be omitted. *)
+    return ()
+  else
   let ty = coqdef_type (Defhash.find constr)
   in
-  let rec hlp ty1 ty2 args1 args2 conjs =
+  (* Status quo structural axiom: constructor injectivity is pre-existing.  For
+     proof fields, proof irrelevance permits replacing the old generated
+     $Proof = $Proof conjuncts by a neutral tautology; the consistency canaries
+     are intentionally ATP-level tests, and preserving this harmless clutter
+     keeps their search profile stable while removing the misleading proof
+     equality from generated axioms. *)
+  let proof_irrel_marker =
+    mk_eq (Const("Hammer.ProofIrrel")) (Const("Hammer.ProofIrrel"))
+  in
+  let add_arg_eq is_param ctx ty name1 name2 conjs =
+    if is_param then
+      (* Constructor parameters are fixed by a homogeneous CIC equality; they
+         are not injective payloads.  More importantly, a parameter-dependent
+         declaration may collapse some constructor instances to their carrier,
+         so inferring parameter equality from the erased FOL premise would be
+         unsound. *)
+      conjs
+    else if Coq_typing.check_prop ctx ty then
+      proof_irrel_marker :: conjs
+    else
+      (mk_eq (Var(name1)) (Var(name2))) :: conjs
+  in
+  let conjoin = function
+    | [] -> Const("$True")
+    | conjs -> join_left mk_and conjs
+  in
+  let rec hlp arg_index ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
     | Prod(name1, lty1, value1), Prod(name2, lty2, value2) ->
       let lname1 = refresh_varname name1
@@ -928,18 +2735,20 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
+      let conjs2 =
+        add_arg_eq (arg_index < params_num) ctx lty1 lname1 lname2 conjs
+      in
       mk_forall lname1 lty1
         (mk_forall lname2 lty2
-           (hlp lvalue1 lvalue2
-              (Var(lname1) :: args1) (Var(lname2) :: args2)
-              ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)))
+           (hlp (arg_index + 1) ((lname1, lty1) :: (lname2, lty2) :: ctx)
+              lvalue1 lvalue2 (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2))
     | _ ->
       mk_impl
         (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
            (mk_long_app (Const(constr)) (List.rev args2)))
-        (join_left mk_and conjs)
+        (conjoin conjs)
   in
-  let rec hlp2 ctx ty1 ty2 args1 args2 conjs =
+  let rec hlp2 arg_index ctx ty1 ty2 args1 args2 conjs =
     match ty1, ty2 with
     | Prod(name1, lty1, value1), Prod(name2, lty2, value2) ->
       let lname1 = refresh_varname name1
@@ -948,24 +2757,27 @@ and add_injection_axioms constr =
       let lvalue1 = simple_subst name1 (Var(lname1)) value1
       and lvalue2 = simple_subst name2 (Var(lname2)) value2
       in
-      (hlp2 ((lname1, lty1) :: (lname2, lty2) :: ctx) lvalue1 lvalue2
-         (Var(lname1) :: args1) (Var(lname2) :: args2)
-         ((mk_eq (Var(lname1)) (Var(lname2))) :: conjs)) >>= fun r ->
+      let conjs2 =
+        add_arg_eq (arg_index < params_num) ctx lty1 lname1 lname2 conjs
+      in
+      (hlp2 (arg_index + 1) ((lname1, lty1) :: (lname2, lty2) :: ctx)
+         lvalue1 lvalue2 (Var(lname1) :: args1) (Var(lname2) :: args2) conjs2)
+      >>= fun r ->
       return (mk_forall lname1 type_any (mk_forall lname2 type_any r))
     | _ ->
       prop_to_formula ctx
         (mk_impl
            (mk_eq (mk_long_app (Const(constr)) (List.rev args1))
               (mk_long_app (Const(constr)) (List.rev args2)))
-           (join_left mk_and conjs))
+           (conjoin conjs))
   in
   match ty with
   | Prod(_) ->
      begin
        if !opt_closure_guards || opt_injectivity_guards then
-         prop_to_formula [] (hlp ty ty [] [] [])
+         prop_to_formula [] (hlp 0 [] ty ty [] [] [])
        else
-         hlp2 [] ty ty [] [] []
+         hlp2 0 [] ty ty [] [] []
      end >>= fun ax ->
      add_axiom (mk_axiom ("$_inj_" ^ constr) ax)
   | _ ->
@@ -973,6 +2785,11 @@ and add_injection_axioms constr =
 
 and add_discrim_axioms constr1 constr2 =
   debug 2 (fun () -> print_endline ("add_discrim_axioms: " ^ constr1 ^ ", " ^ constr2));
+  if not (Defhash.mem constr1 && Defhash.mem constr2) then
+    (* Search filters can omit constructors independently of their inductive;
+       without both telescopes the optional discrimination axiom is omitted. *)
+    return ()
+  else
   let ty1 = coqdef_type (Defhash.find constr1)
   and ty2 = coqdef_type (Defhash.find constr2)
   in
@@ -1031,6 +2848,12 @@ and add_discrim_axioms constr1 constr2 =
 
 and add_inversion_axioms is_prop indname constrs =
   debug 2 (fun () -> print_endline ("add_inversion_axioms: " ^ indname));
+  if not (List.for_all Defhash.mem constrs) then
+    (* Search filters can omit constructors independently of their inductive.
+       Exhaustiveness over a partial constructor list would be unsound, so omit
+       the inversion axiom unless every constructor telescope is available. *)
+    return ()
+  else
   let df = Defhash.find indname
   in
   match df with
@@ -1065,7 +2888,7 @@ and add_inversion_axioms is_prop indname constrs =
 and add_def_axioms ((name, value, ty, srt) as def) =
   debug 2 (fun () -> print_endline ("add_def_axioms: " ^ name));
   match value with
-  | IndType(_, constrs, _) ->
+  | IndType(_, constrs, params_num) ->
      if srt = SortProp then
        (prop_to_formula [] ty) >>= fun r ->
        add_axiom (mk_axiom name r)
@@ -1075,6 +2898,10 @@ and add_def_axioms ((name, value, ty, srt) as def) =
            begin
              begin
                if opt_prop_inversion_axioms && name <> Hhutils.lib_ref_name "core.eq.type" then
+                 (* Status quo structural axiom: propositional inversion remains
+                    the exhaustiveness principle used after losing the old
+                    packaged case split; this is covered by the split/disjunctive
+                    case interderivability theorem. *)
                  add_inversion_axioms true name constrs
                else
                  return ()
@@ -1086,10 +2913,20 @@ and add_def_axioms ((name, value, ty, srt) as def) =
            end
         else
           begin
-            List.fold_left (fun acc c -> add_injection_axioms c >> acc) (return ()) constrs >>
+            let skip_refinement_decl = skip_refinement_decl_axioms name in
+            (if skip_refinement_decl then
+               return ()
+             else
+               List.fold_left
+                 (fun acc c -> add_injection_axioms params_num c >> acc)
+                 (return ()) constrs) >>
             List.fold_left (fun acc (c1, c2) -> add_discrim_axioms c1 c2) (return ()) (Hhlib.mk_pairs constrs) >>
             add_typing_axiom name ty >>
-            if opt_inversion_axioms then
+            if opt_inversion_axioms && not skip_refinement_decl then
+              (* Status quo structural axiom: inversion remains the emitted
+                 exhaustiveness principle; the split/disjunctive-case
+                 interderivability theorem justifies relying on it after the old
+                 packaged case disjunction is no longer emitted. *)
               add_inversion_axioms false name constrs
             else
               return ()
@@ -1099,7 +2936,11 @@ and add_def_axioms ((name, value, ty, srt) as def) =
      if srt = SortProp then
        begin
          prop_to_formula [] ty >>= fun r ->
-         add_axiom (mk_axiom name r)
+         add_axiom (mk_axiom name r) >>
+         if is_transport_constant name then
+           add_def_eq_axiom def
+         else
+           return ()
        end
      else
        begin
@@ -1127,10 +2968,18 @@ end
 (* Translation *)
 
 let translate name =
+  wf_mark := false;
+  proof_case_counter := 0;
   log 1 ("translate: " ^ name);
-  let axs = extract_axioms (add_def_axioms (Defhash.find name))
-  in
-  Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y)) axs
+  let previous_owner = !translation_owner in
+  translation_owner := name;
+  try
+    let axs = extract_axioms (add_def_axioms (Defhash.find name)) in
+    translation_owner := previous_owner;
+    Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y)) axs
+  with e ->
+    translation_owner := previous_owner;
+    raise e
 
 let retranslate lst =
   List.iter
@@ -1141,17 +2990,27 @@ let retranslate lst =
     lst
 
 let get_axioms lst =
+  let structural = List.concat (List.map Case_dependencies.find lst) in
+  retranslate structural;
   coq_axioms @
     Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y))
-    (List.concat (List.map Axhash.find lst))
+      (List.concat
+         (List.map Axhash.find (Hhlib.sort_uniq String.compare (lst @ structural))))
 
 let remove_def name =
   Defhash.remove name;
-  Axhash.remove name
+  Axhash.remove name;
+  Case_dependencies.remove name
 
 let cleanup () =
   Defhash.clear ();
+  Coq_typing.clear_constructor_hash ();
   Axhash.clear ();
+  Coq_erasure.clear ();
+  Case_dependencies.clear ();
+  Lift_dependencies.clear ();
+  Hashtbl.clear type_unfolding_hash;
+  translation_owner := "";
   Hashing.clear coqterm_hash
 
 (******************************************************************************)

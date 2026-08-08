@@ -8,14 +8,17 @@ Hammer_objects.
 Set Hammer SAutoLimit 0.
 
 Lemma lem_1 : le 1 2.
+Proof.
   hammer.
 Qed.
 
 Lemma lem_2 : forall n : nat, Nat.Odd n \/ Nat.Odd (n + 1).
+Proof.
   hammer.
 Qed.
 
 Lemma lem_2_1 : forall n : nat, Nat.Even n \/ Nat.Even (n + 1).
+Proof.
   hammer.
 Qed.
 

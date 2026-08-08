@@ -1,4 +1,36 @@
+; This rule compiles tests/plugin sources with the *installed* coq-hammer
+; packages (rocq c, no -Q/-R flags), the same way the Makefile-based tests
+; do; see tests/plugin/Makefile and CLAUDE.md.  The documented entry point,
+; `make dune-test-plugin`, installs those packages first.  Guard against
+; other entry points (e.g. a bare `dune test`/`dune build @.../runtest`)
+; that would skip that install step and otherwise fail with a confusing
+; "cannot find library Hammer" error deep inside `make -B all`.  We only
+; detect and report that case here rather than installing from within the
+; rule: that would mean invoking `dune build`/`dune install` on this same
+; workspace from inside one of its own build actions, which is unsound.
 (rule
  (alias runtest)
- (deps (:vfile plugin_test.v))
- (action (run coqc %{vfile})))
+ (deps
+  (sandbox none)
+  (source_tree .))
+ (action
+  (bash "set -euo pipefail
+work=$(mktemp -d)
+trap 'rm -rf \"$work\"' EXIT
+cp -LR . \"$work/tests\"
+chmod -R u+w \"$work/tests\"
+cd \"$work/tests\"
+probe=hammer_install_probe
+printf '%s\\n' 'From Hammer Require Import Hammer.' >\"$probe.v\"
+if ! %{bin:rocq} c \"$probe.v\" >/dev/null 2>&1; then
+  echo 'coq-hammer-tactics/coq-hammer are not installed in this opam switch.' >&2
+  echo 'Run make install (or make dune-test-plugin, which does this first) before this rule.' >&2
+  rm -f \"$probe.v\" \"$probe.vo\" \"$probe.glob\"
+  exit 1
+fi
+rm -f \"$probe.v\" \"$probe.vo\" \"$probe.glob\"
+make -B all COQC=\"%{bin:rocq} c\"")))
+
+(alias
+ (name extraction)
+ (deps (alias runtest)))

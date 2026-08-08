@@ -1,0 +1,13 @@
+# Lemmas used for the false-conjecture consistency check on this corpus.
+# See eval/corpora/stdlib-regression/consistency-lemmas.txt for why the check
+# runs against a curated list rather than every goal in the corpus.
+#
+# This corpus is small and hand-written, so every fixture is listed.  All of
+# them completed the check with no refutation before the list was introduced.
+
+dep_eq_rect_refl
+dep_fin_f1_zero
+dep_fmap_empty
+dep_idiv_zero
+dep_mset_empty
+dep_vector_head_cons

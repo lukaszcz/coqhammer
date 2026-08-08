@@ -211,9 +211,32 @@ let is_primed name =
 let add_prime s =
   if is_primed s then s else "\'" ^ s ^ "\'"
 
+(* A premise name is emitted as a single-quoted TPTP atom.  Two kinds of byte
+   cannot survive verbatim: a prime, which TPTP would escape as \' but z3_tptp
+   rejects (it does not implement the backslash escapes and drops the whole
+   problem), and any non-ASCII byte, which appears in Unicode Coq identifiers
+   (e.g. a subscript such as l1) and which z3_tptp also refuses inside a quoted
+   atom.  EProver, Vampire and CVC4 tolerate both, but z3_tptp is the least
+   compliant, so encode everything it cannot read.  The tilde is the escape
+   marker: a prime becomes ~q and a literal tilde ~t (a Coq identifier never
+   contains a tilde), and every other byte outside the safe printable-ASCII
+   range is written ~ followed by two lowercase hex digits.  The safe range is
+   0x20..0x7e minus the prime, the backslash and the tilde, all of which need
+   escaping in their own right.  provers.ml reverses this with decode_thm_name
+   when reading a name back out of a proof. *)
 let escape_special_thm s =
-  Str.global_replace (Str.regexp_string "'") "\\'"
-    (Str.global_replace (Str.regexp_string "\\") "\\\\" s)
+  let buf = Buffer.create (String.length s) in
+  String.iter
+    (fun c ->
+      match c with
+      | '\'' -> Buffer.add_string buf "~q"
+      | '~' -> Buffer.add_string buf "~t"
+      | _ ->
+          let b = Char.code c in
+          if b >= 0x20 && b <= 0x7e && c <> '\\' then Buffer.add_char buf c
+          else Buffer.add_string buf (Printf.sprintf "~%02x" b))
+    s;
+  Buffer.contents buf
 
 let escape_var s = "V" ^ escape_to_hex s
 let escape_const s = "c" ^ escape_to_hex s

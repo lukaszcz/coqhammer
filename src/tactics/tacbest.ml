@@ -432,7 +432,19 @@ let best_tacs lst =
      "hauto b: on");
     (usolve (interp_opts (default_s_opts ())
                lst fcrush),
-     "fcrush")
+     "fcrush");
+    (usolve (interp_opts
+               (set_dep_opts true
+                  (set_quick_opts true
+                     (set_eager_opts false (hauto_s_opts ()))))
+               lst sauto),
+     "hauto lq: on dep: on");
+    (usolve (interp_opts
+               (set_dep_opts true
+                  (set_quick_opts true
+                     (set_eager_opts false (default_s_opts ()))))
+               lst sauto),
+     "sauto lq: on dep: on")
   ]
 
 let best_tactics lst =

@@ -11,10 +11,12 @@ type coqterm =
 | App of coqterm * coqterm
 | Lam of coqabstraction
 | Case of string (* name of inductive type matched on *) * coqterm (* matched term *) *
-    coqterm
-(* return type: a lambda-abstraction that takes as its arguments the
+    coqterm (* normalized return type *) *
+    coqterm (* raw CIC return type, before logical lowering *)
+(* Both return-type forms are lambda-abstractions that take as their arguments the
    non-parameter arguments of the inductive definition and the term
-   matched on *) *
+   matched on.  Translation uses the normalized form for formulas and guards,
+   and the raw form to recover instantiated parameters and indices. *) *
   int (* params_num: number of parameters *) *
   (int * coqterm) list
 (* case branches: pairs (num of args (n), branch term); m-th branch on
@@ -26,8 +28,8 @@ type coqterm =
    it is always the case for each branch that params_num + n is the
    total number of arguments to the corresponding constructor *)
 | Cast of coqterm (* term *) * coqterm (* type *)
-| Fix of coqfixtype * int (* 0-based result index *) * string list (* name list *) *
-    coqterm list (* type list *) * coqterm list (* body list *)
+| Fix of coqfixtype * int (* 0-based result index *) * int list (* recargs *) *
+    string list (* name list *) * coqterm list (* type list *) * coqterm list (* body list *)
 | Let of coqterm (* value *) * coqabstraction
 | Prod of coqabstraction
 | IndType of string (* inductive type name *) * string list (* constructor names *) * int (* params_num *)
@@ -123,6 +125,13 @@ let is_logop c = is_bin_logop c || c = "~" || c = "?" || c = "!" || c = "="
 
 let strip_suffix name = try String.sub name 0 (String.rindex name '$') with Not_found -> name
 
+(* the last dot-separated segment of a (possibly qualified) name *)
+let short_name name =
+  try
+    let i = String.rindex name '.' in
+    String.sub name (i + 1) (String.length name - i - 1)
+  with Not_found -> name
+
 let rec mk_long f varlst body =
   match varlst with
   | (var, varty) :: t ->
@@ -211,10 +220,12 @@ let map_fold_coqterm0 f acc tm =
       let tm2 = Lam(name, ty2, body2)
       in
       f n ctx acc3 tm2
-    | Case(indname, x, ty, npar, lst) ->
+    | Case(indname, x, ty, raw_ty, npar, lst) ->
       let (x2, acc2) = do_map_fold n ctx acc x
       in
       let (ty2, acc3) = do_map_fold n ctx acc2 ty
+      in
+      let (raw_ty2, acc4) = do_map_fold n ctx acc3 raw_ty
       in
       let (lst2, acc4) =
         map_fold_lst
@@ -223,9 +234,9 @@ let map_fold_coqterm0 f acc tm =
             in
             ((nargs, x2), acc2)
           end
-          n ctx lst acc3
+          n ctx lst acc4
       in
-      let tm2 = Case(indname, x2, ty2, npar, lst2)
+      let tm2 = Case(indname, x2, ty2, raw_ty2, npar, lst2)
       in
       f n ctx acc4 tm2
     | Cast(x, y) ->
@@ -236,7 +247,7 @@ let map_fold_coqterm0 f acc tm =
       let tm2 = Cast(x2, y2)
       in
       f n ctx acc3 tm2
-    | Fix(cft, k, names, types, bodies) ->
+    | Fix(cft, k, recargs, names, types, bodies) ->
       let (types2, acc2) = map_fold_lst do_map_fold n ctx types acc
       and m = List.length types
       in
@@ -254,7 +265,7 @@ let map_fold_coqterm0 f acc tm =
       in
       let (bodies2, acc3) = mk_bodies2 bodies acc2
       in
-      let tm2 = Fix(cft, k, names, types2, bodies2)
+      let tm2 = Fix(cft, k, recargs, names, types2, bodies2)
       in
       f n ctx acc3 tm2
     | Let(value, (name, ty, body)) ->
@@ -306,6 +317,17 @@ let map_coqterm f = map_coqterm0 (fun _ ctx x -> f ctx x)
 let fold_coqterm0 g acc tm = snd (map_fold_coqterm0 (fun n ctx acc x -> (x, g n ctx acc x)) acc tm)
 let fold_coqterm g acc = fold_coqterm0 (fun _ ctx acc x -> g ctx acc x) acc
 
+let term_mentions_const names tm =
+  fold_coqterm
+    (fun _ acc tm ->
+       acc ||
+       match tm with
+       | Const c -> List.mem c names
+       | IndType(indname, constrs, _) ->
+           List.mem indname names || List.exists (fun c -> List.mem c names) constrs
+       | _ -> false)
+    false tm
+
 let get_const_names tm =
   let lst =
     fold_coqterm
@@ -356,6 +378,26 @@ let get_fvars ctx tm =
         acc
   in
   hlp ctx tm []
+
+(* [get_fvars] reports only the free variables the context happens to bind.
+   The two below report the free variables of the term itself, which is what a
+   scoping check needs: a term whose free variables are not all bound by the
+   context it is translated in has escaped its binders. *)
+let get_free_varnames tm =
+  Hhlib.sort_uniq (Stdlib.compare)
+    (fold_coqterm
+       begin fun ctx acc tm ->
+         match tm with
+         | Var(name) when not (List.mem_assoc name ctx) ->
+             name :: acc
+         | _ ->
+             acc
+       end
+       []
+       tm)
+
+let term_fvars_subset names tm =
+  List.for_all (fun name -> List.mem name names) (get_free_varnames tm)
 
 let vars_to_ctx = List.rev
 let ctx_to_vars = List.rev
@@ -434,10 +476,10 @@ let dsubst lst tm =
                let (abs2, acc2) = rename_abs n abs acc
                in
                (Let(value, abs2), acc2)
-           | Fix(cft, k, names, types, bodies) ->
+           | Fix(cft, k, recargs, names, types, bodies) ->
                let (names2, acc2) = rename_fix_names names n acc
                in
-               (Fix(cft, k, names2, types, bodies), acc2)
+               (Fix(cft, k, recargs, names2, types, bodies), acc2)
            | _ ->
                (tm, acc)
          end
@@ -445,6 +487,16 @@ let dsubst lst tm =
          tm)
 
 let substvar vname tm = dsubst [(vname, lazy tm)]
+
+let rec subst_params formals params tm =
+  match formals with
+  | [] -> tm
+  | (name, _) :: formals2 ->
+      match params with
+      | [] -> failwith "subst_params: not enough parameters"
+      | param :: params2 ->
+          let tm2 = subst_params formals2 params2 tm in
+          if var_occurs name tm2 then substvar name param tm2 else tm2
 
 let refresh_bvars = substvar "dummy" (Var("dummy"))
 
@@ -457,7 +509,11 @@ let simple_subst vname value =
       | _ -> tm
     end
 
-let subst_proof name ty = simple_subst name (Cast(Const("$Proof"), refresh_bvars ty))
+(* The opaque proof of `ty'.  The type is retained on the cast, so it must stay
+   meaningful in the context the cast is placed in. *)
+let mk_proof_cast ty = Cast(Const("$Proof"), refresh_bvars ty)
+
+let subst_proof name ty = simple_subst name (mk_proof_cast ty)
 
 let simpl =
   map_coqterm
@@ -466,6 +522,81 @@ let simpl =
       | App(Lam(vname, _, body), x) -> substvar vname x body
       | _ -> tm
     end
+
+(* Head-normalize `tm' far enough to expose the head of its weak head normal
+   form -- typically an application of an inductive type.  `unfold' resolves a
+   global constant to its definition value, `None' when the constant is opaque
+   or absent; this module cannot reach the definition hash itself, hence the
+   callback.  Only head steps are taken -- beta, delta, iota and let
+   substitution -- with no reduction under binders and no recursion into
+   arguments, the scrutinee of a `Case' being the sole exception since iota
+   needs it.  All steps share the `budget' fuel counter and the current term is
+   returned unreduced once it runs out: an unbounded type-level unfolder is a
+   known blow-up hazard here.  `Fix' is deliberately not reduced.  It is the
+   caller, not the reducer, that decides whether a stuck head is a refusal. *)
+let whnf_head ~budget ~unfold tm =
+  let fuel = ref budget
+  in
+  let step () =
+    if !fuel <= 0 then
+      false
+    else
+      begin
+        decr fuel;
+        true
+      end
+  in
+  let find_branch constrs branches cname =
+    let rec hlp i constrs =
+      match constrs with
+      | [] -> None
+      | c :: constrs2 -> if c = cname then List.nth_opt branches i else hlp (i + 1) constrs2
+    in
+    hlp 0 constrs
+  in
+  let rec whnf tm args =
+    match tm with
+    | App(x, y) ->
+      whnf x (y :: args)
+    | Lam(vname, _, body) when args <> [] && step () ->
+      whnf (substvar vname (List.hd args) body) (List.tl args)
+    | Let(value, (vname, _, body)) when step () ->
+      whnf (substvar vname value body) args
+    | Const(c) ->
+      begin
+        match unfold c with
+        (* an inductive's own entry must not be unfolded: that would destroy
+           the head we are trying to expose; self-referential entries (e.g. the
+           logical operators above) must not loop *)
+        | Some(IndType(_)) | None -> mk_long_app tm args
+        | Some(value) when value <> tm && step () -> whnf value args
+        | Some(_) -> mk_long_app tm args
+      end
+    | Case(indname, matched, _, _, params_num, branches) ->
+      begin
+        match iota indname matched params_num branches with
+        | Some(tm2) -> whnf tm2 args
+        | None -> mk_long_app tm args
+      end
+    | _ ->
+      mk_long_app tm args
+  and iota indname matched params_num branches =
+    match unfold indname with
+    | Some(IndType(_, constrs, _)) ->
+      begin
+        match flatten_app (whnf matched []) with
+        | (Const(cname), cargs) ->
+          begin
+            match find_branch constrs branches cname with
+            | Some(n, br) when List.length cargs = params_num + n && step () ->
+              Some(mk_long_app br (Hhlib.drop params_num cargs))
+            | _ -> None
+          end
+        | _ -> None
+      end
+    | _ -> None
+  in
+  whnf tm []
 
 (***************************************************************************************)
 (* Printing *)
@@ -491,7 +622,7 @@ let write_coqterm out tm =
       out "]: (";
       write tm;
       out ")"
-    | Case(indname, mtm, rt, nparams, branches) ->
+    | Case(indname, mtm, rt, _, nparams, branches) ->
       out "(match ";
       write mtm;
       out " : ";
@@ -507,12 +638,14 @@ let write_coqterm out tm =
       out " : ";
       write ty;
       out ")"
-    | Fix(cft, res, names, types, bodies) ->
+    | Fix(cft, res, recargs, names, types, bodies) ->
       out "(";
       out (match cft with CoqFix -> "fix" | CoqCoFix -> "cofix");
       out " ";
       out (string_of_int res);
-      out " ";
+      out " [";
+      oiter out (fun i -> out (string_of_int i)) ";" recargs;
+      out "] ";
       oiter
         out
         (fun ((n, ty), tm) -> out "("; out n; out " : "; write ty; out " := "; write tm; out ")")

@@ -1,0 +1,113 @@
+# Lemmas used for the false-conjecture consistency check on this corpus.
+# See eval/corpora/stdlib-regression/consistency-lemmas.txt for why the check
+# runs against a curated list rather than every goal in the corpus.
+#
+# Produced by curating the generated ATP problems: each conjecture was
+# replaced with $false and both E prover and Vampire were run at a longer
+# timeout (10s) than the 2s check, so a lemma whose refutation is merely slow
+# cannot pass here and fire during a run.  Only lemmas both provers left
+# unrefuted are listed; a vacuously true lemma (contradictory hypotheses) is
+# refutable however faithful the translation is and is excluded.
+#
+# Candidates were up to two lemmas per generated module, a broad sample
+# across the std++ modules rather than every goal.
+#
+# Curated against the knn-32 problems.  Vacuity depends on a goal's own
+# hypotheses, not on which premises were selected, so one premise directory
+# covers them all; a refutation appearing at a larger premise count during
+# the check is a real finding about the translation rather than a gap here.
+#
+# Curation verdicts: 89 kept, 0 refutable-from-axioms, 0 no-result.
+#
+# One fully qualified lemma name per line; blank lines and # comments ignored.
+# Names must match the generated problem file names without the .p suffix.
+
+stdpp.base.Empty_set_equivalence
+stdpp.base.Empty_set_leibniz
+stdpp.binders.app_binder_Permutation
+stdpp.binders.app_binder_named
+stdpp.boolset.boolset_set
+stdpp.boolset.boolset_top_set
+stdpp.coGset.coGpick_elem_of
+stdpp.coGset.coGset_finite_spec
+stdpp.coPset.Pset_to_coPset_finite
+stdpp.coPset.coPpick
+stdpp.countable.choose_go_proper
+stdpp.countable.choose_proper
+stdpp.decidable.bool_decide_False
+stdpp.decidable.bool_decide_True
+stdpp.fin.FS_inj
+stdpp.fin.fin_add_inv_l
+stdpp.fin_map_dom.alter_id_dom
+stdpp.fin_map_dom.delete_insert_dom
+stdpp.fin_sets.Forall_fresh_NoDup
+stdpp.fin_sets.Forall_fresh_alt
+stdpp.functions.fn_lookup_alter
+stdpp.functions.fn_lookup_alter_ne
+stdpp.gmap.dom_gset_to_gmap
+stdpp.gmap.elem_of_gset_cprod
+stdpp.hlist.huncurry_curry
+stdpp.infinite.search_infinite_R_wf
+stdpp.infinite.search_infinite_step
+stdpp.lexico.N_lexico_po
+stdpp.lexico.Z_lexico_po
+stdpp.list_relations.list.Exists_Permutation
+stdpp.list_relations.list.Exists_app
+stdpp.listset.listset_empty_alt
+stdpp.listset.listset_fin_set
+stdpp.mapset.elem_of_mapset_dom_with
+stdpp.mapset.lookup_mapset_map_with
+stdpp.namespaces.nclose_infinite
+stdpp.namespaces.nclose_non_empty
+stdpp.natmap.bools_to_natset_unfold
+stdpp.natmap.bools_to_natset_union
+stdpp.numbers.N.le_po
+stdpp.numbers.N.le_total
+stdpp.numbers.Nat.add_sub'
+stdpp.numbers.Nat.divide_ne_0
+stdpp.numbers.Nat2Z.divide
+stdpp.numbers.Nat2Z.inj'
+stdpp.numbers.Pos.app_1_l
+stdpp.numbers.Pos.app_1_r
+stdpp.numbers.Qc_le_po
+stdpp.numbers.Qc_le_total
+stdpp.numbers.Qp.add_1_1
+stdpp.numbers.Qp.add_assoc
+stdpp.numbers.Z.add_alt_addcarries
+stdpp.numbers.Z.add_nocarry_lor
+stdpp.numbers.Z2Nat.inj_div
+stdpp.numbers.Z2Nat.inj_mod
+stdpp.option.None_equiv_eq
+stdpp.option.None_ne_Some
+stdpp.orders.anti_symm_iff
+stdpp.orders.irreflexive_eq
+stdpp.pmap.Pmap_finmap
+stdpp.pmap.Pmap_fold
+stdpp.pretty.pretty_N_char_inj
+stdpp.pretty.pretty_N_go_0
+stdpp.proof_irrel.False_pi
+stdpp.proof_irrel.Is_true_pi
+stdpp.propset.elem_of_PropSet
+stdpp.propset.elem_of_set_to_propset
+stdpp.relations.all_loop_alt
+stdpp.relations.all_loop_red
+stdpp.sets.bind_empty
+stdpp.sets.dec_pred_finite_alt
+stdpp.sorting.HdRel_fmap
+stdpp.sorting.HdRel_list_merge
+stdpp.streams.equal_equivalence
+stdpp.streams.scons_equiv
+stdpp.stringmap.fresh_string_R_wf
+stdpp.stringmap.fresh_string_fresh
+stdpp.strings.String.app_inj
+stdpp.strings.String.le_pi
+stdpp.tactics.f_equal_dep
+stdpp.tactics.f_equal_help
+stdpp.telescopes.tele_app_bind
+stdpp.telescopes.tele_arg_O_inv
+stdpp.topGset.elem_of_gset_to_topGset
+stdpp.topGset.elem_of_topGset_to_coPset
+stdpp.vector.Exists_vlookup
+stdpp.vector.Forall2_vlookup
+stdpp.well_founded.Acc_impl
+stdpp.well_founded.Fix_F_proper

@@ -1,7 +1,22 @@
+CoqHammer v. 1.4.0
+==================
+
+Rocq versions compatibility: 9.2.
+
+Overview of changes
+-------------------
+* Extraction-factored first-order translation: per-constructor match
+  equations, proof/singleton erasure, shallow refinement/specification
+  expansion, and premised well-founded-recursion equations.
+* `hammer_eqdec` - extensible hint database of equality deciders used for axiom-free UIP rewriting, with fallback to UIP_refl (eq_rect_eq) when no decider is registered
+* `Hammer_dump`/`hammer_dump` for writing the current goal's TPTP problem.
+* Fixed temporary file leaks.
+* Fixed parsing of unquoted bare names in TPTP ouput.
+
 CoqHammer v. 1.3.3
 ==================
 
-Rocq versions compatibility: 9.1.
+Rocq versions compatibility: 9.1, 9.2.
 
 Overview of changes
 -------------------

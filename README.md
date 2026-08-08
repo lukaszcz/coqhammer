@@ -1,4 +1,4 @@
-CoqHammer (dev) for Rocq master (use other branches for other versions of Coq)
+CoqHammer (dev) for Rocq master (use other branches for other versions of Rocq)
 
 [![Docker CI][docker-action-shield]][docker-action-link]
 
@@ -34,7 +34,7 @@ Requirements
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2025, Lukasz Czajka.\
+Copyright (c) 2017-2026, Lukasz Czajka.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file

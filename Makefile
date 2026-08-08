@@ -1,5 +1,6 @@
 
-BINDIR ?= $(if $(COQBIN),$(COQBIN),`coqc -where | xargs dirname | xargs dirname`/bin/)
+BINDIR ?= $(if $(COQBIN),$(COQBIN),`rocq c -where | xargs dirname | xargs dirname`/bin/)
+DUNE ?= dune
 
 default: all
 
@@ -50,20 +51,34 @@ Makefile.coq.tactics: _CoqProject.tactics
 Makefile.coq.mathcomp: _CoqProject.mathcomp
 	rocq makefile -f _CoqProject.mathcomp -o Makefile.coq.mathcomp
 
-tests: tests-plugin tests-tactics
+tests: install test-unit tests-plugin tests-tactics
 
-tests-plugin:
+tests-plugin: install
 	$(MAKE) -B -C tests/plugin
 
-tests-tactics:
+tests-tactics: install
 	$(MAKE) -B -C tests/tactics
 
-quicktest: test-plugin test-tactics
+quicktest: install test-unit test-plugin test-tactics
 
-test-plugin:
-	$(MAKE) -B -C tests/plugin plugin_test.vo
+# OCaml unit tests: compiled from the sources, so they need no installation
+# and no external prover.
+test-unit:
+	$(MAKE) -B -C tests/unit
 
-test-tactics:
+# The plugin tests that need no external ATP; this is what CI runs (see
+# coq-hammer.opam).  The ATP-dependent ones are reached through tests,
+# tests-plugin and test-extraction.
+test-plugin: install
+	$(MAKE) -B -C tests/plugin test-no-provers
+
+test-extraction: install
+	$(MAKE) -B -C tests/plugin test-extraction
+
+test-consistency: install
+	$(MAKE) -C tests/plugin test-consistency
+
+test-tactics: install
 	$(MAKE) -B -C tests/tactics tactics_test.vo
 
 clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefile.coq.mathcomp
@@ -76,32 +91,36 @@ clean: Makefile.coq.tactics Makefile.coq.plugin Makefile.coq.plugin.local Makefi
 dune: dune-tactics dune-plugin
 
 dune-tactics:
-	dune build -p coq-hammer-tactics
+	$(DUNE) build -p coq-hammer-tactics
 
 dune-plugin:
-	dune build -p coq-hammer-tactics,coq-hammer
+	$(DUNE) build -p coq-hammer-tactics,coq-hammer
+
+dune-test-plugin: install test-unit
+	$(DUNE) build @tests/plugin/runtest
 
 dune-install: dune-install-tactics dune-install-plugin
 
 dune-install-tactics: dune-tactics
-	dune install coq-hammer-tactics
+	$(DUNE) install coq-hammer-tactics
 
 dune-install-plugin: dune-plugin
-	dune install coq-hammer
+	$(DUNE) install coq-hammer
 
 dune-uninstall:
-	dune uninstall coq-hammer coq-hammer-tactics
+	$(DUNE) uninstall coq-hammer coq-hammer-tactics
 
 dune-uninstall-tactics:
-	dune uninstall coq-hammer-tactics
+	$(DUNE) uninstall coq-hammer-tactics
 
 dune-uninstall-plugin:
-	dune uninstall coq-hammer
+	$(DUNE) uninstall coq-hammer
 
 dune-clean:
-	dune clean
+	$(DUNE) clean
 	$(MAKE) -C eval clean
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
+	$(MAKE) -C tests/unit clean
 
-.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-plugin test-tactics clean dune dune-tactics dune-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin
+.PHONY: default all tactics plugin mathcomp install install-tactics install-plugin install-mathcomp uninstall uninstall-tactics uninstall-plugin tests tests-plugin tests-tactics quicktest test-unit test-plugin test-tactics test-extraction test-consistency clean dune dune-tactics dune-plugin dune-test-plugin dune-install dune-install-tactics dune-install-plugin dune-clean install-extra dune-uninstall dune-uninstall-tactics dune-uninstall-plugin

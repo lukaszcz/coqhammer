@@ -17,7 +17,7 @@ logics of automated systems and the reconstruction of successfully found proofs.
 build: [make "-j%{jobs}%" "plugin"]
 install: [
   [make "install-plugin"]
-  [make "test-plugin"] {with-test}
+  [make "test-unit" "test-plugin"] {with-test}
 ]
 depends: [
   "ocaml" {>= "4.09.0"}

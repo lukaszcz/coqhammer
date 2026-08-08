@@ -14,7 +14,10 @@
 # (coq/opam-coq-archive). Each new opam file is derived from the most recent
 # existing entry of the same package by updating exactly four things:
 #
-#   * the "coq" version constraint       (>= <ROCQ> & < <next>~)
+#   * the Rocq/Coq dependency            (rocq-core/rocq-runtime >= <ROCQ> &
+#                                         rocq-stdlib >= <ROCQ-or-newest-published>
+#                                         for Rocq >= 9.0, or legacy coq for older
+#                                         branches, all < <next>~)
 #   * the "date:" tag                    (today)
 #   * the release tarball URL            (.../tags/v<CVER>+<ROCQ>.tar.gz)
 #   * the sha512 checksum                (computed from that tarball)
@@ -40,6 +43,11 @@ ROCQ="${VERSTR##*+}"
 ROCQ_NEXT="$(next_rocq "$ROCQ")"
 TAG="v${VERSTR}"
 TODAY="$(date +%F)"
+
+# Lower bound for the rocq-stdlib dependency on Rocq >= 9.0: normally <ROCQ>,
+# but rocq-stdlib usually lags rocq-core on opam. Older Coq releases keep the
+# legacy `coq` dependency and do not mention the split Rocq packages.
+STDLIB_LB="$(stdlib_lower_bound "$ROCQ")"
 ARCHIVE_DIR="${OPAM_ARCHIVE_DIR:-$HOME/.cache/coqhammer/opam-coq-archive}"
 BRANCH="release-coq-hammer-${VERSTR}"
 
@@ -97,8 +105,13 @@ add_package() {
   mkdir -p "$newdir"
   cp "$template/opam" "$newdir/opam"
 
+  # Replace whatever Rocq/Coq dependency line(s) the template carries -- an old
+  # entry's single "coq" line or a newer entry's "rocq-core"/"rocq-runtime"/
+  # "rocq-stdlib" form -- with the canonical dependency block for this release.
+  # Rocq >= 9 uses the split packages; older Coq branches keep `coq`.
+  rewrite_opam_deps "$newdir/opam" "$ROCQ" "$ROCQ_NEXT" "$STDLIB_LB"
+
   sed -i \
-    -e "s|.*\"coq\" *{>=.*|  \"coq\" {>= \"${ROCQ}\" \& < \"${ROCQ_NEXT}~\"}|" \
     -e "s|\"date:[0-9-]*\"|\"date:${TODAY}\"|" \
     -e "s|archive/refs/tags/v[^\"]*|archive/refs/tags/${TAG}.tar.gz|" \
     -e "s|checksum: \"sha512=[0-9a-fA-F]*\"|checksum: \"sha512=${SHA512}\"|" \

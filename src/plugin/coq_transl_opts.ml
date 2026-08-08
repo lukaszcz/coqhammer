@@ -47,6 +47,26 @@ let opt_precise_inversion = true
 let opt_type_lifting = true
 (* should translate Set to Type? *)
 let opt_set_to_type = true
+(* Erase propositional case analyses. *)
+let opt_prop_case_erasure = true
+(* Guard erased transports. *)
+let opt_erasure_guards = false
+(* Expand refinement types shallowly. *)
+let opt_refinement_types = true
+(* Skip redundant declaration-level subset axioms. *)
+let opt_refinement_decl_skips = true
+(* Alongside the propositional equivalence for a transparent Prop-valued
+   definition with an atomic body, also emit the term-level definitional
+   equation.  The two sides are one object by delta-conversion, but the
+   equivalence relates only their truth, so equations over the definition
+   occurring in term position -- as the type argument of an erased proof,
+   sumbool payloads being the common case -- can never fire without it.  Not
+   emitted for premised or WF-marked equations: there the equivalence is a
+   theorem under the premises (Fix_eq) rather than a conversion. *)
+let opt_prop_def_term_eqs = true
+(* Head-reduction step budget when exposing the inductive type of a case
+   scrutinee. *)
+let opt_whnf_budget = 64
 
 (***************************************************************************************)
 (* Debugging *)

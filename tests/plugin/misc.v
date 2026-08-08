@@ -3,6 +3,9 @@ From Hammer Require Import Hammer.
 Hammer_version.
 Hammer_objects.
 
+Set Hammer ReconstrRetries 2.
+Unset Hammer ReconstrRetries.
+
 Set Hammer SAutoLimit 0.
 
 From Stdlib Require NArith.Ndec.

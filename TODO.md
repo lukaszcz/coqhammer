@@ -86,8 +86,10 @@ Problems
    much experimentation trying to figure out the right way of doing
    this.
 
-7. Try breaking up the axiom for matches into one axiom for each
-   constructor. E.g. instead of translating
+7. (done) Break up the axiom for matches into one axiom for each
+   constructor. The extraction-factored translator implements the split form;
+   see the regression profile in `tests/plugin/EXPECTED-extraction.md`. E.g.
+   instead of translating
 
    * match x with 0 => t1 | S y => t2 end
 
@@ -106,7 +108,8 @@ Problems
    guards for free variables of lambda-lifted expressions).
 
    This is related to program extraction. See Pierre Letouzey’s
-   Ph.D. thesis.
+   Ph.D. thesis. The implementation uses split equations while retaining
+   inversion axioms for exhaustiveness.
 
 8. Try giving symbol ordering hints to ATPs. There is a natural order
    on constants: c1 > c2 if transitive-closure(c2 occurs in the
@@ -115,8 +118,11 @@ Problems
    src/lib/lpo.ml and the implementation of rewriting actions in
    src/tactics/sauto.ml. Extend this idea, try different orderings.
 
-9. Properly handle functions which use dependent types in a
-   non-trivial way. Properly handle case analysis for small
+9. (done) Properly handle functions which use dependent types in a
+   non-trivial way. The extraction-factored translator now performs singleton
+   erasure, refinement unboxing/spec expansion, enum guard expansion, and
+   premised WF-recursion equations; see `tests/plugin/EXPECTED-extraction.md`.
+   Properly handle case analysis for small
    propositional inductive types. Properly handle sig, sigT, etc., and
    prod, sum, etc. with propositional arguments. For example, given
 
@@ -142,14 +148,17 @@ Problems
 
    * forall x y z, x = y /\ y = z -> x = h(x, y, z)
 
-   Currently, no function definition for h is generated. Neither is
-   the specification axiom. Only an unusable typing axiom for h is
-   generated.
+   Originally, no function definition for h was generated, nor the
+   specification axiom -- only an unusable typing axiom for h was generated.
+   This is now handled; see `extraction_h_proj`/`extraction_h_spec` in
+   `tests/plugin/EXPECTED-extraction.md`.
 
    A similar problem is considered in Pierre Letouzey’s Ph.D. thesis,
    but there the goal is only code extraction, so there is no need to
    generate the specification axioms derived from types. In addition
-   to program extraction, we need to do *specification extraction*.
+   to program extraction, we need to do *specification extraction*. The
+   implemented program/specification extraction behavior is covered by the
+   regression profile cited above.
 
 10. Explicitly state the types of non-trivial terms. E.g. if
     f:nat->nat and 0:nat and (f 0) occurs (in the goal or hypothesis?)
@@ -162,9 +171,9 @@ Problems
 11. Improvements in premise selection: better features, other
     algorithms? Special status for head constants?
 
-12. Translation to HOL. Factor the translation, including a HOL
-    intermediate stage: Coq -> CIC_0 -> HOL -> applicative FOL ->
-    FOL. Try using higher-order ATPs.
+12. Translation to HOL. Factor the translation through an intermediate HOL
+    representation: Coq -> CIC_0 -> HOL -> applicative FOL -> FOL. Try using
+    higher-order ATPs.
 
 13. Write a custom version of the `eapply` tactic which does
     unification modulo "simple" (equational?) reasoning. See the smart

@@ -61,8 +61,13 @@ Proof.
   Fail depind e1; sauto.
   time (depind e1; sauto dep: on).
   (* "dep: on" instructs "sauto" to use the "depelim" tactic for
-     inversion. This may be slower and it will make your proof depend
-     on axioms (equivalent to Uniqueness of Identity Proofs). *)
+     inversion. This may be slower and it may make your proof depend
+     on axioms (equivalent to Uniqueness of Identity Proofs). To keep
+     transport simplification axiom-free at a type with decidable equality,
+     extend the database used by "dep: on", for example:
+       Global Hint Resolve my_type_eq_dec : hammer_eqdec.
+     The database already covers common types such as nat, bool, Z, N,
+     positive, and lists over covered element types. *)
 Qed.
 
 Hint Rewrite lem_plus : simp_db.
