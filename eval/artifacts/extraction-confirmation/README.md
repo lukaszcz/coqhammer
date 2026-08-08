@@ -8,8 +8,14 @@ to. Treat the summaries as valid only together with that provenance file.
 - `summary.tsv` — one row per (corpus, premise selector, prover) cell.
 - `analysis.md` — aggregated rates (overall, per prover, per corpus, per
   premise selector) plus the eq_rect/WF watch points.
-- `provenance.env` — commit `bf435563`, prover timeout 10s, consistency
-  timeout 2s, all seven corpora in `full` mode.
+- `provenance.env` — the run's commit, timeouts, corpus modes, and the digests
+  of the two files above.
+
+Those three are written by the grid; this README is prose about them. It
+therefore quotes as few numbers as it can, and `analysis.md` is authoritative
+wherever the two disagree — the per-prover, per-corpus and per-selector tables
+are deliberately not copied here, because a hand-maintained copy of a generated
+table is stale from the next run onwards.
 
 Regenerate from the raw checkpoints under `eval/results/confirmation` with
 `../../evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
@@ -39,28 +45,8 @@ over seven corpora, 280 cells, 205,960 generated problems.
 
 | metric | value |
 | --- | --- |
-| ATP success rate | 32.7% (67,286 / 205,960) |
-| Reconstruction on ATP-proved goals | 85.8% (57,708 / 67,286) |
+| ATP success rate | 33.2% (68,442 / 205,960) |
+| Reconstruction on ATP-proved goals | 86.2% (58,964 / 68,442) |
 
-Per prover (ATP success / reconstruction-on-ATP):
-
-| prover | success | recon-on-ATP |
-| --- | --- | --- |
-| CVC4 | 37.6% | 85.6% |
-| Vampire | 36.9% | 85.5% |
-| E prover | 29.6% | 85.5% |
-| Z3 | 26.6% | 86.6% |
-
-Per corpus (ATP success / reconstruction-on-ATP):
-
-| corpus | success | recon-on-ATP |
-| --- | --- | --- |
-| stdlib-regression | 55.5% | 93.9% |
-| dependent-slice | 82.9% | 100.0% |
-| external-equations | 31.2% | 61.4% |
-| dependent-stdlib | 30.8% | 75.8% |
-| color-vector | 28.1% | 90.8% |
-| stdpp | 21.7% | 86.8% |
-| equations-examples | 20.4% | 68.5% |
-
-See `analysis.md` for the per-premise-selector breakdown and the full tables.
+See `analysis.md` for the breakdown by prover, corpus and premise selector, and
+for the eq_rect/WF watch points.
