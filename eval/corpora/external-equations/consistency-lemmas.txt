@@ -1,0 +1,64 @@
+# Lemmas used for the false-conjecture consistency check on this corpus.
+# See eval/corpora/stdlib-regression/consistency-lemmas.txt for why the check
+# runs against a curated list rather than every goal in the corpus.
+#
+# Produced by eval/tools/curate-consistency-lemmas.sh over the generated
+# problems: each conjecture was replaced with $false and both provers were
+# run at a longer timeout than the check itself uses, so a lemma whose
+# refutation is merely slow cannot pass here and fire during a run.  Every
+# goal in the corpus survived, so all of them are listed.
+#
+# Vacuity depends on the goal's own hypotheses, not on which premises were
+# selected, so curating against one premise directory covers them all.  A
+# refutation appearing at a larger premise count would therefore be a real
+# finding about the translation rather than a gap in this list.
+
+Equations.Prop.DepElim.eq_sym_invol
+Equations.Prop.DepElim.ind_pack_eq_inv_equiv
+Equations.Prop.DepElim.simplify_ind_pack_elim
+Equations.Prop.DepElim.simplify_ind_pack_refl
+Equations.Prop.EqDec.eq_dec_refl
+Equations.Prop.EqDec.eq_dec_refl_point
+Equations.Prop.EqDec.eq_proofs_unicity
+Equations.Prop.EqDec.eq_proofs_unicity_point
+Equations.Prop.EqDec.eq_uip
+Equations.Prop.EqDec.Id_trans_r
+Equations.Prop.EqDec.inj_right_pair
+Equations.Prop.EqDec.inj_right_pair_refl
+Equations.Prop.EqDec.inj_right_sigma
+Equations.Prop.EqDec.inj_right_sigma_point
+Equations.Prop.EqDec.inj_right_sigma_refl
+Equations.Prop.EqDec.inj_right_sigma_refl_point
+Equations.Prop.EqDec.nu_left_inv
+Equations.Prop.EqDec.nu_left_inv_point
+Equations.Prop.EqDec.peq_dec_refl
+Equations.Prop.EqDec.peq_proofs_unicity
+Equations.Prop.EqDec.pK_dec
+Equations.Prop.EqDec.pnu_left_inv
+Equations.Prop.EqDec.point_trans_sym_eq
+Equations.Prop.EqDec.ptrans_sym_eq
+Equations.Prop.EqDec.trans_sym_eq
+Equations.Prop.EqDec.uip_refl_refl
+Equations.Prop.EqDec.UIP_shift
+Equations.Prop.EqDec.UIP_shift_on
+Equations.Prop.FunctionalInduction.uncurry_conj
+Equations.Prop.NoCycle.noCycle_bigtest
+Equations.Prop.NoCycle.noCycle_test
+Equations.Prop.NoCycle.noCycle_test2
+Equations.Prop.NoCycle.noCycle_test3
+Equations.Prop.Subterm.acc_A_B_lexprod
+Equations.Prop.Subterm.Acc_pi
+Equations.Prop.Subterm.clos_trans_stepr
+Equations.Prop.Subterm.FixWf_unfold
+Equations.Prop.Subterm.FixWf_unfold_ext
+Equations.Prop.Subterm.FixWf_unfold_ext_step
+Equations.Prop.Subterm.FixWf_unfold_step
+Equations.Prop.Subterm.well_founded_irreflexive
+Equations.Prop.Subterm.WellFounded_trans_clos
+Equations.Prop.Subterm.wf_lexprod
+Equations.Prop.Subterm.wf_MR
+Equations.Prop.Telescopes.poly_f_equal
+Equations.Prop.Telescopes.tele_fix_unfold
+Equations.Prop.Telescopes.tele_forall_app_type
+Equations.Prop.Telescopes.tele_forall_pack_unpack
+Equations.Prop.Telescopes.wf_tele_measure

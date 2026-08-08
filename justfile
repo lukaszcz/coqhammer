@@ -17,10 +17,15 @@
 _default:
     @just --list
 
-# Install both packages, then run the quick smoke-test suite.
+# Build and install both packages, then run the quick plugin and tactics tests.
 check:
     make install
     make quicktest
+
+# Run the complete plugin suite and consistency canaries once via isolated Dune.
+check-extra:
+    make clean
+    make dune-test-plugin
 
 # Bump the CoqHammer version (patch|minor|major, or none to keep it) and publish
 # a GitHub release for this branch's Rocq. `none` ports the current release to a
@@ -44,14 +49,15 @@ publish-opam version:
 sync source:
     ./scripts/sync-branch.sh {{source}}
 
-# Migrate the project to a new Rocq version. Run it on the branch to migrate
-# FROM (typically `master`): creates a new local branch `rocq-<VERSION>`,
-# rewrites the per-Rocq version strings and *.opam files on it, and -- when the
-# AGM project config tree is present -- adds a `config/rocq-<VERSION>` workspace
-# config selecting the toolchain (opam package, or a from-source build when the
-# version is not yet on opam). Branch only: no worktree is created and no build
-# is run; review and push the branch (and the config commit) yourself.
-# E.g. on master:  just migrate 9.2
+# Migrate the project to a new Rocq version. Run it on the release branch to
+# migrate FROM (typically the latest stable `rocq-<X.Y>` branch, never `master`):
+# creates a new local branch `rocq-<VERSION>`, rewrites the per-Rocq version
+# strings and *.opam files on it, and -- when the AGM project config tree is
+# present -- adds a `config/rocq-<VERSION>` workspace config selecting the
+# toolchain (opam package, or a from-source build when the version is not yet on
+# opam). Branch only: no worktree is created and no build is run; review and push
+# the branch (and the config commit) yourself.
+# E.g. on rocq-9.1:  just migrate 9.2
 [doc('Branch rocq-<version> off the current branch and retarget its version tokens')]
 migrate version:
     ./scripts/migrate.sh {{version}}

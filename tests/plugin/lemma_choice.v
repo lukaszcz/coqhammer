@@ -4,8 +4,8 @@ From Hammer Require Import Hammer.
 From Stdlib Require Import Lists.List.
 Import ListNotations.
 
-(* Disable the sauto pre-phase so that the lemma choice path is
-   actually exercised. *)
+(* Disable the initial sauto attempt so that the lemma choice path is actually
+   exercised. *)
 Set Hammer SAutoLimit 0.
 
 Lemma lem_given : forall (A : Type) (l1 l2 : list A),
@@ -56,7 +56,7 @@ Qed.
 Lemma lem_not_global : 1 + 1 = 2.
 Proof.
   Fail hammer [(1 + 1)].
-  reflexivity.
+  hammer.
 Qed.
 
 (* The lemma choice also works with GSMode 0. *)

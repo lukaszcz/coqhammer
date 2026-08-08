@@ -1,98 +1,184 @@
-How to evaluate a new Coq library?
-----------------------------------
+# CoqHammer evaluation
 
-Let `N` be the number of parallel jobs to execute. Unless otherwise
-stated, execute all commands in the `eval/` directory.
+This directory evaluates the current CoqHammer checkout. The main entry point
+is `evaluate.sh`; it builds the source tree containing `eval/` and installs it
+in `eval/_installs/current` before running an evaluation.
 
-Some libraries prepared for evaluation are available at
-https://github.com/lukaszcz/coqhammer-eval.git. If the library to
-evaluate is already prepared (according to steps 1-6 below), then put
-it in the `problems/` subdirectory and do:
+## Quick start
+
+Run all commands from this directory. `N` is the number of parallel jobs.
 
 ```bash
-./run-eval.sh N [your.mail@mail.com]
+# Smoke test one committed corpus
+./evaluate.sh sample --corpus stdlib-regression -j N
+
+# Evaluate a prepared library in problems/
+./evaluate.sh library N [your.mail@mail.com]
+
+# Explore extraction configurations
+./evaluate.sh screening -j 4 --tim 5
+
+# Run the complete extraction evaluation for the current configuration
+./evaluate.sh confirmation -j 4 --tim 10
 ```
 
-Otherwise follow all steps below. You may find `make clean-problems`
-useful when you want to redo some steps.
+Use `./evaluate.sh --help` for the unified interface. The screening and
+confirmation modes also accept the options printed by their individual help
+commands. They create resumable checkpoints under `results/` and write
+summaries and provenance under `artifacts/` after a complete run.
 
-1. Place the library sources in the `problems/` directory (possibly
-   with subdirectories). The sources should contain the `*.v` files.
+The confirmation grid runs all seven full corpora (`stdlib-regression`,
+`dependent-stdlib`, `stdpp`, `color-vector`, `dependent-slice`,
+`equations-examples`, `external-equations`); run `./install-external-libs.sh`
+first to install the libraries and build the Coq-Equations checkout that some
+of them need.
 
-2. `cd tools && make`
+The standard evaluation uses the prepared source files in `problems/`. The
+extraction evaluation uses three corpora:
 
-3. Run `tools/fixreqs.sh prefix` in the `problems/` directory to fix
-   the `Require` statements. This script expects one parameter -- the
-   Coq logical prefix for the library. All `Require file` (also
-   `Require Import` and `Require Export`) statements for files which
-   are found in the `problems/` directory are changed to `From prefix
-   Require file`.
+- `stdlib-regression`: built from the installed Rocq standard library. The
+  installed library ships a `.glob` beside every `.v`, which is all `coqnames`
+  needs to place the `hammer_hook` calls, so this needs no stdlib rebuild.
+  The default slice is `Arith Bool Vectors Lists NArith`, about 1200 goals
+  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`.
+- `dependent-slice`: committed dependent elimination, finite map, and
+  well-founded recursion fixtures;
+- `external-equations`: built from the installed `rocq-equations` library, or
+  from a checkout passed with `--external-source /path/to/Coq-Equations`. See
+  `corpora/external-equations/CANDIDATES.md` for how it was chosen.
 
-4. `make -j N init`
+Generating the corpora from the installed libraries keeps them in step with the
+Rocq the evaluation actually runs against, instead of committing a snapshot
+that silently drifts. Pass `--sample-corpus` to use the small committed smoke
+wrappers instead; those are for dry runs in minimal images, not for evidence.
 
-   This will compile the problems, creating the necessary `*.glob`
-   files. If some files do not compile then you need to fix this
-   manually.
+Jobs default to a pool sized from the core count and capped so the concurrent
+ATP processes fit in available memory. `EVAL_JOBS` pins it, and
+`EVAL_MEMORY_PER_JOB_MB` / `EVAL_RESERVE_MB` tune the memory model; `-j`
+overrides all of them.
 
-5. `cd problems && ../tools/mkhooks.sh`
+## Preparing a library
 
-   This script may be used to insert calls to `hammer_hook` in the
-   library source files (it requires the corresponding `*.glob` files
-   to be present). Run it in the `problems/` directory. After running
-   `tools/mkhooks.sh` you may need to edit some files manually to make
-   them compile with `coqc`.
+If the library is not already prepared, use these steps before
+`./evaluate.sh library N`:
 
-6. `./check.sh N`
+1. Place its sources, including all `*.v` files, in `problems/`.
+2. Build the helper tools:
 
-   This checks if the problems compile with `coqc` after running
-   `tools/mkhooks.sh`. It may fail for some files, which must be then
-   edited manually to make them compile with `coqc`. The errors may be
-   viewed in the `check.log` file.
+   ```bash
+   (cd tools && make)
+   ```
 
-7. `./gen-atp.sh N [your.mail@mail.com]`
+3. Fix logical prefixes from the `problems/` directory:
 
-   After running this command the generated ATP problems are in the
-   `atp/problems/` directory.
+   ```bash
+   ../tools/fixreqs.sh prefix
+   ```
 
-8. `cd atp && ./run-provers.sh N [your.mail@mail.com]`
+   Replace `prefix` with the library's Coq logical prefix. The command updates
+   `Require`, `Require Import`, and `Require Export` statements for files found
+   in `problems/`.
 
-   The script `atp/run-provers.sh` should be edited when adding or
-   changing the (versions of) ATP provers used in the evaluation. When
-   adding new ATPs also the `hammer_hook` code in
-   [`src/plugin/hammer_main.ml`](../src/plugin/hammer_main.ml) should be edited.
+4. Compile the library and create its `.glob` files:
 
-9. `./run-reconstr.sh N [your.mail@mail.com]`
+   ```bash
+   make -j N init
+   ```
 
-After executing these steps, the reconstruction results are in the
-`out/` directory. The ATP results are in the `atp/o/` directory.
+   Fix any source files that do not compile.
 
-10. `./gen-stats.sh`
+5. Insert `hammer_hook` calls:
 
-   This computes the statistics (including the greedy sequence), using
-   the `stat` program (see below).
+   ```bash
+   (cd problems && ../tools/mkhooks.sh)
+   ```
 
-Steps 7-10 may be run using the script `./run-eval.sh [-v] N [your.mail@mail.com]`.
-The optional flag -v enables the verbose mode (more emails about the progress are sent).
+   Inspect and adjust the generated sources if necessary.
 
-Tools
------
+6. Check the hooked files:
 
-* `stat`: compute ATP statistics. Run in the `atp/` directory (or
-    `eval/` with the `-r` option). Reads the `o/*/*.p` files
-    (`out/*/*.out` with the `-r` option).
+   ```bash
+   ./check.sh N
+   ```
 
-  Example: `tools/stat , y,p , , false`
+   Errors are recorded in `check.log`.
 
-`stat` takes 5 (optionally 6) space-separated arguments: the `-r`
-option (optional), 4 lists (comma-separated values; empty list is
-represented by a single comma) and a boolean
+`make clean-problems` removes generated files when the preparation needs to be
+repeated. The lower-level commands used by `evaluate.sh library` are
+`gen-atp.sh`, `atp/run-provers.sh`, `run-reconstr.sh`, and `gen-stats.sh`.
 
+## Extraction configurations
+
+`rebuild-config.sh` is an implementation helper used by the grid commands.
+`current` builds exactly the option values committed in
+`src/plugin/coq_transl_opts.ml`. The other names are controlled configuration
+variants used to understand the current translator:
+
+- `all-off` and `all-on`;
+- `loo-prop-case-erasure`;
+- `loo-erasure-guards`;
+- `loo-refinement-types`.
+
+Append `-decl-skips` to a variant to enable declaration-level refinement
+skips. Configuration builds restore `coq_transl_opts.ml` after installation.
+Each build wipes its install prefix first, so `--prefix` is accepted only for a
+dedicated install directory: outside the checkout or under `eval/_installs`,
+and, if it already exists, carrying the `.coqhammer-eval-prefix` marker an
+earlier `rebuild-config.sh` run wrote for that path. A prefix built before the
+marker existed, or one that was moved or copied, is refused; remove it by hand
+(`rm -rf PREFIX`) and rebuild it.
+To inspect the available names:
+
+```bash
+./rebuild-config.sh --list
 ```
-stat -r [labels] [sorting specification] [which fields to merge]
-     [greedy sequence fixed start]
-     (should different versions of the greedy sequence be computed?)
-```
 
-- `y` - the number of proved theorems
-- `n` - the number of countersatisfiable problems
-- `p` - the prover
+The screening run evaluates `current` together with these variants. The
+confirmation run evaluates only `current`, including ATP generation,
+reconstruction, and consistency checks across all standard premise-selector
+and prover combinations.
+
+Every complete grid writes `provenance.env` beside its summary. Checkpoints
+are reused only when their source commit, installed package, configuration,
+corpus content, scripts, and timeout settings still match.
+
+Of everything a run produces, only the confirmation grid's artifacts are
+tracked: `summary.tsv`, `analysis.md`, `provenance.env`, and the README beside
+them. The rest — `results/`, `problems/`, `logs/`, `_external/` — is ignored.
+The line is not source versus output but reproducible versus not. Checkpoints
+and generated problems come back by rerunning; a summary does not, since it
+depends on four external ATPs, pinned external libraries, and timeout-bound
+prover runs that never repeat exactly. A summary is therefore evidence about
+one commit rather than build output, and it is committed so that
+`provenance.env`'s `repository_commit` and the numbers it vouches for share a
+single history — the confirmation checkpoints are keyed by label, so once a
+grid is rerun that history is the only surviving record of the previous one.
+Screening summaries are not tracked; only the confirmation grid, which carries
+the branch's headline claim. `summary.tsv` and `analysis.md` are marked
+`linguist-generated` in `.gitattributes` so review collapses them; regenerate
+them through the grid rather than editing them.
+
+The confirmation run also checks that the translated axioms stay consistent: it
+replaces each conjecture with `$false` and expects no refutation. Those axioms
+include the goal's own hypotheses, so a vacuously true lemma is refutable no
+matter how faithful the translation is — stdlib's `Nat.testbit_neg_r`, proved
+by `inversion H` from `n < 0`, is one. The check therefore runs against the
+curated list in `corpora/<corpus>/consistency-lemmas.txt`, whose entries are
+known to have satisfiable hypotheses; the list is a sample across the corpus
+modules, not an enumeration of it. A corpus with no such file is skipped with a
+warning and left unchecked rather than reported as passing.
+
+`tools/curate-consistency-lemmas.sh PROBLEM_DIR OUT` regenerates such a list
+from a corpus's generated problems. It runs both provers at a longer timeout
+than the check uses, so a lemma whose refutation is merely slow cannot pass
+curation and then fire during a run. Use it when adding a corpus or after a
+library update changes which goals exist.
+
+## Other tools
+
+- `diff-transl-configs.sh CONFIG_A CONFIG_B [CONSTANT]` compares translation
+  output for two current-tree configurations;
+- `atp/run-provers.sh` runs the configured external ATPs directly;
+- `tools/stat` computes ATP statistics from the generated output.
+
+External ATPs must be installed for screening, confirmation, and library runs.

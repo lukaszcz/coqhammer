@@ -22,6 +22,16 @@ Since version 1.3, the CoqHammer system consists of two major separate component
 See the [CoqHammer webpage](https://coqhammer.github.io) for
 documentation and installation instructions.
 
+Debugging ATP problems
+----------------------
+Inside an open proof, `Hammer_dump "file.p"` (or the tactic form
+`hammer_dump "file.p"`) writes a TPTP problem for the current goal using the
+current `Hammer PredictMethod` and `Hammer Predictions` settings. It does not
+iterate the greedy-search predictor/prover schedule when `Hammer GSMode` is
+enabled. Relative dump names are resolved against `Set Hammer Dump Directory
+"..."`; if that option is unset, the `COQHAMMER_DUMP_DIR` environment variable is
+used, and otherwise the name is used relative to the current directory.
+
 Requirements
 ------------
 - [Rocq 9.2](https://rocq-prover.org/)
@@ -34,7 +44,7 @@ Requirements
 Copyright and license
 ---------------------
 
-Copyright (c) 2017-2025, Lukasz Czajka.\
+Copyright (c) 2017-2026, Lukasz Czajka.\
 Copyright (c) 2017-2018, Cezary Kaliszyk, University of Innsbruck.
 
 Distributed under the terms of LGPL 2.1, see the file

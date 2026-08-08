@@ -15,13 +15,11 @@ Proof.
   hammer.
 Qed.
 
-(*
 Lemma lem_lst2 : forall {A} (y1 y2 y3 : A) l l' z, In z l \/ In z l' ->
                                                    In z (y1 :: y2 :: l ++ y3 :: l').
 Proof.
   hammer.
 Qed.
-*)
 
 Lemma lem_lst3 : forall {A} (l : list A), length (tl l) <= length l.
 Proof.

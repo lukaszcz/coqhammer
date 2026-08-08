@@ -1,6 +1,7 @@
 open Hammer_lib
 open Hammer_errors
 open Hh_term
+open Atp_names
 
 (* info about what the ATP used in the proof *)
 type atp_info = {
@@ -16,62 +17,105 @@ type atp_info = {
 
 (******************************************************************************)
 
-let unescape s = Scanf.unescaped (Scanf.unescaped s)
+(* Raised when a line that has already been recognised as carrying a premise
+   name cannot be parsed.  That is always a bug in the parser rather than a
+   property of the proof, so it must reach the user instead of being skipped
+   with the line: a parser that silently drops names turns its own breakage
+   into what looks like a weak translation.  Failing to recognise a line as
+   carrying a name at all is a different matter and stays caught, since the
+   provers interleave other output with their proofs. *)
+exception Parse_error of string
 
-let is_alpha = function 'A'..'Z'|'a'..'z'|'_' -> true | _ -> false
+(* Reverse the encoding tptp_out applies to a premise name: a prime is written
+   ~q, a literal tilde ~t, and every other byte outside the safe printable-ASCII
+   range (notably the non-ASCII bytes of a Unicode identifier) is written ~ then
+   two lowercase hex digits, so that the emitted single-quoted atom needs no
+   TPTP backslash escape (which z3_tptp rejects and EProver mangles) and carries
+   no byte z3_tptp refuses.  A tilde that opens no known escape is kept as-is, so
+   a name that never went through the encoder passes through unchanged. *)
+let hex_digit c =
+  match c with
+  | '0' .. '9' -> Char.code c - Char.code '0'
+  | 'a' .. 'f' -> Char.code c - Char.code 'a' + 10
+  | _ -> -1
+let decode_thm_name s =
+  let n = String.length s in
+  let buf = Buffer.create n in
+  let rec go i =
+    if i >= n then
+      Buffer.contents buf
+    else if s.[i] = '~' && i + 1 < n then
+      match s.[i + 1] with
+      | 'q' -> Buffer.add_char buf '\''; go (i + 2)
+      | 't' -> Buffer.add_char buf '~'; go (i + 2)
+      | _ when i + 2 < n && hex_digit s.[i + 1] >= 0 && hex_digit s.[i + 2] >= 0 ->
+          Buffer.add_char buf
+            (Char.chr (hex_digit s.[i + 1] * 16 + hex_digit s.[i + 2]));
+          go (i + 3)
+      | _ -> Buffer.add_char buf '~'; go (i + 1)
+    else
+      begin
+        Buffer.add_char buf s.[i];
+        go (i + 1)
+      end
+  in
+  go 0
 
-let is_good_dep s = is_alpha (String.get s 0) && not (Hhlib.string_begins_with s "_HAMMER_")
+(* Read the single-quoted atom that opens at ln.[i].  The emitted atom carries
+   no backslash escape and no embedded quote, so the first quote closes it; the
+   prime, encoded as ~q, is restored by decode_thm_name afterwards. *)
+let read_quoted_atom ln i =
+  let n = String.length ln in
+  let buf = Buffer.create 32 in
+  let rec scan i =
+    if i >= n then
+      raise (Parse_error ln)
+    else if ln.[i] = '\'' then
+      Buffer.contents buf
+    else
+      begin
+        Buffer.add_char buf ln.[i];
+        scan (i + 1)
+      end
+  in
+  decode_thm_name (scan (i + 1))
 
-let remove_duplicates = Hhlib.sort_uniq Stdlib.compare
+(* CVC4 is asked for an unsat core rather than a proof, and prints one premise
+   name per line with no enclosing term.  Like Vampire it quotes the name only
+   when TPTP requires it, so a line carrying a bare lower word such as
+   beq_refl is a name in full and not a line to pass over. *)
+let core_atom_of_line ln =
+  let s = String.trim ln in
+  if s = "" then
+    raise (Parse_error ln)
+  else if s.[0] = '\'' then
+    read_quoted_atom s 0
+  else
+    s
 
-let get_deps lst = List.filter is_good_dep lst
-
-let get_defs lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 6 (String.length s - 6))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_def_") lst))
-
-let get_typings lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 9 (String.length s - 9))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_typeof_") lst))
-
-let get_cases lst =
-  remove_duplicates
-    (List.filter is_good_dep
-       (List.map
-          begin fun s ->
-            try
-              let i = String.index s '$' in
-              String.sub s 0 i
-            with Not_found ->
-              "$none"
-          end
-          (List.map (fun s -> String.sub s 7 (String.length s - 7))
-             (List.filter (fun s -> Hhlib.string_begins_with s "$_case_") lst))))
-
-let get_inversions lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 12 (String.length s - 12))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_inversion_") lst))
-
-let get_injections lst =
-  List.filter is_good_dep
-    (List.map (fun s -> String.sub s 6 (String.length s - 6))
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_inj_") lst))
-
-let get_discrims lst =
-  List.filter (fun (x, y) -> is_good_dep x && is_good_dep y)
-    (List.map
-       begin fun s ->
-         let s = String.sub s 10 (String.length s - 10) in
-         let i = String.index s '$' in
-         let s1 = String.sub s 0 i
-         and s2 = String.sub s (i + 1) (String.length s - i - 1)
-         in
-         (s1, s2)
-       end
-       (List.filter (fun s -> Hhlib.string_begins_with s "$_discrim_") lst))
+(* EProver and Vampire print a proof, where the premise name is the second
+   argument of the trailing file(SOURCE, NAME).  Both forms of NAME occur:
+   EProver always quotes it, while Vampire quotes only when TPTP requires it
+   and writes e.g. file('...p',beq_refl) otherwise.  Reading only quoted atoms
+   would take the source path for the name of every unquoted premise, and
+   slicing to the last quote drops them instead. *)
+let axiom_name_of_line ln =
+  let n = String.length ln in
+  let start =
+    match String.rindex_opt ln ',' with
+    | Some i -> ref (i + 1)
+    | None -> raise (Parse_error ln)
+  in
+  while !start < n && (ln.[!start] = ' ' || ln.[!start] = '\t') do incr start done;
+  if !start >= n then
+    raise (Parse_error ln)
+  else if ln.[!start] = '\'' then
+    read_quoted_atom ln !start
+  else
+    let stop = ref !start in
+    while !stop < n && ln.[!stop] <> ')' && ln.[!stop] <> ',' do incr stop done;
+    let name = String.trim (String.sub ln !start (!stop - !start)) in
+    if name = "" then raise (Parse_error ln) else name
 
 let get_types lst =
   remove_duplicates
@@ -89,9 +133,7 @@ let get_types lst =
                   let i = String.index s '$' in
                   String.sub s 0 i
                 else if Hhlib.string_begins_with s "$_case_" then
-                  let s = String.sub s 7 (String.length s - 7) in
-                  let i = String.index s '$' in
-                  String.sub s 0 i
+                  case_name_subject (String.sub s 7 (String.length s - 7))
                 else
                   "$none"
               in
@@ -185,29 +227,34 @@ let extract_eprover_data outfile =
   try
     let ic = open_in outfile
     in
-    let rec pom acc =
-      try
-        let ln = input_line ic in
-        if String.get ln 0 = '#' then
-          pom acc
-        else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
-          let i = String.rindex ln ',' + 2 in
-          let j = String.rindex ln '\'' in
-          let name = unescape (String.sub ln (i + 1) (j - i - 1)) in
-          pom (name :: acc)
-        else
-          pom acc
-      with
-      | End_of_file ->
-         acc
-      | Not_found | Invalid_argument(_) ->
-         pom acc
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          let rec pom acc =
+            try
+              let ln = input_line ic in
+              if String.get ln 0 = '#' then
+                pom acc
+              else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
+                pom (axiom_name_of_line ln :: acc)
+              else
+                pom acc
+            with
+            | End_of_file ->
+               acc
+            (* One unreadable name must not discard the rest of a found proof. *)
+            | Not_found | Invalid_argument(_) ->
+               pom acc
+          in
+          pom []
+        end
     in
-    let names = pom []
-    in
-    close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in EProver output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract EProver data")
 
 type z3_binary = Z3Tptp | Z3
@@ -239,13 +286,21 @@ let extract_z3_data outfile =
   try
     let ic = open_in outfile
     in
-    ignore (input_line ic);
-    let ln = String.trim (input_line ic) in
-    let s = String.sub ln 13 (String.length ln - 2 - 13) in
-    let names = List.map unescape (Str.split (Str.regexp "'| |'") s) in
-    close_in ic;
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          ignore (input_line ic);
+          let ln = String.trim (input_line ic) in
+          let s = String.sub ln 13 (String.length ln - 2 - 13) in
+          List.map decode_thm_name (Str.split (Str.regexp "'| |'") s)
+        end
+    in
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in Z3 output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract Z3 data")
 
 let call_vampire infile outfile =
@@ -260,30 +315,35 @@ let extract_vampire_data outfile =
   try
     let ic = open_in outfile
     in
-    let rec pom acc =
-      try
-        let ln = input_line ic in
-        if String.get ln 0 = '%' then
-          pom acc
-        else
-          let i = String.rindex ln ',' + 1 in
-          let j = String.rindex ln '\'' in
-          let name = unescape (String.sub ln (i + 1) (j - i - 1)) in
-          if name <> "HAMMER_GOAL" then
-            pom (name :: acc)
-          else
-            pom acc
-      with
-      | End_of_file ->
-         acc
-      | Not_found | Invalid_argument(_) ->
-         pom acc
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          let rec pom acc =
+            try
+              let ln = input_line ic in
+              if String.get ln 0 = '%' then
+                pom acc
+              else
+                let name = axiom_name_of_line ln in
+                if name <> "HAMMER_GOAL" then
+                  pom (name :: acc)
+                else
+                  pom acc
+            with
+            | End_of_file ->
+               acc
+            | Not_found | Invalid_argument(_) ->
+               pom acc
+          in
+          pom []
+        end
     in
-    let names = pom []
-    in
-    close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in Vampire output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract Vampire data")
 
 let call_cvc4 infile outfile =
@@ -297,30 +357,35 @@ let call_cvc4 infile outfile =
 let extract_cvc4_data outfile =
   try
     let ic = open_in outfile in
-    let rec pom acc =
-      try
-        let ln = input_line ic in
-        if (String.get ln 0 = '%') then
-          pom acc
-        else
-          let i = String.index ln '\''  in
-          let j = String.rindex ln '\'' in
-          let name = unescape (String.sub ln (i + 1) (j - i - 1)) in
-          if name <> "HAMMER_GOAL" then
-            pom (name :: acc)
-          else
-            pom acc
-      with
-      | End_of_file ->
-         acc
-      | Not_found | Invalid_argument(_) ->
-         pom acc
+    let names =
+      Fun.protect ~finally:(fun () -> close_in_noerr ic)
+        begin fun () ->
+          let rec pom acc =
+            try
+              let ln = input_line ic in
+              if (String.get ln 0 = '%') then
+                pom acc
+              else
+                let name = core_atom_of_line ln in
+                if name <> "HAMMER_GOAL" then
+                  pom (name :: acc)
+                else
+                  pom acc
+            with
+            | End_of_file ->
+               acc
+            | Not_found | Invalid_argument(_) ->
+               pom acc
+          in
+          pom []
+        end
     in
-    let names = pom []
-    in
-    close_in ic;
     get_atp_info names
-  with _ ->
+  with
+  | Parse_error ln ->
+     raise (HammerError
+              ("Failed to parse a premise name in CVC4 output: " ^ ln))
+  | _ ->
     raise (HammerError "Failed to extract CVC4 data")
 
 (******************************************************************************)
@@ -383,8 +448,8 @@ let call_provers_par fname ofname =
   let time = float_of_int !Opt.atp_timelimit
   in
   match Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs with
-  | None -> raise (HammerFailure "ATPs failed to find a proof")
-  | Some x -> x
+  | None, _ -> raise (HammerFailure "ATPs failed to find a proof")
+  | Some x, _ -> x
 
 (******************************************************************************)
 (* Main functions *)
@@ -444,7 +509,7 @@ let minimize info hyps deps goal =
     let time = (float_of_int !Opt.atp_timelimit)
     in
     match Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs with
-    | None ->
+    | None, _ ->
        begin
          if !Opt.debug_mode then
            begin
@@ -456,7 +521,7 @@ let minimize info hyps deps goal =
          clean ();
          info
        end
-    | Some (pname2, info2) -> clean (); pom pname2 info2
+    | Some (pname2, info2), _ -> clean (); pom pname2 info2
   in
   pom "" info
 
@@ -478,22 +543,7 @@ let predict deps1 hyps deps goal =
   try
     let (pname, info) = call fname ofname in
     clean ();
-    if !Opt.gs_mode = 0 then
-      begin
-        Msg.info(pname ^ " succeeded");
-        let info =
-          if List.length info.deps >= !Opt.minimize_threshold then
-            minimize info hyps deps goal
-          else
-            info
-        in
-        let msg = prn_atp_info info in
-        if msg <> "" then
-          Msg.info msg;
-        info
-      end
-    else
-      info
+    (pname, info)
   with e ->
     clean ();
     raise e

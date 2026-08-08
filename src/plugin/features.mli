@@ -13,7 +13,8 @@ val extract : hhdef list (* hyps *) -> hhdef list (* defs *) -> hhdef (* goal *)
 (* `choose_given_lemmas` selects the premises for the ATPs based on
    the given lemmas: the lemmas themselves plus the definitions
    directly referenced by the goal, the hypotheses or the lemmas.
-   The given lemmas must occur in the defs list. *)
+   Callers that accept arbitrary user lemmas should append lemmas missing from
+   the search results to the defs list before calling this function. *)
 val choose_given_lemmas : hhdef list (* hyps *) -> hhdef list (* defs *) ->
   hhdef list (* lemmas *) -> hhdef (* goal *) ->
   hhdef list (* premises *)
@@ -21,6 +22,11 @@ val choose_given_lemmas : hhdef list (* hyps *) -> hhdef list (* defs *) ->
 val run_predict : string (* file name (from `extract`) *) -> hhdef list (* defs *) ->
   int (* pred_num *) -> string (* pred_method *) ->
   hhdef list (* predictions *)
+
+(* Add a few (capped) definitions directly mentioned by the goal or the
+   hypotheses to the ML predictions. *)
+val add_direct_goal_dependencies : hhdef list (* hyps *) -> hhdef list (* defs *) ->
+  hhdef (* goal *) -> hhdef list (* predictions *) -> hhdef list
 
 (* `clean` removes the temporary files created by `extract` *)
 val clean : string (* file name  *) -> unit

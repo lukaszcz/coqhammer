@@ -1,0 +1,95 @@
+# Lemmas used for the false-conjecture consistency check on this corpus.
+# See eval/corpora/stdlib-regression/consistency-lemmas.txt for why the check
+# runs against a curated list rather than every goal in the corpus.
+#
+# Produced by curating the generated ATP problems: each conjecture was
+# replaced with $false and both E prover and Vampire were run at a longer
+# timeout (10s) than the 2s check, so a lemma whose refutation is merely slow
+# cannot pass here and fire during a run.  Only lemmas both provers left
+# unrefuted are listed; a vacuously true lemma (contradictory hypotheses) is
+# refutable however faithful the translation is and is excluded.
+#
+# The corpus is small enough that every generated goal was a candidate;
+# the survivors are listed.
+#
+# Curated against the knn-32 problems.  Vacuity depends on a goal's own
+# hypotheses, not on which premises were selected, so one premise directory
+# covers them all; a refutation appearing at a larger premise count during
+# the check is a real finding about the translation rather than a gap here.
+#
+# Curation verdicts: 71 kept, 0 refutable-from-axioms, 0 no-result.
+#
+# One fully qualified lemma name per line; blank lines and # comments ignored.
+# Names must match the generated problem file names without the .p suffix.
+
+Equations.Examples.Equations_Tutorial_VeriMag.BuildingUp.app_assoc
+Equations.Examples.Equations_Tutorial_VeriMag.BuildingUp.app_nil_r
+Equations.Examples.Equations_Tutorial_VeriMag.BuildingUp.filter_true
+Equations.Examples.Equations_Tutorial_VeriMag.BuildingUp.rev_acc_eq
+Equations.Examples.Equations_Tutorial_VeriMag.neg_inv
+Equations.Examples.Equations_Tutorial_VeriMag.negb_invol
+Equations.Examples.POPLMark1a.cons_app
+Equations.Examples.POPLMark1a.env_app_extend
+Equations.Examples.POPLMark1a.env_extend_lookup
+Equations.Examples.POPLMark1a.lift_type_by_app
+Equations.Examples.POPLMark1a.lift_type_by_id
+Equations.Examples.POPLMark1a.lift_type_by_n
+Equations.Examples.POPLMark1a.lift_var_by_app
+Equations.Examples.POPLMark1a.lookup_app
+Equations.Examples.POPLMark1a.map_var_a
+Equations.Examples.POPLMark1a.map_var_b
+Equations.Examples.POPLMark1a.sa_env_refl
+Equations.Examples.POPLMark1a.sa_narrowing
+Equations.Examples.POPLMark1a.sa_refl
+Equations.Examples.POPLMark1a.sa_toname
+Equations.Examples.POPLMark1a.sa_weakening
+Equations.Examples.POPLMark1a.sa_weakening_app
+Equations.Examples.POPLMark1a.scope_le_app_len
+Equations.Examples.RoseTree.In_list_size
+Equations.Examples.RoseTree.RoseTree.elements'_equation
+Equations.Examples.RoseTree.RoseTree.elements2_equation
+Equations.Examples.RoseTree.RoseTree.elements_equation
+Equations.Examples.RoseTree.RoseTree.max_size_app
+Equations.Examples.RoseTree.map_In_spec
+Equations.Examples.accumulator.indexes_interval
+Equations.Examples.accumulator.indexes_spec
+Equations.Examples.accumulator.interval_large
+Equations.Examples.accumulator.rev_acc_eq
+Equations.Examples.bove_capretta.WithSubset.f91_ongraph_spec
+Equations.Examples.bove_capretta.f91
+Equations.Examples.bove_capretta.f91_spec
+Equations.Examples.bove_capretta.le_nle
+Equations.Examples.mutualwfrec.fn0_unfold
+Equations.Examples.mutualwfrec.fn1_unfold
+Equations.Examples.mutualwfrec.pack
+Equations.Examples.mutualwfrec.rel
+Equations.Examples.nested_mut_rec.nested_map
+Equations.Examples.nested_mut_rec.subst_subst
+Equations.Examples.ordinals.AccElim2
+Equations.Examples.string_matching.app_Associative
+Equations.Examples.string_matching.concatEquivalence
+Equations.Examples.string_matching.if_flip_helper
+Equations.Examples.string_matching.length_chunk_base
+Equations.Examples.string_matching.length_chunk_lt
+Equations.Examples.string_matching.length_list_drop
+Equations.Examples.string_matching.morphism_distribution
+Equations.Examples.views.f_elim'
+Equations.Examples.wfrec.In_filter
+Equations.Examples.wfrec.In_nubBy
+Equations.Examples.wfrec.nuBy_nodup
+Equations.Examples.wfrec.nubBy_length
+Equations.Examples.working_with_vectors.app_assoc
+Equations.Examples.working_with_vectors.app_nil_r
+Equations.Examples.working_with_vectors.app_rew_l
+Equations.Examples.working_with_vectors.app_rew_r
+Equations.Examples.working_with_vectors.congr_append
+Equations.Examples.working_with_vectors.eq_cons
+Equations.Examples.working_with_vectors.eq_rew
+Equations.Examples.working_with_vectors.simpl_rew
+Equations.Examples.working_with_vectors.to_total
+Equations.Examples.working_with_vectors.vrev_acc_invol
+Equations.Examples.working_with_vectors.vrev_acc_spec
+Equations.Examples.working_with_vectors.vrev_app
+Equations.Examples.working_with_vectors.vrev_rew
+Equations.Examples.working_with_vectors.vrev_tail_invol
+Equations.Examples.working_with_vectors.vrev_vrev_tail

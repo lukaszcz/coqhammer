@@ -5,7 +5,17 @@ CoqHammer is an automated reasoning tool for Rocq (Coq), written mostly in OCaml
 1. **coq-hammer-tactics** — the `sauto` general proof search tactic and friends (`hauto`, `qauto`, `sfirstorder`, ...). Sources: `src/lib/`, `src/tactics/`, `theories/Tactics/`.
 2. **coq-hammer** — the `hammer` tool: premise selection by machine learning, translation of goals to FOL, invocation of external ATPs (Vampire, CVC4, Eprover, Z3), and proof reconstruction with `sauto`. Sources: `src/plugin/`, `theories/Plugin/`. Depends on coq-hammer-tactics being **installed**.
 
-Each git branch targets one Rocq/Coq version. Never branch from or merge with `master` for release work — `master` tracks unstable Rocq development.
+## Branch naming conventions
+
+- **`master`** — the development branch that tracks the unstable upstream Rocq
+  `master` branch.
+- **`rocq-X.Y`** — the CoqHammer development branch targeting Rocq version
+  `X.Y` (for example, `rocq-9.2`). These branches are normally created by
+  migrating from `master`; they are not release branches.
+- **`vX.Y.Z-rocqA.B`** — a release branch for CoqHammer version `X.Y.Z`
+  targeting Rocq version `A.B` (for example, `v1.3.0-rocq9.2`). Release work
+  must start from the corresponding `rocq-A.B` development branch, not from
+  `master`.
 
 ## Build commands
 
@@ -21,20 +31,64 @@ make dune-install
 make clean
 ```
 
-The plugin build cannot proceed without an installed coq-hammer-tactics (see `Makefile.coq.plugin.local`, which links against the `coq-hammer-tactics.lib` findlib package) — hence `make` interleaves `install-tactics` between the two builds.
+`make install` is the expected workflow: it builds both packages and installs
+them into the active workspace-local opam switch under `_opam/`. The plugin
+build cannot proceed without an installed coq-hammer-tactics (see
+`Makefile.coq.plugin.local`, which links against the
+`coq-hammer-tactics.lib` findlib package) — hence `make` interleaves
+`install-tactics` between the two builds.
 
 Two small standalone binaries are built alongside the plugin and installed into the Rocq bin directory: `predict` (C++, machine-learning premise selection: kNN, naive Bayes, random forest — `src/predict/`) and `htimeout` (C, `src/htimeout/`).
+
+## Workspace-local opam switch
+
+Each AGM workspace uses its own temporary opam switch. The setup
+script creates the switch when it is missing and installs the branch's OCaml,
+Rocq, and CoqHammer dependencies.
+
+By default, the switch is tied to the current checkout:
+
+```text
+COQHAMMER_OPAM_SWITCH=$REPO_DIR
+opam prefix:              $REPO_DIR/_opam
+```
+
+The `_opam/` directory is ignored by Git and must remain available for normal
+builds, installs, and tests.
+
+Do not install CoqHammer into the default/global opam switch as a substitute;
+the plugin and tactics packages are expected to be installed into this
+workspace's `_opam` prefix.
 
 ## Tests
 
 Tests are `.v` files compiled with the **installed** plugin (`rocq c` with no `-Q`/`-R` flags), so install before testing.
 
 ```bash
-make tests            # full test suite (tests/plugin + tests/tactics)
-make quicktest        # just plugin_test.vo and tactics_test.vo
-make test-plugin
-make test-tactics
+make tests             # all tests except the deprecated legacy tactics ones
+make tests-plugin      # complete plugin suite and ATP consistency canaries
+make tests-tactics     # complete tactics suite
+make quicktest         # the fast prover-free check: unit, plugin and tactics
+make test-extraction   # the translation-shape assertions and the ATP consistency canaries
+make dune-test-plugin  # complete plugin suite via Dune
+just check             # install both packages, then run quicktest
+just check-extra       # clean, then run the complete Dune plugin suite
 ```
+
+The Make test targets depend on `make install`; when running a single test file
+directly, run `make install` first. The Make and Dune test commands use the
+installed Rocq and CoqHammer packages from the workspace's `_opam/` switch;
+they do not create a separate test installation.
+`make dune-test-plugin` performs `make install` first for the same reason.
+
+`just check` does **not** cover the translation-shape assertions. `quicktest`'s
+plugin half is `test-no-provers`, and `extraction_matches.v`,
+`extraction_deptypes.v`, `case_prop_transl.v` and `extraction_transl.v` are
+outside its `NO_PROVER_VOS` set because they discharge goals through the ATPs.
+So a change to what `coq_transl.ml` emits can leave those assertions stale while
+`just check` still passes. Run `make test-extraction` yourself after such a
+change (it needs the provers, and takes about two minutes); `just check-extra`
+also reaches them, since its Dune rule builds the whole `tests/plugin` suite.
 
 Run a single test file directly:
 
@@ -51,8 +105,7 @@ The `justfile` wraps the build/release/branch workflow. Run `just` with no
 arguments to list all recipes.
 
 Release conventions and the underlying scripts live in `scripts/` (see
-`scripts/release-lib.sh` for branch/tag/version naming). Never run release work
-from `master` — it tracks unstable Rocq (see Overview).
+`scripts/release-lib.sh` for branch/tag/version naming).
 
 ## Architecture
 
@@ -81,4 +134,10 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 
 ## Instructions
 
-- When finished, verify with `just check`
+- Do not edit CHANGES.md
+- NEVER run `git clean`, never remove `.agent-files` or `_opam`
+- Do not include session links or coding agent attribution in commit messages
+- When finished, verify with `just check`; if the change alters what the
+  translation emits, also run `make test-extraction`, which `just check` does
+  not cover
+- Do not add steps to the `check` recipe in the justfile

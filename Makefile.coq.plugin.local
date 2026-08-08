@@ -21,3 +21,4 @@ clean::
 	$(MAKE) -C eval clean
 	$(MAKE) -C tests/plugin clean
 	$(MAKE) -C tests/tactics clean
+	$(MAKE) -C tests/unit clean

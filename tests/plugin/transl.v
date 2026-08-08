@@ -10,6 +10,6 @@ Lemma lem_transl_sanity :
     (forall n, P n <-> Q n) ->
     (exists n, ~ P n /\ (n = 0 \/ True)) ->
     ~ (forall n, Q n) \/ ~ False.
-Proof. tauto. Qed.
+Proof. hammer. Qed.
 
 Hammer_transl "lem_transl_sanity".

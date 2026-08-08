@@ -1,0 +1,189 @@
+# Lemmas used for the false-conjecture consistency check on this corpus.
+# See eval/corpora/stdlib-regression/consistency-lemmas.txt for why the check
+# runs against a curated list rather than every goal in the corpus.
+#
+# Produced by curating the generated ATP problems: each conjecture was
+# replaced with $false and both E prover and Vampire were run at a longer
+# timeout (10s) than the 2s check, so a lemma whose refutation is merely slow
+# cannot pass here and fire during a run.  Only lemmas both provers left
+# unrefuted are listed; a vacuously true lemma (contradictory hypotheses) is
+# refutable however faithful the translation is and is excluded.
+#
+# Candidates were one lemma per generated module (a broad sample across
+# the stdlib slice's MSets/Sorting/Structures/Logic modules), matching the
+# stdlib-regression list's "broad sample" rationale rather than listing
+# every goal.
+#
+# Curated against the knn-32 problems.  Vacuity depends on a goal's own
+# hypotheses, not on which premises were selected, so one premise directory
+# covers them all; a refutation appearing at a larger premise count during
+# the check is a real finding about the translation rather than a gap here.
+#
+# Curation verdicts (original knn-32 curation): 143 kept, 5 refutable-from-axioms.
+# The 5 were the Proper/complement Curry paradox (IsStrOrder.lt_compat,
+# Raw2SetsOn.lt_compat, Update_OT.compare_spec, and two slower setoid/classical
+# refutations WeakFanTheorem and ForallOrdPairs_inclA): unguarded definitional
+# axioms for Proper (a diagonal, `Proper R m := R m m`) and complement (negation)
+# let the untyped happ encoding self-apply to $false.
+#
+# Root cause and fix: those definitions only reached the prover because the
+# `filter_classes` premise filter regressed to a no-op after the Stdlib->Corelib
+# split (its prefix no longer matched Corelib.Classes.*); the same regression let
+# the Hurkens universe-paradox lemmas leak via `filter_hurkens`.  With the filters
+# corrected (src/plugin/features.ml), Proper/complement and the Hurkens lemmas are
+# no longer selected, and all five formerly-refutable lemmas are consistent again
+# -- verified by regenerating the whole corpus (17430 problems, 0 inconsistent).
+# They are therefore REINSTATED below and now serve as a canary for the fix.
+# See $PROJ notes/inconsistency.md and artifacts/extraction-confirmation/README.md.
+#
+# One fully qualified lemma name per line; blank lines and # comments ignored.
+# Names must match the generated problem file names without the .p suffix.
+
+Stdlib.Logic.Berardi.AC
+Stdlib.Logic.ChoiceFacts.classical_denumerable_description_imp_fun_choice
+Stdlib.Logic.ClassicalChoice.choice
+Stdlib.Logic.ClassicalDescription.dependent_unique_choice
+Stdlib.Logic.ClassicalEpsilon.choice
+Stdlib.Logic.ClassicalFacts.Godel_Dummett_iff_right_distr_implication_over_disjunction
+Stdlib.Logic.ClassicalUniqueChoice.classic_set_in_prop_context
+Stdlib.Logic.Classical_Pred_Type.all_not_not_ex
+Stdlib.Logic.Classical_Prop.Eq_rect_eq.eq_rect_eq
+Stdlib.Logic.Classical_Prop.NNPP
+Stdlib.Logic.ConstructiveEpsilon.P_eventually_implies_acc
+Stdlib.Logic.Decidable.contrapositive
+Stdlib.Logic.Diaconescu.AC_bool_subset_to_bool
+Stdlib.Logic.Epsilon.small_drinkers'_paradox
+Stdlib.Logic.EqdepFacts.EqdepElimination.eq_rect_eq
+Stdlib.Logic.EqdepFacts.EqdepTheory.Streicher_K
+Stdlib.Logic.EqdepFacts.Streicher_K__eq_rect_eq
+Stdlib.Logic.Eqdep_dec.DecidableEqDep.Streicher_K
+Stdlib.Logic.Eqdep_dec.DecidableEqDepSet.Streicher_K
+Stdlib.Logic.Eqdep_dec.EqdepDec.nu
+Stdlib.Logic.Eqdep_dec.K_dec
+Stdlib.Logic.ExtensionalityFacts.BijComp_FunctExt
+Stdlib.Logic.FunctionalExtensionality.equal_f__functional_extensionality_dep_good
+Stdlib.Logic.HLevels.forall_hprop
+Stdlib.Logic.HLevelsBase.and_hprop
+Stdlib.Logic.Hurkens.NoRetractFromSmallPropositionToProp.mparadox
+Stdlib.Logic.Hurkens.NoRetractFromTypeToProp.Paradox.up_down
+Stdlib.Logic.Hurkens.NoRetractFromTypeToProp.paradox
+Stdlib.Logic.Hurkens.NoRetractToModalProposition.modal
+Stdlib.Logic.Hurkens.NoRetractToNegativeProp.paradox
+Stdlib.Logic.Hurkens.PropNeqType.paradox
+Stdlib.Logic.Hurkens.TypeNeqSmallType.paradox
+Stdlib.Logic.IndefiniteDescription.functional_choice
+Stdlib.Logic.JMeq.JMeq_congr
+Stdlib.Logic.ProofIrrelevanceFacts.ProofIrrelevanceTheory.Eq_rect_eq.eq_rect_eq
+Stdlib.Logic.ProofIrrelevanceFacts.ProofIrrelevanceTheory.subsetT_eq_compat
+Stdlib.Logic.PropExtensionality.proof_irrelevance
+Stdlib.Logic.PropExtensionalityFacts.PredExt_imp_PropExt
+Stdlib.Logic.PropFacts.injection_is_involution_in_Prop
+Stdlib.Logic.SetoidChoice.representative_choice
+Stdlib.Logic.StrictProp.Spr1_inj
+Stdlib.Logic.WKL.PreWeakKonigsLemma
+Stdlib.Logic.WeakFan.WeakFanTheorem
+Stdlib.MSets.MSetAVL.MakeRaw.add_ok
+Stdlib.MSets.MSetDecide.WDecideOn.MSetDecideAuxiliary.dec_In
+Stdlib.MSets.MSetDecide.WDecideOn.MSetDecideTestCases.eq_chain_test
+Stdlib.MSets.MSetDecide.WDecideOn.MSetLogicalFacts.test_pull
+Stdlib.MSets.MSetEqProperties.WEqPropertiesOn.Bool.Comp'
+Stdlib.MSets.MSetEqProperties.WEqPropertiesOn.add_cardinal_1
+Stdlib.MSets.MSetFacts.WFactsOn.Empty_m
+Stdlib.MSets.MSetGenTree.Props.In_1
+Stdlib.MSets.MSetInterface.MakeListOrdering.cons_CompSpec
+Stdlib.MSets.MSetInterface.MakeSetOrdering.lt_add_eq
+Stdlib.MSets.MSetInterface.Raw2SetsOn.lt_compat
+Stdlib.MSets.MSetInterface.SetsOn.Spec.choose_spec3
+Stdlib.MSets.MSetInterface.WRaw2SetsOn.eq_equiv
+Stdlib.MSets.MSetInterface.WRawSets.eq_equiv
+Stdlib.MSets.MSetInterface.WSetsOn.In_compat
+Stdlib.MSets.MSetInterface.WSetsOn.Spec.add_spec
+Stdlib.MSets.MSetList.MakeRaw.In_compat
+Stdlib.MSets.MSetList.MakeWithLeibniz.eq_leibniz_list
+Stdlib.MSets.MSetList.OrderedTypeWithLeibniz.eq_leibniz
+Stdlib.MSets.MSetPositive.PositiveSet.In_compat
+Stdlib.MSets.MSetProperties.OrdProperties.add_fold
+Stdlib.MSets.MSetProperties.WPropertiesOn.Add_Equal
+Stdlib.MSets.MSetRBT.BalanceProps.add_rb
+Stdlib.MSets.MSetRBT.MSetRemoveMin.remove_min_spec1
+Stdlib.MSets.MSetRBT.MakeRaw.INV_drop
+Stdlib.MSets.MSetToFiniteSet.WS_to_Finite_set.Add_Add
+Stdlib.Program.Combinators.compose_assoc
+Stdlib.Program.Equality.JMeq_eq_refl
+Stdlib.Program.Subset.match_eq_rewrite
+Stdlib.Program.WfExtensionality.WfExtensionality.fix_sub_eq_ext
+Stdlib.Sorting.CPermutation.CPermutation_Exists
+Stdlib.Sorting.Heap.invert_heap
+Stdlib.Sorting.Mergesort.NatOrder.leb_total
+Stdlib.Sorting.Mergesort.Sort.LocallySorted_sort
+Stdlib.Sorting.PermutEq.NoDup_permut
+Stdlib.Sorting.PermutSetoid.NoDupA_equivlistA_permut
+Stdlib.Sorting.Permutation.NoDup_Permutation
+Stdlib.Sorting.SetoidList.ForallOrdPairs_inclA
+Stdlib.Sorting.SetoidPermutation.NoDupA_equivlistA_PermutationA
+Stdlib.Sorting.Sorted.HdRel_inv
+Stdlib.Structures.BoolOrder.false_le
+Stdlib.Structures.DecidableType.KeyDecidableType.InA_eqk
+Stdlib.Structures.DecidableTypeEx.PairDecidableType.eq_refl
+Stdlib.Structures.Equalities.BoolEqualityFacts.eqb_compat
+Stdlib.Structures.Equalities.EqbSpec.eqb_eq
+Stdlib.Structures.Equalities.IsEq.eq_equiv
+Stdlib.Structures.EqualitiesFacts.KeyDecidableType.InA_eqk
+Stdlib.Structures.GenericMinMax.GenericMinMax.ge_not_lt
+Stdlib.Structures.GenericMinMax.HasMax.max_l
+Stdlib.Structures.GenericMinMax.HasMin.min_l
+Stdlib.Structures.GenericMinMax.MinMaxLogicalProperties.le_max_l
+Stdlib.Structures.GenericMinMax.MinMaxProperties.max_min_antimonotone
+Stdlib.Structures.GenericMinMax.TOMaxEqDec_to_Compare.compare_spec
+Stdlib.Structures.OrderedType.KeyOrderedType.InA_eqke_eqk
+Stdlib.Structures.OrderedType.OrderedTypeFacts.In_Inf
+Stdlib.Structures.OrderedType.OrderedTypeFacts.IsTO.le_lteq
+Stdlib.Structures.OrderedTypeAlt.OrderedTypeAlt.compare_sym
+Stdlib.Structures.OrderedTypeAlt.OrderedType_from_Alt.eq_refl
+Stdlib.Structures.OrderedTypeEx.Ascii_as_OT.cmp_antisym
+Stdlib.Structures.OrderedTypeEx.N_as_OT.lt_not_eq
+Stdlib.Structures.OrderedTypeEx.Nat_as_OT.lt_not_eq
+Stdlib.Structures.OrderedTypeEx.PairOrderedType.lt_not_eq
+Stdlib.Structures.OrderedTypeEx.PositiveOrderedTypeBits.bits_lt_antirefl
+Stdlib.Structures.OrderedTypeEx.Positive_as_OT.lt_not_eq
+Stdlib.Structures.OrderedTypeEx.String_as_OT.cmp_antisym
+Stdlib.Structures.OrderedTypeEx.UsualOrderedType.eq_refl
+Stdlib.Structures.OrderedTypeEx.Z_as_OT.lt_not_eq
+Stdlib.Structures.Orders.CmpSpec.compare_spec
+Stdlib.Structures.Orders.Compare2EqBool.eqb_eq
+Stdlib.Structures.Orders.IsStrOrder.lt_compat
+Stdlib.Structures.Orders.LeIsLtEq.le_lteq
+Stdlib.Structures.Orders.LebIsTotal.leb_total
+Stdlib.Structures.Orders.LebIsTransitive.leb_trans
+Stdlib.Structures.Orders.LebSpec.leb_le
+Stdlib.Structures.Orders.LtIsTotal.lt_total
+Stdlib.Structures.Orders.OT_to_Full.le_lteq
+Stdlib.Structures.Orders.TTLB_to_OTF.eq_equiv
+Stdlib.Structures.OrdersAlt.Backport_OT.lt_not_eq
+Stdlib.Structures.OrdersAlt.OT_from_Alt.compare_spec
+Stdlib.Structures.OrdersAlt.OT_to_Alt.compare_Eq
+Stdlib.Structures.OrdersAlt.OrderedTypeAlt.compare_sym
+Stdlib.Structures.OrdersAlt.Update_OT.compare_spec
+Stdlib.Structures.OrdersEx.Ascii_as_OT.compare_spec
+Stdlib.Structures.OrdersEx.PairOrderedType.compare_spec
+Stdlib.Structures.OrdersEx.PositiveOrderedTypeBits.bits_lt_antirefl
+Stdlib.Structures.OrdersEx.String_as_OT.compare_spec
+Stdlib.Structures.OrdersFacts.BoolOrderFacts.eqb_compare
+Stdlib.Structures.OrdersFacts.CompareBasedOrderFacts.compare_eq
+Stdlib.Structures.OrdersFacts.CompareFacts.compare_antisym
+Stdlib.Structures.OrdersFacts.OrderedTypeFacts.compare_ge_iff
+Stdlib.Structures.OrdersFacts.OrderedTypeFullFacts.compare_ge_iff
+Stdlib.Structures.OrdersFacts.OrderedTypeRev.compare_spec
+Stdlib.Structures.OrdersFacts.OrderedTypeTest.eq_is_nlt_ngt
+Stdlib.Structures.OrdersLists.KeyOrderedType.Inf_eq
+Stdlib.Structures.OrdersLists.OrderedTypeLists.In_Inf
+Stdlib.Structures.OrdersTac.OrderFacts.eq_neq
+Stdlib.Wellfounded.Disjoint_Union.acc_A_sum
+Stdlib.Wellfounded.Inclusion.Acc_incl
+Stdlib.Wellfounded.Inverse_Image.Acc_inverse_image
+Stdlib.Wellfounded.Lexicographic_Exponentiation.acc_app
+Stdlib.Wellfounded.Lexicographic_Product.Acc_swapprod
+Stdlib.Wellfounded.List_Extension.Acc_list_ext
+Stdlib.Wellfounded.Transitive_Closure.Acc_inv_trans
+Stdlib.Wellfounded.Union.Acc_union
+Stdlib.Wellfounded.Well_Ordering.le_WO_inv

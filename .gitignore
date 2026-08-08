@@ -22,6 +22,11 @@ Makefile.coq.mathcomp
 Makefile.coq.mathcomp.bak
 Makefile.coq.mathcomp.conf
 META
+.filestoinstall
+
+# Hammer_dump TPTP problem dumps (the test harness redirects these to a temp
+# directory; this only catches manual/default dumps run inside the tree).
+tests/plugin/*.p
 
 *.annot
 *.cmo
@@ -48,5 +53,14 @@ setup.log
 /src/hammer.ml
 .merlin
 *.install
-.agent-files
 _opam/
+/_check-install/
+
+# agents
+.agent-files
+.claude
+.codex
+.pi
+
+# python files
+__pycache__

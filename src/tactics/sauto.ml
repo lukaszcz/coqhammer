@@ -332,6 +332,7 @@ let einstering_tac () = Utils.ltac_apply "Tactics.einstering" []
 let f_equal_tac () = Utils.ltac_apply "Tactics.f_equal_tac" []
 let simpl_sigma_tac () = Utils.ltac_apply "Tactics.simpl_sigma" []
 let generalize_proofs_tac () = Utils.ltac_apply "Tactics.generalize_proofs" []
+let uip_rewrite_tac () = Utils.ltac_apply "Tactics.uip_rewrite" []
 let unfold_local_defs_tac () = Utils.ltac_apply "Tactics.unfold_local_defs" []
 
 (*****************************************************************************************)
@@ -818,6 +819,7 @@ let simplify opts =
       opt opts.s_eager_case_splitting (case_splitting true opts) <~>
       simpl_tac opts <~>
       reduce_concl opts <~>
+      opt opts.s_dep (uip_rewrite_tac ()) <~>
       (Tacticals.tclPROGRESS
          begin
            opt opts.s_genproofs (generalize_proofs_tac ()) <*>
@@ -840,7 +842,9 @@ let simplify opts =
   <*> Tacticals.tclTRY opts.s_solve_tac
 
 let simplify_concl opts =
-  (reduce_concl opts <~> autorewriting false opts) <*>
+  (reduce_concl opts <~>
+     opt opts.s_dep (uip_rewrite_tac ()) <~>
+       autorewriting false opts) <*>
     if opts.s_eager_case_splitting then
       Tacticals.tclTRY (Tacticals.tclPROGRESS (case_splitting false opts) <*> simplify opts)
     else

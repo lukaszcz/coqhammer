@@ -132,8 +132,55 @@ and hhterm_of_precdeclaration (a,b,c) =
 let get_type_of env evmap t =
   EConstr.to_constr evmap (Retyping.get_type_of env evmap (EConstr.of_constr t))
 
+(* A primitive projection [c.(p)] has no representation the case translation
+   understands: [Coq_convert] turns it into an [unsupported__] atom, which then
+   stands as the scrutinee of the surrounding dependent match and makes the case
+   scrutinee type escape its normalized scope.  Put every projection back in its
+   compatibility form -- the projection constant applied to the record's
+   parameters and value -- before encoding.  Retyping reads the parameters off
+   the record value's type, so the value has to be typed in its own local
+   context: thread the context through the binders and expand bottom up. *)
+let expand_projections env sigma c =
+  let rec aux env c =
+    match EConstr.kind sigma c with
+    | Constr.Proj (p, _, s) ->
+       (* [expand_projection] reconstructs the record's inductive arguments from
+          the type of [s]; those arguments may themselves contain projections,
+          so re-traverse the whole compatibility application. *)
+       aux env (Retyping.expand_projection env sigma p (aux env s) [])
+    | _ ->
+       Termops.map_constr_with_full_binders env sigma
+         EConstr.push_rel aux env c
+  in
+  aux env c
+
+let without_projections env evmap t =
+  try EConstr.to_constr evmap (expand_projections env evmap (EConstr.of_constr t))
+  with e when CErrors.noncritical e -> t
+
+(* A primitive projection's own compatibility constant is defined by that very
+   projection ([fun params r => r.(p)]), so expanding it would rewrite the
+   constant to a reference to itself and loop.  Detect exactly that shape -- a
+   run of lambdas ending in [p] applied to the last bound variable, with [p]'s
+   compatibility constant being the very constant [c] we are defining.  Such a
+   constant is treated as opaque (see [hhproof_of]): its body is the projection
+   and carries no first-order content, and unfolding it into a match scrutinee
+   position would only reintroduce the unsupported projection the expansion is
+   meant to eliminate.  A body that merely happens to head with some other
+   projection is still expanded, so projections nested deeper inside it are not
+   left behind. *)
+let rec strip_lambda t =
+  match Constr.kind t with
+  | Constr.Lambda (_, _, b) -> strip_lambda b
+  | _ -> t
+
+let is_self_projection env c b =
+  match Constr.kind (strip_lambda b) with
+  | Constr.Proj (p, _, _) -> Environ.QConstant.equal env (Projection.constant p) c
+  | _ -> false
+
 (* only for constants *)
-let hhproof_of c =
+let hhproof_of env sigma c =
   (* [body_of_constant] may raise [Not_found] when the opaque proof body
      is not accessible in the current process. This happens with parallel
      proof processing in an IDE (e.g. CoqIDE), where opaque proofs are
@@ -141,7 +188,9 @@ let hhproof_of c =
      here (issue #86). A constant whose body cannot be accessed is treated
      as an axiom. *)
   begin match Utils.body_of_constant c with
-  | Some (b, _, _) -> hhterm_of b
+  | Some (b, _, _) ->
+     if is_self_projection env c b then mk_id "$Axiom"
+     else hhterm_of (without_projections env sigma b)
   | None -> mk_id "$Axiom"
   | exception Not_found -> mk_id "$Axiom"
   end
@@ -163,7 +212,7 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
     | Names.GlobRef.VarRef v -> Id.to_string v
   in
   let term = match glob_ref with
-    | Names.GlobRef.ConstRef c -> lazy (hhproof_of c)
+    | Names.GlobRef.ConstRef c -> lazy (hhproof_of env sigma c)
     | _ -> lazy (mk_id "$Axiom")
   in
   let opaque = match glob_ref with
@@ -174,13 +223,13 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
      let l = Str.split (Str.regexp "\\.") filename_aux in
      Filename.dirname (String.concat "/" l)
   in
-  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of ty), term))
+  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of (without_projections env sigma ty)), term))
 
 let hhdef_of_hyp env sigma (id, maybe_body, ty) =
   let kind = get_type_of env sigma ty in
   let body =
     match maybe_body with
-    | Some b -> lazy (hhterm_of b)
+    | Some b -> lazy (hhterm_of (without_projections env sigma b))
     | None -> lazy (mk_id "$Axiom")
   in
   let opaque =
@@ -188,7 +237,8 @@ let hhdef_of_hyp env sigma (id, maybe_body, ty) =
     | Some b -> false
     | None -> true
   in
-  (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind, lazy (hhterm_of ty), body)
+  (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind,
+   lazy (hhterm_of (without_projections env sigma ty)), body)
 
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
@@ -203,10 +253,11 @@ let get_hyps gl =
   List.map (Hhlib.comp (hhdef_of_hyp env sigma) make_good) (Proofview.Goal.hyps gl)
 
 let get_goal gl =
+  let env = Proofview.Goal.env gl and sigma = Proofview.Goal.sigma gl in
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    true,
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (hhterm_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))),
+   lazy (hhterm_of (without_projections env sigma (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
    lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
@@ -529,6 +580,26 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
                         (set_eager_opts false
                            (set_brefl_opts true (hauto_s_opts ())))) with
                      s_directed_rewriting = false }))
+  and rhdauto_lq_dep =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_dep_opts true
+                      (set_quick_opts true
+                         (set_eager_opts false (hauto_s_opts ()))))))
+  and rhauto_dep =
+    usolve (use_deps <*>
+              sauto (mkopts (set_dep_opts true (hauto_s_opts ()))))
+  and rsdauto_lq_dep =
+    usolve (use_deps <*>
+              sauto
+                (mkopts
+                   (set_dep_opts true
+                      (set_quick_opts true
+                         (set_eager_opts false (default_s_opts ()))))))
+  and rsauto_dep =
+    usolve (use_deps <*>
+              sauto (mkopts (set_dep_opts true (default_s_opts ()))))
   and rhbfcrush =
     usolve (use_deps <*> fcrush (mkopts (set_brefl_opts true (hauto_s_opts ()))))
   and rhbfcrush_nodrew =
@@ -647,6 +718,11 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
         (rhbauto_nodrew, "hauto brefl: on drew: off");
         (rhbauto_norew, "hauto brefl: on drew: off")
       ];
+      [ (rhdauto_lq_dep, "hauto lq: on dep: on");
+        (rhauto_dep, "hauto dep: on");
+        (rsdauto_lq_dep, "sauto lq: on dep: on");
+        (rsauto_dep, "sauto dep: on")
+      ];
   ]
   in
   let tactics =
@@ -672,143 +748,216 @@ let run_tactics clear_ids deps defs inverts msg_success msg_fail msg_batch =
     Hhpartac.partac limit (List.map fst tacs)
       begin fun k tac ->
         if k >= 0 then
-          f_success (snd (List.nth tacs k)) tac
+          let name = snd (List.nth tacs k) in
+          (* The worker only reports which tactic succeeded. The tactic must be
+             replayed in the parent process to produce the proof term, and that
+             replay can still fail. Restore the original goal and continue with
+             the remaining reconstruction batches in that case. *)
+          Proofview.tclORELSE
+            (Proofview.tclBIND tac
+               begin fun result ->
+                 f_success name;
+                 Proofview.tclUNIT result
+               end)
+            (fun _ -> f_failure ())
         else
           f_failure ()
       end
   in
   let rec hlp k lst =
     match lst with
-    | [] ->
-       begin
-         msg_fail ();
-         Tacticals.tclIDTAC
-       end
+    | [] -> msg_fail ()
     | tacs :: ts ->
        msg_batch k;
-       run !Opt.reconstr_timelimit tacs
-         begin fun name tac ->
-           msg_success name;
-           tac
-         end
+       run !Opt.reconstr_timelimit tacs msg_success
          begin fun () ->
            hlp (k + 1) ts
          end
   in
-  run 1 pretactics
-    begin fun name tac ->
-      msg_success name;
-      tac
-    end
+  run 1 pretactics msg_success
     begin fun () ->
       hlp 1 tactics
     end
 
 (* Runs jobs from `seq` in parallel, each invoking one ATP on the
    premises returned by its selection function. Each element of `seq`
-   is: (prover description, enabled, enabled option ref, premise
-   selection function). *)
-let run_gs_provers hyps deps goal clean seq =
-  let jobs =
-    List.map
-      begin fun (pname, enabled, pref, select) _ ->
-        if not enabled then
-          Unix._exit 1;
-        Opt.vampire_enabled := false;
-        Opt.eprover_enabled := false;
-        Opt.z3_enabled := false;
-        Opt.cvc4_enabled := false;
-        pref := true;
-        Opt.parallel_mode := false;
-        try
-          let deps1 = select () in
-          (* All hypotheses are always passed to the ATPs (only deps
-             are subject to premise selection) *)
-          let info = Provers.predict deps1 hyps deps goal in
-          Msg.info (pname ^ " succeeded");
-          info
-        with
-        | HammerError(msg) ->
-           Msg.error ("Hammer error: " ^ msg);
-           Unix._exit 1
-        | _ ->
-           Unix._exit 1
-      end
-      (Hhlib.take !Opt.gs_mode (List.filter (fun (_, enabled, _, _) -> enabled) seq))
+   is: (index, (prover description, enabled, enabled option ref,
+   selection function)). *)
+(* Reports the prover that succeeded and what it used.  Both prover paths end
+   here so that the message, the minimization and the dependency listing stay
+   in step; the greedy schedule reports from the parent, once the winner is
+   known, rather than from each child that happened to finish. *)
+let report_success pname info hyps deps goal =
+  Msg.info (pname ^ " succeeded");
+  let info =
+    if List.length info.Provers.deps >= !Opt.minimize_threshold then
+      Provers.minimize info hyps deps goal
+    else
+      info
   in
-  let time = (float_of_int !Opt.atp_timelimit) *. 1.5
-  in
-  Msg.info ("Running provers (" ^ string_of_int !Opt.gs_mode ^ " threads)...");
-  let ret =
-    try
-      Parallel.run_parallel (fun _ -> ()) (fun _ -> ()) time jobs
-    with e ->
-      clean (); raise e
-  in
-  match ret with
-  | None -> clean (); raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
-  | Some info ->
-     begin
-       let info =
-         if List.length info.Provers.deps >= !Opt.minimize_threshold then
-           Provers.minimize info hyps deps goal
-         else
-           info
-       in
-       clean ();
-       let msg = Provers.prn_atp_info info in
-       if msg <> "" then
-         Msg.info msg;
-       info
-     end
+  let msg = Provers.prn_atp_info info in
+  if msg <> "" then
+    Msg.info msg;
+  info
 
-let do_predict hyps deps goal =
+let run_gs_provers hyps deps goal clean seq =
+  let candidates = List.filter (fun (_, (_, enabled, _, _)) -> enabled) seq in
+  let rec split_batch n lst acc =
+    if n <= 0 then (List.rev acc, lst)
+    else
+      match lst with
+      | [] -> (List.rev acc, [])
+      | x :: xs -> split_batch (n - 1) xs (x :: acc)
+  in
+  let failure () =
+    clean ();
+    raise (HammerFailure "ATPs failed to find a proof.\nYou may try increasing the ATP time limit with 'Set Hammer ATPLimit N' (default: 20s).")
+  in
+  let run_batches tried candidates =
+    match split_batch !Opt.gs_mode candidates [] with
+    | [], _ -> failure ()
+    | enabled_seq, _ ->
+       let failed = ref [] in
+       let report_failed idx =
+         if not (List.mem idx !failed) then
+           failed := idx :: !failed
+       in
+       let jobs =
+         List.map
+           begin fun (idx, (pname, enabled, pref, select)) progress ->
+             if not enabled then
+               begin
+                 progress idx;
+                 Unix._exit 1
+               end;
+             Opt.vampire_enabled := false;
+             Opt.eprover_enabled := false;
+             Opt.z3_enabled := false;
+             Opt.cvc4_enabled := false;
+             pref := true;
+             Opt.parallel_mode := false;
+             try
+               let deps1 = select () in
+               (* All hypotheses are always passed to the ATPs (only deps
+                  are subject to premise selection) *)
+               (* The schedule's own label names the premise selection this
+                  slot used, which the prover itself knows nothing about. *)
+               let (_, info) = Provers.predict deps1 hyps deps goal in
+               (idx, pname, info)
+             with
+             | HammerError(msg) ->
+                Msg.error ("Hammer error: " ^ msg);
+                progress idx;
+                Unix._exit 1
+             | _ ->
+                progress idx;
+                Unix._exit 1
+           end
+           enabled_seq
+       in
+       let time = (float_of_int !Opt.atp_timelimit) *. 1.5 in
+       Msg.info ("Running provers (" ^ string_of_int (List.length enabled_seq) ^ " threads)...");
+       let ret =
+         try
+           Parallel.run_parallel report_failed (fun _ -> ()) time jobs
+         with e ->
+           clean (); raise e
+       in
+       match ret with
+       | None, _ ->
+          failure ()
+       | Some (idx, pname, info), unfinished ->
+          begin
+            let unfinished_idx =
+              List.map
+                (fun pos -> fst (List.nth enabled_seq pos))
+                unfinished
+            in
+            (* Explicit failure reports take precedence because [unfinished]
+               is deliberately an over-approximation. *)
+            let preempted =
+              List.filter
+                (fun unfinished_idx ->
+                   unfinished_idx <> idx &&
+                   not (List.mem unfinished_idx !failed))
+                unfinished_idx
+            in
+            clean ();
+            let info = report_success pname info hyps deps goal in
+            (idx :: (!failed @ tried), preempted, info)
+          end
+  in
+  run_batches [] candidates
+
+let greedy_predictor_sequence () =
+  [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
+   ("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
+   ("CVC4 (knn-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
+   ("CVC4 (knn-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 256);
+   ("Vampire (nbayes-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 64);
+   ("CVC4 (nbayes-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 256);
+   ("Eprover (nbayes-64)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 64);
+   ("Z3 (nbayes-128)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
+   ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
+   ("CVC4 (nbayes-32)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 32);
+   ("CVC4 (nbayes-1024)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 1024);
+   ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
+   ("Vampire (nbayes-128)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 128);
+   ("Eprover (knn-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 128);
+   ("Vampire (nbayes-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
+   ("Z3 (knn-64)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
+   ("Vampire (knn-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
+   ("Eprover (nbayes-32)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 32);
+   ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
+   ("CVC4 (nbayes-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 64);
+   ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
+   ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
+   ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
+
+(* The order fixes the indices [do_choice] launches its jobs under, so
+   [retry_available] must compute retry availability from this very sequence:
+   a membership or order mismatch would test indices that no longer correspond
+   to the launched jobs. *)
+let choice_prover_sequence () =
+  [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled);
+   ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled);
+   ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
+   ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
+
+let greedy_selected_deps hyps deps goal pred_method preds_num fname =
+  let predicted = Features.run_predict fname deps preds_num pred_method in
+  Features.add_direct_goal_dependencies hyps deps goal predicted
+
+let dump_deps hyps deps goal =
+  (* Dumping is parameterized by [Opt.predict_method] and
+     [Opt.predictions_num] (not by the greedy ATP search schedule), so callers
+     such as [hammer_hook] can generate distinct problem sets for each
+     requested predictor/count even when GSMode is enabled. *)
+  Features.predict hyps deps goal
+
+let do_predict tried hyps deps goal =
   if !Opt.gs_mode > 0 then
-    let greedy_sequence =
-      [("CVC4 (nbayes-128)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 128);
-       ("Vampire (knn-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 1024);
-       ("CVC4 (knn-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 64);
-       ("CVC4 (knn-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "knn", 256);
-       ("Vampire (nbayes-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 64);
-       ("CVC4 (nbayes-256)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 256);
-       ("Eprover (nbayes-64)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 64);
-       ("Z3 (nbayes-128)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 128);
-       ("Vampire (knn-64)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 64);
-       ("CVC4 (nbayes-32)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 32);
-       ("CVC4 (nbayes-1024)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 1024);
-       ("Z3 (nbayes-32)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 32);
-       ("Vampire (nbayes-128)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 128);
-       ("Eprover (knn-128)", !Opt.eprover_enabled, Opt.eprover_enabled, "knn", 128);
-       ("Vampire (nbayes-32)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 32);
-       ("Z3 (knn-64)", !Opt.z3_enabled, Opt.z3_enabled, "knn", 64);
-       ("Vampire (knn-256)", !Opt.vampire_enabled, Opt.vampire_enabled, "knn", 256);
-       ("Eprover (nbayes-32)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 32);
-       ("Z3 (nbayes-64)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 64);
-       ("CVC4 (nbayes-64)", !Opt.cvc4_enabled, Opt.cvc4_enabled, "nbayes", 64);
-       ("Eprover (nbayes-256)", !Opt.eprover_enabled, Opt.eprover_enabled, "nbayes", 256);
-       ("Vampire (nbayes-1024)", !Opt.vampire_enabled, Opt.vampire_enabled, "nbayes", 1024);
-       ("Z3 (nbayes-1024)", !Opt.z3_enabled, Opt.z3_enabled, "nbayes", 1024)]
-    in
     let fname = Features.extract hyps deps goal in
     let seq =
-      List.map
-        begin fun (pname, enabled, pref, pred_method, preds_num) ->
-          (pname, enabled, pref,
-           fun () -> Features.run_predict fname deps preds_num pred_method)
+      List.mapi
+        begin fun idx (pname, enabled, pref, pred_method, preds_num) ->
+          (idx,
+           (pname, enabled && not (List.mem idx tried), pref,
+            fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname))
         end
-        greedy_sequence
+        (greedy_predictor_sequence ())
     in
     let clean () = Features.clean fname in
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
     let deps1 = Features.predict hyps deps goal in
-    Provers.predict deps1 hyps deps goal
+    let (pname, info) = Provers.predict deps1 hyps deps goal in
+    ([], [], report_success pname info hyps deps goal)
 
-let do_choice hyps deps goal lems =
-  (* The given lemmas must occur in the deps list: the ATP premises
-     are selected from it. They may be missing from the search
-     results, e.g. because of the search blacklist or a module
-     filter. *)
+let do_choice tried hyps deps goal lems =
+  (* ATP premises are selected from [deps], so append any requested lemmas
+     missing from the search results (e.g. because of the search blacklist or a
+     module filter). *)
   let deps =
     let names = Hhlib.strset_from_lst (List.map Hh_term.get_hhdef_name deps) in
     deps @
@@ -819,16 +968,15 @@ let do_choice hyps deps goal lems =
   let deps1 = Features.choose_given_lemmas hyps deps lems goal in
   if !Opt.gs_mode > 0 then
     let seq =
-      List.map
-        (fun (pname, enabled, pref) -> (pname, enabled, pref, fun () -> deps1))
-        [("CVC4", !Opt.cvc4_enabled, Opt.cvc4_enabled);
-         ("Vampire", !Opt.vampire_enabled, Opt.vampire_enabled);
-         ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
-         ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
+      List.mapi
+        (fun idx (pname, enabled, pref) ->
+           (idx, (pname, enabled && not (List.mem idx tried), pref, fun () -> deps1)))
+        (choice_prover_sequence ())
     in
     run_gs_provers hyps deps goal (fun () -> ()) seq
   else (* Opts.gs_mode = 0 *)
-    Provers.predict deps1 hyps deps goal
+    let (pname, info) = Provers.predict deps1 hyps deps goal in
+    ([], [], report_success pname info hyps deps goal)
 
 let try_sauto () =
   if !Opt.sauto_timelimit = 0 then
@@ -851,46 +999,95 @@ let hammer_main_tac env sigma gl mode =
   let goal = get_goal gl in
   let hyps = get_hyps gl in
   let defs = get_defs env sigma in
+  let reconstruction_failure_msg =
+    "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'."
+  in
+  let retry_available tried =
+    !Opt.gs_mode > 0 &&
+    let candidates =
+      match mode with
+      | Prediction ->
+         List.mapi
+           (fun idx (_, enabled, _, _, _) -> (idx, enabled))
+           (greedy_predictor_sequence ())
+      | Choice _ ->
+         List.mapi
+           (fun idx (_, enabled, _) -> (idx, enabled))
+           (choice_prover_sequence ())
+    in
+    List.exists (fun (idx, enabled) -> enabled && not (List.mem idx tried)) candidates
+  in
   if !Opt.debug_mode then
     Msg.info ("Found " ^ string_of_int (List.length defs) ^
                 " accessible Coq objects.");
-  let info =
-    Opt.with_temp_dir
+  (* Every round adds at least its winner to [tried], and a candidate is
+     launched at most twice: once fresh and once more after preemption. *)
+  let rec attempt round tried once =
+    let (attempt_ids, preempted, info) =
+      Opt.with_temp_dir
+        begin fun () ->
+          match mode with
+          | Prediction -> do_predict tried hyps defs goal
+          | Choice glems ->
+             (* An empty lemma list is allowed: then the premises are the
+                definitions directly referenced by the goal or the
+                hypotheses. *)
+             do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
+        end
+    in
+    let promoted =
+      List.filter (fun idx -> List.mem idx once) preempted
+    in
+    let tried' = promoted @ attempt_ids @ tried in
+    let once' =
+      List.filter
+        (fun idx ->
+           not (List.mem idx promoted) && not (List.mem idx attempt_ids))
+        once @
+      List.filter (fun idx -> not (List.mem idx once)) preempted
+    in
+    let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
+    let clear_ids = hyps_to_clear env sigma gl used_ids in
+    let sdeps = List.map (Utils.constr_to_string sigma) deps
+    and sdefs = List.map Utils.constant_to_string defs
+    and sinverts = List.map Utils.inductive_to_string inverts
+    and sclear =
+      match clear_ids with
+      | [] -> ""
+      | _ -> "clear " ^ String.concat " " (List.map Id.to_string clear_ids) ^ ".\n\t"
+    in
+    Msg.info ("Reconstructing the proof...");
+    let retry_exists = retry_available tried' in
+    let can_retry = retry_exists && round < !Opt.reconstr_retries in
+    run_tactics clear_ids deps defs inverts
+      begin fun tac ->
+        Msg.info ("Tactic " ^ tac ^ " succeeded.");
+        Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
+                    tac ^ mk_lst_str " use:" sdeps ^
+                      mk_lst_str " unfold:" sdefs ^
+                        mk_lst_str " inv:" sinverts ^ ".")
+      end
       begin fun () ->
-        match mode with
-        | Prediction -> do_predict hyps defs goal
-        | Choice glems ->
-           (* An empty lemma list is allowed: then the premises are the
-              definitions directly referenced by the goal or the
-              hypotheses. *)
-           do_choice hyps defs goal (get_given_lemmas env sigma glems)
+        if can_retry then
+          begin
+            Msg.info "Proof reconstruction failed for this ATP proof; trying another ATP proof...";
+            attempt (round + 1) tried' once'
+          end
+        else
+          let msg =
+            if retry_exists && round >= !Opt.reconstr_retries then
+              reconstruction_failure_msg ^
+              "\nYou may allow more ATP-proof retries with 'Set Hammer ReconstrRetries N' (default: 3)."
+            else
+              reconstruction_failure_msg
+          in
+          raise (HammerFailure msg)
+      end
+      begin fun k ->
+        Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
       end
   in
-  let (deps, defs, inverts, used_ids) = get_tac_args env sigma info in
-  let clear_ids = hyps_to_clear env sigma gl used_ids in
-  let sdeps = List.map (Utils.constr_to_string sigma) deps
-  and sdefs = List.map Utils.constant_to_string defs
-  and sinverts = List.map Utils.inductive_to_string inverts
-  and sclear =
-    match clear_ids with
-    | [] -> ""
-    | _ -> "clear " ^ String.concat " " (List.map Id.to_string clear_ids) ^ ".\n\t"
-  in
-  Msg.info ("Reconstructing the proof...");
-  run_tactics clear_ids deps defs inverts
-    begin fun tac ->
-      Msg.info ("Tactic " ^ tac ^ " succeeded.");
-      Msg.info ("Replace the hammer tactic with:\n\t" ^ sclear ^
-                  tac ^ mk_lst_str " use:" sdeps ^
-                    mk_lst_str " unfold:" sdefs ^
-                      mk_lst_str " inv:" sinverts ^ ".")
-    end
-    begin fun () ->
-      raise (HammerFailure "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'.")
-    end
-    begin fun k ->
-      Msg.info ("Trying reconstruction batch " ^ string_of_int k ^ "...")
-    end
+  attempt 0 [] []
 
 let hammer_tac mode =
   Proofview.Goal.enter
@@ -1010,6 +1207,24 @@ let hammer_transl_tac () =
       Tacticals.tclIDTAC
     end
 
+let hammer_dump_tac fname =
+  try_goal_tactic
+    begin fun gl ->
+      let env = Proofview.Goal.env gl in
+      let sigma = Proofview.Goal.sigma gl in
+      let goal = get_goal gl in
+      let hyps = get_hyps gl in
+      let defs = get_defs env sigma in
+      let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
+      Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
+      Tacticals.tclIDTAC
+    end
+
+let hammer_dump fname ~pstate =
+  let proof = Declare.Proof.get pstate in
+  let _, _, () = Proof.run_tactic (Global.env ()) (hammer_dump_tac fname) proof in
+  ()
+
 let hammer_features name =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try
@@ -1069,7 +1284,7 @@ let hammer_hook_tac prefix name =
                   let goal = get_goal gl in
                   let hyps = get_hyps gl in
                   let defs = get_defs env sigma in
-                  let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
+                  let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
                   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
                 end
                 premises;

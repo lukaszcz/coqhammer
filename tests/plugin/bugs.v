@@ -19,9 +19,6 @@ Axiom P_Q_trans : forall x y,
 
 Lemma bug01 : R 0 -> Q 0 1 -> P 1.
 Proof.
-  intros.
-  eapply P_Q_trans.
-  2 : apply H0.
   hammer.
 Qed.
 

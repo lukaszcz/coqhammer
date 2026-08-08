@@ -3,7 +3,7 @@
 # migrate.sh <X.Y>
 #
 # Migrate CoqHammer to a new Rocq version. Run it on the branch you want to
-# branch FROM -- typically `master` (which tracks unstable Rocq):
+# branch FROM -- typically `master`, which tracks unstable Rocq development:
 #
 #   git checkout master
 #   just migrate 9.2
@@ -19,9 +19,10 @@
 #      `rocq-<X.Y>` development branch from `master` -- the same tokens the
 #      sync merge driver (scripts/sync-merge-driver.sh) normalizes, so a later
 #      `just sync` is a no-op on them:
-#        * the two *.opam files: version "<X.Y>.dev" and the Rocq dependency
-#          lines `"rocq-core" {>= "<X.Y>" & < "<next>~"}` and the matching
-#          `"rocq-stdlib"` (the deprecated `coq` package is no longer used);
+#        * the two *.opam files: version "<X.Y>.dev" and the Rocq/Coq
+#          dependency lines (split `rocq-core`/`rocq-runtime`/`rocq-stdlib`
+#          packages for Rocq >= 9.0, or the legacy `coq` package for older
+#          Coq branches);
 #        * the README title line, the CI-badge branch, and the requirement
 #          label + homepage URL;
 #        * the docker image tag in the Docker CI workflow, plus the `rocq-*` /
@@ -79,30 +80,6 @@ info "new branch:      $NEW_BRANCH"
 # 1. Resolve the toolchain for the new branch: opam package vs from-source.
 # ---------------------------------------------------------------------------
 
-# rocq_core_pkg: the opam core/meta package name for Rocq <X.Y>. Since the Rocq
-# rename (Rocq >= 9.0) it is rocq-core; the deprecated `coq` meta-package is used
-# only for the older Coq (< 9.0) branches.
-rocq_core_pkg() {
-  [ "${V%%.*}" -ge 9 ] 2>/dev/null && echo rocq-core || echo coq
-}
-
-# opam_pkg_versions <pkg>: all released opam versions of <pkg>, one per line.
-opam_pkg_versions() {
-  command -v opam >/dev/null || return 1
-  opam show "$1" -f all-versions 2>/dev/null | tr ' ,' '\n\n' | grep -E '^[0-9]'
-}
-
-# opam_newest_matching <pkg> <X.Y>: newest opam version of <pkg> in the <X.Y>
-# line (e.g. 9.2.1 for rocq-core 9.2); empty if none.
-opam_newest_matching() {
-  opam_pkg_versions "$1" | grep -E "^${2//./\\.}(\.|$)" | sort -V | tail -1
-}
-
-# opam_newest <pkg>: newest opam version of <pkg> overall; empty if none.
-opam_newest() {
-  opam_pkg_versions "$1" | sort -V | tail -1
-}
-
 # resolve_source_ref <repo-url>: print a git ref for a source build of <X.Y>,
 # preferring the latest stable release tag V<X.Y>.<z>, then the version branch
 # v<X.Y>, then the latest pre-release tag V<X.Y>+<...>. Non-zero if none found.
@@ -123,7 +100,7 @@ resolve_source_ref() {
 }
 
 TOOLCHAIN=""            # "opam" or "source"
-CORE_PKG="$(rocq_core_pkg)"
+CORE_PKG="$(rocq_core_pkg "$V")"
 CORE_OPAM_VER=""        # newest opam <X.Y> version of the core package
 ROCQ_OPAM_PACKAGES=""   # explicit pin list for env.sh; empty => rely on constraints
 STDLIB_OPAM_GUESSED=0   # 1 if an older-than-<X.Y> stdlib had to be pinned
@@ -165,27 +142,23 @@ else
   info "toolchain:       source build, Rocq ref '$ROCQ_REF', stdlib ref '$STDLIB_REF'"
 fi
 
-# Lower bound for the rocq-stdlib opam-file dependency. Normally the target Rocq
-# <X.Y>, but rocq-stdlib usually lags rocq-core on opam; when <X.Y> is not yet
-# published, fall back to the newest available stdlib line so the constraint
-# stays satisfiable -- an older stdlib builds and loads against the newer core,
-# and opam CI resolves rocq-hammer's deps against the published packages. rocq-core
-# keeps the exact <X.Y> lower bound (that package is published). Defaults to <X.Y>
-# when opam is unavailable (a source build ignores the opam constraints anyway).
-STDLIB_LB="$V"
-if [ -z "$(opam_newest_matching rocq-stdlib "$V" || true)" ]; then
-  _stdlib_newest="$(opam_newest rocq-stdlib || true)"
-  if [ -n "$_stdlib_newest" ]; then
-    STDLIB_LB="$(printf '%s\n' "$_stdlib_newest" | grep -oE '^[0-9]+\.[0-9]+')"
-  fi
+# Lower bound for the rocq-stdlib opam-file dependency. For Rocq >= 9.0 it is
+# normally the target Rocq <X.Y>, but rocq-stdlib usually lags rocq-core on opam;
+# when <X.Y> is not yet published, fall back to the newest available stdlib line
+# so the constraint stays satisfiable. Older Coq branches keep the legacy `coq`
+# dependency and do not mention the split Rocq packages.
+STDLIB_LB="$(stdlib_lower_bound "$V")"
+if [ "$CORE_PKG" = "rocq-core" ]; then
+  info "opam constraints: rocq-core/rocq-runtime >= $V, rocq-stdlib >= $STDLIB_LB (all < ${NEXT}~)"
+else
+  info "opam constraints: coq >= $V (all < ${NEXT}~)"
 fi
-info "opam constraints: rocq-core >= $V, rocq-stdlib >= $STDLIB_LB (both < ${NEXT}~)"
 
 # ---------------------------------------------------------------------------
 # 2. Build the new branch by rewriting the version tokens, without a worktree.
 #    Each file is read from $SOURCE, transformed in a temp file, hashed into a
-#    blob, and staged in a scratch index; the resulting tree becomes one commit
-#    whose parent is $SOURCE. The current working tree is never touched.
+#    blob, and written into a scratch index; the resulting tree becomes one
+#    commit whose parent is $SOURCE. The current working tree is never touched.
 # ---------------------------------------------------------------------------
 
 TMPDIR_MIG="$(mktemp -d)"
@@ -202,21 +175,10 @@ transform_opam() {
   sed -i -E "s#^version: \".*\"#version: \"${V}.dev\"#" "$1"
   # Replace whatever Rocq/Coq dependency line(s) the source flavor carries --
   # master's single "rocq-stdlib" line, an older branch's single "coq" line, or
-  # the current two-line "rocq-core"/"rocq-stdlib" form -- with the canonical
-  # two-line dependency for the target Rocq <X.Y>. rocq-stdlib takes the lower
-  # bound $STDLIB_LB (<X.Y>, or an older published line when <X.Y> lags on opam).
-  # (`nxt`, not `next`, since `next` is an awk statement.)
-  awk -v v="$V" -v nxt="$NEXT" -v slb="$STDLIB_LB" '
-    /^[[:space:]]*"(rocq-core|rocq-stdlib|coq)"[[:space:]]*[{]/ {
-      if (!done) {
-        print "  \"rocq-core\" {>= \"" v "\" & < \"" nxt "~\"}"
-        print "  \"rocq-stdlib\" {>= \"" slb "\" & < \"" nxt "~\"}"
-        done = 1
-      }
-      next
-    }
-    { print }
-  ' "$1" > "$1.mig" && mv "$1.mig" "$1"
+  # the current "rocq-core"/"rocq-runtime"/"rocq-stdlib" form -- with the
+  # canonical dependency block for the target <X.Y>. Rocq >= 9 uses the split
+  # packages; older Coq branches keep the legacy `coq` package.
+  rewrite_opam_deps "$1" "$V" "$NEXT" "$STDLIB_LB"
 }
 
 transform_readme() {
@@ -250,8 +212,9 @@ transform_mlg() {
     "$1"
 }
 
-# stage <path> <transform-fn>: transform $SOURCE:<path> and stage the result.
-stage() {
+# write_transformed <path> <transform-fn>: transform $SOURCE:<path> and write
+# the result into the scratch index.
+write_transformed() {
   local path="$1" fn="$2" mode blob work
   git cat-file -e "$SOURCE:$path" 2>/dev/null \
     || { info "  skip (absent on $SOURCE): $path"; return 0; }
@@ -264,11 +227,11 @@ stage() {
 }
 
 info "rewriting version tokens on $NEW_BRANCH:"
-stage coq-hammer.opam                     transform_opam
-stage coq-hammer-tactics.opam             transform_opam
-stage README.md                           transform_readme
-stage .github/workflows/docker-action.yml transform_docker
-stage src/plugin/g_hammer.mlg             transform_mlg
+write_transformed coq-hammer.opam                     transform_opam
+write_transformed coq-hammer-tactics.opam             transform_opam
+write_transformed README.md                           transform_readme
+write_transformed .github/workflows/docker-action.yml transform_docker
+write_transformed src/plugin/g_hammer.mlg             transform_mlg
 
 NEW_TREE="$(git write-tree)"
 SOURCE_TREE="$(git rev-parse "${SOURCE}^{tree}")"
