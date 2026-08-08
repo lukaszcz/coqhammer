@@ -176,7 +176,11 @@ let rec strip_lambda t =
 
 let is_self_projection env c b =
   match Constr.kind (strip_lambda b) with
-  | Constr.Proj (p, _, _) -> Environ.QConstant.equal env (Projection.constant p) c
+  | Constr.Proj (p, _, _) ->
+     begin match Structures.PrimitiveProjections.find_opt c with
+     | Some r -> Environ.QProjection.Repr.equal env r (Projection.repr p)
+     | None -> false
+     end
   | _ -> false
 
 (* only for constants *)
