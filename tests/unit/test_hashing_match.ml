@@ -107,6 +107,28 @@ let () =
        (mk_ctx [SortType]) (Prod(v 1, Const "A", Var(v 0)))
        [] (Prod(v 0, Const "A", Var(v 0))))
 
+(* An instance term with a free variable its own context does not bind.  The
+   capture test above covers escape from a binder inside [ctm_i]; this covers
+   escape from [cctx_i] itself, which no binder in either term accounts for.
+   [canonical] renames the context it is handed rather than deriving it from
+   the term, so a caller can produce this pair, and the equation it would close
+   over [cctx_i] would leave [z] free. *)
+let () =
+  check_subst "image escaping the instance context rejected" None
+    (Hashing.match_instance
+       (mk_ctx [SortType]) (Prod(v 1, Const "A", Var(v 0)))
+       [] (Prod(v 0, Const "A", Var "z")))
+
+(* The same instance term against a context which does bind it: the image is
+   well-scoped and the match stands, so it is the scope check and not the shape
+   of the term that rejected the pair above. *)
+let () =
+  check_subst "image bound by the instance context accepted"
+    (Some [Var "z"])
+    (Hashing.match_instance
+       (mk_ctx [SortType]) (Prod(v 1, Const "A", Var(v 0)))
+       ["z", SortType] (Prod(v 0, Const "A", Var "z")))
+
 let () =
   check_subst "inconsistent repeated pattern variable" None
     (Hashing.match_instance

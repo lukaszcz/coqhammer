@@ -174,7 +174,17 @@ let resolve_from_ctx_types pvars subst svars cctx_i =
    bound by [cctx_s] as pattern variables and returns their images, in the
    canonical order [v_CANONICAL_0 .. v_CANONICAL_(k-1)] with
    [k = List.length cctx_s], such that substituting them into [ctm_s] yields
-   [ctm_i] syntactically. *)
+   [ctm_i] syntactically.
+
+   The images are checked to be well-scoped in [cctx_i] rather than assumed to
+   be: [bind_pattern_var] rejects an image escaping an instance-side binder,
+   but that leaves the images exactly as well-scoped as [ctm_i] and the types
+   in [cctx_i] are, and nothing establishes that here.  [canonical] renames the
+   context it is handed rather than deriving it from the term, so a caller
+   which hash-conses a term against a context too short for it -- what
+   `case_aux_value' in coq_transl.ml guards against before lifting -- would
+   otherwise be handed a substitution mentioning a variable neither side of the
+   link equation binds. *)
 let match_instance cctx_s ctm_s cctx_i ctm_i =
   (* [ctx_to_vars] lists the context in the canonical order
      [v_CANONICAL_0 .. v_CANONICAL_(k-1)] *)
@@ -189,8 +199,15 @@ let match_instance cctx_s ctm_s cctx_i ctm_i =
     try
       do_match pvars subst [] ctm_s ctm_i;
       resolve_from_ctx_types pvars subst svars cctx_i;
-      Some (Array.to_list
-              (Array.map (function Some t -> t | None -> raise No_match) subst))
+      let images =
+        Array.to_list
+          (Array.map (function Some t -> t | None -> raise No_match) subst)
+      in
+      let inames = List.map fst cctx_i in
+      if List.for_all (term_fvars_subset inames) images then
+        Some images
+      else
+        None
     with No_match ->
       None
 

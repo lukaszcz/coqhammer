@@ -11,8 +11,10 @@ val canonical : coqcontext -> coqterm -> coqcontext * coqterm * namesubst
    canonical order [v_CANONICAL_0 .. v_CANONICAL_(k-1)] with
    [k = List.length cctx_s], such that substituting them into [ctm_s] yields
    [ctm_i] syntactically.  The match is capture-free: every image is
-   well-scoped in [cctx_i].  A schema term which is a bare pattern variable is
-   rejected. *)
+   well-scoped in [cctx_i], which is enforced rather than assumed -- a match
+   whose images would not be is reported as no match, so a caller may close the
+   link equation over [cctx_i] without checking.  A schema term which is a bare
+   pattern variable is rejected. *)
 val match_instance : coqcontext -> coqterm -> coqcontext -> coqterm ->
   coqterm list option
 
