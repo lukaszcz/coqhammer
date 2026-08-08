@@ -16,8 +16,11 @@
 # It uses a direction-agnostic, token-normalizing merge driver
 # (scripts/sync-merge-driver.sh) that is registered *locally* only for the
 # duration of the merge: nothing is committed to any branch's tracked state,
-# and unrelated merges are unaffected. `git rerere` is also enabled so that any
-# genuine conflict you resolve once is reapplied automatically on the next sync.
+# and unrelated merges are unaffected. Afterwards it re-imposes the current
+# branch's own version tokens on the merge result, because git bypasses the
+# driver entirely for paths it can resolve without a content merge (see
+# reflavor_merge_result below). `git rerere` is also enabled so that any genuine
+# conflict you resolve once is reapplied automatically on the next sync.
 #
 # On success the merge is left committed on the current branch for you to
 # review and push. If real (non-trivial) conflicts remain, the merge is left in
@@ -41,6 +44,9 @@ require_clean_worktree() {
 # `just sync` may run on a branch that has not yet received the scripts/ tooling
 # (e.g. the first sync onto master), where $REPO_ROOT/scripts/ would be empty.
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# shellcheck source=scripts/sync-tokens.sh
+source "$SCRIPT_DIR/sync-tokens.sh"
 
 REPO_ROOT="$(git rev-parse --show-toplevel)"
 cd "$REPO_ROOT"
@@ -118,16 +124,83 @@ restore_rerere() {
   fi
 }
 
+# ---- re-impose OUR flavor where the merge driver was bypassed -------------
+#
+# git runs a merge driver only where it needs a real 3-way *content* merge. A
+# path whose OUR side is byte-identical to the merge base is resolved by taking
+# THEIRS wholesale, and the driver never sees it -- so the source branch's
+# flavored tokens arrive unnormalized. That happens in two ways:
+#
+#   * this branch simply never touched the file (dune, justfile, AGENTS.md, ...);
+#   * there is more than one merge base, so the ort strategy first builds a
+#     *virtual* merge base by merging the real ones -- through this very driver,
+#     which normalizes the result to OUR flavor. The virtual base then matches
+#     our side exactly, and the outer merge takes theirs wholesale. The driver's
+#     own normalization is what erases the difference it needs to act on.
+#
+# Neither case can be fixed from inside the driver, so re-impose our tokens on
+# the merge result afterwards. Only the closed SYNC_FLAVORED_PATHS list is
+# touched: unlike the driver, which rewrites base and theirs by the same rule so
+# the rewrites cancel, this pass is one-sided and would corrupt a file whose
+# version numbers are history rather than flavor.
+REFLAVORED=0
+reflavor_merge_result() {
+  local ours="$1" path ref merged
+  ref="$(mktemp)"; merged="$(mktemp)"
+  for path in "${SYNC_FLAVORED_PATHS[@]}"; do
+    git cat-file -e "${ours}:${path}" 2>/dev/null || continue   # not on our side
+    [ -f "$path" ] || continue
+    git show "${ours}:${path}" > "$ref"
+    cp -- "$path" "$merged"
+    sync_tokens_read "$ref" "$path"
+    sync_tokens_apply "$merged"
+    cmp -s "$merged" "$path" && continue
+    cp -- "$merged" "$path"
+    # Leave a conflicted path unstaged: the user still has to resolve it, and
+    # it is now correctly flavored on both sides of the markers.
+    if [ -z "$(git ls-files -u -- "$path")" ]; then
+      git add -- "$path"
+    fi
+    REFLAVORED=$((REFLAVORED + 1))
+    info "  restored '$TARGET' version tokens in $path"
+  done
+  rm -f "$ref" "$merged"
+}
+
 # ---- do the merge ---------------------------------------------------------
 
 info "merging '$SOURCE' into current branch '$TARGET'"
 
+OURS_BEFORE="$(git rev-parse HEAD)"
+
+# --no-ff on purpose. A sync that fast-forwards would make this branch *become*
+# the source branch, flavor and all, and would leave HEAD pointing at a commit
+# the source branch owns -- which the token-restoring commit below must never
+# rewrite. Always recording a merge commit keeps the two branches' identities,
+# and their flavors, distinct.
 set +e
-git merge --no-edit -m "Merge ${SOURCE} into ${TARGET}" "$SOURCE"
+git merge --no-edit --no-ff -m "Merge ${SOURCE} into ${TARGET}" "$SOURCE"
 MERGE_RC=$?
 set -e
 
+reflavor_merge_result "$OURS_BEFORE"
+
 if [ "$MERGE_RC" -eq 0 ]; then
+  # The merge is already committed; fold the restored tokens into it so the
+  # branch is never left with the wrong flavor in its history. Amend only a
+  # two-parent commit built on OUR pre-merge tip -- i.e. the merge commit this
+  # run just created. Anything else belongs to another branch's history and gets
+  # a follow-up commit instead of being rewritten.
+  if [ "$REFLAVORED" -gt 0 ]; then
+    if [ "$(git rev-parse --verify --quiet 'HEAD^1' || true)" = "$OURS_BEFORE" ] \
+       && git rev-parse --verify --quiet 'HEAD^2' >/dev/null; then
+      git commit --amend --no-edit --quiet
+      info "amended the merge commit with the restored version tokens"
+    else
+      git commit --quiet -m "Restore ${TARGET} version tokens after merging ${SOURCE}"
+      info "committed the restored version tokens on top of the merge"
+    fi
+  fi
   # Clean merge: no conflicts were recorded, so there is no reason to leave
   # rerere enabled repo-wide -- put it back the way we found it.
   restore_rerere
