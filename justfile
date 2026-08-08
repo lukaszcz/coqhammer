@@ -19,10 +19,12 @@ _default:
 
 # Build and install both packages, then run the quick plugin and tactics tests
 # followed by the translation-shape assertions.  quicktest is the prover-free
-# subset CI runs; on its own it compiles none of the files that assert on the
-# emitted axioms, so a change to the translation can leave those assertions
-# stale without any target here going red.  test-extraction needs the ATPs,
-# which a development machine has.
+# subset CI runs; it reaches the assertion files that prove no goal, but not
+# extraction_matches, extraction_deptypes, case_prop_transl or
+# extraction_transl, so a change to the translation can leave the assertions
+# those four carry stale without any target here going red.  They discharge
+# their goals through the ATPs, so test-extraction -- and hence `just check` as
+# a whole, unlike quicktest -- needs the provers a development machine has.
 check:
     make install
     make quicktest
