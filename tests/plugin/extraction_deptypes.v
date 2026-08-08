@@ -214,6 +214,22 @@ Definition dstack_size (n : nat) (r : dstack 0 n) : nat :=
   | dnode m _ _ => S m
   end.
 
+(* The same hazard on an *index-free* family, where it is reached through the
+   type of the case rather than through its index guard.  [dopt dred (dtree 0)]
+   reduces to [option (dtree 0)]; [option] declares no indices, so no guard is
+   read off the scrutinee's type -- but the type of the inner match is still
+   computed by applying its return predicate to the index arguments, and
+   [dopt]'s surplus colour argument is not one.  The inner match is the
+   scrutinee of an outer match on an indexed family, whose own scrutinee type
+   only that computation can supply. *)
+Definition dopt (c : dcolor) (A : Type) : Type := option A.
+
+Definition dnested (o : dopt dred (dtree 0)) : nat :=
+  match (match o with Some t => t | None => dleaf end) with
+  | dleaf => 0
+  | dnode m _ _ => S m
+  end.
+
 Lemma extraction_dsize_leaf : dsize dleaf = 0.
 Proof. hammer. Qed.
 

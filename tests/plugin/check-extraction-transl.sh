@@ -252,6 +252,17 @@ forbid_line "dheight split equations must not mention the type-level function" '
 forbid_line "an unresolvable case scrutinee type emits no definition axiom" '^\$_def_extraction_deptypes\.dstack_size[$:]'
 require_line "a refused case still declares its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
 
+# dnested matches an indexed family on the result of a match over an index-free
+# one, so the outer scrutinee's type is whatever inference reads off the inner
+# case.  [dopt dred (dtree 0)] reduces to [option (dtree 0)]: the colour is a
+# surplus argument of the type-level function, not an index of [option], and
+# applying the inner return predicate to it would type the outer scrutinee at a
+# term-applied [dtree 0].  The auxiliary would then close over [o] and lose its
+# branch equations, so both the arity of the link and the equations are pinned.
+require_line "the inner case supplies the outer scrutinee its unapplied type" '^\$_def_extraction_deptypes\.dnested[$]link:.*= \(\$_case_extraction_deptypes\.dtree[$][0-9]+ @ \(\$_case_Corelib\.Init\.Datatypes\.option[$][0-9]+ @ 0_o\)\)\)'
+require_line "the outer case auxiliary keeps its leaf equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dleaf:'
+require_line "the outer case auxiliary keeps its node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
+
 # Corpus-wide shallowness gates for the covered constants.  WF-gated idiv
 # definitions and explicit stdlib structural snapshots are checked separately.
 forbid_line "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'

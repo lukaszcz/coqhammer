@@ -688,14 +688,17 @@ let rec telescope_length ty =
    arity before anything is emitted.  `None' means the invariant could not be
    established; it is a refusal, never an omission (see `refuse_case').
 
-   A family declaring no indices carries no such obligation: no index guard is
-   read off the scrutinee's type at all, so its shape cannot mislead and is
-   passed on untouched.  That distinction is load-bearing, because outside a
-   case predicate `coq_convert' lowers the logical inductives to the FOL formers
-   `$True', `$False', `&' and `|', and a scrutinee typed by one of them is no
-   longer an application of the inductive in any syntactic sense.  `eq' is the
-   one lowered family that does declare an index; its case translation reads the
-   guard off the lowered equation instead (see `emit_prop_case'). *)
+   A family declaring no indices is not required to expose its inductive, and
+   must not be: outside a case predicate `coq_convert' lowers the logical
+   inductives to the FOL formers `$True', `$False', `&' and `|', and a scrutinee
+   typed by one of them is no longer an application of the inductive in any
+   syntactic sense.  `eq' is the one lowered family that does declare an index;
+   its case translation reads the guard off the lowered equation instead (see
+   `emit_prop_case').  Its arguments are still truncated to the parameter
+   prefix, which is all a caller may read there -- the arguments past
+   `params_num' are the indices, and an index-free family has none.  A reducible
+   alias with arguments of its own -- `Al n A := option A' -- would otherwise
+   hand `n' over as an index of `option'. *)
 let scrutinee_ind_args indname ty =
   match (try Some (Defhash.find indname) with Failure _ -> None) with
   | Some (_, IndType(_, _, params_num), indty, _) ->
@@ -704,7 +707,7 @@ let scrutinee_ind_args indname ty =
         every axiom emitted afterwards *)
      let expected = telescope_length indty in
      if expected <= params_num then
-       Some (snd (flatten_app ty))
+       Some (Hhlib.take params_num (snd (flatten_app ty)))
      else
        (* the arity check is against the inductive's declared telescope, so a
           reduced but partially applied type is rejected too *)
@@ -1441,7 +1444,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
             begin match scrutinee_ind_args indname matched_ty with
             | Some actual_tyargs when List.length actual_tyargs >= params_num ->
                (* the length test still has work to do for an index-free family,
-                  whose arguments are passed through unchecked *)
+                  whose type is not required to expose the inductive and may
+                  thus not supply the parameters either *)
                let indices = Hhlib.drop params_num actual_tyargs in
                Some (simpl (mk_long_app raw_return_type (indices @ [matched])))
             | _ -> None

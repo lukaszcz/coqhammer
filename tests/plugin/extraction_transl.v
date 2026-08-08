@@ -149,6 +149,11 @@ Hammer_transl "dsize".
 Hammer_transl "dheight".
 Hammer_transl "dstack_size".
 
+(* An index-free family reads no index guard off its scrutinee's type, but the
+   type of the case is still its return predicate applied to the indices, and a
+   type-level function's surplus arguments are not indices. *)
+Hammer_transl "dnested".
+
 (* Stdlib regression list. Keep these as structural snapshots, not golden files;
    they pin representative fallback and coverage cases while remaining robust
    across Rocq point releases. *)
