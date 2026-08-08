@@ -11,7 +11,11 @@
    otherwise every entry point here is a no-op, so a default build pays
    nothing.  Each process writes its own file, since problem generation
    compiles many files in parallel and appending to a shared one would
-   interleave.  Parallelism here is between processes only -- the translation
+   interleave.  The name is unique rather than merely per-process: a grid runs
+   far more compilations than the system has PIDs, so a PID-named file would be
+   truncated by the next process the kernel hands that PID to, and the
+   aggregate would silently undercount.  Parallelism here is between processes
+   only -- the translation
    runs on the domain Rocq calls the plugin from, and the provers are forked
    ([Parallel.run_parallel]) -- so the table below needs no synchronization. *)
 
@@ -50,8 +54,14 @@ let collect () =
 let dump () =
   if enabled () then
     try
-      let fname = Filename.concat out_dir ("lift-stats-" ^ string_of_int (Unix.getpid ()) ^ ".txt") in
-      let oc = open_out fname in
+      (* The PID stays in the name to keep a snapshot attributable to a
+         compilation; the suffix [open_temp_file] adds is what makes it
+         unique, and it creates the file atomically so two processes cannot
+         settle on the same name. *)
+      let (_, oc) =
+        Filename.open_temp_file ~temp_dir:out_dir
+          ("lift-stats-" ^ string_of_int (Unix.getpid ()) ^ "-") ".txt"
+      in
       Fun.protect ~finally:(fun () -> close_out_noerr oc)
         begin fun () ->
           List.iter (fun (name, n) -> output_string oc (name ^ "=" ^ string_of_int n ^ "\n")) (collect ())
