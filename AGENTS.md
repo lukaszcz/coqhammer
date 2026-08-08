@@ -69,8 +69,9 @@ make tests             # all tests except the deprecated legacy tactics ones
 make tests-plugin      # complete plugin suite and ATP consistency canaries
 make tests-tactics     # complete tactics suite
 make quicktest         # the fast prover-free check: unit, plugin and tactics
+make test-extraction   # the translation-shape assertions and the ATP consistency canaries
 make dune-test-plugin  # complete plugin suite via Dune
-just check             # install both packages, run quicktest and the extraction assertions
+just check             # install both packages, then run quicktest
 just check-extra       # clean, then run the complete Dune plugin suite
 ```
 
@@ -79,6 +80,15 @@ directly, run `make install` first. The Make and Dune test commands use the
 installed Rocq and CoqHammer packages from the workspace's `_opam/` switch;
 they do not create a separate test installation.
 `make dune-test-plugin` performs `make install` first for the same reason.
+
+`just check` does **not** cover the translation-shape assertions. `quicktest`'s
+plugin half is `test-no-provers`, and `extraction_matches.v`,
+`extraction_deptypes.v`, `case_prop_transl.v` and `extraction_transl.v` are
+outside its `NO_PROVER_VOS` set because they discharge goals through the ATPs.
+So a change to what `coq_transl.ml` emits can leave those assertions stale while
+`just check` still passes. Run `make test-extraction` yourself after such a
+change (it needs the provers, and takes about two minutes); `just check-extra`
+also reaches them, since its Dune rule builds the whole `tests/plugin` suite.
 
 Run a single test file directly:
 
@@ -127,4 +137,7 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 - Do not edit CHANGES.md
 - NEVER run `git clean`, never remove `.agent-files` or `_opam`
 - Do not include session links or coding agent attribution in commit messages
-- When finished, verify with `just check`
+- When finished, verify with `just check`; if the change alters what the
+  translation emits, also run `make test-extraction`, which `just check` does
+  not cover
+- Do not add steps to the `check` recipe in the justfile

@@ -259,6 +259,10 @@ require_line "a refused case still declares its typing axiom" '^\$_typeof_extrac
 # applying the inner return predicate to it would type the outer scrutinee at a
 # term-applied [dtree 0].  The auxiliary would then close over [o] and lose its
 # branch equations, so both the arity of the link and the equations are pinned.
+# The link pattern closes one paren more than it opens, deliberately: the last
+# one is the equation's own, so requiring it pins that the outer auxiliary is
+# applied to the inner case and to nothing further.  These are substring
+# matches, not balanced ones -- do not "balance" the pattern by dropping it.
 require_line "the inner case supplies the outer scrutinee its unapplied type" '^\$_def_extraction_deptypes\.dnested[$]link:.*= \(\$_case_extraction_deptypes\.dtree[$][0-9]+ @ \(\$_case_Corelib\.Init\.Datatypes\.option[$][0-9]+ @ 0_o\)\)\)'
 require_line "the outer case auxiliary keeps its leaf equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dleaf:'
 require_line "the outer case auxiliary keeps its node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
