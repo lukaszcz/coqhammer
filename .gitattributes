@@ -1,2 +1,8 @@
 .* export-ignore
 deps export-ignore
+
+# Confirmation-grid evidence, written by eval/run-*-grid.sh and never edited by
+# hand. Marked generated so review collapses them; they stay tracked because
+# they are experiment records bound to a commit, not derivable build output.
+eval/artifacts/**/summary.tsv linguist-generated
+eval/artifacts/**/analysis.md linguist-generated
