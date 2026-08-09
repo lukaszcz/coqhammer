@@ -1,0 +1,994 @@
+#!/usr/bin/env bash
+# Declarative execution engine for screening grids. Source this file after
+# declaring the GRID_* spec and grid_label_install/grid_label_preamble.
+# force is consumed indirectly by checkpoint_done from the sourced helper.
+# shellcheck disable=SC2034
+
+_grid_engine_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=eval/grid-checkpoint-lib.sh
+# shellcheck disable=SC1091
+source "$_grid_engine_dir/grid-checkpoint-lib.sh"
+# shellcheck source=eval/install-prefix-lib.sh
+# shellcheck disable=SC1091
+source "$_grid_engine_dir/install-prefix-lib.sh"
+
+_grid_validate_indexed_array() {
+  local name="$1" require_nonempty="$2" declaration index expected=0 value
+  declaration=$(declare -p "$name" 2>/dev/null) || {
+    echo "Grid spec must define the $name indexed array" >&2
+    return 1
+  }
+  [[ "$declaration" == "declare -a "* ]] || {
+    echo "Grid spec $name must be an indexed array" >&2
+    return 1
+  }
+  local -n array_ref="$name"
+  if [ "$require_nonempty" = true ] && [ "${#array_ref[@]}" -eq 0 ]; then
+    echo "Grid spec $name must not be empty" >&2
+    return 1
+  fi
+  for index in "${!array_ref[@]}"; do
+    if [ "$index" -ne "$expected" ]; then
+      echo "Grid spec $name must use contiguous indices starting at zero" >&2
+      return 1
+    fi
+    value=${array_ref[$index]}
+    if [ -z "$value" ]; then
+      echo "Grid spec $name contains an empty value" >&2
+      return 1
+    fi
+    expected=$((expected + 1))
+  done
+}
+
+_grid_validate_unique_array() {
+  local name="$1" value
+  local -n array_ref="$name"
+  local -A seen=()
+  for value in "${array_ref[@]}"; do
+    if [ -n "${seen[$value]+set}" ]; then
+      echo "Grid spec $name contains duplicate value: $value" >&2
+      return 1
+    fi
+    seen[$value]=true
+  done
+}
+
+_grid_validate_safe_components() {
+  local name="$1" value
+  local -n array_ref="$name"
+  for value in "${array_ref[@]}"; do
+    if ! eval_safe_component "$value"; then
+      echo "Grid spec $name value must be a safe single path component: $value" >&2
+      return 1
+    fi
+  done
+}
+
+_grid_require_spec() {
+  local name prover legacy_hash consistency_premise
+  for name in GRID_NAME GRID_RESULTS_ROOT GRID_ARTIFACTS_DIR GRID_SUMMARIZER \
+      GRID_COMPLETION_MESSAGE; do
+    if [ -z "${!name:-}" ]; then
+      echo "Grid spec must define $name" >&2
+      return 1
+    fi
+  done
+  # shellcheck disable=SC2153
+  if ! eval_safe_component "$GRID_NAME"; then
+    echo "Grid spec GRID_NAME must be a safe single path component: $GRID_NAME" >&2
+    return 1
+  fi
+  [ -f "$GRID_SUMMARIZER" ] || {
+    echo "Grid summarizer not found: $GRID_SUMMARIZER" >&2
+    return 1
+  }
+  for name in GRID_LABELS GRID_PREMISES GRID_PROVERS GRID_CORPORA; do
+    _grid_validate_indexed_array "$name" true || return 1
+    _grid_validate_unique_array "$name" || return 1
+    _grid_validate_safe_components "$name" || return 1
+  done
+  if declare -p GRID_LEGACY_SCRIPT_SHA256 >/dev/null 2>&1; then
+    _grid_validate_indexed_array GRID_LEGACY_SCRIPT_SHA256 false || return 1
+    _grid_validate_unique_array GRID_LEGACY_SCRIPT_SHA256 || return 1
+    for legacy_hash in "${GRID_LEGACY_SCRIPT_SHA256[@]}"; do
+      if [[ ! "$legacy_hash" =~ ^[0-9a-f]{64}$ ]]; then
+        echo "Grid spec GRID_LEGACY_SCRIPT_SHA256 contains an invalid SHA-256: $legacy_hash" >&2
+        return 1
+      fi
+    done
+  fi
+  for prover in "${GRID_PROVERS[@]}"; do
+    case "$prover" in
+      eprover|vampire) ;;
+      *) echo "Grid spec names unsupported prover: $prover" >&2; return 1 ;;
+    esac
+  done
+  consistency_premise=${GRID_CONSISTENCY_PREMISE-${GRID_PREMISES[0]}}
+  if ! array_contains "$consistency_premise" "${GRID_PREMISES[@]}"; then
+    echo "GRID_CONSISTENCY_PREMISE is not a member of GRID_PREMISES: $consistency_premise" >&2
+    return 1
+  fi
+  if ! declare -F grid_label_install >/dev/null; then
+    echo "Grid spec must define grid_label_install" >&2
+    return 1
+  fi
+  if ! declare -F grid_label_preamble >/dev/null; then
+    echo "Grid spec must define grid_label_preamble" >&2
+    return 1
+  fi
+  if ! declare -F grid_usage >/dev/null; then
+    echo "Grid spec must define grid_usage" >&2
+    return 1
+  fi
+}
+
+_grid_paths_overlap() {
+  local first="$1" second="$2"
+  [ "$first" = "$second" ] || [[ "$first" == "$second/"* ]] || [[ "$second" == "$first/"* ]]
+}
+
+_grid_validate_output_roots() {
+  local confirmation_results confirmation_artifacts protected candidate
+  confirmation_results=$(realpath -m -- "$eval_dir/results/confirmation")
+  confirmation_artifacts=$(realpath -m -- "$eval_dir/artifacts/extraction-confirmation")
+  for candidate in "$results_root" "$artifacts_dir"; do
+    for protected in "$confirmation_results" "$confirmation_artifacts"; do
+      if _grid_paths_overlap "$candidate" "$protected"; then
+        echo "Grid output path overlaps protected confirmation data: $candidate" >&2
+        return 1
+      fi
+    done
+  done
+  if _grid_paths_overlap "$results_root" "$artifacts_dir"; then
+    echo "Grid results and artifacts paths must not overlap" >&2
+    return 1
+  fi
+}
+
+_GRID_TEMP_FILES=()
+GRID_ATOMIC_TEMP=
+
+_grid_cleanup_temp_files() {
+  local temporary
+  for temporary in "${_GRID_TEMP_FILES[@]}"; do
+    [ -n "$temporary" ] && rm -f -- "$temporary"
+  done
+  _GRID_TEMP_FILES=()
+}
+
+_grid_signal_exit() {
+  local status="$1"
+  _grid_cleanup_temp_files
+  exit "$status"
+}
+
+_grid_install_cleanup_traps() {
+  trap _grid_cleanup_temp_files EXIT
+  trap '_grid_signal_exit 130' INT
+  trap '_grid_signal_exit 143' TERM
+}
+
+_grid_forget_temp() {
+  local completed="$1" temporary
+  local remaining=()
+  for temporary in "${_GRID_TEMP_FILES[@]}"; do
+    [ "$temporary" = "$completed" ] || remaining+=("$temporary")
+  done
+  _GRID_TEMP_FILES=("${remaining[@]}")
+}
+
+_grid_new_atomic_temp() {
+  local target="$1" directory base
+  directory=$(dirname "$target")
+  base=$(basename "$target")
+  # A previous process with a reused PID may have left one of our old fixed
+  # names or a newer mktemp name. Delete regular files only; never follow a
+  # hostile stale symlink.
+  find "$directory" -maxdepth 1 -type f \
+    \( -name "$base.tmp.$$" -o -name "$base.tmp.$$.*" \) -delete
+  GRID_ATOMIC_TEMP=$(mktemp -- "$directory/$base.tmp.$$.XXXXXXXX")
+  _GRID_TEMP_FILES+=("$GRID_ATOMIC_TEMP")
+}
+
+_grid_hash_sources() {
+  local spec_script="$1"
+  python3 - "$spec_script" "${BASH_SOURCE[0]}" \
+    "$_grid_engine_dir/rebuild-config.sh" "$_grid_engine_dir/install-prefix-lib.sh" <<'PY'
+import hashlib
+import pathlib
+import sys
+
+digest = hashlib.sha256()
+for name, filename in zip(("spec", "engine", "rebuild", "prefix-helper"), sys.argv[1:]):
+    data = pathlib.Path(filename).read_bytes()
+    encoded_name = name.encode()
+    digest.update(len(encoded_name).to_bytes(8, "big"))
+    digest.update(encoded_name)
+    digest.update(len(data).to_bytes(8, "big"))
+    digest.update(data)
+print(digest.hexdigest())
+PY
+}
+
+_grid_capture_preamble() {
+  local label="$1" temporary value status
+  if ! temporary=$(mktemp "${TMPDIR:-/tmp}/coqhammer-grid-preamble.XXXXXXXX"); then
+    echo "Could not create temporary file for grid_label_preamble" >&2
+    return 1
+  fi
+  _GRID_TEMP_FILES+=("$temporary")
+
+  # The checked subshell turns both `return` and `exit` in a callback into a
+  # status we can report without terminating the grid driver. Capture through a
+  # file so command substitution cannot discard the callback's trailing
+  # newlines; the final sentinel is removed only after the file is read.
+  if (grid_label_preamble "$label") > "$temporary"; then
+    status=0
+  else
+    status=$?
+  fi
+  if ! value=$(cat -- "$temporary" && printf x); then
+    rm -f -- "$temporary"
+    _grid_forget_temp "$temporary"
+    return 1
+  fi
+  GRID_CAPTURED_PREAMBLE=${value%x}
+  rm -f -- "$temporary"
+  _grid_forget_temp "$temporary"
+  if [ "$status" -ne 0 ]; then
+    echo "grid_label_preamble failed for label: $label" >&2
+    return "$status"
+  fi
+}
+
+_grid_canonicalize_external_source() {
+  [ -n "$external_source" ] || return 0
+  if [ ! -d "$external_source" ]; then
+    echo "External source directory not found: $external_source" >&2
+    return 1
+  fi
+  # This runs before the driver changes directory. Keep this one absolute path
+  # for both provenance hashing and prepare-corpus.sh.
+  external_source=$(cd -- "$external_source" && pwd -P)
+}
+
+_grid_hash_text() {
+  printf %s "$1" | sha256sum | awk '{ print $1 }'
+}
+
+_grid_missing_operand() {
+  echo "Missing value for $1" >&2
+  grid_usage >&2
+  return 2
+}
+
+_grid_parse_args() {
+  jobs=
+  tim=${GRID_TIM:-5}
+  consistency_tim=${GRID_CONSISTENCY_TIM:-2}
+  skip_builds=false
+  only_label=
+  only_corpus=
+  sample_corpora=true
+  external_source=
+  force=false
+
+  while [ "$#" -gt 0 ]; do
+    case "$1" in
+      -j|--jobs)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        jobs="$2"; shift 2 ;;
+      --tim)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        tim="$2"; shift 2 ;;
+      --consistency-tim)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        consistency_tim="$2"; shift 2 ;;
+      --skip-builds) skip_builds=true; shift ;;
+      --only-label)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        only_label="$2"; shift 2 ;;
+      --only-corpus)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        only_corpus="$2"; shift 2 ;;
+      --sample-corpus) sample_corpora=true; shift ;;
+      --full-corpus) sample_corpora=false; shift ;;
+      --external-source)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        external_source="$2"; shift 2 ;;
+      --force) force=true; shift ;;
+      -h|--help) grid_usage; return 10 ;;
+      *) echo "Unknown argument: $1" >&2; grid_usage >&2; return 2 ;;
+    esac
+  done
+}
+
+_grid_install_is_supported() {
+  local install="$1" core="$1"
+  [ "$install" = current ] && return 0
+  case "$core" in
+    *-decl-skips) core=${core%-decl-skips} ;;
+  esac
+  case "$core" in
+    all-off|all-on|loo-prop-case-erasure|loo-erasure-guards|loo-refinement-types) ;;
+    *) return 1 ;;
+  esac
+}
+
+_grid_resolve_install_prefixes() {
+  local eval_base="$1"
+  local install label prefix previous
+  local -A prefix_install=()
+  for install in "${!install_label[@]}"; do
+    if [ "${install_count[$install]}" -gt 1 ]; then
+      prefix="$eval_base/_installs/$install"
+    else
+      prefix="$eval_base/_installs/${install_label[$install]}"
+    fi
+    prefix=$(realpath -m -- "$prefix")
+    if [ -n "${prefix_install[$prefix]+set}" ]; then
+      previous=${prefix_install[$prefix]}
+      if [ "$previous" != "$install" ]; then
+        echo "Distinct install identities resolve to the same prefix: $previous and $install -> $prefix" >&2
+        return 1
+      fi
+    fi
+    prefix_install[$prefix]=$install
+    install_prefix[$install]=$prefix
+  done
+  for label in "${labels[@]}"; do
+    install=${label_config[$label]}
+    label_prefix[$label]=${install_prefix[$install]}
+  done
+}
+
+_grid_validate_config_options() {
+  local manifest="$1" config="$2" core decl_skips prop erasure refinement
+  core="$config"
+  decl_skips=false
+  case "$core" in
+    *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
+  esac
+  prop=true
+  erasure=true
+  refinement=true
+  case "$core" in
+    all-off) prop=false; erasure=false; refinement=false ;;
+    all-on) ;;
+    loo-prop-case-erasure) prop=false ;;
+    loo-erasure-guards) erasure=false ;;
+    loo-refinement-types) refinement=false ;;
+    *) return 1 ;;
+  esac
+  _grid_expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
+    _grid_expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
+    _grid_expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
+    _grid_expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips"
+}
+
+_grid_manifest_get() {
+  local file="$1" key="$2"
+  awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit } END { if (!found) exit 1 }' "$file"
+}
+
+_grid_expect_manifest_value() {
+  local manifest="$1" key="$2" expected="$3" actual
+  actual=$(_grid_manifest_get "$manifest" "$key") || return 1
+  [ "$actual" = "$expected" ]
+}
+
+_grid_manifest_matches_install() {
+  local install="$1" prefix="$2" manifest
+  manifest="$prefix/manifest.env"
+  eval_prefix_is_owned "$prefix" || return 1
+  [ -f "$manifest" ] && [ ! -L "$manifest" ] || return 1
+  _grid_expect_manifest_value "$manifest" prefix "$prefix" || return 1
+  if [ "$install" = current ]; then
+    _grid_expect_manifest_value "$manifest" kind current &&
+      _grid_expect_manifest_value "$manifest" config current &&
+      _grid_expect_manifest_value "$manifest" commit "$repo_commit"
+  else
+    _grid_expect_manifest_value "$manifest" kind configuration &&
+      _grid_expect_manifest_value "$manifest" config "$install" &&
+      _grid_expect_manifest_value "$manifest" commit "$repo_commit" &&
+      _grid_validate_config_options "$manifest" "$install"
+  fi
+}
+
+_grid_prepare_prefix_env() {
+  local prefix="$1"
+  export PATH="$prefix/bin:$base_path"
+  if [ -n "$base_ocamlpath" ]; then
+    export OCAMLPATH="$prefix:$base_ocamlpath"
+  else
+    export OCAMLPATH="$prefix"
+  fi
+}
+
+_grid_require_cmd() {
+  if ! command -v "$1" >/dev/null 2>&1; then
+    echo "Required command not found: $1" >&2
+    exit 1
+  fi
+}
+
+_grid_require_prover() {
+  case "$1" in
+    eprover) _grid_require_cmd eprover ;;
+    vampire) _grid_require_cmd htimeout; _grid_require_cmd vampire ;;
+    *) echo "Unknown prover: $1" >&2; exit 1 ;;
+  esac
+}
+
+_grid_prepare_corpus() {
+  local corpus="$1"
+  local args=("$corpus")
+  # dependent-slice has only a committed sample fixture, even in full mode.
+  if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
+    args+=(--sample)
+  fi
+  if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
+    args+=(--source "$external_source")
+  fi
+  ./prepare-corpus.sh "${args[@]}"
+}
+
+_grid_validate_generation() {
+  local outdir="$1" premise
+  status_has "$outdir/generation.status" generation_failed=0 || return 1
+  status_has "$outdir/generation.status" generation_exit=0 || return 1
+  [ -s "$outdir/prepared-files.lst" ] || return 1
+  for premise in "${premises[@]}"; do
+    list_is_nonempty_and_complete "$outdir/generated-$premise.lst" || return 1
+  done
+}
+
+_grid_validate_prover_run() {
+  local outdir="$1" prover="$2" premise="$3"
+  status_has_integer "$outdir/prover-$prover-$premise.status" prover_exit &&
+    list_is_nonempty_and_complete "$outdir/generated-$premise.lst" &&
+    expected_atp_outputs_are_complete \
+      "$outdir/generated-$premise.lst" "$outdir/atp-problems/$premise" \
+      "$outdir/prover-outputs/$prover-$premise" "$prover" \
+      "$outdir/prover-outputs-$prover-$premise.lst" "$outdir/$prover-$premise.log"
+}
+
+_grid_validate_consistency_run() {
+  local outdir="$1" prover="$2" premise="$3" work
+  work="$outdir/consistency/$prover-$premise"
+  status_is "$outdir/consistency-$prover-$premise.status" consistency_exit=0 &&
+    consistency_outputs_are_complete \
+      "$outdir/generated-$premise.lst" "$work/outputs" "$work/raw" "$work/status" \
+      "$outdir/consistency-outputs-$prover-$premise.lst"
+}
+
+_grid_checkpoint_contents() {
+  local marker="$1" label="$3"
+  shift
+  checkpoint_contents "$@"
+  printf '%s\n' \
+    "hook_preamble_sha256=${label_preamble_digest[$label]}" \
+    "hook_preamble_file=hook-preamble.v"
+}
+
+_grid_validate_preamble_sidecar() {
+  local marker="$1" label="$2" sidecar
+  sidecar="$(dirname "$marker")/hook-preamble.v"
+  [ -f "$sidecar" ] || return 1
+  [ "$(hash_file "$sidecar")" = "${label_preamble_digest[$label]}" ] || return 1
+  printf %s "${label_preamble[$label]}" | cmp -s - "$sidecar"
+}
+
+_grid_matches_legacy_checkpoint() {
+  local marker="$1" legacy_digest
+  shift
+  for legacy_digest in "${legacy_grid_script_digests[@]}"; do
+    # Bash locals are dynamically scoped, so checkpoint_contents sees this
+    # accepted historical digest while retaining every other current field.
+    local grid_script_digest="$legacy_digest"
+    if checkpoint_contents "$@" | cmp -s - "$marker.done"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+# Override the checkpoint helpers for engine users. New manifests carry the
+# preamble digest and sidecar. A declared historical manifest remains reusable
+# only for an empty preamble and only when every field other than its historical
+# grid script digest exactly matches the current run.
+checkpoint_matches() {
+  local marker="$1" label="$3"
+  shift
+  [ -f "$marker.done" ] || return 1
+  if _grid_checkpoint_contents "$marker" "$@" | cmp -s - "$marker.done" &&
+      _grid_validate_preamble_sidecar "$marker" "$label"; then
+    return 0
+  fi
+  if [ -z "${label_preamble[$label]}" ] &&
+      _grid_matches_legacy_checkpoint "$marker" "$@"; then
+    return 0
+  fi
+  echo "[checkpoint] stale provenance in $marker.done; rerunning" >&2
+  rm -f "$marker.done"
+  return 1
+}
+
+mark_checkpoint() {
+  local marker="$1" label="$3" temporary sidecar sidecar_temporary
+  shift
+  sidecar="$(dirname "$marker")/hook-preamble.v"
+  _grid_new_atomic_temp "$sidecar"
+  sidecar_temporary=$GRID_ATOMIC_TEMP
+  printf %s "${label_preamble[$label]}" > "$sidecar_temporary"
+  mv -- "$sidecar_temporary" "$sidecar"
+  _grid_forget_temp "$sidecar_temporary"
+  _grid_new_atomic_temp "$marker.done"
+  temporary=$GRID_ATOMIC_TEMP
+  _grid_checkpoint_contents "$marker" "$@" > "$temporary"
+  mv -- "$temporary" "$marker.done"
+  _grid_forget_temp "$temporary"
+}
+
+_grid_build_install() {
+  local install="$1" label prefix
+  label=${install_label[$install]}
+  prefix=${install_prefix[$install]}
+  if [ -f "$prefix/manifest.env" ]; then
+    if _grid_manifest_matches_install "$install" "$prefix"; then
+      echo "[build] $label already installed"
+      return 0
+    fi
+    if [ "$skip_builds" = true ]; then
+      echo "Install prefix for $label is stale or mismatched: $prefix" >&2
+      exit 1
+    fi
+    echo "[build] $label install is stale or mismatched; rebuilding"
+  fi
+  if [ "$skip_builds" = true ]; then
+    echo "Missing install prefix for $label: $prefix" >&2
+    exit 1
+  fi
+  echo "[build] installing $label"
+  export PATH="$base_path"
+  if [ -n "$base_ocamlpath" ]; then
+    export OCAMLPATH="$base_ocamlpath"
+  else
+    unset OCAMLPATH
+  fi
+  (cd "$eval_dir" && ./rebuild-config.sh "$install" --label "$label" --prefix "$prefix")
+}
+
+_grid_run_generation() {
+  local label="$1" corpus="$2" prefix="$3"
+  local outdir="$results_root/$label/$corpus"
+  mkdir -p "$outdir"
+  local marker="$outdir/generate"
+  if checkpoint_done "$marker" generation "$label" "$corpus" "$prefix"; then
+    if _grid_validate_generation "$outdir"; then
+      echo "[gen] $label/$corpus already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "generation artifacts are incomplete or invalid"
+  fi
+
+  rm -f "$outdir/generation.status" "$marker.done"
+  clear_downstream_results "$outdir"
+  echo "[gen] $label/$corpus"
+  _grid_prepare_prefix_env "$prefix"
+  export COQHAMMER_HOOK_PREAMBLE="${label_preamble[$label]}"
+  cd "$eval_dir" || return
+  _grid_prepare_corpus "$corpus" > "$outdir/prepared-files.lst"
+  rm -rf logs atp/problems atp/i atp/o out statistics.html check.log gen-atp.log gen-atp.log.bak coqhammer.opt
+  mkdir -p atp/o out
+
+  coqc_cmd="rocq c -coqlib $prefix/coq"
+  make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1
+  echo check > coqhammer.opt
+  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1
+  grep Error "$outdir/check.full.log" > "$outdir/check.log" || true
+  if [ -s "$outdir/check.log" ]; then
+    echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
+    exit 1
+  fi
+
+  echo gen-atp > coqhammer.opt
+  if ! make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
+    grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
+    echo "ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
+    return 1
+  fi
+  grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
+  if [ -s "$outdir/gen-atp.log" ]; then
+    echo "ATP-generation errors for $label/$corpus; see $outdir/gen-atp.log" >&2
+    exit 1
+  fi
+
+  rm -rf "$outdir/atp-problems"
+  mkdir -p "$outdir/atp-problems"
+  for premise in "${premises[@]}"; do
+    if [ ! -d "atp/problems/$premise" ]; then
+      echo "No generated ATP directory for $premise in $label/$corpus" >&2
+      exit 1
+    fi
+    cp -R "atp/problems/$premise" "$outdir/atp-problems/$premise"
+    find "$outdir/atp-problems/$premise" -name '*.p' | sort > "$outdir/generated-$premise.lst"
+    if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
+      echo "No generated ATP problems for $premise in $label/$corpus" >&2
+      exit 1
+    fi
+  done
+  {
+    echo generation_failed=0
+    echo generation_exit=0
+  } > "$outdir/generation.status"
+  mark_checkpoint "$marker" generation "$label" "$corpus" "$prefix"
+}
+
+_grid_run_prover() {
+  local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
+  local outdir="$results_root/$label/$corpus"
+  local marker="$outdir/prover-$prover-$premise" input_digest
+  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
+  if checkpoint_done "$marker" prover "$label" "$corpus" "$prefix" \
+      "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"; then
+    if _grid_validate_prover_run "$outdir" "$prover" "$premise"; then
+      echo "[prover] $label/$corpus/$prover/$premise already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "prover status or outputs are incomplete or invalid"
+  fi
+
+  rm -f "$marker.done" "$outdir/prover-$prover-$premise.status"
+  if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
+    echo "Cannot run $prover: no generated problems for $label/$corpus/$premise" >&2
+    return 1
+  fi
+  echo "[prover] $label/$corpus/$prover/$premise"
+  _grid_prepare_prefix_env "$prefix"
+  _grid_require_prover "$prover"
+  cd "$eval_dir" || return
+  rm -rf atp/i "atp/o/$prover" "atp/o/$prover-$premise"
+  mkdir -p atp/i atp/o
+  ln -s "$outdir/atp-problems/$premise" atp/i/f
+  if make -C atp -k -j "$jobs" TIM="$tim" "$prover" > "$outdir/$prover-$premise.log" 2>&1; then
+    prover_status=0
+  else
+    prover_status=$?
+    echo "[prover] $label/$corpus/$prover/$premise exited with status $prover_status; keeping partial outputs"
+  fi
+  echo "prover_exit=$prover_status" > "$outdir/prover-$prover-$premise.status"
+  rm -rf "$outdir/prover-outputs/$prover-$premise"
+  mkdir -p "$outdir/prover-outputs" "atp/o/$prover"
+  mv "atp/o/$prover" "$outdir/prover-outputs/$prover-$premise"
+  find "$outdir/prover-outputs/$prover-$premise" -type f | sort > "$outdir/prover-outputs-$prover-$premise.lst"
+  if ! _grid_validate_prover_run "$outdir" "$prover" "$premise"; then
+    echo "Prover run produced incomplete, malformed, or crashed outputs for $label/$corpus/$prover/$premise" >&2
+    return 1
+  fi
+  mark_checkpoint "$marker" prover "$label" "$corpus" "$prefix" \
+    "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"
+}
+
+_grid_run_consistency() {
+  local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
+  local outdir="$results_root/$label/$corpus"
+  local marker="$outdir/consistency-$prover-$premise" input_digest
+  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
+  if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
+      "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
+      "input_sha256=$input_digest"; then
+    if _grid_validate_consistency_run "$outdir" "$prover" "$premise"; then
+      echo "[consistency] $label/$corpus/$prover/$premise already done"
+      return 0
+    fi
+    invalidate_checkpoint "$marker" "consistency status or outputs are incomplete or invalid"
+  fi
+
+  rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status"
+  if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
+    echo "Cannot run consistency check: no problems for $label/$corpus/$premise" >&2
+    return 1
+  fi
+  echo "[consistency] $label/$corpus/$prover/$premise"
+  _grid_prepare_prefix_env "$prefix"
+  _grid_require_prover "$prover"
+  local work="$outdir/consistency/$prover-$premise"
+  rm -rf "$work"
+  mkdir -p "$work/problems" "$work/outputs" "$work/raw" "$work/status"
+
+  python3 - "$outdir/atp-problems/$premise" "$work/problems" <<'PY'
+import pathlib
+import re
+import sys
+src = pathlib.Path(sys.argv[1])
+dst = pathlib.Path(sys.argv[2])
+files = sorted(src.glob('*.p'))
+for path in files:
+    text = path.read_text()
+    text, n = re.subn(r"fof\(([^,]+),\s*conjecture,\s*.*?\)\.\s*$",
+                      r"fof(\1, conjecture, $false).",
+                      text, count=1, flags=re.M)
+    if n != 1:
+        raise SystemExit(f"did not rewrite exactly one conjecture in {path}")
+    (dst / path.name).write_text(text)
+PY
+
+  local problems=("$work/problems"/*.p)
+  if [ ! -e "${problems[0]}" ]; then
+    echo "Consistency check generated no false-conjecture problems for $label/$corpus/$premise" >&2
+    return 1
+  fi
+  for problem in "${problems[@]}"; do
+    local name command_status
+    name=$(basename "$problem")
+    if [ "$prover" = eprover ]; then
+      if eprover -s --cpu-limit="$consistency_tim" --auto-schedule -R --print-statistics -p --tstp-format "$problem" \
+          > "$work/raw/$name" 2>&1; then
+        command_status=0
+      else
+        command_status=$?
+      fi
+      grep "file[(]'\|# SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
+    else
+      if htimeout "$((consistency_tim + 5))" vampire --mode casc -t "$consistency_tim" --proof tptp \
+          --output_axiom_names on "$problem" > "$work/raw/$name" 2>&1; then
+        command_status=0
+      else
+        command_status=$?
+      fi
+      grep "file[(]'\|% SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
+    fi
+    echo "command_exit=$command_status" > "$work/status/$name.status"
+    if log_has_crash_or_error_ignoring_strategy_aborts "$work/raw/$name" ||
+        ! szs_terminal_status "$work/outputs/$name"; then
+      echo consistency_exit=1 > "$outdir/consistency-$prover-$premise.status"
+      echo "Consistency prover crashed or produced no terminal status for $label/$corpus/$prover/$premise/$name" >&2
+      return 1
+    fi
+  done
+  if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
+    echo consistency_exit=1 > "$outdir/consistency-$prover-$premise.status"
+    echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
+    return 1
+  fi
+  find "$work/outputs" -type f | sort > "$outdir/consistency-outputs-$prover-$premise.lst"
+  echo consistency_exit=0 > "$outdir/consistency-$prover-$premise.status"
+  if ! _grid_validate_consistency_run "$outdir" "$prover" "$premise"; then
+    echo "Consistency check produced incomplete outputs for $label/$corpus/$prover/$premise" >&2
+    return 1
+  fi
+  mark_checkpoint "$marker" consistency "$label" "$corpus" "$prefix" \
+    "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
+    "input_sha256=$input_digest"
+}
+
+# Same fields and order as the historical helper, but install prefixes come
+# from the declarative install mapping so labels can share one build.
+# shellcheck disable=SC2153
+_grid_write_provenance() {
+  local output="$1" summarizer="$2" summary="$3" analysis="$4"
+  local temporary label corpus prefix
+  _grid_new_atomic_temp "$output"
+  temporary=$GRID_ATOMIC_TEMP
+  {
+    printf '%s\n' \
+      provenance_version=1 \
+      "grid=$GRID_NAME" \
+      "repository_commit=$repo_commit" \
+      "grid_script_sha256=$grid_script_digest" \
+      "checkpoint_helper_sha256=$grid_helper_digest" \
+      "summarizer_sha256=$(hash_file "$summarizer")" \
+      "prover_timeout=$tim" \
+      "consistency_timeout=$consistency_tim" \
+      "checkpoint_markers_sha256=$(hash_checkpoint_markers "$results_root")" \
+      "summary_sha256=$(hash_file "$summary")" \
+      "analysis_sha256=$(hash_file "$analysis")"
+    for label in "${labels[@]}"; do
+      prefix=${label_prefix[$label]}
+      printf '%s\n' \
+        "label.$label.config=${label_config[$label]}" \
+        "label.$label.install_commit=$(manifest_value "$prefix/manifest.env" commit)" \
+        "label.$label.install_kind=$(manifest_value "$prefix/manifest.env" kind)" \
+        "label.$label.install_manifest_sha256=$(hash_file "$prefix/manifest.env")"
+    done
+    for corpus in "${corpora[@]}"; do
+      printf '%s\n' \
+        "corpus.$corpus.mode=$corpus_mode" \
+        "corpus.$corpus.source=${corpus_source[$corpus]}" \
+        "corpus.$corpus.sha256=${corpus_digest[$corpus]}"
+    done
+  } > "$temporary"
+  mv -- "$temporary" "$output"
+  _grid_forget_temp "$temporary"
+}
+
+# Run the complete driver in a subshell. Its cleanup traps therefore cannot
+# replace traps installed by a script that sourced this engine.
+grid_run() (
+  _grid_install_cleanup_traps
+  _grid_require_spec || return 2
+  local parse_status=0
+  _grid_parse_args "$@" || parse_status=$?
+  [ "$parse_status" -eq 0 ] || {
+    [ "$parse_status" -eq 10 ] && return 0
+    return "$parse_status"
+  }
+
+  local value label corpus source_dir install prefix consistency_premise
+  for value in "$tim" "$consistency_tim"; do
+    if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+      echo "Timeouts must be positive integers: $value" >&2
+      return 2
+    fi
+  done
+
+  repo=$(git rev-parse --show-toplevel)
+  local spec_script spec_relative engine_relative rebuild_relative prefix_helper_relative
+  spec_script=$(realpath "${BASH_SOURCE[1]}")
+  spec_relative=${spec_script#"$repo"/}
+  engine_relative=${BASH_SOURCE[0]#"$repo"/}
+  rebuild_relative=${_grid_engine_dir#"$repo"/}/rebuild-config.sh
+  prefix_helper_relative=${_grid_engine_dir#"$repo"/}/install-prefix-lib.sh
+  # These harness sources are hashed together below, so their exact worktree
+  # contents have provenance even while the harness itself is under review.
+  # All other tracked code and corpus inputs must still match HEAD.
+  if ! git -C "$repo" diff --quiet HEAD -- . \
+      ":(exclude)$spec_relative" ":(exclude)$engine_relative" \
+      ":(exclude)$rebuild_relative" ":(exclude)$prefix_helper_relative"; then
+    echo "Evaluation grids require a clean tracked worktree so build and checkpoint provenance is exact." >&2
+    return 1
+  fi
+  eval_dir="$repo/eval"
+  repo_commit=$(git rev-parse HEAD)
+  grid_script_digest=$(_grid_hash_sources "$spec_script")
+  grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
+  results_root=$(realpath -m -- "$GRID_RESULTS_ROOT")
+  artifacts_dir=$(realpath -m -- "$GRID_ARTIFACTS_DIR")
+  _grid_validate_output_roots || return 2
+  _grid_canonicalize_external_source || return 1
+  for value in "$results_root" "$artifacts_dir"; do
+    if [ -e "$value" ] && [ ! -d "$value" ]; then
+      echo "Grid output root exists but is not a directory: $value" >&2
+      return 2
+    fi
+  done
+
+  labels=("${GRID_LABELS[@]}")
+  premises=("${GRID_PREMISES[@]}")
+  provers=("${GRID_PROVERS[@]}")
+  corpora=("${GRID_CORPORA[@]}")
+  declare -ga legacy_grid_script_digests
+  legacy_grid_script_digests=()
+  if declare -p GRID_LEGACY_SCRIPT_SHA256 >/dev/null 2>&1; then
+    legacy_grid_script_digests=("${GRID_LEGACY_SCRIPT_SHA256[@]}")
+  fi
+  consistency_premise=${GRID_CONSISTENCY_PREMISE-${premises[0]}}
+  declare -gA label_config label_preamble label_preamble_digest
+  declare -gA install_label install_count install_prefix label_prefix
+  label_config=()
+  label_preamble=()
+  label_preamble_digest=()
+  install_label=()
+  install_count=()
+  install_prefix=()
+  label_prefix=()
+  for label in "${labels[@]}"; do
+    if ! install=$(grid_label_install "$label"); then
+      echo "grid_label_install failed for label: $label" >&2
+      return 2
+    fi
+    if ! eval_safe_component "$install"; then
+      echo "grid_label_install must return a safe single path component for $label: $install" >&2
+      return 2
+    fi
+    if ! _grid_install_is_supported "$install"; then
+      echo "grid_label_install returned an unsupported install for $label: $install" >&2
+      return 2
+    fi
+    label_config[$label]=$install
+    if [ -z "${install_label[$install]+set}" ]; then
+      install_label[$install]=$label
+      install_count[$install]=0
+    fi
+    install_count[$install]=$((install_count[$install] + 1))
+  done
+  # Resolve and compare all install destinations before capturing preambles,
+  # creating output roots, or invoking a build. A unique install uses its label
+  # as before, while shared installs use the install identity.
+  _grid_resolve_install_prefixes "$eval_dir" || return 2
+  for label in "${labels[@]}"; do
+    _grid_capture_preamble "$label" || return 2
+    label_preamble[$label]=$GRID_CAPTURED_PREAMBLE
+    label_preamble_digest[$label]=$(_grid_hash_text "${label_preamble[$label]}")
+  done
+
+  if [ -n "$only_label" ] && ! array_contains "$only_label" "${labels[@]}"; then
+    echo "Unknown grid label: $only_label" >&2
+    return 2
+  fi
+  if [ -n "$only_corpus" ] && ! array_contains "$only_corpus" "${corpora[@]}"; then
+    echo "Unknown corpus: $only_corpus" >&2
+    return 2
+  fi
+
+  if [ "$sample_corpora" = true ]; then
+    corpus_mode=sample
+  else
+    corpus_mode=full
+  fi
+  declare -gA corpus_source corpus_digest
+  corpus_source=()
+  corpus_digest=()
+  for corpus in "${corpora[@]}"; do
+    if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
+      source_dir=$external_source
+      corpus_source[$corpus]="$source_dir"
+    else
+      source_dir="$eval_dir/corpora/$corpus"
+      if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
+        source_dir="$source_dir/sample"
+      fi
+      corpus_source[$corpus]="${source_dir#"$repo"/}"
+    fi
+    corpus_digest[$corpus]=$(hash_tree "$source_dir")
+  done
+
+  if [ -z "$jobs" ]; then
+    jobs=$(detect_jobs) || return 2
+    echo "[jobs] using $jobs parallel jobs"
+  fi
+  if [[ ! "$jobs" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Jobs must be a positive integer: $jobs" >&2
+    return 2
+  fi
+  base_path=$PATH
+  base_ocamlpath=${OCAMLPATH:-}
+
+  # All spec callbacks, axes, source trees, and output paths are validated
+  # before this first write or any install build.
+  mkdir -p "$results_root" "$artifacts_dir"
+
+  declare -A prepared_installs=()
+  for label in "${labels[@]}"; do
+    if [ -n "$only_label" ] && [ "$label" != "$only_label" ]; then
+      continue
+    fi
+    install=${label_config[$label]}
+    if [ -z "${prepared_installs[$install]+set}" ]; then
+      _grid_build_install "$install"
+      prepared_installs[$install]=true
+    fi
+    prefix=${label_prefix[$label]}
+    for corpus in "${corpora[@]}"; do
+      if [ -n "$only_corpus" ] && [ "$corpus" != "$only_corpus" ]; then
+        continue
+      fi
+      _grid_run_generation "$label" "$corpus" "$prefix"
+      for premise in "${premises[@]}"; do
+        for prover in "${provers[@]}"; do
+          _grid_run_prover "$label" "$corpus" "$premise" "$prover" "$prefix"
+        done
+      done
+      for prover in "${provers[@]}"; do
+        _grid_run_consistency "$label" "$corpus" "$consistency_premise" "$prover" "$prefix"
+      done
+    done
+  done
+
+  echo "$GRID_COMPLETION_MESSAGE"
+  echo "  raw checkpoints: $results_root"
+  if [ -n "$only_label" ] || [ -n "$only_corpus" ]; then
+    echo "  summary:         not updated by a partial run"
+  else
+    python3 "$GRID_SUMMARIZER" \
+      "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
+      "${labels[@]}"
+    _grid_write_provenance "$artifacts_dir/provenance.env" \
+      "$GRID_SUMMARIZER" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
+    echo "  summary:         $artifacts_dir/summary.tsv"
+    echo "  analysis:        $artifacts_dir/analysis.md"
+    echo "  provenance:      $artifacts_dir/provenance.env"
+  fi
+)

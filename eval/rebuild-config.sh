@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+eval_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 # shellcheck source=eval/cli-lib.sh
-source "$(dirname "${BASH_SOURCE[0]}")/cli-lib.sh"
+# shellcheck disable=SC1091
+source "$eval_dir/cli-lib.sh"
+# shellcheck source=eval/install-prefix-lib.sh
+# shellcheck disable=SC1091
+source "$eval_dir/install-prefix-lib.sh"
 
 usage() {
   cat <<'USAGE'
@@ -73,6 +78,10 @@ if [ -z "$label" ]; then
     label="config-$config"
   fi
 fi
+if ! eval_safe_component "$label"; then
+  echo "Label must be a safe single path component: $label" >&2
+  exit 2
+fi
 
 repo=$(git rev-parse --show-toplevel)
 cd "$repo"
@@ -130,27 +139,10 @@ fi
 # install directory: never the repository or one of its parents, inside the
 # repository only under eval/_installs, and, when it already exists, only a
 # directory carrying the marker a previous run wrote for that very path.
-prefix_marker=.coqhammer-eval-prefix
-prefix_marker_magic=coqhammer-eval-prefix-v1
-
 # Ownership has to be established, not read off contents the directory could
 # have acquired any other way.  A manifest.env is not evidence: an unrelated
-# project may ship a file of that name, and even a manifest naming its own
-# directory is just text, so the check would compare our own guess with a
-# string we do not control.  The marker is written by prepare_prefix alone,
-# right after it creates the directory, and records the path it was written
-# for, so a prefix that was copied or moved elsewhere stops counting as ours.
-write_prefix_marker() {
-  printf '%s\nprefix=%s\n' "$prefix_marker_magic" "$1" > "$1/$prefix_marker"
-}
-
-owns_prefix() {
-  local marker="$1/$prefix_marker"
-  [ -f "$marker" ] || return 1
-  [ "$(sed -n 1p "$marker")" = "$prefix_marker_magic" ] || return 1
-  [ "$(sed -n 's/^prefix=//p' "$marker" | head -n 1)" = "$1" ]
-}
-
+# project may ship a file of that name.  The shared marker records the path it
+# was written for, so a prefix that was copied or moved stops counting as ours.
 validate_prefix() {
   local p="$1"
   case "$p" in
@@ -167,8 +159,8 @@ validate_prefix() {
     echo "Install prefix $p is inside the checkout but not under eval/_installs" >&2
     exit 1
   fi
-  if [ -e "$p" ] && ! owns_prefix "$p"; then
-    echo "Install prefix $p exists but carries no $prefix_marker written for it, so this script cannot establish that it created it; refusing to erase it" >&2
+  if [ -e "$p" ] && ! eval_prefix_is_owned "$p"; then
+    echo "Install prefix $p exists but carries no $EVAL_PREFIX_MARKER written for it, so this script cannot establish that it created it; refusing to erase it" >&2
     echo "Prefixes built before the marker existed, and prefixes that were moved or copied, have to be removed by hand first: rm -rf $p" >&2
     exit 1
   fi
@@ -212,7 +204,7 @@ prepare_prefix() {
   coqlib=$(rocq c -where)
   rm -rf "$p"
   mkdir -p "$p/bin" "$p/coq/user-contrib" "$p/rocq-runtime"
-  write_prefix_marker "$p"
+  eval_prefix_write_marker "$p"
   ln -sfn "$coqlib/theories" "$p/coq/theories"
   # Borrow every installed library except Hammer, which this prefix installs
   # itself and must not shadow with the switch's copy.  Linking only Stdlib
@@ -255,6 +247,8 @@ EOF
     rm -rf "$tmp"
     return 1
   fi
+  # The dollar signs are literal parts of Hammer's generated identifiers.
+  # shellcheck disable=SC2016
   if grep -Eq '^\$_def_.*prop_case_ablation\$(lower|upper):' "$out"; then
     echo "opt_prop_case_erasure=false still emitted proposition-case bounds" >&2
     cat "$out" >&2

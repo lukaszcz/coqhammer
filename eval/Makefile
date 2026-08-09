@@ -13,6 +13,9 @@ all:
 test-prepare-corpus:
 	python3 tests/test_insert_committed_preamble.py
 
+test-grid-engine:
+	bash tests/test_grid_engine.sh
+
 init: $(OFILES)
 problems/%.vo: problems/%.v
 	@mkdir -p logs/init
@@ -50,4 +53,4 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
-.PHONY: clean clean-vo clean-problems test-prepare-corpus check atp reconstr init all
+.PHONY: clean clean-vo clean-problems test-prepare-corpus test-grid-engine check atp reconstr init all
