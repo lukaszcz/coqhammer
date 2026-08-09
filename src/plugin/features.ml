@@ -291,14 +291,17 @@ let run_predict fname defs pred_num pred_method =
   let ic = open_in oname in
   try
     let predicts =
-      Hhlib.strset_from_lst
-        (Str.split (Str.regexp " ")
-           (try input_line ic with End_of_file ->
-             close_in ic; Sys.remove oname;
-             raise (HammerError "Predictor did not return advice.")))
+      Str.split (Str.regexp " ")
+        (try input_line ic with End_of_file ->
+          close_in ic; Sys.remove oname;
+          raise (HammerError "Predictor did not return advice."))
     in
     close_in ic; Sys.remove oname;
-    List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) predicts) defs
+    let def_tbl = Hashtbl.create (List.length defs) in
+    List.iter
+      (fun def -> Hashtbl.add def_tbl (get_hhdef_name def) def)
+      (List.filter is_nontrivial defs);
+    List.filter_map (fun name -> Hashtbl.find_opt def_tbl name) predicts
   with e ->
     close_in ic; Sys.remove oname;
     raise e

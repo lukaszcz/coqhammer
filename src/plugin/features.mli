@@ -19,6 +19,8 @@ val choose_given_lemmas : hhdef list (* hyps *) -> hhdef list (* defs *) ->
   hhdef list (* lemmas *) -> hhdef (* goal *) ->
   hhdef list (* premises *)
 
+(* Predictions are returned in the predictor's ranking order, best first;
+   the list length is at most [pred_num]. *)
 val run_predict : string (* file name (from `extract`) *) -> hhdef list (* defs *) ->
   int (* pred_num *) -> string (* pred_method *) ->
   hhdef list (* predictions *)
