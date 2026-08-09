@@ -192,15 +192,25 @@ _grid_new_atomic_temp() {
 }
 
 _grid_hash_sources() {
-  local spec_script="$1"
-  python3 - "$spec_script" "${BASH_SOURCE[0]}" \
-    "$_grid_engine_dir/rebuild-config.sh" "$_grid_engine_dir/install-prefix-lib.sh" <<'PY'
+  local spec_script="$1" summarizer="$2"
+  python3 - \
+    spec "$spec_script" \
+    engine "${BASH_SOURCE[0]}" \
+    checkpoint-helper "$_grid_engine_dir/grid-checkpoint-lib.sh" \
+    rebuild "$_grid_engine_dir/rebuild-config.sh" \
+    cli-helper "$_grid_engine_dir/cli-lib.sh" \
+    prefix-helper "$_grid_engine_dir/install-prefix-lib.sh" \
+    eval-makefile "$_grid_engine_dir/Makefile" \
+    summarizer "$summarizer" <<'PY'
 import hashlib
 import pathlib
 import sys
 
+arguments = sys.argv[1:]
+if len(arguments) % 2:
+    raise SystemExit("internal error: unpaired harness provenance argument")
 digest = hashlib.sha256()
-for name, filename in zip(("spec", "engine", "rebuild", "prefix-helper"), sys.argv[1:]):
+for name, filename in zip(arguments[::2], arguments[1::2]):
     data = pathlib.Path(filename).read_bytes()
     encoded_name = name.encode()
     digest.update(len(encoded_name).to_bytes(8, "big"))
@@ -209,6 +219,63 @@ for name, filename in zip(("spec", "engine", "rebuild", "prefix-helper"), sys.ar
     digest.update(data)
 print(digest.hexdigest())
 PY
+}
+
+_grid_require_reviewable_worktree() {
+  local worktree="$1" spec_script="$2" summarizer="$3" relative path dirty=
+  local -a allowed=(
+    eval/grid-engine.sh
+    eval/grid-checkpoint-lib.sh
+    eval/rebuild-config.sh
+    eval/cli-lib.sh
+    eval/install-prefix-lib.sh
+    eval/Makefile
+  )
+  for path in "$spec_script" "$summarizer"; do
+    relative=${path#"$worktree"/}
+    if [ "$relative" = "$path" ] || [ -z "$relative" ]; then
+      echo "Grid harness source is outside the repository: $path" >&2
+      return 1
+    fi
+    allowed+=("$relative")
+  done
+
+  # Runtime harness files are allowed to differ from HEAD only because
+  # _grid_hash_sources records their exact bytes in every checkpoint's
+  # grid_script_sha256 and in final provenance. eval/Makefile is included in
+  # that digest because generation invokes it. eval/tests is non-runtime review
+  # material. Every other tracked change remains tied exclusively to
+  # repository_commit and must therefore block the run.
+  local -a pathspec=(.)
+  for path in "${allowed[@]}"; do
+    pathspec+=(":(top,exclude,literal)$path")
+  done
+  pathspec+=(':(top,exclude)eval/tests/**')
+  if ! git -C "$worktree" diff --quiet HEAD -- "${pathspec[@]}"; then
+    echo "Evaluation grids reject dirty tracked build, plugin, or corpus sources." >&2
+    return 1
+  fi
+
+  # `git diff HEAD` does not see untracked files. Ignore unrelated local files,
+  # but reject untracked files in source-bearing paths unless they are one of
+  # the explicitly hashed harness files or an eval test.
+  while IFS= read -r -d '' relative; do
+    for path in "${allowed[@]}"; do
+      [ "$relative" != "$path" ] || continue 2
+    done
+    case "$relative" in
+      eval/tests/*) continue ;;
+      src/*|theories/*|eval/corpora/*|eval/*.sh|eval/atp/*|eval/tools/*|\
+      Makefile|Makefile.*|_CoqProject.*|dune|dune-project|dune-workspace)
+        dirty=$relative
+        break
+        ;;
+    esac
+  done < <(git -C "$worktree" ls-files --others --exclude-standard -z)
+  if [ -n "$dirty" ]; then
+    echo "Evaluation grids reject untracked build, plugin, or corpus source: $dirty" >&2
+    return 1
+  fi
 }
 
 _grid_capture_preamble() {
@@ -422,8 +489,8 @@ _grid_require_prover() {
 }
 
 _grid_prepare_corpus() {
-  local corpus="$1"
-  local args=("$corpus")
+  local corpus="$1" prefix="$2"
+  local args=("$corpus" --coqlib "$prefix/coq")
   # dependent-slice has only a committed sample fixture, even in full mode.
   if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
     args+=(--sample)
@@ -432,6 +499,113 @@ _grid_prepare_corpus() {
     args+=(--source "$external_source")
   fi
   ./prepare-corpus.sh "${args[@]}"
+}
+
+_grid_set_corpus_inputs() {
+  local corpus="$1" prefix="$2" source_dir module lib subtree modules
+  local trees='' files='' source=''
+  if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
+    source=$external_source
+    trees=$external_source
+  elif [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
+    source_dir="$eval_dir/corpora/$corpus/sample"
+    source=${source_dir#"$repo"/}
+    trees=$source_dir
+  else
+    case "$corpus" in
+      stdlib-regression|dependent-stdlib)
+        if [ "$corpus" = stdlib-regression ]; then
+          modules=$stdlib_modules
+        else
+          modules=$dependent_stdlib_modules
+        fi
+        source="installed-Stdlib modules=$modules"
+        for module in $modules; do
+          if ! eval_safe_component "$module"; then
+            echo "Invalid installed Stdlib module in corpus selection: $module" >&2
+            return 1
+          fi
+          source_dir="$prefix/coq/user-contrib/Stdlib/$module"
+          [ -d "$source_dir" ] || {
+            echo "Installed Stdlib module not found: $source_dir" >&2
+            return 1
+          }
+          source_dir=$(realpath -e -- "$source_dir")
+          trees+="${trees:+$'\n'}$source_dir"
+        done
+        ;;
+      stdpp|color-vector|external-equations)
+        case "$corpus" in
+          stdpp) lib=stdpp; subtree= ;;
+          color-vector) lib=CoLoR; subtree=/Util/Vector ;;
+          external-equations) lib=Equations; subtree= ;;
+        esac
+        source="installed-$lib$subtree"
+        source_dir="$prefix/coq/user-contrib/$lib$subtree"
+        [ -d "$source_dir" ] || {
+          echo "Installed library not found: $source_dir" >&2
+          return 1
+        }
+        trees=$(realpath -e -- "$source_dir")
+        ;;
+      equations-examples)
+        source_dir="$eval_dir/_external/Coq-Equations/_build/default/examples"
+        [ -d "$source_dir" ] || {
+          echo "Equations examples not found: $source_dir" >&2
+          return 1
+        }
+        source_dir=$(realpath -e -- "$source_dir")
+        source=$source_dir
+        trees=$source_dir
+        ;;
+      *)
+        echo "No full-corpus provenance mapping for corpus: $corpus" >&2
+        return 1
+        ;;
+    esac
+    if [ -f "$eval_dir/corpora/$corpus/excluded.txt" ]; then
+      files="$eval_dir/corpora/$corpus/excluded.txt"
+    fi
+  fi
+  if [[ "$source" == *$'\n'* ]]; then
+    echo "Corpus provenance source contains an unsupported newline" >&2
+    return 1
+  fi
+  corpus_source[$corpus]=$source
+  corpus_input_trees[$corpus]=$trees
+  corpus_input_files[$corpus]=$files
+  _grid_recompute_corpus_digest "$corpus"
+}
+
+_grid_recompute_corpus_digest() {
+  local corpus="$1" path digests=
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    digests+=$(hash_file "$path")
+  done <<< "${corpus_input_files[$corpus]}"
+  while IFS= read -r path; do
+    [ -n "$path" ] || continue
+    digests+=$(hash_tree "$path")
+  done <<< "${corpus_input_trees[$corpus]}"
+  [ -n "$digests" ] || {
+    echo "Corpus provenance has no inputs: $corpus" >&2
+    return 1
+  }
+  corpus_digest[$corpus]=$(printf %s "$digests" | sha256sum | awk '{ print $1 }')
+}
+
+_grid_require_consistent_corpus_provenance() {
+  local corpus="$1"
+  if [ -n "${expected_corpus_digest[$corpus]+set}" ]; then
+    if [ "${corpus_source[$corpus]}" != "${expected_corpus_source[$corpus]}" ] ||
+        [ "${corpus_digest[$corpus]}" != "${expected_corpus_digest[$corpus]}" ]; then
+      echo "Corpus provenance differs across active installs: $corpus" >&2
+      return 1
+    fi
+  else
+    expected_corpus_source[$corpus]=${corpus_source[$corpus]}
+    expected_corpus_digest[$corpus]=${corpus_digest[$corpus]}
+  fi
 }
 
 _grid_validate_generation() {
@@ -579,7 +753,7 @@ _grid_run_generation() {
   _grid_prepare_prefix_env "$prefix"
   export COQHAMMER_HOOK_PREAMBLE="${label_preamble[$label]}"
   cd "$eval_dir" || return
-  _grid_prepare_corpus "$corpus" > "$outdir/prepared-files.lst"
+  _grid_prepare_corpus "$corpus" "$prefix" > "$outdir/prepared-files.lst"
   rm -rf logs atp/problems atp/i atp/o out statistics.html check.log gen-atp.log gen-atp.log.bak coqhammer.opt
   mkdir -p atp/o out
 
@@ -764,6 +938,85 @@ PY
     "input_sha256=$input_digest"
 }
 
+# Summarizer API: labels remain positional for compatibility with the existing
+# extraction summarizer. Active axes, mode, consistency premise, and all values
+# needed to validate current checkpoint provenance are exposed in the
+# environment. Summarizers that predate this API may safely ignore them.
+_grid_expected_provenance_json() {
+  local label corpus prefix
+  local args=(
+    "$repo_commit" "$grid_script_digest" "$grid_helper_digest" "$tim" "$consistency_tim"
+    "${#labels[@]}"
+  )
+  for label in "${labels[@]}"; do
+    prefix=${label_prefix[$label]}
+    args+=("$label" "${label_config[$label]}"
+      "$(manifest_value "$prefix/manifest.env" commit)"
+      "$(manifest_value "$prefix/manifest.env" kind)"
+      "$(hash_file "$prefix/manifest.env")")
+  done
+  args+=("${#corpora[@]}")
+  for corpus in "${corpora[@]}"; do
+    args+=("$corpus" "$corpus_mode" "${corpus_source[$corpus]}"
+      "${corpus_digest[$corpus]}" "${corpus_input_trees[$corpus]}"
+      "${corpus_input_files[$corpus]}")
+  done
+  python3 - "${args[@]}" <<'PY'
+import json
+import sys
+
+values = iter(sys.argv[1:])
+result = {
+    "repository_commit": next(values),
+    "grid_script_sha256": next(values),
+    "checkpoint_helper_sha256": next(values),
+    "prover_timeout": next(values),
+    "consistency_timeout": next(values),
+    "labels": {},
+    "corpora": {},
+}
+for _ in range(int(next(values))):
+    label = next(values)
+    result["labels"][label] = dict(zip(
+        ("config", "install_commit", "install_kind", "install_manifest_sha256"),
+        (next(values), next(values), next(values), next(values)),
+    ))
+for _ in range(int(next(values))):
+    corpus = next(values)
+    mode, source, digest, trees, files = (next(values) for _ in range(5))
+    result["corpora"][corpus] = {
+        "mode": mode,
+        "source": source,
+        "sha256": digest,
+        "trees": trees.splitlines(),
+        "files": files.splitlines(),
+    }
+try:
+    next(values)
+except StopIteration:
+    pass
+else:
+    raise SystemExit("internal error: unused provenance arguments")
+print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+PY
+}
+
+_grid_run_summarizer() {
+  local summarizer="$1" root="$2" summary="$3" analysis="$4"
+  local premise_axis prover_axis corpus_axis expected_provenance
+  premise_axis=$(printf '%s\n' "${premises[@]}")
+  prover_axis=$(printf '%s\n' "${provers[@]}")
+  corpus_axis=$(printf '%s\n' "${corpora[@]}")
+  expected_provenance=$(_grid_expected_provenance_json)
+  COQHAMMER_GRID_PREMISES="$premise_axis" \
+  COQHAMMER_GRID_PROVERS="$prover_axis" \
+  COQHAMMER_GRID_CORPORA="$corpus_axis" \
+  COQHAMMER_GRID_CORPUS_MODE="$corpus_mode" \
+  COQHAMMER_GRID_CONSISTENCY_PREMISE="$consistency_premise" \
+  COQHAMMER_GRID_EXPECTED_PROVENANCE="$expected_provenance" \
+    python3 "$summarizer" "$root" "$summary" "$analysis" "${labels[@]}"
+}
+
 # Same fields and order as the historical helper, but install prefixes come
 # from the declarative install mapping so labels can share one build.
 # shellcheck disable=SC2153
@@ -816,7 +1069,7 @@ grid_run() (
     return "$parse_status"
   }
 
-  local value label corpus source_dir install prefix consistency_premise
+  local value label corpus install prefix consistency_premise
   for value in "$tim" "$consistency_tim"; do
     if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
       echo "Timeouts must be positive integers: $value" >&2
@@ -825,24 +1078,14 @@ grid_run() (
   done
 
   repo=$(git rev-parse --show-toplevel)
-  local spec_script spec_relative engine_relative rebuild_relative prefix_helper_relative
+  local spec_script
   spec_script=$(realpath "${BASH_SOURCE[1]}")
-  spec_relative=${spec_script#"$repo"/}
-  engine_relative=${BASH_SOURCE[0]#"$repo"/}
-  rebuild_relative=${_grid_engine_dir#"$repo"/}/rebuild-config.sh
-  prefix_helper_relative=${_grid_engine_dir#"$repo"/}/install-prefix-lib.sh
-  # These harness sources are hashed together below, so their exact worktree
-  # contents have provenance even while the harness itself is under review.
-  # All other tracked code and corpus inputs must still match HEAD.
-  if ! git -C "$repo" diff --quiet HEAD -- . \
-      ":(exclude)$spec_relative" ":(exclude)$engine_relative" \
-      ":(exclude)$rebuild_relative" ":(exclude)$prefix_helper_relative"; then
-    echo "Evaluation grids require a clean tracked worktree so build and checkpoint provenance is exact." >&2
-    return 1
-  fi
+  _grid_require_reviewable_worktree "$repo" "$spec_script" "$GRID_SUMMARIZER" || return 1
   eval_dir="$repo/eval"
   repo_commit=$(git rev-parse HEAD)
-  grid_script_digest=$(_grid_hash_sources "$spec_script")
+  # This aggregate covers every under-review runtime source accepted by the
+  # guard. Clean build/corpus machinery is represented by repository_commit.
+  grid_script_digest=$(_grid_hash_sources "$spec_script" "$GRID_SUMMARIZER")
   grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
   results_root=$(realpath -m -- "$GRID_RESULTS_ROOT")
   artifacts_dir=$(realpath -m -- "$GRID_ARTIFACTS_DIR")
@@ -918,22 +1161,14 @@ grid_run() (
   else
     corpus_mode=full
   fi
-  declare -gA corpus_source corpus_digest
+  echo "[corpus mode] $corpus_mode"
+  stdlib_modules=${STDLIB_CORPUS_MODULES:-"Arith Bool Vectors Lists NArith"}
+  dependent_stdlib_modules=${DEPENDENT_STDLIB_MODULES:-"Logic Wellfounded MSets Structures Sorting Program"}
+  declare -gA corpus_source corpus_digest corpus_input_trees corpus_input_files
   corpus_source=()
   corpus_digest=()
-  for corpus in "${corpora[@]}"; do
-    if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
-      source_dir=$external_source
-      corpus_source[$corpus]="$source_dir"
-    else
-      source_dir="$eval_dir/corpora/$corpus"
-      if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
-        source_dir="$source_dir/sample"
-      fi
-      corpus_source[$corpus]="${source_dir#"$repo"/}"
-    fi
-    corpus_digest[$corpus]=$(hash_tree "$source_dir")
-  done
+  corpus_input_trees=()
+  corpus_input_files=()
 
   if [ -z "$jobs" ]; then
     jobs=$(detect_jobs) || return 2
@@ -946,8 +1181,8 @@ grid_run() (
   base_path=$PATH
   base_ocamlpath=${OCAMLPATH:-}
 
-  # All spec callbacks, axes, source trees, and output paths are validated
-  # before this first write or any install build.
+  # All spec callbacks, axes, and output paths are validated before this first
+  # write. Full-corpus source trees are validated after their installs exist.
   mkdir -p "$results_root" "$artifacts_dir"
 
   declare -A prepared_installs=()
@@ -959,6 +1194,34 @@ grid_run() (
     if [ -z "${prepared_installs[$install]+set}" ]; then
       _grid_build_install "$install"
       prepared_installs[$install]=true
+    fi
+  done
+
+  # Full corpora come from the active installation, so calculate provenance
+  # only after every selected prefix exists. Distinct installs must expose the
+  # same corpus inputs: summaries have one corpus provenance, not one per label.
+  declare -A provenance_checked_install=()
+  declare -A expected_corpus_source=() expected_corpus_digest=()
+  for label in "${labels[@]}"; do
+    if [ -n "$only_label" ] && [ "$label" != "$only_label" ]; then
+      continue
+    fi
+    install=${label_config[$label]}
+    [ -z "${provenance_checked_install[$install]+set}" ] || continue
+    prefix=${label_prefix[$label]}
+    for corpus in "${corpora[@]}"; do
+      if [ -n "$only_corpus" ] && [ "$corpus" != "$only_corpus" ]; then
+        continue
+      fi
+      _grid_set_corpus_inputs "$corpus" "$prefix" || return 1
+      _grid_require_consistent_corpus_provenance "$corpus" || return 1
+    done
+    provenance_checked_install[$install]=true
+  done
+
+  for label in "${labels[@]}"; do
+    if [ -n "$only_label" ] && [ "$label" != "$only_label" ]; then
+      continue
     fi
     prefix=${label_prefix[$label]}
     for corpus in "${corpora[@]}"; do
@@ -982,9 +1245,8 @@ grid_run() (
   if [ -n "$only_label" ] || [ -n "$only_corpus" ]; then
     echo "  summary:         not updated by a partial run"
   else
-    python3 "$GRID_SUMMARIZER" \
-      "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
-      "${labels[@]}"
+    _grid_run_summarizer "$GRID_SUMMARIZER" "$results_root" \
+      "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
     _grid_write_provenance "$artifacts_dir/provenance.env" \
       "$GRID_SUMMARIZER" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
     echo "  summary:         $artifacts_dir/summary.tsv"

@@ -19,6 +19,15 @@ test-grid-engine:
 test-atp-makefile:
 	bash tests/test_atp_makefile.sh
 
+test-premise-grid-spec:
+	bash tests/test_premise_grid_spec.sh
+
+test-premise-summarizer:
+	python3 tests/test_summarize_premise_screening.py
+
+test: test-prepare-corpus test-grid-engine test-atp-makefile \
+      test-premise-grid-spec test-premise-summarizer
+
 init: $(OFILES)
 problems/%.vo: problems/%.v
 	@mkdir -p logs/init
@@ -56,4 +65,6 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
-.PHONY: clean clean-vo clean-problems test-prepare-corpus test-grid-engine test-atp-makefile check atp reconstr init all
+.PHONY: clean clean-vo clean-problems test test-prepare-corpus test-grid-engine \
+        test-atp-makefile test-premise-grid-spec test-premise-summarizer \
+        check atp reconstr init all
