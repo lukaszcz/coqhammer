@@ -198,16 +198,130 @@ let is_nontrivial (def : hhdef) : bool =
     (if !Opt.filter_classes then not (begins_with_any name filter_classes_prefixes) else true) &&
     (if !Opt.filter_hurkens then not (begins_with_any name filter_hurkens_prefixes) else true)
 
-let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
+type selection_ctx = {
+  ndefs : hhdef list;
+  def_tbl : (string, hhdef) Hashtbl.t;
+  occ : (string, int) Hashtbl.t Lazy.t;
+  dcands : hhdef list Lazy.t;
+}
+
+let constructor_inductive (def : hhdef) : string option =
+  match def with
+  | (Comb(Comb(Id "$Construct",
+                    Comb(Comb(Id "$Ind", Id ind), _)), Id _), _, _, _, _) ->
+     Some ind
+  | _ -> None
+
+let inductive_name (def : hhdef) : string option =
+  match def with
+  | (Comb(Comb(Id "$Ind", Id ind), _), _, _, _, _) -> Some ind
+  | _ -> None
+
+let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : selection_ctx =
+  let ndefs = List.filter is_nontrivial defs in
+  let def_tbl = Hashtbl.create (List.length ndefs) in
+  List.iter
+    (fun def -> Hashtbl.replace def_tbl (get_hhdef_name def) def)
+    ndefs;
+  let occ =
+    lazy
+      (let tbl = Hashtbl.create (List.length ndefs) in
+       List.iter
+         (fun def ->
+            List.iter
+              (fun name ->
+                 let count =
+                   match Hashtbl.find_opt tbl name with
+                   | Some count -> count
+                   | None -> 0
+                 in
+                 Hashtbl.replace tbl name (count + 1))
+              (get_deps_cached def))
+         ndefs;
+       tbl)
+  in
+  let make_dcands occ =
+    let seed_names =
+      Hhlib.strset_from_lst
+        (get_deps goal @ List.concat_map get_deps hyps)
+    in
+    let seed_defs =
+      List.filter
+        (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) seed_names)
+        ndefs
+    in
+    let constructors = Hashtbl.create 64 in
+    List.iter
+      (fun def ->
+         match constructor_inductive def with
+         | Some ind ->
+            let defs =
+              match Hashtbl.find_opt constructors ind with
+              | Some defs -> defs
+              | None -> []
+            in
+            Hashtbl.replace constructors ind (def :: defs)
+         | None -> ())
+      ndefs;
+    let candidate_names = ref seed_names in
+    List.iter
+      (fun def ->
+         match constructor_inductive def, inductive_name def with
+         | Some ind, _ when Hashtbl.mem def_tbl ind ->
+            candidate_names := Hhlib.StringSet.add ind !candidate_names
+         | _, Some ind ->
+            begin match Hashtbl.find_opt constructors ind with
+            | Some defs ->
+               List.iter
+                 (fun def ->
+                    candidate_names :=
+                      Hhlib.StringSet.add (get_hhdef_name def) !candidate_names)
+                 defs
+            | None -> ()
+            end
+         | _ -> ())
+      seed_defs;
+    let occ = Lazy.force occ in
+    let ranked =
+      List.filter_map
+        (fun def ->
+           let name = get_hhdef_name def in
+           if Hhlib.StringSet.mem name !candidate_names then
+             let count =
+               match Hashtbl.find_opt occ name with
+               | Some count -> count
+               | None -> 0
+             in
+             Some (count, hhterm_size (get_def_fea_term def), name, def)
+           else
+             None)
+        ndefs
+    in
+    List.map
+      (fun (_, _, _, def) -> def)
+      (List.sort
+         (fun (occ1, size1, name1, _) (occ2, size2, name2, _) ->
+            let c = compare occ1 occ2 in
+            if c <> 0 then c
+            else
+              let c = compare size1 size2 in
+              if c <> 0 then c else String.compare name1 name2)
+         ranked)
+  in
+  let rec ctx : selection_ctx =
+    { ndefs; def_tbl; occ; dcands = lazy (make_dcands ctx.occ) }
+  in
+  ctx
+
+let extract (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
   let fname = Opt.temp_file "predict" "" in
   let ocfea = open_out (fname ^ "fea") in
   let ocdep = open_out (fname ^ "dep") in
   let ocseq = open_out (fname ^ "seq") in
-  let defs = List.filter is_nontrivial defs in
+  let defs = ctx.ndefs in
   if !Opt.debug_mode then
     Msg.info ("After filtering: " ^ string_of_int (List.length defs) ^ " Coq objects.");
-  let names = Hhlib.strset_from_lst (List.map get_hhdef_name defs) in
   let write_def def =
     let name = get_hhdef_name def in
     output_string ocseq name; output_char ocseq '\n';
@@ -218,7 +332,7 @@ let extract (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : string =
     Hhlib.oiter (output_string ocfea) (output_string ocfea) "\", \"" fea;
     output_string ocfea "\"\n";
     let pre_deps = get_deps_cached def in
-    let deps = List.filter (fun a -> Hhlib.StringSet.mem a names) pre_deps in
+    let deps = List.filter (fun name -> Hashtbl.mem ctx.def_tbl name) pre_deps in
     output_string ocdep name; output_char ocdep ':';
     if deps <> [] then Hhlib.oiter (output_string ocdep) (output_string ocdep) " " deps;
     output_char ocdep '\n';
@@ -255,7 +369,7 @@ let choose_given_lemmas (hyps : hhdef list) (defs : hhdef list) (lems : hhdef li
   in
   List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) objs) defs
 
-let run_predict fname defs pred_num pred_method =
+let run_predict (ctx : selection_ctx) fname pred_num pred_method =
   let oname = Opt.temp_file ("coqhammer_out" ^ pred_method ^ string_of_int pred_num) "" in
   let cmd = !Opt.predict_path ^ " " ^ fname ^ "fea " ^ fname ^ "dep " ^
     fname ^ "seq -n " ^ string_of_int pred_num ^
@@ -297,11 +411,7 @@ let run_predict fname defs pred_num pred_method =
           raise (HammerError "Predictor did not return advice."))
     in
     close_in ic; Sys.remove oname;
-    let def_tbl = Hashtbl.create (List.length defs) in
-    List.iter
-      (fun def -> Hashtbl.add def_tbl (get_hhdef_name def) def)
-      (List.filter is_nontrivial defs);
-    List.filter_map (fun name -> Hashtbl.find_opt def_tbl name) predicts
+    List.filter_map (fun name -> Hashtbl.find_opt ctx.def_tbl name) predicts
   with e ->
     close_in ic; Sys.remove oname;
     raise e
@@ -311,50 +421,52 @@ let clean fname =
     List.iter Sys.remove [fname; (fname ^ "fea"); (fname ^ "dep"); (fname ^ "seq");
                           (fname ^ "conj")]
 
-(* Temporary measure: the predictor sometimes misses definitions the goal or
-   the hypotheses mention directly, which makes such goals unprovable. Add a
-   few of them to the predictions. The number is capped so that the premise
-   count stays close to the requested one. *)
-let max_direct_deps = 6
+let rec take n lst =
+  if n <= 0 then
+    []
+  else
+    match lst with
+    | [] -> []
+    | x :: xs -> x :: take (n - 1) xs
 
-let add_direct_goal_dependencies hyps defs goal predicted =
-  let ndefs = List.filter is_nontrivial defs in
-  let names = Hhlib.strset_from_lst (List.map get_hhdef_name ndefs) in
-  let predicted_names = Hhlib.strset_from_lst (List.map get_hhdef_name predicted) in
-  let filter_deps deps =
-    List.filter
-      (fun a -> Hhlib.StringSet.mem a names && not (Hhlib.StringSet.mem a predicted_names))
-      deps
-  in
-  (* The goal and the hypotheses are local to the current proof, so their
-     dependencies must not be cached under their names. *)
-  let deps =
-    filter_deps (get_deps goal) @
-      List.concat (List.map (fun h -> filter_deps (get_deps h)) hyps)
-  in
-  let selected =
-    List.fold_left
-      begin fun (acc, n) name ->
-        if n >= max_direct_deps || Hhlib.StringSet.mem name acc then
-          (acc, n)
-        else
-          (Hhlib.StringSet.add name acc, n + 1)
-      end
-      (predicted_names, 0) deps
-  in
-  let selected = fst selected in
-  (* Return from [ndefs], not [defs]: [predicted] seeds [selected] and may carry
-     a filtered name (the predictor ranks a candidate the extract filter dropped),
-     so filtering the full [defs] here would re-admit a definition the filters are
-     meant to exclude.  Restricting to [ndefs] makes this function respect the
-     filters unconditionally. *)
-  List.filter (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) selected) ndefs
+let prepare_def_slots (ctx : selection_ctx) =
+  if !Opt.definition_premises > 0 then
+    ignore (Lazy.force ctx.dcands)
 
-let predict (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : hhdef list =
-  let fname = extract hyps defs goal in
+let take_unique_defs seen n defs =
+  let rec hlp seen n acc = function
+    | _ when n <= 0 -> List.rev acc
+    | [] -> List.rev acc
+    | def :: defs2 ->
+       let name = get_hhdef_name def in
+       if Hhlib.StringSet.mem name seen then
+         hlp seen n acc defs2
+       else
+         hlp (Hhlib.StringSet.add name seen) (n - 1) (def :: acc) defs2
+  in
+  hlp seen n [] defs
+
+let merge_def_slots (ctx : selection_ctx) n predictions =
+  let max_slots = !Opt.definition_premises in
+  if n <= 0 then
+    []
+  else if max_slots = 0 then
+    predictions
+  else
+    let dcands = Lazy.force ctx.dcands in
+    let ceil_eighth = n / 8 + (if n mod 8 = 0 then 0 else 1) in
+    let k = min (List.length dcands) (min max_slots ceil_eighth) in
+    let forced = take k dcands in
+    let seen = Hhlib.strset_from_lst (List.map get_hhdef_name forced) in
+    forced @ take_unique_defs seen (n - k) predictions
+
+let predict (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) : hhdef list =
+  let fname = extract ctx hyps goal in
   try
-    let predicted = run_predict fname defs !Opt.predictions_num !Opt.predict_method in
-    let r = add_direct_goal_dependencies hyps defs goal predicted in
+    let predicted =
+      run_predict ctx fname !Opt.predictions_num !Opt.predict_method
+    in
+    let r = merge_def_slots ctx !Opt.predictions_num predicted in
     clean fname;
     r
   with e ->

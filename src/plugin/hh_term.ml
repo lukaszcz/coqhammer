@@ -28,6 +28,11 @@ let get_hhdef_name ((c, _, _, _, _) : hhdef) : string =
 let hhdef_is_opaque ((_, opaque, _, _, _) : hhdef) : bool =
   opaque
 
+let rec hhterm_size (t : hhterm) : int =
+  match t with
+  | Id _ -> 1
+  | Comb (x, y) -> 1 + hhterm_size x + hhterm_size y
+
 (* A variable (a section variable or a local hypothesis) is not a
    global object: its name may denote something else in another
    context. *)

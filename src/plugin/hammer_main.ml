@@ -924,33 +924,33 @@ let choice_prover_sequence () =
    ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
    ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
 
-let greedy_selected_deps hyps deps goal pred_method preds_num fname =
-  let predicted = Features.run_predict fname deps preds_num pred_method in
-  Features.add_direct_goal_dependencies hyps deps goal predicted
+let greedy_selected_deps ctx pred_method preds_num fname =
+  let predicted = Features.run_predict ctx fname preds_num pred_method in
+  Features.merge_def_slots ctx preds_num predicted
 
-let dump_deps hyps deps goal =
+let dump_deps ctx hyps goal =
   (* Dumping is parameterized by [Opt.predict_method] and
      [Opt.predictions_num] (not by the greedy ATP search schedule), so callers
      such as [hammer_hook] can generate distinct problem sets for each
      requested predictor/count even when GSMode is enabled. *)
-  Features.predict hyps deps goal
+  Features.predict ctx hyps goal
 
-let do_predict tried hyps deps goal =
+let do_predict ctx tried hyps deps goal =
   if !Opt.gs_mode > 0 then
-    let fname = Features.extract hyps deps goal in
+    let fname = Features.extract ctx hyps goal in
     let seq =
       List.mapi
         begin fun idx (pname, enabled, pref, pred_method, preds_num) ->
           (idx,
            (pname, enabled && not (List.mem idx tried), pref,
-            fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname))
+            fun () -> greedy_selected_deps ctx pred_method preds_num fname))
         end
         (greedy_predictor_sequence ())
     in
     let clean () = Features.clean fname in
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
-    let deps1 = Features.predict hyps deps goal in
+    let deps1 = Features.predict ctx hyps goal in
     let (pname, info) = Provers.predict deps1 hyps deps goal in
     ([], [], report_success pname info hyps deps goal)
 
@@ -999,6 +999,18 @@ let hammer_main_tac env sigma gl mode =
   let goal = get_goal gl in
   let hyps = get_hyps gl in
   let defs = get_defs env sigma in
+  let run_provers =
+    match mode with
+    | Prediction ->
+       let ctx = Features.make_selection_ctx hyps defs goal in
+       Features.prepare_def_slots ctx;
+       fun tried -> do_predict ctx tried hyps defs goal
+    | Choice glems ->
+       fun tried ->
+         (* An empty lemma list is allowed: then the premises are the
+            definitions directly referenced by the goal or the hypotheses. *)
+         do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
+  in
   let reconstruction_failure_msg =
     "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'."
   in
@@ -1024,16 +1036,7 @@ let hammer_main_tac env sigma gl mode =
      launched at most twice: once fresh and once more after preemption. *)
   let rec attempt round tried once =
     let (attempt_ids, preempted, info) =
-      Opt.with_temp_dir
-        begin fun () ->
-          match mode with
-          | Prediction -> do_predict tried hyps defs goal
-          | Choice glems ->
-             (* An empty lemma list is allowed: then the premises are the
-                definitions directly referenced by the goal or the
-                hypotheses. *)
-             do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
-        end
+      Opt.with_temp_dir (fun () -> run_provers tried)
     in
     let promoted =
       List.filter (fun idx -> List.mem idx once) preempted
@@ -1140,7 +1143,8 @@ let predict_tac n pred_method =
             Opt.predictions_num := old_n
           in
           try
-            let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
+            let ctx = Features.make_selection_ctx hyps defs goal in
+            let defs1 = Opt.with_temp_dir (fun () -> Features.predict ctx hyps goal) in
             restore ();
             Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
           with e ->
@@ -1215,7 +1219,8 @@ let hammer_dump_tac fname =
       let goal = get_goal gl in
       let hyps = get_hyps gl in
       let defs = get_defs env sigma in
-      let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
+      let ctx = Features.make_selection_ctx hyps defs goal in
+      let defs1 = Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal) in
       Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
       Tacticals.tclIDTAC
     end
@@ -1269,22 +1274,25 @@ let hammer_hook_tac prefix name =
             begin
               let env = Proofview.Goal.env gl in
               let sigma = Proofview.Goal.sigma gl in
+              Opt.search_blacklist := false;
+              Opt.filter_program := true;
+              Opt.filter_classes := true;
+              Opt.filter_hurkens := true;
+              let goal = get_goal gl in
+              let hyps = get_hyps gl in
+              let defs = get_defs env sigma in
+              let ctx = Features.make_selection_ctx hyps defs goal in
               List.iter
                 begin fun (met, n) ->
                   let str = met ^ "-" ^ string_of_int n in
                   Msg.info ("Parameters: " ^ str);
                   Opt.predictions_num := n;
                   Opt.predict_method := met;
-                  Opt.search_blacklist := false;
-                  Opt.filter_program := true;
-                  Opt.filter_classes := true;
-                  Opt.filter_hurkens := true;
                   let dir = "atp/problems/" ^ str in
                   ignore (Sys.command ("mkdir -p " ^ dir));
-                  let goal = get_goal gl in
-                  let hyps = get_hyps gl in
-                  let defs = get_defs env sigma in
-                  let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
+                  let defs1 =
+                    Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal)
+                  in
                   Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
                 end
                 premises;

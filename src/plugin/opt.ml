@@ -16,6 +16,21 @@ let _ =
   in
   declare_int_option gdopt
 
+let definition_premises = ref 32
+
+let _ =
+  let gdopt=
+    { optdepr=None;
+      optstage = Interp;
+      optkey=["Hammer";"DefinitionPremises"];
+      optread=(fun ()->Some !definition_premises);
+      optwrite=
+   (function
+        None -> definition_premises := 32
+      | Some i -> definition_premises := (max i 0))}
+  in
+  declare_int_option gdopt
+
 let sauto_timelimit = ref 1
 
 let _ =
