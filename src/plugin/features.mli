@@ -7,6 +7,13 @@ val get_goal_features : hhdef list (* hyps *) -> hhdef (* goal *) -> string list
 
 type selection_ctx
 
+type selection_metadata = {
+  def_candidates : int;
+  seed_min_occ : int option;
+  seed_median_occ : int option;
+  forced_slots : int;
+}
+
 (* Build the per-invocation selection context, including the filtered
    definition lookup table used by extraction and prediction. The goal seed,
    occurrence table and ranked definitional candidates remain lazy. *)
@@ -17,6 +24,17 @@ val make_selection_ctx : hhdef list (* hyps *) -> hhdef list (* defs *) ->
    parent process so every candidate and reconstruction retry shares the work.
    This does not force the lazy fields when [DefinitionPremises] is zero. *)
 val prepare_def_slots : selection_ctx -> unit
+
+(* Derive eval metadata from the same seed, occurrence table and ranked
+   definitional candidates used by selection. Seed statistics include only
+   accessible, nontrivial seed constants. An empty such seed has [None] for
+   both occurrence fields. For an even-sized seed, [seed_median_occ] is the
+   lower of the two middle values after sorting. [forced_slots] is exactly the
+   merge's [min(|D|, DefinitionPremises, ceil(n / 8))]; it is zero when [n] or
+   [DefinitionPremises] is non-positive, and its ceiling calculation cannot
+   overflow. *)
+val selection_metadata : selection_ctx -> int (* premise budget *) ->
+  selection_metadata
 
 (* Construct the predictor's conjecture features. Positive
    [DefinitionFeatures] values add the plain dependencies of seed definitions

@@ -454,7 +454,7 @@ let call_provers_par fname ofname =
 (******************************************************************************)
 (* Main functions *)
 
-let write_atp_file fname deps1 hyps deps goal =
+let prepare_atp deps1 hyps deps goal =
   let name = Hh_term.get_hhdef_name goal in
   let depnames = List.map Hh_term.get_hhdef_name (hyps @ deps1) in
   Coq_transl.remove_def name;
@@ -463,6 +463,14 @@ let write_atp_file fname deps1 hyps deps goal =
   if !Opt.debug_mode || !Opt.gs_mode = 0 then
     Msg.info ("Translating the problem to FOL...");
   Coq_transl.retranslate (name :: depnames);
+  name, depnames
+
+let write_atp oc deps1 hyps deps goal =
+  let name, depnames = prepare_atp deps1 hyps deps goal in
+  Coq_transl.output_problem oc name depnames
+
+let write_atp_file fname deps1 hyps deps goal =
+  let name, depnames = prepare_atp deps1 hyps deps goal in
   if !Opt.debug_mode then
     Msg.info ("Writing translated problem to file '" ^ fname ^ "'...");
   Coq_transl.write_problem fname name depnames

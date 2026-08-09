@@ -1258,6 +1258,17 @@ let hammer_objects () =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   Msg.info ("Found " ^ string_of_int (List.length (get_defs env sigma)) ^ " accessible Coq objects.")
 
+let write_selection_metadata oc (metadata : Features.selection_metadata) =
+  let string_of_occurrence = function
+    | Some occurrence -> string_of_int occurrence
+    | None -> "none"
+  in
+  Printf.fprintf oc "d_size=%d min_occ=%s median_occ=%s k=%d\n"
+    metadata.def_candidates
+    (string_of_occurrence metadata.seed_min_occ)
+    (string_of_occurrence metadata.seed_median_occ)
+    metadata.forced_slots
+
 let hammer_hook_tac prefix name =
   let premises = [("knn", 32); ("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
                   ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
@@ -1299,7 +1310,22 @@ let hammer_hook_tac prefix name =
                   let defs1 =
                     Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal)
                   in
-                  Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
+                  let problem_base = dir ^ "/" ^ name in
+                  let metadata = Features.selection_metadata ctx n in
+                  (* Stable format for the premise-screening summarizer. Only
+                     accessible, nontrivial seed constants are counted;
+                     [none] denotes an empty seed, and an even seed uses its
+                     lower middle occurrence count as the median. Per-goal
+                     paired publication avoids append races under [make -j]
+                     and makes [.p] the marker for a complete [.meta]/[.p]
+                     pair. *)
+                  Paired_output.write
+                    ~commit_path:(problem_base ^ ".p")
+                    ~write_commit:(fun oc ->
+                      Provers.write_atp oc defs1 hyps defs goal)
+                    ~companion_path:(problem_base ^ ".meta")
+                    ~write_companion:(fun oc ->
+                      write_selection_metadata oc metadata)
                 end
                 premises;
               Msg.info ("Done processing " ^ name ^ ".\n");

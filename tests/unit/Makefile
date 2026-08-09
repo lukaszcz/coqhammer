@@ -13,8 +13,8 @@ BUILD := _build
 LIB := hhlib hammer_errors
 # plugin modules compiled from $(ROOT)/src/plugin, in dependency order; every
 # test is linked against all of them
-MODULES := atp_names coq_transl_opts coqterms hashing
-TESTS := test_atp_names test_hashing_match
+MODULES := atp_names coq_transl_opts coqterms hashing paired_output
+TESTS := test_atp_names test_hashing_match test_paired_output
 
 .PHONY: all clean
 
@@ -32,16 +32,16 @@ all:
 	for t in $(TESTS); do cp $$t.ml $(BUILD)/; done; \
 	cd $(BUILD); \
 	for m in $(LIB); do \
-	  $(OCAMLFIND) ocamlopt -package str -for-pack Hammer_lib -c $$m.ml; \
+	  $(OCAMLFIND) ocamlopt -package str,unix -for-pack Hammer_lib -c $$m.ml; \
 	done; \
-	$(OCAMLFIND) ocamlopt -package str -pack -o hammer_lib.cmx \
+	$(OCAMLFIND) ocamlopt -package str,unix -pack -o hammer_lib.cmx \
 	  $(addsuffix .cmx,$(LIB)); \
 	for m in $(MODULES); do \
-	  if [ -f $$m.mli ]; then $(OCAMLFIND) ocamlopt -package str -c $$m.mli; fi; \
-	  $(OCAMLFIND) ocamlopt -package str -c $$m.ml; \
+	  if [ -f $$m.mli ]; then $(OCAMLFIND) ocamlopt -package str,unix -c $$m.mli; fi; \
+	  $(OCAMLFIND) ocamlopt -package str,unix -c $$m.ml; \
 	done; \
 	for t in $(TESTS); do \
-	  $(OCAMLFIND) ocamlopt -package str -linkpkg -o $$t \
+	  $(OCAMLFIND) ocamlopt -package str,unix -linkpkg -o $$t \
 	    hammer_lib.cmx $(addsuffix .cmx,$(MODULES)) $$t.ml; \
 	  ./$$t; \
 	done

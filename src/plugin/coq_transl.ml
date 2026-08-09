@@ -3015,17 +3015,21 @@ let cleanup () =
 
 (******************************************************************************)
 
+let output_problem_axioms oc name axioms =
+  Tptp_out.write_fol_problem
+    (output_string oc)
+    (List.remove_assoc name axioms)
+    (name, List.assoc name axioms)
+
+let output_problem oc name deps =
+  output_problem_axioms oc name (get_axioms (name :: deps))
+
 let write_problem fname name deps =
-  let axioms = get_axioms (name :: deps)
-  in
-  let oc = open_out fname
-  in
+  let axioms = get_axioms (name :: deps) in
+  let oc = open_out fname in
   try
-    Tptp_out.write_fol_problem
-      (output_string oc)
-      (List.remove_assoc name axioms)
-      (name, List.assoc name axioms);
+    output_problem_axioms oc name axioms;
     close_out oc
   with e ->
-    close_out oc;
+    close_out_noerr oc;
     raise e

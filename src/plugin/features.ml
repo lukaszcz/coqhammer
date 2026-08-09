@@ -206,6 +206,13 @@ type selection_ctx = {
   dcands : hhdef list Lazy.t;
 }
 
+type selection_metadata = {
+  def_candidates : int;
+  seed_min_occ : int option;
+  seed_median_occ : int option;
+  forced_slots : int;
+}
+
 let constructor_inductive (def : hhdef) : string option =
   match def with
   | (Comb(Comb(Id "$Construct",
@@ -469,17 +476,50 @@ let take_unique_defs seen n defs =
   in
   hlp seen n [] defs
 
-let merge_def_slots (ctx : selection_ctx) n predictions =
+let definition_slot_count ctx n =
   let max_slots = !Opt.definition_premises in
+  if n <= 0 || max_slots <= 0 then
+    0
+  else
+    let ceil_eighth = n / 8 + (if n mod 8 = 0 then 0 else 1) in
+    min (List.length (Lazy.force ctx.dcands)) (min max_slots ceil_eighth)
+
+let selection_metadata ctx n =
+  let occ = Lazy.force ctx.occ in
+  let seed_occurrences =
+    Hhlib.StringSet.fold
+      (fun name counts ->
+         if Hashtbl.mem ctx.def_tbl name then
+           (match Hashtbl.find_opt occ name with
+            | Some count -> count
+            | None -> 0) :: counts
+         else
+           counts)
+      (Lazy.force ctx.seed) []
+    |> List.sort compare
+  in
+  let seed_min_occ, seed_median_occ =
+    match seed_occurrences with
+    | [] -> None, None
+    | min_occ :: _ ->
+       let middle = (List.length seed_occurrences - 1) / 2 in
+       Some min_occ, Some (List.nth seed_occurrences middle)
+  in
+  {
+    def_candidates = List.length (Lazy.force ctx.dcands);
+    seed_min_occ;
+    seed_median_occ;
+    forced_slots = definition_slot_count ctx n;
+  }
+
+let merge_def_slots (ctx : selection_ctx) n predictions =
   if n <= 0 then
     []
-  else if max_slots = 0 then
+  else if !Opt.definition_premises <= 0 then
     predictions
   else
-    let dcands = Lazy.force ctx.dcands in
-    let ceil_eighth = n / 8 + (if n mod 8 = 0 then 0 else 1) in
-    let k = min (List.length dcands) (min max_slots ceil_eighth) in
-    let forced = take k dcands in
+    let k = definition_slot_count ctx n in
+    let forced = take k (Lazy.force ctx.dcands) in
     let seen = Hhlib.strset_from_lst (List.map get_hhdef_name forced) in
     forced @ take_unique_defs seen (n - k) predictions
 
