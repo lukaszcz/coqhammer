@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# Globals below are consumed dynamically by the sourced provenance helpers.
+# shellcheck disable=SC2034
 set -euo pipefail
 
 usage() {
@@ -85,7 +87,10 @@ if ! git -C "$repo" diff --quiet HEAD --; then
 fi
 eval_dir="$repo/eval"
 # shellcheck source=eval/grid-checkpoint-lib.sh
+# shellcheck disable=SC1091
 source "$eval_dir/grid-checkpoint-lib.sh"
+# shellcheck source=eval/confirmation-option-probe.sh
+source "$eval_dir/confirmation-option-probe.sh"
 
 # An unset -j means "use the machine": one job by default wasted almost all of
 # it, which is the difference between a smoke test and an evaluation.
@@ -100,6 +105,7 @@ fi
 repo_commit=$(git rev-parse HEAD)
 grid_script_digest=$(hash_file "${BASH_SOURCE[0]}")
 grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
+option_probe_digest=$(hash_file "$eval_dir/confirmation-option-probe.sh")
 results_root="$eval_dir/results/confirmation"
 artifacts_dir="$eval_dir/artifacts/extraction-confirmation"
 mkdir -p "$results_root" "$artifacts_dir"
@@ -111,7 +117,7 @@ corpora=(stdlib-regression dependent-stdlib stdpp color-vector
          dependent-slice equations-examples external-equations)
 labels=(current)
 
-declare -A label_config
+declare -A label_config label_definition_premises label_definition_features
 label_config[current]=current
 
 # Only these corpora have a committed eval/corpora/<name>/sample fixture; the
@@ -363,6 +369,16 @@ validate_consistency_run() {
       "$outdir/consistency-outputs-$prover-$premise.lst"
 }
 
+probe_label_options() {
+  local label="$1" prefix="$2"
+  confirmation_probe_hammer_options "$prefix"
+  confirmation_record_hammer_options "$prefix/manifest.env" "$option_probe_digest" \
+    "$CONFIRMATION_DEFINITION_PREMISES" "$CONFIRMATION_DEFINITION_FEATURES"
+  label_definition_premises[$label]=$CONFIRMATION_DEFINITION_PREMISES
+  label_definition_features[$label]=$CONFIRMATION_DEFINITION_FEATURES
+  echo "[probe] $label: DefinitionPremises=$CONFIRMATION_DEFINITION_PREMISES DefinitionFeatures=$CONFIRMATION_DEFINITION_FEATURES"
+}
+
 build_label() {
   local label="$1"
   local prefix="$eval_dir/_installs/$label"
@@ -427,7 +443,7 @@ run_generation() {
   local outdir="$results_root/$label/$corpus"
   mkdir -p "$outdir"
   local marker="$outdir/generate"
-  if checkpoint_done "$marker" generation "$label" "$corpus" "$prefix"; then
+  if confirmation_checkpoint_done "$marker" generation "$label" "$corpus" "$prefix"; then
     if validate_generation "$outdir"; then
       echo "[gen] $label/$corpus already done"
       return 0
@@ -504,7 +520,7 @@ run_generation() {
     fi
   done
   echo "generation_failed=0" > "$outdir/generation.status"
-  mark_checkpoint "$marker" generation "$label" "$corpus" "$prefix"
+  confirmation_mark_checkpoint "$marker" generation "$label" "$corpus" "$prefix"
 }
 
 run_prover() {
@@ -512,7 +528,7 @@ run_prover() {
   local outdir="$results_root/$label/$corpus"
   local marker="$outdir/prover-$prover-$premise" input_digest
   input_digest=$(hash_tree "$outdir/atp-problems/$premise")
-  if checkpoint_done "$marker" prover "$label" "$corpus" "$prefix" \
+  if confirmation_checkpoint_done "$marker" prover "$label" "$corpus" "$prefix" \
       "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"; then
     if validate_prover_run "$outdir" "$prover" "$premise"; then
       echo "[prover] $label/$corpus/$prover/$premise already done"
@@ -548,7 +564,7 @@ run_prover() {
     echo "Prover run produced incomplete, malformed, or crashed outputs for $label/$corpus/$prover/$premise" >&2
     return 1
   fi
-  mark_checkpoint "$marker" prover "$label" "$corpus" "$prefix" \
+  confirmation_mark_checkpoint "$marker" prover "$label" "$corpus" "$prefix" \
     "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"
 }
 
@@ -557,7 +573,7 @@ run_reconstruction() {
   local outdir="$results_root/$label/$corpus"
   local marker="$outdir/reconstruction" input_digest reconstruction_status
   input_digest=$(hash_tree "$outdir/prover-outputs")
-  if checkpoint_done "$marker" reconstruction "$label" "$corpus" "$prefix" \
+  if confirmation_checkpoint_done "$marker" reconstruction "$label" "$corpus" "$prefix" \
       "prover_timeout=$tim" "input_sha256=$input_digest"; then
     if validate_reconstruction_run "$outdir"; then
       echo "[reconstr] $label/$corpus already done"
@@ -596,7 +612,7 @@ run_reconstruction() {
     echo "Reconstruction produced incomplete or invalid outputs for $label/$corpus; see $outdir/reconstr.full.log" >&2
     return 1
   fi
-  mark_checkpoint "$marker" reconstruction "$label" "$corpus" "$prefix" \
+  confirmation_mark_checkpoint "$marker" reconstruction "$label" "$corpus" "$prefix" \
     "prover_timeout=$tim" "input_sha256=$input_digest"
 }
 
@@ -640,7 +656,7 @@ run_consistency() {
   local lemma_list="$eval_dir/corpora/$corpus/consistency-lemmas.txt" lemmas_digest=none
   [ -f "$lemma_list" ] && lemmas_digest=$(hash_file "$lemma_list")
   input_digest=$(hash_tree "$outdir/atp-problems/$premise")
-  if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
+  if confirmation_checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
       "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
       "lemmas_sha256=$lemmas_digest" \
       "input_sha256=$input_digest"; then
@@ -787,7 +803,7 @@ PY
     echo "Consistency check produced incomplete outputs for $label/$corpus/$prover/$premise" >&2
     return 1
   fi
-  mark_checkpoint "$marker" consistency "$label" "$corpus" "$prefix" \
+  confirmation_mark_checkpoint "$marker" consistency "$label" "$corpus" "$prefix" \
     "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
     "lemmas_sha256=$lemmas_digest" \
     "input_sha256=$input_digest"
@@ -799,6 +815,7 @@ for label in "${labels[@]}"; do
   fi
   build_label "$label"
   prefix="$eval_dir/_installs/$label"
+  probe_label_options "$label" "$prefix"
   for corpus in "${corpora[@]}"; do
     if [ -n "$only_corpus" ] && [ "$corpus" != "$only_corpus" ]; then
       continue
@@ -829,8 +846,10 @@ else
   python3 "$summarizer" \
     "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
     "${labels[@]}"
-  write_grid_provenance "$artifacts_dir/provenance.env" confirmation \
-    "$summarizer" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
+  provenance="$artifacts_dir/provenance.env"
+  confirmation_publish_final_provenance "$provenance" confirmation \
+    "$summarizer" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
+    "$option_probe_digest"
   echo "  summary:         $artifacts_dir/summary.tsv"
   echo "  analysis:        $artifacts_dir/analysis.md"
   echo "  provenance:      $artifacts_dir/provenance.env"

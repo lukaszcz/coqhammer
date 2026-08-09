@@ -22,11 +22,15 @@ test-atp-makefile:
 test-premise-grid-spec:
 	bash tests/test_premise_grid_spec.sh
 
+test-confirmation-option-probe:
+	bash tests/test_confirmation_option_probe.sh
+
 test-premise-summarizer:
 	python3 tests/test_summarize_premise_screening.py
 
 test: test-prepare-corpus test-grid-engine test-atp-makefile \
-      test-premise-grid-spec test-premise-summarizer
+      test-premise-grid-spec test-confirmation-option-probe \
+      test-premise-summarizer
 
 init: $(OFILES)
 problems/%.vo: problems/%.v
@@ -66,5 +70,6 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
 .PHONY: clean clean-vo clean-problems test test-prepare-corpus test-grid-engine \
-        test-atp-makefile test-premise-grid-spec test-premise-summarizer \
+        test-atp-makefile test-premise-grid-spec test-confirmation-option-probe \
+        test-premise-summarizer \
         check atp reconstr init all
