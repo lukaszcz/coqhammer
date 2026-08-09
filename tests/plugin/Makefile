@@ -1,7 +1,7 @@
 COQC ?= rocq c
 
 EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo $(EXTRACTION_VOS)
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo def_premises.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
@@ -48,6 +48,9 @@ basic.vo: basic.v
 
 bugs.vo: bugs.v
 	$(COQC) bugs.v
+
+def_premises.vo: def_premises.v
+	$(COQC) def_premises.v
 
 prover_selection.vo: prover_selection.v
 	$(COQC) prover_selection.v
