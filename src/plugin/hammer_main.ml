@@ -1156,7 +1156,13 @@ let predict_tac n pred_method =
 let hammer_features_tac () =
   try_goal_tactic
     begin fun gl ->
-      let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
+      let env = Proofview.Goal.env gl in
+      let sigma = Proofview.Goal.sigma gl in
+      let goal = get_goal gl in
+      let hyps = get_hyps gl in
+      let defs = get_defs env sigma in
+      let ctx = Features.make_selection_ctx hyps defs goal in
+      let features = Features.get_query_features ctx hyps goal in
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
       Tacticals.tclIDTAC
     end

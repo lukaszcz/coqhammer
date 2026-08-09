@@ -201,6 +201,7 @@ let is_nontrivial (def : hhdef) : bool =
 type selection_ctx = {
   ndefs : hhdef list;
   def_tbl : (string, hhdef) Hashtbl.t;
+  seed : Hhlib.StringSet.t Lazy.t;
   occ : (string, int) Hashtbl.t Lazy.t;
   dcands : hhdef list Lazy.t;
 }
@@ -223,6 +224,11 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
   List.iter
     (fun def -> Hashtbl.replace def_tbl (get_hhdef_name def) def)
     ndefs;
+  let seed =
+    lazy
+      (Hhlib.strset_from_lst
+         (get_deps goal @ List.concat_map get_deps hyps))
+  in
   let occ =
     lazy
       (let tbl = Hashtbl.create (List.length ndefs) in
@@ -240,14 +246,11 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
          ndefs;
        tbl)
   in
-  let make_dcands occ =
-    let seed_names =
-      Hhlib.strset_from_lst
-        (get_deps goal @ List.concat_map get_deps hyps)
-    in
+  let make_dcands seed occ =
+    let seed = Lazy.force seed in
     let seed_defs =
       List.filter
-        (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) seed_names)
+        (fun def -> Hhlib.StringSet.mem (get_hhdef_name def) seed)
         ndefs
     in
     let constructors = Hashtbl.create 64 in
@@ -263,7 +266,7 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
             Hashtbl.replace constructors ind (def :: defs)
          | None -> ())
       ndefs;
-    let candidate_names = ref seed_names in
+    let candidate_names = ref seed in
     List.iter
       (fun def ->
          match constructor_inductive def, inductive_name def with
@@ -308,10 +311,30 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
               if c <> 0 then c else String.compare name1 name2)
          ranked)
   in
-  let rec ctx : selection_ctx =
-    { ndefs; def_tbl; occ; dcands = lazy (make_dcands ctx.occ) }
-  in
-  ctx
+  { ndefs; def_tbl; seed; occ; dcands = lazy (make_dcands seed occ) }
+
+let get_query_features (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) =
+  let features = get_goal_features hyps goal in
+  let generality = !Opt.definition_features in
+  if generality = 0 then
+    features
+  else
+    let occ = Lazy.force ctx.occ in
+    let expanded =
+      Hhlib.StringSet.fold
+        (fun name acc ->
+           match Hashtbl.find_opt ctx.def_tbl name with
+           | Some def ->
+              let count =
+                match Hashtbl.find_opt occ name with
+                | Some count -> count
+                | None -> 0
+              in
+              if count <= generality then get_deps_cached def @ acc else acc
+           | None -> acc)
+        (Lazy.force ctx.seed) []
+    in
+    Hhlib.sort_uniq compare (features @ expanded)
 
 let extract (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
@@ -342,7 +365,7 @@ let extract (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) : string =
   close_out ocseq;
   close_out ocdep;
   let oc = open_out (fname ^ "conj") in
-  let fea = get_goal_features hyps goal in
+  let fea = get_query_features ctx hyps goal in
   output_char oc '\"';
   Hhlib.oiter (output_string oc) (output_string oc) "\", \"" fea;
   output_string oc "\"\n";

@@ -8,8 +8,8 @@ val get_goal_features : hhdef list (* hyps *) -> hhdef (* goal *) -> string list
 type selection_ctx
 
 (* Build the per-invocation selection context, including the filtered
-   definition lookup table used by extraction and prediction. The occurrence
-   table and ranked definitional candidates remain lazy. *)
+   definition lookup table used by extraction and prediction. The goal seed,
+   occurrence table and ranked definitional candidates remain lazy. *)
 val make_selection_ctx : hhdef list (* hyps *) -> hhdef list (* defs *) ->
   hhdef (* goal *) -> selection_ctx
 
@@ -17,6 +17,13 @@ val make_selection_ctx : hhdef list (* hyps *) -> hhdef list (* defs *) ->
    parent process so every candidate and reconstruction retry shares the work.
    This does not force the lazy fields when [DefinitionPremises] is zero. *)
 val prepare_def_slots : selection_ctx -> unit
+
+(* Construct the predictor's conjecture features. Positive
+   [DefinitionFeatures] values add the plain dependencies of seed definitions
+   whose occurrence count is at most the configured value. At zero this is
+   exactly [get_goal_features] and does not force lazy context fields. *)
+val get_query_features : selection_ctx -> hhdef list (* hyps *) ->
+  hhdef (* goal *) -> string list (* features *)
 
 (* `extract` extracts the features and dependencies into temporary
    files (to be used by the `predict` command). *)
