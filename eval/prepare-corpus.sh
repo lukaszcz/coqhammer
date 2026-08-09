@@ -15,6 +15,10 @@ Options:
   --modules "A B"         Stdlib modules for stdlib-regression
                           (default: Arith Bool Vectors Lists NArith)
 
+Environment:
+  COQHAMMER_HOOK_PREAMBLE  extra vernacular to insert after the Hammer import
+                          that provides hammer_hook; may contain multiple lines
+
 Corpora:
   stdlib-regression       hammer_hook corpus built from the installed Rocq
                           standard library; --sample selects the committed
@@ -83,6 +87,18 @@ cd "$eval_dir"
 rm -rf problems
 mkdir -p problems
 
+# Committed corpora already contain hammer_hook calls and the Hammer import
+# that provides them, so they do not pass through coqnames.  Insert a requested
+# preamble directly after that import.  Python's byte-oriented environment and
+# file APIs avoid interpreting multiline vernacular or shell-special bytes.
+# With no preamble this is deliberately a no-op, preserving the fixtures byte
+# for byte.
+insert_committed_preamble() {
+  local root="$1"
+  [ -n "${COQHAMMER_HOOK_PREAMBLE-}" ] || return 0
+  python3 "$eval_dir/tools/insert-committed-preamble.py" "$root"
+}
+
 copy_committed() {
   local name="$1"
   local src="corpora/$name"
@@ -94,6 +110,7 @@ copy_committed() {
     exit 1
   fi
   cp -R "$src"/. problems/
+  insert_committed_preamble problems
 }
 
 # Build a corpus from a library already installed in the switch.  An installed
@@ -135,7 +152,10 @@ build_installed_corpus() {
 }
 
 insert_hooks() {
-  (cd problems && "$eval_dir/tools/mkhooks.sh" > /dev/null 2>&1)
+  # Preserve the preamble verbatim while forwarding it through mkhooks to
+  # coqnames.  An unset variable is equivalent to an empty one.
+  (cd problems && COQHAMMER_HOOK_PREAMBLE="${COQHAMMER_HOOK_PREAMBLE-}" \
+    "$eval_dir/tools/mkhooks.sh" > /dev/null 2>&1)
   # rmcomments leaves a .bak beside every rewritten file; they are not sources.
   find problems -name '*.v.bak' -delete
 }

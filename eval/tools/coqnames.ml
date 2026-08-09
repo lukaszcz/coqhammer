@@ -176,7 +176,17 @@ let process_file fname =
   let ic = open_in fname
   and oc = open_out ofname
   in
-  output_string oc "From Hammer Require Import HammerHook.\n\n";
+  output_string oc "From Hammer Require Import HammerHook.\n";
+  begin match Sys.getenv_opt "COQHAMMER_HOOK_PREAMBLE" with
+    | Some preamble when preamble <> "" ->
+      output_string oc preamble;
+      if preamble.[String.length preamble - 1] = '\n' then
+        output_string oc "\n"
+      else
+        output_string oc "\n\n"
+    | _ ->
+      output_string oc "\n"
+  end;
   try
     pom prefix ic oc ""
   with End_of_file ->

@@ -10,6 +10,9 @@ COQC=rocq c $(COQFLAGS) $(shell find problems/ -name "*.conf" -exec cat {} + | t
 all:
 	@echo "See README on how to invoke make."
 
+test-prepare-corpus:
+	python3 tests/test_insert_committed_preamble.py
+
 init: $(OFILES)
 problems/%.vo: problems/%.v
 	@mkdir -p logs/init
@@ -47,4 +50,4 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
-.PHONY: clean clean-vo clean-problems check atp reconstr init all
+.PHONY: clean clean-vo clean-problems test-prepare-corpus check atp reconstr init all
