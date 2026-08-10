@@ -50,7 +50,17 @@ bugs.vo: bugs.v
 	$(COQC) bugs.v
 
 def_premises.vo: def_premises.v
-	$(COQC) def_premises.v
+	@set -e; \
+	$(COQC) def_premises.v > def_premises.out 2>&1 || { \
+	  cat def_premises.out; rm -f def_premises.vo def_premises.out; exit 1; \
+	}; \
+	premises=$$(grep -Fxc 'Current value of Hammer DefinitionPremises is 32' def_premises.out || true); \
+	features=$$(grep -Fxc 'Current value of Hammer DefinitionFeatures is 16' def_premises.out || true); \
+	if [ "$$premises" -ne 2 ] || [ "$$features" -ne 2 ]; then \
+	  echo "definition option default/reset check FAILED"; cat def_premises.out; \
+	  rm -f def_premises.vo def_premises.out; exit 1; \
+	fi; \
+	rm -f def_premises.out
 
 prover_selection.vo: prover_selection.v
 	$(COQC) prover_selection.v

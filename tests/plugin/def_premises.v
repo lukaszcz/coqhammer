@@ -1,5 +1,10 @@
 From Hammer Require Import Hammer.
 
+(* The first pair checks declaration-time defaults.  The Makefile also checks
+   the pair after Unset below, so changes to either reset value are caught. *)
+Test Hammer DefinitionPremises.
+Test Hammer DefinitionFeatures.
+
 (* Force every proof through premise selection and an external prover.  A
    single predictor/prover configuration makes the negative controls below
    deterministic and keeps their premise budget small. *)
@@ -68,7 +73,7 @@ Set Hammer Vampire.
    makes the definition-feature expansion path nonempty even though this goal
    is intentionally independent of selected premises. *)
 Set Hammer DefinitionPremises 0.
-Set Hammer DefinitionFeatures 16.
+Set Hammer DefinitionFeatures 4.
 
 Definition feature_marker (n : nat) := n + n.
 
@@ -76,13 +81,19 @@ Lemma nondefault_options : forall n, feature_marker n = feature_marker n.
 Proof. hammer. Qed.
 
 Set Hammer DefinitionPremises 32.
-Set Hammer DefinitionFeatures 0.
+Set Hammer DefinitionFeatures 16.
 
-Lemma explicitly_restored_options : forall P : Prop, P -> P.
+Lemma explicitly_configured_defaults : forall P : Prop, P -> P.
 Proof. hammer. Qed.
 
+(* Unset must reset values changed in the current session, rather than merely
+   leaving the most recently configured values in place. *)
+Set Hammer DefinitionPremises 0.
+Set Hammer DefinitionFeatures 0.
 Unset Hammer DefinitionPremises.
 Unset Hammer DefinitionFeatures.
+Test Hammer DefinitionPremises.
+Test Hammer DefinitionFeatures.
 
 Lemma unset_options : forall P : Prop, P -> P.
 Proof. hammer. Qed.

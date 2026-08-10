@@ -31,10 +31,10 @@ expect_parse() {
 
 cat > "$tmp/current.out" <<'EOF'
 Current value of Hammer DefinitionPremises is 32
-Current value of Hammer DefinitionFeatures is 0
+Current value of Hammer DefinitionFeatures is 16
 EOF
 expect_parse 32 DefinitionPremises "$tmp/current.out"
-expect_parse 0 DefinitionFeatures "$tmp/current.out"
+expect_parse 16 DefinitionFeatures "$tmp/current.out"
 
 cat > "$tmp/variant.out" <<'EOF'
   Hammer   DefinitionPremises : 8.
@@ -74,7 +74,7 @@ expected=$'Test Hammer DefinitionPremises.\nTest Hammer DefinitionFeatures.\n'
 [ -z "${FAKE_ROCQ_FAIL:-}" ] || exit 9
 printf '%s\n' \
   'Current value of Hammer DefinitionPremises is 32' \
-  'Hammer DefinitionFeatures : 0.'
+  'Hammer DefinitionFeatures : 16.'
 EOF
 chmod +x "$tmp/prefix/bin/rocq"
 export FAKE_PREFIX="$tmp/prefix"
@@ -83,7 +83,7 @@ export OCAMLPATH="$FAKE_BASE_OCAMLPATH"
 export TMPDIR="$tmp/probe-tmp"
 confirmation_probe_hammer_options "$tmp/prefix"
 [ "$CONFIRMATION_DEFINITION_PREMISES" = 32 ] || fail "probe returned wrong premise value"
-[ "$CONFIRMATION_DEFINITION_FEATURES" = 0 ] || fail "probe returned wrong feature value"
+[ "$CONFIRMATION_DEFINITION_FEATURES" = 16 ] || fail "probe returned wrong feature value"
 [ -z "$(find "$TMPDIR" -mindepth 1 -print -quit)" ] || fail "successful probe left a temporary"
 if FAKE_ROCQ_FAIL=1 confirmation_probe_hammer_options "$tmp/prefix" >/dev/null 2>&1; then
   fail "accepted a failed Rocq probe"
@@ -100,7 +100,7 @@ corpus_mode=sample
 force=false
 declare -A label_config=([current]=current)
 declare -A label_definition_premises=([current]=32)
-declare -A label_definition_features=([current]=0)
+declare -A label_definition_features=([current]=16)
 declare -A corpus_source=([sample]=fixture)
 declare -A corpus_digest=([sample]=dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd)
 cat > "$tmp/prefix/manifest.env" <<EOF
@@ -116,7 +116,7 @@ confirmation_record_hammer_options "$tmp/prefix/manifest.env" \
   "$CONFIRMATION_DEFINITION_FEATURES"
 grep -Fqx 'definition_premises=32' "$tmp/prefix/manifest.env" ||
   fail "install manifest omitted DefinitionPremises"
-grep -Fqx 'definition_features=0' "$tmp/prefix/manifest.env" ||
+grep -Fqx 'definition_features=16' "$tmp/prefix/manifest.env" ||
   fail "install manifest omitted DefinitionFeatures"
 [ "$(grep -Ec '^(option_probe_sha256|definition_premises|definition_features)=' \
     "$tmp/prefix/manifest.env")" -eq 3 ] || fail "install manifest repeated option fields"
@@ -137,7 +137,7 @@ fields=(
 )
 confirmation_mark_checkpoint "$marker" generation current sample "$tmp/prefix"
 grep -Fqx 'definition_premises=32' "$marker.done" || fail "marker omitted DefinitionPremises"
-grep -Fqx 'definition_features=0' "$marker.done" || fail "marker omitted DefinitionFeatures"
+grep -Fqx 'definition_features=16' "$marker.done" || fail "marker omitted DefinitionFeatures"
 checkpoint_matches "$marker" generation current sample "$tmp/prefix" "${fields[@]}" ||
   fail "fresh option provenance did not match"
 fields[1]=definition_premises=8
@@ -183,7 +183,7 @@ for expected in \
     'label.current.install_kind=current' \
     "label.current.install_manifest_sha256=$manifest_digest" \
     'label.current.definition_premises=32' \
-    'label.current.definition_features=0' \
+    'label.current.definition_features=16' \
     'corpus.sample.mode=sample' 'corpus.sample.source=fixture' \
     "corpus.sample.sha256=${corpus_digest[sample]}"; do
   grep -Fqx "$expected" "$final_provenance" ||

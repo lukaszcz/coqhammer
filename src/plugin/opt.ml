@@ -31,7 +31,7 @@ let _ =
   in
   declare_int_option gdopt
 
-let definition_features = ref 0
+let definition_features = ref 16
 
 let _ =
   let gdopt=
@@ -41,7 +41,7 @@ let _ =
       optread=(fun ()->Some !definition_features);
       optwrite=
    (function
-        None -> definition_features := 0
+        None -> definition_features := 16
       | Some i -> definition_features := (max i 0))}
   in
   declare_int_option gdopt
