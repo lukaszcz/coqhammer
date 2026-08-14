@@ -32,38 +32,29 @@ let ptimeout n tac =
            with _ -> ());
           Unix._exit 0
         end;
-      let clean_watchdog () =
-        ignore (try Unix.kill pid2 Sys.sigterm with _ -> ());
-        (try ignore (Unix.waitpid [] pid2) with _ -> ())
-      in
-      let clean_all () =
-        (* Watchdog first: while it lives it may SIGTERM the worker's
-           pid, which must not happen after that pid has been reaped
-           (and possibly recycled). *)
-        clean_watchdog ();
-        ignore (try Unix.kill pid Sys.sigterm with _ -> ());
-        (try ignore (Unix.waitpid [] pid) with _ -> ())
-      in
+      (* Watchdog first: see [Hhpartac.kill_children]. *)
+      let live = ref [pid2; pid] in
       let res =
         try
-          let (_, status) = Unix.waitpid [] pid
-          in
+          let (_, status) = Hhpartac.restart_on_eintr (Unix.waitpid []) pid in
+          live := List.filter (fun p -> p <> pid) !live;
+          Hhpartac.kill_children live;
           match status with
-          | Unix.WEXITED 0 -> clean_watchdog (); `Success
-          | Unix.WSIGNALED s when s = Sys.sigint ->
+          | Unix.WEXITED 0 -> `Success
+          | _ when Hhpartac.killed_by_sigint status ->
              (* The worker has the default SIGINT behaviour, so this
                 means Ctrl-C: the user's interrupt must not be turned
                 into a mere Tac_Timeout failure. *)
-             clean_watchdog (); `Interrupted
-          | _ -> clean_watchdog (); `Timeout
+             `Interrupted
+          | _ -> `Timeout
         with
         | e when CErrors.noncritical e ->
-           clean_all (); `Timeout
+           Hhpartac.kill_children live; `Timeout
         | e ->
            (* Sys.Break in particular: do not swallow the user's
               interrupt; clean up and let it propagate. *)
            let e = Exninfo.capture e in
-           clean_all ();
+           Hhpartac.kill_children live;
            Exninfo.iraise e
       in
       match res with

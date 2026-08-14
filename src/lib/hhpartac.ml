@@ -22,14 +22,53 @@ let detach_child () =
      inherited channel buffers (the concern of PR #229) on any
      remaining [Stdlib.exit] path. *)
   at_exit (fun () -> Unix._exit 2);
-  (* An exception must never escape from a freshly forked child. *)
+  (* An exception must never escape from a freshly forked child; and a
+     child whose descriptors could not be detached would keep the
+     toplevel's protocol channels, recreating the hazard above, so
+     abort it outright (its exit status reports a failed tactic). *)
   try
     let devnull = Unix.openfile "/dev/null" [Unix.O_RDWR] 0o600 in
     Unix.dup2 devnull Unix.stdin;
     Unix.dup2 devnull Unix.stdout;
     Unix.dup2 devnull Unix.stderr;
     Unix.close devnull
-  with _ -> ()
+  with _ -> Unix._exit 2
+
+(* Restart [f x] when interrupted by a signal whose OCaml handler
+   returns normally: the kernel then fails the underlying system call
+   with EINTR, which must not be confused with a real error (or,
+   worse, a timeout).  A handler that raises instead -- as
+   [Sys.catch_break]'s does with [Sys.Break] on Ctrl-C -- propagates
+   out of [f] as usual. *)
+let rec restart_on_eintr f x =
+  try f x with Unix.Unix_error (Unix.EINTR, _, _) -> restart_on_eintr f x
+
+let killed_by_sigint status =
+  match status with
+  | Unix.WSIGNALED s -> s = Sys.sigint
+  | _ -> false
+
+(* SIGTERM and reap the child processes still listed in [live],
+   removing each pid as it is reaped.  A pid leaves [live] only when
+   reaped, and only reaped pids can be recycled by the kernel, so no
+   signal is ever sent to a pid that may denote an unrelated process.
+   This also makes the cleanup idempotent and re-entrant: if it is
+   itself interrupted -- an asynchronous [Sys.Break] arriving during
+   [kill] or [waitpid] must propagate rather than be swallowed
+   together with the user's interrupt -- running it again finishes the
+   job.  Watchdog processes must precede workers in [live]: a watchdog
+   is then reaped -- hence provably no longer signalling anybody --
+   before the worker pids it holds are reaped and become recyclable. *)
+let kill_children live =
+  List.iter
+    (fun pid -> try Unix.kill pid Sys.sigterm with Unix.Unix_error _ -> ())
+    !live;
+  List.iter
+    (fun pid ->
+      (try ignore (restart_on_eintr (Unix.waitpid []) pid)
+       with Unix.Unix_error (Unix.ECHILD, _, _) -> ());
+      live := List.filter (fun p -> p <> pid) !live)
+    !live
 
 let partac time lst0 cont =
   let rec pom lst pids =
@@ -51,24 +90,9 @@ let partac time lst0 cont =
            Unix._exit 0
          end
        else
-         let cleaned = ref false in
-         let clean () =
-           (* Idempotent: [clean] may be reached again when an exception
-              is raised from [cont] after a normal cleanup; the pids may
-              have been reaped and recycled by then, so they must not be
-              killed twice. *)
-           if not !cleaned then
-             begin
-               cleaned := true;
-               (* Kill and reap the watchdog first: while it lives it
-                  may SIGTERM a worker pid, which must not happen after
-                  that pid has been reaped (and possibly recycled). *)
-               ignore (try Unix.kill pid2 Sys.sigterm with _ -> ());
-               (try ignore (Unix.waitpid [] pid2) with _ -> ());
-               List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) pids;
-               List.iter (fun i -> try ignore (Unix.waitpid [] i) with _ -> ()) pids
-             end
-         in
+         (* Watchdog first: see [kill_children]. *)
+         let live = ref (pid2 :: pids) in
+         let clean () = kill_children live in
          let n = List.length lst0 in
          let rec wait k =
            if k = 0 then
@@ -77,18 +101,14 @@ let partac time lst0 cont =
                  cont (-1) (Proofview.tclZERO Logic_monad.Tac_Timeout)
                end
            else
-             let (pid, status) = Unix.wait () in
-             let interrupted =
-               (* The children have the default SIGINT behaviour, so a
-                  child killed by SIGINT means Ctrl-C: propagate the
-                  interrupt instead of racing with the parent's own
-                  pending [Sys.Break] (losing that race would turn the
-                  user's interrupt into a mere tactic failure). *)
-               match status with
-               | Unix.WSIGNALED s -> s = Sys.sigint
-               | _ -> false
-             in
-             if interrupted then
+             let (pid, status) = restart_on_eintr Unix.wait () in
+             live := List.filter (fun p -> p <> pid) !live;
+             (* The children have the default SIGINT behaviour, so a
+                child killed by SIGINT means Ctrl-C: propagate the
+                interrupt instead of racing with the parent's own
+                pending [Sys.Break] (losing that race would turn the
+                user's interrupt into a mere tactic failure). *)
+             if killed_by_sigint status then
                begin
                  clean ();
                  raise Sys.Break
