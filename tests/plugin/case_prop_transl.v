@@ -82,7 +82,12 @@ Definition delivery_cache_warm : nat :=
      end).
 
 Definition delivery_cache_hit : nat :=
-  S (match hidden_delivery with
+  Nat.add
+    (match hidden_delivery with
+     | delivery_left n => n
+     | delivery_right n => S n
+     end)
+    (match hidden_delivery with
      | delivery_left n => n
      | delivery_right n => S n
      end).
@@ -117,6 +122,11 @@ Hammer_transl "compound_eq_case_prop".
 Hammer_transl "nested_eq_case_prop".
 Hammer_transl "compound_false_case_prop".
 Hammer_transl "delivery_cache_warm".
+(* A different owner hits the exact case lift warmed above.  Dumping this
+   declaration's closure without premise selection excludes the warm owner, so
+   [delivery_box]'s structural theory can arrive only through hit replay. *)
+Hammer_transl "delivery_cache_hit".
+Hammer_dump_transl "delivery_cache_hit" "case-structural-cache-hit.p".
 Hammer_transl "prop_case_only".
 Hammer_transl "prop_case_closed".
 
@@ -134,10 +144,6 @@ Goal forall b, delivery_value b = delivery_value b.
 Abort.
 
 Set Hammer Predictions 0.
-
-Goal delivery_cache_hit = delivery_cache_hit.
-  hammer_dump "case-structural-cache-hit.p".
-Abort.
 
 (* This goal does not expose [prop_case_box], but translating the selected
    closed definition still needs its case structure. *)

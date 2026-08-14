@@ -158,7 +158,15 @@ let coq_axioms = [
 (***************************************************************************************)
 (* Coqterms hash *)
 
-let coqterm_hash = Hashing.create lift
+(* Cached translations use a difference list for their side axioms.  Leaving
+   that composition unevaluated retains a shared expression DAG; repeated
+   instance reuse can expand it many times when the enclosing declaration is
+   finally extracted.  Freeze and validate each cache miss once. *)
+let compact_axioms (tm, mk) =
+  let axioms = compose_axioms [mk []] in
+  (tm, fun tail -> axioms @ tail)
+
+let coqterm_hash = Hashing.create ~compact:compact_axioms lift
 
 (* Nested anonymous lifts have no definition-style axiom name of their own.
    Keep the enclosing declaration while translating so their structural case
@@ -205,12 +213,24 @@ module Case_dependencies = struct
     if not (List.mem indname previous) then
       Hashtbl.replace table owner (indname :: previous)
   let find owner = try Hashtbl.find table owner with Not_found -> []
+  let mem owner indname = List.mem indname (find owner)
   let remove owner = Hashtbl.remove table owner
 end
 
 (* Hash-consed lifts replay their exact case dependencies on cache hits.  A
    scoped collector records dependencies while constructing a cache miss;
    nested lifts propagate their dependencies to the enclosing cached lift. *)
+module Lift_owners = struct
+  (* Availability belongs to a (symbol, declaration) pair.  One cached lift may
+     be replayed into several declarations; recording only its last owner makes
+     schema reuse depend on which declaration happened to be translated last. *)
+  let table = Hashtbl.create 128
+  let clear () = Hashtbl.clear table
+  let add name owner =
+    if owner <> "" then Hashtbl.replace table (name, owner) ()
+  let mem name owner = Hashtbl.mem table (name, owner)
+end
+
 module Lift_dependencies = struct
   let table = Hashtbl.create 128
   let collectors = ref []
@@ -224,6 +244,57 @@ module Lift_dependencies = struct
     let previous = find name in
     Hashtbl.replace table name
       (Hhlib.sort_uniq String.compare (dependencies @ previous))
+end
+
+(* Translation normally records ownership and structural delivery eagerly.
+   Schema applications are exceptional: their translated arity decides whether
+   they may be used at all.  Capture these side effects while checking such an
+   application, then either commit all of them with its axiom bundle or discard
+   all of them on fallback. *)
+module Translation_effects = struct
+  type delivery =
+    | Case_dependency of string * string
+    | Lift_owner of string * string
+
+  let collectors = ref []
+
+  let is_applied = function
+    | Case_dependency(owner, indname) -> Case_dependencies.mem owner indname
+    | Lift_owner(name, owner) -> Lift_owners.mem name owner
+
+  let apply = function
+    | Case_dependency(owner, indname) -> Case_dependencies.add owner indname
+    | Lift_owner(name, owner) -> Lift_owners.add name owner
+
+  let record delivery =
+    match !collectors with
+    | effects :: _ -> effects := (delivery, is_applied delivery) :: !effects
+    | [] -> apply delivery
+
+  let case_dependency owner indname =
+    if owner <> "" then record (Case_dependency(owner, indname))
+
+  let lift_owner name owner =
+    if owner <> "" then record (Lift_owner(name, owner))
+
+  let capture make =
+    let effects = ref [] in
+    let previous = !collectors in
+    collectors := effects :: previous;
+    try
+      let result = make () in
+      collectors := previous;
+      (result, List.rev !effects)
+    with e ->
+      collectors := previous;
+      raise e
+
+  let commit effects = List.iter (fun (delivery, _) -> record delivery) effects
+
+  let unchanged effects =
+    List.for_all
+      (fun (delivery, was_applied) -> is_applied delivery = was_applied)
+      effects
 end
 
 let with_lift_dependencies make =
@@ -247,10 +318,46 @@ let with_lift_dependencies make =
   in
   List.iter
     (fun dependency ->
-       Case_dependencies.add !translation_owner dependency;
+       Translation_effects.case_dependency !translation_owner dependency;
        Lift_dependencies.record dependency)
     delivered;
   result
+
+(* Isolate both dependency propagation and eager ownership effects while a
+   translated candidate is being validated.  Cache metadata created during the
+   attempt remains valid and reusable, but no declaration is said to contain
+   that metadata until [commit_speculation] accompanies a retained result. *)
+let speculate_translation make =
+  let dependencies = ref [] in
+  let previous_collectors = !(Lift_dependencies.collectors) in
+  Lift_dependencies.collectors := [dependencies];
+  try
+    let (result, effects) = Translation_effects.capture make in
+    Lift_dependencies.collectors := previous_collectors;
+    (result, Hhlib.sort_uniq String.compare !dependencies, effects)
+  with e ->
+    Lift_dependencies.collectors := previous_collectors;
+    raise e
+
+let discarded_speculations = ref 0
+let discarded_speculation_effects = ref 0
+
+let discard_speculation dependencies effects =
+  if not (Translation_effects.unchanged effects) then
+    raise (Hammer_errors.HammerError
+             "internal translation error: rejected schema candidate leaked effects");
+  let count = List.length dependencies + List.length effects in
+  if count > 0 then begin
+    incr discarded_speculations;
+    discarded_speculation_effects := !discarded_speculation_effects + count
+  end
+
+let speculation_stats () =
+  (!discarded_speculations, !discarded_speculation_effects)
+
+let commit_speculation dependencies effects =
+  Translation_effects.commit effects;
+  List.iter Lift_dependencies.record dependencies
 
 (***************************************************************************************)
 (* Lift-sharing diagnostic *)
@@ -1556,10 +1663,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                    of its scrutinee, including proposition-valued matches
                    translated as lower/upper bounds. *)
                 Lift_dependencies.record indname;
-                if dependency_owner <> "" then
-                  Case_dependencies.add dependency_owner indname;
-                if !translation_owner <> "" && !translation_owner <> dependency_owner then
-                  Case_dependencies.add !translation_owner indname
+                Translation_effects.case_dependency dependency_owner indname;
+                if !translation_owner <> dependency_owner then
+                  Translation_effects.case_dependency !translation_owner indname
               in
               let rec return_target_is_prop ctx = function
                 | Lam(name, ty, body) -> return_target_is_prop ((name, ty) :: ctx) body
@@ -2231,10 +2337,84 @@ and close vars cont =
     in
     hlp [] vars
 
+(* A lifted symbol is defined at the number of context arguments which survive
+   translation.  Validate an application by translating it first and reading
+   the actual retained spine; syntactic proof tests are only approximations of
+   the conversion path and must never authorize an equation or schema reuse. *)
+and retained_context_arity ctx =
+  List.length
+    (List.filter
+       (fun (name, _) ->
+          not (try Coq_typing.check_proof_var ctx name with _ -> false))
+       (ctx_to_vars ctx))
+
+and translate_schema_application ctx schema_name schema_ctx subst =
+  let candidate = convert ctx (mk_long_app (Const schema_name) subst) in
+  match flatten_app (fst candidate) with
+  | Const name, args
+      when name = schema_name && List.length args = retained_context_arity schema_ctx ->
+     Some candidate
+  | _ -> None
+
 and remove_lambda ctx tm =
   debug 3 (fun () -> print_header "remove_lambda" tm ctx);
   with_lift_dependencies (fun () ->
-    Hashing.find_or_insert coqterm_hash ctx tm
+    let key = Hashing.canonical_key ctx tm in
+    let cctx = Hashing.key_context key
+    and ctm = Hashing.key_term key in
+    (* When a lambda is a syntactic instance of a schema available in this
+       declaration, applying the schema symbol to the matching substitution
+       names exactly the same Coq term.  Reuse is authorized only after that
+       candidate application has gone through the real conversion path and its
+       retained arity has been checked.  A rejected attempt contributes neither
+       axioms nor ownership/structural-delivery effects. *)
+    let reuse_instance () =
+      match Hashing.find_lift_link "lam" cctx ctm with
+      | Some link when not link.Hashing.ll_new_is_schema &&
+                       Lift_owners.mem link.Hashing.ll_name !translation_owner &&
+                       binder_erasure_profile cctx ctm =
+                         binder_erasure_profile link.Hashing.ll_ctx link.Hashing.ll_tm ->
+         let schema_key =
+           Hashing.canonical_pair_key link.Hashing.ll_ctx link.Hashing.ll_tm
+         in
+         begin match Hashing.find_key "" coqterm_hash schema_key with
+         | None -> None
+         | Some cached ->
+            let (candidate, dependencies, effects) =
+              speculate_translation (fun () ->
+                translate_schema_application cctx link.Hashing.ll_name
+                  link.Hashing.ll_ctx link.Hashing.ll_subst)
+            in
+            begin match candidate with
+            | None ->
+               discard_speculation dependencies effects;
+               None
+            | Some candidate ->
+               commit_speculation dependencies effects;
+               Some (Hashing.lift_key coqterm_hash key (cached >> candidate))
+            end
+         end
+      | _ -> None
+    in
+    let reuse =
+      match Hashing.find_key "" coqterm_hash key with
+      | Some cached ->
+         (* Replaying the complete cached bundle makes its symbol available to
+            this owner.  Record the pair after constructing that replay, so a
+            later schema instance in the same declaration is order-independent
+            across earlier owners of the same cache entry. *)
+         let result = Hashing.lift_key coqterm_hash key cached in
+         begin match fst (flatten_app (fst result)) with
+         | Const name -> Translation_effects.lift_owner name !translation_owner
+         | _ -> ()
+         end;
+         Some result
+      | None -> reuse_instance ()
+    in
+    match reuse with
+    | Some result -> result
+    | None ->
+    Hashing.find_or_insert_key "" coqterm_hash key
       begin fun cctx ctm ->
         let name = "$_lam_" ^ unique_id ()
         in
@@ -2268,6 +2448,7 @@ and remove_lambda ctx tm =
         | Const cname when cname = name ->
            count_lift "lam" (link_outcome link);
            Hashing.register_lift "lam" name cctx ctm;
+           Translation_effects.lift_owner name !translation_owner;
            add_link_axiom name cctx ctm link >>
            return result
         | _ ->
@@ -2431,46 +2612,33 @@ and add_link_axiom name cctx ctm link =
        else
          (name, cctx, link.ll_name, link.ll_ctx)
      in
-     let vars = ctx_to_vars inst_ctx
+     let vars = ctx_to_vars inst_ctx in
+     (* Matching is syntactic on unerased terms, so a surviving schema-context
+        variable may be instantiated by a proof which conversion drops.  Run
+        the same checked application path used by lambda schema reuse.  Its
+        speculative side axioms and dependency deliveries are retained only if
+        the translated spine has the symbol's real definition arity. *)
+     let (rhs, dependencies, effects) =
+       speculate_translation (fun () ->
+         translate_schema_application inst_ctx schema_name schema_ctx link.ll_subst)
      in
-     (* The arity a symbol is defined at counts the context variables which
-        survive erasure, and the left-hand side reproduces the instance's own
-        context, so only the right-hand side can miss it: the schema's symbol
-        is applied to the *images* of its context variables, and matching is
-        syntactic on unerased terms, so a schema variable which survives in the
-        schema's context -- one of type [v_CANONICAL_k] with [k] a [Type]
-        variable, say -- may be instantiated by a proof.  The image is then
-        dropped from the application and the schema's symbol appears one
-        argument short of its definition, which with that definition equates a
-        value with a function, exactly as a mismatched lambda binder would.
-        This is why the binder profiles alone do not settle it.  Count the
-        arguments the conversion kept and compare against the definition. *)
-     let schema_arity =
-       List.length
-         (List.filter
-            (fun (x, _) -> not (try Coq_typing.check_proof_var schema_ctx x with _ -> false))
-            (ctx_to_vars schema_ctx))
-     and kept_args = ref (-1)
-     in
-     (* Built through the same path [add_def_eq_type_axiom] uses, so arity and
-        [$HasType] handling are unchanged. *)
-     close vars
-       begin fun ctx ->
-         convert ctx (mk_long_app (Const(inst_name)) (mk_vars vars)) >>= fun lhs ->
-         convert ctx (mk_long_app (Const(schema_name)) link.ll_subst) >>= fun rhs ->
-         (* the conversion runs once and cannot be repeated to measure it (it
-            emits the axioms of the lifts inside the images), so read the arity
-            off here *)
-         kept_args := List.length (snd (flatten_app rhs));
-         return (mk_eq lhs rhs)
-       end >>= fun r ->
-     if !kept_args <> schema_arity then
-       begin
-         Lift_stats.count "link.arg_erasure_mismatch";
-         return ()
-       end
-     else
-       add_axiom (mk_axiom ("$_link_" ^ unique_id ()) r)
+     begin match rhs with
+     | None ->
+        discard_speculation dependencies effects;
+        Lift_stats.count "link.arg_erasure_mismatch";
+        return ()
+     | Some rhs ->
+        commit_speculation dependencies effects;
+        (* Built through the same path [add_def_eq_type_axiom] uses, so arity
+           and [$HasType] handling are unchanged. *)
+        close vars
+          begin fun ctx ->
+            convert ctx (mk_long_app (Const(inst_name)) (mk_vars vars)) >>= fun lhs ->
+            rhs >>= fun rhs ->
+            return (mk_eq lhs rhs)
+          end >>= fun r ->
+        add_axiom (mk_axiom ("$_link_" ^ unique_id ()) r)
+     end
 
 and add_def_eq_type_axiom axname name fvars ty =
   debug 2 (fun () -> print_header "add_def_eq_type_axiom" ty fvars);
@@ -2976,7 +3144,7 @@ let translate name =
   try
     let axs = extract_axioms (add_def_axioms (Defhash.find name)) in
     translation_owner := previous_owner;
-    Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y)) axs
+    compose_axioms [axs]
   with e ->
     translation_owner := previous_owner;
     raise e
@@ -2992,10 +3160,10 @@ let retranslate lst =
 let get_axioms lst =
   let structural = List.concat (List.map Case_dependencies.find lst) in
   retranslate structural;
-  coq_axioms @
-    Hhlib.sort_uniq (fun x y -> Stdlib.compare (fst x) (fst y))
-      (List.concat
-         (List.map Axhash.find (Hhlib.sort_uniq String.compare (lst @ structural))))
+  compose_axioms
+    (coq_axioms ::
+       List.map Axhash.find
+         (Hhlib.sort_uniq String.compare (lst @ structural)))
 
 let remove_def name =
   Defhash.remove name;
@@ -3003,12 +3171,16 @@ let remove_def name =
   Case_dependencies.remove name
 
 let cleanup () =
+  reset_unique_id ();
+  discarded_speculations := 0;
+  discarded_speculation_effects := 0;
   Defhash.clear ();
   Coq_typing.clear_constructor_hash ();
   Axhash.clear ();
   Coq_erasure.clear ();
   Case_dependencies.clear ();
   Lift_dependencies.clear ();
+  Lift_owners.clear ();
   Hashtbl.clear type_unfolding_hash;
   translation_owner := "";
   Hashing.clear coqterm_hash

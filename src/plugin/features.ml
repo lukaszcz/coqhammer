@@ -123,9 +123,9 @@ let extract_features (t : hhterm) : string list =
 let get_def_fea_term (def : hhdef) : hhterm =
   match def with
   | (_, true, _, ty, _) ->
-     Lazy.force ty
+     force_hhterm ty
   | (_, false, _, ty, prf) ->
-     Comb(Lazy.force ty, Lazy.force prf)
+     Comb(force_hhterm ty, force_hhterm prf)
 
 let get_def_features (def : hhdef) : string list =
   extract_features (get_def_fea_term def)
@@ -142,7 +142,7 @@ let get_goal_features (hyps : hhdef list) (goal : hhdef) : string list =
 let get_deps (def : hhdef) : string list =
   match def with
   | (_, _, _, ty, prf) ->
-    extract_consts (Comb(Lazy.force ty, Lazy.force prf))
+    extract_consts (Comb(force_hhterm ty, force_hhterm prf))
 
 let features_cache = Hashtbl.create 1024
 let deps_cache = Hashtbl.create 1024
@@ -366,6 +366,11 @@ let extract (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) : string =
     output_string ocdep name; output_char ocdep ':';
     if deps <> [] then Hhlib.oiter (output_string ocdep) (output_string ocdep) " " deps;
     output_char ocdep '\n';
+    (* Feature/dependency caches now hold the compact products needed by later
+       predictions.  Drop the much larger converted type/body trees before
+       moving to the next global; selected premises are regenerated lazily for
+       translation. *)
+    release_hhdef def;
   in
   List.iter write_def defs;
   close_out ocfea;

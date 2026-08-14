@@ -22,7 +22,7 @@ validate_positive_int() {
 # outright; EVAL_MEMORY_PER_JOB_MB and EVAL_RESERVE_MB tune the memory model.
 detect_jobs() {
   local cores available_kb reserve_kb per_job_kb memory_jobs
-  local per_job_mb=${EVAL_MEMORY_PER_JOB_MB:-2048}
+  local per_job_mb=${EVAL_MEMORY_PER_JOB_MB:-4096}
   local reserve_mb=${EVAL_RESERVE_MB:-4096}
 
   cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)

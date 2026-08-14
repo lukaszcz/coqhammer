@@ -457,8 +457,10 @@ let call_provers_par fname ofname =
 let prepare_atp deps1 hyps deps goal =
   let name = Hh_term.get_hhdef_name goal in
   let depnames = List.map Hh_term.get_hhdef_name (hyps @ deps1) in
-  Coq_transl.remove_def name;
-  List.iter (fun d -> Coq_transl.remove_def (Hh_term.get_hhdef_name d)) hyps;
+  (* Every ATP problem owns its translation state.  In particular, premise
+     growth or minimization must not reuse anonymous lifts and side-axiom
+     bundles created for an earlier problem in the same Rocq process. *)
+  Coq_transl.cleanup ();
   Coq_transl.reinit (goal :: hyps @ deps);
   if !Opt.debug_mode || !Opt.gs_mode = 0 then
     Msg.info ("Translating the problem to FOL...");

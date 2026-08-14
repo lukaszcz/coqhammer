@@ -47,6 +47,15 @@ VERNAC COMMAND EXTEND Hammer_plugin_transl CLASSIFIED AS QUERY
 | [ "Hammer_transl" string(name) ] -> { hammer_transl name }
 END
 
+VERNAC COMMAND EXTEND Hammer_plugin_dump_transl CLASSIFIED AS QUERY
+| [ "Hammer_dump_transl" string(name) string(fname) ] ->
+  { hammer_dump_transl name fname }
+END
+
+VERNAC COMMAND EXTEND Hammer_plugin_speculation_stats CLASSIFIED AS QUERY
+| [ "Hammer_speculation_stats" ] -> { hammer_speculation_stats () }
+END
+
 (* The dump is read-only with respect to Rocq's state.  SIDEFF commands in an
    open proof are replayed on the master and proof branches. *)
 VERNAC COMMAND EXTEND Hammer_plugin_dump CLASSIFIED AS QUERY STATE proof_query

@@ -90,8 +90,9 @@ Hammer_transl "lam_inst".
 
 Section DumpGoal.
 
-(* A hypothesis of the dumped goal, so its lift is minted while the problem is
-   translated and the link equation travels into the problem with it. *)
+(* A hypothesis of the dumped goal exercises type lifting in a complete ATP
+   problem.  Problem generation resets translation state, so links printed by
+   the preceding [Hammer_transl] queries are intentionally not reused here. *)
 Variable Qs : X -> Type.
 Variable ks : forall x : X, Qs x.
 

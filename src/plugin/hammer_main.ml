@@ -212,8 +212,8 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
     | Names.GlobRef.VarRef v -> Id.to_string v
   in
   let term = match glob_ref with
-    | Names.GlobRef.ConstRef c -> lazy (hhproof_of env sigma c)
-    | _ -> lazy (mk_id "$Axiom")
+    | Names.GlobRef.ConstRef c -> Hh_term.delay_hhterm (fun () -> hhproof_of env sigma c)
+    | _ -> Hh_term.delay_hhterm (fun () -> mk_id "$Axiom")
   in
   let opaque = match glob_ref with
     | Names.GlobRef.ConstRef c -> Declareops.is_opaque (Global.lookup_constant c)
@@ -223,14 +223,16 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
      let l = Str.split (Str.regexp "\\.") filename_aux in
      Filename.dirname (String.concat "/" l)
   in
-  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of (without_projections env sigma ty)), term))
+  (filename,
+   (const, opaque, hhterm_of kind,
+    Hh_term.delay_hhterm (fun () -> hhterm_of (without_projections env sigma ty)), term))
 
 let hhdef_of_hyp env sigma (id, maybe_body, ty) =
   let kind = get_type_of env sigma ty in
   let body =
     match maybe_body with
-    | Some b -> lazy (hhterm_of (without_projections env sigma b))
-    | None -> lazy (mk_id "$Axiom")
+    | Some b -> Hh_term.delay_hhterm (fun () -> hhterm_of (without_projections env sigma b))
+    | None -> Hh_term.delay_hhterm (fun () -> mk_id "$Axiom")
   in
   let opaque =
     match maybe_body with
@@ -238,7 +240,7 @@ let hhdef_of_hyp env sigma (id, maybe_body, ty) =
     | None -> true
   in
   (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind,
-   lazy (hhterm_of (without_projections env sigma ty)), body)
+   Hh_term.delay_hhterm (fun () -> hhterm_of (without_projections env sigma ty)), body)
 
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
@@ -257,8 +259,10 @@ let get_goal gl =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    true,
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (hhterm_of (without_projections env sigma (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
-   lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
+   Hh_term.delay_hhterm (fun () ->
+     hhterm_of (without_projections env sigma
+                  (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
+   Hh_term.delay_hhterm (fun () -> mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
 
@@ -1173,8 +1177,8 @@ let hammer_print name =
     let glob = Utils.get_global name in
     let (_, (const, opaque, kind, ty, trm)) = hhdef_of_global env sigma glob in
     Msg.notice (Hh_term.string_of_hhterm const ^ " = ");
-    Msg.notice (Hh_term.string_of_hhterm (Lazy.force trm));
-    Msg.notice (" : " ^ Hh_term.string_of_hhterm (Lazy.force ty));
+    Msg.notice (Hh_term.string_of_hhterm (Hh_term.force_hhterm trm));
+    Msg.notice (" : " ^ Hh_term.string_of_hhterm (Hh_term.force_hhterm ty));
     Msg.notice (" : " ^ Hh_term.string_of_hhterm kind);
     if opaque then Msg.notice ("(opaque)")
   with Not_found ->
@@ -1194,6 +1198,37 @@ let hammer_transl name0 =
           Msg.notice (n ^ ": " ^ Coqterms.string_of_coqterm a)
       end
       (Coq_transl.translate name)
+  with Not_found ->
+    Msg.error ("Not found: " ^ name0)
+
+(* Dump the complete axiom closure of one declaration without resetting the
+   translation caches.  Unlike [hammer_dump], this diagnostic performs no
+   premise selection; it is useful for checking that metadata replayed from a
+   prior owner's structural cache hit is attached to the current owner alone. *)
+let hammer_speculation_stats () =
+  let rejected, effects = Coq_transl.speculation_stats () in
+  Msg.notice
+    (Printf.sprintf "rejected_schema_candidates_with_effects=%d discarded_effects=%d"
+       rejected effects)
+
+let hammer_dump_transl name0 fname =
+  let env, sigma = let e = Global.env () in e, Evd.from_env e in
+  try
+    let glob = Utils.get_global name0 in
+    let (_, def) = hhdef_of_global env sigma glob in
+    let name = Hh_term.get_hhdef_name def in
+    Coq_transl.reinit (get_defs env sigma);
+    Coq_transl.retranslate [name];
+    let oc = open_out (Opt.resolve_dump_path fname) in
+    try
+      Tptp_out.write_fol_problem (output_string oc)
+        (Coq_transl.get_axioms [name])
+        ("_HAMMER_DIAGNOSTIC",
+         Coqterms.Equal(Coqterms.Const "$True", Coqterms.Const "$True"));
+      close_out oc
+    with e ->
+      close_out_noerr oc;
+      raise e
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
 
