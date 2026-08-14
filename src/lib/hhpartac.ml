@@ -31,8 +31,30 @@ let detach_child () =
     Unix.dup2 devnull Unix.stdin;
     Unix.dup2 devnull Unix.stdout;
     Unix.dup2 devnull Unix.stderr;
-    Unix.close devnull
+    (* [openfile] returns the lowest free descriptor: if a standard
+       descriptor was closed at fork time, [devnull] IS that
+       descriptor, and closing it would undo its own redirection. *)
+    if devnull <> Unix.stdin && devnull <> Unix.stdout && devnull <> Unix.stderr
+    then Unix.close devnull
   with _ -> Unix._exit 2
+
+(* The body of a forked worker: detach from the toplevel, run the
+   tactic, and report success or failure through the exit status.
+   When [time > 0] the worker also arms a SIGALRM deadline slightly
+   beyond the timeout: the parent normally kills it earlier, so the
+   alarm only bounds the lifetime of a worker orphaned by a parent
+   that died without cleaning up -- and a worker signalling itself
+   cannot hit a recycled pid. *)
+let worker time tac =
+  detach_child ();
+  if time > 0 then
+    begin
+      Sys.set_signal Sys.sigalrm Sys.Signal_default;
+      ignore (Unix.alarm (time + 5))
+    end;
+  Proofview.tclOR
+    (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
+    (fun _ -> Unix._exit 1)
 
 (* Restart [f x] when interrupted by a signal whose OCaml handler
    returns normally: the kernel then fails the underlying system call
@@ -76,17 +98,16 @@ let partac time lst0 cont =
     | [] ->
        let pid2 = Unix.fork () in
        if pid2 = 0 then
-         begin (* the watchdog *)
+         begin (* The watchdog: a pure timer.  It must not signal the
+                  worker pids itself: it only holds a fork-time
+                  snapshot of them, and by the time it fires some may
+                  have been reaped by the parent -- and recycled by
+                  the kernel, so the signal could hit an unrelated
+                  process.  The parent, which knows which pids are
+                  still live, does the killing when [Unix.wait]
+                  returns the watchdog. *)
            detach_child ();
-           begin
-             try
-               if time > 0 then
-                 begin
-                   Unix.sleep time;
-                   List.iter (fun i -> try Unix.kill i Sys.sigterm with _ -> ()) pids
-                 end
-             with _ -> ()
-           end;
+           (try if time > 0 then Unix.sleep time with _ -> ());
            Unix._exit 0
          end
        else
@@ -141,12 +162,7 @@ let partac time lst0 cont =
     | tac :: t ->
        let pid = Unix.fork () in
        if pid = 0 then
-         begin (* a worker *)
-           detach_child ();
-           Proofview.tclOR
-             (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
-             (fun _ -> Unix._exit 1)
-         end
+         worker time tac
        else
          pom t (pid :: pids)
   in
