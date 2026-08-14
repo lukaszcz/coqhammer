@@ -101,6 +101,12 @@ def fixture_checkpoint(
         "hook_preamble_sha256": hashlib.sha256(fixture_preamble(label)).hexdigest(),
         "hook_preamble_file": "hook-preamble.v",
     }
+    if stage == "generation":
+        fields.update({
+            "compile_supervisor_sha256": provenance.compile_supervisor_sha256,
+            "compile_timeout": provenance.compile_timeout,
+            "compile_timeout_grace": provenance.compile_timeout_grace,
+        })
     if stage in ("prover", "consistency"):
         assert premise is not None and prover is not None and input_sha256 is not None
         fields.update({
@@ -157,6 +163,9 @@ class Fixture:
             repository_commit="3" * 40,
             grid_script_sha256="4" * 64,
             checkpoint_helper_sha256="5" * 64,
+            compile_supervisor_sha256="6" * 64,
+            compile_timeout="600",
+            compile_timeout_grace="10",
             prover_timeout="5",
             consistency_timeout="2",
             consistency_premise=axes.premises[0],
@@ -263,6 +272,9 @@ class Fixture:
             "repository_commit": self.provenance.repository_commit,
             "grid_script_sha256": self.provenance.grid_script_sha256,
             "checkpoint_helper_sha256": self.provenance.checkpoint_helper_sha256,
+            "compile_supervisor_sha256": self.provenance.compile_supervisor_sha256,
+            "compile_timeout": self.provenance.compile_timeout,
+            "compile_timeout_grace": self.provenance.compile_timeout_grace,
             "prover_timeout": self.provenance.prover_timeout,
             "consistency_timeout": self.provenance.consistency_timeout,
             "labels": self.provenance.labels,

@@ -193,7 +193,7 @@ _grid_new_atomic_temp() {
 
 _grid_hash_sources() {
   local spec_script="$1" summarizer="$2"
-  python3 - \
+  hash_harness_sources \
     spec "$spec_script" \
     engine "${BASH_SOURCE[0]}" \
     checkpoint-helper "$_grid_engine_dir/grid-checkpoint-lib.sh" \
@@ -201,24 +201,8 @@ _grid_hash_sources() {
     cli-helper "$_grid_engine_dir/cli-lib.sh" \
     prefix-helper "$_grid_engine_dir/install-prefix-lib.sh" \
     eval-makefile "$_grid_engine_dir/Makefile" \
-    summarizer "$summarizer" <<'PY'
-import hashlib
-import pathlib
-import sys
-
-arguments = sys.argv[1:]
-if len(arguments) % 2:
-    raise SystemExit("internal error: unpaired harness provenance argument")
-digest = hashlib.sha256()
-for name, filename in zip(arguments[::2], arguments[1::2]):
-    data = pathlib.Path(filename).read_bytes()
-    encoded_name = name.encode()
-    digest.update(len(encoded_name).to_bytes(8, "big"))
-    digest.update(encoded_name)
-    digest.update(len(data).to_bytes(8, "big"))
-    digest.update(data)
-print(digest.hexdigest())
-PY
+    compile-supervisor "$_grid_engine_dir/tools/rocq-compile-supervisor.sh" \
+    summarizer "$summarizer"
 }
 
 _grid_require_reviewable_worktree() {
@@ -230,6 +214,7 @@ _grid_require_reviewable_worktree() {
     eval/cli-lib.sh
     eval/install-prefix-lib.sh
     eval/Makefile
+    eval/tools/rocq-compile-supervisor.sh
   )
   for path in "$spec_script" "$summarizer"; do
     relative=${path#"$worktree"/}
@@ -334,6 +319,8 @@ _grid_parse_args() {
   jobs=
   tim=${GRID_TIM:-5}
   consistency_tim=${GRID_CONSISTENCY_TIM:-2}
+  compile_timeout=${GRID_COMPILE_TIMEOUT:-600}
+  compile_timeout_grace=${GRID_COMPILE_TIMEOUT_GRACE:-10}
   skip_builds=false
   only_label=
   only_corpus=
@@ -352,6 +339,12 @@ _grid_parse_args() {
       --consistency-tim)
         [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
         consistency_tim="$2"; shift 2 ;;
+      --compile-timeout)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        compile_timeout="$2"; shift 2 ;;
+      --compile-timeout-grace)
+        [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
+        compile_timeout_grace="$2"; shift 2 ;;
       --skip-builds) skip_builds=true; shift ;;
       --only-label)
         [ "$#" -ge 2 ] || { _grid_missing_operand "$1"; return 2; }
@@ -638,9 +631,10 @@ _grid_validate_consistency_run() {
 }
 
 _grid_checkpoint_contents() {
-  local marker="$1" label="$3"
+  local marker="$1" stage="$2" label="$3"
   shift
   checkpoint_contents "$@"
+  compile_checkpoint_fields "$stage"
   printf '%s\n' \
     "hook_preamble_sha256=${label_preamble_digest[$label]}" \
     "hook_preamble_file=hook-preamble.v"
@@ -655,7 +649,11 @@ _grid_validate_preamble_sidecar() {
 }
 
 _grid_matches_legacy_checkpoint() {
-  local marker="$1" legacy_digest
+  local marker="$1" stage="$2" legacy_digest
+  # Historical generation ran without the now-provenanced compile supervisor.
+  # Its output must be regenerated; non-compiling downstream stages remain
+  # reusable when their explicit input hashes and all other fields still match.
+  [ "$stage" != generation ] || return 1
   shift
   for legacy_digest in "${legacy_grid_script_digests[@]}"; do
     # Bash locals are dynamically scoped, so checkpoint_contents sees this
@@ -669,9 +667,10 @@ _grid_matches_legacy_checkpoint() {
 }
 
 # Override the checkpoint helpers for engine users. New manifests carry the
-# preamble digest and sidecar. A declared historical manifest remains reusable
-# only for an empty preamble and only when every field other than its historical
-# grid script digest exactly matches the current run.
+# preamble digest, sidecar, and compile provenance. A declared historical
+# manifest remains reusable only for a non-generation stage with an empty
+# preamble, and only when every field other than its historical grid script
+# digest exactly matches the current run.
 checkpoint_matches() {
   local marker="$1" label="$3"
   shift
@@ -734,6 +733,20 @@ _grid_build_install() {
   (cd "$eval_dir" && ./rebuild-config.sh "$install" --label "$label" --prefix "$prefix")
 }
 
+_grid_run_compile_make() {
+  local phase="$1" target="$2" coqc_cmd="$3" output_log="$4" compile_log_dir="$5"
+  local status=0
+  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
+    COMPILE_SUPERVISOR="$compile_supervisor" \
+    COMPILE_TIMEOUT="$compile_timeout" \
+    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
+    COMPILE_PHASE="$phase" > "$output_log" 2>&1 || status=$?
+  if [ "$status" -ne 0 ]; then
+    report_compile_timeouts "$compile_log_dir"
+    return "$status"
+  fi
+}
+
 _grid_run_generation() {
   local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
@@ -748,7 +761,9 @@ _grid_run_generation() {
   fi
 
   rm -f "$outdir/generation.status" "$marker.done"
-  clear_downstream_results "$outdir"
+  # Keep downstream checkpoints until the regenerated problem trees exist.
+  # Their input_sha256 fields then safely decide whether their outputs can be
+  # reused, rather than discarding expensive results when generation is equal.
   echo "[gen] $label/$corpus"
   _grid_prepare_prefix_env "$prefix"
   export COQHAMMER_HOOK_PREAMBLE="${label_preamble[$label]}"
@@ -758,9 +773,16 @@ _grid_run_generation() {
   mkdir -p atp/o out
 
   coqc_cmd="rocq c -coqlib $prefix/coq"
-  make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1
+  if ! _grid_run_compile_make init init "$coqc_cmd" "$outdir/init.log" logs/init; then
+    echo "Init failed for $label/$corpus; see $outdir/init.log" >&2
+    return 1
+  fi
   echo check > coqhammer.opt
-  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1
+  if ! _grid_run_compile_make check check "$coqc_cmd" \
+      "$outdir/check.full.log" logs/check; then
+    echo "Check failed for $label/$corpus; see $outdir/check.full.log" >&2
+    return 1
+  fi
   grep Error "$outdir/check.full.log" > "$outdir/check.log" || true
   if [ -s "$outdir/check.log" ]; then
     echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
@@ -768,11 +790,14 @@ _grid_run_generation() {
   fi
 
   echo gen-atp > coqhammer.opt
-  if ! make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
+  if ! _grid_run_compile_make gen-atp atp "$coqc_cmd" \
+      "$outdir/gen-atp.full.log" logs/atp; then
+    cleanup_paired_output_temporaries atp/problems
     grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
     echo "ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
     return 1
   fi
+  cleanup_paired_output_temporaries atp/problems
   grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
   if [ -s "$outdir/gen-atp.log" ]; then
     echo "ATP-generation errors for $label/$corpus; see $outdir/gen-atp.log" >&2
@@ -945,8 +970,9 @@ PY
 _grid_expected_provenance_json() {
   local label corpus prefix
   local args=(
-    "$repo_commit" "$grid_script_digest" "$grid_helper_digest" "$tim" "$consistency_tim"
-    "${#labels[@]}"
+    "$repo_commit" "$grid_script_digest" "$grid_helper_digest"
+    "$compile_supervisor_digest" "$compile_timeout" "$compile_timeout_grace"
+    "$tim" "$consistency_tim" "${#labels[@]}"
   )
   for label in "${labels[@]}"; do
     prefix=${label_prefix[$label]}
@@ -970,6 +996,9 @@ result = {
     "repository_commit": next(values),
     "grid_script_sha256": next(values),
     "checkpoint_helper_sha256": next(values),
+    "compile_supervisor_sha256": next(values),
+    "compile_timeout": next(values),
+    "compile_timeout_grace": next(values),
     "prover_timeout": next(values),
     "consistency_timeout": next(values),
     "labels": {},
@@ -1033,6 +1062,9 @@ _grid_write_provenance() {
       "grid_script_sha256=$grid_script_digest" \
       "checkpoint_helper_sha256=$grid_helper_digest" \
       "summarizer_sha256=$(hash_file "$summarizer")" \
+      "compile_supervisor_sha256=$compile_supervisor_digest" \
+      "compile_timeout=$compile_timeout" \
+      "compile_timeout_grace=$compile_timeout_grace" \
       "prover_timeout=$tim" \
       "consistency_timeout=$consistency_tim" \
       "checkpoint_markers_sha256=$(hash_checkpoint_markers "$results_root")" \
@@ -1070,7 +1102,7 @@ grid_run() (
   }
 
   local value label corpus install prefix consistency_premise
-  for value in "$tim" "$consistency_tim"; do
+  for value in "$tim" "$consistency_tim" "$compile_timeout" "$compile_timeout_grace"; do
     if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
       echo "Timeouts must be positive integers: $value" >&2
       return 2
@@ -1087,6 +1119,8 @@ grid_run() (
   # guard. Clean build/corpus machinery is represented by repository_commit.
   grid_script_digest=$(_grid_hash_sources "$spec_script" "$GRID_SUMMARIZER")
   grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
+  compile_supervisor="$eval_dir/tools/rocq-compile-supervisor.sh"
+  compile_supervisor_digest=$(hash_file "$compile_supervisor")
   results_root=$(realpath -m -- "$GRID_RESULTS_ROOT")
   artifacts_dir=$(realpath -m -- "$GRID_ARTIFACTS_DIR")
   _grid_validate_output_roots || return 2

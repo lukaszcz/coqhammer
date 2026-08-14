@@ -72,23 +72,55 @@ probe=$7
 expected=$'Test Hammer DefinitionPremises.\nTest Hammer DefinitionFeatures.\n'
 [ "$(cat "$probe"; printf x)" = "${expected}x" ]
 [ -z "${FAKE_ROCQ_FAIL:-}" ] || exit 9
+[ -z "${FAKE_ROCQ_SLEEP:-}" ] || sleep 30
 printf '%s\n' \
   'Current value of Hammer DefinitionPremises is 32' \
   'Hammer DefinitionFeatures : 16.'
 EOF
 chmod +x "$tmp/prefix/bin/rocq"
+cat > "$tmp/probe-supervisor" <<'EOF'
+#!/usr/bin/env bash
+set -euo pipefail
+printf '%s\n' "$@" > "$FAKE_SUPERVISOR_ARGS"
+exec "$REAL_COMPILE_SUPERVISOR" "$@"
+EOF
+chmod +x "$tmp/probe-supervisor"
 export FAKE_PREFIX="$tmp/prefix"
 export FAKE_BASE_OCAMLPATH="$tmp/base-ocamlpath"
+export FAKE_SUPERVISOR_ARGS="$tmp/supervisor.args"
+export REAL_COMPILE_SUPERVISOR="$eval_dir/tools/rocq-compile-supervisor.sh"
 export OCAMLPATH="$FAKE_BASE_OCAMLPATH"
 export TMPDIR="$tmp/probe-tmp"
-confirmation_probe_hammer_options "$tmp/prefix"
+confirmation_probe_hammer_options "$tmp/prefix" "$tmp/probe-supervisor" \
+  2 1 option-probe
 [ "$CONFIRMATION_DEFINITION_PREMISES" = 32 ] || fail "probe returned wrong premise value"
 [ "$CONFIRMATION_DEFINITION_FEATURES" = 16 ] || fail "probe returned wrong feature value"
+mapfile -t supervisor_args < "$FAKE_SUPERVISOR_ARGS"
+if ! { [ "${supervisor_args[0]}" = --timeout ] &&
+    [ "${supervisor_args[1]}" = 2 ] &&
+    [ "${supervisor_args[2]}" = --grace ] &&
+    [ "${supervisor_args[3]}" = 1 ] &&
+    [ "${supervisor_args[4]}" = --phase ] &&
+    [ "${supervisor_args[5]}" = option-probe ] &&
+    [ "${supervisor_args[6]}" = --source ] &&
+    [ "$(basename "${supervisor_args[7]}")" = options.v ] &&
+    [ "${supervisor_args[8]}" = -- ] &&
+    [ "${supervisor_args[9]}" = rocq ]; }; then
+  fail "probe did not pass its compile policy and phase to the supervisor"
+fi
 [ -z "$(find "$TMPDIR" -mindepth 1 -print -quit)" ] || fail "successful probe left a temporary"
-if FAKE_ROCQ_FAIL=1 confirmation_probe_hammer_options "$tmp/prefix" >/dev/null 2>&1; then
+if FAKE_ROCQ_FAIL=1 confirmation_probe_hammer_options "$tmp/prefix" \
+    "$tmp/probe-supervisor" 2 1 option-probe >/dev/null 2>&1; then
   fail "accepted a failed Rocq probe"
 fi
 [ -z "$(find "$TMPDIR" -mindepth 1 -print -quit)" ] || fail "failed probe left a temporary"
+if FAKE_ROCQ_SLEEP=1 confirmation_probe_hammer_options "$tmp/prefix" \
+    "$tmp/probe-supervisor" 1 1 option-probe >"$tmp/slow.out" 2>"$tmp/slow.err"; then
+  fail "accepted a timed-out Rocq probe"
+fi
+grep -Fq 'TIMEOUT phase=option-probe' "$tmp/slow.err" ||
+  fail "timed-out probe omitted the supervisor phase diagnostic"
+[ -z "$(find "$TMPDIR" -mindepth 1 -print -quit)" ] || fail "timed-out probe left a temporary"
 
 # Exercise the checkpoint-manifest path in an isolated root. Both values are
 # part of the exact marker, so changing either invalidates it.
@@ -96,6 +128,9 @@ repo_commit=0123456789012345678901234567890123456789
 grid_script_digest=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 grid_helper_digest=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
 option_probe_digest=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc
+compile_supervisor_digest=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+compile_timeout=600
+compile_timeout_grace=10
 corpus_mode=sample
 force=false
 declare -A label_config=([current]=current)
@@ -130,20 +165,27 @@ if compgen -G "$tmp/missing-manifest.env.tmp.*" >/dev/null; then
 fi
 marker="$tmp/results/current/sample/generate"
 mkdir -p "$(dirname "$marker")"
-fields=(
-  "option_probe_sha256=$option_probe_digest"
-  "definition_premises=$CONFIRMATION_DEFINITION_PREMISES"
-  "definition_features=$CONFIRMATION_DEFINITION_FEATURES"
-)
 confirmation_mark_checkpoint "$marker" generation current sample "$tmp/prefix"
 grep -Fqx 'definition_premises=32' "$marker.done" || fail "marker omitted DefinitionPremises"
 grep -Fqx 'definition_features=16' "$marker.done" || fail "marker omitted DefinitionFeatures"
-checkpoint_matches "$marker" generation current sample "$tmp/prefix" "${fields[@]}" ||
-  fail "fresh option provenance did not match"
-fields[1]=definition_premises=8
-if checkpoint_matches "$marker" generation current sample "$tmp/prefix" "${fields[@]}" >/dev/null 2>&1; then
+grep -Fqx "compile_supervisor_sha256=$compile_supervisor_digest" "$marker.done" ||
+  fail "marker omitted compile supervisor hash"
+grep -Fqx 'compile_timeout=600' "$marker.done" || fail "marker omitted compile timeout"
+confirmation_checkpoint_done "$marker" generation current sample "$tmp/prefix" ||
+  fail "fresh option/compile provenance did not match"
+label_definition_premises[current]=8
+if confirmation_checkpoint_done "$marker" generation current sample \
+    "$tmp/prefix" >/dev/null 2>&1; then
   fail "changed option provenance reused a checkpoint"
 fi
+label_definition_premises[current]=32
+confirmation_mark_checkpoint "$marker" generation current sample "$tmp/prefix"
+compile_timeout=601
+if confirmation_checkpoint_done "$marker" generation current sample \
+    "$tmp/prefix" >/dev/null 2>&1; then
+  fail "changed compile policy reused a generation checkpoint"
+fi
+compile_timeout=600
 
 # Exercise the production final-provenance publisher, including the shared
 # fields, install-manifest digest, confirmation fields, publication mode, and
@@ -177,6 +219,8 @@ for expected in \
     "repository_commit=$repo_commit" \
     "grid_script_sha256=$grid_script_digest" \
     "checkpoint_helper_sha256=$grid_helper_digest" \
+    "compile_supervisor_sha256=$compile_supervisor_digest" \
+    'compile_timeout=600' 'compile_timeout_grace=10' \
     "option_probe_sha256=$option_probe_digest" \
     'label.current.config=current' \
     "label.current.install_commit=$repo_commit" \
@@ -191,6 +235,10 @@ for expected in \
 done
 [ "$(grep -Ec '^(option_probe_sha256|label\.current\.definition_(premises|features))=' \
     "$final_provenance")" -eq 3 ] || fail "final provenance repeated option fields"
+for field in compile_supervisor_sha256 compile_timeout compile_timeout_grace; do
+  [ "$(grep -c "^$field=" "$final_provenance")" -eq 1 ] ||
+    fail "final provenance did not record $field exactly once"
+done
 chmod 0604 "$final_provenance"
 confirmation_publish_final_provenance "$final_provenance" confirmation \
   "$eval_dir/summarizer.py" "$eval_dir/summary.tsv" "$eval_dir/analysis.md" \
@@ -250,6 +298,12 @@ for function, stage in (
             raise SystemExit(f"{function} does not use {helper} for {stage}")
 if re.search(r"^  (?:if )?(?:checkpoint_done|mark_checkpoint) ", text, re.M):
     raise SystemExit("confirmation stage bypasses option-provenance wrappers")
+if not re.search(
+    r'confirmation_probe_hammer_options "\$prefix" "\$compile_supervisor" \\\n'
+    r'    "\$compile_timeout" "\$compile_timeout_grace" "\$option_probe_phase"',
+    text,
+):
+    raise SystemExit("confirmation probe does not receive the configured compile policy")
 PY
 
 trap -p EXIT HUP INT TERM > "$tmp/caller-traps.after"

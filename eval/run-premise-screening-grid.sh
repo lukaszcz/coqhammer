@@ -22,6 +22,9 @@ Options:
                         (default: sized from cores and available memory)
   --tim SEC             ATP timeout per problem (default: 5)
   --consistency-tim S  false-conjecture timeout per problem (default: 2)
+  --compile-timeout S  per-file Rocq compile timeout (default: 600)
+  --compile-timeout-grace S
+                       TERM grace before process-group KILL (default: 10)
   --skip-builds        require the shared current install; do not build it
   --only-label LABEL   run only one runtime-option label
   --only-corpus CORPUS run only one corpus

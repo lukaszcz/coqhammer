@@ -28,6 +28,9 @@ legacy=0a4af3b6fb21c4b53f0d6193714981b2c7d9e42c6ed39bf7325fa028e93ab563
 repo_commit=0123456789012345678901234567890123456789
 grid_script_digest=aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
 grid_helper_digest=bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+compile_supervisor_digest=dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
+compile_timeout=600
+compile_timeout_grace=10
 legacy_grid_script_digests=("$legacy")
 corpus_mode=sample
 force=false
@@ -37,7 +40,19 @@ declare -A label_preamble_digest=([label]="$(_grid_hash_text '')")
 declare -A corpus_source=([corpus]=eval/corpora/corpus/sample)
 declare -A corpus_digest=([corpus]=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc)
 prefix="$tmp/prefix"
-mkdir -p "$prefix" "$tmp/checkpoint"
+mkdir -p "$prefix" "$tmp/checkpoint" "$tmp/timeout-logs/nested"
+printf '%s\n' \
+  'rocq-compile-supervisor: TIMEOUT phase=check source=fixture.v limit=1s grace=1s exit=124' \
+  > "$tmp/timeout-logs/nested/fixture.log"
+timeout_report=$(report_compile_timeouts "$tmp/timeout-logs" 2>&1)
+[[ "$timeout_report" == *'phase=check source=fixture.v'* ]] ||
+  fail "compile timeout report remained buried in per-file logs"
+printf 'one\n' > "$tmp/harness-source"
+first_harness_hash=$(hash_harness_sources supervisor "$tmp/harness-source")
+printf 'two\n' > "$tmp/harness-source"
+second_harness_hash=$(hash_harness_sources supervisor "$tmp/harness-source")
+[ "$first_harness_hash" != "$second_harness_hash" ] ||
+  fail "composite harness hash ignored changed supervisor bytes"
 eval_prefix_write_marker "$prefix"
 cat > "$prefix/manifest.env" <<EOF
 kind=configuration
@@ -54,12 +69,13 @@ old_corpus_digest=${corpus_digest[corpus]}
 
 manifest_sha=$(sha256sum "$prefix/manifest.env" | awk '{ print $1 }')
 write_historical_marker() {
-  local historical_digest="$1"
+  local historical_digest="$1" stage="$2"
+  shift 2
   # Golden historical engine schema: do not call checkpoint_contents here, or
   # a producer/checker schema change could make this integration test tautological.
   cat > "$marker.done" <<EOF
 checkpoint_version=3
-stage=generation
+stage=$stage
 repository_commit=$repo_commit
 grid_script_sha256=$historical_digest
 checkpoint_helper_sha256=$grid_helper_digest
@@ -73,38 +89,54 @@ corpus_mode=sample
 corpus_source=eval/corpora/corpus/sample
 corpus_sha256=$old_corpus_digest
 EOF
+  [ "$#" -eq 0 ] || printf '%s\n' "$@" >> "$marker.done"
 }
 
-# The actual historical extraction-screening digest is accepted with an empty
-# preamble when all other provenance is current.
-write_historical_marker "$legacy"
-checkpoint_matches "$marker" generation label corpus "$prefix" ||
-  fail "valid historical checkpoint was not reused"
-[ -f "$marker.done" ] || fail "valid historical checkpoint was removed"
+# The actual historical extraction-screening generation checkpoint predates
+# compile supervision and must not be reused, even when all old fields match.
+write_historical_marker "$legacy" generation
+expect_failure checkpoint_matches "$marker" generation label corpus "$prefix"
+[ ! -e "$marker.done" ] || fail "unsupervised historical generation marker survived"
+
+# Historical downstream work is still safe when its generated-input hash and
+# every other provenance field match the current run.
+write_historical_marker "$legacy" prover \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
+checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest" ||
+  fail "valid historical downstream checkpoint was not reused"
+[ -f "$marker.done" ] || fail "valid historical downstream checkpoint was removed"
 
 # An undeclared old digest is not a migration wildcard.
-write_historical_marker dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd
-expect_failure checkpoint_matches "$marker" generation label corpus "$prefix"
+write_historical_marker \
+  dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd prover \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
+expect_failure checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
 [ ! -e "$marker.done" ] || fail "unsupported historical marker survived"
 
 # Historical markers are never valid for a nonempty preamble.
-write_historical_marker "$legacy"
+write_historical_marker "$legacy" prover \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
 label_preamble[label]='Set Hammer DefinitionPremises 8.'
 label_preamble_digest[label]=$(_grid_hash_text "${label_preamble[label]}")
-expect_failure checkpoint_matches "$marker" generation label corpus "$prefix"
+expect_failure checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
 label_preamble[label]=''
 label_preamble_digest[label]=$(_grid_hash_text '')
 
-# Tampering with a provenance field, or merely changing an unrelated current
-# input field, invalidates the otherwise accepted historical digest.
-write_historical_marker "$legacy"
+# Tampering with a provenance field, or changing the downstream input hash,
+# invalidates the otherwise accepted historical digest.
+write_historical_marker "$legacy" prover \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
 sed -i 's/^repository_commit=.*/repository_commit=tampered/' "$marker.done"
-expect_failure checkpoint_matches "$marker" generation label corpus "$prefix"
-write_historical_marker "$legacy"
-old_corpus_digest=${corpus_digest[corpus]}
-corpus_digest[corpus]=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-expect_failure checkpoint_matches "$marker" generation label corpus "$prefix"
-corpus_digest[corpus]=$old_corpus_digest
+expect_failure checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
+write_historical_marker "$legacy" prover \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
+expect_failure checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 \
+  input_sha256=eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 
 # A current marker must retain this literal engine schema and the golden SHA-256
 # of an empty hook preamble. This is intentionally not generated by the helper.
@@ -124,6 +156,9 @@ corpus=corpus
 corpus_mode=sample
 corpus_source=eval/corpora/corpus/sample
 corpus_sha256=$old_corpus_digest
+compile_supervisor_sha256=$compile_supervisor_digest
+compile_timeout=600
+compile_timeout_grace=10
 hook_preamble_sha256=e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855
 hook_preamble_file=hook-preamble.v
 EOF
@@ -131,6 +166,18 @@ cmp -s "$tmp/current-marker.golden" "$marker.done" || fail "current marker schem
 [ "$(sha256sum "$tmp/checkpoint/hook-preamble.v" | awk '{ print $1 }')" = \
   e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855 ] ||
   fail "empty preamble sidecar hash drifted"
+
+compile_timeout=601
+expect_failure checkpoint_matches "$marker" generation label corpus "$prefix"
+[ ! -e "$marker.done" ] || fail "changed compile timeout reused generation checkpoint"
+compile_timeout=600
+mark_checkpoint "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
+compile_timeout=601
+checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest" ||
+  fail "compile policy invalidated a non-compile checkpoint"
+compile_timeout=600
 
 # Prefix reuse requires both the path-bound ownership marker and manifest path.
 _grid_manifest_matches_install all-on "$prefix" || fail "owned prefix was rejected"
@@ -154,6 +201,17 @@ fi
 [ -f "$atomic_temp" ] || fail "atomic temporary was not created"
 _grid_cleanup_temp_files
 [ ! -e "$atomic_temp" ] || fail "registered atomic temporary was not cleaned"
+mkdir -p "$tmp/paired/nested"
+touch "$tmp/paired/.coqhammer-pair-stale.tmp" \
+  "$tmp/paired/nested/.coqhammer-pair-stale.tmp"
+ln -s "$prefix/manifest.env" "$tmp/paired/.coqhammer-pair-hostile.tmp"
+cleanup_paired_output_temporaries "$tmp/paired"
+[ ! -e "$tmp/paired/.coqhammer-pair-stale.tmp" ] ||
+  fail "top-level paired-output temporary survived cleanup"
+[ ! -e "$tmp/paired/nested/.coqhammer-pair-stale.tmp" ] ||
+  fail "nested paired-output temporary survived cleanup"
+[ -L "$tmp/paired/.coqhammer-pair-hostile.tmp" ] ||
+  fail "paired-output cleanup removed or followed a symlink"
 ln -s "$prefix/manifest.env" "$target.tmp.$$"
 _grid_new_atomic_temp "$target"
 [ -L "$target.tmp.$$" ] || fail "stale symlink was followed or removed"
@@ -299,6 +357,8 @@ corpus_mode=sample
 consistency_premise=knn-32
 tim=5
 consistency_tim=2
+compile_timeout=600
+compile_timeout_grace=10
 declare -A label_config=([base]=current [candidate]=current)
 declare -A label_prefix=([base]="$prefix" [candidate]="$prefix")
 declare -A corpus_source=([tiny-a]=fixture-a [tiny-b]=fixture-b)
@@ -421,6 +481,7 @@ PY
   done
   printf 'original\n' > "$guard_repo/eval/Makefile"
   printf 'original\n' > "$guard_repo/eval/tools/summarizer.py"
+  printf 'original\n' > "$guard_repo/eval/tools/rocq-compile-supervisor.sh"
   printf 'original\n' > "$guard_repo/eval/corpora/tiny/source.v"
   printf 'original\n' > "$guard_repo/src/plugin/runtime.ml"
   git -C "$guard_repo" init -q
@@ -436,6 +497,7 @@ PY
   printf 'reviewed prefix helper\n' > "$guard_repo/eval/install-prefix-lib.sh"
   printf 'reviewed spec\n' > "$guard_repo/eval/spec.sh"
   printf 'reviewed summarizer\n' > "$guard_repo/eval/tools/summarizer.py"
+  printf 'reviewed supervisor\n' > "$guard_repo/eval/tools/rocq-compile-supervisor.sh"
   printf 'reviewed test registration\n' > "$guard_repo/eval/Makefile"
   printf 'new test\n' > "$guard_repo/eval/tests/new-test.sh"
   printf 'unrelated\n' > "$guard_repo/local.notes"
@@ -569,6 +631,8 @@ EOF
 for command in \
     "$eval_dir/run-screening-grid.sh --tim" \
     "$eval_dir/run-screening-grid.sh --consistency-tim" \
+    "$eval_dir/run-screening-grid.sh --compile-timeout" \
+    "$eval_dir/run-screening-grid.sh --compile-timeout-grace" \
     "$eval_dir/run-screening-grid.sh --only-label" \
     "$eval_dir/run-screening-grid.sh --only-corpus" \
     "$eval_dir/run-screening-grid.sh --external-source" \

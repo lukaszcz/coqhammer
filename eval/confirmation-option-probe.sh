@@ -79,7 +79,8 @@ confirmation_record_hammer_options() (
 )
 
 _confirmation_probe_hammer_options() (
-  local prefix="$1" temporary='' output premises features
+  local prefix="$1" supervisor="$2" timeout_seconds="$3" grace_seconds="$4"
+  local phase="$5" temporary='' output premises features
   trap 'rm -rf -- "$temporary"' EXIT
   trap 'exit 129' HUP
   trap 'exit 130' INT
@@ -93,6 +94,8 @@ _confirmation_probe_hammer_options() (
 
   if ! LC_ALL=C PATH="$prefix/bin:$PATH" \
       OCAMLPATH="$prefix${OCAMLPATH:+:$OCAMLPATH}" \
+      "$supervisor" --timeout "$timeout_seconds" --grace "$grace_seconds" \
+      --phase "$phase" --source "$temporary/options.v" -- \
       rocq c -q -coqlib "$prefix/coq" -require Hammer.Plugin.Hammer \
       "$temporary/options.v" > "$output" 2>&1; then
     echo "Could not probe Hammer premise-selection options in $prefix:" >&2
@@ -109,8 +112,10 @@ _confirmation_probe_hammer_options() (
 )
 
 confirmation_probe_hammer_options() {
-  local prefix="$1" values
-  values=$(_confirmation_probe_hammer_options "$prefix") || return 1
+  local prefix="$1" supervisor="$2" timeout_seconds="$3" grace_seconds="$4"
+  local phase="$5" values
+  values=$(_confirmation_probe_hammer_options "$prefix" "$supervisor" \
+    "$timeout_seconds" "$grace_seconds" "$phase") || return 1
   mapfile -t values <<< "$values"
   [ "${#values[@]}" -eq 2 ] || return 1
 
@@ -127,7 +132,10 @@ confirmation_probe_hammer_options() {
 confirmation_checkpoint_done() {
   local marker="$1" stage="$2" label="$3" corpus="$4" prefix="$5"
   shift 5
+  local compile_fields=()
+  mapfile -t compile_fields < <(compile_checkpoint_fields "$stage")
   checkpoint_done "$marker" "$stage" "$label" "$corpus" "$prefix" \
+    "${compile_fields[@]}" \
     "option_probe_sha256=$option_probe_digest" \
     "definition_premises=${label_definition_premises[$label]}" \
     "definition_features=${label_definition_features[$label]}" "$@"
@@ -137,7 +145,10 @@ confirmation_checkpoint_done() {
 confirmation_mark_checkpoint() {
   local marker="$1" stage="$2" label="$3" corpus="$4" prefix="$5"
   shift 5
+  local compile_fields=()
+  mapfile -t compile_fields < <(compile_checkpoint_fields "$stage")
   mark_checkpoint "$marker" "$stage" "$label" "$corpus" "$prefix" \
+    "${compile_fields[@]}" \
     "option_probe_sha256=$option_probe_digest" \
     "definition_premises=${label_definition_premises[$label]}" \
     "definition_features=${label_definition_features[$label]}" "$@"

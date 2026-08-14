@@ -23,6 +23,9 @@ Options:
                         (default: sized from cores and available memory)
   --tim SEC             ATP timeout per problem for screening prover runs (default: 5)
   --consistency-tim S  ATP timeout per false-conjecture consistency run (default: 2)
+  --compile-timeout S  per-file Rocq compile timeout (default: 600)
+  --compile-timeout-grace S
+                       TERM grace before process-group KILL (default: 10)
   --skip-builds        require install prefixes to already exist; do not build them
   --only-label LABEL   run only one install label (debug/resume convenience)
   --only-corpus CORPUS run only one corpus (debug/resume convenience)

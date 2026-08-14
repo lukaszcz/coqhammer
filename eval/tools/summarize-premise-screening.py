@@ -80,6 +80,9 @@ class Provenance:
     repository_commit: str
     grid_script_sha256: str
     checkpoint_helper_sha256: str
+    compile_supervisor_sha256: str
+    compile_timeout: str
+    compile_timeout_grace: str
     prover_timeout: str
     consistency_timeout: str
     consistency_premise: str
@@ -206,6 +209,7 @@ def provenance_from_environment(labels: list[str], axes: Axes) -> Provenance:
         raise ValueError("COQHAMMER_GRID_EXPECTED_PROVENANCE is not valid JSON") from error
     top_keys = {
         "repository_commit", "grid_script_sha256", "checkpoint_helper_sha256",
+        "compile_supervisor_sha256", "compile_timeout", "compile_timeout_grace",
         "prover_timeout", "consistency_timeout", "labels", "corpora",
     }
     if not isinstance(data, dict) or set(data) != top_keys:
@@ -219,10 +223,12 @@ def provenance_from_environment(labels: list[str], axes: Axes) -> Provenance:
         raise ValueError("expected provenance labels and corpora must be JSON objects")
     if re.fullmatch(r"[0-9a-f]{40}", data["repository_commit"]) is None:
         raise ValueError("expected provenance has an invalid repository commit")
-    for key in ("grid_script_sha256", "checkpoint_helper_sha256"):
+    for key in ("grid_script_sha256", "checkpoint_helper_sha256",
+                "compile_supervisor_sha256"):
         if re.fullmatch(r"[0-9a-f]{64}", data[key]) is None:
             raise ValueError(f"expected provenance has an invalid hash: {key}")
-    for key in ("prover_timeout", "consistency_timeout"):
+    for key in ("compile_timeout", "compile_timeout_grace",
+                "prover_timeout", "consistency_timeout"):
         if re.fullmatch(r"[1-9][0-9]*", data[key]) is None:
             raise ValueError(f"expected provenance has an invalid timeout: {key}")
     if set(label_data) != set(labels) or set(corpus_data) != set(axes.corpora):
@@ -260,6 +266,9 @@ def provenance_from_environment(labels: list[str], axes: Axes) -> Provenance:
         repository_commit=data["repository_commit"],
         grid_script_sha256=data["grid_script_sha256"],
         checkpoint_helper_sha256=data["checkpoint_helper_sha256"],
+        compile_supervisor_sha256=data["compile_supervisor_sha256"],
+        compile_timeout=data["compile_timeout"],
+        compile_timeout_grace=data["compile_timeout_grace"],
         prover_timeout=data["prover_timeout"],
         consistency_timeout=data["consistency_timeout"],
         consistency_premise=consistency_premise,
@@ -422,6 +431,12 @@ def checkpoint_expected(
         "hook_preamble_sha256": hashlib.sha256(expected_preamble(label)).hexdigest(),
         "hook_preamble_file": "hook-preamble.v",
     }
+    if stage == "generation":
+        expected.update({
+            "compile_supervisor_sha256": provenance.compile_supervisor_sha256,
+            "compile_timeout": provenance.compile_timeout,
+            "compile_timeout_grace": provenance.compile_timeout_grace,
+        })
     if stage in ("prover", "consistency"):
         assert premise is not None and prover is not None and input_sha256 is not None
         expected.update({

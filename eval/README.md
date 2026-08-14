@@ -140,7 +140,15 @@ and prover combinations.
 
 Every complete grid writes `provenance.env` beside its summary. Checkpoints
 are reused only when their source commit, installed package, configuration,
-corpus content, scripts, and timeout settings still match.
+corpus content, scripts, and applicable timeout settings still match. Each
+per-file Rocq phase (`init`, `check`, ATP generation, and confirmation
+reconstruction) is supervised with `--compile-timeout SEC` (600 by default).
+On expiry the supervisor sends TERM to the compilation process group, waits the
+fixed `--compile-timeout-grace SEC` (10 by default), then sends KILL and reports
+the source file and phase with exit status 124. Generation checkpoints from
+before compile supervision are rejected. Regeneration retains downstream ATP
+results, but reuses each only when its recorded input hash still matches the
+newly generated problems.
 
 Of everything a run produces, only the confirmation grid's artifacts are
 tracked: `summary.tsv`, `analysis.md`, `provenance.env`, and the README beside

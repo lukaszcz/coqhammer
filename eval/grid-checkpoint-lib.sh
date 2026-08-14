@@ -89,6 +89,58 @@ hash_file() {
   sha256sum "$1" | awk '{ print $1 }'
 }
 
+# Hash a sequence of NAME FILE pairs with boundaries, so callers can record a
+# composite runtime harness without depending on path spelling or concatenation.
+hash_harness_sources() {
+  python3 - "$@" <<'PY'
+import hashlib
+import pathlib
+import sys
+
+arguments = sys.argv[1:]
+if len(arguments) % 2:
+    raise SystemExit("internal error: unpaired harness provenance argument")
+digest = hashlib.sha256()
+for name, filename in zip(arguments[::2], arguments[1::2]):
+    data = pathlib.Path(filename).read_bytes()
+    encoded_name = name.encode()
+    digest.update(len(encoded_name).to_bytes(8, "big"))
+    digest.update(encoded_name)
+    digest.update(len(data).to_bytes(8, "big"))
+    digest.update(data)
+print(digest.hexdigest())
+PY
+}
+
+compile_checkpoint_fields() {
+  local stage="$1"
+  case "$stage" in
+    generation|reconstruction)
+      # Globals are initialized by each grid before checkpoints are inspected.
+      # shellcheck disable=SC2154
+      printf '%s\n' \
+        "compile_supervisor_sha256=$compile_supervisor_digest" \
+        "compile_timeout=$compile_timeout" \
+        "compile_timeout_grace=$compile_timeout_grace"
+      ;;
+  esac
+}
+
+report_compile_timeouts() {
+  local source="$1"
+  [ -e "$source" ] || return 0
+  grep -rhF 'rocq-compile-supervisor: TIMEOUT ' -- "$source" >&2 || true
+}
+
+# SIGKILL can interrupt paired_output.ml between creating its same-directory
+# temporaries and its cleanup handler. Delete regular temporary files only;
+# never follow or remove a symlink with a matching hostile name.
+cleanup_paired_output_temporaries() {
+  local root="$1"
+  [ -d "$root" ] || return 0
+  find "$root" -type f -name '.coqhammer-pair-*.tmp' -delete
+}
+
 hash_checkpoint_markers() {
   local root="$1"
   python3 - "$root" <<'PY'
@@ -125,6 +177,9 @@ write_grid_provenance() {
       "grid_script_sha256=$grid_script_digest" \
       "checkpoint_helper_sha256=$grid_helper_digest" \
       "summarizer_sha256=$(hash_file "$summarizer")" \
+      "compile_supervisor_sha256=$compile_supervisor_digest" \
+      "compile_timeout=$compile_timeout" \
+      "compile_timeout_grace=$compile_timeout_grace" \
       "prover_timeout=$tim" \
       "consistency_timeout=$consistency_tim" \
       "checkpoint_markers_sha256=$(hash_checkpoint_markers "$results_root")" \
@@ -211,17 +266,6 @@ invalidate_checkpoint() {
   local marker="$1" reason="$2"
   echo "[checkpoint] $reason; rerunning $marker" >&2
   rm -f "$marker.done"
-}
-
-clear_downstream_results() {
-  local outdir="$1"
-  rm -rf "$outdir/prover-outputs" "$outdir/consistency" "$outdir/reconstr-outputs"
-  find "$outdir" -maxdepth 1 -type f \
-    \( -name 'prover-*.done' -o -name 'prover-*.status' \
-       -o -name 'prover-outputs-*.lst' -o -name 'consistency-*.done' \
-       -o -name 'consistency-*.status' -o -name 'consistency-outputs-*.lst' \
-       -o -name 'reconstruction.done' -o -name 'reconstruction.status' \
-       -o -name 'reconstr-outputs.lst' \) -delete
 }
 
 array_contains() {

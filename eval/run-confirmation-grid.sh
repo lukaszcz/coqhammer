@@ -21,6 +21,9 @@ Options:
                         (default: sized from cores and available memory)
   --tim SEC             ATP timeout per problem for confirmation prover runs (default: 10)
   --consistency-tim S   ATP timeout per false-conjecture consistency run (default: 2)
+  --compile-timeout S   per-file Rocq compile timeout (default: 600)
+  --compile-timeout-grace S
+                        TERM grace before process-group KILL (default: 10)
   --skip-builds         require install prefixes to already exist; do not build them
   --only-label LABEL    run only one install label (debug/resume convenience)
   --only-corpus CORPUS  run only one corpus (debug/resume convenience)
@@ -40,9 +43,17 @@ Options:
 USAGE
 }
 
+eval_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
+# shellcheck source=eval/cli-lib.sh
+# shellcheck disable=SC1091
+source "$eval_dir/cli-lib.sh"
+
 jobs=
 tim=10
 consistency_tim=2
+compile_timeout=600
+compile_timeout_grace=10
+option_probe_phase='option-probe'
 skip_builds=false
 only_label=
 only_corpus=
@@ -57,23 +68,25 @@ force=false
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
-    -j|--jobs) jobs="$2"; shift 2 ;;
-    --tim) tim="$2"; shift 2 ;;
-    --consistency-tim) consistency_tim="$2"; shift 2 ;;
+    -j|--jobs) need_value "$@"; jobs="$2"; shift 2 ;;
+    --tim) need_value "$@"; tim="$2"; shift 2 ;;
+    --consistency-tim) need_value "$@"; consistency_tim="$2"; shift 2 ;;
+    --compile-timeout) need_value "$@"; compile_timeout="$2"; shift 2 ;;
+    --compile-timeout-grace) need_value "$@"; compile_timeout_grace="$2"; shift 2 ;;
     --skip-builds) skip_builds=true; shift ;;
-    --only-label) only_label="$2"; shift 2 ;;
-    --only-corpus) only_corpus="$2"; shift 2 ;;
+    --only-label) need_value "$@"; only_label="$2"; shift 2 ;;
+    --only-corpus) need_value "$@"; only_corpus="$2"; shift 2 ;;
     --full-corpus) sample_corpora=false; shift ;;
     --sample-corpus) sample_corpora=true; shift ;;
-    --stdlib-modules) stdlib_modules="$2"; shift 2 ;;
-    --external-source) external_source="$2"; shift 2 ;;
+    --stdlib-modules) need_value "$@"; stdlib_modules="$2"; shift 2 ;;
+    --external-source) need_value "$@"; external_source="$2"; shift 2 ;;
     --force) force=true; shift ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
 done
 
-for value in "$tim" "$consistency_tim"; do
+for value in "$tim" "$consistency_tim" "$compile_timeout" "$compile_timeout_grace"; do
   if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
     echo "Timeouts must be positive integers: $value" >&2
     exit 2
@@ -81,11 +94,15 @@ for value in "$tim" "$consistency_tim"; do
 done
 
 repo=$(git rev-parse --show-toplevel)
+if ! git -C "$repo" ls-files --error-unmatch \
+    eval/tools/rocq-compile-supervisor.sh >/dev/null 2>&1; then
+  echo "Evaluation grids reject an untracked compile supervisor." >&2
+  exit 1
+fi
 if ! git -C "$repo" diff --quiet HEAD --; then
   echo "Evaluation grids require a clean tracked worktree so build and checkpoint provenance is exact." >&2
   exit 1
 fi
-eval_dir="$repo/eval"
 # shellcheck source=eval/grid-checkpoint-lib.sh
 # shellcheck disable=SC1091
 source "$eval_dir/grid-checkpoint-lib.sh"
@@ -103,9 +120,18 @@ if [[ ! "$jobs" =~ ^[1-9][0-9]*$ ]]; then
   exit 2
 fi
 repo_commit=$(git rev-parse HEAD)
-grid_script_digest=$(hash_file "${BASH_SOURCE[0]}")
 grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
 option_probe_digest=$(hash_file "$eval_dir/confirmation-option-probe.sh")
+compile_supervisor="$eval_dir/tools/rocq-compile-supervisor.sh"
+compile_supervisor_digest=$(hash_file "$compile_supervisor")
+grid_script_digest=$(hash_harness_sources \
+  grid-script "${BASH_SOURCE[0]}" \
+  checkpoint-helper "$eval_dir/grid-checkpoint-lib.sh" \
+  option-probe "$eval_dir/confirmation-option-probe.sh" \
+  cli-helper "$eval_dir/cli-lib.sh" \
+  eval-makefile "$eval_dir/Makefile" \
+  compile-supervisor "$compile_supervisor" \
+  summarizer "$eval_dir/tools/summarize-confirmation.py")
 results_root="$eval_dir/results/confirmation"
 artifacts_dir="$eval_dir/artifacts/extraction-confirmation"
 mkdir -p "$results_root" "$artifacts_dir"
@@ -371,7 +397,8 @@ validate_consistency_run() {
 
 probe_label_options() {
   local label="$1" prefix="$2"
-  confirmation_probe_hammer_options "$prefix"
+  confirmation_probe_hammer_options "$prefix" "$compile_supervisor" \
+    "$compile_timeout" "$compile_timeout_grace" "$option_probe_phase"
   confirmation_record_hammer_options "$prefix/manifest.env" "$option_probe_digest" \
     "$CONFIRMATION_DEFINITION_PREMISES" "$CONFIRMATION_DEFINITION_FEATURES"
   label_definition_premises[$label]=$CONFIRMATION_DEFINITION_PREMISES
@@ -438,6 +465,20 @@ save_hook_logs() {
   fi
 }
 
+run_compile_make() {
+  local phase="$1" target="$2" coqc_cmd="$3" output_log="$4" compile_log_dir="$5"
+  local status=0
+  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
+    COMPILE_SUPERVISOR="$compile_supervisor" \
+    COMPILE_TIMEOUT="$compile_timeout" \
+    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
+    COMPILE_PHASE="$phase" > "$output_log" 2>&1 || status=$?
+  if [ "$status" -ne 0 ]; then
+    report_compile_timeouts "$compile_log_dir"
+    return "$status"
+  fi
+}
+
 run_generation() {
   local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
@@ -452,7 +493,9 @@ run_generation() {
   fi
 
   rm -f "$outdir/generation.status" "$marker.done"
-  clear_downstream_results "$outdir"
+  # Retain downstream results until generation finishes. Their input hashes
+  # preserve matching prover/consistency work and invalidate changed inputs;
+  # reconstruction also carries its own compile-policy provenance.
   echo "[gen] $label/$corpus"
   prepare_prefix_env "$prefix"
   cd "$eval_dir"
@@ -461,7 +504,7 @@ run_generation() {
   mkdir -p atp/o out
 
   coqc_cmd="rocq c -coqlib $prefix/coq"
-  if ! make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1; then
+  if ! run_compile_make init init "$coqc_cmd" "$outdir/init.log" logs/init; then
     echo "Init failed for $label/$corpus; see $outdir/init.log" >&2
     exit 1
   fi
@@ -475,7 +518,7 @@ run_generation() {
   # of the scanned words.  So scan first, for the diagnostics, then fail on
   # either verdict.
   local check_status=0
-  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1 \
+  run_compile_make check check "$coqc_cmd" "$outdir/check.full.log" logs/check \
     || check_status=$?
   if collect_failures "$outdir/check.full.log" "$outdir/check.log"; then
     echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
@@ -487,12 +530,15 @@ run_generation() {
   fi
 
   echo gen-atp > coqhammer.opt
-  if ! make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
+  if ! run_compile_make gen-atp atp "$coqc_cmd" \
+      "$outdir/gen-atp.full.log" logs/atp; then
+    cleanup_paired_output_temporaries atp/problems
     collect_failures "$outdir/gen-atp.full.log" "$outdir/gen-atp.log" || true
     save_hook_logs "$outdir"
     echo "ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
     exit 1
   fi
+  cleanup_paired_output_temporaries atp/problems
   # The per-file logs hold what the hook actually reported; the next corpus
   # wipes logs/, so they have to be kept here to be of any use afterwards.
   save_hook_logs "$outdir"
@@ -596,7 +642,8 @@ run_reconstruction() {
   done
   echo reconstr > coqhammer.opt
   coqc_cmd="rocq c -coqlib $prefix/coq"
-  if make -k -j "$jobs" reconstr COQC="$coqc_cmd" > "$outdir/reconstr.full.log" 2>&1; then
+  if run_compile_make reconstruction reconstr "$coqc_cmd" \
+      "$outdir/reconstr.full.log" logs/reconstr; then
     reconstruction_status=0
   else
     reconstruction_status=$?
