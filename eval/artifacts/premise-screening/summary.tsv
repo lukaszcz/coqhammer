@@ -1,20 +1,20 @@
 label	definition_premises	definition_features	corpus_mode	scope	corpus	premise	prover	min_occ_bucket	goals	solved_goals	baseline_solved_goals	goal_net	goal_gains	goal_losses	n32_goal_gains	n32_goal_losses	n32_goal_net	n32_regression_flag	attempts	solved_attempts	baseline_solved_attempts	attempt_net	attempt_gains	attempt_losses
-ds0-df0	0	0	full	aggregate	all	all	all	all	1176	747	747	0	0	0	0	0	0	baseline	9408	5025	5025	0	0	0
-ds0-df0	0	0	full	corpus	stdlib-regression	all	all	all	1121	726	726	0	0	0	0	0	0	baseline	8968	4883	4883	0	0	0
+ds0-df0	0	0	full	aggregate	all	all	all	all	1176	754	754	0	0	0	0	0	0	baseline	9408	5043	5043	0	0	0
+ds0-df0	0	0	full	corpus	stdlib-regression	all	all	all	1121	731	731	0	0	0	0	0	0	baseline	8968	4885	4885	0	0	0
 ds0-df0	0	0	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	0	0	0	baseline	48	28	28	0	0	0
-ds0-df0	0	0	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	0	0	0	baseline	392	114	114	0	0	0
-ds0-df0	0	0	full	bucket	all	all	all	<=1	210	64	64	0	0	0	0	0	0	baseline	1680	325	325	0	0	0
-ds0-df0	0	0	full	bucket	all	all	all	<=4	183	89	89	0	0	0	0	0	0	baseline	1464	529	529	0	0	0
-ds0-df0	0	0	full	bucket	all	all	all	rest	783	594	594	0	0	0	0	0	0	baseline	6264	4171	4171	0	0	0
-ds0-df0	0	0	full	n32	all	N=32	all	all	1176	691	691	0	0	0	0	0	0	baseline	4704	2504	2504	0	0	0
+ds0-df0	0	0	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	0	0	0	baseline	392	130	130	0	0	0
+ds0-df0	0	0	full	bucket	all	all	all	<=1	210	67	67	0	0	0	0	0	0	baseline	1680	336	336	0	0	0
+ds0-df0	0	0	full	bucket	all	all	all	<=4	183	90	90	0	0	0	0	0	0	baseline	1464	532	532	0	0	0
+ds0-df0	0	0	full	bucket	all	all	all	rest	783	597	597	0	0	0	0	0	0	baseline	6264	4175	4175	0	0	0
+ds0-df0	0	0	full	n32	all	N=32	all	all	1176	697	697	0	0	0	0	0	0	baseline	4704	2519	2519	0	0	0
 ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	598	598	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	622	622	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	575	575	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	641	641	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	594	594	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	624	624	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	585	585	0	0	0
-ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	644	644	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	625	625	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	578	578	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	649	649	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	596	596	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	626	626	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	579	579	0	0	0
+ds0-df0	0	0	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	634	634	0	0	0
 ds0-df0	0	0	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	3	3	0	0	0
 ds0-df0	0	0	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	3	3	0	0	0
 ds0-df0	0	0	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	4	4	0	0	0
@@ -23,30 +23,30 @@ ds0-df0	0	0	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										di
 ds0-df0	0	0	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	3	3	0	0	0
 ds0-df0	0	0	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds0-df0	0	0	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	4	4	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	14	14	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	14	14	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	14	14	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	13	13	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	13	13	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds0-df4	0	4	full	aggregate	all	all	all	all	1176	761	747	14	17	3	17	2	15	REGRESSION	9408	5099	5025	74	105	31
-ds0-df4	0	4	full	corpus	stdlib-regression	all	all	all	1121	740	726	14	17	3	16	2	14	REGRESSION	8968	4954	4883	71	102	31
+ds0-df0	0	0	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	16	16	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	16	16	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	16	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	15	15	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	15	15	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds0-df0	0	0	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds0-df4	0	4	full	aggregate	all	all	all	all	1176	758	754	4	12	8	14	4	10	REGRESSION	9408	5069	5043	26	90	64
+ds0-df4	0	4	full	corpus	stdlib-regression	all	all	all	1121	735	731	4	12	8	13	4	9	REGRESSION	8968	4908	4885	23	87	64
 ds0-df4	0	4	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	1	0	1	clear	48	30	28	2	2	0
-ds0-df4	0	4	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	0	0	0	clear	392	115	114	1	1	0
-ds0-df4	0	4	full	bucket	all	all	all	<=1	210	76	64	12	13	1	14	1	13	REGRESSION	1680	383	325	58	71	13
-ds0-df4	0	4	full	bucket	all	all	all	<=4	183	89	89	0	1	1	1	1	0	REGRESSION	1464	535	529	6	17	11
-ds0-df4	0	4	full	bucket	all	all	all	rest	783	596	594	2	3	1	2	0	2	clear	6264	4181	4171	10	17	7
-ds0-df4	0	4	full	n32	all	N=32	all	all	1176	706	691	15	17	2	17	2	15	REGRESSION	4704	2539	2504	35	53	18
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	607	598	9	15	6
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	636	622	14	16	2
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	582	575	7	11	4
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	654	641	13	17	4
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	597	594	3	10	7
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	631	624	7	10	3
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	592	585	7	12	5
-ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	655	644	11	11	0
+ds0-df4	0	4	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	0	0	0	clear	392	131	130	1	1	0
+ds0-df4	0	4	full	bucket	all	all	all	<=1	210	78	67	11	12	1	13	1	12	REGRESSION	1680	386	336	50	65	15
+ds0-df4	0	4	full	bucket	all	all	all	<=4	183	87	90	-3	0	3	1	2	-1	REGRESSION	1464	532	532	0	15	15
+ds0-df4	0	4	full	bucket	all	all	all	rest	783	593	597	-4	0	4	0	1	-1	REGRESSION	6264	4151	4175	-24	10	34
+ds0-df4	0	4	full	n32	all	N=32	all	all	1176	707	697	10	14	4	14	4	10	REGRESSION	4704	2544	2519	25	50	25
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	610	598	12	16	4
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	633	625	8	14	6
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	581	578	3	8	5
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	644	649	-5	10	15
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	598	596	2	9	7
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	627	626	1	9	8
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	586	579	7	12	5
+ds0-df4	0	4	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	629	634	-5	9	14
 ds0-df4	0	4	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	4	3	1	1	0
 ds0-df4	0	4	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	4	3	1	1	0
 ds0-df4	0	4	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	4	4	0	0	0
@@ -55,30 +55,30 @@ ds0-df4	0	4	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										di
 ds0-df4	0	4	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	3	3	0	0	0
 ds0-df4	0	4	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds0-df4	0	4	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	4	4	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	14	14	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	14	14	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	15	14	1	1	0
-ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	13	13	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	13	13	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds0-df16	0	16	full	aggregate	all	all	all	all	1176	762	747	15	19	4	21	3	18	REGRESSION	9408	5096	5025	71	123	52
-ds0-df16	0	16	full	corpus	stdlib-regression	all	all	all	1121	741	726	15	19	4	20	3	17	REGRESSION	8968	4949	4883	66	118	52
+ds0-df4	0	4	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	16	16	0	0	0
+ds0-df4	0	4	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	16	16	0	0	0
+ds0-df4	0	4	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds0-df4	0	4	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	17	16	1	1	0
+ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	15	15	0	0	0
+ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	15	15	0	0	0
+ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds0-df4	0	4	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds0-df16	0	16	full	aggregate	all	all	all	all	1176	766	754	12	17	5	19	3	16	REGRESSION	9408	5117	5043	74	121	47
+ds0-df16	0	16	full	corpus	stdlib-regression	all	all	all	1121	743	731	12	17	5	18	3	15	REGRESSION	8968	4954	4885	69	116	47
 ds0-df16	0	16	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	1	0	1	clear	48	30	28	2	2	0
-ds0-df16	0	16	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	0	0	0	clear	392	117	114	3	3	0
-ds0-df16	0	16	full	bucket	all	all	all	<=1	210	76	64	12	13	1	14	1	13	REGRESSION	1680	382	325	57	72	15
-ds0-df16	0	16	full	bucket	all	all	all	<=4	183	88	89	-1	0	1	1	1	0	REGRESSION	1464	527	529	-2	13	15
-ds0-df16	0	16	full	bucket	all	all	all	rest	783	598	594	4	6	2	6	1	5	REGRESSION	6264	4187	4171	16	38	22
-ds0-df16	0	16	full	n32	all	N=32	all	all	1176	709	691	18	21	3	21	3	18	REGRESSION	4704	2551	2504	47	67	20
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	608	598	10	16	6
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	638	622	16	19	3
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	583	575	8	13	5
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	646	641	5	17	12
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	600	594	6	13	7
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	635	624	11	15	4
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	593	585	8	13	5
-ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	646	644	2	12	10
+ds0-df16	0	16	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	0	0	0	clear	392	133	130	3	3	0
+ds0-df16	0	16	full	bucket	all	all	all	<=1	210	79	67	12	13	1	14	1	13	REGRESSION	1680	393	336	57	70	13
+ds0-df16	0	16	full	bucket	all	all	all	<=4	183	89	90	-1	0	1	1	1	0	REGRESSION	1464	535	532	3	17	14
+ds0-df16	0	16	full	bucket	all	all	all	rest	783	598	597	1	4	3	4	1	3	REGRESSION	6264	4189	4175	14	34	20
+ds0-df16	0	16	full	n32	all	N=32	all	all	1176	713	697	16	19	3	19	3	16	REGRESSION	4704	2563	2519	44	63	19
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	609	598	11	16	5
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	640	625	15	16	1
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	585	578	7	12	5
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	644	649	-5	14	19
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	601	596	5	12	7
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	635	626	9	15	6
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	592	579	13	15	2
+ds0-df16	0	16	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	648	634	14	16	2
 ds0-df16	0	16	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	4	3	1	1	0
 ds0-df16	0	16	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	4	3	1	1	0
 ds0-df16	0	16	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	4	4	0	0	0
@@ -87,30 +87,30 @@ ds0-df16	0	16	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										
 ds0-df16	0	16	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	3	3	0	0	0
 ds0-df16	0	16	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds0-df16	0	16	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	4	4	0	0	0
-ds0-df16	0	16	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	15	14	1	1	0
-ds0-df16	0	16	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	15	14	1	1	0
-ds0-df16	0	16	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds0-df16	0	16	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	15	14	1	1	0
-ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	13	13	0	0	0
-ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	13	13	0	0	0
-ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds8-df0	8	0	full	aggregate	all	all	all	all	1176	769	747	22	25	3	48	1	47	REGRESSION	9408	5236	5025	211	231	20
-ds8-df0	8	0	full	corpus	stdlib-regression	all	all	all	1121	748	726	22	25	3	45	1	44	REGRESSION	8968	5076	4883	193	213	20
+ds0-df16	0	16	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	17	16	1	1	0
+ds0-df16	0	16	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	17	16	1	1	0
+ds0-df16	0	16	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds0-df16	0	16	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	17	16	1	1	0
+ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	15	15	0	0	0
+ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	15	15	0	0	0
+ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds0-df16	0	16	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds8-df0	8	0	full	aggregate	all	all	all	all	1176	776	754	22	27	5	49	3	46	REGRESSION	9408	5251	5043	208	243	35
+ds8-df0	8	0	full	corpus	stdlib-regression	all	all	all	1121	753	731	22	27	5	46	3	43	REGRESSION	8968	5075	4885	190	225	35
 ds8-df0	8	0	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	2	0	2	clear	48	39	28	11	11	0
-ds8-df0	8	0	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	1	0	1	clear	392	121	114	7	7	0
-ds8-df0	8	0	full	bucket	all	all	all	<=1	210	79	64	15	15	0	28	0	28	clear	1680	463	325	138	141	3
-ds8-df0	8	0	full	bucket	all	all	all	<=4	183	89	89	0	0	0	1	0	1	clear	1464	541	529	12	14	2
-ds8-df0	8	0	full	bucket	all	all	all	rest	783	601	594	7	10	3	19	1	18	REGRESSION	6264	4232	4171	61	76	15
-ds8-df0	8	0	full	n32	all	N=32	all	all	1176	738	691	47	48	1	48	1	47	REGRESSION	4704	2670	2504	166	176	10
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	635	598	37	40	3
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	662	622	40	42	2
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	584	575	9	11	2
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	654	641	13	16	3
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	627	594	33	38	5
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	668	624	44	44	0
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	589	585	4	9	5
-ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	657	644	13	13	0
+ds8-df0	8	0	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	1	0	1	clear	392	137	130	7	7	0
+ds8-df0	8	0	full	bucket	all	all	all	<=1	210	82	67	15	17	2	29	0	29	clear	1680	478	336	142	148	6
+ds8-df0	8	0	full	bucket	all	all	all	<=4	183	90	90	0	0	0	1	1	0	REGRESSION	1464	541	532	9	14	5
+ds8-df0	8	0	full	bucket	all	all	all	rest	783	604	597	7	10	3	19	2	17	REGRESSION	6264	4232	4175	57	81	24
+ds8-df0	8	0	full	n32	all	N=32	all	all	1176	743	697	46	49	3	49	3	46	REGRESSION	4704	2686	2519	167	182	15
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	637	598	39	42	3
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	665	625	40	44	4
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	588	578	10	11	1
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	645	649	-4	13	17
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	632	596	36	39	3
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	666	626	40	45	5
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	585	579	6	8	2
+ds8-df0	8	0	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	657	634	23	23	0
 ds8-df0	8	0	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	5	3	2	2	0
 ds8-df0	8	0	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds8-df0	8	0	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	5	4	1	1	0
@@ -119,30 +119,30 @@ ds8-df0	8	0	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										di
 ds8-df0	8	0	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds8-df0	8	0	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds8-df0	8	0	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	5	4	1	1	0
-ds8-df0	8	0	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	15	14	1	1	0
-ds8-df0	8	0	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	15	14	1	1	0
-ds8-df0	8	0	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	16	15	1	1	0
-ds8-df0	8	0	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	14	2	2	0
-ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	14	13	1	1	0
-ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	14	13	1	1	0
-ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds8-df4	8	4	full	aggregate	all	all	all	all	1176	772	747	25	30	5	57	2	55	REGRESSION	9408	5286	5025	261	295	34
-ds8-df4	8	4	full	corpus	stdlib-regression	all	all	all	1121	751	726	25	30	5	54	2	52	REGRESSION	8968	5126	4883	243	277	34
+ds8-df0	8	0	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	17	16	1	1	0
+ds8-df0	8	0	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	17	16	1	1	0
+ds8-df0	8	0	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	18	17	1	1	0
+ds8-df0	8	0	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	18	16	2	2	0
+ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	16	15	1	1	0
+ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	16	15	1	1	0
+ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds8-df0	8	0	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds8-df4	8	4	full	aggregate	all	all	all	all	1176	777	754	23	29	6	56	3	53	REGRESSION	9408	5309	5043	266	300	34
+ds8-df4	8	4	full	corpus	stdlib-regression	all	all	all	1121	754	731	23	29	6	53	3	50	REGRESSION	8968	5133	4885	248	282	34
 ds8-df4	8	4	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	2	0	2	clear	48	39	28	11	11	0
-ds8-df4	8	4	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	1	0	1	clear	392	121	114	7	7	0
-ds8-df4	8	4	full	bucket	all	all	all	<=1	210	80	64	16	17	1	35	0	35	clear	1680	493	325	168	179	11
-ds8-df4	8	4	full	bucket	all	all	all	<=4	183	89	89	0	1	1	2	1	1	REGRESSION	1464	546	529	17	30	13
-ds8-df4	8	4	full	bucket	all	all	all	rest	783	603	594	9	12	3	20	1	19	REGRESSION	6264	4247	4171	76	86	10
-ds8-df4	8	4	full	n32	all	N=32	all	all	1176	746	691	55	57	2	57	2	55	REGRESSION	4704	2702	2504	198	219	21
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	641	598	43	50	7
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	670	622	48	51	3
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	586	575	11	16	5
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	660	641	19	22	3
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	637	594	43	51	8
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	676	624	52	55	3
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	596	585	11	15	4
-ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	660	644	16	17	1
+ds8-df4	8	4	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	1	0	1	clear	392	137	130	7	7	0
+ds8-df4	8	4	full	bucket	all	all	all	<=1	210	83	67	16	18	2	35	0	35	clear	1680	506	336	170	181	11
+ds8-df4	8	4	full	bucket	all	all	all	<=4	183	89	90	-1	0	1	2	1	1	REGRESSION	1464	555	532	23	33	10
+ds8-df4	8	4	full	bucket	all	all	all	rest	783	605	597	8	11	3	19	2	17	REGRESSION	6264	4248	4175	73	86	13
+ds8-df4	8	4	full	n32	all	N=32	all	all	1176	750	697	53	56	3	56	3	53	REGRESSION	4704	2719	2519	200	220	20
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	643	598	45	51	6
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	675	625	50	52	2
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	584	578	6	11	5
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	663	649	14	19	5
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	638	596	42	50	8
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	677	626	51	55	4
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	591	579	12	15	3
+ds8-df4	8	4	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	662	634	28	29	1
 ds8-df4	8	4	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	5	3	2	2	0
 ds8-df4	8	4	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds8-df4	8	4	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	5	4	1	1	0
@@ -151,30 +151,30 @@ ds8-df4	8	4	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										di
 ds8-df4	8	4	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds8-df4	8	4	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds8-df4	8	4	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	5	4	1	1	0
-ds8-df4	8	4	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	15	14	1	1	0
-ds8-df4	8	4	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	15	14	1	1	0
-ds8-df4	8	4	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	16	15	1	1	0
-ds8-df4	8	4	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	14	2	2	0
-ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	14	13	1	1	0
-ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	14	13	1	1	0
-ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds8-df16	8	16	full	aggregate	all	all	all	all	1176	775	747	28	31	3	58	1	57	REGRESSION	9408	5296	5025	271	309	38
-ds8-df16	8	16	full	corpus	stdlib-regression	all	all	all	1121	754	726	28	31	3	55	1	54	REGRESSION	8968	5134	4883	251	289	38
+ds8-df4	8	4	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	17	16	1	1	0
+ds8-df4	8	4	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	17	16	1	1	0
+ds8-df4	8	4	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	18	17	1	1	0
+ds8-df4	8	4	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	18	16	2	2	0
+ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	16	15	1	1	0
+ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	16	15	1	1	0
+ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds8-df4	8	4	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds8-df16	8	16	full	aggregate	all	all	all	all	1176	782	754	28	32	4	59	1	58	REGRESSION	9408	5331	5043	288	318	30
+ds8-df16	8	16	full	corpus	stdlib-regression	all	all	all	1121	759	731	28	32	4	56	1	55	REGRESSION	8968	5153	4885	268	298	30
 ds8-df16	8	16	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	2	0	2	clear	48	39	28	11	11	0
-ds8-df16	8	16	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	1	0	1	clear	392	123	114	9	9	0
-ds8-df16	8	16	full	bucket	all	all	all	<=1	210	80	64	16	17	1	35	0	35	clear	1680	493	325	168	179	11
-ds8-df16	8	16	full	bucket	all	all	all	<=4	183	89	89	0	1	1	2	1	1	REGRESSION	1464	543	529	14	28	14
-ds8-df16	8	16	full	bucket	all	all	all	rest	783	606	594	12	13	1	21	0	21	clear	6264	4260	4171	89	102	13
-ds8-df16	8	16	full	n32	all	N=32	all	all	1176	748	691	57	58	1	58	1	57	REGRESSION	4704	2713	2504	209	230	21
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	643	598	45	51	6
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	672	622	50	54	4
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	585	575	10	15	5
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	662	641	21	25	4
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	640	594	46	54	8
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	678	624	54	57	3
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	595	585	10	15	5
-ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	659	644	15	18	3
+ds8-df16	8	16	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	1	0	1	clear	392	139	130	9	9	0
+ds8-df16	8	16	full	bucket	all	all	all	<=1	210	83	67	16	18	2	35	0	35	clear	1680	507	336	171	181	10
+ds8-df16	8	16	full	bucket	all	all	all	<=4	183	90	90	0	1	1	3	1	2	REGRESSION	1464	556	532	24	34	10
+ds8-df16	8	16	full	bucket	all	all	all	rest	783	609	597	12	13	1	21	0	21	clear	6264	4268	4175	93	103	10
+ds8-df16	8	16	full	n32	all	N=32	all	all	1176	755	697	58	59	1	59	1	58	REGRESSION	4704	2734	2519	215	230	15
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	648	598	50	53	3
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	678	625	53	55	2
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	584	578	6	13	7
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	666	649	17	23	6
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	639	596	43	50	7
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	681	626	55	58	3
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	596	579	17	18	1
+ds8-df16	8	16	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	661	634	27	28	1
 ds8-df16	8	16	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	5	3	2	2	0
 ds8-df16	8	16	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds8-df16	8	16	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	5	4	1	1	0
@@ -183,30 +183,30 @@ ds8-df16	8	16	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										
 ds8-df16	8	16	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds8-df16	8	16	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds8-df16	8	16	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	5	4	1	1	0
-ds8-df16	8	16	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	16	14	2	2	0
-ds8-df16	8	16	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	16	14	2	2	0
-ds8-df16	8	16	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	16	15	1	1	0
-ds8-df16	8	16	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	14	2	2	0
-ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	14	13	1	1	0
-ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	14	13	1	1	0
-ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds32-df0	32	0	full	aggregate	all	all	all	all	1176	770	747	23	26	3	47	1	46	REGRESSION	9408	5245	5025	220	235	15
-ds32-df0	32	0	full	corpus	stdlib-regression	all	all	all	1121	749	726	23	26	3	44	1	43	REGRESSION	8968	5085	4883	202	217	15
+ds8-df16	8	16	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	18	16	2	2	0
+ds8-df16	8	16	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	18	16	2	2	0
+ds8-df16	8	16	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	18	17	1	1	0
+ds8-df16	8	16	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	18	16	2	2	0
+ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	16	15	1	1	0
+ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	16	15	1	1	0
+ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds8-df16	8	16	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds32-df0	32	0	full	aggregate	all	all	all	all	1176	778	754	24	27	3	49	1	48	REGRESSION	9408	5277	5043	234	249	15
+ds32-df0	32	0	full	corpus	stdlib-regression	all	all	all	1121	755	731	24	27	3	46	1	45	REGRESSION	8968	5101	4885	216	231	15
 ds32-df0	32	0	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	2	0	2	clear	48	39	28	11	11	0
-ds32-df0	32	0	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	1	0	1	clear	392	121	114	7	7	0
-ds32-df0	32	0	full	bucket	all	all	all	<=1	210	79	64	15	15	0	28	0	28	clear	1680	464	325	139	142	3
-ds32-df0	32	0	full	bucket	all	all	all	<=4	183	89	89	0	0	0	1	0	1	clear	1464	541	529	12	14	2
-ds32-df0	32	0	full	bucket	all	all	all	rest	783	602	594	8	11	3	18	1	17	REGRESSION	6264	4240	4171	69	79	10
-ds32-df0	32	0	full	n32	all	N=32	all	all	1176	737	691	46	47	1	47	1	46	REGRESSION	4704	2673	2504	169	176	7
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	636	598	38	40	2
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	661	622	39	41	2
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	585	575	10	12	2
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	657	641	16	18	2
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	630	594	36	39	3
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	668	624	44	44	0
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	591	585	6	9	3
-ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	657	644	13	14	1
+ds32-df0	32	0	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	1	0	1	clear	392	137	130	7	7	0
+ds32-df0	32	0	full	bucket	all	all	all	<=1	210	82	67	15	16	1	28	0	28	clear	1680	483	336	147	149	2
+ds32-df0	32	0	full	bucket	all	all	all	<=4	183	90	90	0	0	0	1	0	1	clear	1464	547	532	15	15	0
+ds32-df0	32	0	full	bucket	all	all	all	rest	783	606	597	9	11	2	20	1	19	REGRESSION	6264	4247	4175	72	85	13
+ds32-df0	32	0	full	n32	all	N=32	all	all	1176	745	697	48	49	1	49	1	48	REGRESSION	4704	2694	2519	175	184	9
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	634	598	36	40	4
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	670	625	45	46	1
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	588	578	10	11	1
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	662	649	13	16	3
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	635	596	39	42	3
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	669	626	43	44	1
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	587	579	8	9	1
+ds32-df0	32	0	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	656	634	22	23	1
 ds32-df0	32	0	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	5	3	2	2	0
 ds32-df0	32	0	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds32-df0	32	0	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	5	4	1	1	0
@@ -215,30 +215,30 @@ ds32-df0	32	0	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										
 ds32-df0	32	0	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds32-df0	32	0	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds32-df0	32	0	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	5	4	1	1	0
-ds32-df0	32	0	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	15	14	1	1	0
-ds32-df0	32	0	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	15	14	1	1	0
-ds32-df0	32	0	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	16	15	1	1	0
-ds32-df0	32	0	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	14	2	2	0
-ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	14	13	1	1	0
-ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	14	13	1	1	0
-ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds32-df4	32	4	full	aggregate	all	all	all	all	1176	775	747	28	32	4	58	2	56	REGRESSION	9408	5280	5025	255	291	36
-ds32-df4	32	4	full	corpus	stdlib-regression	all	all	all	1121	754	726	28	32	4	55	2	53	REGRESSION	8968	5120	4883	237	273	36
+ds32-df0	32	0	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	17	16	1	1	0
+ds32-df0	32	0	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	17	16	1	1	0
+ds32-df0	32	0	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	18	17	1	1	0
+ds32-df0	32	0	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	18	16	2	2	0
+ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	16	15	1	1	0
+ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	16	15	1	1	0
+ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds32-df0	32	0	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds32-df4	32	4	full	aggregate	all	all	all	all	1176	779	754	25	30	5	58	2	56	REGRESSION	9408	5311	5043	268	300	32
+ds32-df4	32	4	full	corpus	stdlib-regression	all	all	all	1121	756	731	25	30	5	55	2	53	REGRESSION	8968	5135	4885	250	282	32
 ds32-df4	32	4	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	2	0	2	clear	48	39	28	11	11	0
-ds32-df4	32	4	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	1	0	1	clear	392	121	114	7	7	0
-ds32-df4	32	4	full	bucket	all	all	all	<=1	210	80	64	16	17	1	35	0	35	clear	1680	490	325	165	176	11
-ds32-df4	32	4	full	bucket	all	all	all	<=4	183	89	89	0	1	1	2	1	1	REGRESSION	1464	543	529	14	28	14
-ds32-df4	32	4	full	bucket	all	all	all	rest	783	606	594	12	14	2	21	1	20	REGRESSION	6264	4247	4171	76	87	11
-ds32-df4	32	4	full	n32	all	N=32	all	all	1176	747	691	56	58	2	58	2	56	REGRESSION	4704	2705	2504	201	223	22
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	642	598	44	51	7
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	671	622	49	52	3
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	582	575	7	11	4
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	657	641	16	20	4
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	638	594	44	53	9
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	676	624	52	55	3
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	595	585	10	14	4
-ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	659	644	15	17	2
+ds32-df4	32	4	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	1	0	1	clear	392	137	130	7	7	0
+ds32-df4	32	4	full	bucket	all	all	all	<=1	210	84	67	17	19	2	36	0	36	clear	1680	507	336	171	182	11
+ds32-df4	32	4	full	bucket	all	all	all	<=4	183	89	90	-1	0	1	2	1	1	REGRESSION	1464	552	532	20	32	12
+ds32-df4	32	4	full	bucket	all	all	all	rest	783	606	597	9	11	2	20	1	19	REGRESSION	6264	4252	4175	77	86	9
+ds32-df4	32	4	full	n32	all	N=32	all	all	1176	753	697	56	58	2	58	2	56	REGRESSION	4704	2723	2519	204	221	17
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	645	598	47	52	5
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	676	625	51	53	2
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	585	578	7	12	5
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	662	649	13	18	5
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	637	596	41	48	7
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	679	626	53	56	3
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	591	579	12	15	3
+ds32-df4	32	4	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	660	634	26	28	2
 ds32-df4	32	4	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	5	3	2	2	0
 ds32-df4	32	4	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds32-df4	32	4	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	5	4	1	1	0
@@ -247,30 +247,30 @@ ds32-df4	32	4	full	exact_attempt	dependent-slice	nbayes-32	eprover	all										
 ds32-df4	32	4	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds32-df4	32	4	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds32-df4	32	4	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	5	4	1	1	0
-ds32-df4	32	4	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	15	14	1	1	0
-ds32-df4	32	4	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	15	14	1	1	0
-ds32-df4	32	4	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	16	15	1	1	0
-ds32-df4	32	4	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	14	2	2	0
-ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	14	13	1	1	0
-ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	14	13	1	1	0
-ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
-ds32-df16	32	16	full	aggregate	all	all	all	all	1176	775	747	28	32	4	59	1	58	REGRESSION	9408	5293	5025	268	309	41
-ds32-df16	32	16	full	corpus	stdlib-regression	all	all	all	1121	754	726	28	32	4	56	1	55	REGRESSION	8968	5131	4883	248	289	41
+ds32-df4	32	4	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	17	16	1	1	0
+ds32-df4	32	4	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	17	16	1	1	0
+ds32-df4	32	4	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	18	17	1	1	0
+ds32-df4	32	4	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	18	16	2	2	0
+ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	16	15	1	1	0
+ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	16	15	1	1	0
+ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds32-df4	32	4	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0
+ds32-df16	32	16	full	aggregate	all	all	all	all	1176	782	754	28	31	3	57	1	56	REGRESSION	9408	5327	5043	284	320	36
+ds32-df16	32	16	full	corpus	stdlib-regression	all	all	all	1121	759	731	28	31	3	54	1	53	REGRESSION	8968	5149	4885	264	300	36
 ds32-df16	32	16	full	corpus	dependent-slice	all	all	all	6	5	5	0	0	0	2	0	2	clear	48	39	28	11	11	0
-ds32-df16	32	16	full	corpus	external-equations	all	all	all	49	16	16	0	0	0	1	0	1	clear	392	123	114	9	9	0
-ds32-df16	32	16	full	bucket	all	all	all	<=1	210	81	64	17	18	1	36	0	36	clear	1680	493	325	168	180	12
-ds32-df16	32	16	full	bucket	all	all	all	<=4	183	89	89	0	1	1	2	1	1	REGRESSION	1464	542	529	13	27	14
-ds32-df16	32	16	full	bucket	all	all	all	rest	783	605	594	11	13	2	21	0	21	clear	6264	4258	4171	87	102	15
-ds32-df16	32	16	full	n32	all	N=32	all	all	1176	749	691	58	59	1	59	1	58	REGRESSION	4704	2714	2504	210	231	21
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	644	598	46	52	6
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	673	622	51	54	3
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	585	575	10	16	6
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	661	641	20	25	5
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	638	594	44	53	9
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	679	624	55	58	3
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	594	585	9	14	5
-ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	657	644	13	17	4
+ds32-df16	32	16	full	corpus	external-equations	all	all	all	49	18	18	0	0	0	1	0	1	clear	392	139	130	9	9	0
+ds32-df16	32	16	full	bucket	all	all	all	<=1	210	83	67	16	18	2	34	0	34	clear	1680	506	336	170	181	11
+ds32-df16	32	16	full	bucket	all	all	all	<=4	183	89	90	-1	0	1	2	1	1	REGRESSION	1464	556	532	24	34	10
+ds32-df16	32	16	full	bucket	all	all	all	rest	783	610	597	13	13	0	21	0	21	clear	6264	4265	4175	90	105	15
+ds32-df16	32	16	full	n32	all	N=32	all	all	1176	753	697	56	57	1	57	1	56	REGRESSION	4704	2731	2519	212	230	18
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-32	eprover	all										diagnostic	1121	645	598	47	52	5
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-32	vampire	all										diagnostic	1121	677	625	52	55	3
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-1024	eprover	all										diagnostic	1121	583	578	5	13	8
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	knn-1024	vampire	all										diagnostic	1121	664	649	15	23	8
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-32	eprover	all										diagnostic	1121	641	596	45	52	7
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-32	vampire	all										diagnostic	1121	680	626	54	57	3
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-1024	eprover	all										diagnostic	1121	599	579	20	21	1
+ds32-df16	32	16	full	exact_attempt	stdlib-regression	nbayes-1024	vampire	all										diagnostic	1121	660	634	26	27	1
 ds32-df16	32	16	full	exact_attempt	dependent-slice	knn-32	eprover	all										diagnostic	6	5	3	2	2	0
 ds32-df16	32	16	full	exact_attempt	dependent-slice	knn-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds32-df16	32	16	full	exact_attempt	dependent-slice	knn-1024	eprover	all										diagnostic	6	5	4	1	1	0
@@ -279,11 +279,11 @@ ds32-df16	32	16	full	exact_attempt	dependent-slice	nbayes-32	eprover	all								
 ds32-df16	32	16	full	exact_attempt	dependent-slice	nbayes-32	vampire	all										diagnostic	6	5	3	2	2	0
 ds32-df16	32	16	full	exact_attempt	dependent-slice	nbayes-1024	eprover	all										diagnostic	6	4	4	0	0	0
 ds32-df16	32	16	full	exact_attempt	dependent-slice	nbayes-1024	vampire	all										diagnostic	6	5	4	1	1	0
-ds32-df16	32	16	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	16	14	2	2	0
-ds32-df16	32	16	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	16	14	2	2	0
-ds32-df16	32	16	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	16	15	1	1	0
-ds32-df16	32	16	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	16	14	2	2	0
-ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	14	13	1	1	0
-ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	14	13	1	1	0
-ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	15	15	0	0	0
-ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	16	16	0	0	0
+ds32-df16	32	16	full	exact_attempt	external-equations	knn-32	eprover	all										diagnostic	49	18	16	2	2	0
+ds32-df16	32	16	full	exact_attempt	external-equations	knn-32	vampire	all										diagnostic	49	18	16	2	2	0
+ds32-df16	32	16	full	exact_attempt	external-equations	knn-1024	eprover	all										diagnostic	49	18	17	1	1	0
+ds32-df16	32	16	full	exact_attempt	external-equations	knn-1024	vampire	all										diagnostic	49	18	16	2	2	0
+ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-32	eprover	all										diagnostic	49	16	15	1	1	0
+ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-32	vampire	all										diagnostic	49	16	15	1	1	0
+ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-1024	eprover	all										diagnostic	49	17	17	0	0	0
+ds32-df16	32	16	full	exact_attempt	external-equations	nbayes-1024	vampire	all										diagnostic	49	18	18	0	0	0

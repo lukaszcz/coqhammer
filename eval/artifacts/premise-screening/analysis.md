@@ -10,47 +10,47 @@ Decision metrics use solved `GoalKey = (corpus, relative goal path)` sets. A goa
 
 | label | solved goals | baseline | net | gains | losses |
 | --- | --- | --- | --- | --- | --- |
-| ds0-df0 | 747 | 747 | +0 | 0 | 0 |
-| ds0-df4 | 761 | 747 | +14 | 17 | 3 |
-| ds0-df16 | 762 | 747 | +15 | 19 | 4 |
-| ds8-df0 | 769 | 747 | +22 | 25 | 3 |
-| ds8-df4 | 772 | 747 | +25 | 30 | 5 |
-| ds8-df16 | 775 | 747 | +28 | 31 | 3 |
-| ds32-df0 | 770 | 747 | +23 | 26 | 3 |
-| ds32-df4 | 775 | 747 | +28 | 32 | 4 |
-| ds32-df16 | 775 | 747 | +28 | 32 | 4 |
+| ds0-df0 | 754 | 754 | +0 | 0 | 0 |
+| ds0-df4 | 758 | 754 | +4 | 12 | 8 |
+| ds0-df16 | 766 | 754 | +12 | 17 | 5 |
+| ds8-df0 | 776 | 754 | +22 | 27 | 5 |
+| ds8-df4 | 777 | 754 | +23 | 29 | 6 |
+| ds8-df16 | 782 | 754 | +28 | 32 | 4 |
+| ds32-df0 | 778 | 754 | +24 | 27 | 3 |
+| ds32-df4 | 779 | 754 | +25 | 30 | 5 |
+| ds32-df16 | 782 | 754 | +28 | 31 | 3 |
 
 ## Per-corpus solved goals
 
 | label | corpus | solved goals | baseline | net | gains | losses |
 | --- | --- | --- | --- | --- | --- | --- |
-| ds0-df0 | stdlib-regression | 726 | 726 | +0 | 0 | 0 |
+| ds0-df0 | stdlib-regression | 731 | 731 | +0 | 0 | 0 |
 | ds0-df0 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds0-df0 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds0-df4 | stdlib-regression | 740 | 726 | +14 | 17 | 3 |
+| ds0-df0 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds0-df4 | stdlib-regression | 735 | 731 | +4 | 12 | 8 |
 | ds0-df4 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds0-df4 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds0-df16 | stdlib-regression | 741 | 726 | +15 | 19 | 4 |
+| ds0-df4 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds0-df16 | stdlib-regression | 743 | 731 | +12 | 17 | 5 |
 | ds0-df16 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds0-df16 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds8-df0 | stdlib-regression | 748 | 726 | +22 | 25 | 3 |
+| ds0-df16 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds8-df0 | stdlib-regression | 753 | 731 | +22 | 27 | 5 |
 | ds8-df0 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds8-df0 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds8-df4 | stdlib-regression | 751 | 726 | +25 | 30 | 5 |
+| ds8-df0 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds8-df4 | stdlib-regression | 754 | 731 | +23 | 29 | 6 |
 | ds8-df4 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds8-df4 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds8-df16 | stdlib-regression | 754 | 726 | +28 | 31 | 3 |
+| ds8-df4 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds8-df16 | stdlib-regression | 759 | 731 | +28 | 32 | 4 |
 | ds8-df16 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds8-df16 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds32-df0 | stdlib-regression | 749 | 726 | +23 | 26 | 3 |
+| ds8-df16 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds32-df0 | stdlib-regression | 755 | 731 | +24 | 27 | 3 |
 | ds32-df0 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds32-df0 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds32-df4 | stdlib-regression | 754 | 726 | +28 | 32 | 4 |
+| ds32-df0 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds32-df4 | stdlib-regression | 756 | 731 | +25 | 30 | 5 |
 | ds32-df4 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds32-df4 | external-equations | 16 | 16 | +0 | 0 | 0 |
-| ds32-df16 | stdlib-regression | 754 | 726 | +28 | 32 | 4 |
+| ds32-df4 | external-equations | 18 | 18 | +0 | 0 | 0 |
+| ds32-df16 | stdlib-regression | 759 | 731 | +28 | 31 | 3 |
 | ds32-df16 | dependent-slice | 5 | 5 | +0 | 0 | 0 |
-| ds32-df16 | external-equations | 16 | 16 | +0 | 0 | 0 |
+| ds32-df16 | external-equations | 18 | 18 | +0 | 0 | 0 |
 
 ## Per-bucket solved goals
 
@@ -58,33 +58,33 @@ Buckets are exclusive: `<=4` means 2--4 after removing `<=1`; `rest` means great
 
 | label | bucket | solved goals | baseline | net | gains | losses |
 | --- | --- | --- | --- | --- | --- | --- |
-| ds0-df0 | <=1 | 64 | 64 | +0 | 0 | 0 |
-| ds0-df0 | <=4 | 89 | 89 | +0 | 0 | 0 |
-| ds0-df0 | rest | 594 | 594 | +0 | 0 | 0 |
-| ds0-df4 | <=1 | 76 | 64 | +12 | 13 | 1 |
-| ds0-df4 | <=4 | 89 | 89 | +0 | 1 | 1 |
-| ds0-df4 | rest | 596 | 594 | +2 | 3 | 1 |
-| ds0-df16 | <=1 | 76 | 64 | +12 | 13 | 1 |
-| ds0-df16 | <=4 | 88 | 89 | -1 | 0 | 1 |
-| ds0-df16 | rest | 598 | 594 | +4 | 6 | 2 |
-| ds8-df0 | <=1 | 79 | 64 | +15 | 15 | 0 |
-| ds8-df0 | <=4 | 89 | 89 | +0 | 0 | 0 |
-| ds8-df0 | rest | 601 | 594 | +7 | 10 | 3 |
-| ds8-df4 | <=1 | 80 | 64 | +16 | 17 | 1 |
-| ds8-df4 | <=4 | 89 | 89 | +0 | 1 | 1 |
-| ds8-df4 | rest | 603 | 594 | +9 | 12 | 3 |
-| ds8-df16 | <=1 | 80 | 64 | +16 | 17 | 1 |
-| ds8-df16 | <=4 | 89 | 89 | +0 | 1 | 1 |
-| ds8-df16 | rest | 606 | 594 | +12 | 13 | 1 |
-| ds32-df0 | <=1 | 79 | 64 | +15 | 15 | 0 |
-| ds32-df0 | <=4 | 89 | 89 | +0 | 0 | 0 |
-| ds32-df0 | rest | 602 | 594 | +8 | 11 | 3 |
-| ds32-df4 | <=1 | 80 | 64 | +16 | 17 | 1 |
-| ds32-df4 | <=4 | 89 | 89 | +0 | 1 | 1 |
-| ds32-df4 | rest | 606 | 594 | +12 | 14 | 2 |
-| ds32-df16 | <=1 | 81 | 64 | +17 | 18 | 1 |
-| ds32-df16 | <=4 | 89 | 89 | +0 | 1 | 1 |
-| ds32-df16 | rest | 605 | 594 | +11 | 13 | 2 |
+| ds0-df0 | <=1 | 67 | 67 | +0 | 0 | 0 |
+| ds0-df0 | <=4 | 90 | 90 | +0 | 0 | 0 |
+| ds0-df0 | rest | 597 | 597 | +0 | 0 | 0 |
+| ds0-df4 | <=1 | 78 | 67 | +11 | 12 | 1 |
+| ds0-df4 | <=4 | 87 | 90 | -3 | 0 | 3 |
+| ds0-df4 | rest | 593 | 597 | -4 | 0 | 4 |
+| ds0-df16 | <=1 | 79 | 67 | +12 | 13 | 1 |
+| ds0-df16 | <=4 | 89 | 90 | -1 | 0 | 1 |
+| ds0-df16 | rest | 598 | 597 | +1 | 4 | 3 |
+| ds8-df0 | <=1 | 82 | 67 | +15 | 17 | 2 |
+| ds8-df0 | <=4 | 90 | 90 | +0 | 0 | 0 |
+| ds8-df0 | rest | 604 | 597 | +7 | 10 | 3 |
+| ds8-df4 | <=1 | 83 | 67 | +16 | 18 | 2 |
+| ds8-df4 | <=4 | 89 | 90 | -1 | 0 | 1 |
+| ds8-df4 | rest | 605 | 597 | +8 | 11 | 3 |
+| ds8-df16 | <=1 | 83 | 67 | +16 | 18 | 2 |
+| ds8-df16 | <=4 | 90 | 90 | +0 | 1 | 1 |
+| ds8-df16 | rest | 609 | 597 | +12 | 13 | 1 |
+| ds32-df0 | <=1 | 82 | 67 | +15 | 16 | 1 |
+| ds32-df0 | <=4 | 90 | 90 | +0 | 0 | 0 |
+| ds32-df0 | rest | 606 | 597 | +9 | 11 | 2 |
+| ds32-df4 | <=1 | 84 | 67 | +17 | 19 | 2 |
+| ds32-df4 | <=4 | 89 | 90 | -1 | 0 | 1 |
+| ds32-df4 | rest | 606 | 597 | +9 | 11 | 2 |
+| ds32-df16 | <=1 | 83 | 67 | +16 | 18 | 2 |
+| ds32-df16 | <=4 | 89 | 90 | -1 | 0 | 1 |
+| ds32-df16 | rest | 610 | 597 | +13 | 13 | 0 |
 
 ## Goal-level N=32 regression guard
 
@@ -92,28 +92,28 @@ Buckets are exclusive: `<=4` means 2--4 after removing `<=1`; `rest` means great
 
 | label | N=32 solved goals | baseline | net | gains | losses | flag |
 | --- | --- | --- | --- | --- | --- | --- |
-| ds0-df0 | 691 | 691 | +0 | 0 | 0 | baseline |
-| ds0-df4 | 706 | 691 | +15 | 17 | 2 | REGRESSION |
-| ds0-df16 | 709 | 691 | +18 | 21 | 3 | REGRESSION |
-| ds8-df0 | 738 | 691 | +47 | 48 | 1 | REGRESSION |
-| ds8-df4 | 746 | 691 | +55 | 57 | 2 | REGRESSION |
-| ds8-df16 | 748 | 691 | +57 | 58 | 1 | REGRESSION |
-| ds32-df0 | 737 | 691 | +46 | 47 | 1 | REGRESSION |
-| ds32-df4 | 747 | 691 | +56 | 58 | 2 | REGRESSION |
-| ds32-df16 | 749 | 691 | +58 | 59 | 1 | REGRESSION |
+| ds0-df0 | 697 | 697 | +0 | 0 | 0 | baseline |
+| ds0-df4 | 707 | 697 | +10 | 14 | 4 | REGRESSION |
+| ds0-df16 | 713 | 697 | +16 | 19 | 3 | REGRESSION |
+| ds8-df0 | 743 | 697 | +46 | 49 | 3 | REGRESSION |
+| ds8-df4 | 750 | 697 | +53 | 56 | 3 | REGRESSION |
+| ds8-df16 | 755 | 697 | +58 | 59 | 1 | REGRESSION |
+| ds32-df0 | 745 | 697 | +48 | 49 | 1 | REGRESSION |
+| ds32-df4 | 753 | 697 | +56 | 58 | 2 | REGRESSION |
+| ds32-df16 | 753 | 697 | +56 | 57 | 1 | REGRESSION |
 
 ## Exact-attempt diagnostics (not decision metrics)
 
 | label | solved attempts | baseline | net | gains | losses |
 | --- | --- | --- | --- | --- | --- |
-| ds0-df0 | 5025 | 5025 | +0 | 0 | 0 |
-| ds0-df4 | 5099 | 5025 | +74 | 105 | 31 |
-| ds0-df16 | 5096 | 5025 | +71 | 123 | 52 |
-| ds8-df0 | 5236 | 5025 | +211 | 231 | 20 |
-| ds8-df4 | 5286 | 5025 | +261 | 295 | 34 |
-| ds8-df16 | 5296 | 5025 | +271 | 309 | 38 |
-| ds32-df0 | 5245 | 5025 | +220 | 235 | 15 |
-| ds32-df4 | 5280 | 5025 | +255 | 291 | 36 |
-| ds32-df16 | 5293 | 5025 | +268 | 309 | 41 |
+| ds0-df0 | 5043 | 5043 | +0 | 0 | 0 |
+| ds0-df4 | 5069 | 5043 | +26 | 90 | 64 |
+| ds0-df16 | 5117 | 5043 | +74 | 121 | 47 |
+| ds8-df0 | 5251 | 5043 | +208 | 243 | 35 |
+| ds8-df4 | 5309 | 5043 | +266 | 300 | 34 |
+| ds8-df16 | 5331 | 5043 | +288 | 318 | 30 |
+| ds32-df0 | 5277 | 5043 | +234 | 249 | 15 |
+| ds32-df4 | 5311 | 5043 | +268 | 300 | 32 |
+| ds32-df16 | 5327 | 5043 | +284 | 320 | 36 |
 
 Per-corpus/premise/prover attempt diagnostics are available in `summary.tsv` rows with `scope=exact_attempt`.

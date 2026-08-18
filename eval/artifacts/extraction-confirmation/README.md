@@ -18,7 +18,7 @@ are deliberately not copied here, because a hand-maintained copy of a generated
 table is stale from the next run onwards.
 
 Regenerate from the raw checkpoints under `eval/results/confirmation` with
-`../../evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
+`./evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
 switch, add `--setup` (or run `eval/install-external-libs.sh` first) to install
 the external libraries the full corpora need.
 
@@ -41,12 +41,12 @@ distinguish a sound translation from an unsound one.
 ## Performance
 
 The grid is `{knn,nbayes} x {32,64,128,256,1024} x {E prover,Vampire,Z3,CVC4}`
-over seven corpora, 280 cells, 205,960 generated problems.
+over seven corpora, 280 cells, 276,560 generated problems.
 
 | metric | value |
 | --- | --- |
-| ATP success rate | 33.2% (68,442 / 205,960) |
-| Reconstruction on ATP-proved goals | 86.2% (58,964 / 68,442) |
+| ATP success rate | 29.2% (80,631 / 276,560) |
+| Reconstruction on ATP-proved goals | 87.1% (70,195 / 80,631) |
 
 See `analysis.md` for the breakdown by prover, corpus and premise selector, and
 for the eq_rect/WF watch points.
