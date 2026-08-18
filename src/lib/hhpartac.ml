@@ -50,7 +50,7 @@ let worker time tac =
   if time > 0 then
     begin
       Sys.set_signal Sys.sigalrm Sys.Signal_default;
-ignore (Unix.alarm (min time (Sys.max_int - 5) + 5))
+      ignore (Unix.alarm (min time (Sys.max_int - 5) + 5))
     end;
   Proofview.tclOR
     (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
