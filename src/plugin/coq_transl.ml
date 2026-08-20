@@ -223,12 +223,31 @@ end
 module Lift_owners = struct
   (* Availability belongs to a (symbol, declaration) pair.  One cached lift may
      be replayed into several declarations; recording only its last owner makes
-     schema reuse depend on which declaration happened to be translated last. *)
-  let table = Hashtbl.create 128
+     schema reuse depend on which declaration happened to be translated last.
+
+     The table is keyed by owner and holds that owner's symbol set, so
+     [remove_def] can drop one declaration's whole ownership in one step: the
+     [remove_def] + [reinit] diagnostics keep the translation caches, and an
+     ownership pair surviving a re-declaration would authorize schema reuse
+     that a fresh process would not perform. *)
+  let table : (string, (string, unit) Hashtbl.t) Hashtbl.t = Hashtbl.create 128
   let clear () = Hashtbl.clear table
   let add name owner =
-    if owner <> "" then Hashtbl.replace table (name, owner) ()
-  let mem name owner = Hashtbl.mem table (name, owner)
+    if owner <> "" then
+      let symbols =
+        match Hashtbl.find_opt table owner with
+        | Some symbols -> symbols
+        | None ->
+           let symbols = Hashtbl.create 16 in
+           Hashtbl.add table owner symbols;
+           symbols
+      in
+      Hashtbl.replace symbols name ()
+  let mem name owner =
+    match Hashtbl.find_opt table owner with
+    | Some symbols -> Hashtbl.mem symbols name
+    | None -> false
+  let remove owner = Hashtbl.remove table owner
 end
 
 module Lift_dependencies = struct
@@ -297,7 +316,22 @@ module Translation_effects = struct
       effects
 end
 
-let with_lift_dependencies make =
+(* [make] sets [reuses_lift] when the value it returns reuses a lift symbol
+   that is already registered -- a replayed cache entry, or a schema applied to
+   a matching substitution -- instead of minting one of its own.  The
+   distinction decides who owns the structural theory collected while [make]
+   ran.  When a lift is minted, those dependencies are properties of the lifted
+   term itself and belong to the new symbol permanently.  When a symbol is
+   reused they are properties of THIS occurrence only -- typically of
+   converting the substitution arguments -- and attaching them to the shared
+   symbol would deliver inversion and discrimination theory for inductives the
+   symbol never inspects to every later user of it.
+
+   Either way the occurrence itself needs the union of the symbol's recorded
+   theory and its own dependencies; in the minting case [add] followed by
+   [find] computes exactly that union, so one expression serves both and only
+   the [add] is suppressed on reuse. *)
+let with_lift_dependencies ?reuses_lift make =
   let dependencies = ref [] in
   let previous_collectors = !(Lift_dependencies.collectors) in
   Lift_dependencies.collectors := dependencies :: previous_collectors;
@@ -308,12 +342,19 @@ let with_lift_dependencies make =
       raise e
   in
   Lift_dependencies.collectors := previous_collectors;
+  let reused =
+    match reuses_lift with
+    | Some flag -> !flag
+    | None -> false
+  in
   let delivered =
     match flatten_app (fst result) with
     | Const name, _
          when String.length name >= 2 && String.sub name 0 2 = "$_" ->
-       if !dependencies <> [] then Lift_dependencies.add name !dependencies;
-       Lift_dependencies.find name
+       if not reused && !dependencies <> [] then
+         Lift_dependencies.add name !dependencies;
+       Hhlib.sort_uniq String.compare
+         (!dependencies @ Lift_dependencies.find name)
     | _ -> Hhlib.sort_uniq String.compare !dependencies
   in
   List.iter
@@ -358,6 +399,45 @@ let speculation_stats () =
 let commit_speculation dependencies effects =
   Translation_effects.commit effects;
   List.iter Lift_dependencies.record dependencies
+
+(* A lift symbol as [Hashing.register_lift]/[Hashing.find_lift_link] mint it:
+   a kind prefix followed by a [unique_id] of digits.  Axioms derived from a
+   lift's definition append a [$]-separated suffix ([$term], [$lower],
+   [$upper], [$link], [$<constructor>]), so the defining symbol is the axiom
+   name truncated at the first [$] after the prefix.  Only the two kinds
+   [Lift_owners] is ever queried with are recognized. *)
+let defined_lift_symbol axname =
+  let matches prefix =
+    Hhlib.string_begins_with axname prefix &&
+    String.length axname > String.length prefix
+  in
+  let prefix =
+    if matches "$_lam_" then Some "$_lam_"
+    else if matches "$_type_" then Some "$_type_"
+    else None
+  in
+  match prefix with
+  | None -> None
+  | Some prefix ->
+     let start = String.length prefix in
+     let stop =
+       try String.index_from axname start '$' with Not_found -> String.length axname
+     in
+     if stop = start then None else Some (String.sub axname 0 stop)
+
+(* Replaying a cached bundle into a declaration makes available not only its
+   head symbol but the definition axioms of every lift nested inside it, so
+   every symbol the bundle defines is owned by the current declaration.
+   Without this a later instance of a nested lift is refused reuse and mints a
+   duplicate symbol plus a link equation -- sound, but it defeats the sharing.
+   Costs one O(bundle) pass over the axiom list per cache hit. *)
+let record_bundle_owners value =
+  List.iter
+    (fun (axname, _) ->
+       match defined_lift_symbol axname with
+       | Some name -> Translation_effects.lift_owner name !translation_owner
+       | None -> ())
+    (extract_axioms value)
 
 (***************************************************************************************)
 (* Lift-sharing diagnostic *)
@@ -2358,10 +2438,18 @@ and translate_schema_application ctx schema_name schema_ctx subst =
 
 and remove_lambda ctx tm =
   debug 3 (fun () -> print_header "remove_lambda" tm ctx);
-  with_lift_dependencies (fun () ->
+  (* Set when the value returned below names an already-registered lift instead
+     of minting one, so that the dependencies collected on the way are not
+     attributed to that shared symbol; see [with_lift_dependencies]. *)
+  let reuses_lift = ref false in
+  with_lift_dependencies ~reuses_lift (fun () ->
     let key = Hashing.canonical_key ctx tm in
     let cctx = Hashing.key_context key
     and ctm = Hashing.key_term key in
+    (* The link is looked up before the lift minted below registers itself, so
+       that lift cannot match itself.  It is computed once here and shared by
+       both the instance-reuse path and the minting path. *)
+    let link = Hashing.find_lift_link "lam" cctx ctm in
     (* When a lambda is a syntactic instance of a schema available in this
        declaration, applying the schema symbol to the matching substitution
        names exactly the same Coq term.  Reuse is authorized only after that
@@ -2369,7 +2457,7 @@ and remove_lambda ctx tm =
        retained arity has been checked.  A rejected attempt contributes neither
        axioms nor ownership/structural-delivery effects. *)
     let reuse_instance () =
-      match Hashing.find_lift_link "lam" cctx ctm with
+      match link with
       | Some link when not link.Hashing.ll_new_is_schema &&
                        Lift_owners.mem link.Hashing.ll_name !translation_owner &&
                        binder_erasure_profile cctx ctm =
@@ -2391,7 +2479,27 @@ and remove_lambda ctx tm =
                None
             | Some candidate ->
                commit_speculation dependencies effects;
-               Some (Hashing.lift_key coqterm_hash key (cached >> candidate))
+               reuses_lift := true;
+               let value = cached >> candidate in
+               (* Cache the instance under its own key, so a further occurrence
+                  of the same lambda is an exact hit instead of re-running the
+                  registry scan and the speculative translation -- which would
+                  also make reuse depend on the registry's examination cap.
+
+                  Only when the speculation contributed no dependencies: an
+                  exact hit re-translates nothing, so all it can deliver is the
+                  theory recorded for its head symbol.  Since a reusing
+                  occurrence must not extend that symbol's entry, caching an
+                  instance whose arguments did contribute structural
+                  dependencies would silently under-deliver them on replay.
+                  Such instances keep re-speculating per occurrence.
+
+                  [value] is built over [Hashing.key_context key] and is stored
+                  before any [lift_key] renaming, as [insert_key] requires. *)
+               if dependencies = [] then
+                 Hashing.insert_key "" coqterm_hash key value;
+               record_bundle_owners value;
+               Some (Hashing.lift_key coqterm_hash key value)
             end
          end
       | _ -> None
@@ -2399,15 +2507,17 @@ and remove_lambda ctx tm =
     let reuse =
       match Hashing.find_key "" coqterm_hash key with
       | Some cached ->
-         (* Replaying the complete cached bundle makes its symbol available to
-            this owner.  Record the pair after constructing that replay, so a
-            later schema instance in the same declaration is order-independent
+         (* Replaying the complete cached bundle makes its symbols available
+            to this owner.  Record the pairs after constructing that replay, so
+            a later schema instance in the same declaration is order-independent
             across earlier owners of the same cache entry. *)
+         reuses_lift := true;
          let result = Hashing.lift_key coqterm_hash key cached in
          begin match fst (flatten_app (fst result)) with
          | Const name -> Translation_effects.lift_owner name !translation_owner
          | _ -> ()
          end;
+         record_bundle_owners cached;
          Some result
       | None -> reuse_instance ()
     in
@@ -2430,9 +2540,8 @@ and remove_lambda ctx tm =
            [add_link_axiom] checks, matching being syntactic on the unerased
            term while arity is settled after erasure.
 
-           The link is looked up before the lift is built, so this lift -- which
-           registers itself only below -- cannot match itself. *)
-        let link = Hashing.find_lift_link "lam" cctx ctm in
+           [link] is computed above, before this lift registers itself below,
+           so this lift cannot match itself. *)
         count_lift "lam" "minted";
         lambda_lifting [] name name (ctx_to_vars cctx) [] ctm >>= fun result ->
         (* [lambda_lifting] does not always name the lift [name]: a [Fix] body
@@ -3168,7 +3277,15 @@ let get_axioms lst =
 let remove_def name =
   Defhash.remove name;
   Axhash.remove name;
-  Case_dependencies.remove name
+  Case_dependencies.remove name;
+  (* Everything attributed to this declaration goes with it.  [remove_def] is
+     used together with [reinit] -- not [cleanup] -- to re-translate one
+     declaration while keeping the translation caches, so a surviving
+     ownership pair would let a later occurrence reuse a lift a fresh process
+     would have minted anew, making translation output order-dependent.
+     [Lift_dependencies] is keyed by symbol rather than by owner and stays
+     consistent with the surviving [coqterm_hash], so it is left alone. *)
+  Lift_owners.remove name
 
 let cleanup () =
   reset_unique_id ();

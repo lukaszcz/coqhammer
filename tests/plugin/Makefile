@@ -328,7 +328,39 @@ type_sharing_transl.vo: type_sharing_transl.v
 	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
 	  fail "a lifted-type axiom is an equivalence, which is unsound over empty domains"; \
 	fi; \
-	equivalences=$$(grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
+	dep_dumped_link=$$(grep -E '^fof\(.\$$_link_[0-9]+., axiom, \(c_24__type__[0-9]+ = c_24__type__[0-9]+___24a2\(ctype__sharing__transl_2eX,cQs\)\)\)\.$$' \
+	  "$$tmp/type_sharing_transl.p" || true); \
+	[ -n "$$dep_dumped_link" ] || \
+	  fail "dumped dependent product link equation check FAILED"; \
+	dep_dumped_lhs=$$(printf '%s\n' "$$dep_dumped_link" | grep -Eo 'c_24__type__[0-9]+' | head -n 1); \
+	dep_dumped_rhs=$$(printf '%s\n' "$$dep_dumped_link" | grep -Eo 'c_24__type__[0-9]+' | sed -n 2p); \
+	dep_dumped_sym=$$(grep -F "fof('\$$_typeof_ks'," "$$tmp/type_sharing_transl.p" | \
+	  grep -Eo 'c_24__type__[0-9]+' | head -n 1); \
+	[ "$$dep_dumped_lhs" = "$$dep_dumped_sym" ] || \
+	  fail "the dumped dependent link does not relate the goal hypothesis' own lifted type"; \
+	[ "$$dep_dumped_lhs" != "$$dep_dumped_rhs" ] || \
+	  fail "the dumped dependent link relates a lifted type to itself, so it says nothing"; \
+	lam_dumped_link=$$(grep -E '^fof\(.\$$_link_[0-9]+., axiom, \(c_24__lam__[0-9]+ = c_24__lam__[0-9]+___24a2\(ctype__sharing__transl_2eX,cgs\)\)\)\.$$' \
+	  "$$tmp/type_sharing_transl.p" || true); \
+	[ -n "$$lam_dumped_link" ] || \
+	  fail "dumped lambda link equation check FAILED"; \
+	lam_dumped_lhs=$$(printf '%s\n' "$$lam_dumped_link" | grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	lam_dumped_rhs=$$(printf '%s\n' "$$lam_dumped_link" | grep -Eo 'c_24__lam__[0-9]+' | sed -n 2p); \
+	lam_dumped_inst=$$(grep -F "fof('lam_inst_h'," "$$tmp/type_sharing_transl.p" | \
+	  grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	lam_dumped_schema=$$(grep -F "fof('lam_schema_h'," "$$tmp/type_sharing_transl.p" | \
+	  grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	[ "$$lam_dumped_lhs" = "$$lam_dumped_inst" ] || \
+	  fail "the dumped lambda link does not relate the instance hypothesis' own lifted lambda"; \
+	[ "$$lam_dumped_rhs" = "$$lam_dumped_schema" ] || \
+	  fail "the dumped lambda link does not relate the schema hypothesis' own lifted lambda"; \
+	[ "$$lam_dumped_lhs" != "$$lam_dumped_rhs" ] || \
+	  fail "the dumped lambda link relates a lifted lambda to itself, so it says nothing"; \
+	scanned=$$(grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" || true); \
+	printf '%s\n' "$$scanned" | grep -Fq "$$dep_dumped_link" && \
+	printf '%s\n' "$$scanned" | grep -Fq "$$lam_dumped_link" || \
+	  fail "the connective scan below no longer covers the link equations asserted above"; \
+	equivalences=$$(printf '%s\n' "$$scanned" | \
 	  awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
 	         if (j > 0 && (i == 0 || j < i)) print }'); \
 	if [ -n "$$equivalences" ]; then \
@@ -464,6 +496,21 @@ lambda_reuse_transl.vo: lambda_reuse_transl.v
 	  fail "the cross-owner lambda cache hit lost its replay_box dependency"; \
 	if grep -Fq '_def_lambda_reuse_transl.owner_seed' "$$tmp/lambda-reuse-structural.p"; then \
 	  fail "the structural replay check is masked by the seed owner in the final theory"; \
+	fi; \
+	grep -F "_def_lambda_reuse_transl.nested_replay:" lambda_reuse_transl.out | \
+	  grep -Fq "lambda_reuse_transl.gv" || \
+	  fail "a replayed bundle did not make the lambdas nested inside it available"; \
+	grep -Fq "_inversion_lambda_reuse_transl.attr_marker'" \
+	  "$$tmp/lambda-reuse-attribution-instance.p" || \
+	  fail "a reusing occurrence lost the structural theory its own substitution needs"; \
+	if grep -Fq "attr_marker" "$$tmp/lambda-reuse-attribution-probe.p"; then \
+	  fail "a reusing occurrence's dependencies were attributed to the shared lift symbol"; \
+	fi; \
+	[ $$(grep -c '^_HAMMER_GOAL:' lambda_reuse_transl.out) -eq 2 ] || \
+	  fail "the goal-level translations did not both run"; \
+	if grep '^_HAMMER_GOAL:' lambda_reuse_transl.out | tail -n 1 | \
+	     grep -Fq "lambda_reuse_transl.gw"; then \
+	  fail "lift ownership recorded for one goal survived into the next one"; \
 	fi; \
 	rm -f lambda_reuse_transl.out
 

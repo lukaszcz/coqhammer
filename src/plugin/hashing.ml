@@ -658,6 +658,10 @@ let find_or_insert_key name tbl key mk =
   in
   lift_key tbl key value
 
+let insert_key name tbl key value =
+  let (table, (_, compact)) = tbl in
+  Hashtbl.replace table (name, key.ck_ctx, key.ck_tm) (compact value)
+
 let find_or_insert_keyed name tbl ctx tm mk =
   debug 4 (fun () -> print_header "find_or_insert" tm ctx);
   find_or_insert_key name tbl (canonical_key ctx tm) mk

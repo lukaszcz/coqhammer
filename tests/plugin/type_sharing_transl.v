@@ -30,13 +30,14 @@
    [link_erasure_transl.v] is what pins it.
 
    Pinned here: the shapes lifting still splits, namely dependent products,
-   Prop-domain products and lambdas, are linked; the link survives into a
-   dumped problem; and no unfolding axiom became an equivalence in the
-   process.  That last check is about the axiom's own connective and nothing
-   else: a guard may legitimately contain a translated Coq [iff] -- a subset
-   payload or a Prop-domain antecedent is an ordinary proposition -- so the
-   first connective is what is compared, not the presence of [<=>] anywhere in
-   the axiom. *)
+   Prop-domain products and lambdas, are linked; a dependent-product link and
+   a lambda link are minted inside a dumped ATP problem, from a schema and an
+   instance the dumped goal carries itself; and no unfolding axiom became an
+   equivalence in the process.  That last check is about the axiom's own
+   connective and nothing else: a guard may legitimately contain a translated
+   Coq [iff] -- a subset payload or a Prop-domain antecedent is an ordinary
+   proposition -- so the first connective is what is compared, not the
+   presence of [<=>] anywhere in the axiom. *)
 
 From Hammer Require Import Hammer.
 
@@ -90,11 +91,35 @@ Hammer_transl "lam_inst".
 
 Section DumpGoal.
 
-(* A hypothesis of the dumped goal exercises type lifting in a complete ATP
-   problem.  Problem generation resets translation state, so links printed by
-   the preceding [Hammer_transl] queries are intentionally not reused here. *)
+(* The dumped problem has to exercise linking on its own.  Problem generation
+   resets translation state, so no lift the [Hammer_transl] queries above
+   minted survives into it and no link of theirs can be reused; and premise
+   selection decides on its own what a problem gets, so the schemata are not
+   left to it either.  Instead both halves of each pair sit in the goal's own
+   local context, which [Hammer_dump] always translates along with the
+   conclusion: [ks] is a dependent-product instance of the schema in
+   [dep_schema_h], and the lambda in [lam_inst_h] is an instance of the one in
+   [lam_schema_h].
+
+   Hypotheses are translated in reverse declaration order, so the schemata are
+   declared last, after the instances which must find them.  That order is
+   what the registry needs for the dependent-product schema [forall z : Z, Q z]:
+   it mentions no constant, an instance is indexed under the constants it does
+   mention, and a constant-free lookup probes the constant-free bucket only --
+   so a schema registered after its instance would not find it.  The lambda
+   schema mentions [idp] and is found either way. *)
+
 Variable Qs : X -> Type.
 Variable ks : forall x : X, Qs x.
+
+Variable gs : X -> X.
+Variable lam_inst_h : forall u : X, apply2 X (fun x : X => gs (idp X x)) u = u.
+
+Variable dep_schema_h :
+  forall (Z : Type) (Q : Z -> Type), (forall z : Z, Q z) -> nat.
+Variable lam_schema_h :
+  forall (Z : Type) (f : Z -> Z) (u : Z),
+    apply2 Z (fun z : Z => f (idp Z z)) u = u.
 
 Goal ks = ks.
   Hammer_dump "type_sharing_transl.p".

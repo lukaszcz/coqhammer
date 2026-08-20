@@ -111,3 +111,11 @@ val find_key : string -> 'a coqterms_hash -> canonical_key -> 'a option
 val lift_key : 'a coqterms_hash -> canonical_key -> 'a -> 'a
 val find_or_insert_key : string -> 'a coqterms_hash -> canonical_key ->
   (coqcontext -> coqterm -> 'a) -> 'a
+(* [insert_key name tbl key value] stores [value] under [key]'s canonical
+   triple, applying the table's [compact] exactly as [find_or_insert_key]
+   does.  For callers which obtained a value outside the table (by replaying
+   and extending another entry) and want later occurrences of the same term to
+   be exact hits.  [value] must already be expressed in the key's canonical
+   frame -- that is, built over [key_context key] -- and must NOT have been
+   [lift_key]-renamed back to any occurrence's context. *)
+val insert_key : string -> 'a coqterms_hash -> canonical_key -> 'a -> unit

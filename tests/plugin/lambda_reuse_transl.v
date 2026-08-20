@@ -66,6 +66,50 @@ Definition owner_replay (Z : Type) (z : Z) : nat :=
        (fun u : U =>
           match choose U u with replay_left => O | replay_right => S O end)).
 
+(* A lambda whose body lifts a second, nested lambda: the bundle cached for the
+   outer one therefore defines two symbols, and replaying it must make both of
+   them available, not only its head. *)
+Parameter V : Type.
+Parameter gv : V -> V.
+
+Definition nested_seed : nat :=
+  use_nat_fun (V -> V) (fun g : V -> V => use_endo V (fun a : V => g a)).
+
+(* The first summand is an exact hit on [nested_seed]'s outer bundle.  The
+   second is a ground instance of the lambda nested inside that bundle, so it
+   can only reuse the nested symbol if replaying the bundle recorded ownership
+   for every symbol the bundle defines. *)
+Definition nested_replay : nat :=
+  Nat.add
+    (use_nat_fun (V -> V) (fun g : V -> V => use_endo V (fun a : V => g a)))
+    (use_endo V (fun a : V => gv a)).
+
+Inductive attr_marker : Type := attr_left | attr_right.
+Parameter attr_mark : attr_marker.
+
+(* The second summand reuses that nested lambda again, but here the matching
+   substitution is a [match], so translating the schema application contributes
+   [attr_marker]'s structural theory.  That dependency belongs to this
+   occurrence, not to the shared symbol. *)
+Definition attr_instance : nat :=
+  Nat.add
+    (use_nat_fun (V -> V) (fun g : V -> V => use_endo V (fun a : V => g a)))
+    (use_endo V
+       (fun a : V =>
+          (match attr_mark with attr_left => gv | attr_right => gv end) a)).
+
+(* An exact hit on the nested lambda alone -- the enclosing lambda differs, so
+   only the inner one is replayed.  It must receive that symbol's own theory
+   and nothing [attr_instance]'s substitution happened to need. *)
+Definition attr_probe : nat :=
+  use_nat_fun (V -> V) (fun g : V -> V => S (use_endo V (fun a : V => g a))).
+
+(* Goal-level translation names every goal [_HAMMER_GOAL] and keeps the
+   translation caches across goals, so ownership recorded while translating one
+   goal must not survive into the next. *)
+Parameter W : Type.
+Parameter gw : W -> W.
+
 Hammer_transl "reuse_ok".
 Hammer_transl "reject_binder_erasure".
 Hammer_cleanup.
@@ -92,4 +136,21 @@ Set Hammer SAutoLimit 0.
 Goal owner_seed X x = owner_seed X x /\
      owner_replay X x = owner_replay X x.
   hammer_dump "lambda-reuse-owners.p".
+Abort.
+
+Hammer_transl "nested_seed".
+Hammer_transl "nested_replay".
+Hammer_transl "attr_instance".
+Hammer_dump_transl "attr_instance" "lambda-reuse-attribution-instance.p".
+Hammer_dump_transl "attr_probe" "lambda-reuse-attribution-probe.p".
+
+Goal use_nat_fun (W -> W) (fun g : W -> W => use_endo W (fun a : W => g a)) = O.
+  hammer_transl.
+Abort.
+
+(* A ground instance of the previous goal's nested lambda.  The previous goal
+   carried the same declaration name, so without dropping its ownership this
+   would reuse a lift a fresh process would have minted anew. *)
+Goal use_endo W (fun a : W => gw a) = O.
+  hammer_transl.
 Abort.
