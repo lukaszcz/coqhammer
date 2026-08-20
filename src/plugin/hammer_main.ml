@@ -1201,16 +1201,19 @@ let hammer_transl name0 =
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
 
-(* Dump the complete axiom closure of one declaration without resetting the
-   translation caches.  Unlike [hammer_dump], this diagnostic performs no
-   premise selection; it is useful for checking that metadata replayed from a
-   prior owner's structural cache hit is attached to the current owner alone. *)
+(* Report how many speculative schema-application candidates were rejected
+   after having produced dependency or ownership effects, and how many such
+   effects were discarded with them. *)
 let hammer_speculation_stats () =
   let rejected, effects = Coq_transl.speculation_stats () in
   Msg.notice
     (Printf.sprintf "rejected_schema_candidates_with_effects=%d discarded_effects=%d"
        rejected effects)
 
+(* Dump the complete axiom closure of one declaration without resetting the
+   translation caches.  Unlike [hammer_dump], this diagnostic performs no
+   premise selection; it is useful for checking that metadata replayed from a
+   prior owner's structural cache hit is attached to the current owner alone. *)
 let hammer_dump_transl name0 fname =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   try

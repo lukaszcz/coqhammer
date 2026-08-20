@@ -456,14 +456,6 @@ let clean fname =
     List.iter Sys.remove [fname; (fname ^ "fea"); (fname ^ "dep"); (fname ^ "seq");
                           (fname ^ "conj")]
 
-let rec take n lst =
-  if n <= 0 then
-    []
-  else
-    match lst with
-    | [] -> []
-    | x :: xs -> x :: take (n - 1) xs
-
 let prepare_def_slots (ctx : selection_ctx) =
   if !Opt.definition_premises > 0 then
     ignore (Lazy.force ctx.dcands)
@@ -524,7 +516,7 @@ let merge_def_slots (ctx : selection_ctx) n predictions =
     predictions
   else
     let k = definition_slot_count ctx n in
-    let forced = take k (Lazy.force ctx.dcands) in
+    let forced = Hhlib.take k (Lazy.force ctx.dcands) in
     let seen = Hhlib.strset_from_lst (List.map get_hhdef_name forced) in
     forced @ take_unique_defs seen (n - k) predictions
 
