@@ -734,6 +734,30 @@ mark_checkpoint() {
   _grid_forget_temp "$temporary"
 }
 
+# rebuild-config.sh refuses to erase an existing prefix that carries no
+# ownership marker written for that exact path, so a prefix built before the
+# marker existed, or one that was moved or copied, would abort the whole run
+# just after the engine announced a rebuild. Engine prefixes are not
+# user-supplied: _grid_resolve_install_prefixes derives every one of them as a
+# realpath-normalized <eval_dir>/_installs/<component>. Re-establish that
+# ownership by construction here, then erase the stale prefix so the rebuild can
+# proceed; refuse loudly, and without deleting anything, when it does not hold.
+_grid_discard_stale_prefix() {
+  local label="$1" prefix="$2" installs_root component repo_path
+  installs_root=$(realpath -m -- "$eval_dir/_installs")
+  repo_path=$(realpath -m -- "$repo")
+  component=${prefix#"$installs_root"/}
+  if [ "$component" != "$prefix" ] && eval_safe_component "$component" &&
+      [ -d "$prefix" ] && [ ! -L "$prefix" ] && [ "$prefix" != "$repo_path" ] &&
+      [ "${repo_path#"$prefix"/}" = "$repo_path" ]; then
+    rm -rf -- "$prefix"
+    return 0
+  fi
+  echo "Install prefix for $label is stale but is not an engine-managed directory under $installs_root: $prefix" >&2
+  echo "Remove it by hand before rerunning the grid: rm -rf $prefix" >&2
+  return 1
+}
+
 _grid_build_install() {
   local install="$1" label prefix
   label=${install_label[$install]}
@@ -747,6 +771,7 @@ _grid_build_install() {
       echo "Install prefix for $label is stale or mismatched: $prefix" >&2
       exit 1
     fi
+    _grid_discard_stale_prefix "$label" "$prefix" || exit 1
     echo "[build] $label install is stale or mismatched; rebuilding"
   fi
   if [ "$skip_builds" = true ]; then

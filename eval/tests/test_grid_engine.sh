@@ -235,6 +235,69 @@ sed -i "s|^prefix=.*|prefix=$tmp/elsewhere|" "$prefix/manifest.env"
 expect_failure _grid_manifest_matches_install all-on "$prefix"
 sed -i "s|^prefix=.*|prefix=$prefix|" "$prefix/manifest.env"
 
+# A stale prefix has to be erased before rebuild-config.sh can reinstall into
+# it, and rebuild-config.sh itself refuses to erase what it cannot prove it
+# created. Build a stale, unowned prefix and check both engine branches: one
+# that the engine constructed under _installs, and one that is not.
+build_install_fixture() {
+  local relative="$1"
+  rm -rf "$tmp/build-eval" "$tmp/build-repo" "$tmp/rebuild-args"
+  mkdir -p "$tmp/build-eval" "$tmp/build-repo"
+  eval_dir=$(cd "$tmp/build-eval" && pwd -P)
+  repo=$(cd "$tmp/build-repo" && pwd -P)
+  build_prefix="$eval_dir/$relative"
+  mkdir -p "$build_prefix"
+  # A prefix without the ownership marker, so rebuild-config.sh would refuse it.
+  printf 'kind=configuration\nconfig=all-on\ncommit=stale\nprefix=%s\n' \
+    "$build_prefix" > "$build_prefix/manifest.env"
+  printf 'stale\n' > "$build_prefix/sentinel"
+  cat > "$eval_dir/rebuild-config.sh" <<'SCRIPT'
+#!/usr/bin/env bash
+printf '%s\n' "$@" > "$RECORD"
+mkdir -p "$5"
+printf 'rebuilt\n' > "$5/manifest.env"
+SCRIPT
+  chmod +x "$eval_dir/rebuild-config.sh"
+  skip_builds=false
+  base_path=$PATH
+  base_ocamlpath=
+  export RECORD="$tmp/rebuild-args"
+  declare -gA install_label=([all-on]=stale-label)
+  declare -gA install_prefix=([all-on]="$build_prefix")
+}
+(
+  build_install_fixture _installs/stale-label
+  output=$(_grid_build_install all-on 2>&1)
+  [[ "$output" == *'stale or mismatched; rebuilding'* ]] ||
+    fail "stale unowned prefix did not announce a rebuild: $output"
+  [ ! -e "$build_prefix/sentinel" ] || fail "stale unowned prefix was not erased"
+  mapfile -t rebuild_args < "$RECORD"
+  [ "${rebuild_args[0]}" = all-on ] || fail "rebuild received config ${rebuild_args[0]}"
+  [ "${rebuild_args[2]}" = stale-label ] || fail "rebuild received label ${rebuild_args[2]}"
+  [ "${rebuild_args[4]}" = "$build_prefix" ] ||
+    fail "rebuild received prefix ${rebuild_args[4]}"
+) || fail "stale engine-managed prefix was not rebuilt"
+
+# Ownership by construction, not by marker: anything the engine cannot re-derive
+# as <eval_dir>/_installs/<component> aborts with the manual removal command and
+# is left untouched.
+for unmanaged in _installs/nested/stale-label not-installs/stale-label; do
+  (
+    build_install_fixture "$unmanaged"
+    set +e
+    output=$(_grid_build_install all-on 2>&1)
+    status=$?
+    set -e
+    [ "$status" -eq 1 ] || fail "unmanaged stale prefix exited $status"
+    [[ "$output" != *rebuilding* ]] ||
+      fail "unmanaged stale prefix announced a rebuild it cannot perform"
+    [[ "$output" == *"rm -rf $build_prefix"* ]] ||
+      fail "unmanaged stale prefix gave no manual removal command: $output"
+    [ -e "$build_prefix/sentinel" ] || fail "unmanaged stale prefix was erased"
+    [ ! -e "$RECORD" ] || fail "unmanaged stale prefix still invoked a rebuild"
+  ) || fail "unmanaged stale prefix policy drifted: $unmanaged"
+done
+
 # Atomic-write temporaries clean stale regular files for this target/PID, never
 # follow stale symlinks, and remain registered for EXIT/signal cleanup.
 target="$tmp/checkpoint/atomic"
