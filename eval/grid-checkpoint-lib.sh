@@ -126,10 +126,12 @@ compile_checkpoint_fields() {
   esac
 }
 
+# A compile that was killed before its budget expired (usually by the OOM
+# killer) is reported on its own line and must surface next to the timeouts.
 report_compile_timeouts() {
   local source="$1"
   [ -e "$source" ] || return 0
-  grep -rhF 'rocq-compile-supervisor: TIMEOUT ' -- "$source" >&2 || true
+  grep -rhE 'rocq-compile-supervisor: (TIMEOUT|KILLED) ' -- "$source" >&2 || true
 }
 
 # SIGKILL can interrupt paired_output.ml between creating its same-directory

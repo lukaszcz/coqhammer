@@ -15,6 +15,31 @@ sentinel_starttime=
 sentinel_session=
 sentinel_pgid=
 sentinel_file=
+status_file=
+command_start_cs=
+
+# Elapsed wall time distinguishes a genuine budget overrun from an external
+# SIGKILL, so it must come from a clock that cannot be stepped: /proc/uptime is
+# the monotonic one a shell can read. Report centiseconds, and fall back to the
+# shell's own second counter when /proc/uptime is unavailable.
+monotonic_centiseconds() {
+  local uptime seconds fraction
+  if IFS=' ' read -r uptime _ < "$proc_root/uptime" 2>/dev/null; then
+    seconds=${uptime%%.*}
+    fraction=${uptime#*.}
+    [ "$fraction" != "$uptime" ] || fraction=0
+    fraction=${fraction}00
+    fraction=${fraction:0:2}
+    case "$seconds$fraction" in
+      ''|*[!0-9]*) ;;
+      *)
+        printf '%s\n' "$((10#$seconds * 100 + 10#$fraction))"
+        return 0
+        ;;
+    esac
+  fi
+  printf '%s\n' "$((SECONDS * 100))"
+}
 
 # Read the identity fields that remain stable for the lifetime of a Linux
 # process. /proc/PID/stat puts the possibly parenthesized command first; strip
@@ -121,21 +146,69 @@ signal_process_group() {
   fi
 }
 
-handle_external_signal() {
-  local signal="$1" status="$2" attempts latest_pid=${!:-}
-  trap '' HUP INT TERM
-  # $! is already set in the narrow interval after the asynchronous monitor
-  # starts but before the following assignment to monitor_pid completes.
+# Once the monitor has been reaped its PID is eligible for reuse, so no later
+# trap may act on the retained identity.
+forget_supervised_identity() {
+  monitor_pid=
+  monitor_starttime=
+  monitor_session=
+  monitor_pgid=
+  sentinel_pid=
+  sentinel_starttime=
+  sentinel_session=
+  sentinel_pgid=
+}
+
+# The inner wrapper records that the supervised command itself has returned
+# before it parks as a deliberate signal-resistant anchor. Once either record
+# is present, nothing worth waiting for is left in the process group.
+supervised_command_finished() {
+  [ -n "$status_file" ] || return 1
+  grep -Eq '^(done|interrupted):' -- "$status_file" 2>/dev/null
+}
+
+# A trap can run before supervisor_main has recorded the monitor it just
+# started. $! is already set in that narrow interval, so the identity can still
+# be recovered from it; the sentinel is only ever introduced by a live monitor.
+recover_supervised_identity() {
+  local latest_pid="$1"
   if [ -z "$monitor_pid" ] && [ -n "$latest_pid" ]; then
     capture_monitor_identity "$latest_pid" || true
   elif [ -n "$monitor_pid" ] && [ -z "$monitor_starttime" ]; then
     capture_monitor_identity "$monitor_pid" || true
   fi
   [ -n "$sentinel_starttime" ] || capture_sentinel_identity || true
+}
+
+# A second external signal must escalate rather than be swallowed: kill the
+# group outright and end the wait. The blanket trap installed first keeps any
+# further signal from re-entering either handler.
+escalate_external_signal() {
+  local status="$1" latest_pid=${!:-}
+  trap '' HUP INT TERM
+  recover_supervised_identity "$latest_pid"
+  if group_identity_matches; then
+    signal_process_group KILL
+    wait "$monitor_pid" 2>/dev/null || true
+  fi
+  forget_supervised_identity
+  exit "$status"
+}
+
+handle_external_signal() {
+  local signal="$1" status="$2" attempts latest_pid=${!:-}
+  trap 'escalate_external_signal 129' HUP
+  trap 'escalate_external_signal 130' INT
+  trap 'escalate_external_signal 143' TERM
+  recover_supervised_identity "$latest_pid"
   if group_identity_matches; then
     signal_process_group "$signal"
+    # Stop waiting as soon as the command itself is gone: what remains in the
+    # group is then only the wrapper's deliberate resistance, which would
+    # otherwise burn the whole grace period on every interrupted file.
     attempts=$((grace_seconds * 10))
-    while [ "$attempts" -gt 0 ] && process_group_exists; do
+    while [ "$attempts" -gt 0 ] && process_group_exists &&
+      ! supervised_command_finished; do
       sleep 0.1
       attempts=$((attempts - 1))
     done
@@ -146,14 +219,7 @@ handle_external_signal() {
     # descendant exhausted the grace period.
     wait "$monitor_pid" 2>/dev/null || true
   fi
-  monitor_pid=
-  monitor_starttime=
-  monitor_session=
-  monitor_pgid=
-  sentinel_pid=
-  sentinel_starttime=
-  sentinel_session=
-  sentinel_pgid=
+  forget_supervised_identity
   exit "$status"
 }
 
@@ -168,10 +234,13 @@ Usage: rocq-compile-supervisor.sh --timeout SEC --grace SEC \
 
 Run COMMAND for at most SEC seconds. On expiry GNU timeout sends TERM to the
 command process group, waits GRACE seconds, then sends KILL. A timeout is
-reported on stderr and exits 124; otherwise COMMAND's exit status is preserved.
-External HUP, INT, and TERM are forwarded to the process group and produce
-statuses 129, 130, and 143 after the group has been terminated. SEC and GRACE
-must be positive integers.
+reported on stderr and exits 124. A command process that is killed by a signal
+before the time budget expires -- typically by the out-of-memory killer -- is
+reported separately on stderr and exits 137, so that it is never counted as a
+timeout. Otherwise COMMAND's exit status is preserved. External HUP, INT, and
+TERM are forwarded to the process group and produce statuses 129, 130, and 143
+after the group has been terminated; a second external signal kills the group
+at once instead of waiting out GRACE. SEC and GRACE must be positive integers.
 USAGE
 }
 
@@ -179,6 +248,13 @@ fail_usage() {
   echo "rocq-compile-supervisor: $*" >&2
   usage >&2
   exit 2
+}
+
+# The reported policy fields are set by supervisor_main before any report.
+# shellcheck disable=SC2154
+report_timeout() {
+  printf 'rocq-compile-supervisor: TIMEOUT phase=%s source=%s limit=%ss grace=%ss exit=124\n' \
+    "$phase" "$source_file" "$timeout_seconds" "$grace_seconds" >&2
 }
 
 supervisor_main() {
@@ -263,7 +339,12 @@ trap 'handle_external_signal TERM 143' TERM
 # completion record only after COMMAND has returned; all paths are private.
 # If timeout sends TERM, keep its direct child alive until --kill-after fires:
 # otherwise a TERM-resistant grandchild could remain after the direct child
-# exits and timeout decides that its job is finished.
+# exits and timeout decides that its job is finished. Before parking, it
+# records "interrupted" so that the supervisor knows the command has returned
+# and only the deliberate anchor is left.
+# The start time is taken before the fork: measuring more elapsed time than
+# actually elapsed can only classify a kill as the timeout it may well be.
+command_start_cs=$(monotonic_centiseconds)
 # shellcheck disable=SC2016
 # Bash starts asynchronous children with INT ignored when job control is off.
 # Reset external-signal dispositions before timeout starts so INT can actually
@@ -283,6 +364,7 @@ env --default-signal=HUP,INT,TERM \
     command_status=$?
     if [ "$interrupted" = true ]; then
       trap "" HUP INT TERM
+      printf "interrupted:%s\n" "$command_status" > "$status_file"
       while :; do
         sleep 3600 &
         wait "$!" || true
@@ -331,14 +413,7 @@ wait "$monitor_pid"
 supervisor_status=$?
 # No trap after this reap may act on monitor_pid: it is now eligible for reuse.
 trap - HUP INT TERM
-monitor_pid=
-monitor_starttime=
-monitor_session=
-monitor_pgid=
-sentinel_pid=
-sentinel_starttime=
-sentinel_session=
-sentinel_pgid=
+forget_supervised_identity
 
 status_record=$(cat -- "$status_file") || exit 125
 case "$status_record" in
@@ -352,7 +427,10 @@ case "$status_record" in
     esac
     exit "$command_status"
     ;;
-  running)
+  # The command returned but the wrapper parked as a signal-resistant anchor
+  # and was killed there, so its status never became the supervised outcome:
+  # classify the run exactly like a still-running sentinel.
+  running|interrupted:*)
     ;;
   *)
     echo "rocq-compile-supervisor: invalid command status record" >&2
@@ -361,10 +439,25 @@ case "$status_record" in
 esac
 
 case "$supervisor_status" in
-  124|137)
-    printf 'rocq-compile-supervisor: TIMEOUT phase=%s source=%s limit=%ss grace=%ss exit=124\n' \
-      "$phase" "$source_file" "$timeout_seconds" "$grace_seconds" >&2
+  124)
+    report_timeout
     exit 124
+    ;;
+  137)
+    # 137 is timeout's own --kill-after KILL, but also what it propagates when
+    # something else SIGKILLed the wrapper -- under memory pressure, the OOM
+    # killer. Only elapsed time separates them. Tolerate a whole second below
+    # the budget, since the clock is coarse and timeout rounds its own sleep:
+    # a real timeout must never be demoted to a spurious kill report.
+    elapsed_cs=$(($(monotonic_centiseconds) - command_start_cs))
+    if [ "$elapsed_cs" -ge "$((timeout_seconds * 100 - 100))" ]; then
+      report_timeout
+      exit 124
+    fi
+    printf 'rocq-compile-supervisor: KILLED phase=%s source=%s elapsed=%d.%02ds limit=%ss grace=%ss exit=137 (command process killed before the time budget expired; an out-of-memory kill is the usual cause)\n' \
+      "$phase" "$source_file" "$((elapsed_cs / 100))" "$((elapsed_cs % 100))" \
+      "$timeout_seconds" "$grace_seconds" >&2
+    exit 137
     ;;
   *) exit "$supervisor_status" ;;
 esac

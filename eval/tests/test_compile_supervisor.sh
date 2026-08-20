@@ -42,6 +42,32 @@ grep -Fq 'source=problems/equations-examples/POPLMark1a.v' "$tmp/timeout.err" ||
   fail "diagnostic omitted source filename"
 grep -Fq 'limit=1s grace=1s exit=124' "$tmp/timeout.err" ||
   fail "diagnostic omitted timeout policy/status"
+grep -Fq 'KILLED' "$tmp/timeout.err" &&
+  fail "a genuine timeout was reported as a premature kill"
+grep -Fq 'invalid command status record' "$tmp/timeout.err" &&
+  fail "the interrupted record leaked out of the timeout path"
+
+# A command process killed well before the budget expires - the OOM killer is
+# the reason that matters in the grids - must be reported as a kill, never
+# folded into the timeout bucket. The command kills its own parent, the private
+# wrapper, so that no completion record is ever written.
+run_status "$supervisor" --timeout 30 --grace 1 --phase check \
+  --source problems/oom.v -- bash -c 'kill -KILL "$PPID"' \
+  >"$tmp/killed.out" 2>"$tmp/killed.err"
+[ "$RUN_STATUS" -ne 124 ] || fail "a premature kill was counted as a timeout"
+[ "$RUN_STATUS" -eq 137 ] || fail "premature kill exited $RUN_STATUS instead of 137"
+grep -Fq 'rocq-compile-supervisor: KILLED' "$tmp/killed.err" ||
+  fail "premature-kill diagnostic was missing"
+grep -Fq 'phase=check source=problems/oom.v' "$tmp/killed.err" ||
+  fail "premature-kill diagnostic omitted phase/source"
+grep -Eq 'elapsed=[0-9]+\.[0-9][0-9]s' "$tmp/killed.err" ||
+  fail "premature-kill diagnostic omitted the elapsed time"
+grep -Fq 'out-of-memory' "$tmp/killed.err" ||
+  fail "premature-kill diagnostic omitted the likely cause"
+grep -Fq 'TIMEOUT' "$tmp/killed.err" &&
+  fail "premature kill also emitted a timeout diagnostic"
+grep -Fq 'invalid command status record' "$tmp/killed.err" &&
+  fail "premature kill was reported as an invalid status record"
 
 cat > "$tmp/resistant-tree.sh" <<'SCRIPT'
 #!/usr/bin/env bash
@@ -54,10 +80,18 @@ echo "$!" > "$1"
 while :; do sleep 30; done
 SCRIPT
 chmod +x "$tmp/resistant-tree.sh"
-run_status "$supervisor" --timeout 1 --grace 1 --phase reconstruction \
+# The budget is larger than one second so that the elapsed-time rule has to
+# recognize a real overrun rather than accept every measurement.
+run_status "$supervisor" --timeout 2 --grace 1 --phase reconstruction \
   --source descendant.v -- "$tmp/resistant-tree.sh" "$tmp/descendant.pid" \
   >"$tmp/tree.out" 2>"$tmp/tree.err"
 [ "$RUN_STATUS" -eq 124 ] || fail "TERM-resistant tree exited $RUN_STATUS"
+grep -Fq 'rocq-compile-supervisor: TIMEOUT' "$tmp/tree.err" ||
+  fail "a command killed by --kill-after lost its timeout diagnostic"
+grep -Fq 'KILLED' "$tmp/tree.err" &&
+  fail "a real overrun killed by --kill-after was reported as a premature kill"
+grep -Fq 'invalid command status record' "$tmp/tree.err" &&
+  fail "the interrupted record leaked out of the --kill-after path"
 descendant=$(cat "$tmp/descendant.pid")
 for _ in 1 2 3 4 5 6 7 8 9 10; do
   kill -0 "$descendant" 2>/dev/null || break
@@ -69,8 +103,11 @@ fi
 
 # Signals delivered to the supervisor itself must be forwarded immediately,
 # must still escalate for resistant descendants, and must retain shell-standard
-# statuses. Python starts the supervisor without the SIGINT-ignore disposition
-# that a non-interactive shell gives its own asynchronous children.
+# statuses. The grace period is deliberately huge: once the supervised command
+# has returned, only the wrapper's own resistance is left, and waiting it out
+# would make every interrupted file cost the full grace. Python starts the
+# supervisor without the SIGINT-ignore disposition that a non-interactive shell
+# gives its own asynchronous children.
 cat > "$tmp/signalled-tree.sh" <<'SCRIPT'
 #!/usr/bin/env bash
 set -u
@@ -131,7 +168,7 @@ for name, sig, expected in (
         [
             supervisor,
             "--timeout", "30",
-            "--grace", "1",
+            "--grace", "300",
             "--phase", "external-signal",
             "--source", f"{name}.v",
             "--", command, str(pid_file), str(signal_file),
@@ -153,17 +190,28 @@ for name, sig, expected in (
     if stat.S_IMODE(status_file.stat().st_mode) != 0o600:
         raise SystemExit(f"{name}: status sentinel is not mode 0600")
 
+    started = time.monotonic()
     os.kill(process.pid, sig)
-    time.sleep(0.05)
+    wait_for(signal_file.exists, f"{name}: signal was not forwarded to the command")
     if process.poll() is None:
+        # A second external signal must escalate, not be swallowed by a trap.
         os.kill(process.pid, sig)
-    stdout, stderr = process.communicate(timeout=8)
+    stdout, stderr = process.communicate(timeout=10)
+    elapsed = time.monotonic() - started
     if process.returncode != expected:
         raise SystemExit(
             f"{name}: supervisor returned {process.returncode}, expected {expected}; "
             f"stdout={stdout!r}, stderr={stderr!r}"
         )
-    wait_for(signal_file.exists, f"{name}: signal was not forwarded to the command")
+    if elapsed > 5:
+        raise SystemExit(
+            f"{name}: supervisor took {elapsed:.1f}s, close to the 300s grace period"
+        )
+    if "invalid command status record" in stderr:
+        raise SystemExit(
+            f"{name}: the interrupted record leaked out as an invalid record; "
+            f"stderr={stderr!r}"
+        )
     if signal_file.read_text().strip() != name:
         raise SystemExit(f"{name}: command recorded the wrong forwarded signal")
     pids = [int(value) for value in pid_file.read_text().split()]
