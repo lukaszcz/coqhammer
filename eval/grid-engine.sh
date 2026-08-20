@@ -648,29 +648,59 @@ _grid_validate_preamble_sidecar() {
   printf %s "${label_preamble[$label]}" | cmp -s - "$sidecar"
 }
 
+# Read one `key=value` provenance field back out of a historical marker. A key
+# that is missing or recorded more than once, and a value that does not have the
+# expected digest shape, fail the read: a garbled marker must narrow the
+# accepted migration rather than widen it.
+_grid_marker_field() {
+  local marker="$1" key="$2" pattern="$3" matches value
+  matches=$(grep -c -e "^$key=" -- "$marker") || return 1
+  [ "$matches" -eq 1 ] || return 1
+  value=$(sed -n "s/^$key=//p" -- "$marker")
+  [[ "$value" =~ $pattern ]] || return 1
+  printf %s "$value"
+}
+
 _grid_matches_legacy_checkpoint() {
-  local marker="$1" stage="$2" legacy_digest
+  local marker="$1" stage="$2"
+  local historical_script historical_commit historical_helper
+  local commit_pattern='^([0-9a-f]{40}|[0-9a-f]{64})$'
+  local digest_pattern='^[0-9a-f]{64}$'
   # Historical generation ran without the now-provenanced compile supervisor.
   # Its output must be regenerated; non-compiling downstream stages remain
   # reusable when their explicit input hashes and all other fields still match.
   [ "$stage" != generation ] || return 1
   shift
-  for legacy_digest in "${legacy_grid_script_digests[@]}"; do
-    # Bash locals are dynamically scoped, so checkpoint_contents sees this
-    # accepted historical digest while retaining every other current field.
-    local grid_script_digest="$legacy_digest"
-    if checkpoint_contents "$@" | cmp -s - "$marker.done"; then
-      return 0
-    fi
-  done
-  return 1
+  # A genuinely historical marker was necessarily written at an older repository
+  # commit and against an older checkpoint helper, so re-rendering it with only
+  # the grid script digest replaced could never match. Recover all three
+  # harness-provenance values from the marker instead, and gate the migration on
+  # its recorded grid script digest being one the spec declares.
+  historical_script=$(_grid_marker_field "$marker.done" grid_script_sha256 \
+    "$digest_pattern") || return 1
+  array_contains "$historical_script" "${legacy_grid_script_digests[@]}" || return 1
+  historical_commit=$(_grid_marker_field "$marker.done" repository_commit \
+    "$commit_pattern") || return 1
+  historical_helper=$(_grid_marker_field "$marker.done" checkpoint_helper_sha256 \
+    "$digest_pattern") || return 1
+  # Bash locals are dynamically scoped, so checkpoint_contents renders exactly
+  # these three recorded historical values while every remaining field -- the
+  # checkpoint version, label, config, install identity, corpus provenance and
+  # the stage-specific fields -- stays current and must still match byte for
+  # byte, including the unfaked install and corpus digests.
+  local repo_commit="$historical_commit"
+  local grid_script_digest="$historical_script"
+  local grid_helper_digest="$historical_helper"
+  checkpoint_contents "$@" | cmp -s - "$marker.done"
 }
 
 # Override the checkpoint helpers for engine users. New manifests carry the
-# preamble digest, sidecar, and compile provenance. A declared historical
-# manifest remains reusable only for a non-generation stage with an empty
-# preamble, and only when every field other than its historical grid script
-# digest exactly matches the current run.
+# preamble digest, sidecar, and compile provenance. A historical manifest
+# remains reusable only for a non-generation stage with an empty preamble, only
+# when the grid script digest it records is declared in
+# GRID_LEGACY_SCRIPT_SHA256, and only when every field other than the three
+# harness-provenance fields read back from it -- grid script digest, repository
+# commit, checkpoint helper digest -- exactly matches the current run.
 checkpoint_matches() {
   local marker="$1" label="$3"
   shift
