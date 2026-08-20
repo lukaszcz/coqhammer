@@ -20,9 +20,16 @@ validate_positive_int() {
 # concurrent ATP processes fit in available memory, since a prover on a large
 # problem is far more likely to exhaust RAM than CPU.  EVAL_JOBS pins the value
 # outright; EVAL_MEMORY_PER_JOB_MB and EVAL_RESERVE_MB tune the memory model.
+#
+# The per-job figure is an estimate of a job's peak resident size and nothing
+# enforces it: it only divides available memory, so raising it does not bound
+# any process, it just shrinks the pool and leaves cores idle.  2048 is the
+# figure this harness was sized with and stays there.  It was raised to 4096
+# in 435c2fd as an unrelated aside to a plugin change and reverted; do not
+# change it again without a measurement of what evaluation jobs actually use.
 detect_jobs() {
   local cores available_kb reserve_kb per_job_kb memory_jobs
-  local per_job_mb=${EVAL_MEMORY_PER_JOB_MB:-4096}
+  local per_job_mb=${EVAL_MEMORY_PER_JOB_MB:-2048}
   local reserve_mb=${EVAL_RESERVE_MB:-4096}
 
   cores=$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 1)
