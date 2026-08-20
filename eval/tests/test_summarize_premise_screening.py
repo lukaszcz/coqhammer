@@ -407,6 +407,69 @@ class SummarizerTests(unittest.TestCase):
         self.assertEqual(axes.corpora, ("custom-one", "custom-two"))
         self.assertEqual(axes.corpus_mode, "full")
 
+    def test_premise_axis_without_the_guarded_count_is_rejected(self) -> None:
+        # An axis whose selectors all miss GUARD_PREMISE_COUNT would leave the
+        # goal-level guard measuring nothing while still reporting "clear".
+        guarded = summarizer.GUARD_PREMISE_COUNT
+        premises = (f"knn-{guarded * 2}", f"nbayes-{guarded * 2}")
+        environment = {
+            "COQHAMMER_GRID_PREMISES": "\n".join(premises),
+            "COQHAMMER_GRID_PROVERS": "eprover",
+            "COQHAMMER_GRID_CORPORA": "tiny-a",
+            "COQHAMMER_GRID_CORPUS_MODE": "sample",
+        }
+        with mock.patch.dict(os.environ, environment, clear=True):
+            with self.assertRaisesRegex(ValueError, "GUARD_PREMISE_COUNT"):
+                summarizer.axes_from_environment()
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            axes = summarizer.Axes(
+                premises=premises,
+                provers=("eprover",),
+                corpora=("tiny-a",),
+                corpus_mode="sample",
+            )
+            fixture = Fixture(root / "results", axes, [summarizer.BASELINE])
+            with self.assertRaisesRegex(ValueError, "GUARD_PREMISE_COUNT"):
+                summarizer.load_grid(
+                    root / "results", [summarizer.BASELINE], axes, fixture.provenance,
+                )
+
+            # An otherwise complete grid must abort instead of emitting "clear".
+            summary = root / "summary.tsv"
+            analysis = root / "analysis.md"
+            environment = os.environ.copy()
+            environment.update({
+                "COQHAMMER_GRID_PREMISES": "\n".join(premises),
+                "COQHAMMER_GRID_PROVERS": "eprover",
+                "COQHAMMER_GRID_CORPORA": "tiny-a",
+                "COQHAMMER_GRID_CORPUS_MODE": "sample",
+                "COQHAMMER_GRID_CONSISTENCY_PREMISE": premises[0],
+                "COQHAMMER_GRID_EXPECTED_PROVENANCE": fixture.environment_json(),
+            })
+            result = subprocess.run(
+                [sys.executable, str(SCRIPT), str(root / "results"), str(summary),
+                 str(analysis), summarizer.BASELINE],
+                env=environment, capture_output=True, text=True,
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("GUARD_PREMISE_COUNT", result.stderr)
+            self.assertIn("GRID_PREMISES", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertFalse(summary.exists())
+            self.assertFalse(analysis.exists())
+
+    def test_guard_columns_and_scope_spell_the_guarded_count(self) -> None:
+        # The published artifact names stay literal; they must track the constant.
+        guarded = summarizer.GUARD_PREMISE_COUNT
+        self.assertEqual(guarded, 32)
+        for column in ("n32_goal_gains", "n32_goal_losses", "n32_goal_net",
+                       "n32_regression_flag"):
+            self.assertIn(column, summarizer.FIELDNAMES)
+        self.assertEqual(summarizer.GUARD_SCOPE, "n32")
+        self.assertEqual(summarizer.GUARD_PREMISE_FIELD, "N=32")
+
     def test_provenance_json_rejects_root_and_nested_type_errors(self) -> None:
         base = json.loads(self.fixture.environment_json())
         malformed = []

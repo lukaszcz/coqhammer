@@ -21,6 +21,20 @@ from typing import Callable, Iterable
 
 BASELINE = "ds0-df0"
 BUCKETS = ("<=1", "<=4", "rest")
+# Premise count guarded by the goal-level regression guard. The emitted TSV
+# columns, the summary scope and the analysis heading all spell this count out
+# ("n32_*", "N=32") because eval/artifacts/premise-screening/summary.tsv is
+# already published with those names; deriving every one of them from this
+# constant keeps the names and the guarded count from drifting apart silently.
+# validate_guarded_premise_axis() refuses an axis in which no premise selector
+# has this count, so the guard can never report "clear" without measuring.
+GUARD_PREMISE_COUNT = 32
+GUARD_SCOPE = f"n{GUARD_PREMISE_COUNT}"
+GUARD_PREMISE_FIELD = f"N={GUARD_PREMISE_COUNT}"
+GUARD_GAINS_COLUMN = f"{GUARD_SCOPE}_goal_gains"
+GUARD_LOSSES_COLUMN = f"{GUARD_SCOPE}_goal_losses"
+GUARD_NET_COLUMN = f"{GUARD_SCOPE}_goal_net"
+GUARD_FLAG_COLUMN = f"{GUARD_SCOPE}_regression_flag"
 LABEL_RE = re.compile(r"ds(0|[1-9][0-9]*)-df(0|[1-9][0-9]*)")
 META_RE = re.compile(
     r"d_size=(0|[1-9][0-9]*) "
@@ -128,8 +142,8 @@ class Stats:
     baseline_solved_goals: int
     goal_gains: int
     goal_losses: int
-    n32_goal_gains: int
-    n32_goal_losses: int
+    guard_goal_gains: int
+    guard_goal_losses: int
 
     @property
     def attempt_net(self) -> int:
@@ -140,8 +154,8 @@ class Stats:
         return self.solved_goals - self.baseline_solved_goals
 
     @property
-    def n32_goal_net(self) -> int:
-        return self.n32_goal_gains - self.n32_goal_losses
+    def guard_goal_net(self) -> int:
+        return self.guard_goal_gains - self.guard_goal_losses
 
 
 @dataclass(frozen=True)
@@ -187,6 +201,7 @@ def axes_from_environment() -> Axes:
         raise ValueError(f"unsupported premise-screening prover: {sorted(unsupported)[0]}")
     for premise in axes.premises:
         premise_count(premise)
+    validate_guarded_premise_axis(axes.premises)
     return axes
 
 
@@ -577,6 +592,17 @@ def premise_count(premise: str) -> int:
     return int(match.group(1))
 
 
+def validate_guarded_premise_axis(premises: Iterable[str]) -> None:
+    if not any(premise_count(premise) == GUARD_PREMISE_COUNT for premise in premises):
+        raise ValueError(
+            f"premise axis has no selector with GUARD_PREMISE_COUNT="
+            f"{GUARD_PREMISE_COUNT}, so the goal-level regression guard would "
+            f"measure nothing; update GUARD_PREMISE_COUNT in "
+            f"{Path(__file__).name} together with GRID_PREMISES in "
+            f"run-premise-screening-grid.sh"
+        )
+
+
 def describe_set_difference(expected: set[str], actual: set[str]) -> str:
     missing = sorted(expected - actual)
     extra = sorted(actual - expected)
@@ -599,6 +625,7 @@ def load_grid(
         raise ValueError(f"invalid expected corpus mode: {axes.corpus_mode}")
     if not axes.premises or not axes.provers or not axes.corpora:
         raise ValueError("premise-grid axes must not be empty")
+    validate_guarded_premise_axis(axes.premises)
     label_options = {label: parse_label(label) for label in labels}
     if set(provenance.labels) != set(labels) or set(provenance.corpora) != set(axes.corpora):
         raise ValueError("expected provenance conflicts with requested grid")
@@ -735,9 +762,9 @@ def collect_stats(
     baseline_solved_attempts = {key for key in keys if baseline[key].success}
     solved_goals = _solved_goals(keys, attempts)
     baseline_solved_goals = _solved_goals(keys, baseline)
-    n32_keys = {key for key in keys if premise_count(key[1]) == 32}
-    n32_solved = _solved_goals(n32_keys, attempts)
-    baseline_n32_solved = _solved_goals(n32_keys, baseline)
+    guard_keys = {key for key in keys if premise_count(key[1]) == GUARD_PREMISE_COUNT}
+    guard_solved = _solved_goals(guard_keys, attempts)
+    baseline_guard_solved = _solved_goals(guard_keys, baseline)
     return Stats(
         attempts=len(keys),
         solved_attempts=len(solved_attempts),
@@ -749,15 +776,15 @@ def collect_stats(
         baseline_solved_goals=len(baseline_solved_goals),
         goal_gains=len(solved_goals - baseline_solved_goals),
         goal_losses=len(baseline_solved_goals - solved_goals),
-        n32_goal_gains=len(n32_solved - baseline_n32_solved),
-        n32_goal_losses=len(baseline_n32_solved - n32_solved),
+        guard_goal_gains=len(guard_solved - baseline_guard_solved),
+        guard_goal_losses=len(baseline_guard_solved - guard_solved),
     )
 
 
 def regression_flag(label: str, stats: Stats) -> str:
     if label == BASELINE:
         return "baseline"
-    return "REGRESSION" if stats.n32_goal_losses else "clear"
+    return "REGRESSION" if stats.guard_goal_losses else "clear"
 
 
 def summary_row(
@@ -791,10 +818,10 @@ def summary_row(
         "goal_net": "" if diagnostic else stats.goal_net,
         "goal_gains": "" if diagnostic else stats.goal_gains,
         "goal_losses": "" if diagnostic else stats.goal_losses,
-        "n32_goal_gains": "" if diagnostic else stats.n32_goal_gains,
-        "n32_goal_losses": "" if diagnostic else stats.n32_goal_losses,
-        "n32_goal_net": "" if diagnostic else stats.n32_goal_net,
-        "n32_regression_flag": "diagnostic" if diagnostic else regression_flag(label, stats),
+        GUARD_GAINS_COLUMN: "" if diagnostic else stats.guard_goal_gains,
+        GUARD_LOSSES_COLUMN: "" if diagnostic else stats.guard_goal_losses,
+        GUARD_NET_COLUMN: "" if diagnostic else stats.guard_goal_net,
+        GUARD_FLAG_COLUMN: "diagnostic" if diagnostic else regression_flag(label, stats),
         "attempts": stats.attempts,
         "solved_attempts": stats.solved_attempts,
         "baseline_solved_attempts": stats.baseline_solved_attempts,
@@ -825,8 +852,8 @@ def make_summary_rows(grid: LoadedGrid, labels: list[str]) -> list[dict[str, obj
         for bucket in BUCKETS:
             add("bucket", bucket=bucket,
                 predicate=lambda _key, attempt, bucket=bucket: attempt.bucket == bucket)
-        add("n32", premise="N=32",
-            predicate=lambda key, _attempt: premise_count(key[1]) == 32)
+        add(GUARD_SCOPE, premise=GUARD_PREMISE_FIELD,
+            predicate=lambda key, _attempt: premise_count(key[1]) == GUARD_PREMISE_COUNT)
         for corpus in grid.axes.corpora:
             for premise in grid.axes.premises:
                 for prover in grid.axes.provers:
@@ -842,7 +869,7 @@ FIELDNAMES = (
     "label", "definition_premises", "definition_features", "corpus_mode", "scope",
     "corpus", "premise", "prover", "min_occ_bucket", "goals", "solved_goals",
     "baseline_solved_goals", "goal_net", "goal_gains", "goal_losses",
-    "n32_goal_gains", "n32_goal_losses", "n32_goal_net", "n32_regression_flag",
+    GUARD_GAINS_COLUMN, GUARD_LOSSES_COLUMN, GUARD_NET_COLUMN, GUARD_FLAG_COLUMN,
     "attempts", "solved_attempts", "baseline_solved_attempts", "attempt_net",
     "attempt_gains", "attempt_losses",
 )
@@ -941,29 +968,32 @@ def write_analysis(grid: LoadedGrid, labels: list[str], out: Path) -> None:
             ),
         ),
         "",
-        "## Goal-level N=32 regression guard",
+        f"## Goal-level {GUARD_PREMISE_FIELD} regression guard",
         "",
         (
-            "`REGRESSION` means at least one N=32 GoalKey solved by the baseline is no "
-            "longer solved by any active N=32 selector/prover for that label. Attempt-level "
-            "losses cannot trigger this guard, and gains cannot hide a GoalKey loss."
+            f"`REGRESSION` means at least one {GUARD_PREMISE_FIELD} GoalKey solved by the "
+            f"baseline is no longer solved by any active {GUARD_PREMISE_FIELD} "
+            "selector/prover for that label. Attempt-level losses cannot trigger this "
+            "guard, and gains cannot hide a GoalKey loss."
         ),
         "",
         md_table(
-            ["label", "N=32 solved goals", "baseline", "net", "gains", "losses", "flag"],
+            ["label", f"{GUARD_PREMISE_FIELD} solved goals", "baseline", "net",
+             "gains", "losses", "flag"],
             (
                 (
                     label,
-                    n32.solved_goals,
-                    n32.baseline_solved_goals,
-                    signed(n32.goal_net),
-                    n32.goal_gains,
-                    n32.goal_losses,
-                    regression_flag(label, n32),
+                    guard.solved_goals,
+                    guard.baseline_solved_goals,
+                    signed(guard.goal_net),
+                    guard.goal_gains,
+                    guard.goal_losses,
+                    regression_flag(label, guard),
                 )
                 for label in labels
-                for n32 in [stats(
-                    label, lambda key, _a: premise_count(key[1]) == 32
+                for guard in [stats(
+                    label,
+                    lambda key, _a: premise_count(key[1]) == GUARD_PREMISE_COUNT,
                 )]
             ),
         ),

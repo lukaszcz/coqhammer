@@ -54,11 +54,16 @@ GRID_ARTIFACTS_DIR="$eval_dir/artifacts/premise-screening"
 GRID_SUMMARIZER="$eval_dir/tools/summarize-premise-screening.py"
 GRID_COMPLETION_MESSAGE="Premise-selection screening checkpoints complete."
 GRID_CONSISTENCY_PREMISE=knn-32
+# The summarizer's goal-level regression guard measures only the selectors whose
+# premise count equals GUARD_PREMISE_COUNT in tools/summarize-premise-screening.py
+# (currently 32), so this axis must keep at least one such selector. Editing it
+# otherwise makes the summarizer abort instead of reporting a vacuous "clear";
+# change GUARD_PREMISE_COUNT together with this array.
 GRID_PREMISES=(knn-32 knn-1024 nbayes-32 nbayes-1024)
 GRID_PROVERS=(eprover vampire)
 GRID_CORPORA=(stdlib-regression dependent-slice external-equations)
 
-# Each runtime axis is adjustable with one array edit. Labels and preambles are
+# Each label axis is adjustable with one array edit. Labels and preambles are
 # derived from these two arrays rather than maintained independently.
 DEFINITION_PREMISES=(0 8 32)
 DEFINITION_FEATURES=(0 4 16)
