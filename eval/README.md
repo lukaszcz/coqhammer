@@ -150,21 +150,29 @@ before compile supervision are rejected. Regeneration retains downstream ATP
 results, but reuses each only when its recorded input hash still matches the
 newly generated problems.
 
-Of everything a run produces, only the confirmation grid's artifacts are
-tracked: `summary.tsv`, `analysis.md`, `provenance.env`, and the README beside
-them. The rest — `results/`, `problems/`, `logs/`, `_external/` — is ignored.
-The line is not source versus output but reproducible versus not. Checkpoints
-and generated problems come back by rerunning; a summary does not, since it
-depends on four external ATPs, pinned external libraries, and timeout-bound
-prover runs that never repeat exactly. A summary is therefore evidence about
-one commit rather than build output, and it is committed so that
-`provenance.env`'s `repository_commit` and the numbers it vouches for share a
-single history — the confirmation checkpoints are keyed by label, so once a
-grid is rerun that history is the only surviving record of the previous one.
-Screening summaries are not tracked; only the confirmation grid, which carries
-the branch's headline claim. `summary.tsv` and `analysis.md` are marked
-`linguist-generated` in `.gitattributes` so review collapses them; regenerate
-them through the grid rather than editing them.
+Of everything a run produces, only the artifacts of a grid whose numbers the
+branch actually claims are tracked: `summary.tsv`, `analysis.md`,
+`provenance.env`, and the README beside them. The rest — `results/`,
+`problems/`, `logs/`, `_external/` — is ignored. The line is not source versus
+output but reproducible versus not. Checkpoints and generated problems come
+back by rerunning; a summary does not, since it depends on four external ATPs,
+pinned external libraries, and timeout-bound prover runs that never repeat
+exactly. A summary is therefore evidence about one commit rather than build
+output, and it is committed so that `provenance.env`'s `repository_commit` and
+the numbers it vouches for share a single history — checkpoints are keyed by
+label, so once a grid is rerun that history is the only surviving record of the
+previous one.
+
+Two grids qualify. `artifacts/extraction-confirmation` holds the confirmation
+grid, which carries the soundness and reconstruction claims.
+`artifacts/premise-screening` holds the premise-selection screening grid, whose
+definitional-slot sweep is the headline result for premise selection; it is the
+one screening grid that is tracked, and it records its own non-standard
+measurement policy in `provenance.env`. Every other screening summary —
+`artifacts/extraction-screening` — stays untracked: a variant sweep that
+nothing is claimed from is rerun rather than cited. `summary.tsv` and
+`analysis.md` are marked `linguist-generated` in `.gitattributes` so review
+collapses them; regenerate them through the grid rather than editing them.
 
 The confirmation run also checks that the translated axioms stay consistent: it
 replaces each conjecture with `$false` and expects no refutation. Those axioms
