@@ -556,20 +556,32 @@ _grid_set_corpus_inputs() {
 }
 
 _grid_recompute_corpus_digest() {
-  local corpus="$1" path digests=
+  local corpus="$1" path inputs=0 digests=
   while IFS= read -r path; do
     [ -n "$path" ] || continue
     digests+=$(hash_file "$path")
+    inputs=$((inputs + 1))
   done <<< "${corpus_input_files[$corpus]}"
   while IFS= read -r path; do
     [ -n "$path" ] || continue
     digests+=$(hash_tree "$path")
+    inputs=$((inputs + 1))
   done <<< "${corpus_input_trees[$corpus]}"
-  [ -n "$digests" ] || {
+  [ "$inputs" -gt 0 ] || {
     echo "Corpus provenance has no inputs: $corpus" >&2
     return 1
   }
   corpus_digest[$corpus]=$(hash_text "$digests")
+  # The pre-engine grid scripts folded a one-input corpus differently: they
+  # recorded that input's own tree digest, with no outer hash over the
+  # concatenation. Keep the older rendering available for exactly that case, so
+  # a historical marker can still be recognized without giving up the uniform
+  # digest the summarizers recompute from the provenance manifest.
+  if [ "$inputs" -eq 1 ]; then
+    corpus_legacy_digest[$corpus]=$digests
+  else
+    corpus_legacy_digest[$corpus]=
+  fi
 }
 
 _grid_require_consistent_corpus_provenance() {
@@ -646,7 +658,7 @@ _grid_marker_field() {
 }
 
 _grid_matches_legacy_checkpoint() {
-  local marker="$1" stage="$2"
+  local marker="$1" stage="$2" corpus="$4"
   local historical_script historical_commit historical_helper
   local commit_pattern='^([0-9a-f]{40}|[0-9a-f]{64})$'
   local digest_pattern='^[0-9a-f]{64}$'
@@ -671,11 +683,27 @@ _grid_matches_legacy_checkpoint() {
   # these three recorded historical values while every remaining field -- the
   # checkpoint version, label, config, install identity, corpus provenance and
   # the stage-specific fields -- stays current and must still match byte for
-  # byte, including the unfaked install and corpus digests.
+  # byte, including the unfaked install identity and the corpus inputs.
   local repo_commit="$historical_commit"
   local grid_script_digest="$historical_script"
   local grid_helper_digest="$historical_helper"
-  checkpoint_contents "$@" | cmp -s - "$marker.done"
+  # The one exception is how the corpus inputs are folded into a single field:
+  # a historical marker records the pre-engine rendering of the very same
+  # inputs. Both renderings are recomputed here from the corpus as it stands
+  # now, so the corpus contents are still verified either way.
+  local candidates=("${corpus_digest[$corpus]}") candidate
+  candidate=${corpus_legacy_digest[$corpus]:-}
+  if [ -n "$candidate" ] && [ "$candidate" != "${corpus_digest[$corpus]}" ]; then
+    candidates+=("$candidate")
+  fi
+  local -A corpus_digest
+  for candidate in "${candidates[@]}"; do
+    corpus_digest[$corpus]=$candidate
+    if checkpoint_contents "$@" | cmp -s - "$marker.done"; then
+      return 0
+    fi
+  done
+  return 1
 }
 
 # Override the checkpoint helpers for engine users. New manifests carry the
@@ -684,7 +712,8 @@ _grid_matches_legacy_checkpoint() {
 # when the grid script digest it records is declared in
 # GRID_LEGACY_SCRIPT_SHA256, and only when every field other than the three
 # harness-provenance fields read back from it -- grid script digest, repository
-# commit, checkpoint helper digest -- exactly matches the current run.
+# commit, checkpoint helper digest -- exactly matches the current run, with the
+# corpus digest also accepted in the pre-engine rendering of the same inputs.
 checkpoint_matches() {
   local marker="$1" label="$3"
   shift
@@ -1223,9 +1252,11 @@ grid_run() (
   echo "[corpus mode] $corpus_mode"
   stdlib_modules=${STDLIB_CORPUS_MODULES:-"Arith Bool Vectors Lists NArith"}
   dependent_stdlib_modules=${DEPENDENT_STDLIB_MODULES:-"Logic Wellfounded MSets Structures Sorting Program"}
-  declare -gA corpus_source corpus_digest corpus_input_trees corpus_input_files
+  declare -gA corpus_source corpus_digest corpus_legacy_digest
+  declare -gA corpus_input_trees corpus_input_files
   corpus_source=()
   corpus_digest=()
+  corpus_legacy_digest=()
   corpus_input_trees=()
   corpus_input_files=()
 

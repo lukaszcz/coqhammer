@@ -38,15 +38,32 @@ declare -A label_config=([label]=all-on)
 declare -A label_preamble=([label]='')
 declare -A label_preamble_digest=([label]="$(hash_text '')")
 declare -A corpus_source=([corpus]=eval/corpora/corpus/sample)
-declare -A corpus_digest=([corpus]=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc)
+declare -A corpus_digest=() corpus_legacy_digest=()
+declare -A corpus_input_files=([corpus]='')
+declare -A corpus_input_trees=([corpus]="$tmp/corpus-src")
 prefix="$tmp/prefix"
-mkdir -p "$prefix" "$tmp/checkpoint" "$tmp/timeout-logs/nested"
+mkdir -p "$prefix" "$tmp/checkpoint" "$tmp/timeout-logs/nested" "$tmp/corpus-src"
+printf 'Lemma fixture : True.\nProof. exact I. Qed.\n' > "$tmp/corpus-src/fixture.v"
+_grid_recompute_corpus_digest corpus
 printf '%s\n' \
   'rocq-compile-supervisor: TIMEOUT phase=check source=fixture.v limit=1s grace=1s exit=124' \
   > "$tmp/timeout-logs/nested/fixture.log"
 timeout_report=$(report_compile_timeouts "$tmp/timeout-logs" 2>&1)
 [[ "$timeout_report" == *'phase=check source=fixture.v'* ]] ||
   fail "compile timeout report remained buried in per-file logs"
+
+# "make -C" implies "-w", so its directory notices always carry a quoted path
+# and are only stripped if the pattern allows for one. A log of nothing but
+# routine make chatter records no failure, even when the build directory is
+# spelled with the word "error" in it.
+printf '%s\n' \
+  "make: Entering directory '/tmp/build error 2/atp'" \
+  'make[1]: *** [Makefile:9: all] Error 2' \
+  "make: Leaving directory '/tmp/build error 2/atp'" \
+  > "$tmp/routine-make.log"
+expect_failure log_has_crash_or_error "$tmp/routine-make.log"
+expect_failure log_has_crash_or_error_ignoring_backstop_kills "$tmp/routine-make.log"
+
 printf 'one\n' > "$tmp/harness-source"
 first_harness_hash=$(hash_harness_sources supervisor "$tmp/harness-source")
 printf 'two\n' > "$tmp/harness-source"
@@ -66,6 +83,14 @@ opt_refinement_decl_skips=false
 EOF
 marker="$tmp/checkpoint/generate"
 old_corpus_digest=${corpus_digest[corpus]}
+# The pre-engine grid scripts recorded a single-tree corpus as that tree's own
+# hash_tree digest, without the outer hash the engine now folds its inputs
+# with. Compute that historical form here from the fixture corpus instead of
+# reading the engine's current corpus_digest back out: seeding the marker from
+# the value under test would make the migration check tautological and would
+# not notice a change to how the engine renders the field.
+legacy_corpus_digest=$(hash_tree "$tmp/corpus-src")
+historical_corpus_digest=$legacy_corpus_digest
 
 manifest_sha=$(sha256sum "$prefix/manifest.env" | awk '{ print $1 }')
 # A genuinely historical marker was written at an older repository commit and
@@ -95,7 +120,7 @@ install_manifest_sha256=$manifest_sha
 corpus=corpus
 corpus_mode=sample
 corpus_source=eval/corpora/corpus/sample
-corpus_sha256=$old_corpus_digest
+corpus_sha256=$historical_corpus_digest
 EOF
   [ "$#" -eq 0 ] || printf '%s\n' "$@" >> "$marker.done"
 }
@@ -114,6 +139,16 @@ checkpoint_matches "$marker" prover label corpus "$prefix" \
   premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest" ||
   fail "valid historical downstream checkpoint was not reused"
 [ -f "$marker.done" ] || fail "valid historical downstream checkpoint was removed"
+
+# The engine's own rendering of the same corpus inputs is accepted too, so a
+# marker written by an early engine run migrates as readily as a pre-engine one.
+historical_corpus_digest=$old_corpus_digest
+write_historical_marker "$legacy" prover \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
+checkpoint_matches "$marker" prover label corpus "$prefix" \
+  premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest" ||
+  fail "historical checkpoint carrying the current corpus digest was not reused"
+historical_corpus_digest=$legacy_corpus_digest
 
 # An undeclared old digest is not a migration wildcard.
 write_historical_marker \
