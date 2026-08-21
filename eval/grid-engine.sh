@@ -775,8 +775,12 @@ _grid_build_install() {
   local install="$1" label prefix
   label=${install_label[$install]}
   prefix=${install_prefix[$install]}
-  if [ -f "$prefix/manifest.env" ]; then
-    if _grid_manifest_matches_install "$install" "$prefix"; then
+  # Any existing prefix directory is a candidate for reuse; one without a
+  # manifest cannot be matched, so it is stale by construction and goes through
+  # the same discard path rather than being built over.
+  if [ -d "$prefix" ]; then
+    if [ -f "$prefix/manifest.env" ] &&
+        _grid_manifest_matches_install "$install" "$prefix"; then
       echo "[build] $label already installed"
       return 0
     fi
@@ -802,7 +806,7 @@ _grid_build_install() {
 }
 
 _grid_run_generation() {
-  local label="$1" corpus="$2" prefix="$3"
+  local label="$1" corpus="$2" prefix="$3" coqc_cmd premise
   local outdir="$results_root/$label/$corpus"
   mkdir -p "$outdir"
   local marker="$outdir/generate"
@@ -880,7 +884,7 @@ _grid_run_generation() {
 }
 
 _grid_run_prover() {
-  local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
+  local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5" prover_status
   local outdir="$results_root/$label/$corpus"
   local marker="$outdir/prover-$prover-$premise" input_digest
   input_digest=$(hash_tree "$outdir/atp-problems/$premise")
@@ -1156,6 +1160,7 @@ grid_run() (
   }
 
   local value label corpus install prefix consistency_premise
+  local run_status=0
   for value in "$tim" "$consistency_tim" "$compile_timeout" "$compile_timeout_grace"; do
     if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
       echo "Timeouts must be positive integers: $value" >&2
@@ -1318,18 +1323,32 @@ grid_run() (
       if [ -n "$only_corpus" ] && [ "$corpus" != "$only_corpus" ]; then
         continue
       fi
-      _grid_run_generation "$label" "$corpus" "$prefix"
+      # A failed stage leaves the rest of the grid worth running, so remember
+      # the failure and carry on. Everything downstream of generation depends
+      # on its problem trees, so that one failure skips the rest of the corpus.
+      if ! _grid_run_generation "$label" "$corpus" "$prefix"; then
+        run_status=1
+        continue
+      fi
       for premise in "${premises[@]}"; do
         for prover in "${provers[@]}"; do
-          _grid_run_prover "$label" "$corpus" "$premise" "$prover" "$prefix"
+          _grid_run_prover "$label" "$corpus" "$premise" "$prover" "$prefix" ||
+            run_status=1
         done
       done
+      # The consistency canary is measurement, not a gate: it reports both a
+      # genuine inconsistency hit and an infrastructure failure through
+      # consistency_exit= in its status file, which the summarizer reads. Its
+      # exit status stays out of run_status so a hit cannot fail the grid.
       for prover in "${provers[@]}"; do
-        _grid_run_consistency "$label" "$corpus" "$consistency_premise" "$prover" "$prefix"
+        _grid_run_consistency "$label" "$corpus" "$consistency_premise" "$prover" "$prefix" || true
       done
     done
   done
 
+  if [ "$run_status" -ne 0 ]; then
+    echo "One or more grid stages failed; see the messages above" >&2
+  fi
   echo "$GRID_COMPLETION_MESSAGE"
   echo "  raw checkpoints: $results_root"
   if [ -n "$only_label" ] || [ -n "$only_corpus" ]; then
@@ -1343,4 +1362,5 @@ grid_run() (
     echo "  analysis:        $artifacts_dir/analysis.md"
     echo "  provenance:      $artifacts_dir/provenance.env"
   fi
+  return "$run_status"
 )
