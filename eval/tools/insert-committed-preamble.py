@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 import re
 import sys
+import tempfile
 
 
 # Match the grammar of the relevant import rather than its physical line.
@@ -88,7 +89,7 @@ def hook_import_ends(contents):
     ends = []
     for match in HAMMER_IMPORT.finditer(masked):
         modules = [
-            re.sub(SPACE, b"", module.group()).rsplit(b".", 1)[-1]
+            module.group().rsplit(b".", 1)[-1]
             for module in MODULE.finditer(match.group("modules"))
         ]
         if HOOK_MODULES.intersection(modules):
@@ -173,10 +174,18 @@ def write_files(rewritten):
     staged = []
     try:
         for path, contents in rewritten:
-            # The suffix keeps a leftover temporary out of the *.v corpus.
-            temporary = path.with_name(path.name + ".preamble-tmp")
-            temporary.write_bytes(contents)
+            # Created exclusively under a unique name, so staging can never
+            # overwrite a file that was already there, and the suffix keeps a
+            # leftover temporary out of the *.v corpus.  The staged file takes
+            # over the source's permissions when it replaces it.
+            handle, name = tempfile.mkstemp(
+                dir=path.parent, prefix=path.name + ".", suffix=".preamble-tmp"
+            )
+            os.close(handle)
+            temporary = Path(name)
             staged.append((temporary, path))
+            os.chmod(temporary, path.stat().st_mode & 0o7777)
+            temporary.write_bytes(contents)
         while staged:
             temporary, path = staged[-1]
             os.replace(temporary, path)

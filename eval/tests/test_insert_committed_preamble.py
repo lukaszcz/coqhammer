@@ -304,6 +304,20 @@ class InsertCommittedPreambleTests(unittest.TestCase):
                 original[:command_end] + PREAMBLE + b"\n\n" + original[command_end:],
             )
 
+    def test_staging_keeps_an_occupied_sibling_and_the_source_permissions(self):
+        path = self.root / "sample.v"
+        original = b"From Hammer Require Import Hammer.\nCheck True.\n"
+        path.write_bytes(original)
+        path.chmod(0o640)
+        occupied = self.root / "sample.v.preamble-tmp"
+        occupied.write_bytes(b"unrelated\n")
+
+        result = self.run_tool()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(path.read_bytes(), self.rewrite_of(original))
+        self.assertEqual(path.stat().st_mode & 0o7777, 0o640)
+        self.assertEqual(occupied.read_bytes(), b"unrelated\n")
+
     def test_committed_samples(self):
         corpora = EVAL_DIR / "corpora"
         samples = sorted(corpora.glob("*/sample/*.v"))
