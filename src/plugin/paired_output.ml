@@ -12,25 +12,15 @@ let file_id path =
   try Some (id_of_stats (Unix.lstat path)) with
   | Unix.Unix_error (Unix.ENOENT, _, _) -> None
 
-let id_mem id ids = List.exists ((=) id) ids
-
 let unlink_if_owned path ids =
   match file_id path with
-  | Some id when id_mem id ids -> Unix.unlink path
+  | Some id when List.mem id ids -> Unix.unlink path
   | _ -> ()
 
-let attempt_all actions =
-  let error = ref None in
-  List.iter
-    (fun action ->
-       try action () with e ->
-         match !error with
-         | None -> error := Some e
-         | Some _ -> ())
-    actions;
-  match !error with
-  | Some e -> raise e
-  | None -> ()
+(* Cleanup runs with an exception already propagating, so one leftover that
+   cannot be removed must neither replace that exception nor stop the removals
+   that follow it. *)
+let ignore_errors f = try f () with _ -> ()
 
 let make_temporary target =
   let dir = Filename.dirname target in
@@ -51,31 +41,30 @@ let ensure_absent path =
   | None -> ()
   | Some _ -> failwith ("paired output target appeared during publication: " ^ path)
 
-let option_to_list = function
-  | Some value -> [value]
-  | None -> []
-
 let write ~commit_path ~write_commit ~companion_path ~write_companion =
   let stale_commit = file_id commit_path in
   let stale_companion = file_id companion_path in
-  let commit_ids = ref (option_to_list stale_commit) in
-  let companion_ids = ref (option_to_list stale_companion) in
+  (* [Stdlib.] because Rocq's own [Option] shadows the standard one here. *)
+  let commit_ids = ref (Stdlib.Option.to_list stale_commit) in
+  let companion_ids = ref (Stdlib.Option.to_list stale_companion) in
   let temporaries = ref [] in
   let cleanup () =
+    (* Close every channel before unlinking any of them, so no removal races a
+       still-open handle on platforms that refuse one. *)
     List.iter (fun temporary -> close_out_noerr temporary.channel) !temporaries;
-    attempt_all
-      (List.map
-         (fun temporary () -> unlink_if_owned temporary.path [temporary.id])
-         !temporaries @
-       [ (fun () -> unlink_if_owned commit_path !commit_ids);
-         (fun () -> unlink_if_owned companion_path !companion_ids) ])
+    List.iter
+      (fun temporary ->
+         ignore_errors (fun () -> unlink_if_owned temporary.path [temporary.id]))
+      !temporaries;
+    ignore_errors (fun () -> unlink_if_owned commit_path !commit_ids);
+    ignore_errors (fun () -> unlink_if_owned companion_path !companion_ids)
   in
   try
     (* A retry must not leave an old pair looking like the result of this run
-       if creating or writing its replacement subsequently fails. *)
-    attempt_all
-      [ (fun () -> unlink_if_owned commit_path !commit_ids);
-        (fun () -> unlink_if_owned companion_path !companion_ids) ];
+       if creating or writing its replacement subsequently fails.  Should the
+       first removal raise, [cleanup] reattempts the second. *)
+    unlink_if_owned commit_path !commit_ids;
+    unlink_if_owned companion_path !companion_ids;
     ensure_absent commit_path;
     ensure_absent companion_path;
     let commit = make_temporary commit_path in
@@ -97,5 +86,5 @@ let write ~commit_path ~write_commit ~companion_path ~write_companion =
     commit_ids := commit.id :: !commit_ids;
     Unix.rename commit.path commit_path
   with e ->
-    (try cleanup () with _ -> ());
+    cleanup ();
     raise e

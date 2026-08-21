@@ -36,7 +36,7 @@ corpus_mode=sample
 force=false
 declare -A label_config=([label]=all-on)
 declare -A label_preamble=([label]='')
-declare -A label_preamble_digest=([label]="$(_grid_hash_text '')")
+declare -A label_preamble_digest=([label]="$(hash_text '')")
 declare -A corpus_source=([corpus]=eval/corpora/corpus/sample)
 declare -A corpus_digest=([corpus]=cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc)
 prefix="$tmp/prefix"
@@ -127,11 +127,11 @@ expect_failure checkpoint_matches "$marker" prover label corpus "$prefix" \
 write_historical_marker "$legacy" prover \
   premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
 label_preamble[label]='Set Hammer DefinitionPremises 8.'
-label_preamble_digest[label]=$(_grid_hash_text "${label_preamble[label]}")
+label_preamble_digest[label]=$(hash_text "${label_preamble[label]}")
 expect_failure checkpoint_matches "$marker" prover label corpus "$prefix" \
   premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
 label_preamble[label]=''
-label_preamble_digest[label]=$(_grid_hash_text '')
+label_preamble_digest[label]=$(hash_text '')
 
 # Tampering with a provenance field, or changing the downstream input hash,
 # invalidates the otherwise accepted historical digest.
@@ -697,7 +697,7 @@ EOF
   _grid_require_consistent_corpus_provenance stdlib-regression
   declare -A label_config=([fixture]=current)
   declare -A label_preamble=([fixture]='')
-  declare -A label_preamble_digest=([fixture]="$(_grid_hash_text '')")
+  declare -A label_preamble_digest=([fixture]="$(hash_text '')")
   legacy_grid_script_digests=()
   generation_marker="$fixture_eval/generation/generate"
   mkdir -p "$(dirname "$generation_marker")"

@@ -213,17 +213,12 @@ type selection_metadata = {
   forced_slots : int;
 }
 
-let constructor_inductive (def : hhdef) : string option =
-  match def with
-  | (Comb(Comb(Id "$Construct",
-                    Comb(Comb(Id "$Ind", Id ind), _)), Id _), _, _, _, _) ->
-     Some ind
-  | _ -> None
-
-let inductive_name (def : hhdef) : string option =
-  match def with
-  | (Comb(Comb(Id "$Ind", Id ind), _), _, _, _, _) -> Some ind
-  | _ -> None
+(* An accessible global that never occurs in another global's statement has no
+   entry; that is an occurrence count of zero, not a missing measurement. *)
+let occurrence_count occ name =
+  match Hashtbl.find_opt occ name with
+  | Some count -> count
+  | None -> 0
 
 let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : selection_ctx =
   let ndefs = List.filter is_nontrivial defs in
@@ -243,12 +238,7 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
          (fun def ->
             List.iter
               (fun name ->
-                 let count =
-                   match Hashtbl.find_opt tbl name with
-                   | Some count -> count
-                   | None -> 0
-                 in
-                 Hashtbl.replace tbl name (count + 1))
+                 Hashtbl.replace tbl name (occurrence_count tbl name + 1))
               (get_deps_cached def))
          ndefs;
        tbl)
@@ -297,12 +287,8 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
         (fun def ->
            let name = get_hhdef_name def in
            if Hhlib.StringSet.mem name !candidate_names then
-             let count =
-               match Hashtbl.find_opt occ name with
-               | Some count -> count
-               | None -> 0
-             in
-             Some (count, hhterm_size (get_def_fea_term def), name, def)
+             Some (occurrence_count occ name,
+                   hhterm_size (get_def_fea_term def), name, def)
            else
              None)
         ndefs
@@ -332,16 +318,14 @@ let get_query_features (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) 
         (fun name acc ->
            match Hashtbl.find_opt ctx.def_tbl name with
            | Some def ->
-              let count =
-                match Hashtbl.find_opt occ name with
-                | Some count -> count
-                | None -> 0
-              in
-              if count <= generality then get_deps_cached def @ acc else acc
+              if occurrence_count occ name <= generality then
+                get_deps_cached def @ acc
+              else
+                acc
            | None -> acc)
         (Lazy.force ctx.seed) []
     in
-    Hhlib.sort_uniq compare (features @ expanded)
+    Hhlib.sort_uniq String.compare (features @ expanded)
 
 let extract (ctx : selection_ctx) (hyps : hhdef list) (goal : hhdef) : string =
   Msg.info "Extracting features...";
@@ -487,9 +471,7 @@ let selection_metadata ctx n =
     Hhlib.StringSet.fold
       (fun name counts ->
          if Hashtbl.mem ctx.def_tbl name then
-           (match Hashtbl.find_opt occ name with
-            | Some count -> count
-            | None -> 0) :: counts
+           occurrence_count occ name :: counts
          else
            counts)
       (Lazy.force ctx.seed) []

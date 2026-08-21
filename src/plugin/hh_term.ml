@@ -44,9 +44,6 @@ let get_hhterm_name (c : hhterm) : string =
 let get_hhdef_name ((c, _, _, _, _) : hhdef) : string =
   get_hhterm_name c
 
-let hhdef_is_opaque ((_, opaque, _, _, _) : hhdef) : bool =
-  opaque
-
 let rec hhterm_size (t : hhterm) : int =
   match t with
   | Id _ -> 1
@@ -59,6 +56,21 @@ let hhdef_is_var ((c, _, _, _, _) : hhdef) : bool =
   match c with
   | Comb(Id "$Var", Id _) -> true
   | _ -> false
+
+(* The inductive a constructor belongs to, and an inductive's own name.  Both
+   read the same [$Construct]/[$Ind] encoding as [get_hhterm_name], so they
+   belong beside it rather than in the modules that group definitions by their
+   inductive. *)
+let constructor_inductive ((c, _, _, _, _) : hhdef) : string option =
+  match c with
+  | Comb(Comb(Id "$Construct", Comb(Comb(Id "$Ind", Id ind), _)), Id _) ->
+     Some ind
+  | _ -> None
+
+let inductive_name ((c, _, _, _, _) : hhdef) : string option =
+  match c with
+  | Comb(Comb(Id "$Ind", Id ind), _) -> Some ind
+  | _ -> None
 
 let rec string_of_hhterm t =
   match t with

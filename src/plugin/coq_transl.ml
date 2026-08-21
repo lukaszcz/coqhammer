@@ -164,7 +164,11 @@ let coq_axioms = [
    finally extracted.  Freeze and validate each cache miss once. *)
 let compact_axioms (tm, mk) =
   let axioms = compose_axioms [mk []] in
-  (tm, fun tail -> axioms @ tail)
+  (* [axioms @ []] is [axioms], so serving the empty tail without copying lets
+     [extract_axioms] read a compacted bundle in constant time.  Cached bundles
+     are extracted whole on every replay, which would otherwise allocate a
+     throwaway copy of the entire axiom list per cache hit. *)
+  (tm, fun tail -> if tail == [] then axioms else axioms @ tail)
 
 let coqterm_hash = Hashing.create ~compact:compact_axioms lift
 
@@ -300,13 +304,10 @@ module Translation_effects = struct
     let effects = ref [] in
     let previous = !collectors in
     collectors := effects :: previous;
-    try
-      let result = make () in
-      collectors := previous;
-      (result, List.rev !effects)
-    with e ->
-      collectors := previous;
-      raise e
+    let result =
+      Fun.protect ~finally:(fun () -> collectors := previous) make
+    in
+    (result, List.rev !effects)
 
   let commit effects = List.iter (fun (delivery, _) -> record delivery) effects
 
@@ -336,12 +337,10 @@ let with_lift_dependencies ?reuses_lift make =
   let previous_collectors = !(Lift_dependencies.collectors) in
   Lift_dependencies.collectors := dependencies :: previous_collectors;
   let result =
-    try make ()
-    with e ->
-      Lift_dependencies.collectors := previous_collectors;
-      raise e
+    Fun.protect
+      ~finally:(fun () -> Lift_dependencies.collectors := previous_collectors)
+      make
   in
-  Lift_dependencies.collectors := previous_collectors;
   let reused =
     match reuses_lift with
     | Some flag -> !flag
@@ -351,10 +350,17 @@ let with_lift_dependencies ?reuses_lift make =
     match flatten_app (fst result) with
     | Const name, _
          when String.length name >= 2 && String.sub name 0 2 = "$_" ->
-       if not reused && !dependencies <> [] then
-         Lift_dependencies.add name !dependencies;
-       Hhlib.sort_uniq String.compare
-         (!dependencies @ Lift_dependencies.find name)
+       if reused then
+         Hhlib.sort_uniq String.compare
+           (!dependencies @ Lift_dependencies.find name)
+       else begin
+         (* [add] stores the sorted union with what the symbol already had, and
+            nothing else writes the table, so its entry is already the union
+            this occurrence must deliver. *)
+         if !dependencies <> [] then
+           Lift_dependencies.add name !dependencies;
+         Lift_dependencies.find name
+       end
     | _ -> Hhlib.sort_uniq String.compare !dependencies
   in
   List.iter
@@ -372,13 +378,12 @@ let speculate_translation make =
   let dependencies = ref [] in
   let previous_collectors = !(Lift_dependencies.collectors) in
   Lift_dependencies.collectors := [dependencies];
-  try
-    let (result, effects) = Translation_effects.capture make in
-    Lift_dependencies.collectors := previous_collectors;
-    (result, Hhlib.sort_uniq String.compare !dependencies, effects)
-  with e ->
-    Lift_dependencies.collectors := previous_collectors;
-    raise e
+  let (result, effects) =
+    Fun.protect
+      ~finally:(fun () -> Lift_dependencies.collectors := previous_collectors)
+      (fun () -> Translation_effects.capture make)
+  in
+  (result, Hhlib.sort_uniq String.compare !dependencies, effects)
 
 let discarded_speculations = ref 0
 let discarded_speculation_effects = ref 0
@@ -404,8 +409,10 @@ let commit_speculation dependencies effects =
    a kind prefix followed by a [unique_id] of digits.  Axioms derived from a
    lift's definition append a [$]-separated suffix ([$term], [$lower],
    [$upper], [$link], [$<constructor>]), so the defining symbol is the axiom
-   name truncated at the first [$] after the prefix.  Only the two kinds
-   [Lift_owners] is ever queried with are recognized. *)
+   name truncated at the first [$] after the prefix.  Only the kinds that emit
+   link equations are recognized: they are the ones whose symbols a later
+   occurrence can be offered for reuse, which is what ownership decides.  Of
+   those, [Lift_owners] is today queried for lambda lifts only. *)
 let defined_lift_symbol axname =
   let matches prefix =
     Hhlib.string_begins_with axname prefix &&
@@ -2448,8 +2455,12 @@ and remove_lambda ctx tm =
     and ctm = Hashing.key_term key in
     (* The link is looked up before the lift minted below registers itself, so
        that lift cannot match itself.  It is computed once here and shared by
-       both the instance-reuse path and the minting path. *)
-    let link = Hashing.find_lift_link "lam" cctx ctm in
+       both the instance-reuse path and the minting path.  Deferred because an
+       exact cache hit needs no link at all, and the lookup is a registry scan
+       over every lambda lift examined so far: forcing it eagerly would pay
+       that scan once per lambda occurrence instead of once per minted lift.
+       Every path that does need it forces it before anything registers. *)
+    let link = lazy (Hashing.find_lift_link "lam" cctx ctm) in
     (* When a lambda is a syntactic instance of a schema available in this
        declaration, applying the schema symbol to the matching substitution
        names exactly the same Coq term.  Reuse is authorized only after that
@@ -2457,7 +2468,7 @@ and remove_lambda ctx tm =
        retained arity has been checked.  A rejected attempt contributes neither
        axioms nor ownership/structural-delivery effects. *)
     let reuse_instance () =
-      match link with
+      match Lazy.force link with
       | Some link when not link.Hashing.ll_new_is_schema &&
                        Lift_owners.mem link.Hashing.ll_name !translation_owner &&
                        binder_erasure_profile cctx ctm =
@@ -2541,7 +2552,8 @@ and remove_lambda ctx tm =
            term while arity is settled after erasure.
 
            [link] is computed above, before this lift registers itself below,
-           so this lift cannot match itself. *)
+           so this lift cannot match itself.  Reaching here means the reuse
+           attempt already forced it, so this is the memoized value. *)
         count_lift "lam" "minted";
         lambda_lifting [] name name (ctx_to_vars cctx) [] ctm >>= fun result ->
         (* [lambda_lifting] does not always name the lift [name]: a [Fix] body
@@ -2555,10 +2567,10 @@ and remove_lambda ctx tm =
            context the result is the bare [Const name]. *)
         match fst (flatten_app result) with
         | Const cname when cname = name ->
-           count_lift "lam" (link_outcome link);
+           count_lift "lam" (link_outcome (Lazy.force link));
            Hashing.register_lift "lam" name cctx ctm;
            Translation_effects.lift_owner name !translation_owner;
-           add_link_axiom name cctx ctm link >>
+           add_link_axiom name cctx ctm (Lazy.force link) >>
            return result
         | _ ->
            count_lift "lam" "unnamed";
@@ -3250,13 +3262,11 @@ let translate name =
   log 1 ("translate: " ^ name);
   let previous_owner = !translation_owner in
   translation_owner := name;
-  try
-    let axs = extract_axioms (add_def_axioms (Defhash.find name)) in
-    translation_owner := previous_owner;
-    compose_axioms [axs]
-  with e ->
-    translation_owner := previous_owner;
-    raise e
+  let axs =
+    Fun.protect ~finally:(fun () -> translation_owner := previous_owner)
+      (fun () -> extract_axioms (add_def_axioms (Defhash.find name)))
+  in
+  compose_axioms [axs]
 
 let retranslate lst =
   List.iter
@@ -3316,9 +3326,7 @@ let output_problem oc name deps =
 let write_problem fname name deps =
   let axioms = get_axioms (name :: deps) in
   let oc = open_out fname in
-  try
-    output_problem_axioms oc name axioms;
-    close_out oc
-  with e ->
-    close_out_noerr oc;
-    raise e
+  (* [flush] inside the body so a write error still reaches the caller, which
+     [close_out_noerr] in the finally would swallow. *)
+  Fun.protect ~finally:(fun () -> close_out_noerr oc)
+    (fun () -> output_problem_axioms oc name axioms; flush oc)

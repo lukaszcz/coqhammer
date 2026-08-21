@@ -61,7 +61,10 @@ let compose_axioms bundles =
     | ((name, formula) as axiom) :: rest ->
        let rec consume = function
          | (name2, formula2) :: tail when name2 = name ->
-            if formula2 <> formula then
+            (* Replaying a cached bundle shares its formulas physically, so the
+               duplicates this is here to tolerate are almost always the same
+               object; the structural comparison then never has to walk them. *)
+            if formula2 != formula && formula2 <> formula then
               raise (Hammer_errors.HammerError
                        ("internal translation error: axiom name collision for " ^
                         name));

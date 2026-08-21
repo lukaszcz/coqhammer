@@ -108,28 +108,15 @@ export OCAMLPATH="$prefix${OCAMLPATH:+:$OCAMLPATH}"
 coqc_cmd="rocq c -coqlib $prefix/coq"
 compile_supervisor="$eval_dir/tools/rocq-compile-supervisor.sh"
 
-run_compile_make() {
-  local phase="$1" target="$2" compile_log_dir="$3" status=0
-  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
-    COMPILE_SUPERVISOR="$compile_supervisor" \
-    COMPILE_TIMEOUT="$compile_timeout" \
-    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
-    COMPILE_PHASE="$phase" || status=$?
-  if [ "$status" -ne 0 ]; then
-    report_compile_timeouts "$compile_log_dir"
-    return "$status"
-  fi
-}
-
 # shellcheck source=eval/grid-checkpoint-lib.sh
 # shellcheck disable=SC1091
 source "$eval_dir/grid-checkpoint-lib.sh"
 
-run_compile_make init init logs/init
+run_compile_make init init "$coqc_cmd" "" logs/init
 echo "check" > coqhammer.opt
 rm -rf logs/check/ check.log
 check_status=0
-run_compile_make check check logs/check 2>&1 | tee check.log.bak || check_status=$?
+run_compile_make check check "$coqc_cmd" "" logs/check 2>&1 | tee check.log.bak || check_status=$?
 grep Error check.log.bak > check.log || true
 rm check.log.bak
 [ "$check_status" -eq 0 ] || exit "$check_status"
@@ -137,7 +124,7 @@ rm check.log.bak
 echo "gen-atp" > coqhammer.opt
 rm -rf logs/atp/ atp/problems gen-atp.log
 generation_status=0
-run_compile_make gen-atp atp logs/atp 2>&1 | tee gen-atp.log.bak || generation_status=$?
+run_compile_make gen-atp atp "$coqc_cmd" "" logs/atp 2>&1 | tee gen-atp.log.bak || generation_status=$?
 cleanup_paired_output_temporaries atp/problems
 grep Error gen-atp.log.bak > gen-atp.log || true
 rm gen-atp.log.bak
@@ -164,7 +151,7 @@ mv "atp/o/$prover" "atp/o/$prover-$premise"
 make clean-vo
 echo "reconstr" > coqhammer.opt
 reconstr_jobs=$(echo "($jobs-4)/4+1" | bc)
-jobs=$reconstr_jobs run_compile_make reconstruction reconstr logs/reconstr
+jobs=$reconstr_jobs run_compile_make reconstruction reconstr "$coqc_cmd" "" logs/reconstr
 
 result_dir="results/$label/$corpus"
 rm -rf "$result_dir"
@@ -180,7 +167,7 @@ find out -type f | sort > "$result_dir/reconstruction-outputs.lst"
   echo "premise=$premise"
   echo "compile_timeout=$compile_timeout"
   echo "compile_timeout_grace=$compile_timeout_grace"
-  echo "compile_supervisor_sha256=$(sha256sum "$compile_supervisor" | awk '{ print $1 }')"
+  echo "compile_supervisor_sha256=$(hash_file "$compile_supervisor")"
   echo "generated=$(wc -l < "$result_dir/generated.lst")"
   echo "prover_outputs=$(wc -l < "$result_dir/prover-outputs.lst")"
   echo "theorems=$( (grep -R "SZS status Theorem" "atp/o/$prover-$premise" 2>/dev/null || true) | wc -l )"

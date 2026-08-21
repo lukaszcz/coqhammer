@@ -141,6 +141,36 @@ report_compile_timeouts() {
   grep -rhE 'rocq-compile-supervisor: (TIMEOUT|KILLED) ' -- "$source" >&2 || true
 }
 
+# The supervised make invocation itself; run_compile_make below decides where
+# its output goes.  The supervisor variables are globals the sourcing script
+# sets, as for checkpoint_contents.
+_supervised_make() {
+  local phase="$1" target="$2" coqc_cmd="$3"
+  # shellcheck disable=SC2154
+  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
+    COMPILE_SUPERVISOR="$compile_supervisor" \
+    COMPILE_TIMEOUT="$compile_timeout" \
+    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
+    COMPILE_PHASE="$phase"
+}
+
+# Run one supervised Rocq compilation phase of a grid, reporting the supervisor
+# diagnostics of a failed phase.  An empty OUTPUT_LOG leaves make's output on
+# stdout for the caller to tee rather than redirecting it to a log.
+run_compile_make() {
+  local phase="$1" target="$2" coqc_cmd="$3" output_log="$4" compile_log_dir="$5"
+  local status=0
+  if [ -n "$output_log" ]; then
+    _supervised_make "$phase" "$target" "$coqc_cmd" > "$output_log" 2>&1 || status=$?
+  else
+    _supervised_make "$phase" "$target" "$coqc_cmd" || status=$?
+  fi
+  if [ "$status" -ne 0 ]; then
+    report_compile_timeouts "$compile_log_dir"
+    return "$status"
+  fi
+}
+
 # SIGKILL can interrupt paired_output.ml between creating its same-directory
 # temporaries and its cleanup handler. Delete regular temporary files only;
 # never follow or remove a symlink with a matching hostile name.
@@ -214,6 +244,25 @@ write_grid_provenance() {
 manifest_value() {
   local manifest="$1" key="$2"
   awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); exit }' "$manifest"
+}
+
+# Like manifest_value, but fails when the key is absent, so a truncated or
+# foreign manifest is rejected instead of comparing equal to an empty value.
+manifest_require() {
+  local manifest="$1" key="$2"
+  awk -F= -v key="$key" \
+    '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit }
+     END { if (!found) exit 1 }' "$manifest"
+}
+
+expect_manifest_value() {
+  local manifest="$1" key="$2" expected="$3" actual
+  actual=$(manifest_require "$manifest" "$key") || return 1
+  [ "$actual" = "$expected" ]
+}
+
+hash_text() {
+  printf %s "$1" | sha256sum | awk '{ print $1 }'
 }
 
 checkpoint_contents() {

@@ -264,17 +264,6 @@ let get_goal gl =
                   (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
    Hh_term.delay_hhterm (fun () -> mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
-let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
-
-let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
-  (filename,
-   "tt(" ^ Hh_term.string_of_hhterm const ^ "," ^
-     Hh_term.string_of_hhterm hkind ^ "," ^ Hh_term.string_of_hhterm (Lazy.force hty) ^ "," ^
-     Hh_term.string_of_hhterm (Lazy.force hterm) ^ ").")
-
-let string_of_goal gl =
-  string_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))
-
 let my_search env =
   let save_in_list refl glob_ref env sigma c = refl := glob_ref :: !refl in
   let ans = ref [] in
@@ -324,6 +313,12 @@ let unique_hhdefs hhdefs =
 let get_defs env sigma : Hh_term.hhdef list =
   List.map snd (unique_hhdefs
                   (List.map (hhdef_of_global env sigma) (my_search env)))
+
+(* The three views of a goal every entry point below starts from.  Building the
+   selection context from them is left to the caller: it reads the filtering
+   options, so some entry points must set those first. *)
+let get_goal_context env sigma gl =
+  (get_goal gl, get_hyps gl, get_defs env sigma)
 
 let get_given_lemmas env sigma l : Hh_term.hhdef list =
   let get_lemma c =
@@ -1000,9 +995,7 @@ let try_sauto () =
 let provers_detected = ref false
 
 let hammer_main_tac env sigma gl mode =
-  let goal = get_goal gl in
-  let hyps = get_hyps gl in
-  let defs = get_defs env sigma in
+  let (goal, hyps, defs) = get_goal_context env sigma gl in
   let run_provers =
     match mode with
     | Prediction ->
@@ -1127,9 +1120,7 @@ let predict_tac n pred_method =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
       if !Opt.debug_mode then
         Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
       if pred_method <> "knn" && pred_method <> "nbayes" then
@@ -1162,9 +1153,7 @@ let hammer_features_tac () =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
       let ctx = Features.make_selection_ctx hyps defs goal in
       let features = Features.get_query_features ctx hyps goal in
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
@@ -1223,15 +1212,14 @@ let hammer_dump_transl name0 fname =
     Coq_transl.reinit (get_defs env sigma);
     Coq_transl.retranslate [name];
     let oc = open_out (Opt.resolve_dump_path fname) in
-    try
-      Tptp_out.write_fol_problem (output_string oc)
-        (Coq_transl.get_axioms [name])
-        ("_HAMMER_DIAGNOSTIC",
-         Coqterms.Equal(Coqterms.Const "$True", Coqterms.Const "$True"));
-      close_out oc
-    with e ->
-      close_out_noerr oc;
-      raise e
+    Fun.protect ~finally:(fun () -> close_out_noerr oc)
+      begin fun () ->
+        Tptp_out.write_fol_problem (output_string oc)
+          (Coq_transl.get_axioms [name])
+          ("_HAMMER_DIAGNOSTIC",
+           Coqterms.Equal(Coqterms.Const "$True", Coqterms.Const "$True"));
+        flush oc
+      end
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
 
@@ -1240,9 +1228,7 @@ let hammer_transl_tac () =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
       let name = Hh_term.get_hhdef_name goal in
       Coq_transl.remove_def name;
       List.iter (fun d -> Coq_transl.remove_def (Hh_term.get_hhdef_name d)) hyps;
@@ -1260,9 +1246,7 @@ let hammer_dump_tac fname =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
       let ctx = Features.make_selection_ctx hyps defs goal in
       let defs1 = Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal) in
       Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
@@ -1333,9 +1317,7 @@ let hammer_hook_tac prefix name =
               Opt.filter_program := true;
               Opt.filter_classes := true;
               Opt.filter_hurkens := true;
-              let goal = get_goal gl in
-              let hyps = get_hyps gl in
-              let defs = get_defs env sigma in
+              let (goal, hyps, defs) = get_goal_context env sigma gl in
               let ctx = Features.make_selection_ctx hyps defs goal in
               List.iter
                 begin fun (met, n) ->

@@ -305,10 +305,6 @@ _grid_canonicalize_external_source() {
   external_source=$(cd -- "$external_source" && pwd -P)
 }
 
-_grid_hash_text() {
-  printf %s "$1" | sha256sum | awk '{ print $1 }'
-}
-
 _grid_missing_operand() {
   echo "Missing value for $1" >&2
   grid_usage >&2
@@ -421,21 +417,10 @@ _grid_validate_config_options() {
     loo-refinement-types) refinement=false ;;
     *) return 1 ;;
   esac
-  _grid_expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
-    _grid_expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
-    _grid_expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
-    _grid_expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips"
-}
-
-_grid_manifest_get() {
-  local file="$1" key="$2"
-  awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit } END { if (!found) exit 1 }' "$file"
-}
-
-_grid_expect_manifest_value() {
-  local manifest="$1" key="$2" expected="$3" actual
-  actual=$(_grid_manifest_get "$manifest" "$key") || return 1
-  [ "$actual" = "$expected" ]
+  expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
+    expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
+    expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
+    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips"
 }
 
 _grid_manifest_matches_install() {
@@ -443,15 +428,15 @@ _grid_manifest_matches_install() {
   manifest="$prefix/manifest.env"
   eval_prefix_is_owned "$prefix" || return 1
   [ -f "$manifest" ] && [ ! -L "$manifest" ] || return 1
-  _grid_expect_manifest_value "$manifest" prefix "$prefix" || return 1
+  expect_manifest_value "$manifest" prefix "$prefix" || return 1
   if [ "$install" = current ]; then
-    _grid_expect_manifest_value "$manifest" kind current &&
-      _grid_expect_manifest_value "$manifest" config current &&
-      _grid_expect_manifest_value "$manifest" commit "$repo_commit"
+    expect_manifest_value "$manifest" kind current &&
+      expect_manifest_value "$manifest" config current &&
+      expect_manifest_value "$manifest" commit "$repo_commit"
   else
-    _grid_expect_manifest_value "$manifest" kind configuration &&
-      _grid_expect_manifest_value "$manifest" config "$install" &&
-      _grid_expect_manifest_value "$manifest" commit "$repo_commit" &&
+    expect_manifest_value "$manifest" kind configuration &&
+      expect_manifest_value "$manifest" config "$install" &&
+      expect_manifest_value "$manifest" commit "$repo_commit" &&
       _grid_validate_config_options "$manifest" "$install"
   fi
 }
@@ -584,7 +569,7 @@ _grid_recompute_corpus_digest() {
     echo "Corpus provenance has no inputs: $corpus" >&2
     return 1
   }
-  corpus_digest[$corpus]=$(printf %s "$digests" | sha256sum | awk '{ print $1 }')
+  corpus_digest[$corpus]=$(hash_text "$digests")
 }
 
 _grid_require_consistent_corpus_provenance() {
@@ -631,8 +616,7 @@ _grid_validate_consistency_run() {
 }
 
 _grid_checkpoint_contents() {
-  local marker="$1" stage="$2" label="$3"
-  shift
+  local stage="$1" label="$2"
   checkpoint_contents "$@"
   compile_checkpoint_fields "$stage"
   printf '%s\n' \
@@ -705,7 +689,7 @@ checkpoint_matches() {
   local marker="$1" label="$3"
   shift
   [ -f "$marker.done" ] || return 1
-  if _grid_checkpoint_contents "$marker" "$@" | cmp -s - "$marker.done" &&
+  if _grid_checkpoint_contents "$@" | cmp -s - "$marker.done" &&
       _grid_validate_preamble_sidecar "$marker" "$label"; then
     return 0
   fi
@@ -729,7 +713,7 @@ mark_checkpoint() {
   _grid_forget_temp "$sidecar_temporary"
   _grid_new_atomic_temp "$marker.done"
   temporary=$GRID_ATOMIC_TEMP
-  _grid_checkpoint_contents "$marker" "$@" > "$temporary"
+  _grid_checkpoint_contents "$@" > "$temporary"
   mv -- "$temporary" "$marker.done"
   _grid_forget_temp "$temporary"
 }
@@ -788,20 +772,6 @@ _grid_build_install() {
   (cd "$eval_dir" && ./rebuild-config.sh "$install" --label "$label" --prefix "$prefix")
 }
 
-_grid_run_compile_make() {
-  local phase="$1" target="$2" coqc_cmd="$3" output_log="$4" compile_log_dir="$5"
-  local status=0
-  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
-    COMPILE_SUPERVISOR="$compile_supervisor" \
-    COMPILE_TIMEOUT="$compile_timeout" \
-    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
-    COMPILE_PHASE="$phase" > "$output_log" 2>&1 || status=$?
-  if [ "$status" -ne 0 ]; then
-    report_compile_timeouts "$compile_log_dir"
-    return "$status"
-  fi
-}
-
 _grid_run_generation() {
   local label="$1" corpus="$2" prefix="$3"
   local outdir="$results_root/$label/$corpus"
@@ -828,12 +798,12 @@ _grid_run_generation() {
   mkdir -p atp/o out
 
   coqc_cmd="rocq c -coqlib $prefix/coq"
-  if ! _grid_run_compile_make init init "$coqc_cmd" "$outdir/init.log" logs/init; then
+  if ! run_compile_make init init "$coqc_cmd" "$outdir/init.log" logs/init; then
     echo "Init failed for $label/$corpus; see $outdir/init.log" >&2
     return 1
   fi
   echo check > coqhammer.opt
-  if ! _grid_run_compile_make check check "$coqc_cmd" \
+  if ! run_compile_make check check "$coqc_cmd" \
       "$outdir/check.full.log" logs/check; then
     echo "Check failed for $label/$corpus; see $outdir/check.full.log" >&2
     return 1
@@ -845,7 +815,7 @@ _grid_run_generation() {
   fi
 
   echo gen-atp > coqhammer.opt
-  if ! _grid_run_compile_make gen-atp atp "$coqc_cmd" \
+  if ! run_compile_make gen-atp atp "$coqc_cmd" \
       "$outdir/gen-atp.full.log" logs/atp; then
     cleanup_paired_output_temporaries atp/problems
     grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
@@ -1233,7 +1203,7 @@ grid_run() (
   for label in "${labels[@]}"; do
     _grid_capture_preamble "$label" || return 2
     label_preamble[$label]=$GRID_CAPTURED_PREAMBLE
-    label_preamble_digest[$label]=$(_grid_hash_text "${label_preamble[$label]}")
+    label_preamble_digest[$label]=$(hash_text "${label_preamble[$label]}")
   done
 
   if [ -n "$only_label" ] && ! array_contains "$only_label" "${labels[@]}"; then

@@ -309,10 +309,16 @@ command -v timeout >/dev/null 2>&1 || {
   echo "rocq-compile-supervisor: GNU timeout is required" >&2
   exit 125
 }
-timeout --version 2>/dev/null | head -n 1 | grep -Fq 'GNU coreutils' || {
-  echo "rocq-compile-supervisor: GNU timeout from coreutils is required" >&2
-  exit 125
-}
+# One fork rather than the three a `timeout --version | head | grep` pipeline
+# costs: the supervisor runs once per source file per phase, so a whole grid
+# pays this check tens of thousands of times.
+case "$(timeout --version 2>/dev/null)" in
+  *'GNU coreutils'*) ;;
+  *)
+    echo "rocq-compile-supervisor: GNU timeout from coreutils is required" >&2
+    exit 125
+    ;;
+esac
 
 # The status path is never exposed in a shared directory or unlinked while the
 # monitor is live. The private directory makes both the retained sentinel and
@@ -415,7 +421,10 @@ supervisor_status=$?
 trap - HUP INT TERM
 forget_supervised_identity
 
-status_record=$(cat -- "$status_file") || exit 125
+# Every writer terminates the record with a newline, so one `read` replaces a
+# `cat` fork; an unreadable or truncated file leaves it empty and falls through
+# to the invalid-record report below.
+IFS= read -r status_record < "$status_file" || status_record=
 case "$status_record" in
   done:*)
     command_status=${status_record#done:}

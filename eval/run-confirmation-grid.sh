@@ -220,7 +220,7 @@ compute_corpus_provenance() {
         fi
         digests+=$(hash_tree "$source_dir")
       done
-      corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
+      corpus_digest[$corpus]=$(hash_text "$digests")
       ;;
     stdpp|color-vector|external-equations)
       local lib subtree
@@ -237,7 +237,7 @@ compute_corpus_provenance() {
       fi
       corpus_source[$corpus]="installed-$lib$subtree"
       digests+=$(hash_tree "$source_dir")
-      corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
+      corpus_digest[$corpus]=$(hash_text "$digests")
       ;;
     equations-examples)
       # --external-source only overrides the external-equations corpus (see
@@ -254,7 +254,7 @@ compute_corpus_provenance() {
       source_dir=$(cd "$source_dir" && pwd -P)
       corpus_source[$corpus]="$source_dir"
       digests+=$(hash_tree "$source_dir")
-      corpus_digest[$corpus]=$(printf '%s' "$digests" | sha256sum | awk '{ print $1 }')
+      corpus_digest[$corpus]=$(hash_text "$digests")
       ;;
     *)
       source_dir="$eval_dir/corpora/$corpus"
@@ -293,17 +293,6 @@ require_prover() {
 
 base_path="$PATH"
 base_ocamlpath="${OCAMLPATH:-}"
-
-manifest_get() {
-  local file="$1" key="$2"
-  awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit } END { if (!found) exit 1 }' "$file"
-}
-
-expect_manifest_value() {
-  local manifest="$1" key="$2" expected="$3" actual
-  actual=$(manifest_get "$manifest" "$key") || return 1
-  [ "$actual" = "$expected" ]
-}
 
 manifest_matches_label() {
   local label="$1" prefix="$2" expected_commit
@@ -462,20 +451,6 @@ save_hook_logs() {
   if [ -d logs/atp ]; then
     mkdir -p "$outdir/hook-logs"
     cp -R logs/atp/. "$outdir/hook-logs/"
-  fi
-}
-
-run_compile_make() {
-  local phase="$1" target="$2" coqc_cmd="$3" output_log="$4" compile_log_dir="$5"
-  local status=0
-  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
-    COMPILE_SUPERVISOR="$compile_supervisor" \
-    COMPILE_TIMEOUT="$compile_timeout" \
-    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
-    COMPILE_PHASE="$phase" > "$output_log" 2>&1 || status=$?
-  if [ "$status" -ne 0 ]; then
-    report_compile_timeouts "$compile_log_dir"
-    return "$status"
   fi
 }
 
