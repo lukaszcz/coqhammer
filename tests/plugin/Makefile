@@ -9,14 +9,18 @@ PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo def_prem
 # consulted; erasure_blacklist.vo, arrow_transl.vo, type_sharing_transl.vo,
 # membership_transl.vo, link_erasure_transl.vo and defterm_transl.vo assert on
 # the axioms the translation emits and prove nothing -- arrow_transl.vo,
-# type_sharing_transl.vo, lambda_reuse_transl.vo and premise_isolation.vo also
-# dump problems for aborted goals, the rest only translate declarations.
+# type_sharing_transl.vo and lambda_reuse_transl.vo also dump problems for
+# aborted goals, the rest only translate declarations.
+# premise_isolation.vo dumps problems too and needs no prover either, but its
+# goal is an Equations-generated function, and coq-equations is not a test
+# dependency of coq-hammer; like extraction_deptypes.vo it is therefore reached
+# only through tests and tests-plugin.
 # Everything else either sets SAutoLimit to 0, which disables that phase and
 # hands the goal to the ATPs, or requires a file that does.  prover_selection.vo
 # also passes without an ATP, but only vacuously: it checks that `hammer` fails
 # when every prover is disabled, which is equally true when no prover exists, so
 # running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo premise_isolation.vo
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
