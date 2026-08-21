@@ -58,8 +58,10 @@ Proof.
   hammer.
 Qed.
 
-(* Restore the ordinary search configuration before exercising the option
-   interface, so these coverage checks do not depend on the controls above. *)
+(* Restore the ordinary predictor and prover configuration before exercising
+   the option interface, so these coverage checks do not depend on the narrow
+   budget of the controls above.  SAutoLimit stays 0: the checks are only
+   meaningful if they reach premise selection instead of the sauto phase. *)
 Set Hammer ATPLimit 20.
 Set Hammer GSMode 8.
 Set Hammer Predictions 1024.
@@ -97,5 +99,3 @@ Test Hammer DefinitionFeatures.
 
 Lemma unset_options : forall P : Prop, P -> P.
 Proof. hammer. Qed.
-
-Set Hammer SAutoLimit 1.
