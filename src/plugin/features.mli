@@ -80,5 +80,5 @@ val clean : string (* file name  *) -> unit
 val predict : selection_ctx -> hhdef list (* hyps *) -> hhdef (* goal *) ->
   hhdef list (* predictions *)
 
-(* `cleanup` resets the feature and dependency cache *)
+(* `cleanup` resets the feature, dependency and term-size caches *)
 val cleanup : unit -> unit

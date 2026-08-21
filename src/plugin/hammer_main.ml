@@ -1327,11 +1327,16 @@ let hammer_hook_tac prefix name =
                   Opt.predict_method := met;
                   let dir = "atp/problems/" ^ str in
                   ignore (Sys.command ("mkdir -p " ^ dir));
+                  (* Before the dump, not after: the metadata ranks the
+                     definitional candidates, and the dump releases the
+                     converted trees that ranking reads, so taking it second
+                     would convert every candidate whose size is not cached
+                     yet a second time. *)
+                  let metadata = Features.selection_metadata ctx n in
                   let defs1 =
                     Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal)
                   in
                   let problem_base = dir ^ "/" ^ name in
-                  let metadata = Features.selection_metadata ctx n in
                   (* Stable format for the premise-screening summarizer. Only
                      accessible, nontrivial seed constants are counted;
                      [none] denotes an empty seed, and an even seed uses its

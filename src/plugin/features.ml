@@ -146,37 +146,42 @@ let get_deps (def : hhdef) : string list =
 
 let features_cache = Hashtbl.create 1024
 let deps_cache = Hashtbl.create 1024
+let sizes_cache = Hashtbl.create 1024
 
 let cleanup () =
   Hashtbl.reset features_cache;
-  Hashtbl.reset deps_cache
+  Hashtbl.reset deps_cache;
+  Hashtbl.reset sizes_cache
 
 (* Variables must not be cached under their names: the same name may
    denote a different variable in another section or proof. *)
 
-let get_def_features_cached (def : hhdef) : string list =
+let cached table compute def =
   if hhdef_is_var def then
-    get_def_features def
+    compute def
   else
     let name = get_hhdef_name def in
-    try
-      Hashtbl.find features_cache name
-    with Not_found ->
-      let fea = get_def_features def in
-      Hashtbl.add features_cache name fea;
-      fea
+    match Hashtbl.find_opt table name with
+    | Some value -> value
+    | None ->
+       let value = compute def in
+       Hashtbl.add table name value;
+       value
+
+let get_def_features_cached (def : hhdef) : string list =
+  cached features_cache get_def_features def
 
 let get_deps_cached (def : hhdef) : string list =
-  if hhdef_is_var def then
-    get_deps def
-  else
-    let name = get_hhdef_name def in
-    try
-      Hashtbl.find deps_cache name
-    with Not_found ->
-      let deps = get_deps def in
-      Hashtbl.add deps_cache name deps;
-      deps
+  cached deps_cache get_deps def
+
+(* The size of a global's feature term is a property of its statement, like its
+   features and its dependencies, so it is cached the same way.  Without that,
+   the ranking below pays for it again on every goal: [extract] releases the
+   converted type and body trees as soon as it has written the features it
+   needed them for, and the ranking is their only later reader, so it would
+   re-convert the whole candidate set each time. *)
+let get_def_size_cached (def : hhdef) : int =
+  cached sizes_cache (fun def -> hhterm_size (get_def_fea_term def)) def
 
 (* A name is under one of [prefixes] if it begins with any of them.  Each
    filtered module is listed under both its legacy [Stdlib.*] name and its
@@ -288,7 +293,7 @@ let make_selection_ctx (hyps : hhdef list) (defs : hhdef list) (goal : hhdef) : 
            let name = get_hhdef_name def in
            if Hhlib.StringSet.mem name !candidate_names then
              Some (occurrence_count occ name,
-                   hhterm_size (get_def_fea_term def), name, def)
+                   get_def_size_cached def, name, def)
            else
              None)
         ndefs
