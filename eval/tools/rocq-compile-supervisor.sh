@@ -271,10 +271,16 @@ report_timeout() {
 # memory pressure, the OOM killer. Only elapsed time separates them. Tolerate a
 # whole second below the budget, since the clock is coarse and timeout rounds
 # its own sleep: a real timeout must never be demoted to a spurious kill report.
+# That tolerance must still leave a budget to undercut: a one-second limit would
+# otherwise put the floor at zero and report every immediate kill as a timeout,
+# so never tolerate more than half of the budget.
 report_kill() {
-  local status="$1" elapsed_cs
+  local status="$1" elapsed_cs timeout_cs floor_cs
   elapsed_cs=$(($(monotonic_centiseconds) - command_start_cs))
-  if [ "$elapsed_cs" -ge "$((timeout_seconds * 100 - 100))" ]; then
+  timeout_cs=$((timeout_seconds * 100))
+  floor_cs=$((timeout_cs - 100))
+  [ "$floor_cs" -ge "$((timeout_cs / 2))" ] || floor_cs=$((timeout_cs / 2))
+  if [ "$elapsed_cs" -ge "$floor_cs" ]; then
     report_timeout
     exit 124
   fi

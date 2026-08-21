@@ -26,7 +26,7 @@ deliberately not copied here, because a hand-maintained copy of a generated
 table is stale from the next run onwards.
 
 Regenerate with `./run-premise-screening-grid.sh --full-corpus` from `eval/`.
-On a fresh switch, run `eval/install-external-libs.sh` first to install the
+On a fresh switch, run `./install-external-libs.sh` there first to install the
 external libraries the full corpora need.
 
 ## What the grid measures

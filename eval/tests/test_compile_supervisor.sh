@@ -87,6 +87,18 @@ grep -Fq 'phase=check source=problems/oom-command.v' "$tmp/oom-command.err" ||
 grep -Fq 'TIMEOUT' "$tmp/oom-command.err" &&
   fail "a killed command also emitted a timeout diagnostic"
 
+# The smallest budget the supervisor accepts leaves no whole second to undercut,
+# so a command killed at once under --timeout 1 must still be a kill.
+run_status "$supervisor" --timeout 1 --grace 1 --phase check \
+  --source problems/oom-short.v -- bash -c 'kill -KILL $$' \
+  >"$tmp/oom-short.out" 2>"$tmp/oom-short.err"
+[ "$RUN_STATUS" -eq 137 ] ||
+  fail "an immediate kill under a one-second budget exited $RUN_STATUS"
+grep -Fq 'rocq-compile-supervisor: KILLED' "$tmp/oom-short.err" ||
+  fail "an immediate kill under a one-second budget lost its kill diagnostic"
+grep -Fq 'TIMEOUT' "$tmp/oom-short.err" &&
+  fail "an immediate kill under a one-second budget was counted as a timeout"
+
 # A command that dies of any other fatal signal crashed on its own; reporting
 # that as an external kill would send the grids hunting for memory pressure.
 run_status "$supervisor" --timeout 30 --grace 1 --phase check \
