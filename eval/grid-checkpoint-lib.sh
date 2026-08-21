@@ -203,6 +203,17 @@ print(digest.hexdigest())
 PY
 }
 
+# How a corpus that lives in the tree is named in checkpoints and provenance.
+# The absolute path is the checkout that happened to run the grid, so recording
+# it would name a corpus by a directory that exists on one machine; relative to
+# the checkout, the same corpus reads the same everywhere. A source outside the
+# checkout -- only --external-source can be one -- has no such spelling and
+# stays absolute.
+# shellcheck disable=SC2154
+corpus_source_path() {
+  printf %s "${1#"$repo"/}"
+}
+
 # The grid scripts define the arrays and scalar values referenced here.
 # shellcheck disable=SC2154
 write_grid_provenance() {

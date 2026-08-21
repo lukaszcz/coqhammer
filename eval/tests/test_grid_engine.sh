@@ -777,7 +777,31 @@ EOF
     "$first_prefix/coq/user-contrib/Stdlib/Arith/source.v"
   _grid_set_corpus_inputs stdlib-regression "$first_prefix"
   [ "${corpus_digest[stdlib-regression]}" = "$sample_digest" ]
+
+  # A corpus resolved from a directory in the tree is named relative to the
+  # checkout on every branch that resolves one, not by the absolute path of the
+  # worktree that happened to run the grid.
+  sample_corpora=false
+  examples="$fixture_eval/_external/Coq-Equations/_build/default/examples"
+  mkdir -p "$examples"
+  printf 'examples\n' > "$examples/source.v"
+  _grid_set_corpus_inputs equations-examples "$first_prefix"
+  [ "${corpus_source[equations-examples]}" = \
+    'provenance-eval/_external/Coq-Equations/_build/default/examples' ]
+  external_source="$fixture_eval/elsewhere/equations"
+  mkdir -p "$external_source"
+  printf 'external\n' > "$external_source/source.v"
+  _grid_set_corpus_inputs external-equations "$first_prefix"
+  [ "${corpus_source[external-equations]}" = 'provenance-eval/elsewhere/equations' ]
 ) || fail "installed/sample corpus provenance did not track actual sources"
+
+# Only a source inside the checkout has a spelling relative to it; one outside
+# -- which only --external-source can be -- has to stay absolute.
+(
+  repo=/opt/checkout
+  [ "$(corpus_source_path /opt/checkout/eval/corpora/tiny)" = eval/corpora/tiny ] &&
+    [ "$(corpus_source_path /elsewhere/equations)" = /elsewhere/equations ]
+) || fail "corpus source path did not relativize exactly inside the checkout"
 
 # Missing operands must be normal usage errors, not nounset diagnostics.
 for command in \

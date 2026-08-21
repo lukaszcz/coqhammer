@@ -483,11 +483,11 @@ _grid_set_corpus_inputs() {
   local corpus="$1" prefix="$2" source_dir module lib subtree modules
   local trees='' files='' source=''
   if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
-    source=$external_source
+    source=$(corpus_source_path "$external_source")
     trees=$external_source
   elif [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
     source_dir="$eval_dir/corpora/$corpus/sample"
-    source=${source_dir#"$repo"/}
+    source=$(corpus_source_path "$source_dir")
     trees=$source_dir
   else
     case "$corpus" in
@@ -533,7 +533,7 @@ _grid_set_corpus_inputs() {
           return 1
         }
         source_dir=$(realpath -e -- "$source_dir")
-        source=$source_dir
+        source=$(corpus_source_path "$source_dir")
         trees=$source_dir
         ;;
       *)

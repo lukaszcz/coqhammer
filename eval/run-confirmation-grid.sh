@@ -184,13 +184,13 @@ compute_corpus_provenance() {
   local corpus="$1" prefix="$2" source_dir module digests=
   if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
     source_dir=$(cd "$external_source" && pwd -P)
-    corpus_source[$corpus]="$source_dir"
+    corpus_source[$corpus]=$(corpus_source_path "$source_dir")
     corpus_digest[$corpus]=$(hash_tree "$source_dir")
     return 0
   fi
   if [ "$sample_corpora" = true ]; then
     source_dir="$eval_dir/corpora/$corpus/sample"
-    corpus_source[$corpus]="${source_dir#"$repo"/}"
+    corpus_source[$corpus]=$(corpus_source_path "$source_dir")
     corpus_digest[$corpus]=$(hash_tree "$source_dir")
     return 0
   fi
@@ -252,13 +252,13 @@ compute_corpus_provenance() {
         return 1
       fi
       source_dir=$(cd "$source_dir" && pwd -P)
-      corpus_source[$corpus]="$source_dir"
+      corpus_source[$corpus]=$(corpus_source_path "$source_dir")
       digests+=$(hash_tree "$source_dir")
       corpus_digest[$corpus]=$(hash_text "$digests")
       ;;
     *)
       source_dir="$eval_dir/corpora/$corpus"
-      corpus_source[$corpus]="${source_dir#"$repo"/}"
+      corpus_source[$corpus]=$(corpus_source_path "$source_dir")
       corpus_digest[$corpus]=$(hash_tree "$source_dir")
       ;;
   esac
