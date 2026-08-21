@@ -51,12 +51,20 @@ let rec can_aux n t =
    canonical names into the terms they are built from, so a context may already
    bind a variable literally called [v_CANONICAL_k]; renaming one entry at a
    time would make an earlier entry's new name collide with that variable and
-   the next step would then rename both together. *)
+   the next step would then rename both together.  Context types are terms too:
+   normalize their own binders above the context-variable range, or fresh Rocq
+   names for anonymous product binders prevent valid exact cache hits. *)
 let canonical ctx tm =
   let vars = List.rev ctx in
   let subst = List.mapi (fun n (x, _) -> (var n, x)) vars in
-  let cctx = List.rev (List.mapi (fun n (_, tp) -> (var n, subs subst tp)) vars) in
-  (cctx, can_aux (List.length vars) (subs subst tm), List.rev subst)
+  let first_inner = List.length vars in
+  let cctx =
+    List.rev
+      (List.mapi
+         (fun n (_, tp) -> (var n, can_aux first_inner (subs subst tp)))
+         vars)
+  in
+  (cctx, can_aux first_inner (subs subst tm), List.rev subst)
 
 (***************************************************************************************)
 (* Instance matching between canonical lifts *)
@@ -576,9 +584,17 @@ let reset_counters () =
 (***************************************************************************************)
 
 type 'a lift_fun = (coqterm -> coqterm) -> 'a -> 'a
-type 'a coqterms_hash = (string * coqcontext * coqterm, 'a) Hashtbl.t * 'a lift_fun
+type 'a coqterms_hash =
+  (string * coqcontext * coqterm, 'a) Hashtbl.t * ('a lift_fun * ('a -> 'a))
 
-let create lift = (Hashtbl.create 128, lift)
+type canonical_key = {
+  ck_ctx : coqcontext;
+  ck_tm : coqterm;
+  ck_revsigma : namesubst;
+}
+
+let create ?(compact = fun x -> x) lift =
+  (Hashtbl.create 128, (lift, compact))
 
 (* The lift registry mirrors the entries of the lift table, so it is emptied
    with the table: an entry surviving into the next translation would link a
@@ -590,14 +606,12 @@ let clear tbl =
   Hashtbl.clear (fst tbl);
   clear_lifts ()
 
-let find_or_insert_keyed key tbl ctx tm mk =
-  debug 4 (fun () -> print_header "find_or_insert" tm ctx);
-  let (tbl, lift) = tbl in
-  (* [get_fvars] silently keeps only the free variables the context binds, so a
-     term that escaped its binders would be canonicalized against a context too
-     short for it and the fresh canonical binders would capture the variables
-     left out.  The escape is the bug; report it here, where the term still
-     shows which variable got loose. *)
+(* Hash-table keys must only be made here.  [get_fvars] silently keeps only the
+   free variables the context binds, so canonicalizing an escaped variable
+   against a short context could capture it under a fresh canonical binder.
+   Keeping the checked result abstract prevents direct-hit paths from
+   duplicating, or accidentally omitting, this invariant. *)
+let check_key_scope ctx tm =
   let escaped =
     List.filter (fun name -> not (List.mem_assoc name ctx)) (get_free_varnames tm)
   in
@@ -605,20 +619,52 @@ let find_or_insert_keyed key tbl ctx tm mk =
     raise (Hammer_errors.HammerError
              ("internal translation error: free variables " ^
               String.concat ", " escaped ^ " escape the context of " ^
-              string_of_coqterm tm));
+              string_of_coqterm tm))
+
+let canonical_key ctx tm =
+  check_key_scope ctx tm;
   let ctx' = vars_to_ctx (get_fvars ctx tm) in
-  let (cctx,ctm,sigma) = canonical ctx' tm in
+  let (cctx, ctm, sigma) = canonical ctx' tm in
   debug 4 begin fun () ->
     print_header "canonical (result)" ctm cctx;
-    print_list (fun (x,y) -> print_string ("(" ^ x ^ "," ^ y ^ ")")) sigma
+    print_list (fun (x, y) -> print_string ("(" ^ x ^ "," ^ y ^ ")")) sigma
   end;
-  let revsigma = List.map (fun (x,y) -> (y,x)) sigma in
-  try
-    lift (subs revsigma) (Hashtbl.find tbl (key,cctx,ctm))
-  with _ ->
-    let x = mk cctx ctm in
-    Hashtbl.add tbl (key,cctx,ctm) x;
-    lift (subs revsigma) x
+  { ck_ctx = cctx; ck_tm = ctm;
+    ck_revsigma = List.map (fun (x, y) -> (y, x)) sigma }
+
+let canonical_pair_key cctx ctm =
+  check_key_scope cctx ctm;
+  { ck_ctx = cctx; ck_tm = ctm; ck_revsigma = [] }
+
+let key_context key = key.ck_ctx
+let key_term key = key.ck_tm
+
+let find_key name tbl key =
+  Hashtbl.find_opt (fst tbl) (name, key.ck_ctx, key.ck_tm)
+
+let lift_key tbl key value =
+  let (_, (lift, _)) = tbl in
+  lift (subs key.ck_revsigma) value
+
+let find_or_insert_key name tbl key mk =
+  let (table, (_, compact)) = tbl in
+  let value =
+    match Hashtbl.find_opt table (name, key.ck_ctx, key.ck_tm) with
+    | Some value -> value
+    | None ->
+       let value = compact (mk key.ck_ctx key.ck_tm) in
+       Hashtbl.add table (name, key.ck_ctx, key.ck_tm) value;
+       value
+  in
+  lift_key tbl key value
+
+let insert_key name tbl key value =
+  let (table, (_, compact)) = tbl in
+  Hashtbl.replace table (name, key.ck_ctx, key.ck_tm) (compact value)
+
+let find_or_insert_keyed name tbl ctx tm mk =
+  debug 4 (fun () -> print_header "find_or_insert" tm ctx);
+  find_or_insert_key name tbl (canonical_key ctx tm) mk
 
 let find_or_insert tbl ctx tm mk =
   find_or_insert_keyed "" tbl ctx tm mk

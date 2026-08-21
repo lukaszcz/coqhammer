@@ -212,8 +212,8 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
     | Names.GlobRef.VarRef v -> Id.to_string v
   in
   let term = match glob_ref with
-    | Names.GlobRef.ConstRef c -> lazy (hhproof_of env sigma c)
-    | _ -> lazy (mk_id "$Axiom")
+    | Names.GlobRef.ConstRef c -> Hh_term.delay_hhterm (fun () -> hhproof_of env sigma c)
+    | _ -> Hh_term.delay_hhterm (fun () -> mk_id "$Axiom")
   in
   let opaque = match glob_ref with
     | Names.GlobRef.ConstRef c -> Declareops.is_opaque (Global.lookup_constant c)
@@ -223,14 +223,16 @@ let hhdef_of_global env sigma glob_ref : (string * Hh_term.hhdef) =
      let l = Str.split (Str.regexp "\\.") filename_aux in
      Filename.dirname (String.concat "/" l)
   in
-  (filename, (const, opaque, hhterm_of kind, lazy (hhterm_of (without_projections env sigma ty)), term))
+  (filename,
+   (const, opaque, hhterm_of kind,
+    Hh_term.delay_hhterm (fun () -> hhterm_of (without_projections env sigma ty)), term))
 
 let hhdef_of_hyp env sigma (id, maybe_body, ty) =
   let kind = get_type_of env sigma ty in
   let body =
     match maybe_body with
-    | Some b -> lazy (hhterm_of (without_projections env sigma b))
-    | None -> lazy (mk_id "$Axiom")
+    | Some b -> Hh_term.delay_hhterm (fun () -> hhterm_of (without_projections env sigma b))
+    | None -> Hh_term.delay_hhterm (fun () -> mk_id "$Axiom")
   in
   let opaque =
     match maybe_body with
@@ -238,7 +240,7 @@ let hhdef_of_hyp env sigma (id, maybe_body, ty) =
     | None -> true
   in
   (mk_comb(mk_id "$Const", mk_id (Id.to_string id)), opaque, hhterm_of kind,
-   lazy (hhterm_of (without_projections env sigma ty)), body)
+   Hh_term.delay_hhterm (fun () -> hhterm_of (without_projections env sigma ty)), body)
 
 let get_hyps gl =
   let env = Proofview.Goal.env gl in
@@ -257,19 +259,10 @@ let get_goal gl =
   (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL"),
    true,
    mk_comb(mk_id "$Sort", mk_id "$Prop"),
-   lazy (hhterm_of (without_projections env sigma (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
-   lazy (mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
-
-let string_of t = Hh_term.string_of_hhterm (hhterm_of t)
-
-let string_of_hhdef_2 (filename, (const, hkind, hty, hterm)) =
-  (filename,
-   "tt(" ^ Hh_term.string_of_hhterm const ^ "," ^
-     Hh_term.string_of_hhterm hkind ^ "," ^ Hh_term.string_of_hhterm (Lazy.force hty) ^ "," ^
-     Hh_term.string_of_hhterm (Lazy.force hterm) ^ ").")
-
-let string_of_goal gl =
-  string_of (EConstr.to_constr (Proofview.Goal.sigma gl) (Proofview.Goal.concl gl))
+   Hh_term.delay_hhterm (fun () ->
+     hhterm_of (without_projections env sigma
+                  (EConstr.to_constr sigma (Proofview.Goal.concl gl)))),
+   Hh_term.delay_hhterm (fun () -> mk_comb(mk_id "$Const", mk_id "_HAMMER_GOAL")))
 
 let my_search env =
   let save_in_list refl glob_ref env sigma c = refl := glob_ref :: !refl in
@@ -320,6 +313,24 @@ let unique_hhdefs hhdefs =
 let get_defs env sigma : Hh_term.hhdef list =
   List.map snd (unique_hhdefs
                   (List.map (hhdef_of_global env sigma) (my_search env)))
+
+(* The three views of a goal every entry point below starts from.  Building the
+   selection context from them is left to the caller: it reads the filtering
+   options, so some entry points must set those first. *)
+let get_goal_context env sigma gl =
+  (get_goal gl, get_hyps gl, get_defs env sigma)
+
+(* The selection context for every path that goes on to extract features.
+   [Features.prepare_def_slots] must run before [Features.extract]: extraction
+   releases the converted trees that ranking the definitional candidates
+   reads, so preparing the slots afterwards would convert every candidate
+   whose size is not cached yet a second time.  Paths that never extract (such
+   as [hammer_features_tac]) build the context directly and leave the ranking
+   unforced. *)
+let make_extraction_ctx hyps defs goal =
+  let ctx = Features.make_selection_ctx hyps defs goal in
+  Features.prepare_def_slots ctx;
+  ctx
 
 let get_given_lemmas env sigma l : Hh_term.hhdef list =
   let get_lemma c =
@@ -924,33 +935,33 @@ let choice_prover_sequence () =
    ("Eprover", !Opt.eprover_enabled, Opt.eprover_enabled);
    ("Z3", !Opt.z3_enabled, Opt.z3_enabled)]
 
-let greedy_selected_deps hyps deps goal pred_method preds_num fname =
-  let predicted = Features.run_predict fname deps preds_num pred_method in
-  Features.add_direct_goal_dependencies hyps deps goal predicted
+let greedy_selected_deps ctx pred_method preds_num fname =
+  let predicted = Features.run_predict ctx fname preds_num pred_method in
+  Features.merge_def_slots ctx preds_num predicted
 
-let dump_deps hyps deps goal =
+let dump_deps ctx hyps goal =
   (* Dumping is parameterized by [Opt.predict_method] and
      [Opt.predictions_num] (not by the greedy ATP search schedule), so callers
      such as [hammer_hook] can generate distinct problem sets for each
      requested predictor/count even when GSMode is enabled. *)
-  Features.predict hyps deps goal
+  Features.predict ctx hyps goal
 
-let do_predict tried hyps deps goal =
+let do_predict ctx tried hyps deps goal =
   if !Opt.gs_mode > 0 then
-    let fname = Features.extract hyps deps goal in
+    let fname = Features.extract ctx hyps goal in
     let seq =
       List.mapi
         begin fun idx (pname, enabled, pref, pred_method, preds_num) ->
           (idx,
            (pname, enabled && not (List.mem idx tried), pref,
-            fun () -> greedy_selected_deps hyps deps goal pred_method preds_num fname))
+            fun () -> greedy_selected_deps ctx pred_method preds_num fname))
         end
         (greedy_predictor_sequence ())
     in
     let clean () = Features.clean fname in
     run_gs_provers hyps deps goal clean seq
   else (* Opts.gs_mode = 0 *)
-    let deps1 = Features.predict hyps deps goal in
+    let deps1 = Features.predict ctx hyps goal in
     let (pname, info) = Provers.predict deps1 hyps deps goal in
     ([], [], report_success pname info hyps deps goal)
 
@@ -996,9 +1007,18 @@ let try_sauto () =
 let provers_detected = ref false
 
 let hammer_main_tac env sigma gl mode =
-  let goal = get_goal gl in
-  let hyps = get_hyps gl in
-  let defs = get_defs env sigma in
+  let (goal, hyps, defs) = get_goal_context env sigma gl in
+  let run_provers =
+    match mode with
+    | Prediction ->
+       let ctx = make_extraction_ctx hyps defs goal in
+       fun tried -> do_predict ctx tried hyps defs goal
+    | Choice glems ->
+       fun tried ->
+         (* An empty lemma list is allowed: then the premises are the
+            definitions directly referenced by the goal or the hypotheses. *)
+         do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
+  in
   let reconstruction_failure_msg =
     "proof reconstruction failed.\nYou may try increasing the reconstruction time limit with 'Set Hammer ReconstrLimit N' (default: 5s).\nOther options are to disable the ATP which found this proof (Unset Hammer CVC4/Vampire/Eprover/Z3), or try to prove the goal manually using the displayed dependencies. Note that if the proof found by the ATP is inherently classical, it can never be reconstructed with CoqHammer's intuitionistic proof search procedure. As a last resort, you may also try enabling legacy reconstruction tactics with 'From Hammer Require Reconstr'."
   in
@@ -1024,16 +1044,7 @@ let hammer_main_tac env sigma gl mode =
      launched at most twice: once fresh and once more after preemption. *)
   let rec attempt round tried once =
     let (attempt_ids, preempted, info) =
-      Opt.with_temp_dir
-        begin fun () ->
-          match mode with
-          | Prediction -> do_predict tried hyps defs goal
-          | Choice glems ->
-             (* An empty lemma list is allowed: then the premises are the
-                definitions directly referenced by the goal or the
-                hypotheses. *)
-             do_choice tried hyps defs goal (get_given_lemmas env sigma glems)
-        end
+      Opt.with_temp_dir (fun () -> run_provers tried)
     in
     let promoted =
       List.filter (fun idx -> List.mem idx once) preempted
@@ -1120,9 +1131,7 @@ let predict_tac n pred_method =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
       if !Opt.debug_mode then
         Msg.info ("Found " ^ string_of_int (List.length defs) ^ " accessible Coq objects.");
       if pred_method <> "knn" && pred_method <> "nbayes" then
@@ -1140,7 +1149,8 @@ let predict_tac n pred_method =
             Opt.predictions_num := old_n
           in
           try
-            let defs1 = Opt.with_temp_dir (fun () -> Features.predict hyps defs goal) in
+            let ctx = make_extraction_ctx hyps defs goal in
+            let defs1 = Opt.with_temp_dir (fun () -> Features.predict ctx hyps goal) in
             restore ();
             Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
           with e ->
@@ -1152,7 +1162,11 @@ let predict_tac n pred_method =
 let hammer_features_tac () =
   try_goal_tactic
     begin fun gl ->
-      let features = Features.get_goal_features (get_hyps gl) (get_goal gl) in
+      let env = Proofview.Goal.env gl in
+      let sigma = Proofview.Goal.sigma gl in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
+      let ctx = Features.make_selection_ctx hyps defs goal in
+      let features = Features.get_query_features ctx hyps goal in
       Msg.notice (Hhlib.sfold (fun x -> x) ", " features);
       Tacticals.tclIDTAC
     end
@@ -1163,8 +1177,8 @@ let hammer_print name =
     let glob = Utils.get_global name in
     let (_, (const, opaque, kind, ty, trm)) = hhdef_of_global env sigma glob in
     Msg.notice (Hh_term.string_of_hhterm const ^ " = ");
-    Msg.notice (Hh_term.string_of_hhterm (Lazy.force trm));
-    Msg.notice (" : " ^ Hh_term.string_of_hhterm (Lazy.force ty));
+    Msg.notice (Hh_term.string_of_hhterm (Hh_term.force_hhterm trm));
+    Msg.notice (" : " ^ Hh_term.string_of_hhterm (Hh_term.force_hhterm ty));
     Msg.notice (" : " ^ Hh_term.string_of_hhterm kind);
     if opaque then Msg.notice ("(opaque)")
   with Not_found ->
@@ -1187,14 +1201,45 @@ let hammer_transl name0 =
   with Not_found ->
     Msg.error ("Not found: " ^ name0)
 
+(* Report how many speculative schema-application candidates were rejected
+   after having produced dependency or ownership effects, and how many such
+   effects were discarded with them. *)
+let hammer_speculation_stats () =
+  let rejected, effects = Coq_transl.speculation_stats () in
+  Msg.notice
+    (Printf.sprintf "rejected_schema_candidates_with_effects=%d discarded_effects=%d"
+       rejected effects)
+
+(* Dump the complete axiom closure of one declaration without resetting the
+   translation caches.  Unlike [hammer_dump], this diagnostic performs no
+   premise selection; it is useful for checking that metadata replayed from a
+   prior owner's structural cache hit is attached to the current owner alone. *)
+let hammer_dump_transl name0 fname =
+  let env, sigma = let e = Global.env () in e, Evd.from_env e in
+  try
+    let glob = Utils.get_global name0 in
+    let (_, def) = hhdef_of_global env sigma glob in
+    let name = Hh_term.get_hhdef_name def in
+    Coq_transl.reinit (get_defs env sigma);
+    Coq_transl.retranslate [name];
+    let oc = open_out (Opt.resolve_dump_path fname) in
+    Fun.protect ~finally:(fun () -> close_out_noerr oc)
+      begin fun () ->
+        Tptp_out.write_fol_problem (output_string oc)
+          (Coq_transl.get_axioms [name])
+          ("_HAMMER_DIAGNOSTIC",
+           Coqterms.Equal(Coqterms.Const "$True", Coqterms.Const "$True"));
+        flush oc
+      end
+  with Not_found ->
+    Msg.error ("Not found: " ^ name0)
+
 let hammer_transl_tac () =
   try_goal_tactic
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
       let name = Hh_term.get_hhdef_name goal in
       Coq_transl.remove_def name;
       List.iter (fun d -> Coq_transl.remove_def (Hh_term.get_hhdef_name d)) hyps;
@@ -1212,10 +1257,9 @@ let hammer_dump_tac fname =
     begin fun gl ->
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
-      let goal = get_goal gl in
-      let hyps = get_hyps gl in
-      let defs = get_defs env sigma in
-      let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
+      let (goal, hyps, defs) = get_goal_context env sigma gl in
+      let ctx = make_extraction_ctx hyps defs goal in
+      let defs1 = Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal) in
       Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
       Tacticals.tclIDTAC
     end
@@ -1247,6 +1291,17 @@ let hammer_objects () =
   let env, sigma = let e = Global.env () in e, Evd.from_env e in
   Msg.info ("Found " ^ string_of_int (List.length (get_defs env sigma)) ^ " accessible Coq objects.")
 
+let write_selection_metadata oc (metadata : Features.selection_metadata) =
+  let string_of_occurrence = function
+    | Some occurrence -> string_of_int occurrence
+    | None -> "none"
+  in
+  Printf.fprintf oc "d_size=%d min_occ=%s median_occ=%s k=%d\n"
+    metadata.def_candidates
+    (string_of_occurrence metadata.seed_min_occ)
+    (string_of_occurrence metadata.seed_median_occ)
+    metadata.forced_slots
+
 let hammer_hook_tac prefix name =
   let premises = [("knn", 32); ("knn", 64); ("knn", 128); ("knn", 256); ("knn", 1024);
                   ("nbayes", 32); ("nbayes", 64); ("nbayes", 128); ("nbayes", 256); ("nbayes", 1024)]
@@ -1269,23 +1324,44 @@ let hammer_hook_tac prefix name =
             begin
               let env = Proofview.Goal.env gl in
               let sigma = Proofview.Goal.sigma gl in
+              Opt.search_blacklist := false;
+              Opt.filter_program := true;
+              Opt.filter_classes := true;
+              Opt.filter_hurkens := true;
+              let (goal, hyps, defs) = get_goal_context env sigma gl in
+              let ctx = make_extraction_ctx hyps defs goal in
               List.iter
                 begin fun (met, n) ->
                   let str = met ^ "-" ^ string_of_int n in
                   Msg.info ("Parameters: " ^ str);
                   Opt.predictions_num := n;
                   Opt.predict_method := met;
-                  Opt.search_blacklist := false;
-                  Opt.filter_program := true;
-                  Opt.filter_classes := true;
-                  Opt.filter_hurkens := true;
                   let dir = "atp/problems/" ^ str in
                   ignore (Sys.command ("mkdir -p " ^ dir));
-                  let goal = get_goal gl in
-                  let hyps = get_hyps gl in
-                  let defs = get_defs env sigma in
-                  let defs1 = Opt.with_temp_dir (fun () -> dump_deps hyps defs goal) in
-                  Provers.write_atp_file (dir ^ "/" ^ name ^ ".p") defs1 hyps defs goal
+                  (* Before the dump, not after: the metadata ranks the
+                     definitional candidates, and the dump releases the
+                     converted trees that ranking reads, so taking it second
+                     would convert every candidate whose size is not cached
+                     yet a second time. *)
+                  let metadata = Features.selection_metadata ctx n in
+                  let defs1 =
+                    Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal)
+                  in
+                  let problem_base = dir ^ "/" ^ name in
+                  (* Stable format for the premise-screening summarizer. Only
+                     accessible, nontrivial seed constants are counted;
+                     [none] denotes an empty seed, and an even seed uses its
+                     lower middle occurrence count as the median. Per-goal
+                     paired publication avoids append races under [make -j]
+                     and makes [.p] the marker for a complete [.meta]/[.p]
+                     pair. *)
+                  Paired_output.write
+                    ~commit_path:(problem_base ^ ".p")
+                    ~write_commit:(fun oc ->
+                      Provers.write_atp oc defs1 hyps defs goal)
+                    ~companion_path:(problem_base ^ ".meta")
+                    ~write_companion:(fun oc ->
+                      write_selection_metadata oc metadata)
                 end
                 premises;
               Msg.info ("Done processing " ^ name ^ ".\n");

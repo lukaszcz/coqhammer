@@ -9,5 +9,8 @@ val retranslate : string list (* names *) -> unit
 val get_axioms : string list (* definition names *) -> fol_axioms
 val remove_def : string (* name *) -> unit
 val cleanup : unit -> unit
+val speculation_stats : unit -> int * int
+val output_problem : out_channel -> string (* conjecture name *) ->
+  string list (* dependency names *) -> unit
 val write_problem : string (* file name *) -> string (* conjecture name *) ->
   string list (* dependency names *) -> unit

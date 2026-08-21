@@ -31,6 +31,8 @@ src/plugin/features.mli
 src/plugin/features.ml
 src/plugin/atp_names.mli
 src/plugin/atp_names.ml
+src/plugin/paired_output.mli
+src/plugin/paired_output.ml
 src/plugin/provers.mli
 src/plugin/provers.ml
 src/plugin/hammer_main.ml

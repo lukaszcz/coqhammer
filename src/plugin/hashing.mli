@@ -73,9 +73,24 @@ type 'a lift_fun = (coqterm -> coqterm) -> ('a -> 'a)
 (* a hash table for coqterms which hashes up to alpha-equivalence; 'a
    = f coqterm for some functor f; the second element of the pair is
    the functor lifting function (fmap) *)
-type 'a coqterms_hash = (string * coqcontext * coqterm, 'a) Hashtbl.t * ('a lift_fun)
+type 'a coqterms_hash
 
-val create : 'a lift_fun -> 'a coqterms_hash
+(* A checked, alpha-canonical hash key.  [canonical_key ctx tm] rejects every
+   free variable of [tm] which is not bound by [ctx] before canonicalization;
+   all direct cache lookup goes through this abstract type. *)
+type canonical_key
+val canonical_key : coqcontext -> coqterm -> canonical_key
+(* Wraps a pair already produced by [canonical_key]/[canonical] without
+   canonicalizing it a second time, but still enforces the escaped-variable
+   invariant before it can be used for a direct hit. *)
+val canonical_pair_key : coqcontext -> coqterm -> canonical_key
+val key_context : canonical_key -> coqcontext
+val key_term : canonical_key -> coqterm
+
+(* [compact] is applied once before a newly created value enters the table.
+   It may replace an extensionally equal but expensive representation (such as
+   a composed difference list) by a bounded reusable one. *)
+val create : ?compact:('a -> 'a) -> 'a lift_fun -> 'a coqterms_hash
 (* clears the table and, with it, the lift registry *)
 val clear : 'a coqterms_hash -> unit
 (* find_or_insert h ctx tm mk *)
@@ -87,3 +102,20 @@ val find_or_insert : 'a coqterms_hash -> coqcontext -> coqterm ->
 val find_or_insert_keyed : string -> 'a coqterms_hash -> coqcontext -> coqterm ->
   (coqcontext -> coqterm -> 'a) ->
   'a
+
+(* Operations for callers which need to inspect a key before deciding whether
+   to insert.  [find_key] returns the canonical cached value; [lift_key] renames
+   such a value back to the key's original context; and [find_or_insert_key]
+   avoids canonicalizing the same checked key again on fallback. *)
+val find_key : string -> 'a coqterms_hash -> canonical_key -> 'a option
+val lift_key : 'a coqterms_hash -> canonical_key -> 'a -> 'a
+val find_or_insert_key : string -> 'a coqterms_hash -> canonical_key ->
+  (coqcontext -> coqterm -> 'a) -> 'a
+(* [insert_key name tbl key value] stores [value] under [key]'s canonical
+   triple, applying the table's [compact] exactly as [find_or_insert_key]
+   does.  For callers which obtained a value outside the table (by replaying
+   and extending another entry) and want later occurrences of the same term to
+   be exact hits.  [value] must already be expressed in the key's canonical
+   frame -- that is, built over [key_context key] -- and must NOT have been
+   [lift_key]-renamed back to any occurrence's context. *)
+val insert_key : string -> 'a coqterms_hash -> canonical_key -> 'a -> unit

@@ -47,6 +47,34 @@ type coqcontext = (string * coqterm) list
 type fol = coqterm
 type fol_axioms = (string * fol) list
 
+(* Axiom names identify formulas throughout a translated problem.  Merge all
+   bundles through this function so duplicate replay is harmless only when the
+   formulas agree; silently retaining either side of a conflicting collision
+   would make the result depend on traversal order. *)
+let compose_axioms bundles =
+  let sorted =
+    List.sort (fun x y -> String.compare (fst x) (fst y))
+      (List.concat bundles)
+  in
+  let rec deduplicate acc = function
+    | [] -> List.rev acc
+    | ((name, formula) as axiom) :: rest ->
+       let rec consume = function
+         | (name2, formula2) :: tail when name2 = name ->
+            (* Replaying a cached bundle shares its formulas physically, so the
+               duplicates this is here to tolerate are almost always the same
+               object; the structural comparison then never has to walk them. *)
+            if formula2 != formula && formula2 <> formula then
+              raise (Hammer_errors.HammerError
+                       ("internal translation error: axiom name collision for " ^
+                        name));
+            consume tail
+         | tail -> tail
+       in
+       deduplicate (axiom :: acc) (consume rest)
+  in
+  deduplicate [] sorted
+
 let is_fol tm =
   match tm with
   | Fix(_) | Case(_) | Lam(_) | Cast(_) | Prod(_) | IndType(_) | Let(_) |
@@ -86,16 +114,15 @@ let coqdef_sort (_, _, _, srt) = srt
 
 let coqdef_map f (name, value, ty, srt) = (name, f value, f ty, srt)
 
-let unique_id =
-  let id = ref 0
-  in
-  fun () ->
-    begin
-      incr id;
-      if !id = 0 then
-        failwith "unique_id";
-      string_of_int !id
-    end
+let unique_id_counter = ref 0
+
+let unique_id () =
+  incr unique_id_counter;
+  if !unique_id_counter = 0 then
+    failwith "unique_id";
+  string_of_int !unique_id_counter
+
+let reset_unique_id () = unique_id_counter := 0
 
 let refresh_varname name = "var_" ^ name ^ "_" ^ unique_id ()
 

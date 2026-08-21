@@ -20,6 +20,13 @@ validate_positive_int() {
 # concurrent ATP processes fit in available memory, since a prover on a large
 # problem is far more likely to exhaust RAM than CPU.  EVAL_JOBS pins the value
 # outright; EVAL_MEMORY_PER_JOB_MB and EVAL_RESERVE_MB tune the memory model.
+#
+# The per-job figure is an estimate of a job's peak resident size and nothing
+# enforces it: it only divides available memory, so raising it does not bound
+# any process, it just shrinks the pool and leaves cores idle.  2048 is the
+# figure this harness was sized with and stays there.  It was raised to 4096
+# in 435c2fd as an unrelated aside to a plugin change and reverted; do not
+# change it again without a measurement of what evaluation jobs actually use.
 detect_jobs() {
   local cores available_kb reserve_kb per_job_kb memory_jobs
   local per_job_mb=${EVAL_MEMORY_PER_JOB_MB:-2048}
@@ -89,6 +96,90 @@ hash_file() {
   sha256sum "$1" | awk '{ print $1 }'
 }
 
+# Hash a sequence of NAME FILE pairs with boundaries, so callers can record a
+# composite runtime harness without depending on path spelling or concatenation.
+hash_harness_sources() {
+  python3 - "$@" <<'PY'
+import hashlib
+import pathlib
+import sys
+
+arguments = sys.argv[1:]
+if len(arguments) % 2:
+    raise SystemExit("internal error: unpaired harness provenance argument")
+digest = hashlib.sha256()
+for name, filename in zip(arguments[::2], arguments[1::2]):
+    data = pathlib.Path(filename).read_bytes()
+    encoded_name = name.encode()
+    digest.update(len(encoded_name).to_bytes(8, "big"))
+    digest.update(encoded_name)
+    digest.update(len(data).to_bytes(8, "big"))
+    digest.update(data)
+print(digest.hexdigest())
+PY
+}
+
+compile_checkpoint_fields() {
+  local stage="$1"
+  case "$stage" in
+    generation|reconstruction)
+      # Globals are initialized by each grid before checkpoints are inspected.
+      # shellcheck disable=SC2154
+      printf '%s\n' \
+        "compile_supervisor_sha256=$compile_supervisor_digest" \
+        "compile_timeout=$compile_timeout" \
+        "compile_timeout_grace=$compile_timeout_grace"
+      ;;
+  esac
+}
+
+# A compile that was killed before its budget expired (usually by the OOM
+# killer) is reported on its own line and must surface next to the timeouts.
+report_compile_timeouts() {
+  local source="$1"
+  [ -e "$source" ] || return 0
+  grep -rhE 'rocq-compile-supervisor: (TIMEOUT|KILLED) ' -- "$source" >&2 || true
+}
+
+# The supervised make invocation itself; run_compile_make below decides where
+# its output goes.  The supervisor variables are globals the sourcing script
+# sets, as for checkpoint_contents.
+_supervised_make() {
+  local phase="$1" target="$2" coqc_cmd="$3"
+  # shellcheck disable=SC2154
+  make -k -j "$jobs" "$target" COQC="$coqc_cmd" \
+    COMPILE_SUPERVISOR="$compile_supervisor" \
+    COMPILE_TIMEOUT="$compile_timeout" \
+    COMPILE_TIMEOUT_GRACE="$compile_timeout_grace" \
+    COMPILE_PHASE="$phase"
+}
+
+# Run one supervised Rocq compilation phase of a grid, reporting the supervisor
+# diagnostics of a failed phase.  An empty OUTPUT_LOG leaves make's output on
+# stdout for the caller to tee rather than redirecting it to a log.
+run_compile_make() {
+  local phase="$1" target="$2" coqc_cmd="$3" output_log="$4" compile_log_dir="$5"
+  local status=0
+  if [ -n "$output_log" ]; then
+    _supervised_make "$phase" "$target" "$coqc_cmd" > "$output_log" 2>&1 || status=$?
+  else
+    _supervised_make "$phase" "$target" "$coqc_cmd" || status=$?
+  fi
+  if [ "$status" -ne 0 ]; then
+    report_compile_timeouts "$compile_log_dir"
+    return "$status"
+  fi
+}
+
+# SIGKILL can interrupt paired_output.ml between creating its same-directory
+# temporaries and its cleanup handler. Delete regular temporary files only;
+# never follow or remove a symlink with a matching hostile name.
+cleanup_paired_output_temporaries() {
+  local root="$1"
+  [ -d "$root" ] || return 0
+  find "$root" -type f -name '.coqhammer-pair-*.tmp' -delete
+}
+
 hash_checkpoint_markers() {
   local root="$1"
   python3 - "$root" <<'PY'
@@ -112,10 +203,29 @@ print(digest.hexdigest())
 PY
 }
 
+# How a corpus that lives in the tree is named in checkpoints and provenance.
+# The absolute path is the checkout that happened to run the grid, so recording
+# it would name a corpus by a directory that exists on one machine; relative to
+# the checkout, the same corpus reads the same everywhere, and the checkout root
+# itself -- which --external-source can resolve to -- reads as a bare dot. A
+# source outside the checkout -- only --external-source can be one -- has no
+# such spelling and stays absolute.
+# shellcheck disable=SC2154
+corpus_source_path() {
+  if [ "$1" = "$repo" ]; then
+    printf %s .
+  else
+    printf %s "${1#"$repo"/}"
+  fi
+}
+
 # The grid scripts define the arrays and scalar values referenced here.
 # shellcheck disable=SC2154
 write_grid_provenance() {
   local output="$1" grid_name="$2" summarizer="$3" summary="$4" analysis="$5"
+  # Callers that pass a temporary as $output clean this intermediate up by
+  # spelling it out themselves (see confirmation_publish_final_provenance), so
+  # renaming it here means updating them too.
   local temporary="$output.tmp.$$" label corpus
   {
     printf '%s\n' \
@@ -125,6 +235,9 @@ write_grid_provenance() {
       "grid_script_sha256=$grid_script_digest" \
       "checkpoint_helper_sha256=$grid_helper_digest" \
       "summarizer_sha256=$(hash_file "$summarizer")" \
+      "compile_supervisor_sha256=$compile_supervisor_digest" \
+      "compile_timeout=$compile_timeout" \
+      "compile_timeout_grace=$compile_timeout_grace" \
       "prover_timeout=$tim" \
       "consistency_timeout=$consistency_tim" \
       "checkpoint_markers_sha256=$(hash_checkpoint_markers "$results_root")" \
@@ -150,6 +263,25 @@ write_grid_provenance() {
 manifest_value() {
   local manifest="$1" key="$2"
   awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); exit }' "$manifest"
+}
+
+# Like manifest_value, but fails when the key is absent, so a truncated or
+# foreign manifest is rejected instead of comparing equal to an empty value.
+manifest_require() {
+  local manifest="$1" key="$2"
+  awk -F= -v key="$key" \
+    '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit }
+     END { if (!found) exit 1 }' "$manifest"
+}
+
+expect_manifest_value() {
+  local manifest="$1" key="$2" expected="$3" actual
+  actual=$(manifest_require "$manifest" "$key") || return 1
+  [ "$actual" = "$expected" ]
+}
+
+hash_text() {
+  printf %s "$1" | sha256sum | awk '{ print $1 }'
 }
 
 checkpoint_contents() {
@@ -211,17 +343,6 @@ invalidate_checkpoint() {
   local marker="$1" reason="$2"
   echo "[checkpoint] $reason; rerunning $marker" >&2
   rm -f "$marker.done"
-}
-
-clear_downstream_results() {
-  local outdir="$1"
-  rm -rf "$outdir/prover-outputs" "$outdir/consistency" "$outdir/reconstr-outputs"
-  find "$outdir" -maxdepth 1 -type f \
-    \( -name 'prover-*.done' -o -name 'prover-*.status' \
-       -o -name 'prover-outputs-*.lst' -o -name 'consistency-*.done' \
-       -o -name 'consistency-*.status' -o -name 'consistency-outputs-*.lst' \
-       -o -name 'reconstruction.done' -o -name 'reconstruction.status' \
-       -o -name 'reconstr-outputs.lst' \) -delete
 }
 
 array_contains() {
@@ -372,7 +493,10 @@ log_has_crash_or_error_ignoring_backstop_kills() {
 log_has_crash_or_error() {
   local log="$1"
   log_has_crash_or_infrastructure_error "$log" && return 0
-  grep -Eiv '^(make(\[[0-9]+\])?: (\*\*\* .* Error [0-9]+|Target .* not remade because of errors\.|Entering directory|Leaving directory))$' "$log" |
+  # "make -C" implies "-w", so the directory notices always carry the quoted
+  # path: "make: Entering directory '/.../eval/atp'". Anchoring right after the
+  # phrase would never match one.
+  grep -Eiv '^(make(\[[0-9]+\])?: (\*\*\* .* Error [0-9]+|Target .* not remade because of errors\.|(Entering|Leaving) directory .*))$' "$log" |
     grep -Eiq '((^|[^[:alpha:]])(parse|input)?[[:space:]_-]*error([:[:space:]]|$))'
 }
 

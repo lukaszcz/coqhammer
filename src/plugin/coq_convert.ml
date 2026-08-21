@@ -241,10 +241,10 @@ let to_coqdef (def : hhdef) (lst : hhdef list) =
       in
       log 2 ("to_coqdef: " ^ indname);
       (indname, IndType(indname, constrs, int_of_string params_num),
-       to_coqterm (Lazy.force ty), to_coqsort kind)
+       to_coqterm (force_hhterm ty), to_coqsort kind)
   | (Comb(Id "$Const", Id name), _, Comb(Id "$Sort", Id "$Prop"), ty, _) ->
       log 2 ("to_coqdef (omit proof): " ^ name);
-      (name, Const(name), to_coqterm (Lazy.force ty), SortProp)
+      (name, Const(name), to_coqterm (force_hhterm ty), SortProp)
   | (Comb(Id "$Const", Id name), opaque, kind, ty, prf) ->
     begin
       log 2 ("to_coqdef: " ^ name);
@@ -252,17 +252,17 @@ let to_coqdef (def : hhdef) (lst : hhdef list) =
         if opaque then
           Const(name)
         else
-          let vp = Lazy.force prf in
+          let vp = force_hhterm prf in
           match vp with
           | Id "$Axiom" ->
              Const(name)
           | _ ->
              to_coqterm vp
       in
-      (name, prf, to_coqterm (Lazy.force ty), to_coqsort kind)
+      (name, prf, to_coqterm (force_hhterm ty), to_coqsort kind)
     end
   | (Comb(Comb(Id "$Construct", _), Id constrname), _, kind, ty, _) ->
       log 2 ("to_coqdef: " ^ constrname);
-      (constrname, Const(constrname), to_coqterm (Lazy.force ty), to_coqsort kind)
+      (constrname, Const(constrname), to_coqterm (force_hhterm ty), to_coqsort kind)
   | _ ->
       failwith ("to_coqdef: " ^ get_hhdef_name def)

@@ -5,7 +5,7 @@
 #
 
 # input files
-FFILES=$(shell find i/f/ -type f | sort -R)
+FFILES=$(shell find i/f/ -type f -name "*.p" | sort -R)
 
 # timeout (in seconds)
 TIM=30

@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# The GRID_* spec is consumed indirectly by the sourced engine.
+# shellcheck disable=SC2034
 set -euo pipefail
 
 usage() {
@@ -19,11 +21,15 @@ Results are checkpointed under eval/results/screening/ and summarized under
 Options:
   -j, --jobs N          parallel jobs for Rocq/prover make invocations
                         (default: sized from cores and available memory)
-  --tim SEC            ATP timeout per problem for screening prover runs (default: 5)
+  --tim SEC             ATP timeout per problem for screening prover runs (default: 5)
   --consistency-tim S  ATP timeout per false-conjecture consistency run (default: 2)
+  --compile-timeout S  per-file Rocq compile timeout (default: 600)
+  --compile-timeout-grace S
+                       TERM grace before process-group KILL (default: 10)
   --skip-builds        require install prefixes to already exist; do not build them
   --only-label LABEL   run only one install label (debug/resume convenience)
   --only-corpus CORPUS run only one corpus (debug/resume convenience)
+  --sample-corpus      use the small committed smoke corpora (default)
   --full-corpus        use full committed corpora instead of sample subdirectories
                         (dependent-slice has no full-corpus fixture and
                         always stays on its sample subdirectory)
@@ -38,68 +44,30 @@ finishes successfully.
 USAGE
 }
 
-jobs=
-tim=5
-consistency_tim=2
-skip_builds=false
-only_label=
-only_corpus=
-sample_corpora=true
-external_source=
-force=false
+grid_usage() {
+  usage
+}
 
-while [ "$#" -gt 0 ]; do
-  case "$1" in
-    -j|--jobs) jobs="$2"; shift 2 ;;
-    --tim) tim="$2"; shift 2 ;;
-    --consistency-tim) consistency_tim="$2"; shift 2 ;;
-    --skip-builds) skip_builds=true; shift ;;
-    --only-label) only_label="$2"; shift 2 ;;
-    --only-corpus) only_corpus="$2"; shift 2 ;;
-    --full-corpus) sample_corpora=false; shift ;;
-    --external-source) external_source="$2"; shift 2 ;;
-    --force) force=true; shift ;;
-    -h|--help) usage; exit 0 ;;
-    *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
-  esac
-done
+eval_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 
-for value in "$tim" "$consistency_tim"; do
-  if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
-    echo "Timeouts must be positive integers: $value" >&2
-    exit 2
-  fi
-done
+GRID_NAME=screening
+GRID_TIM=5
+GRID_CONSISTENCY_TIM=2
+GRID_RESULTS_ROOT="$eval_dir/results/screening"
+GRID_ARTIFACTS_DIR="$eval_dir/artifacts/extraction-screening"
+GRID_SUMMARIZER="$eval_dir/tools/summarize-screening.py"
+GRID_COMPLETION_MESSAGE="Extraction screening checkpoints complete."
+GRID_CONSISTENCY_PREMISE=knn-64
+# Checkpoints produced by the extraction screening script before it moved onto
+# grid-engine.sh carry this script digest and no hook-preamble fields. Keep
+# accepted migrations explicit and narrowly scoped; do not add generic hashes.
+GRID_LEGACY_SCRIPT_SHA256=(
+  0a4af3b6fb21c4b53f0d6193714981b2c7d9e42c6ed39bf7325fa028e93ab563
+)
+GRID_PREMISES=(knn-64 knn-256 knn-1024)
+GRID_PROVERS=(eprover vampire)
+GRID_CORPORA=(stdlib-regression dependent-slice external-equations)
 
-repo=$(git rev-parse --show-toplevel)
-if ! git -C "$repo" diff --quiet HEAD --; then
-  echo "Evaluation grids require a clean tracked worktree so build and checkpoint provenance is exact." >&2
-  exit 1
-fi
-eval_dir="$repo/eval"
-# shellcheck source=eval/grid-checkpoint-lib.sh
-source "$eval_dir/grid-checkpoint-lib.sh"
-
-# An unset -j means "use the machine": one job by default wasted almost all of
-# it, which is the difference between a smoke test and an evaluation.
-if [ -z "$jobs" ]; then
-  jobs=$(detect_jobs) || exit 2
-  echo "[jobs] using $jobs parallel jobs"
-fi
-if [[ ! "$jobs" =~ ^[1-9][0-9]*$ ]]; then
-  echo "Jobs must be a positive integer: $jobs" >&2
-  exit 2
-fi
-repo_commit=$(git rev-parse HEAD)
-grid_script_digest=$(hash_file "${BASH_SOURCE[0]}")
-grid_helper_digest=$(hash_file "$eval_dir/grid-checkpoint-lib.sh")
-results_root="$eval_dir/results/screening"
-artifacts_dir="$eval_dir/artifacts/extraction-screening"
-mkdir -p "$results_root" "$artifacts_dir"
-
-premises=(knn-64 knn-256 knn-1024)
-provers=(eprover vampire)
-corpora=(stdlib-regression dependent-slice external-equations)
 configs=(
   all-off
   all-on
@@ -108,455 +76,29 @@ configs=(
   loo-refinement-types
 )
 
-labels=(current)
-declare -A label_config
-label_config[current]=current
+GRID_LABELS=(current)
+declare -A screening_label_install
+screening_label_install[current]=current
 for cfg in "${configs[@]}"; do
   label="screening-$cfg"
-  labels+=("$label")
-  label_config[$label]="$cfg"
-  label_ds="screening-$cfg-decl-skips"
-  labels+=("$label_ds")
-  label_config[$label_ds]="$cfg-decl-skips"
+  GRID_LABELS+=("$label")
+  screening_label_install[$label]="$cfg"
+  label="screening-$cfg-decl-skips"
+  GRID_LABELS+=("$label")
+  screening_label_install[$label]="$cfg-decl-skips"
 done
 
-if [ -n "$only_label" ] && ! array_contains "$only_label" "${labels[@]}"; then
-  echo "Unknown screening label: $only_label" >&2
-  exit 2
-fi
-if [ -n "$only_corpus" ] && ! array_contains "$only_corpus" "${corpora[@]}"; then
-  echo "Unknown corpus: $only_corpus" >&2
-  exit 2
-fi
-
-if [ "$sample_corpora" = true ]; then
-  corpus_mode=sample
-else
-  corpus_mode=full
-fi
-declare -A corpus_source corpus_digest
-for corpus in "${corpora[@]}"; do
-  if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
-    if [ ! -d "$external_source" ]; then
-      echo "External source directory not found: $external_source" >&2
-      exit 1
-    fi
-    source_dir=$(cd "$external_source" && pwd -P)
-    corpus_source[$corpus]="$source_dir"
-  else
-    source_dir="$eval_dir/corpora/$corpus"
-    # dependent-slice has no full-corpus source tree committed, only the
-    # sample fixture (eval/corpora/dependent-slice/sample); --full-corpus
-    # must not silently point it at the parent directory, which has no .v
-    # files of its own and would just bury the same fixture one level deeper.
-    if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
-      source_dir="$source_dir/sample"
-    fi
-    corpus_source[$corpus]="${source_dir#"$repo"/}"
-  fi
-  corpus_digest[$corpus]=$(hash_tree "$source_dir")
-done
-
-prepare_prefix_env() {
-  local prefix="$1"
-  export PATH="$prefix/bin:$base_path"
-  if [ -n "$base_ocamlpath" ]; then
-    export OCAMLPATH="$prefix:$base_ocamlpath"
-  else
-    export OCAMLPATH="$prefix"
-  fi
+# Declarative label callbacks consumed by grid-engine.sh.
+grid_label_install() {
+  printf %s "${screening_label_install[$1]}"
 }
 
-require_cmd() {
-  if ! command -v "$1" >/dev/null 2>&1; then
-    echo "Required command not found: $1" >&2
-    exit 1
-  fi
+grid_label_preamble() {
+  # Extraction screening has no runtime-option axis.
+  printf ''
 }
 
-require_prover() {
-  case "$1" in
-    eprover) require_cmd eprover ;;
-    vampire) require_cmd htimeout; require_cmd vampire ;;
-    *) echo "Unknown prover: $1" >&2; exit 1 ;;
-  esac
-}
-
-base_path="$PATH"
-base_ocamlpath="${OCAMLPATH:-}"
-
-manifest_get() {
-  local file="$1" key="$2"
-  awk -F= -v key="$key" '$1 == key { print substr($0, index($0, "=") + 1); found=1; exit } END { if (!found) exit 1 }' "$file"
-}
-
-expect_manifest_value() {
-  local manifest="$1" key="$2" expected="$3" actual
-  actual=$(manifest_get "$manifest" "$key") || return 1
-  [ "$actual" = "$expected" ]
-}
-
-validate_config_options() {
-  local manifest="$1" config="$2" core decl_skips prop erasure refinement
-  core="$config"
-  decl_skips=false
-  case "$core" in
-    *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
-  esac
-  prop=true; erasure=true; refinement=true
-  case "$core" in
-    all-off) prop=false; erasure=false; refinement=false ;;
-    all-on) ;;
-    loo-prop-case-erasure) prop=false ;;
-    loo-erasure-guards) erasure=false ;;
-    loo-refinement-types) refinement=false ;;
-    *) return 1 ;;
-  esac
-  expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
-    expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
-    expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
-    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips"
-}
-
-manifest_matches_label() {
-  local label="$1" prefix="$2" expected_commit expected_config
-  local manifest="$prefix/manifest.env"
-  [ -f "$manifest" ] || return 1
-  if [ "$label" = current ]; then
-    expected_commit=$(git rev-parse HEAD)
-    expect_manifest_value "$manifest" kind current &&
-      expect_manifest_value "$manifest" config current &&
-      expect_manifest_value "$manifest" commit "$expected_commit"
-  else
-    expected_commit=$(git rev-parse HEAD)
-    expected_config="${label_config[$label]}"
-    expect_manifest_value "$manifest" kind configuration &&
-      expect_manifest_value "$manifest" config "$expected_config" &&
-      expect_manifest_value "$manifest" commit "$expected_commit" &&
-      validate_config_options "$manifest" "$expected_config"
-  fi
-}
-
-prepare_corpus() {
-  local corpus="$1"
-  local args=("$corpus")
-  # See the matching comment in the corpus_source loop above: dependent-slice
-  # is always taken from its committed sample fixture, --full-corpus or not.
-  if [ "$sample_corpora" = true ] || [ "$corpus" = dependent-slice ]; then
-    args+=(--sample)
-  fi
-  if [ "$corpus" = external-equations ] && [ -n "$external_source" ]; then
-    args+=(--source "$external_source")
-  fi
-  ./prepare-corpus.sh "${args[@]}"
-}
-
-validate_generation() {
-  local outdir="$1" premise
-  status_has "$outdir/generation.status" generation_failed=0 || return 1
-  status_has "$outdir/generation.status" generation_exit=0 || return 1
-  [ -s "$outdir/prepared-files.lst" ] || return 1
-  for premise in "${premises[@]}"; do
-    list_is_nonempty_and_complete "$outdir/generated-$premise.lst" || return 1
-  done
-}
-
-validate_prover_run() {
-  local outdir="$1" prover="$2" premise="$3"
-  status_has_integer "$outdir/prover-$prover-$premise.status" prover_exit &&
-    list_is_nonempty_and_complete "$outdir/generated-$premise.lst" &&
-    expected_atp_outputs_are_complete \
-      "$outdir/generated-$premise.lst" "$outdir/atp-problems/$premise" \
-      "$outdir/prover-outputs/$prover-$premise" "$prover" \
-      "$outdir/prover-outputs-$prover-$premise.lst" "$outdir/$prover-$premise.log"
-}
-
-validate_consistency_run() {
-  local outdir="$1" prover="$2" premise="$3" work
-  work="$outdir/consistency/$prover-$premise"
-  status_is "$outdir/consistency-$prover-$premise.status" consistency_exit=0 &&
-    consistency_outputs_are_complete \
-      "$outdir/generated-$premise.lst" "$work/outputs" "$work/raw" "$work/status" \
-      "$outdir/consistency-outputs-$prover-$premise.lst"
-}
-
-build_label() {
-  local label="$1"
-  local prefix="$eval_dir/_installs/$label"
-  if [ -f "$prefix/manifest.env" ]; then
-    if manifest_matches_label "$label" "$prefix"; then
-      echo "[build] $label already installed"
-      return 0
-    fi
-    if [ "$skip_builds" = true ]; then
-      echo "Install prefix for $label is stale or mismatched: $prefix" >&2
-      exit 1
-    fi
-    echo "[build] $label install is stale or mismatched; rebuilding"
-    rm -rf "$prefix"
-  fi
-  if [ "$skip_builds" = true ]; then
-    echo "Missing install prefix for $label: $prefix" >&2
-    exit 1
-  fi
-  echo "[build] installing $label"
-  export PATH="$base_path"
-  if [ -n "$base_ocamlpath" ]; then
-    export OCAMLPATH="$base_ocamlpath"
-  else
-    unset OCAMLPATH
-  fi
-  if [ "$label" = current ]; then
-    (cd "$eval_dir" && ./rebuild-config.sh current --label "$label")
-  else
-    (cd "$eval_dir" && ./rebuild-config.sh "${label_config[$label]}" --label "$label")
-  fi
-}
-
-run_generation() {
-  local label="$1" corpus="$2" prefix="$3"
-  local outdir="$results_root/$label/$corpus"
-  mkdir -p "$outdir"
-  local marker="$outdir/generate"
-  if checkpoint_done "$marker" generation "$label" "$corpus" "$prefix"; then
-    if validate_generation "$outdir"; then
-      echo "[gen] $label/$corpus already done"
-      return 0
-    fi
-    invalidate_checkpoint "$marker" "generation artifacts are incomplete or invalid"
-  fi
-
-  rm -f "$outdir/generation.status" "$marker.done"
-  clear_downstream_results "$outdir"
-  echo "[gen] $label/$corpus"
-  prepare_prefix_env "$prefix"
-  cd "$eval_dir"
-  prepare_corpus "$corpus" > "$outdir/prepared-files.lst"
-  rm -rf logs atp/problems atp/i atp/o out statistics.html check.log gen-atp.log gen-atp.log.bak coqhammer.opt
-  mkdir -p atp/o out
-
-  coqc_cmd="rocq c -coqlib $prefix/coq"
-  make -k -j "$jobs" init COQC="$coqc_cmd" > "$outdir/init.log" 2>&1
-  echo check > coqhammer.opt
-  make -k -j "$jobs" check COQC="$coqc_cmd" > "$outdir/check.full.log" 2>&1
-  grep Error "$outdir/check.full.log" > "$outdir/check.log" || true
-  if [ -s "$outdir/check.log" ]; then
-    echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
-    exit 1
-  fi
-
-  echo gen-atp > coqhammer.opt
-  if ! make -k -j "$jobs" atp COQC="$coqc_cmd" > "$outdir/gen-atp.full.log" 2>&1; then
-    grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
-    echo "ATP generation failed for $label/$corpus; see $outdir/gen-atp.full.log" >&2
-    return 1
-  fi
-  grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
-  if [ -s "$outdir/gen-atp.log" ]; then
-    echo "ATP-generation errors for $label/$corpus; see $outdir/gen-atp.log" >&2
-    exit 1
-  fi
-
-  rm -rf "$outdir/atp-problems"
-  mkdir -p "$outdir/atp-problems"
-  for premise in "${premises[@]}"; do
-    if [ ! -d "atp/problems/$premise" ]; then
-      echo "No generated ATP directory for $premise in $label/$corpus" >&2
-      exit 1
-    fi
-    cp -R "atp/problems/$premise" "$outdir/atp-problems/$premise"
-    find "$outdir/atp-problems/$premise" -name '*.p' | sort > "$outdir/generated-$premise.lst"
-    if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
-      echo "No generated ATP problems for $premise in $label/$corpus" >&2
-      exit 1
-    fi
-  done
-  {
-    echo "generation_failed=0"
-    echo "generation_exit=0"
-  } > "$outdir/generation.status"
-  mark_checkpoint "$marker" generation "$label" "$corpus" "$prefix"
-}
-
-run_prover() {
-  local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
-  local outdir="$results_root/$label/$corpus"
-  local marker="$outdir/prover-$prover-$premise" input_digest
-  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
-  if checkpoint_done "$marker" prover "$label" "$corpus" "$prefix" \
-      "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"; then
-    if validate_prover_run "$outdir" "$prover" "$premise"; then
-      echo "[prover] $label/$corpus/$prover/$premise already done"
-      return 0
-    fi
-    invalidate_checkpoint "$marker" "prover status or outputs are incomplete or invalid"
-  fi
-
-  rm -f "$marker.done" "$outdir/prover-$prover-$premise.status"
-  if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
-    echo "Cannot run $prover: no generated problems for $label/$corpus/$premise" >&2
-    return 1
-  fi
-  echo "[prover] $label/$corpus/$prover/$premise"
-  prepare_prefix_env "$prefix"
-  require_prover "$prover"
-  cd "$eval_dir"
-  rm -rf atp/i "atp/o/$prover" "atp/o/$prover-$premise"
-  mkdir -p atp/i atp/o
-  ln -s "$outdir/atp-problems/$premise" atp/i/f
-  if make -C atp -k -j "$jobs" TIM="$tim" "$prover" > "$outdir/$prover-$premise.log" 2>&1; then
-    prover_status=0
-  else
-    prover_status=$?
-    echo "[prover] $label/$corpus/$prover/$premise exited with status $prover_status; keeping partial outputs"
-  fi
-  echo "prover_exit=$prover_status" > "$outdir/prover-$prover-$premise.status"
-  rm -rf "$outdir/prover-outputs/$prover-$premise"
-  mkdir -p "$outdir/prover-outputs" "atp/o/$prover"
-  mv "atp/o/$prover" "$outdir/prover-outputs/$prover-$premise"
-  find "$outdir/prover-outputs/$prover-$premise" -type f | sort > "$outdir/prover-outputs-$prover-$premise.lst"
-  if ! validate_prover_run "$outdir" "$prover" "$premise"; then
-    echo "Prover run produced incomplete, malformed, or crashed outputs for $label/$corpus/$prover/$premise" >&2
-    return 1
-  fi
-  mark_checkpoint "$marker" prover "$label" "$corpus" "$prefix" \
-    "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"
-}
-
-run_consistency() {
-  local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
-  local outdir="$results_root/$label/$corpus"
-  local marker="$outdir/consistency-$prover-$premise" input_digest
-  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
-  if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
-      "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
-      "input_sha256=$input_digest"; then
-    if validate_consistency_run "$outdir" "$prover" "$premise"; then
-      echo "[consistency] $label/$corpus/$prover/$premise already done"
-      return 0
-    fi
-    invalidate_checkpoint "$marker" "consistency status or outputs are incomplete or invalid"
-  fi
-
-  rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status"
-  if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
-    echo "Cannot run consistency check: no problems for $label/$corpus/$premise" >&2
-    return 1
-  fi
-  echo "[consistency] $label/$corpus/$prover/$premise"
-  prepare_prefix_env "$prefix"
-  require_prover "$prover"
-  local work="$outdir/consistency/$prover-$premise"
-  rm -rf "$work"
-  mkdir -p "$work/problems" "$work/outputs" "$work/raw" "$work/status"
-
-  python3 - "$outdir/atp-problems/$premise" "$work/problems" <<'PY'
-import pathlib
-import re
-import sys
-src = pathlib.Path(sys.argv[1])
-dst = pathlib.Path(sys.argv[2])
-files = sorted(src.glob('*.p'))
-# The committed screening corpora are small; scan all generated problems.  The
-# selection code is deterministic and can be narrowed later for larger corpora.
-for path in files:
-    text = path.read_text()
-    text, n = re.subn(r"fof\(([^,]+),\s*conjecture,\s*.*?\)\.\s*$",
-                      r"fof(\1, conjecture, $false).",
-                      text, count=1, flags=re.M)
-    if n != 1:
-        raise SystemExit(f"did not rewrite exactly one conjecture in {path}")
-    (dst / path.name).write_text(text)
-PY
-
-  local problems=("$work/problems"/*.p)
-  if [ ! -e "${problems[0]}" ]; then
-    echo "Consistency check generated no false-conjecture problems for $label/$corpus/$premise" >&2
-    return 1
-  fi
-  for problem in "${problems[@]}"; do
-    local name command_status
-    name=$(basename "$problem")
-    if [ "$prover" = eprover ]; then
-      if eprover -s --cpu-limit="$consistency_tim" --auto-schedule -R --print-statistics -p --tstp-format "$problem" \
-          > "$work/raw/$name" 2>&1; then
-        command_status=0
-      else
-        command_status=$?
-      fi
-      grep "file[(]'\|# SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
-    else
-      # Give the external kill a grace margin over Vampire's own deadline, so a
-      # loaded machine cannot SIGKILL it before it reports its SZS status.
-      if htimeout "$((consistency_tim + 5))" vampire --mode casc -t "$consistency_tim" --proof tptp \
-          --output_axiom_names on "$problem" > "$work/raw/$name" 2>&1; then
-        command_status=0
-      else
-        command_status=$?
-      fi
-      grep "file[(]'\|% SZS\|SZS status" "$work/raw/$name" > "$work/outputs/$name" || true
-    fi
-    echo "command_exit=$command_status" > "$work/status/$name.status"
-    if log_has_crash_or_error_ignoring_strategy_aborts "$work/raw/$name" ||
-        ! szs_terminal_status "$work/outputs/$name"; then
-      echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
-      echo "Consistency prover crashed or produced no terminal status for $label/$corpus/$prover/$premise/$name" >&2
-      return 1
-    fi
-  done
-  if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
-    echo "consistency_exit=1" > "$outdir/consistency-$prover-$premise.status"
-    echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
-    return 1
-  fi
-  find "$work/outputs" -type f | sort > "$outdir/consistency-outputs-$prover-$premise.lst"
-  echo "consistency_exit=0" > "$outdir/consistency-$prover-$premise.status"
-  if ! validate_consistency_run "$outdir" "$prover" "$premise"; then
-    echo "Consistency check produced incomplete outputs for $label/$corpus/$prover/$premise" >&2
-    return 1
-  fi
-  mark_checkpoint "$marker" consistency "$label" "$corpus" "$prefix" \
-    "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
-    "input_sha256=$input_digest"
-}
-
-for label in "${labels[@]}"; do
-  if [ -n "$only_label" ] && [ "$label" != "$only_label" ]; then
-    continue
-  fi
-  build_label "$label"
-  prefix="$eval_dir/_installs/$label"
-  for corpus in "${corpora[@]}"; do
-    if [ -n "$only_corpus" ] && [ "$corpus" != "$only_corpus" ]; then
-      continue
-    fi
-    run_generation "$label" "$corpus" "$prefix"
-    for premise in "${premises[@]}"; do
-      for prover in "${provers[@]}"; do
-        run_prover "$label" "$corpus" "$premise" "$prover" "$prefix"
-      done
-    done
-    # Scan one representative premise level per label/corpus; all generated
-    # problems in that directory are scanned, which includes the committed canary
-    # fixtures when present in the corpus.
-    for prover in "${provers[@]}"; do
-      run_consistency "$label" "$corpus" knn-64 "$prover" "$prefix"
-    done
-  done
-done
-
-echo "Extraction screening checkpoints complete."
-echo "  raw checkpoints: $results_root"
-if [ -n "$only_label" ] || [ -n "$only_corpus" ]; then
-  echo "  summary:         not updated by a partial run"
-else
-  summarizer="$eval_dir/tools/summarize-screening.py"
-  python3 "$summarizer" \
-    "$results_root" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md" \
-    "${labels[@]}"
-  write_grid_provenance "$artifacts_dir/provenance.env" screening \
-    "$summarizer" "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"
-  echo "  summary:         $artifacts_dir/summary.tsv"
-  echo "  analysis:        $artifacts_dir/analysis.md"
-  echo "  provenance:      $artifacts_dir/provenance.env"
-fi
+# shellcheck source=eval/grid-engine.sh
+# shellcheck disable=SC1091
+source "$eval_dir/grid-engine.sh"
+grid_run "$@"
