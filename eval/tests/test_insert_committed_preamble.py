@@ -12,6 +12,46 @@ EVAL_DIR = Path(__file__).resolve().parents[1]
 TOOL = EVAL_DIR / "tools" / "insert-committed-preamble.py"
 PREAMBLE = b'Set Warnings "-deprecated".\nSet Default Proof Using "Type".'
 
+# Runs the tool in-process so that a chosen file-system call can be made to
+# fail partway through, which no external means can trigger deterministically.
+FAILING_DRIVER = """\
+import importlib.util
+import os
+from pathlib import Path
+import sys
+
+tool_path, target, successes, root = sys.argv[1:]
+successes = int(successes)
+spec = importlib.util.spec_from_file_location("tool", tool_path)
+tool = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(tool)
+
+calls = []
+
+
+def guard():
+    calls.append(None)
+    if len(calls) > successes:
+        raise OSError("simulated failure")
+
+
+if target == "replace":
+    real_replace = os.replace
+    def replace(source, destination, **kwargs):
+        guard()
+        return real_replace(source, destination, **kwargs)
+    os.replace = replace
+else:
+    real_write_bytes = Path.write_bytes
+    def write_bytes(self, data):
+        guard()
+        return real_write_bytes(self, data)
+    Path.write_bytes = write_bytes
+
+sys.argv = [tool_path, root]
+tool.main()
+"""
+
 
 class InsertCommittedPreambleTests(unittest.TestCase):
     def setUp(self):
@@ -33,6 +73,51 @@ class InsertCommittedPreambleTests(unittest.TestCase):
             capture_output=True,
             text=True,
         )
+
+    def run_tool_failing_at(self, target, successes, preamble=PREAMBLE):
+        """Run the tool with everything after `successes` `target` calls failing."""
+        env = os.environ.copy()
+        env["COQHAMMER_HOOK_PREAMBLE"] = preamble.decode()
+        result = subprocess.run(
+            [
+                "python3",
+                "-c",
+                FAILING_DRIVER,
+                str(TOOL),
+                target,
+                str(successes),
+                str(self.root),
+            ],
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("simulated failure", result.stderr)
+        return result
+
+    def assert_only_sources_remain(self):
+        leftovers = [
+            str(path.relative_to(self.root))
+            for path in self.root.rglob("*")
+            if path.is_file() and path.suffix != ".v"
+        ]
+        self.assertEqual(leftovers, [])
+
+    def rewrite_of(self, original):
+        command_end = original.index(b"\n") + 1
+        return original[:command_end] + PREAMBLE + b"\n\n" + original[command_end:]
+
+    def write_corpus(self):
+        originals = {}
+        for name in ("a.v", "b.v", "c.v"):
+            path = self.root / name
+            contents = (
+                f"From Hammer Require Import Hammer.\nCheck {name[0]}.\n".encode()
+            )
+            path.write_bytes(contents)
+            originals[path] = contents
+        return originals
 
     def test_spacing_leading_whitespace_and_mixed_import_lists(self):
         cases = {
@@ -241,6 +326,70 @@ class InsertCommittedPreambleTests(unittest.TestCase):
                 path.read_bytes(),
                 original.replace(command, command + preamble + b"\n\n", 1),
             )
+
+    def test_rerunning_does_not_insert_the_preamble_twice(self):
+        shapes = {
+            "eof.v": b"From Hammer Require Import Tactics Hammer .",
+            "same-line.v": (
+                b'Set Warnings "none". From Hammer Require Import '
+                b"Qualified.Plugin.Hammer. Check True.\n"
+            ),
+            "crlf.v": (
+                b"\tFrom Hammer Require Import Tactics\t HammerHook Hints .  \r\n"
+                b"Check True.\r\n"
+            ),
+            "plain.v": b"From Hammer Require Import Hammer.\nCheck True.\n",
+        }
+        for name, contents in shapes.items():
+            (self.root / name).write_bytes(contents)
+
+        for preamble in (PREAMBLE, PREAMBLE + b"\n"):
+            with self.subTest(preamble=preamble):
+                first = self.run_tool(preamble)
+                self.assertEqual(first.returncode, 0, first.stderr)
+                inserted = {
+                    name: (self.root / name).read_bytes() for name in shapes
+                }
+                second = self.run_tool(preamble)
+                self.assertEqual(second.returncode, 0, second.stderr)
+                for name, contents in inserted.items():
+                    self.assertEqual((self.root / name).read_bytes(), contents)
+                    self.assertEqual(contents.count(PREAMBLE), 1)
+                for name, contents in shapes.items():
+                    (self.root / name).write_bytes(contents)
+        self.assert_only_sources_remain()
+
+    def test_failed_staging_leaves_every_source_untouched(self):
+        originals = self.write_corpus()
+
+        self.run_tool_failing_at("write", 1)
+        for path, original in originals.items():
+            self.assertEqual(path.read_bytes(), original)
+        self.assert_only_sources_remain()
+
+        result = self.run_tool()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for path, original in originals.items():
+            self.assertEqual(path.read_bytes(), self.rewrite_of(original))
+
+    def test_failed_replace_leaves_a_completable_corpus(self):
+        originals = self.write_corpus()
+
+        self.run_tool_failing_at("replace", 1)
+        rewritten = 0
+        for path, original in originals.items():
+            contents = path.read_bytes()
+            if contents != original:
+                self.assertEqual(contents, self.rewrite_of(original))
+                rewritten += 1
+        self.assertEqual(rewritten, 1)
+        self.assert_only_sources_remain()
+
+        result = self.run_tool()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for path, original in originals.items():
+            self.assertEqual(path.read_bytes(), self.rewrite_of(original))
+        self.assert_only_sources_remain()
 
     def build_coqnames(self):
         build = self.root / "coqnames-build"

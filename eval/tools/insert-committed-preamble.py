@@ -136,7 +136,12 @@ def insertion_offset(contents, command_end):
 
 
 def rewritten_files(root, preamble):
-    """Validate every source before returning any rewritten contents."""
+    """Validate every source before returning any rewritten contents.
+
+    Sources that already carry exactly the insertion this run would make are
+    skipped, so a run that follows a partially written one completes the job
+    instead of inserting the preamble a second time.
+    """
     rewritten = []
     separator = b"\n" if preamble.endswith(b"\n") else b"\n\n"
     for path in sorted(root.rglob("*.v")):
@@ -149,17 +154,36 @@ def rewritten_files(root, preamble):
             )
         offset = insertion_offset(contents, ends[0])
         line_break = b"" if contents[:offset].endswith((b"\r", b"\n")) else b"\n"
-        rewritten.append(
-            (
-                path,
-                contents[:offset]
-                + line_break
-                + preamble
-                + separator
-                + contents[offset:],
-            )
-        )
+        insertion = line_break + preamble + separator
+        if contents.startswith(insertion, offset):
+            continue
+        rewritten.append((path, contents[:offset] + insertion + contents[offset:]))
     return rewritten
+
+
+def write_files(rewritten):
+    """Stage every rewrite in full before replacing any source.
+
+    A staging failure therefore leaves the corpus untouched.  The replace
+    pass is not itself all-or-nothing, but each source is replaced atomically,
+    so no file is ever left half-written, and `rewritten_files` skips sources
+    that already carry the preamble, so re-running after such a failure
+    rewrites the remainder rather than duplicating the preamble.
+    """
+    staged = []
+    try:
+        for path, contents in rewritten:
+            # The suffix keeps a leftover temporary out of the *.v corpus.
+            temporary = path.with_name(path.name + ".preamble-tmp")
+            temporary.write_bytes(contents)
+            staged.append((temporary, path))
+        while staged:
+            temporary, path = staged[-1]
+            os.replace(temporary, path)
+            staged.pop()
+    finally:
+        for temporary, _ in staged:
+            temporary.unlink(missing_ok=True)
 
 
 def main():
@@ -173,8 +197,7 @@ def main():
     except ValueError as error:
         raise SystemExit(str(error)) from error
 
-    for path, contents in rewritten:
-        path.write_bytes(contents)
+    write_files(rewritten)
 
 
 if __name__ == "__main__":
