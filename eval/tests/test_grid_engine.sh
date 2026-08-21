@@ -797,11 +797,14 @@ EOF
   [ "${corpus_source[external-equations]}" = 'provenance-eval/elsewhere/equations' ]
 ) || fail "installed/sample corpus provenance did not track actual sources"
 
-# Only a source inside the checkout has a spelling relative to it; one outside
-# -- which only --external-source can be -- has to stay absolute.
+# Only a source inside the checkout has a spelling relative to it -- the
+# checkout itself included; one outside -- which only --external-source can be
+# -- has to stay absolute.
 (
   repo=/opt/checkout
   [ "$(corpus_source_path /opt/checkout/eval/corpora/tiny)" = eval/corpora/tiny ] &&
+    [ "$(corpus_source_path /opt/checkout)" = . ] &&
+    [ "$(corpus_source_path /opt/checkout-elsewhere)" = /opt/checkout-elsewhere ] &&
     [ "$(corpus_source_path /elsewhere/equations)" = /elsewhere/equations ]
 ) || fail "corpus source path did not relativize exactly inside the checkout"
 
