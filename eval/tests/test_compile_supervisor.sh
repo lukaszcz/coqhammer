@@ -18,6 +18,18 @@ run_status() {
   set -e
 }
 
+# A killed descendant is reparented to PID 1, and where that PID 1 does not
+# promptly reap it the process lingers in /proc as a zombie for which kill -0
+# keeps succeeding. Only a process /proc still reports in a non-zombie state is
+# genuinely alive; the Python half of this test applies the same rule.
+process_is_live() {
+  local pid="$1" stat_line stat_tail
+  IFS= read -r stat_line 2>/dev/null < "/proc/$pid/stat" || return 1
+  stat_tail=${stat_line##*) }
+  [ "$stat_tail" != "$stat_line" ] || return 1
+  [ "${stat_tail%% *}" != Z ]
+}
+
 output=$(
   "$supervisor" --timeout 2 --grace 1 --phase init \
     --source 'problems/a file.v' -- printf 'compiled\n'
@@ -210,10 +222,10 @@ grep -Fq 'invalid command status record' "$tmp/tree.err" &&
   fail "the interrupted record leaked out of the --kill-after path"
 descendant=$(cat "$tmp/descendant.pid")
 for _ in 1 2 3 4 5 6 7 8 9 10; do
-  kill -0 "$descendant" 2>/dev/null || break
+  process_is_live "$descendant" || break
   sleep 0.1
 done
-if kill -0 "$descendant" 2>/dev/null; then
+if process_is_live "$descendant"; then
   fail "TERM-resistant descendant $descendant survived process-group KILL"
 fi
 
@@ -258,10 +270,10 @@ run_status wait "$supervised"
 grep -Fq 'rocq-compile-supervisor: KILLED' "$tmp/orphan.err" ||
   fail "a killed timeout lost its premature-kill diagnostic"
 for _ in 1 2 3 4 5 6 7 8 9 10; do
-  kill -0 "$orphan" 2>/dev/null || break
+  process_is_live "$orphan" || break
   sleep 0.1
 done
-if kill -0 "$orphan" 2>/dev/null; then
+if process_is_live "$orphan"; then
   kill -KILL "$orphan" 2>/dev/null || true
   fail "descendant $orphan outlived a killed timeout"
 fi
