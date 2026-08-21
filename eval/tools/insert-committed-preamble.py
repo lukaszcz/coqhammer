@@ -184,8 +184,10 @@ def write_files(rewritten):
             os.close(handle)
             temporary = Path(name)
             staged.append((temporary, path))
-            os.chmod(temporary, path.stat().st_mode & 0o7777)
             temporary.write_bytes(contents)
+            # Applied after the contents, since a read-only source would
+            # otherwise make its own staged replacement unwritable.
+            os.chmod(temporary, path.stat().st_mode & 0o7777)
         while staged:
             temporary, path = staged[-1]
             os.replace(temporary, path)
