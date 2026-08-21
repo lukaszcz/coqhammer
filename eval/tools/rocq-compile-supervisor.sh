@@ -54,6 +54,7 @@ read_process_identity() {
   read -r -a fields <<< "$stat_tail"
   [ "${#fields[@]}" -ge 20 ] || return 1
   [ "${stat_line%% *}" = "$pid" ] || return 1
+  PROCESS_STATE=${fields[0]}
   PROCESS_PGID=${fields[2]}
   PROCESS_SESSION=${fields[3]}
   PROCESS_STARTTIME=${fields[19]}
@@ -81,6 +82,14 @@ monitor_is_same_process() {
   read_process_identity "$monitor_pid" || return 1
   [ "$PROCESS_STARTTIME" = "$monitor_starttime" ] &&
     [ "$PROCESS_SESSION" = "$monitor_session" ]
+}
+
+# Terminal condition for the startup waits below: the monitor is gone from
+# /proc, or Bash has reaped it, or it is a zombie awaiting our own wait. Any of
+# those means no further polling can change what we observe.
+monitor_has_exited() {
+  monitor_is_same_process || return 0
+  [ "$PROCESS_STATE" = Z ]
 }
 
 capture_sentinel_identity() {
@@ -387,28 +396,44 @@ if ! capture_monitor_identity "$monitor_pid"; then
   exit 125
 fi
 # Normally timeout has already called setpgid by the first read. Keep the
-# captured starttime/session while waiting briefly for that sole safe PGID. A
-# very short command can finish in the pre-exec child before we ever observe
-# the transition; its private completion record makes waiting/reaping it safe.
+# captured starttime/session while waiting for that sole safe PGID. Poll until
+# an event settles the question rather than for a fixed number of ticks: a
+# tick budget is really a bet on how promptly this shell is rescheduled, and a
+# loaded machine loses that bet. The group matters only for signalling a live
+# tree, so a monitor that is already gone settles it just as well as one that
+# formed its group: a command can finish in the pre-exec child, and one that
+# dies at once takes timeout with it, since timeout re-raises the child's
+# fatal signal on itself. Neither leaves anything this supervisor could still
+# signal, so both are reaped normally below; only a monitor that is still
+# alive without a group of its own is the failure this cannot proceed past.
 monitor_complete=false
-for _ in {1..100}; do
+monitor_gone=false
+while :; do
+  monitor_adopt_own_process_group || true
   [ "$monitor_pgid" = "$monitor_pid" ] && break
   if grep -q '^done:' "$status_file"; then
     monitor_complete=true
     break
   fi
-  monitor_adopt_own_process_group || true
-  [ "$monitor_pgid" = "$monitor_pid" ] && break
+  if monitor_has_exited; then
+    monitor_gone=true
+    break
+  fi
   sleep 0.01
 done
 if [ "$monitor_pgid" = "$monitor_pid" ]; then
-  for _ in {1..100}; do
+  # The inner Bash records the sentinel as its first action, so the same
+  # reasoning applies: poll until it appears, the command reports completion,
+  # or the monitor is gone and it never will.
+  while :; do
     capture_sentinel_identity && break
     grep -q '^done:' "$status_file" && break
+    monitor_has_exited && break
     sleep 0.01
   done
 fi
-if [ "$monitor_pgid" != "$monitor_pid" ] && [ "$monitor_complete" = false ]; then
+if [ "$monitor_pgid" != "$monitor_pid" ] &&
+   [ "$monitor_complete" = false ] && [ "$monitor_gone" = false ]; then
   signal_process_group TERM
   wait "$monitor_pid" 2>/dev/null || true
   trap - HUP INT TERM
