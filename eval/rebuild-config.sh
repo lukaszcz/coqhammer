@@ -182,7 +182,15 @@ validate_prefix() {
 require_markable_prefix "$prefix"
 # Resolve next: the prefix is later used from other working directories
 # (-coqlib in validate_prop_case_ablation), so it has to be absolute.
-prefix=$(realpath -m -- "$prefix")
+# Resolution can reintroduce the very newline the check above ruled out -- a
+# markable prefix may be a symlink to a target whose name ends in one -- so
+# capture the output behind a sentinel and drop only the newline realpath
+# itself terminates the path with.  Stripping with plain command substitution
+# would eat the target's newline too, again yielding a different, newline-free
+# path for prepare_prefix to erase.
+resolved=$(realpath -m -- "$prefix" && printf x)
+resolved=${resolved%x}
+prefix=${resolved%$'\n'}
 validate_prefix "$prefix"
 
 restore_opts() {
