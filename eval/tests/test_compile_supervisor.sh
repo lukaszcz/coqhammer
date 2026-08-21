@@ -391,6 +391,15 @@ makefile, engine, confirmation, dry = (
 )
 if makefile.count("$(SUPERVISED_COQC) --source") != 5:
     raise SystemExit("not every eval Makefile Rocq recipe is supervised")
+for target, phase in (
+    ("problems/%.vo", "init"),
+    ("logs/check/%.log", "check"),
+    ("logs/atp/%.log", "gen-atp"),
+    ("logs/reconstr/%.log", "reconstruction"),
+    ("logs/prove/%.log", "prove"),
+):
+    if f"{target}: COMPILE_PHASE = {phase}" not in makefile:
+        raise SystemExit(f"eval Makefile does not report {target} as {phase}")
 for phase, target in (("init", "init"), ("check", "check"), ("gen-atp", "atp")):
     if f"run_compile_make {phase} {target}" not in engine:
         raise SystemExit(f"declarative engine omitted supervised {phase}")

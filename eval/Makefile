@@ -12,6 +12,15 @@ COMPILE_TIMEOUT_GRACE ?= 10
 COMPILE_PHASE ?= compile
 SUPERVISED_COQC=$(COMPILE_SUPERVISOR) --timeout "$(COMPILE_TIMEOUT)" \
 	--grace "$(COMPILE_TIMEOUT_GRACE)" --phase "$(COMPILE_PHASE)"
+# Each Rocq recipe names the phase the grid harness reports for it, so that a
+# timeout on the direct `make`, `check.sh`, `gen-atp.sh`, `run-reconstr.sh` and
+# `run-prove.sh` path is as diagnosable as one inside a grid. A COMPILE_PHASE=
+# on the command line -- what grid-checkpoint-lib.sh passes -- still wins.
+problems/%.vo: COMPILE_PHASE = init
+logs/check/%.log: COMPILE_PHASE = check
+logs/atp/%.log: COMPILE_PHASE = gen-atp
+logs/reconstr/%.log: COMPILE_PHASE = reconstruction
+logs/prove/%.log: COMPILE_PHASE = prove
 
 all:
 	@echo "See README on how to invoke make."
