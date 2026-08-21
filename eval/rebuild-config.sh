@@ -134,6 +134,13 @@ if [ -z "$prefix" ]; then
   prefix="$repo/eval/_installs/$label"
 fi
 
+require_markable_prefix() {
+  if ! eval_prefix_path_is_markable "$1"; then
+    echo "Install prefix contains a newline, which the ownership marker cannot record; refusing to use it" >&2
+    exit 1
+  fi
+}
+
 # prepare_prefix wipes the prefix with `rm -rf`, so a mistyped --prefix would
 # erase the checkout or an unrelated directory.  Accept only a dedicated
 # install directory: never the repository or one of its parents, inside the
@@ -145,10 +152,7 @@ fi
 # was written for, so a prefix that was copied or moved stops counting as ours.
 validate_prefix() {
   local p="$1"
-  if ! eval_prefix_path_is_markable "$p"; then
-    echo "Install prefix contains a newline, which the ownership marker cannot record; refusing to use it" >&2
-    exit 1
-  fi
+  require_markable_prefix "$p"
   case "$p" in
     /|"${HOME:-}")
       echo "Refusing to use $p as the install prefix" >&2
@@ -170,7 +174,13 @@ validate_prefix() {
   fi
 }
 
-# Resolve first: the prefix is later used from other working directories
+# Check the prefix as it was spelled first: `$(realpath ...)` reports the path
+# on a line of its own, so command substitution would eat a trailing newline
+# and hand validate_prefix a different, newline-free path -- one that may well
+# be an owned prefix, which prepare_prefix would then erase instead of
+# refusing the unusable path the caller asked for.
+require_markable_prefix "$prefix"
+# Resolve next: the prefix is later used from other working directories
 # (-coqlib in validate_prop_case_ablation), so it has to be absolute.
 prefix=$(realpath -m -- "$prefix")
 validate_prefix "$prefix"

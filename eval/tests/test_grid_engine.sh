@@ -835,4 +835,17 @@ if [ "$status" -ne 2 ] || [[ "$output" != *"safe single path component"* ]]; the
   fail "rebuild-config accepted an unsafe label"
 fi
 
+# The prefix is validated as it was spelled: command substitution around
+# `realpath` drops a trailing newline, so a prefix that ends in one would
+# otherwise be checked, and erased, as some other directory.
+mkdir -p "$tmp/prefix-newline"
+set +e
+output=$("$eval_dir/rebuild-config.sh" current --prefix "$tmp/prefix-newline"$'\n' 2>&1)
+status=$?
+set -e
+if [ "$status" -ne 1 ] || [[ "$output" != *"contains a newline"* ]]; then
+  fail "rebuild-config accepted a prefix ending in a newline"
+fi
+[ -d "$tmp/prefix-newline" ] || fail "rebuild-config erased the newline-free prefix"
+
 echo "test_grid_engine: ok"
