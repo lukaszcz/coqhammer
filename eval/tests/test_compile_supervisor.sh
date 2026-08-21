@@ -26,9 +26,11 @@ output=$(
 
 for expected in 7 124 137; do
   run_status "$supervisor" --timeout 2 --grace 1 --phase check \
-    --source ordinary.v -- bash -c "exit $expected"
+    --source ordinary.v -- bash -c "exit $expected" 2>"$tmp/ordinary.err"
   [ "$RUN_STATUS" -eq "$expected" ] ||
     fail "ordinary exit $expected became $RUN_STATUS"
+  grep -Eq 'rocq-compile-supervisor: (TIMEOUT|KILLED) ' "$tmp/ordinary.err" &&
+    fail "ordinary exit $expected was reported as a timeout or a kill"
 done
 
 run_status "$supervisor" --timeout 1 --grace 1 --phase gen-atp \
@@ -69,6 +71,31 @@ grep -Fq 'TIMEOUT' "$tmp/killed.err" &&
 grep -Fq 'invalid command status record' "$tmp/killed.err" &&
   fail "premature kill was reported as an invalid status record"
 
+# The OOM killer usually takes the compile itself rather than its supervisor.
+# The wrapper then completes and records the command's own status, which 137
+# alone cannot be told apart from the ordinary exit above: the report has to
+# follow the kill rather than the number.
+run_status "$supervisor" --timeout 30 --grace 1 --phase check \
+  --source problems/oom-command.v -- bash -c 'kill -KILL $$' \
+  >"$tmp/oom-command.out" 2>"$tmp/oom-command.err"
+[ "$RUN_STATUS" -eq 137 ] ||
+  fail "a killed command exited $RUN_STATUS instead of 137"
+grep -Fq 'rocq-compile-supervisor: KILLED' "$tmp/oom-command.err" ||
+  fail "a killed command lost its premature-kill diagnostic"
+grep -Fq 'phase=check source=problems/oom-command.v' "$tmp/oom-command.err" ||
+  fail "the killed command diagnostic omitted phase/source"
+grep -Fq 'TIMEOUT' "$tmp/oom-command.err" &&
+  fail "a killed command also emitted a timeout diagnostic"
+
+# A command that dies of any other fatal signal crashed on its own; reporting
+# that as an external kill would send the grids hunting for memory pressure.
+run_status "$supervisor" --timeout 30 --grace 1 --phase check \
+  --source problems/crash.v -- bash -c 'kill -USR1 $$' \
+  >"$tmp/crash.out" 2>"$tmp/crash.err"
+[ "$RUN_STATUS" -eq 138 ] || fail "a crashing command exited $RUN_STATUS"
+grep -Eq 'rocq-compile-supervisor: (TIMEOUT|KILLED) ' "$tmp/crash.err" &&
+  fail "an ordinary crash was reported as a premature kill"
+
 cat > "$tmp/resistant-tree.sh" <<'SCRIPT'
 #!/usr/bin/env bash
 trap '' TERM
@@ -99,6 +126,55 @@ for _ in 1 2 3 4 5 6 7 8 9 10; do
 done
 if kill -0 "$descendant" 2>/dev/null; then
   fail "TERM-resistant descendant $descendant survived process-group KILL"
+fi
+
+# GNU timeout runs no cleanup when it is itself the process that is SIGKILLed,
+# so its whole supervised tree outlives it unless the supervisor kills what is
+# left. Nothing supervised may still be running once the kill is reported.
+cat > "$tmp/spawning-tree.sh" <<'SCRIPT'
+#!/usr/bin/env bash
+sleep 30 &
+echo "$!" > "$1"
+while :; do sleep 30; done
+SCRIPT
+chmod +x "$tmp/spawning-tree.sh"
+"$supervisor" --timeout 30 --grace 1 --phase prove --source orphan.v \
+  -- "$tmp/spawning-tree.sh" "$tmp/orphan.pid" \
+  >"$tmp/orphan.out" 2>"$tmp/orphan.err" &
+supervised=$!
+# The monitor is the supervisor's only timeout child; wait for the tree to
+# report its descendant so that there is something left to outlive the kill.
+monitor=
+attempts=200
+while [ "$attempts" -gt 0 ] && [ -z "$monitor" ]; do
+  if [ -s "$tmp/orphan.pid" ]; then
+    children=()
+    read -r -a children \
+      < "/proc/$supervised/task/$supervised/children" 2>/dev/null || true
+    for pid in ${children[@]+"${children[@]}"}; do
+      [ "$(cat "/proc/$pid/comm" 2>/dev/null)" = timeout ] || continue
+      monitor=$pid
+    done
+  fi
+  [ -n "$monitor" ] && break
+  sleep 0.05
+  attempts=$((attempts - 1))
+done
+[ -n "$monitor" ] || fail "the supervised timeout process was never observed"
+orphan=$(cat "$tmp/orphan.pid")
+kill -KILL "$monitor"
+run_status wait "$supervised"
+[ "$RUN_STATUS" -eq 137 ] ||
+  fail "a killed timeout exited $RUN_STATUS instead of 137"
+grep -Fq 'rocq-compile-supervisor: KILLED' "$tmp/orphan.err" ||
+  fail "a killed timeout lost its premature-kill diagnostic"
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  kill -0 "$orphan" 2>/dev/null || break
+  sleep 0.1
+done
+if kill -0 "$orphan" 2>/dev/null; then
+  kill -KILL "$orphan" 2>/dev/null || true
+  fail "descendant $orphan outlived a killed timeout"
 fi
 
 # Signals delivered to the supervisor itself must be forwarded immediately,
