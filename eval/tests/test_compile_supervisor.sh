@@ -87,6 +87,83 @@ grep -Fq 'phase=check source=problems/oom-command.v' "$tmp/oom-command.err" ||
 grep -Fq 'TIMEOUT' "$tmp/oom-command.err" &&
   fail "a killed command also emitted a timeout diagnostic"
 
+# Bash writes the job notice that tells a killed command from one exiting 137
+# at whatever command boundary follows the death, which is only the wrapper's
+# wait when the command outlived the fork. Park a copy of the supervisor in
+# that window and kill the command there: the classification must not depend on
+# how far the wrapper had got.
+sed 's/^\( *\)command_pid=\$!$/&\n\1kill -STOP $$/' "$supervisor" \
+  > "$tmp/parked-supervisor.sh"
+[ "$(grep -c 'kill -STOP \$\$' "$tmp/parked-supervisor.sh")" -eq 1 ] ||
+  fail "the wrapper's fork/wait window is no longer where the race test parks it"
+chmod +x "$tmp/parked-supervisor.sh"
+mkdir "$tmp/race-state"
+TMPDIR=$tmp/race-state "$tmp/parked-supervisor.sh" --timeout 30 --grace 1 \
+  --phase check --source problems/oom-race.v -- sleep 30 \
+  >"$tmp/race.out" 2>"$tmp/race.err" &
+race_supervisor=$!
+process_state() {
+  local stat_line stat_tail
+  IFS= read -r stat_line < "/proc/$1/stat" 2>/dev/null || return 1
+  stat_tail=${stat_line##*) }
+  [ "$stat_tail" != "$stat_line" ] || return 1
+  printf '%s\n' "${stat_tail%% *}"
+}
+# The wrapper announces itself before the fork, so the sentinel names it well
+# before it parks.
+wrapper=
+for _ in $(seq 1 200); do
+  for candidate in "$tmp"/race-state/rocq-compile-supervisor.*/sentinel; do
+    [ -s "$candidate" ] || continue
+    IFS= read -r wrapper < "$candidate" || wrapper=
+  done
+  [ -n "$wrapper" ] && break
+  sleep 0.05
+done
+[ -n "$wrapper" ] || fail "the supervised wrapper never announced itself"
+parked=false
+for _ in $(seq 1 200); do
+  [ "$(process_state "$wrapper")" = T ] && { parked=true; break; }
+  sleep 0.05
+done
+[ "$parked" = true ] ||
+  fail "the wrapper never parked between the fork and its wait"
+race_children=()
+read -r -a race_children \
+  < "/proc/$wrapper/task/$wrapper/children" 2>/dev/null || true
+[ "${#race_children[@]}" -eq 1 ] ||
+  fail "the parked wrapper does not have the command as its only child"
+race_command=${race_children[0]}
+kill -KILL "$race_command"
+for _ in $(seq 1 200); do
+  case "$(process_state "$race_command")" in ''|Z) break ;; esac
+  sleep 0.05
+done
+kill -CONT "$wrapper"
+run_status wait "$race_supervisor"
+[ "$RUN_STATUS" -eq 137 ] ||
+  fail "a command killed before the wrapper's wait exited $RUN_STATUS"
+grep -Fq 'rocq-compile-supervisor: KILLED' "$tmp/race.err" ||
+  fail "a command killed before the wrapper's wait lost its kill diagnostic"
+grep -Fq 'TIMEOUT' "$tmp/race.err" &&
+  fail "a command killed before the wrapper's wait was counted as a timeout"
+grep -Eq '[0-9]+ Killed' "$tmp/race.err" &&
+  fail "the wrapper leaked Bash's job notice to the caller's stderr"
+
+# The notice mechanism must not capture the command's own stderr: a chatty
+# command that exits on its own is not a kill, and its output reaches the
+# caller unchanged.
+run_status "$supervisor" --timeout 30 --grace 1 --phase check \
+  --source problems/chatty.v -- \
+  bash -c 'printf "warning: one\nwarning: two\n" >&2; exit 137' \
+  >"$tmp/chatty.out" 2>"$tmp/chatty.err"
+[ "$RUN_STATUS" -eq 137 ] || fail "a chatty command exited $RUN_STATUS"
+grep -Eq 'rocq-compile-supervisor: (TIMEOUT|KILLED) ' "$tmp/chatty.err" &&
+  fail "a chatty command's own stderr was mistaken for a job notice"
+printf 'warning: one\nwarning: two\n' > "$tmp/chatty.expected"
+cmp -s "$tmp/chatty.expected" "$tmp/chatty.err" ||
+  fail "the command's stderr did not reach the caller unchanged"
+
 # The smallest budget the supervisor accepts leaves no whole second to undercut,
 # so a command killed at once under --timeout 1 must still be a kill.
 run_status "$supervisor" --timeout 1 --grace 1 --phase check \

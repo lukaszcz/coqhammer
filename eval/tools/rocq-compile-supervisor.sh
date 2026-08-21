@@ -397,16 +397,22 @@ env --default-signal=HUP,INT,TERM \
     interrupted=false
     trap '\''interrupted=true'\'' HUP INT TERM
     printf "%s\n" "$$" > "$sentinel_file"
-    env --default-signal=HUP,INT,TERM "$@" &
-    command_pid=$!
     # A command killed by a signal and one exiting with 128+N leave the same
     # status here, and only the first owes a premature-kill report. Bash keeps
-    # the distinction solely in the job notice it writes while reaping, so
-    # capture that: a non-empty notice means the command did not exit on its
-    # own. The redirection binds the builtin alone, never the stderr the
-    # command inherited when it started.
+    # the distinction solely in the job notice it writes about the command,
+    # and it writes that notice at the first command boundary after the death:
+    # inside wait when the command outlived the fork, but at one of the
+    # assignments below when it did not. Redirecting the wait builtin alone
+    # would lose the notice in that second case, so this shell reports to the
+    # notice file for its whole life and the command is given the inherited
+    # stderr back through a saved descriptor -- its own diagnostics must never
+    # be read as a notice. A non-empty notice then means the command did not
+    # exit on its own.
     notice_file=$status_file.notice
-    wait "$command_pid" 2>"$notice_file"
+    exec {inherited_stderr}>&2 2>"$notice_file"
+    env --default-signal=HUP,INT,TERM "$@" 2>&"$inherited_stderr" &
+    command_pid=$!
+    wait "$command_pid"
     command_status=$?
     if [ "$interrupted" = true ]; then
       trap "" HUP INT TERM
