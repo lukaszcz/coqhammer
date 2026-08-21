@@ -266,6 +266,14 @@ printf '%s\nprefix=%s\n' "$EVAL_PREFIX_MARKER_MAGIC" "$tmp/elsewhere" > \
   "$prefix/$EVAL_PREFIX_MARKER"
 expect_failure _grid_manifest_matches_install all-on "$prefix"
 eval_prefix_write_marker "$prefix"
+# The marker is line-oriented, so a prefix spelled with a newline could never
+# be recognized again; it is refused before anything is written or erased.
+newline_prefix="$tmp/new"$'\n'"line"
+mkdir -p "$newline_prefix"
+expect_failure eval_prefix_write_marker "$newline_prefix"
+[ ! -e "$newline_prefix/$EVAL_PREFIX_MARKER" ] ||
+  fail "marker was written for a prefix that cannot be read back"
+expect_failure eval_prefix_is_owned "$newline_prefix"
 sed -i "s|^prefix=.*|prefix=$tmp/elsewhere|" "$prefix/manifest.env"
 expect_failure _grid_manifest_matches_install all-on "$prefix"
 sed -i "s|^prefix=.*|prefix=$prefix|" "$prefix/manifest.env"

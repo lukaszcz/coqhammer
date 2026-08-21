@@ -145,6 +145,10 @@ fi
 # was written for, so a prefix that was copied or moved stops counting as ours.
 validate_prefix() {
   local p="$1"
+  if ! eval_prefix_path_is_markable "$p"; then
+    echo "Install prefix contains a newline, which the ownership marker cannot record; refusing to use it" >&2
+    exit 1
+  fi
   case "$p" in
     /|"${HOME:-}")
       echo "Refusing to use $p as the install prefix" >&2
