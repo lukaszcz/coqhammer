@@ -320,6 +320,18 @@ let get_defs env sigma : Hh_term.hhdef list =
 let get_goal_context env sigma gl =
   (get_goal gl, get_hyps gl, get_defs env sigma)
 
+(* The selection context for every path that goes on to extract features.
+   [Features.prepare_def_slots] must run before [Features.extract]: extraction
+   releases the converted trees that ranking the definitional candidates
+   reads, so preparing the slots afterwards would convert every candidate
+   whose size is not cached yet a second time.  Paths that never extract (such
+   as [hammer_features_tac]) build the context directly and leave the ranking
+   unforced. *)
+let make_extraction_ctx hyps defs goal =
+  let ctx = Features.make_selection_ctx hyps defs goal in
+  Features.prepare_def_slots ctx;
+  ctx
+
 let get_given_lemmas env sigma l : Hh_term.hhdef list =
   let get_lemma c =
     let r =
@@ -999,8 +1011,7 @@ let hammer_main_tac env sigma gl mode =
   let run_provers =
     match mode with
     | Prediction ->
-       let ctx = Features.make_selection_ctx hyps defs goal in
-       Features.prepare_def_slots ctx;
+       let ctx = make_extraction_ctx hyps defs goal in
        fun tried -> do_predict ctx tried hyps defs goal
     | Choice glems ->
        fun tried ->
@@ -1138,7 +1149,7 @@ let predict_tac n pred_method =
             Opt.predictions_num := old_n
           in
           try
-            let ctx = Features.make_selection_ctx hyps defs goal in
+            let ctx = make_extraction_ctx hyps defs goal in
             let defs1 = Opt.with_temp_dir (fun () -> Features.predict ctx hyps goal) in
             restore ();
             Msg.notice (Hhlib.sfold Hh_term.get_hhdef_name ", " defs1)
@@ -1247,7 +1258,7 @@ let hammer_dump_tac fname =
       let env = Proofview.Goal.env gl in
       let sigma = Proofview.Goal.sigma gl in
       let (goal, hyps, defs) = get_goal_context env sigma gl in
-      let ctx = Features.make_selection_ctx hyps defs goal in
+      let ctx = make_extraction_ctx hyps defs goal in
       let defs1 = Opt.with_temp_dir (fun () -> dump_deps ctx hyps goal) in
       Provers.write_atp_file (Opt.resolve_dump_path fname) defs1 hyps defs goal;
       Tacticals.tclIDTAC
@@ -1318,7 +1329,7 @@ let hammer_hook_tac prefix name =
               Opt.filter_classes := true;
               Opt.filter_hurkens := true;
               let (goal, hyps, defs) = get_goal_context env sigma gl in
-              let ctx = Features.make_selection_ctx hyps defs goal in
+              let ctx = make_extraction_ctx hyps defs goal in
               List.iter
                 begin fun (met, n) ->
                   let str = met ^ "-" ^ string_of_int n in

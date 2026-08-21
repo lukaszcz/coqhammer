@@ -20,9 +20,14 @@ type selection_metadata = {
 val make_selection_ctx : hhdef list (* hyps *) -> hhdef list (* defs *) ->
   hhdef (* goal *) -> selection_ctx
 
-(* Eagerly prepare enabled definitional slots. GS mode calls this in the
-   parent process so every candidate and reconstruction retry shares the work.
-   This does not force the lazy fields when [DefinitionPremises] is zero. *)
+(* Eagerly prepare enabled definitional slots. Every caller that goes on to
+   call [extract] must call this first: [extract] releases the converted
+   type/body trees that ranking the definitional candidates reads, so a
+   [merge_def_slots] or [selection_metadata] forcing the ranking afterwards
+   would convert every candidate whose size is not cached yet a second time.
+   GS mode also calls this in the parent process so every candidate and
+   reconstruction retry shares the work. This does not force the lazy fields
+   when [DefinitionPremises] is zero. *)
 val prepare_def_slots : selection_ctx -> unit
 
 (* Derive eval metadata from the same seed, occurrence table and ranked
