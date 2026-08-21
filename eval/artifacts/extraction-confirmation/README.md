@@ -19,7 +19,7 @@ table is stale from the next run onwards.
 
 Regenerate from the raw checkpoints under `eval/results/confirmation` with
 `./evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
-switch, add `--setup` (or run `eval/install-external-libs.sh` first) to install
+switch, add `--setup` (or run `./install-external-libs.sh` first) to install
 the external libraries the full corpora need.
 
 ## Headline: soundness
