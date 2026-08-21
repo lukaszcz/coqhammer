@@ -481,8 +481,9 @@ trap - INT TERM
 
 # The generic summarizer API supplies every active non-label axis and mode via
 # environment while preserving the positional interface used by extraction.
-summary_probe="$tmp/summary-probe.py"
-cat > "$summary_probe" <<'PY'
+(
+  summary_probe="$tmp/summary-probe.py"
+  cat > "$summary_probe" <<'PY'
 import os
 import pathlib
 import sys
@@ -501,29 +502,30 @@ pathlib.Path(sys.argv[2]).write_text("\n".join((
 )))
 pathlib.Path(sys.argv[3]).write_text("compatible\n")
 PY
-labels=(base candidate)
-premises=(knn-32 nbayes-1024)
-provers=(eprover vampire)
-corpora=(tiny-a tiny-b)
-corpus_mode=sample
-consistency_premise=knn-32
-tim=5
-consistency_tim=2
-compile_timeout=600
-compile_timeout_grace=10
-declare -A label_config=([base]=current [candidate]=current)
-declare -A label_prefix=([base]="$prefix" [candidate]="$prefix")
-declare -A corpus_source=([tiny-a]=fixture-a [tiny-b]=fixture-b)
-declare -A corpus_digest=([tiny-a]="$old_corpus_digest" [tiny-b]="$old_corpus_digest")
-declare -A corpus_input_trees=([tiny-a]="$tmp" [tiny-b]="$tmp")
-declare -A corpus_input_files=([tiny-a]='' [tiny-b]='')
-_grid_run_summarizer "$summary_probe" "$tmp/results-unused" \
-  "$tmp/summary-probe.out" "$tmp/analysis-probe.out"
-expected_probe=$'knn-32\nnbayes-1024\neprover\nvampire\ntiny-a\ntiny-b\nsample\nknn-32\n0123456789012345678901234567890123456789\ncurrent\nfixture-b\nbase|candidate'
-[ "$(cat "$tmp/summary-probe.out")" = "$expected_probe" ] ||
-  fail "summarizer did not receive dynamic axes and mode"
-[ "$(cat "$tmp/analysis-probe.out")" = compatible ] ||
-  fail "positional summarizer API changed"
+  labels=(base candidate)
+  premises=(knn-32 nbayes-1024)
+  provers=(eprover vampire)
+  corpora=(tiny-a tiny-b)
+  corpus_mode=sample
+  consistency_premise=knn-32
+  tim=5
+  consistency_tim=2
+  compile_timeout=600
+  compile_timeout_grace=10
+  declare -A label_config=([base]=current [candidate]=current)
+  declare -A label_prefix=([base]="$prefix" [candidate]="$prefix")
+  declare -A corpus_source=([tiny-a]=fixture-a [tiny-b]=fixture-b)
+  declare -A corpus_digest=([tiny-a]="$old_corpus_digest" [tiny-b]="$old_corpus_digest")
+  declare -A corpus_input_trees=([tiny-a]="$tmp" [tiny-b]="$tmp")
+  declare -A corpus_input_files=([tiny-a]='' [tiny-b]='')
+  _grid_run_summarizer "$summary_probe" "$tmp/results-unused" \
+    "$tmp/summary-probe.out" "$tmp/analysis-probe.out"
+  expected_probe=$'knn-32\nnbayes-1024\neprover\nvampire\ntiny-a\ntiny-b\nsample\nknn-32\n0123456789012345678901234567890123456789\ncurrent\nfixture-b\nbase|candidate'
+  [ "$(cat "$tmp/summary-probe.out")" = "$expected_probe" ] ||
+    fail "summarizer did not receive dynamic axes and mode"
+  [ "$(cat "$tmp/analysis-probe.out")" = compatible ] ||
+    fail "positional summarizer API changed"
+)
 
 # A unique install named by its label can collide with a different shared
 # install identity. Detect the normalized destination before creating it.

@@ -35,6 +35,10 @@ GUARD_GAINS_COLUMN = f"{GUARD_SCOPE}_goal_gains"
 GUARD_LOSSES_COLUMN = f"{GUARD_SCOPE}_goal_losses"
 GUARD_NET_COLUMN = f"{GUARD_SCOPE}_goal_net"
 GUARD_FLAG_COLUMN = f"{GUARD_SCOPE}_regression_flag"
+# git rev-parse prints 40 hex characters in a SHA-1 repository and 64 in a
+# SHA-256 one; the grid engine accepts either (commit_pattern in
+# grid-engine.sh), so this checker must not narrow that to SHA-1 alone.
+COMMIT_RE = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
 LABEL_RE = re.compile(r"ds(0|[1-9][0-9]*)-df(0|[1-9][0-9]*)")
 META_RE = re.compile(
     r"d_size=(0|[1-9][0-9]*) "
@@ -239,7 +243,7 @@ def provenance_from_environment(labels: list[str], axes: Axes) -> Provenance:
     corpus_data = data["corpora"]
     if not isinstance(label_data, dict) or not isinstance(corpus_data, dict):
         raise ValueError("expected provenance labels and corpora must be JSON objects")
-    if re.fullmatch(r"[0-9a-f]{40}", data["repository_commit"]) is None:
+    if COMMIT_RE.fullmatch(data["repository_commit"]) is None:
         raise ValueError("expected provenance has an invalid repository commit")
     for key in ("grid_script_sha256", "checkpoint_helper_sha256",
                 "compile_supervisor_sha256"):
@@ -257,7 +261,7 @@ def provenance_from_environment(labels: list[str], axes: Axes) -> Provenance:
             not isinstance(value, str) or not value for value in fields.values()
         ):
             raise ValueError(f"expected provenance has malformed label fields: {label}")
-        if re.fullmatch(r"[0-9a-f]{40}", fields["install_commit"]) is None or \
+        if COMMIT_RE.fullmatch(fields["install_commit"]) is None or \
                 re.fullmatch(r"[0-9a-f]{64}", fields["install_manifest_sha256"]) is None:
             raise ValueError(f"expected provenance has invalid install hashes: {label}")
         if fields["install_kind"] not in ("current", "configuration"):
@@ -872,7 +876,9 @@ def make_summary_rows(grid: LoadedGrid, labels: list[str]) -> list[dict[str, obj
 
         def add(scope: str, corpus: str = "all", premise: str = "all",
                 prover: str = "all", bucket: str = "all",
-                predicate: Callable[[AttemptKey, Attempt], bool] = lambda _k, _a: True) -> None:
+                predicate: Callable[[AttemptKey, Attempt], bool] = lambda _k, _a: True,
+                label: str = label,
+                attempts: dict[AttemptKey, Attempt] = attempts) -> None:
             rows.append(summary_row(
                 grid, label, scope, corpus, premise, prover, bucket,
                 collect_stats(attempts, baseline, predicate),

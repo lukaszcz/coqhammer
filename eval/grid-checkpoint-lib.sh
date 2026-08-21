@@ -218,6 +218,9 @@ corpus_source_path() {
 # shellcheck disable=SC2154
 write_grid_provenance() {
   local output="$1" grid_name="$2" summarizer="$3" summary="$4" analysis="$5"
+  # Callers that pass a temporary as $output clean this intermediate up by
+  # spelling it out themselves (see confirmation_publish_final_provenance), so
+  # renaming it here means updating them too.
   local temporary="$output.tmp.$$" label corpus
   {
     printf '%s\n' \

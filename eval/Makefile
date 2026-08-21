@@ -92,4 +92,4 @@ clean-problems: clean-vo
         test-compile-supervisor test-atp-makefile test-premise-grid-spec \
         test-confirmation-option-probe \
         test-premise-summarizer \
-        check atp reconstr init all
+        check atp reconstr prove init all

@@ -13,6 +13,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar
 from unittest import mock
 
 SCRIPT = Path(__file__).resolve().parents[1] / "tools" / "summarize-premise-screening.py"
@@ -120,7 +121,7 @@ def fixture_checkpoint(
 
 
 class Fixture:
-    intrinsic = {
+    intrinsic: ClassVar[dict[str, tuple[int, str, str]]] = {
         "tiny-a": (8, "1", "2"),
         "tiny-b": (0, "none", "none"),
     }
@@ -363,6 +364,31 @@ class SummarizerTests(unittest.TestCase):
         self.assertIn("Goal-level N=32 regression guard", text)
         self.assertIn("Exact-attempt diagnostics (not decision metrics)", text)
 
+    def test_superset_of_guarded_successes_reports_clear(self) -> None:
+        # A candidate that keeps every baseline N=32 attempt and adds one loses
+        # no guarded GoalKey, so its aggregate guard must read "clear".
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            fixture = Fixture(root)
+            extra = ("ds8-df4", "tiny-a", "knn-32", "vampire")
+            for key, output in fixture.outputs.items():
+                if key[0] == summarizer.BASELINE:
+                    continue
+                output.write_text(
+                    "% SZS status Theorem\n" if key == extra
+                    else Fixture.output_text(summarizer.BASELINE, *key[1:])
+                )
+            grid = summarizer.load_grid(root, LABELS, AXES, fixture.provenance)
+            rows = summarizer.make_summary_rows(grid, LABELS)
+            aggregate = next(
+                row for row in rows
+                if row["label"] == "ds8-df4" and row["scope"] == "aggregate"
+            )
+            self.assertEqual(aggregate["attempt_gains"], 1)
+            self.assertEqual(aggregate["attempt_losses"], 0)
+            self.assertEqual(aggregate["n32_goal_losses"], 0)
+            self.assertEqual(aggregate["n32_regression_flag"], "clear")
+
     def test_standalone_one_label_one_corpus_strict_summary(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -469,6 +495,36 @@ class SummarizerTests(unittest.TestCase):
             self.assertIn(column, summarizer.FIELDNAMES)
         self.assertEqual(summarizer.GUARD_SCOPE, "n32")
         self.assertEqual(summarizer.GUARD_PREMISE_FIELD, "N=32")
+
+    def test_corpus_input_hash_folds_files_and_trees(self) -> None:
+        # The tree bytes are the ones frozen in tests/test_grid_engine.sh, and
+        # the fold over files then trees is the one load_grid verifies a corpus
+        # with, so this golden pins the complete published digest.
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            tree = root / "tree"
+            (tree / "sub").mkdir(parents=True)
+            (tree / ".git").mkdir()
+            (tree / "_build").mkdir()
+            (tree / "a.txt").write_text("alpha\n")
+            (tree / "sub" / "b.txt").write_text("beta\n")
+            (tree / ".git" / "ignored").write_text("ignored git\n")
+            (tree / "_build" / "ignored").write_text("ignored build\n")
+            first, second = root / "first.v", root / "second.v"
+            first.write_text("(* first *)\n")
+            second.write_text("(* second *)\n")
+            fields: dict[str, object] = {
+                "files": [str(first), str(second)],
+                "trees": [str(tree)],
+            }
+            self.assertEqual(
+                summarizer.hash_tree(tree),
+                "e316ab979d37ab94a8f0c9ff5959c94a43c811122785b33fef37526f3e7cdcc5",
+            )
+            self.assertEqual(
+                summarizer.corpus_input_hash(fields),
+                "db6556761a819f1eb9edb42f1af10f0ccab8d8a47790acbb8c672809a103afc9",
+            )
 
     def test_provenance_json_rejects_root_and_nested_type_errors(self) -> None:
         base = json.loads(self.fixture.environment_json())

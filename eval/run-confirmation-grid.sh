@@ -107,6 +107,7 @@ fi
 # shellcheck disable=SC1091
 source "$eval_dir/grid-checkpoint-lib.sh"
 # shellcheck source=eval/confirmation-option-probe.sh
+# shellcheck disable=SC1091
 source "$eval_dir/confirmation-option-probe.sh"
 
 # An unset -j means "use the machine": one job by default wasted almost all of

@@ -167,6 +167,10 @@ confirmation_publish_final_provenance() (
   trap 'exit 143' TERM
 
   temporary=$(mktemp "$output.tmp.XXXXXX") || return 1
+  # write_grid_provenance builds its own intermediate as "<its output>.tmp.$$",
+  # so this spelling is the path it will create under our temporary. Keep the
+  # two in step: a change to the writer's intermediate name has to change here
+  # too, or an interrupted write leaves that file behind.
   nested_temporary="$temporary.tmp.$$"
   write_grid_provenance "$temporary" "$grid_name" \
     "$summarizer" "$summary" "$analysis" || return 1

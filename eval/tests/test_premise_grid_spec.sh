@@ -31,11 +31,17 @@ expected_labels=(
 for label in "${GRID_LABELS[@]}"; do
   [ "$(grid_label_install "$label")" = current ] || fail "$label does not share current"
 done
-expected_preamble=$'Set Hammer DefinitionPremises 8.\nSet Hammer DefinitionFeatures 16.'
-[ "$(grid_label_preamble ds8-df16)" = "$expected_preamble" ] ||
+# The engine captures the callback through a file, so the trailing newline is
+# part of what a label's preamble is. The sentinel keeps command substitution
+# from stripping it, which would hide a preamble that ran the two settings
+# together with the line that follows them.
+expected_preamble=$'Set Hammer DefinitionPremises 8.\nSet Hammer DefinitionFeatures 16.\n'
+actual_preamble=$(grid_label_preamble ds8-df16; printf x)
+[ "${actual_preamble%x}" = "$expected_preamble" ] ||
   fail "wrong ds8-df16 preamble"
-baseline_preamble=$'Set Hammer DefinitionPremises 0.\nSet Hammer DefinitionFeatures 0.'
-[ "$(grid_label_preamble ds0-df0)" = "$baseline_preamble" ] ||
+baseline_preamble=$'Set Hammer DefinitionPremises 0.\nSet Hammer DefinitionFeatures 0.\n'
+actual_baseline=$(grid_label_preamble ds0-df0; printf x)
+[ "${actual_baseline%x}" = "$baseline_preamble" ] ||
   fail "wrong pure-predictor baseline preamble"
 
 case "$GRID_RESULTS_ROOT" in
