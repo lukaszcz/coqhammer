@@ -474,7 +474,10 @@ log_has_crash_or_error_ignoring_backstop_kills() {
 log_has_crash_or_error() {
   local log="$1"
   log_has_crash_or_infrastructure_error "$log" && return 0
-  grep -Eiv '^(make(\[[0-9]+\])?: (\*\*\* .* Error [0-9]+|Target .* not remade because of errors\.|Entering directory|Leaving directory))$' "$log" |
+  # "make -C" implies "-w", so the directory notices always carry the quoted
+  # path: "make: Entering directory '/.../eval/atp'". Anchoring right after the
+  # phrase would never match one.
+  grep -Eiv '^(make(\[[0-9]+\])?: (\*\*\* .* Error [0-9]+|Target .* not remade because of errors\.|(Entering|Leaving) directory .*))$' "$log" |
     grep -Eiq '((^|[^[:alpha:]])(parse|input)?[[:space:]_-]*error([:[:space:]]|$))'
 }
 

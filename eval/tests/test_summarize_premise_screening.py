@@ -653,6 +653,64 @@ class SummarizerTests(unittest.TestCase):
         )
         self.load()  # Empty Vampire output is only the documented backstop result.
 
+    def test_consistency_backstop_kill_is_a_crash_for_the_consistency_tier(self) -> None:
+        # grid-engine.sh screens the consistency raw log with
+        # log_has_crash_or_error_ignoring_strategy_aborts, which keeps the
+        # backstop lines. Accepting them here would pass a run the engine failed.
+        raw = (self.root / "ds0-df0" / "tiny-a" / "consistency" / "eprover-knn-32" /
+               "raw" / "shared.p")
+        backstop = "Killed\nmake[1]: *** [Makefile:9: target] Error 137\n"
+        raw.write_text(backstop)
+        with self.assertRaisesRegex(ValueError, "consistency raw log records a crash"):
+            self.load()
+        # Only the prover stage, which runs its ATPs under htimeout, drops them.
+        self.assertTrue(
+            summarizer.log_has_crash_or_error(backstop, ignore_backstop_kills=False)
+        )
+        self.assertFalse(
+            summarizer.log_has_crash_or_error(backstop, ignore_backstop_kills=True)
+        )
+
+        # The recovered per-strategy abort is dropped by every tier, though.
+        raw.write_text(
+            "% Aborted by signal SIGSEGV on child.p\n"
+            "use '--traceback on' to invoke a debugger and get a human-readable "
+            "stack trace\n"
+        )
+        self.load()
+
+    def test_make_directory_notices_are_stripped_with_their_quoted_path(self) -> None:
+        # "make -C" implies "-w": the notice always carries a quoted path, so
+        # anchoring right after the phrase would never strip one.
+        for line in ("make: Entering directory '/home/dev/eval/atp'",
+                     "make[1]: Leaving directory '/home/dev/eval/atp'"):
+            self.assertIsNotNone(summarizer.ROUTINE_MAKE_ERROR_RE.fullmatch(line))
+        # A path segment that ends in a word the parse-error scan would match
+        # makes the stripping observable, not just structural.
+        routine = (
+            "make: Entering directory '/tmp/error dir/atp'\n"
+            "make[1]: *** [Makefile:9: all] Error 2\n"
+            "make: Leaving directory '/tmp/error dir/atp'\n"
+        )
+        self.assertFalse(
+            summarizer.log_has_crash_or_error(routine, ignore_backstop_kills=True)
+        )
+        self.assertFalse(
+            summarizer.log_has_crash_or_error(routine, ignore_backstop_kills=False)
+        )
+
+    def test_unlisted_generated_problem_is_reported_as_missing(self) -> None:
+        # Every listed entry is is_file()-verified, so the only real discrepancy
+        # is an output the checkpoint list omits; it must not read "unexpected".
+        problem_dir = self.root / "ds0-df0" / "tiny-a" / "atp-problems" / "knn-32"
+        (problem_dir / "unlisted.p").write_text("% fixture\n")
+        with self.assertRaises(ValueError) as caught:
+            self.load()
+        message = str(caught.exception)
+        self.assertIn("checkpoint list does not exactly cover", message)
+        self.assertIn("missing unlisted.p", message)
+        self.assertNotIn("unexpected", message)
+
     def test_empty_e_output_is_rejected(self) -> None:
         key = ("ds0-df0", "tiny-a", "knn-32", "eprover")
         self.fixture.outputs[key].write_text("")

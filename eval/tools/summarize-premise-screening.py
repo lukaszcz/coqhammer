@@ -67,8 +67,12 @@ PARSE_ERROR_RE = re.compile(
     re.IGNORECASE | re.MULTILINE,
 )
 ROUTINE_MAKE_ERROR_RE = re.compile(
+    # "make -C" implies "-w", so the directory notices always carry the quoted
+    # path: "make: Entering directory '/.../eval/atp'". Anchoring right after
+    # the phrase would never match one.
     r"^make(?:\[[0-9]+\])?: (?:\*\*\* .* Error [0-9]+|"
-    r"Target .* not remade because of errors\.|Entering directory|Leaving directory)$",
+    r"Target .* not remade because of errors\.|"
+    r"(?:Entering|Leaving) directory .*)$",
     re.IGNORECASE,
 )
 BACKSTOP_LINE_RE = re.compile(
@@ -161,7 +165,6 @@ class Stats:
 @dataclass(frozen=True)
 class LoadedGrid:
     attempts: dict[str, dict[AttemptKey, Attempt]]
-    goal_metadata: dict[GoalKey, Metadata]
     label_options: dict[str, tuple[int, int]]
     axes: Axes
 
@@ -402,7 +405,11 @@ def listed_files(path: Path, expected_root: Path, suffix: str) -> dict[str, Path
         for item in expected_root.rglob(f"*{suffix}") if item.is_file()
     }
     if actual != set(result):
-        difference = describe_set_difference(set(result), actual)
+        # The directory is the ground truth here: every listed entry was already
+        # is_file()-verified above, so the only real failure is an output the
+        # list omits. Passing the list as "expected" would report exactly that
+        # omission as an "unexpected" file.
+        difference = describe_set_difference(actual, set(result))
         raise ValueError(f"checkpoint list does not exactly cover {expected_root}: {difference}")
     return result
 
@@ -496,15 +503,31 @@ def validate_status(path: Path) -> None:
         raise ValueError(f"prover status is missing or not a single integer field: {path}")
 
 
-def _filtered_log(text: str) -> str:
-    lines = [line for line in text.splitlines() if BACKSTOP_LINE_RE.fullmatch(line) is None]
-    text = "\n".join(lines)
+def _filtered_log(text: str, ignore_backstop_kills: bool) -> str:
+    if ignore_backstop_kills:
+        lines = [
+            line for line in text.splitlines() if BACKSTOP_LINE_RE.fullmatch(line) is None
+        ]
+        text = "\n".join(lines)
+    # A portfolio prover reports a child strategy that died while the run itself
+    # carried on to a terminal SZS status; every tier drops those notices, as
+    # strip_portfolio_strategy_aborts does in grid-checkpoint-lib.sh.
     text = STRATEGY_ABORT_RE.sub("", text).replace(STRATEGY_HINT, "")
     return text
 
 
-def log_has_crash_or_error(text: str) -> bool:
-    filtered = _filtered_log(text)
+def log_has_crash_or_error(text: str, *, ignore_backstop_kills: bool) -> bool:
+    """Scan a raw log the way the grid engine's shell helpers do.
+
+    ``ignore_backstop_kills=True`` mirrors
+    ``log_has_crash_or_error_ignoring_backstop_kills``: it drops the "Killed" and
+    "Error 137" lines that htimeout's SIGKILL backstop leaves behind. ``False``
+    mirrors ``log_has_crash_or_error_ignoring_strategy_aborts``, which keeps
+    them, and is the tier the engine applies to the consistency stage
+    (eval/grid-engine.sh). Picking the wrong tier would let this checker accept
+    a run the engine itself failed.
+    """
+    filtered = _filtered_log(text, ignore_backstop_kills)
     if CRASH_RE.search(filtered) is not None:
         return True
     nonroutine = "\n".join(
@@ -516,7 +539,9 @@ def log_has_crash_or_error(text: str) -> bool:
 def validate_log(path: Path) -> None:
     if not path.is_file():
         raise ValueError(f"required prover log is missing: {path}")
-    if log_has_crash_or_error(path.read_text(errors="replace")):
+    # The prover stage runs each ATP under htimeout, so the engine accepts the
+    # backstop's kill reports here (expected_atp_outputs_are_complete).
+    if log_has_crash_or_error(path.read_text(errors="replace"), ignore_backstop_kills=True):
         raise ValueError(f"prover log records a crash or infrastructure error: {path}")
 
 
@@ -577,7 +602,12 @@ def validate_consistency(
     inconsistent = {"Theorem", "Unsatisfiable", "ContradictoryAxioms"}
     for name, output in outputs.items():
         raw = work / "raw" / name
-        if not raw.is_file() or log_has_crash_or_error(raw.read_text(errors="replace")):
+        # The consistency stage fails on a backstop kill (grid-engine.sh uses
+        # log_has_crash_or_error_ignoring_strategy_aborts there), so this
+        # checker must not accept a "Killed" the engine rejects.
+        if not raw.is_file() or log_has_crash_or_error(
+            raw.read_text(errors="replace"), ignore_backstop_kills=False
+        ):
             raise ValueError(f"consistency raw log records a crash or error: {raw}")
         validate_integer_status(work / "status" / f"{name}.status", "command_exit")
         status = terminal_status(output)
@@ -642,6 +672,9 @@ def load_grid(
         raise ValueError(f"required baseline label is missing: {BASELINE}")
 
     attempts: dict[str, dict[AttemptKey, Attempt]] = {}
+    # Only a cross-label/premise consistency check: a GoalKey's intrinsic
+    # metadata may not depend on which label or premise selector produced it.
+    # Buckets travel on Attempt.bucket, so nothing outside this loop reads it.
     goal_metadata: dict[GoalKey, Metadata] = {}
     metadata_sources: dict[GoalKey, Path] = {}
     corpus_goals: dict[str, set[str]] = {}
@@ -741,7 +774,7 @@ def load_grid(
     for label, label_attempts in attempts.items():
         if set(label_attempts) != baseline_keys:
             raise ValueError(f"attempt identities for {label} conflict with {BASELINE}")
-    return LoadedGrid(attempts, goal_metadata, label_options, axes)
+    return LoadedGrid(attempts, label_options, axes)
 
 
 def goal_of(key: AttemptKey) -> GoalKey:
