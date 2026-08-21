@@ -81,7 +81,9 @@ val merge_def_slots : selection_ctx -> int (* premise budget *) ->
 (* `clean` removes the temporary files created by `extract` *)
 val clean : string (* file name  *) -> unit
 
-(* [predict] is extract + run_predict + merge + clean over one context. *)
+(* [predict] is extract + run_predict + merge + clean over one context. Like
+   any other path that reaches [extract], its caller must have run
+   [prepare_def_slots] on the context first. *)
 val predict : selection_ctx -> hhdef list (* hyps *) -> hhdef (* goal *) ->
   hhdef list (* predictions *)
 

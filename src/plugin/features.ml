@@ -430,8 +430,10 @@ let run_predict (ctx : selection_ctx) fname pred_num pred_method =
   try
     let predicts =
       Str.split (Str.regexp " ")
+        (* Cleanup is left to the handler below: doing it here too would
+           remove [oname] twice, and the second removal's [Sys_error] would
+           replace the diagnostic. *)
         (try input_line ic with End_of_file ->
-          close_in ic; Sys.remove oname;
           raise (HammerError "Predictor did not return advice."))
     in
     close_in ic; Sys.remove oname;
