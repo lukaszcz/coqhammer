@@ -163,6 +163,56 @@ fi
 if compgen -G "$tmp/missing-manifest.env.tmp.*" >/dev/null; then
   fail "failed manifest rewrite left a temporary"
 fi
+
+# _installs/current is shared with the screening grids, whose checkpoints hash
+# its manifest.env into install_manifest_sha256, so recording the probed options
+# must leave that file byte-identical.  Exercise the production
+# probe_label_options against the fake install above rather than a copy of it.
+extract_shell_function() {
+  awk -v name="$2" '
+    $0 == name "() {" { inside = 1 }
+    inside { print }
+    inside && $0 == "}" { exit }
+  ' "$1"
+}
+eval "$(extract_shell_function "$eval_dir/run-confirmation-grid.sh" probe_label_options)"
+compile_supervisor="$tmp/probe-supervisor"
+option_probe_phase='option-probe'
+shared_options="$tmp/prefix/confirmation-options.env"
+# Reset the fixture to a manifest that carries no option fields; a manifest that
+# already held the probed values would reproduce its own bytes under an in-place
+# rewrite and hide exactly the regression this checks for.
+cat > "$tmp/prefix/manifest.env" <<EOF
+kind=current
+config=current
+commit=$repo_commit
+EOF
+cp "$tmp/prefix/manifest.env" "$tmp/shared-manifest.expected"
+shared_manifest_digest=$(hash_file "$tmp/prefix/manifest.env")
+label_definition_premises[current]=
+label_definition_features[current]=
+probe_label_options current "$tmp/prefix" > /dev/null
+cmp -s "$tmp/prefix/manifest.env" "$tmp/shared-manifest.expected" ||
+  fail "recording the probed options rewrote the shared install manifest"
+[ "$(hash_file "$tmp/prefix/manifest.env")" = "$shared_manifest_digest" ] ||
+  fail "recording the probed options changed install_manifest_sha256"
+grep -Fqx 'definition_premises=32' "$shared_options" ||
+  fail "option sidecar omitted DefinitionPremises"
+grep -Fqx 'definition_features=16' "$shared_options" ||
+  fail "option sidecar omitted DefinitionFeatures"
+grep -Fqx "option_probe_sha256=$option_probe_digest" "$shared_options" ||
+  fail "option sidecar omitted the probe digest"
+[ "${label_definition_premises[current]}" = 32 ] &&
+  [ "${label_definition_features[current]}" = 16 ] ||
+  fail "probe_label_options did not publish the probed values"
+cp "$shared_options" "$tmp/shared-options.expected"
+probe_label_options current "$tmp/prefix" > /dev/null
+cmp -s "$shared_options" "$tmp/shared-options.expected" ||
+  fail "reprobing the same install rewrote the option sidecar differently"
+cmp -s "$tmp/prefix/manifest.env" "$tmp/shared-manifest.expected" ||
+  fail "reprobing the same install rewrote the shared install manifest"
+[ -z "$(find "$TMPDIR" -mindepth 1 -print -quit)" ] ||
+  fail "option recording left a temporary"
 marker="$tmp/results/current/sample/generate"
 mkdir -p "$(dirname "$marker")"
 confirmation_mark_checkpoint "$marker" generation current sample "$tmp/prefix"
@@ -298,6 +348,8 @@ for function, stage in (
             raise SystemExit(f"{function} does not use {helper} for {stage}")
 if re.search(r"^  (?:if )?(?:checkpoint_done|mark_checkpoint) ", text, re.M):
     raise SystemExit("confirmation stage bypasses option-provenance wrappers")
+if re.search(r"confirmation_record_hammer_options \"[^\"]*manifest\.env\"", text):
+    raise SystemExit("confirmation options are recorded into the shared install manifest")
 if not re.search(
     r'confirmation_probe_hammer_options "\$prefix" "\$compile_supervisor" \\\n'
     r'    "\$compile_timeout" "\$compile_timeout_grace" "\$option_probe_phase"',

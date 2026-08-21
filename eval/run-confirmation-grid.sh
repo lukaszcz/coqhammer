@@ -384,11 +384,21 @@ validate_consistency_run() {
       "$outdir/consistency-outputs-$prover-$premise.lst"
 }
 
+# The probed values are recorded in a sidecar beside the install rather than in
+# manifest.env.  _installs/current is the prefix the screening grids use for
+# their own current label, and every grid hashes that manifest into its
+# install_manifest_sha256 checkpoint field, so rewriting it here would
+# invalidate their checkpoints and silently discard finished prover work.
+# Nothing reads these values back from disk -- this grid's checkpoints and its
+# final provenance carry them as their own fields -- so the sidecar records what
+# the install was probed as without being an input to anything.
 probe_label_options() {
   local label="$1" prefix="$2"
+  local options="$prefix/confirmation-options.env"
   confirmation_probe_hammer_options "$prefix" "$compile_supervisor" \
     "$compile_timeout" "$compile_timeout_grace" "$option_probe_phase"
-  confirmation_record_hammer_options "$prefix/manifest.env" "$option_probe_digest" \
+  printf '%s\n' "label=$label" "prefix=$prefix" > "$options"
+  confirmation_record_hammer_options "$options" "$option_probe_digest" \
     "$CONFIRMATION_DEFINITION_PREMISES" "$CONFIRMATION_DEFINITION_FEATURES"
   label_definition_premises[$label]=$CONFIRMATION_DEFINITION_PREMISES
   label_definition_features[$label]=$CONFIRMATION_DEFINITION_FEATURES
