@@ -454,15 +454,15 @@ _grid_prepare_prefix_env() {
 _grid_require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
     echo "Required command not found: $1" >&2
-    exit 1
+    return 1
   fi
 }
 
 _grid_require_prover() {
   case "$1" in
     eprover) _grid_require_cmd eprover ;;
-    vampire) _grid_require_cmd htimeout; _grid_require_cmd vampire ;;
-    *) echo "Unknown prover: $1" >&2; exit 1 ;;
+    vampire) _grid_require_cmd htimeout && _grid_require_cmd vampire ;;
+    *) echo "Unknown prover: $1" >&2; return 1 ;;
   esac
 }
 
@@ -805,6 +805,32 @@ _grid_build_install() {
   (cd "$eval_dir" && ./rebuild-config.sh "$install" --label "$label" --prefix "$prefix")
 }
 
+# A stage that reports a failure must not also abort the driver, and the driver
+# must not lose a failure the stage did not report itself. Bash ignores errexit
+# for the whole dynamic extent of a command run in a condition or on the left of
+# `||` -- every function and subshell it invokes included -- and a `set -e`
+# inside cannot bring it back, so a stage invoked that way would silently walk
+# past a failing command it does not check. Call stages through this helper
+# instead: it is invoked as a plain command, so the caller's errexit is
+# undisturbed, and it reports the stage's status in GRID_STAGE_STATUS rather
+# than its own exit code. The subshell restores errexit for the stage body and
+# keeps an `exit` reached inside one -- from a shared helper, say -- from
+# terminating the driver. It also cleans up the temporaries the stage
+# registered, which the driver's own EXIT trap can no longer see.
+GRID_STAGE_STATUS=0
+
+_grid_run_stage() {
+  local -
+  set +e
+  (
+    set -e
+    _GRID_TEMP_FILES=()
+    trap _grid_cleanup_temp_files EXIT
+    "$@"
+  )
+  GRID_STAGE_STATUS=$?
+}
+
 _grid_run_generation() {
   local label="$1" corpus="$2" prefix="$3" coqc_cmd premise
   local outdir="$results_root/$label/$corpus"
@@ -844,7 +870,7 @@ _grid_run_generation() {
   grep Error "$outdir/check.full.log" > "$outdir/check.log" || true
   if [ -s "$outdir/check.log" ]; then
     echo "Check errors for $label/$corpus; see $outdir/check.log" >&2
-    exit 1
+    return 1
   fi
 
   echo gen-atp > coqhammer.opt
@@ -859,7 +885,7 @@ _grid_run_generation() {
   grep Error "$outdir/gen-atp.full.log" > "$outdir/gen-atp.log" || true
   if [ -s "$outdir/gen-atp.log" ]; then
     echo "ATP-generation errors for $label/$corpus; see $outdir/gen-atp.log" >&2
-    exit 1
+    return 1
   fi
 
   rm -rf "$outdir/atp-problems"
@@ -867,13 +893,13 @@ _grid_run_generation() {
   for premise in "${premises[@]}"; do
     if [ ! -d "atp/problems/$premise" ]; then
       echo "No generated ATP directory for $premise in $label/$corpus" >&2
-      exit 1
+      return 1
     fi
     cp -R "atp/problems/$premise" "$outdir/atp-problems/$premise"
     find "$outdir/atp-problems/$premise" -name '*.p' | sort > "$outdir/generated-$premise.lst"
     if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
       echo "No generated ATP problems for $premise in $label/$corpus" >&2
-      exit 1
+      return 1
     fi
   done
   {
@@ -927,6 +953,12 @@ _grid_run_prover() {
   mark_checkpoint "$marker" prover "$label" "$corpus" "$prefix" \
     "premise=$premise" "prover=$prover" "timeout=$tim" "input_sha256=$input_digest"
 }
+
+# The status a consistency scan returns when the premises it was given really
+# are inconsistent. Every other non-zero status it returns is a failure of the
+# scan itself, which the driver reports; a hit is a measurement, which it does
+# not. Both are recorded as consistency_exit=1 for the summarizer.
+_GRID_CONSISTENCY_HIT_STATUS=3
 
 _grid_run_consistency() {
   local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
@@ -1008,7 +1040,7 @@ PY
   if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
     echo consistency_exit=1 > "$outdir/consistency-$prover-$premise.status"
     echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
-    return 1
+    return "$_GRID_CONSISTENCY_HIT_STATUS"
   fi
   find "$work/outputs" -type f | sort > "$outdir/consistency-outputs-$prover-$premise.lst"
   echo consistency_exit=0 > "$outdir/consistency-$prover-$premise.status"
@@ -1326,22 +1358,31 @@ grid_run() (
       # A failed stage leaves the rest of the grid worth running, so remember
       # the failure and carry on. Everything downstream of generation depends
       # on its problem trees, so that one failure skips the rest of the corpus.
-      if ! _grid_run_generation "$label" "$corpus" "$prefix"; then
+      _grid_run_stage _grid_run_generation "$label" "$corpus" "$prefix"
+      if [ "$GRID_STAGE_STATUS" -ne 0 ]; then
         run_status=1
         continue
       fi
       for premise in "${premises[@]}"; do
         for prover in "${provers[@]}"; do
-          _grid_run_prover "$label" "$corpus" "$premise" "$prover" "$prefix" ||
-            run_status=1
+          _grid_run_stage _grid_run_prover "$label" "$corpus" "$premise" \
+            "$prover" "$prefix"
+          [ "$GRID_STAGE_STATUS" -eq 0 ] || run_status=1
         done
       done
-      # The consistency canary is measurement, not a gate: it reports both a
-      # genuine inconsistency hit and an infrastructure failure through
-      # consistency_exit= in its status file, which the summarizer reads. Its
-      # exit status stays out of run_status so a hit cannot fail the grid.
+      # The consistency canary is measurement, not a gate: a genuine
+      # inconsistency hit is a result the summarizer reads from consistency_exit=
+      # in its status file, not a reason to fail the grid. A scan that could not
+      # be run or crashed is an ordinary infrastructure failure, and a partial
+      # run has no summarizer to notice it, so only the hit stays out of
+      # run_status.
       for prover in "${provers[@]}"; do
-        _grid_run_consistency "$label" "$corpus" "$consistency_premise" "$prover" "$prefix" || true
+        _grid_run_stage _grid_run_consistency "$label" "$corpus" \
+          "$consistency_premise" "$prover" "$prefix"
+        if [ "$GRID_STAGE_STATUS" -ne 0 ] &&
+            [ "$GRID_STAGE_STATUS" -ne "$_GRID_CONSISTENCY_HIT_STATUS" ]; then
+          run_status=1
+        fi
       done
     done
   done

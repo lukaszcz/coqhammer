@@ -479,6 +479,106 @@ grid_run --help >/dev/null
 [ "$(trap -p TERM)" = "$before_term" ] || fail "grid driver replaced caller TERM trap"
 trap - INT TERM
 
+# The label/corpus loop aggregates what each stage reports. Stages are stubbed
+# here to fail in every way one can: by returning, by walking into an unchecked
+# failing command, and by exiting the way a shared helper still may.
+(
+  cd "$eval_dir"
+  valid_spec
+  GRID_CORPORA=(corpus-a corpus-b)
+  # Everything outside the run loop is neutralized; only the stages are of
+  # interest, and none of them touches a real install, corpus, or summarizer.
+  _grid_require_reviewable_worktree() { return 0; }
+  _grid_build_install() { return 0; }
+  _grid_set_corpus_inputs() { return 0; }
+  _grid_require_consistent_corpus_provenance() { return 0; }
+  _grid_run_summarizer() { echo summarized; }
+  _grid_write_provenance() { return 0; }
+  _grid_run_generation() { echo "gen $2"; }
+  _grid_run_prover() { echo "prover $2"; }
+  _grid_run_consistency() { echo "consistency $2"; }
+
+  driver_out=
+  driver_status=0
+  run_driver() {
+    local stage_override="$1"
+    shift
+    set +e
+    driver_out=$( "$stage_override"; grid_run -j 2 "$@" 2>&1 )
+    driver_status=$?
+    set -e
+  }
+  expect_driver() {
+    local description="$1" expected="$2" present="$3" absent="$4"
+    if [ "$driver_status" -ne "$expected" ]; then
+      fail "$description exited $driver_status, expected $expected"
+    fi
+    if [ -n "$present" ] && ! grep -qF -- "$present" <<< "$driver_out"; then
+      fail "$description did not report: $present"
+    fi
+    if [ -n "$absent" ] && grep -qF -- "$absent" <<< "$driver_out"; then
+      fail "$description still reported: $absent"
+    fi
+  }
+
+  no_override() { :; }
+  run_driver no_override
+  expect_driver "a clean grid" 0 summarized ''
+
+  # A generation failure skips the rest of its corpus, since every later stage
+  # reads the problem trees it did not write, and leaves the next corpus alone.
+  generation_returns() {
+    _grid_run_generation() {
+      echo "gen $2"
+      [ "$2" != corpus-a ] || return 1
+    }
+  }
+  run_driver generation_returns
+  expect_driver "a failed generation" 1 'gen corpus-b' 'prover corpus-a'
+
+  # Bash ignores errexit throughout a command run in a condition or on the left
+  # of ||, so a stage invoked that way would walk past this unchecked failure.
+  generation_walks_on() {
+    _grid_run_generation() {
+      echo "gen $2"
+      false
+      echo "gen $2 continued"
+    }
+  }
+  run_driver generation_walks_on
+  expect_driver "an unchecked stage failure" 1 '' 'continued'
+
+  prover_exits() { _grid_run_prover() { echo "prover $2"; exit 1; }; }
+  run_driver prover_exits
+  expect_driver "a stage that exits" 1 'prover corpus-b' ''
+
+  prover_returns() { _grid_run_prover() { echo "prover $2"; return 1; }; }
+  run_driver prover_returns
+  expect_driver "a failed prover" 1 'consistency corpus-a' ''
+
+  # An inconsistency hit is a measurement the summarizer reads from the status
+  # file, so it alone leaves the grid's own status clean.
+  consistency_hits() {
+    _grid_run_consistency() {
+      echo "consistency $2"
+      return "$_GRID_CONSISTENCY_HIT_STATUS"
+    }
+  }
+  run_driver consistency_hits
+  expect_driver "an inconsistency hit" 0 summarized 'stages failed'
+  run_driver consistency_hits --only-label label
+  expect_driver "an inconsistency hit in a partial run" 0 '' ''
+
+  # A scan that could not run at all is an ordinary infrastructure failure, and
+  # a partial run has no summarizer to report it in the engine's place.
+  consistency_breaks() { _grid_run_consistency() { echo "consistency $2"; return 1; }; }
+  run_driver consistency_breaks
+  expect_driver "a failed consistency scan" 1 'stages failed' ''
+  run_driver consistency_breaks --only-corpus corpus-a
+  expect_driver "a failed consistency scan in a partial run" 1 \
+    'not updated by a partial run' summarized
+)
+
 # The generic summarizer API supplies every active non-label axis and mode via
 # environment while preserving the positional interface used by extraction.
 (
