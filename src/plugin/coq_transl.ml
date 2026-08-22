@@ -1926,9 +1926,12 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                 in
                 if opt_refinement_types then
                   match Coq_erasure.classify (List.rev vars) indname params with
-                  | Coq_erasure.CSubset { carrier_idx; subset_args; _ } ->
+                  | Coq_erasure.CSubset {
+                      carrier_idx; subset_args; index_formals = []; _
+                    } ->
                      compile_case ?premise lhs vars axname
                        (collapse_subset_case subset_args carrier_idx)
+                  | Coq_erasure.CSubset _ -> regular_case ()
                   | Coq_erasure.CEnum _ ->
                      (* Enum scrutinees (e.g. sumbool) need no special collapse;
                         split-form validity applies to the erased constructor tags,
@@ -2262,12 +2265,20 @@ and guard_leaf ctx ty x =
           let params = Hhlib.take params_num args
           in
           begin match Coq_erasure.classify ctx indname params with
+          | Coq_erasure.CSubset { index_formals = _ :: _; _ } ->
+             (* Indexed metadata must be instantiated at a saturated
+                occurrence.  Until that expansion is available, retain the
+                ordinary typing leaf. *)
+             None
           | Coq_erasure.CSubset {
               carrier_idx; carrier_name; subset_args; prop_args; _
             } ->
              let (_, carrier_ty) = List.nth subset_args carrier_idx
              in
              Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
+          | Coq_erasure.CEnum { enum_index_formals = _ :: _; _ } ->
+             (* See the indexed-subset fallback above. *)
+             None
           | Coq_erasure.CEnum enum ->
              let ctors =
                List.map

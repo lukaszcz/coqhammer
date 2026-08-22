@@ -1,6 +1,6 @@
 COQC ?= rocq c
 
-EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
+EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
 PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo def_premises.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo premise_isolation.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
@@ -89,6 +89,9 @@ extraction_matches.vo: extraction_matches.v
 
 extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
+
+extraction_indexed.vo: extraction_indexed.v extraction_deptypes.vo
+	$(COQC) extraction_indexed.v
 
 erasure_blacklist.vo: erasure_blacklist.v
 	@set -e; \
@@ -536,7 +539,7 @@ premise_isolation.vo: premise_isolation.v
 	  rm -f premise_isolation.vo premise_isolation.out; exit 1; }; \
 	rm -f premise_isolation.out
 
-extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
+extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo check-extraction-transl.sh
 	@set -e; \
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \

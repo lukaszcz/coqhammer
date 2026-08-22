@@ -9,7 +9,7 @@ From Stdlib Require Import Arith.PeanoNat Arith.Wf_nat Classes.RelationClasses
   Streams Vectors.Vector Lists.List Strings.String.
 From Corelib.ssr Require Import ssrbool.
 
-Require Import extraction_matches extraction_deptypes.
+Require Import extraction_matches extraction_deptypes extraction_indexed.
 
 Open Scope string_scope.
 
@@ -135,7 +135,7 @@ Hammer_transl "pval".
 Hammer_transl "beq".
 Hammer_transl "between".
 Hammer_transl "tag".
-Hammer_transl "vhead".
+Hammer_transl "extraction_deptypes.vhead".
 Hammer_transl "idiv".
 Hammer_transl "idiv2".
 Hammer_transl "idiv3".

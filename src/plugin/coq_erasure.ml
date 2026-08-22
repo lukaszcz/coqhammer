@@ -77,10 +77,6 @@ exception Not_classifiable
 let check_prop ctx ty =
   try Coq_typing.check_prop ctx ty with _ -> raise Not_classifiable
 
-let is_ex_ind name = Coq_stdnames.is_init_logic "ex" name
-let is_eq_ind name = Coq_stdnames.is_init_logic "eq" name
-let is_acc_ind name = Coq_stdnames.is_init_wf "Acc" name
-
 let get_inductive name =
   if Defhash.mem name then
     match Defhash.find name with
@@ -206,6 +202,14 @@ let rec carrier_reaches_inductive target visited ty =
           List.exists (carrier_reaches_inductive target visited) types ||
           List.exists (carrier_reaches_inductive target visited) bodies
 
+let is_solved ctor info =
+  List.exists (fun (arg_idx, _) -> arg_idx = info.arg_index) ctor.ctor_solved
+
+let residual_informative ctor =
+  List.filter
+    (fun info -> not info.arg_is_prop && not (is_solved ctor info))
+    ctor.ctor_args
+
 let solved_names ctor =
   (* A solved argument necessarily came from a kept result-index pattern. *)
   if ctor.ctor_solved <> [] && ctor.ctor_patterns = [] then
@@ -214,7 +218,7 @@ let solved_names ctor =
     (fun (arg_idx, index_pos) acc ->
        match arg_at ctor.ctor_args arg_idx with
        | Some info -> (info.arg_name, index_pos) :: acc
-       | None -> acc)
+       | None -> raise Not_classifiable)
     ctor.ctor_solved []
 
 let validate_subset indname ctor carrier_idx prop_indices =
@@ -255,7 +259,8 @@ let validate_subset indname ctor carrier_idx prop_indices =
       prop_args
   in
   match arg_at infos carrier_idx with
-  | Some carrier when not carrier.arg_is_prop && not (is_sort carrier.arg_ty) &&
+  | Some carrier when residual_informative ctor = [carrier] &&
+                       not (is_sort carrier.arg_ty) &&
                        not (carrier_reaches_inductive indname [indname] carrier.arg_ty) ->
       let prop_args =
         List.fold_right
@@ -304,7 +309,7 @@ let validate_enum ctor_infos ctor_prop_indices =
         in
         let local_arg_names = List.map (fun info -> info.arg_name) ctor.ctor_args in
         if List.length prop_tys = List.length prop_indices &&
-           List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args &&
+           residual_informative ctor = [] &&
            List.for_all
              (fun prop_ty ->
                 List.for_all
@@ -363,44 +368,36 @@ let instantiate_class indname ctor_infos = function
   | MEnum ctor_prop_indices -> validate_enum ctor_infos ctor_prop_indices
   | MRegular -> CRegular
 
-let classify_shape indname is_prop_ind has_indices ctor_infos =
+let classify_shape _indname is_prop_ind has_indices ctor_infos =
   (* Singleton proof matches can be erased, and refinement/enum occurrences
-     can be expanded from their informative payloads.  Anything not recognized
-     stays on the ordinary path for totality.
-
-     Indexed families need their indices reflected in the generated premises.
-     The current shallow expansion records constructor payloads but not result-
-     index constraints, so classifying indexed families as CEnum/CSubset or
-     CPropSingleton would be too weak (e.g. equality/transport could be reduced
-     without requiring the source equality).  Keep them on the ordinary path
-     until index constraints are represented.  [Acc] is the one indexed
-     proof-singleton exception: its erasure path has a well-founded-recursion
-     guardrail in the translation layer. *)
+     can be expanded from their residual informative arguments.  Solved
+     constructor arguments remain in the retained telescope but are not
+     residual data.  Anything not recognized stays on the ordinary path for
+     totality. *)
+  let prop_indices ctor =
+    List.fold_right
+      (fun info acc -> if info.arg_is_prop then info.arg_index :: acc else acc)
+      ctor.ctor_args []
+  in
   match ctor_infos with
   | [] -> MEmpty
-  | _ when is_ex_ind indname -> MRegular
-  | _ when is_eq_ind indname -> MPropSingleton
   | [ctor] when is_prop_ind && List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args ->
       MPropSingleton
-  | _ when has_indices && not (is_acc_ind indname) -> MRegular
+  | _ when has_indices && not opt_indexed_families -> MRegular
   | _ when is_prop_ind -> MRegular
   | [ctor] ->
-      let informative = List.filter (fun info -> not info.arg_is_prop) ctor.ctor_args in
-      let prop_args = List.filter (fun info -> info.arg_is_prop) ctor.ctor_args in
+      let informative = residual_informative ctor in
+      let prop_args = prop_indices ctor in
       begin match informative, prop_args with
       | [carrier], _ :: _ ->
-          MSubset (carrier.arg_index, List.map (fun info -> info.arg_index) prop_args)
+          MSubset (carrier.arg_index, prop_args)
       | [], _ ->
-          MEnum [ctor.ctor_name, List.map (fun info -> info.arg_index) prop_args]
+          MEnum [ctor.ctor_name, prop_args]
       | _ -> MRegular
       end
   | _ ->
-      if List.for_all (fun ctor -> List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args) ctor_infos then
-        MEnum
-          (List.map
-             (fun ctor ->
-                (ctor.ctor_name, List.map (fun info -> info.arg_index) ctor.ctor_args))
-             ctor_infos)
+      if List.for_all (fun ctor -> residual_informative ctor = []) ctor_infos then
+        MEnum (List.map (fun ctor -> (ctor.ctor_name, prop_indices ctor)) ctor_infos)
       else
         MRegular
 

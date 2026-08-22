@@ -1,0 +1,100 @@
+(* Indexed-family translation fixtures.  Shape assertions over this output are
+   added separately once occurrence expansion and case compilation consume the
+   forded metadata. *)
+
+From Hammer Require Import Hammer.
+
+From Stdlib Require Import Arith.PeanoNat Bool.Bool Logic.JMeq.
+
+Require Import extraction_deptypes.
+
+Inductive breflect (P : Prop) : bool -> Set :=
+| BReflectT : P -> breflect P true
+| BReflectF : ~ P -> breflect P false.
+
+Inductive tagged : nat -> Set :=
+| tg : forall n, tagged n.
+
+Definition untag n (t : tagged n) : nat :=
+  match t with
+  | tg n' => n'
+  end.
+
+Inductive ibounded : nat -> Set :=
+| IBounded : forall n k, k < n -> ibounded n.
+
+Definition ibval n (b : ibounded n) : nat :=
+  match b with
+  | IBounded _ k _ => k
+  end.
+
+Inductive okp (n : nat) : nat -> Prop :=
+| ok_intro : okp n (S n).
+
+Definition fromok n m (p : okp n m) : nat :=
+  match p with
+  | ok_intro _ => S n
+  end.
+
+Inductive isT : Type -> Prop :=
+| is_nat : isT nat.
+
+Definition fromisT (T : Type) (p : isT T) : T :=
+  match p in isT U return U with
+  | is_nat => 0
+  end.
+
+Inductive istrue : bool -> Prop :=
+| istrue_intro : istrue true.
+
+Definition fromtrue b (p : istrue b) : bool :=
+  match p with
+  | istrue_intro => true
+  end.
+
+Definition cast (A B : Type) (e : A = B) (x : A) : B :=
+  match e in (_ = T) return T with
+  | eq_refl => x
+  end.
+
+Inductive vec (A : Type) : nat -> Type :=
+| vnil : vec A 0
+| vcons : forall n, A -> vec A n -> vec A (S n).
+
+Definition vhead (A : Type) (n : nat) (v : vec A (S n)) : A :=
+  match v in vec _ m return (match m with 0 => unit | S _ => A end) with
+  | vnil _ => tt
+  | vcons _ _ a _ => a
+  end.
+
+(* [dswap]'s declared argument order differs from [dbox]'s.  Reading the
+   scrutinee indices positionally from the declared type would therefore prune
+   the live successor branch in the later rigid-clash pass. *)
+Definition dheight2 {n} (b : dswap (S n) dred) : nat :=
+  match b with
+  | dbox_zero _ => 0
+  | dbox_succ _ m _ => S m
+  end.
+
+Definition jmeq_match
+    (A B : Type) (x : A) (y : B) (e : JMeq x y) : A :=
+  match e with
+  | JMeq_refl => x
+  end.
+
+Hammer_transl "breflect".
+Hammer_transl "tagged".
+Hammer_transl "untag".
+Hammer_transl "ibounded".
+Hammer_transl "ibval".
+Hammer_transl "okp".
+Hammer_transl "fromok".
+Hammer_transl "isT".
+Hammer_transl "fromisT".
+Hammer_transl "istrue".
+Hammer_transl "fromtrue".
+Hammer_transl "cast".
+Hammer_transl "vec".
+Hammer_transl "vhead".
+Hammer_transl "dheight2".
+Hammer_transl "jmeq_match".

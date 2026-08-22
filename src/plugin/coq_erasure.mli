@@ -40,10 +40,8 @@ type enum_data = {
 
 type ind_class =
   | CEmpty
-      (** No inhabitants are represented in the extracted program.  This covers
-          ordinary empty inductives such as [False] (and future indexed-empty
-          instances when the occurrence analysis can prove that no constructor
-          matches). *)
+      (** No inhabitants are represented in the extracted program, as for
+          ordinary empty inductives such as [False]. *)
   | CPropSingleton of {
       index_eqs : index_eqs;
       (** Residual equations of the singleton constructor's forded form. *)
