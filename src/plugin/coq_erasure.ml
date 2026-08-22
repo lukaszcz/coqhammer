@@ -6,13 +6,44 @@
 
 open Hammer_lib
 open Coqterms
+open Coq_transl_opts
+
+type index_eqs = (int * coqterm) list
+type index_formals = (string * coqterm) list
+
+type enum_constructor = {
+  enum_name : string;
+  enum_args : (string * coqterm) list;
+  enum_payloads : (string * coqterm) list;
+  enum_solved : (string * int) list;
+  enum_index_eqs : index_eqs;
+}
+
+type enum_data = {
+  enum_constructors : enum_constructor list;
+  enum_index_formals : index_formals;
+}
 
 type ind_class =
   | CEmpty
-  | CPropSingleton
-  | CSubset of { carrier_idx : int; carrier_name : string; prop_args : (string * coqterm) list }
-  | CEnum of (string * coqterm list) list
+  | CPropSingleton of { index_eqs : index_eqs; index_formals : index_formals }
+  | CSubset of {
+      carrier_idx : int;
+      carrier_name : string;
+      subset_args : (string * coqterm) list;
+      prop_args : (string * coqterm) list;
+      solved : (string * int) list;
+      index_eqs : index_eqs;
+      index_formals : index_formals;
+    }
+  | CEnum of enum_data
   | CRegular
+
+let instantiate formals actuals tm =
+  if List.length formals <> List.length actuals then
+    invalid_arg "Coq_erasure.instantiate: index arity mismatch"
+  else
+    subst_params formals actuals tm
 
 type arg_info = {
   arg_index : int;
@@ -24,6 +55,10 @@ type arg_info = {
 type ctor_info = {
   ctor_name : string;
   ctor_args : arg_info list;
+  ctor_patterns : coqterm list;
+  ctor_solved : (int * int) list;
+  ctor_eqs : index_eqs;
+  ctor_index_formals : index_formals;
 }
 
 type memo_class =
@@ -54,6 +89,49 @@ let get_inductive name =
     | _ -> None
   else
     None
+
+let constructor_index_data _ctx params params_num cname =
+  let (target, targs, cargs) =
+    Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+  in
+  let param_formals = Hhlib.take params_num cargs in
+  let instantiate_params tm = subst_params param_formals params tm in
+  let patterns =
+    match target with
+    | Equal (_, rhs) -> [rhs]
+    | _ -> Hhlib.drop params_num targs
+  in
+  let args =
+    List.map
+      (fun (name, ty) -> (name, instantiate_params ty))
+      (Hhlib.drop params_num cargs)
+  in
+  (List.map instantiate_params patterns, args)
+
+let constructor_index_patterns ctx params params_num cname =
+  fst (constructor_index_data ctx params params_num cname)
+
+let rec telescope_length = function
+  | Prod (_, _, body) -> 1 + telescope_length body
+  | Let (_, (_, _, body)) -> telescope_length body
+  | _ -> 0
+
+let occurrence_indices indname ty =
+  match indname = Hhutils.lib_ref_name "core.eq.type", ty with
+  | true, Equal (_, rhs) -> Some [rhs]
+  | _ ->
+    match get_inductive indname with
+    | Some (_, params_num, ind_ty, _) ->
+        let expected = telescope_length ind_ty in
+        let unfold name =
+          try Some (coqdef_value (Defhash.find name)) with Failure _ -> None
+        in
+        begin match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
+        | Const name, args when name = indname && List.length args = expected ->
+            Some (Hhlib.drop params_num args)
+        | _ -> None
+        end
+    | None -> None
 
 let arg_at infos idx =
   try Some (List.find (fun info -> info.arg_index = idx) infos) with Not_found -> None
@@ -128,7 +206,19 @@ let rec carrier_reaches_inductive target visited ty =
           List.exists (carrier_reaches_inductive target visited) types ||
           List.exists (carrier_reaches_inductive target visited) bodies
 
-let validate_subset indname infos carrier_idx prop_indices =
+let solved_names ctor =
+  (* A solved argument necessarily came from a kept result-index pattern. *)
+  if ctor.ctor_solved <> [] && ctor.ctor_patterns = [] then
+    raise Not_classifiable;
+  List.fold_right
+    (fun (arg_idx, index_pos) acc ->
+       match arg_at ctor.ctor_args arg_idx with
+       | Some info -> (info.arg_name, index_pos) :: acc
+       | None -> acc)
+    ctor.ctor_solved []
+
+let validate_subset indname ctor carrier_idx prop_indices =
+  let infos = ctor.ctor_args in
   let no_erased_payload_dependencies prop_args =
     let prop_names = List.map fst prop_args in
     List.for_all
@@ -182,7 +272,16 @@ let validate_subset indname infos carrier_idx prop_indices =
            (fun (prop_name, _) -> not (var_occurs prop_name carrier.arg_ty))
            prop_args
       then
-        CSubset { carrier_idx; carrier_name = carrier.arg_name; prop_args }
+        CSubset {
+          carrier_idx;
+          carrier_name = carrier.arg_name;
+          subset_args =
+            List.map (fun info -> (info.arg_name, info.arg_ty)) ctor.ctor_args;
+          prop_args;
+          solved = solved_names ctor;
+          index_eqs = ctor.ctor_eqs;
+          index_formals = ctor.ctor_index_formals;
+        }
       else
         CRegular
   | _ -> CRegular
@@ -213,7 +312,19 @@ let validate_enum ctor_infos ctor_prop_indices =
                   local_arg_names)
              prop_tys
         then
-          Some (name, prop_tys)
+          Some {
+            enum_name = name;
+            enum_args =
+              List.map (fun info -> (info.arg_name, info.arg_ty)) ctor.ctor_args;
+            enum_payloads =
+              List.map2 (fun idx ty ->
+                  match arg_at ctor.ctor_args idx with
+                  | Some info -> (info.arg_name, ty)
+                  | None -> raise Not_classifiable)
+                prop_indices prop_tys;
+            enum_solved = solved_names ctor;
+            enum_index_eqs = ctor.ctor_eqs;
+          }
         else
           None
   in
@@ -225,16 +336,28 @@ let validate_enum ctor_infos ctor_prop_indices =
         | None -> None
         end
   in
-  match collect [] ctor_prop_indices with
-  | Some ctors -> CEnum ctors
-  | None -> CRegular
+  match collect [] ctor_prop_indices, ctor_infos with
+  | Some enum_constructors, ctor :: _ ->
+      CEnum {
+        enum_constructors;
+        enum_index_formals = ctor.ctor_index_formals;
+      }
+  | _ -> CRegular
 
 let instantiate_class indname ctor_infos = function
   | MEmpty -> CEmpty
-  | MPropSingleton -> CPropSingleton
+  | MPropSingleton ->
+      begin match ctor_infos with
+      | [ctor] ->
+          CPropSingleton {
+            index_eqs = ctor.ctor_eqs;
+            index_formals = ctor.ctor_index_formals;
+          }
+      | _ -> CRegular
+      end
   | MSubset (carrier_idx, prop_indices) ->
       begin match ctor_infos with
-      | [ctor] -> validate_subset indname ctor.ctor_args carrier_idx prop_indices
+      | [ctor] -> validate_subset indname ctor carrier_idx prop_indices
       | _ -> CRegular
       end
   | MEnum ctor_prop_indices -> validate_enum ctor_infos ctor_prop_indices
@@ -281,23 +404,102 @@ let classify_shape indname is_prop_ind has_indices ctor_infos =
       else
         MRegular
 
-let constructor_info ctx params params_num cname =
-  let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname)) in
-  let param_formals = Hhlib.take params_num cargs in
-  let args =
-    List.map
-      (fun (name, ty) -> (name, subst_params param_formals params ty))
-      (Hhlib.drop params_num cargs)
+let constructor_info ctx params params_num index_formals cname =
+  let patterns, args = constructor_index_data ctx params params_num cname in
+  let rec keep_patterns pos formal_ctx acc formals patterns =
+    match formals, patterns with
+    | [], [] -> List.rev acc
+    | (name, ty) :: formals2, pattern :: patterns2 ->
+        let is_prop = check_prop formal_ctx ty in
+        let acc = if is_prop then acc else (pos, name, pattern) :: acc in
+        keep_patterns (pos + 1) ((name, ty) :: formal_ctx) acc formals2 patterns2
+    | _ -> raise Not_classifiable
   in
-  let rec collect ctx idx acc = function
+  let kept = keep_patterns 0 ctx [] index_formals patterns in
+  let find_arg name =
+    let rec find idx = function
+      | [] -> None
+      | (name2, _) :: args2 ->
+          if name = name2 then Some idx else find (idx + 1) args2
+    in
+    find 0 args
+  in
+  let rec ford solved eqs = function
+    | [] -> (List.rev solved, List.rev eqs)
+    | (index_pos, formal_name, pattern) :: rest ->
+        begin match pattern with
+        | Var arg_name when not (List.mem_assoc arg_name solved) ->
+            begin match find_arg arg_name with
+            | Some arg_idx ->
+                let replacement = Var formal_name in
+                let rest =
+                  List.map
+                    (fun (pos, name, tm) ->
+                       (pos, name, simple_subst arg_name replacement tm))
+                    rest
+                in
+                ford ((arg_name, (arg_idx, index_pos, replacement)) :: solved) eqs rest
+            | None -> ford solved ((index_pos, pattern) :: eqs) rest
+            end
+        | _ -> ford solved ((index_pos, pattern) :: eqs) rest
+        end
+  in
+  let solved_by_name, eqs = ford [] [] kept in
+  let apply_solved tm =
+    List.fold_left
+      (fun tm (name, (_, _, replacement)) -> simple_subst name replacement tm)
+      tm solved_by_name
+  in
+  let args = List.map (fun (name, ty) -> (name, apply_solved ty)) args in
+  let rec collect arg_ctx idx acc = function
     | [] -> List.rev acc
     | (name, ty) :: args2 ->
         let ty = simpl ty in
-        let is_prop = check_prop ctx ty in
+        let is_prop = check_prop arg_ctx ty in
         let info = { arg_index = idx; arg_name = name; arg_ty = ty; arg_is_prop = is_prop } in
-        collect ((name, ty) :: ctx) (idx + 1) (info :: acc) args2
+        collect ((name, ty) :: arg_ctx) (idx + 1) (info :: acc) args2
   in
-  { ctor_name = cname; ctor_args = collect ctx 0 [] args }
+  let ctor_args = collect (List.rev index_formals @ ctx) 0 [] args in
+  let rec erase_proofs substitutions eqs = function
+    | [] -> eqs
+    | info :: infos ->
+        let ty = List.fold_left (fun ty (name, value) -> simple_subst name value ty)
+                   info.arg_ty substitutions
+        in
+        if info.arg_is_prop then
+          (* [destruct_type_app] globally refreshes the binders in the patterns
+             and constructor telescope returned by [constructor_index_data], and
+             the index formals are globally fresh too.  Consequently [ty] has no
+             free name that a residual pattern binder can capture.  Preserve
+             that invariant and build the analytical proof cast directly:
+             [mk_proof_cast] would refresh already-safe binders and perturb the
+             global fresh-name stream merely by classifying metadata. *)
+          let value = Cast (Const "$Proof", ty) in
+          let eqs =
+            List.map (fun (pos, tm) -> (pos, simple_subst info.arg_name value tm)) eqs
+          in
+          erase_proofs ((info.arg_name, value) :: substitutions) eqs infos
+        else
+          erase_proofs substitutions eqs infos
+  in
+  let ctor_solved =
+    List.map (fun (_, (arg_idx, index_pos, _)) -> (arg_idx, index_pos)) solved_by_name
+  in
+  let proof_occurs =
+    List.exists
+      (fun info ->
+         info.arg_is_prop &&
+         List.exists (fun (_, tm) -> var_occurs info.arg_name tm) eqs)
+      ctor_args
+  in
+  {
+    ctor_name = cname;
+    ctor_args;
+    ctor_patterns = List.map (fun (_, _, pattern) -> pattern) kept;
+    ctor_solved;
+    ctor_eqs = if proof_occurs then erase_proofs [] eqs ctor_args else eqs;
+    ctor_index_formals = index_formals;
+  }
 
 let classify ctx indname params =
   try
@@ -313,8 +515,16 @@ let classify ctx indname params =
         let all_formals = Coq_typing.get_type_args ind_ty in
         let has_indices = List.length all_formals > params_num in
         let params = Hhlib.take params_num params in
+        let param_formals = Hhlib.take params_num all_formals in
+        let index_formals =
+          List.map
+            (fun (name, ty) -> (name, subst_params param_formals params ty))
+            (Hhlib.drop params_num all_formals)
+        in
         let mask = List.map (check_prop ctx) params in
-        let ctor_infos = List.map (constructor_info ctx params params_num) constrs in
+        let ctor_infos =
+          List.map (constructor_info ctx params params_num index_formals) constrs
+        in
         let is_prop_ind =
           ind_sort = SortProp || Coq_typing.check_type_target_is_prop ind_ty
         in
@@ -363,7 +573,7 @@ let classify_decl indname =
 
 let is_erasable_class = function
   | CRegular -> false
-  | CEmpty | CPropSingleton | CSubset _ | CEnum _ -> true
+  | CEmpty | CPropSingleton _ | CSubset _ | CEnum _ -> true
 
 let params_for_inductive indname args =
   match get_inductive indname with

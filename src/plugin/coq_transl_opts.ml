@@ -51,6 +51,10 @@ let opt_set_to_type = true
 let opt_prop_case_erasure = true
 (* Guard erased transports. *)
 let opt_erasure_guards = false
+(* Classify the forded form of indexed families; expand index equations per
+   occurrence; ford the premise of singleton collapses under
+   opt_erasure_guards. *)
+let opt_indexed_families = true
 (* Expand refinement types shallowly. *)
 let opt_refinement_types = true
 (* Skip redundant declaration-level subset axioms. *)

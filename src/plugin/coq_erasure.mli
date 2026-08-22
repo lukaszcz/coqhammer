@@ -7,13 +7,49 @@ open Coqterms
     constructor arguments are computationally informative and which are erased
     proofs.  The classifier itself only analyses existing definitions; it emits no
     axioms and has no translation side effects. *)
+type index_eqs = (int * coqterm) list
+(** Residual constructor equations, pairing a zero-based index position with
+    its forded constructor pattern. *)
+
+type index_formals = (string * coqterm) list
+(** The declared index telescope, instantiated with occurrence parameters. *)
+
+type enum_constructor = {
+  enum_name : string;
+  (** Constructor tag. *)
+  enum_args : (string * coqterm) list;
+  (** The instantiated, non-parameter constructor telescope in declaration order.
+      Types include N1 substitutions and provide the names needed to erase proof
+      arguments when constructing the tag at an occurrence. *)
+  enum_payloads : (string * coqterm) list;
+  (** Propositional constructor arguments and their payload formulas. *)
+  enum_solved : (string * int) list;
+  (** Constructor argument names solved by their zero-based index position. *)
+  enum_index_eqs : index_eqs;
+  (** Residual equations of this constructor's forded form. *)
+}
+(** Forded metadata for one enumerated constructor. *)
+
+type enum_data = {
+  enum_constructors : enum_constructor list;
+  (** Constructor entries in declaration order. *)
+  enum_index_formals : index_formals;
+  (** Common formals used by every constructor's payloads and residual patterns. *)
+}
+(** Forded metadata shared by an enumerated inductive instance. *)
+
 type ind_class =
   | CEmpty
       (** No inhabitants are represented in the extracted program.  This covers
           ordinary empty inductives such as [False] (and future indexed-empty
           instances when the occurrence analysis can prove that no constructor
           matches). *)
-  | CPropSingleton
+  | CPropSingleton of {
+      index_eqs : index_eqs;
+      (** Residual equations of the singleton constructor's forded form. *)
+      index_formals : index_formals;
+      (** Formals used by the residual index patterns. *)
+    }
       (** A [Prop]-sorted inductive satisfying CIC's singleton-elimination
           criterion: one constructor and all non-parameter constructor arguments
           are propositional.  Matches on such proofs may be erased to the unique
@@ -27,30 +63,66 @@ type ind_class =
       (** Binder name of the informative carrier in the instantiated constructor
           telescope.  Payload types may mention this name and guard expansion
           substitutes the guarded term for it before proposition translation. *)
+      subset_args : (string * coqterm) list;
+      (** The complete instantiated, non-parameter constructor telescope in
+          declaration order.  Its types include N1 solved-argument substitutions;
+          consumers must use this retained telescope instead of destructing the
+          constructor again, which would produce unrelated fresh binder names. *)
       prop_args : (string * coqterm) list;
       (** Propositional payload fields dropped by program extraction.  The types
           are instantiated with the actual inductive parameters and may mention
           the carrier variable. *)
+      solved : (string * int) list;
+      (** Constructor argument names solved by their zero-based index position. *)
+      index_eqs : index_eqs;
+      (** Residual equations of the constructor's forded form. *)
+      index_formals : index_formals;
+      (** Formals used by payloads and residual index patterns. *)
     }
       (** A [Set]/[Type]-sorted singleton with exactly one informative
           constructor argument and at least one propositional payload argument,
           e.g. [sig] or [sig2] and per-instance cases such as [prod A P] when
-          [P : Prop].  Side conditions: the inductive must be non-indexed, the
-          carrier type must not lead back to the inductive through another
-          constructor telescope (Letouzey's non-recursive-carrier condition),
-          and a purely informative one-field
+          [P : Prop].  Side conditions: the carrier type must not lead back to
+          the inductive through another constructor telescope (Letouzey's
+          non-recursive-carrier condition), and a purely informative one-field
           wrapper is kept [CRegular] instead of being collapsed. *)
-  | CEnum of (string * coqterm list) list
-      (** A non-indexed inductive whose constructors have only propositional
-          non-parameter arguments after instantiation.  Extracted values are
-          constructor tags; the listed payload formulas are the specifications
-          associated with each tag (for example [sumbool A B]).  Indexed enums
-          such as [reflect] stay [CRegular] until index constraints are represented
-          in the shallow guard. *)
+  | CEnum of enum_data
+      (** An inductive whose constructors have no residual informative arguments
+          after instantiation.  Extracted values are constructor tags; the record
+          retains the complete forded constructor metadata and the common index
+          formals needed to instantiate tags, payloads, and equations at a
+          saturated occurrence. *)
   | CRegular
       (** No erasure-specific simplification is justified.  The existing
           constructor, inversion, and typing translation remains the sound
           fallback. *)
+
+val instantiate : index_formals -> coqterm list -> coqterm -> coqterm
+(** [instantiate formals indices tm] substitutes the occurrence [indices]
+    pointwise for the declared index [formals] in [tm].  The arities must agree. *)
+
+val constructor_index_data :
+  coqcontext -> coqterm list -> int -> string ->
+  coqterm list * (string * coqterm) list
+(** [constructor_index_data ctx params params_num cname] atomically returns the
+    result-index patterns and instantiated non-parameter constructor telescope
+    of [cname].  Both components come from the same [destruct_type_app] call, so
+    their globally refreshed constructor binders correspond.  Callers needing
+    both must use this helper rather than destructing the constructor separately. *)
+
+val constructor_index_patterns :
+  coqcontext -> coqterm list -> int -> string -> coqterm list
+(** [constructor_index_patterns ctx params params_num cname] is the patterns-only
+    wrapper around [constructor_index_data].  It returns the result indices of
+    [cname], with constructor parameter formals replaced by [params].  For the
+    lowered equality target [Equal (a, b)], it returns [[b]]. *)
+
+val occurrence_indices : string -> coqterm -> coqterm list option
+(** [occurrence_indices indname ty] weak-head-normalizes [ty], verifies that it
+    is an exactly saturated occurrence of [indname], and returns only its
+    indices.  This validation also applies to index-free inductives.  For the
+    exact inductive registered as [core.eq.type], the lowered representation
+    [Equal (a, b)] returns [Some [b]]. *)
 
 val clear : unit -> unit
 (** Clear the classification memo table. *)

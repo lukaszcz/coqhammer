@@ -1366,10 +1366,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
        particular the carrier never heads a proof-payload type.  So the
        [check_prop] below cannot fail on a well-classified subset, and the
        informative-payload internal error is an unreachable consistency check. *)
-    let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
+    let collapse_subset_case ~matched_term ~vars ~constrs ~branches subset_args carrier_idx =
       match constrs, branches with
-      | [cname], [(n, branch)] ->
-         let (_, args) = constructor_args params params_num cname in
+      | [_], [(n, branch)] ->
+         let args = subset_args in
          if List.length args <> n then
            internal_error "subset constructor telescope arity mismatch"
          else
@@ -1801,7 +1801,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                        (* An elimination from an empty proposition is unreachable.
                           Its lifted denotation is intentionally unconstrained. *)
                        return ()
-                    | Coq_erasure.CPropSingleton ->
+                    | Coq_erasure.CPropSingleton _ ->
                        begin
                          match collapse_prop_singleton vars indname constrs params params_num branches with
                          | None ->
@@ -1839,9 +1839,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                 end
               else begin
                 record_case_dependency ();
-                let collapse_subset_case carrier_idx =
+                let collapse_subset_case subset_args carrier_idx =
                   collapse_subset_case ~matched_term ~vars ~constrs ~branches
-                    ~params ~params_num carrier_idx
+                    subset_args carrier_idx
                 in
                 let regular_case () =
                   match matched_term with
@@ -1926,14 +1926,15 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                 in
                 if opt_refinement_types then
                   match Coq_erasure.classify (List.rev vars) indname params with
-                  | Coq_erasure.CSubset { carrier_idx; _ } ->
-                     compile_case ?premise lhs vars axname (collapse_subset_case carrier_idx)
+                  | Coq_erasure.CSubset { carrier_idx; subset_args; _ } ->
+                     compile_case ?premise lhs vars axname
+                       (collapse_subset_case subset_args carrier_idx)
                   | Coq_erasure.CEnum _ ->
                      (* Enum scrutinees (e.g. sumbool) need no special collapse;
                         split-form validity applies to the erased constructor tags,
                         while enum guards reuse the existing inversion scheme. *)
                      regular_case ()
-                  | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
+                  | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular ->
                      regular_case ()
                 else
                   regular_case ()
@@ -2084,7 +2085,8 @@ and convert ctx tm =
                        let params = Hhlib.take params_num args in
                        begin
                          match Coq_erasure.classify ctx indname params with
-                         | Coq_erasure.CSubset { carrier_idx; _ } ->
+                         | Coq_erasure.CSubset { carrier_idx; subset_args; _ } ->
+                            let cargs = Hhlib.take params_num cargs @ subset_args in
                             let actuals, extras = align_actuals cargs args in
                             let carrier_pos = params_num + carrier_idx in
                             if List.length actuals > carrier_pos then
@@ -2256,30 +2258,27 @@ and guard_leaf ctx ty x =
     match flatten_app ty_nf with
     | Const indname, args ->
        begin match Defhash.find indname with
-       | (_, IndType(_, constrs, params_num), _, _) ->
+       | (_, IndType(_, _, params_num), _, _) ->
           let params = Hhlib.take params_num args
           in
           begin match Coq_erasure.classify ctx indname params with
-          | Coq_erasure.CSubset { carrier_idx; carrier_name; prop_args } ->
-             begin match constrs with
-             | [cname] ->
-                let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
-                in
-                let cparams = Hhlib.take params_num cargs
-                in
-                let cargs =
-                  List.map
-                    (fun (name, ty) -> (name, subst_params cparams params ty))
-                    (Hhlib.drop params_num cargs)
-                in
-                let (_, carrier_ty) = List.nth cargs carrier_idx
-                in
-                Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
-             | _ -> None
-             end
-          | Coq_erasure.CEnum ctors -> Some (`Enum (params, ctors))
+          | Coq_erasure.CSubset {
+              carrier_idx; carrier_name; subset_args; prop_args; _
+            } ->
+             let (_, carrier_ty) = List.nth subset_args carrier_idx
+             in
+             Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
+          | Coq_erasure.CEnum enum ->
+             let ctors =
+               List.map
+                 (fun ctor ->
+                    (ctor.Coq_erasure.enum_name,
+                     List.map snd ctor.Coq_erasure.enum_payloads))
+                 enum.Coq_erasure.enum_constructors
+             in
+             Some (`Enum (params, ctors))
           | Coq_erasure.CEmpty -> Some `Empty
-          | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
+          | Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular -> None
           end
        | _ -> None
        end
