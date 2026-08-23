@@ -183,9 +183,10 @@ forbid_line "Hammer_transl lookup failures" '^Error: Not found:'
 forbid_line "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|ex|all)\b'
 
 
-# Proof arguments are proof-irrelevant in constructor injectivity: they must not
-# leave tautological $Proof = $Proof conjuncts behind.
+# Proof arguments are proof-irrelevant: generated structural and definitional
+# axioms must not leave tautological $Proof = $Proof equalities behind.
 forbid_line "injectivity axioms omit proof-only equalities" '^\$_inj_.*\$Proof = \$Proof'
+forbid_line "definition axioms omit proof-only equalities" '^\$_def_.*\$Proof = \$Proof'
 
 # Shallowness gates for definitional output: split equations should not
 # reintroduce type guards, existential packages, or disjunctive case bodies on
@@ -626,7 +627,9 @@ for wf_name in idiv idiv2 idiv3; do
     fail "$wf_name must not expose an unpremised le_lt_dec definition"
   fi
 done
-require_line "Acc_rect definition is premised by its Acc proof" '^\$_def_Corelib\.Init\.Wf\.Acc_rect:.*=> @ \(\(\(Corelib\.Init\.Wf\.Acc @ 0_A\) @ 1_R\) @ 5_x\)'
+require_count_exact "Acc_rect emits one definition with an Acc premise" '^\$_def_Corelib\.Init\.Wf\.Acc_rect:.*=> @ \(\(\(Corelib\.Init\.Wf\.Acc @ 0_A\) @ 1_R\) @ 5_x\)' 1
+acc_rect_line=$(get_unique_line "Acc_rect definition" '$_def_Corelib.Init.Wf.Acc_rect:')
+require_text_count_exact "Acc_rect definition carries exactly one Acc premise" "$acc_rect_line" '=> @ (((Corelib.Init.Wf.Acc' 1
 
 # -----------------------------------------------------------------------------
 # Stdlib regression constants: structural snapshots enforced now.
@@ -641,8 +644,21 @@ require_line "List.app split mentions nil" '^\$_def_Corelib\.Init\.Datatypes\.ap
 require_line "List.app split mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.app[$]cons:.*Corelib\.Init\.Datatypes\.cons'
 
 require_line "List.Forall has an inversion axiom" '^\$_inversion_Corelib\.Lists\.ListDef\.Forall:'
+eq_rect_line=$(get_unique_line "eq_rect generic definition" '$_def_Corelib.Init.Logic.eq_rect:')
+parse_binders "eq_rect generic definition" "$eq_rect_line" universal 5 eq_rect_binders
+eq_rect_a=${eq_rect_binders[0]}
+eq_rect_x=${eq_rect_binders[1]}
+eq_rect_p=${eq_rect_binders[2]}
+eq_rect_f=${eq_rect_binders[3]}
+eq_rect_y=${eq_rect_binders[4]}
+require_text_count_exact "eq_rect generic singleton equation" "$eq_rect_line" "Corelib.Init.Logic.eq_rect @ $eq_rect_a) @ $eq_rect_x) @ $eq_rect_p) @ $eq_rect_f) @ $eq_rect_y) = $eq_rect_f" 1
+if [[ "$eq_rect_line" == *'=> @'* ]]; then
+  fail "eq_rect generic singleton equation must be unconditional with erasure guards off"
+fi
+require_line "eq_ind has a translated formula" '^Corelib\.Init\.Logic\.eq_ind:'
 require_line "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'
-require_line "eq_ind_r has a transport-erased definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:.*\$Proof = \$Proof'
+forbid_line "eq_ind has no synthetic definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind:'
+forbid_line "eq_ind_r has no synthetic definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:'
 require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1

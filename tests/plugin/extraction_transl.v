@@ -176,6 +176,8 @@ Hammer_transl "jmeq_match".
 Hammer_transl "Nat.add".
 Hammer_transl "app".              (* List.app *)
 Hammer_transl "Forall".           (* List.Forall *)
+Hammer_transl "eq_rect".
+Hammer_transl "eq_ind".
 Hammer_transl "eq_ind_r".
 Hammer_transl "proj1".
 Hammer_transl "Acc_rect".

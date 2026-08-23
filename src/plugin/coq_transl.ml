@@ -637,32 +637,17 @@ let erase_false_rect_type_arg ctx tm =
 let transport_full_arity = 6
 
 let erase_transport_head tm =
-  if opt_prop_case_erasure then
+  if opt_prop_case_erasure && not opt_erasure_guards then
     match flatten_app tm with
     | Const name, args
-         when is_transport_constant name && List.length args >= transport_full_arity ->
-       (* Transport erasure maps fully applied casts to the transported value in
-          the proof-irrelevant model.  Preserve applications after the transport
-          spine, e.g. [(eq_rect ... f ... e) x] erases to [f x].
-          Reconstruction-sensitive cases are isolated by [opt_erasure_guards]. *)
+         when name <> !translation_owner && is_transport_constant name &&
+              List.length args >= transport_full_arity ->
+       (* Inline an occurrence of the generic transport definition equation.
+          The defining equation's own left-hand side stays intact.  Preserve
+          applications after the transport spine, e.g. [(eq_rect ... f ... e) x]
+          becomes [f x].  With erasure guards enabled, leave the occurrence
+          intact so the generic premised equation applies. *)
        Some (mk_long_app (List.nth args 3) (Hhlib.drop transport_full_arity args))
-    | _ -> None
-  else
-    None
-
-let transport_erasure_premise tm =
-  if opt_erasure_guards then
-    match flatten_app tm with
-    | Const name, args
-         when is_transport_constant name && List.length args >= transport_full_arity ->
-       let a = List.nth args 1
-       and b = List.nth args 4
-       in
-       (* Transport/UIP debt note: transport erasure is valid in the junk model
-          by proof irrelevance but is not generally replayable as a CIC source
-          theorem; the guarded option emits the converted source equality as a
-          premise. *)
-       Some (mk_eq a b)
     | _ -> None
   else
     None
@@ -1011,8 +996,7 @@ and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
   in
   match erase_transport_head body2 with
   | Some body3 ->
-     let premise = transport_erasure_premise body2 in
-     emit_definition_equation ?premise axname name fvars lvars body3
+     emit_definition_equation axname name fvars lvars body3
   | None ->
   let wf_recursion_equation tm =
     if name = "" then
@@ -2108,7 +2092,7 @@ and convert ctx tm =
         in
         build args missing
       in
-      begin match if opt_erasure_guards then None else erase_transport_head tm with
+      begin match erase_transport_head tm with
       | Some tm2 -> convert ctx tm2
       | None ->
       begin match erase_false_rect_type_arg ctx tm with
@@ -2981,25 +2965,6 @@ and add_def_eq_axiom (name, value, ty, srt) =
   debug 2 (fun () -> print_endline ("add_def_eq_axiom: " ^ name));
   let axname = "$_def_" ^ name
   in
-  let emit_transport_definition () =
-    try
-      let vars = Coq_typing.get_type_args ty in
-      match Hhlib.drop 3 vars with
-      | (proof_name, _) :: _ ->
-         (* Transport erasure for the standard transport family itself maps
-            the transport to its carried proof/value.  Reconstruction-sensitive
-            cases are the same as user constants whose bodies are eq_rect/eq_rec
-            or eq_ind wrappers. *)
-         let premise = transport_erasure_premise (mk_long_app (Const name) (mk_vars vars)) in
-         emit_definition_equation ?premise axname name [] vars (Var(proof_name)) >>
-         return ()
-      | [] -> return ()
-    with _ ->
-      return ()
-  in
-  if is_transport_constant name then
-    emit_transport_definition ()
-  else
   match value with
   | Lam(_) ->
      lambda_lifting [] axname name [] [] value >>
@@ -3304,14 +3269,8 @@ and add_def_axioms ((name, value, ty, srt) as def) =
       end
   | _ ->
      if srt = SortProp then
-       begin
-         prop_to_formula [] ty >>= fun r ->
-         add_axiom (mk_axiom name r) >>
-         if is_transport_constant name then
-           add_def_eq_axiom def
-         else
-           return ()
-       end
+       prop_to_formula [] ty >>= fun r ->
+       add_axiom (mk_axiom name r)
      else
        begin
          add_typing_axiom name ty >>

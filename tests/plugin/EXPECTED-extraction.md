@@ -140,17 +140,20 @@ structural assertions that hold with the current translator:
   the exact shared boolean helper is checked against the full `Nat.eqb` O/S
   truth table. Their old nominal `$HasType ... reflect` leaves are forbidden.
 - Stdlib regression constants: split-equation checks for `Nat.add`, `List.app`,
-  and `Streams.hd`; structural checks for `List.Forall`, `eq_ind_r`, `proj1`,
-  `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `Nat.eqb_spec`, `sumbool`, `introT`,
-  `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
-  the `Equivalence_Reflexive` typeclass method projection. Declaration-level
-  subset injectivity/inversion remains present for parameter-dependent `sig`.
+  and `Streams.hd`; structural checks for `List.Forall`, `eq_rect`, `eq_ind_r`,
+  `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `Nat.eqb_spec`, `sumbool`,
+  `introT`, `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
+  the `Equivalence_Reflexive` typeclass method projection. The generic
+  singleton path emits the unconditional `eq_rect(A,x,P,f,y) = f` equation in
+  the default guards-off build; `eq_ind` and `eq_ind_r` contribute only their
+  formulas, with no synthetic `$Proof = $Proof` definition. `Acc_rect` carries
+  exactly one `Acc` premise. Declaration-level subset injectivity/inversion
+  remains present for parameter-dependent `sig`.
 
 ### Documented deviations
 
 No disabled translation assertion blocks remain. The transport ATP-dump layer
 remains as an independent translation-quality gate in addition to the end-to-end
-`hammer` goal. Two transport-cleanup snapshots are intentionally deferred to
-TASK_07: removal of the synthetic `$_def_eq_ind_r` proof equation, and tightening
-`$_def_Acc_rect` to exactly one `Acc` premise. Until then the harness retains the
-current `eq_ind_r` definition assertion and the existing `Acc_rect` premise check.
+`hammer` goal. Standard transports now use the generic definition path; no
+synthetic transport-definition axiom or definitional `$Proof = $Proof` equality
+remains.
