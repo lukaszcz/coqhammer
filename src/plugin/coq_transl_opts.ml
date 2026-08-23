@@ -55,6 +55,10 @@ let opt_erasure_guards = false
    occurrence; ford the premise of singleton collapses under
    opt_erasure_guards. *)
 let opt_indexed_families = true
+(* Skip split equations of branches whose constructor result indices rigidly
+   clash with the scrutinee's indices.  This is sound pruning (Prop. pruning)
+   and affects only the operational choice of equations (Rem. equation-choice). *)
+let opt_rigid_clash_pruning = true
 (* Expand refinement types shallowly. *)
 let opt_refinement_types = true
 (* Skip redundant declaration-level subset axioms. *)

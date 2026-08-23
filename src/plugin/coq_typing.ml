@@ -40,9 +40,10 @@ let rec reify v =
    opaque constants standing for themselves -- so constructorhood is read off
    the target of the declared type, which for a constructor is always a literal
    telescope ending in an application of its own inductive.  An inductive that
-   is not in the hash cannot vouch for the name, and the answer is then `no':
-   the sole caller uses it to decide whether a fixpoint may be unfolded, and
-   leaving a fixpoint folded is always safe. *)
+   is not in the hash cannot vouch for the name, and the answer is then `no'.
+   Callers use it only for conservative constructor-sensitive decisions,
+   including rigid-clash pruning and whether a fixpoint may be unfolded;
+   leaving a branch unpruned or a fixpoint folded is always safe. *)
 let constructor_hash : (string, bool) Hashtbl.t = Hashtbl.create 257
 
 let is_constructor name =

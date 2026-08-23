@@ -866,6 +866,27 @@ let program_wf_simpl tm =
    unsafe unconditional equation. *)
 let wf_mark = ref false
 
+let nbe tm = simpl (Coq_typing.reify (Coq_typing.eval tm))
+
+(* Constructor applications are rigid only at constructor heads.  Equal heads
+   may still clash in any corresponding argument, including parameters; a
+   variable or any other non-constructor head is deliberately never unified. *)
+let rec rigid_clash u t =
+  match flatten_app u, flatten_app t with
+  | (Const c1, args1), (Const c2, args2)
+       when Coq_typing.is_constructor c1 && Coq_typing.is_constructor c2 ->
+     if c1 <> c2 then
+       true
+     else
+       let rec some_pair_clashes xs ys =
+         match xs, ys with
+         | x :: xs, y :: ys ->
+            rigid_clash x y || some_pair_clashes xs ys
+         | _ -> false
+       in
+       some_pair_clashes args1 args2
+  | _ -> false
+
 (* True only for a proposition whose formula rendering is `p(t)' for a
    Const-headed application `t': then, and only then, does the definitional
    equivalence have a genuine term on each side and may be duplicated as a
@@ -1709,7 +1730,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                        (* An elimination from an empty proposition is unreachable.
                           Its lifted denotation is intentionally unconstrained. *)
                        return ()
-                    | Coq_erasure.CPropSingleton _ ->
+                    | Coq_erasure.CPropSingleton { index_eqs; index_formals } ->
                        begin
                          match collapse_prop_singleton vars indname constrs params params_num branches with
                          | None ->
@@ -1718,16 +1739,44 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             return ()
                          | Some body2 ->
                             record_case_dependency ();
-                            (* Singleton erasure: the proof match computes as
-                               its unique branch after proof arguments are erased.
-                               The source proposition is load-bearing for indexed
-                               singletons such as equality and [eq_true]. *)
-                            let premise =
-                              try
-                                combine_premises premise (Some (List.assoc proof_name vars))
-                              with Not_found ->
-                                internal_error "singleton proof scrutinee is absent from the normalized context"
+                            (* With guards disabled, singleton elimination uses
+                               the unconditional proof-irrelevant equation.  With
+                               guards enabled, ford the premise to the residual
+                               constructor index equations; if the occurrence
+                               cannot be exposed, retain the source proposition
+                               as the conservative fallback.  Index-free
+                               singletons such as [Acc] need no extra premise. *)
+                            let singleton_premise =
+                              if not opt_erasure_guards || index_eqs = [] then
+                                None
+                              else
+                                let scrutinee_ty =
+                                  try List.assoc proof_name vars with Not_found ->
+                                    internal_error
+                                      "singleton proof scrutinee is absent from the normalized context"
+                                in
+                                match Coq_erasure.occurrence_indices indname scrutinee_ty with
+                                | None -> Some scrutinee_ty
+                                | Some indices ->
+                                   let equations =
+                                     List.map
+                                       (fun (pos, pattern) ->
+                                          let actual =
+                                            try List.nth indices pos with _ ->
+                                              internal_error
+                                                "singleton index equation is outside the occurrence telescope"
+                                          in
+                                          mk_eq actual
+                                            (Coq_erasure.instantiate
+                                               index_formals indices pattern))
+                                       index_eqs
+                                   in
+                                   begin match equations with
+                                   | [] -> None
+                                   | _ -> Some (join_right mk_and equations)
+                                   end
                             in
+                            let premise = combine_premises premise singleton_premise in
                             compile_case ?premise lhs vars axname body2
                        end
                     | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
@@ -1754,6 +1803,46 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                 let regular_case () =
                   match matched_term with
                   | Var scrutinee when var_occurs scrutinee lhs ->
+                     let pruning_data =
+                       if not opt_rigid_clash_pruning then
+                         None
+                       else
+                         let scrutinee_ty =
+                           try List.assoc scrutinee vars with Not_found ->
+                             internal_error
+                               "case scrutinee is absent from the normalized context"
+                         in
+                         match Coq_erasure.occurrence_indices indname scrutinee_ty with
+                         | None -> None
+                         | Some indices ->
+                            Some (indices, case_index_formals indty params params_num)
+                     in
+                     let branch_clashes patterns =
+                       match pruning_data with
+                       | None -> false
+                       | Some (indices, formals) ->
+                          if List.length indices <> List.length patterns ||
+                             List.length patterns <> List.length formals
+                          then
+                            internal_error
+                              "constructor result indices do not align with the scrutinee occurrence"
+                          else
+                            let rec check formal_ctx indices patterns formals =
+                              match indices, patterns, formals with
+                              | actual :: indices2, pattern :: patterns2,
+                                (name, ty) :: formals2 ->
+                                 if Coq_typing.check_prop formal_ctx ty then
+                                   check ((name, ty) :: formal_ctx)
+                                     indices2 patterns2 formals2
+                                 else
+                                   rigid_clash (nbe actual) pattern ||
+                                   check ((name, ty) :: formal_ctx)
+                                     indices2 patterns2 formals2
+                              | [], [], [] -> false
+                              | _ -> assert false
+                            in
+                            check (List.rev vars) indices patterns formals
+                     in
                      let rec split_scrutinee acc = function
                        | [] -> internal_error "case scrutinee is absent from the normalized context"
                        | (name, _) :: vars_after when name = scrutinee ->
@@ -1762,20 +1851,32 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      in
                      let vars_before, vars_after = split_scrutinee [] vars in
                      let prepare_branch cname =
-                       let (n, branch) = get_branch cname constrs branches
-                       in
-                       let (_, args) =
+                       let (n, branch) = get_branch cname constrs branches in
+                       let patterns, args0 =
                          Coq_erasure.constructor_index_data
                            (List.rev vars) params params_num cname
                        in
-                       if List.length args <> n then
+                       if List.length args0 <> n then
                          internal_error
                            ("constructor telescope arity mismatch for " ^ cname ^
                             " in " ^ indname ^ ": branch binds " ^ string_of_int n ^
                             " but normalized constructor has " ^
-                            string_of_int (List.length args))
+                            string_of_int (List.length args0))
                        else
-                         let args = refresh_case_args vars args in
+                         let args = refresh_case_args vars args0 in
+                         let patterns =
+                           match pruning_data with
+                           | None -> []
+                           | Some _ ->
+                              List.map
+                                (fun tm ->
+                                   List.fold_left2
+                                     (fun tm (name, _) (name2, _) ->
+                                        if name = name2 then tm
+                                        else substvar name (Var name2) tm)
+                                     tm args0 args)
+                                patterns
+                         in
                          let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
                          in
                          let branch_body = simpl (mk_long_app branch (mk_vars args))
@@ -1788,13 +1889,20 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          and axname2 = axname ^ "$" ^ short_name cname
                          and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
                          in
-                         (lhs2, vars2, axname2, body2)
+                         (branch_clashes patterns, lhs2, vars2, axname2, body2)
                      in
-                     (* Validate every constructor telescope before the first
-                        split equation is emitted. *)
+                     (* Validate every constructor telescope before filtering
+                        any impossible branch or emitting the first equation. *)
                      let prepared = List.map prepare_branch constrs in
+                     let prepared =
+                       List.filter
+                         (fun (clashes, _, _, axname2, _) ->
+                            if clashes then log 2 ("case-branch-pruned: " ^ axname2);
+                            not clashes)
+                         prepared
+                     in
                      List.fold_left
-                       (fun acc (lhs2, vars2, axname2, body2) ->
+                       (fun acc (_, lhs2, vars2, axname2, body2) ->
                           acc >> compile_case ?premise lhs2 vars2 axname2 body2)
                        (return ()) prepared
                   | _ ->
