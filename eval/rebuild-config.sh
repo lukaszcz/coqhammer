@@ -25,6 +25,8 @@ Core configs:
   loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false
   loo-refinement-types     all-on except opt_refinement_types=false
+  loo-indexed-families     all-on except opt_indexed_families=false
+  loo-rigid-clash-pruning  all-on except opt_rigid_clash_pruning=false
 
 Decl-skip variants:
   append -decl-skips to any core config other than `current` to set
@@ -46,7 +48,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
       echo current
-      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types; do
+      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-indexed-families loo-rigid-clash-pruning; do
         echo "$base"
         echo "$base-decl-skips"
       done
@@ -120,13 +122,17 @@ fi
 prop=true
 erasure=true
 refinement=true
+indexed=true
+pruning=true
 case "$core" in
   current) ;;
-  all-off) prop=false; erasure=false; refinement=false ;;
+  all-off) prop=false; erasure=false; refinement=false; indexed=false; pruning=false ;;
   all-on) ;;
   loo-prop-case-erasure) prop=false ;;
   loo-erasure-guards) erasure=false ;;
   loo-refinement-types) refinement=false ;;
+  loo-indexed-families) indexed=false ;;
+  loo-rigid-clash-pruning) pruning=false ;;
   *) echo "Unknown configuration: $config" >&2; usage >&2; exit 2 ;;
 esac
 
@@ -199,7 +205,7 @@ restore_opts() {
 trap restore_opts EXIT INT TERM
 
 if [ "$patch_needed" = true ]; then
-python3 - "$opts" "$prop" "$erasure" "$refinement" "$decl_skips" <<'PY'
+python3 - "$opts" "$prop" "$erasure" "$refinement" "$indexed" "$pruning" "$decl_skips" <<'PY'
 import pathlib
 import re
 import sys
@@ -209,7 +215,9 @@ values = {
     "opt_prop_case_erasure": sys.argv[2],
     "opt_erasure_guards": sys.argv[3],
     "opt_refinement_types": sys.argv[4],
-    "opt_refinement_decl_skips": sys.argv[5],
+    "opt_indexed_families": sys.argv[5],
+    "opt_rigid_clash_pruning": sys.argv[6],
+    "opt_refinement_decl_skips": sys.argv[7],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -300,6 +308,8 @@ if [ "$patch_needed" = true ]; then
 opt_prop_case_erasure=$prop
 opt_erasure_guards=$erasure
 opt_refinement_types=$refinement
+opt_indexed_families=$indexed
+opt_rigid_clash_pruning=$pruning
 opt_refinement_decl_skips=$decl_skips
 MANIFEST
 fi

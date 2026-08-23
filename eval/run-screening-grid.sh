@@ -10,7 +10,7 @@ Usage: ./run-screening-grid.sh [options]
 Run the extraction screening grid for the current checkout in a resumable
 layout:
   premise counts {64,256,1024} x {Vampire,E prover} x
-  {current, all-off, all-on, three leave-one-out configurations} x
+  {current, all-off, all-on, five leave-one-out configurations} x
   {decl-skips off,on for configuration variants} over the three prepared corpora.
 
 Results are checkpointed under eval/results/screening/ and summarized under
@@ -74,6 +74,8 @@ configs=(
   loo-prop-case-erasure
   loo-erasure-guards
   loo-refinement-types
+  loo-indexed-families
+  loo-rigid-clash-pruning
 )
 
 GRID_LABELS=(current)

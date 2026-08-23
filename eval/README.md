@@ -117,7 +117,9 @@ variants used to understand the current translator:
 - `all-off` and `all-on`;
 - `loo-prop-case-erasure`;
 - `loo-erasure-guards`;
-- `loo-refinement-types`.
+- `loo-refinement-types`;
+- `loo-indexed-families`;
+- `loo-rigid-clash-pruning`.
 
 Append `-decl-skips` to a variant to enable declaration-level refinement
 skips. Configuration builds restore `coq_transl_opts.ml` after installation.
