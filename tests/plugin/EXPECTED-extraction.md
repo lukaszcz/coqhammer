@@ -81,6 +81,23 @@ fixtures are additionally dumped as `consistency-dsize.p` and
 `consistency-dheight.p` and ATP-checked by `check-consistency.sh`, since a
 misread index guard is soundness-relevant rather than merely lossy.
 
+The consistency suite also retains four indexed-family canary groups in the
+existing dump names enumerated by `check-consistency.sh`:
+
+- `consistency-prop-or-match.p` / `consistency-false-case-prop.p`: negative and
+  positive `reflect` expansions, including the `true` result index;
+- `consistency-dsize.p` / `consistency-dheight.p`: vector and `Fin.t 0`
+  hypotheses whose constructor indices rigidly clash;
+- `consistency-eq-rect.p`: the F*-#1542-shaped equality match under
+  `true = false`, together with guards-off transports across `nat`, `bool`, and
+  `string` in one problem;
+- `consistency-h.p`: an indexed subset at zero whose expanded carrier payload
+  is the refutable proposition `k < 0`.
+
+Each group keeps its relevant definition/typing formulas as axioms, so replacing
+the conjecture by `$false` checks the emitted theory rather than merely deleting
+the exercised shape.
+
 ### Documented deviations
 
 No dependent-types extraction goals remain wrapped. The `canary`
