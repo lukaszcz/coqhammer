@@ -2241,46 +2241,89 @@ and guard_leaf ctx ty x =
     | [] -> Const("$True")
     | fs -> join_right mk_and fs
   in
+  let internal_error msg =
+    raise
+      (Hammer_errors.HammerError
+         ("internal translation error: indexed guard " ^ msg))
+  in
+  let nth_index indices pos =
+    try List.nth indices pos with Failure _ ->
+      internal_error "refers to an index outside the occurrence telescope"
+  in
+  let subst_env env tm =
+    List.fold_left
+      (fun tm (name, value) ->
+         if var_occurs name tm then substvar name value tm else tm)
+      tm env
+  in
+  let instantiate formals indices tm =
+    simpl (Coq_erasure.instantiate formals indices tm)
+  in
+  (* Instantiate a retained constructor telescope from left to right.  Every
+     local argument of an enum is either solved by an occurrence index or is an
+     erased proof; a subset additionally has its one residual carrier.  Keeping
+     an explicit substitution environment is important for dependent
+     telescopes: proof casts use the already-instantiated types of preceding
+     arguments, rather than a second constructor destruction with unrelated
+     binder names.  [substvar] is capture-avoiding, so occurrence variables are
+     safe even when source binders reuse their printed names. *)
+  let prepare_telescope formals indices solved residuals proof_names args =
+    let find name entries =
+      try Some (List.assoc name entries) with Not_found -> None
+    in
+    let rec prepare env acc = function
+      | [] -> (List.rev acc, env)
+      | (name, ty) :: args2 ->
+         let ty = subst_env env (instantiate formals indices ty) in
+         let value =
+           match find name solved with
+           | Some pos -> nth_index indices pos
+           | None ->
+              begin match find name residuals with
+              | Some value -> value
+              | None when List.mem name proof_names -> mk_proof_cast ty
+              | None -> internal_error "has an unaccounted constructor argument"
+              end
+         in
+         prepare ((name, value) :: env) ((name, ty, value) :: acc) args2
+    in
+    prepare [] [] args
+  in
+  let prepare_term formals indices env tm =
+    simpl (subst_env env (instantiate formals indices tm))
+  in
+  let index_equations formals indices env eqs =
+    List.map
+      (fun (pos, pattern) ->
+         mk_eq (nth_index indices pos)
+           (prepare_term formals indices env pattern))
+      eqs
+  in
   (* Decide the shape of the guard before building any formula.  An inductive,
      constructor or telescope which is unavailable or malformed simply carries
      no refinement structure, and such a leaf legitimately degrades to plain
      typing; the lookups below are therefore the only failures allowed to mean
      "no refinement here".  Payload translation is kept outside, so a bug in it
-     surfaces instead of quietly weakening the guard. *)
+     surfaces instead of quietly weakening the guard.  Exact saturation is
+     checked before exposing the class: a partial family application is a type
+     former and must retain its complete ordinary typing atom. *)
   let classify_leaf ty_nf =
     match flatten_app ty_nf with
     | Const indname, args ->
        begin match Defhash.find indname with
-       | (_, IndType(_, _, params_num), _, _) ->
-          let params = Hhlib.take params_num args
-          in
-          begin match Coq_erasure.classify ctx indname params with
-          | Coq_erasure.CSubset { index_formals = _ :: _; _ } ->
-             (* Indexed metadata must be instantiated at a saturated
-                occurrence.  Until that expansion is available, retain the
-                ordinary typing leaf. *)
-             None
-          | Coq_erasure.CSubset {
-              carrier_idx; carrier_name; subset_args; prop_args; _
-            } ->
-             let (_, carrier_ty) = List.nth subset_args carrier_idx
-             in
-             Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
-          | Coq_erasure.CEnum { enum_index_formals = _ :: _; _ } ->
-             (* See the indexed-subset fallback above. *)
-             None
-          | Coq_erasure.CEnum enum ->
-             let ctors =
-               List.map
-                 (fun ctor ->
-                    (ctor.Coq_erasure.enum_name,
-                     List.map snd ctor.Coq_erasure.enum_payloads))
-                 enum.Coq_erasure.enum_constructors
-             in
-             Some (`Enum (params, ctors))
-          | Coq_erasure.CEmpty -> Some `Empty
-          | Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular -> None
-          end
+       | (_, IndType(_, _, params_num), ind_ty, _) ->
+          let arity = List.length (Coq_typing.get_type_args ind_ty) in
+          if List.length args <> arity then
+            None
+          else
+            let params = Hhlib.take params_num args in
+            let indices = Hhlib.drop params_num args in
+            begin match Coq_erasure.classify ctx indname params with
+            | (Coq_erasure.CSubset _ | Coq_erasure.CEnum _ |
+               Coq_erasure.CEmpty) as cls ->
+               Some (params, indices, cls)
+            | Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular -> None
+            end
        | _ -> None
        end
     | _ -> None
@@ -2293,24 +2336,60 @@ and guard_leaf ctx ty x =
     match (try classify_leaf ty_nf with _ -> None) with
     | None ->
        fallback ()
-    | Some (`Subset (carrier_ty, carrier_name, prop_args)) ->
+    | Some (_, indices, Coq_erasure.CSubset {
+        carrier_idx; carrier_name; subset_args; prop_args; solved; index_eqs;
+        index_formals
+      }) ->
        (* A refinement guard is expanded at the occurrence itself: the carrier
-          guard is conjoined with the translated payload.  The same leaf is used
-          in hypotheses and conclusions.  Substitute the erased carrier before
-          translating the payload so beta-redexes in predicate parameters
-          disappear shallowly. *)
+          guard is conjoined with the translated payload and residual result-
+          index equations.  The same leaf is used in hypotheses and conclusions.
+          The retained named telescope lets solved arguments, erased proofs and
+          the carrier be substituted coherently through dependent payloads. *)
        convert ctx x >>= fun carrier ->
+       let proof_names = List.map fst prop_args in
+       let prepared, env =
+         prepare_telescope index_formals indices solved
+           [carrier_name, carrier] proof_names subset_args
+       in
+       let carrier_ty =
+         try
+           let (_, ty, _) = List.nth prepared carrier_idx in ty
+         with Failure _ ->
+           internal_error "subset carrier is outside its constructor telescope"
+       in
        make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
        formulas ctx
          (List.map
-            (fun (_, prop_ty) -> simpl (substvar carrier_name carrier prop_ty))
+            (fun (_, prop_ty) ->
+               prepare_term index_formals indices env prop_ty)
             prop_args) >>= fun payloads ->
-       return (conjoin (carrier_guard :: payloads))
-    | Some (`Enum (params, ctors)) ->
-       let one_ctor (cname, payloads) =
-         convert ctx (mk_long_app (Const cname) params) >>= fun ctor ->
-         formulas ctx payloads >>= fun payloads ->
-         return (mk_and (mk_eq x ctor) (conjoin payloads))
+       formulas ctx
+         (index_equations index_formals indices env index_eqs) >>= fun equations ->
+       return (conjoin (carrier_guard :: payloads @ equations))
+    | Some (params, indices, Coq_erasure.CEnum enum) ->
+       let one_ctor ctor =
+         let proof_names =
+           List.map fst ctor.Coq_erasure.enum_payloads
+         in
+         let prepared, env =
+           prepare_telescope enum.Coq_erasure.enum_index_formals indices
+             ctor.Coq_erasure.enum_solved [] proof_names
+             ctor.Coq_erasure.enum_args
+         in
+         let args = List.map (fun (_, _, value) -> value) prepared in
+         convert ctx
+           (mk_long_app (Const ctor.Coq_erasure.enum_name) (params @ args))
+           >>= fun tag ->
+         formulas ctx
+           (List.map
+              (fun (_, payload_ty) ->
+                 prepare_term enum.Coq_erasure.enum_index_formals indices env
+                   payload_ty)
+              ctor.Coq_erasure.enum_payloads) >>= fun payloads ->
+         formulas ctx
+           (index_equations enum.Coq_erasure.enum_index_formals indices env
+              ctor.Coq_erasure.enum_index_eqs) >>= fun equations ->
+         return (mk_and (mk_eq x tag) (conjoin (payloads @ equations)))
        in
        let rec disjs = function
          | [] -> return []
@@ -2320,15 +2399,17 @@ and guard_leaf ctx ty x =
             return (f :: fs)
        in
        (* A CEnum guard reuses the existing inversion scheme as a self-contained
-          disjunction of constructor tags and their propositional payload
-          formulas; non-guard occurrences still use the ordinary inversion
-          axiom. *)
-       disjs ctors >>= fun fs ->
+          disjunction of constructor tags, payload formulas and instantiated
+          result-index equations; non-guard occurrences still use the ordinary
+          declaration-level inversion axiom. *)
+       disjs enum.Coq_erasure.enum_constructors >>= fun fs ->
        return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
-    | Some `Empty ->
+    | Some (_, _, Coq_erasure.CEmpty) ->
        (* The guard for an empty classified type is false, matching the
           zero-constructor inversion scheme. *)
        return (Const("$False"))
+    | Some (_, _, (Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular)) ->
+       internal_error "received a non-expandable classification"
 
 (* `x' does not get converted *)
 and make_guard ctx ty x =
