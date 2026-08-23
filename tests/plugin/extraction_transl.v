@@ -140,19 +140,35 @@ Hammer_transl "idiv".
 Hammer_transl "idiv2".
 Hammer_transl "idiv3".
 
-(* Case index guards must be read off the matched family, not off the scrutinee's
-   declared type: dsize crashes the guard walk when the type-level function's
-   arguments are counted as indices, dheight silently mistakes one for an index
-   when the counts happen to agree, and dstack_size has no computable guard at
-   all and must be refused rather than emitted unguarded. *)
+(* Fording makes split equations independent of index guards read from the
+   scrutinee's declared type.  This includes type-level function and fixpoint
+   wrappers that are only convertible to the matched family. *)
 Hammer_transl "dsize".
 Hammer_transl "dheight".
 Hammer_transl "dstack_size".
 
-(* An index-free family reads no index guard off its scrutinee's type, but the
-   type of the case is still its return predicate applied to the indices, and a
-   type-level function's surplus arguments are not indices. *)
+(* The nested indexed match also exercises rigid-clash pruning: only its leaf
+   branch is possible at index zero. *)
 Hammer_transl "dnested".
+
+(* Indexed-family fixtures.  Commands in an imported .vo are not replayed, so
+   invoke them here to put their emissions under the shape-assertion harness. *)
+Hammer_transl "breflect".
+Hammer_transl "tagged".
+Hammer_transl "untag".
+Hammer_transl "ibounded".
+Hammer_transl "ibval".
+Hammer_transl "okp".
+Hammer_transl "fromok".
+Hammer_transl "isT".
+Hammer_transl "fromisT".
+Hammer_transl "istrue".
+Hammer_transl "fromtrue".
+Hammer_transl "cast".
+Hammer_transl "vec".
+Hammer_transl "extraction_indexed.vhead".
+Hammer_transl "dheight2".
+Hammer_transl "jmeq_match".
 
 (* Stdlib regression list. Keep these as structural snapshots, not golden files;
    they pin representative fallback and coverage cases while remaining robust
@@ -164,6 +180,7 @@ Hammer_transl "eq_ind_r".
 Hammer_transl "proj1".
 Hammer_transl "Acc_rect".
 Hammer_transl "Nat.eq_dec".
+Hammer_transl "Nat.eqb_spec".
 Hammer_transl "sumbool".
 Hammer_transl "reflect".
 Hammer_transl "introT".

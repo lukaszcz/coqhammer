@@ -160,8 +160,8 @@ Proof. hammer [idiv3_small_unfold]. Qed.
    [dtree], whose single index would then be matched against [dred].  This is
    the shape Equations produces for a type-level function returning a different
    family per branch; Equations is not available to this suite, so the function
-   is spelled as the plain match Equations compiles it to.  The emitted index
-   guards are pinned in extraction_transl.v. *)
+   is spelled as the plain match Equations compiles it to.  The emitted
+   unconditional constructor equations are pinned in extraction_transl.v. *)
 Inductive dcolor := dred | dblack.
 
 Inductive dtree : nat -> Set :=
@@ -198,10 +198,9 @@ Definition dheight {n} (b : dswap n dred) : nat :=
 
 (* A type-level function the head-normalizer cannot see through: it is a
    fixpoint, and fixpoint unfolding is deliberately not one of the head steps
-   taken.  Rocq's own conversion still accepts the match, so the case is
-   translatable in principle -- but its index guard is not computable, and an
-   unguarded branch equation would be asserted for every index.  The case must
-   therefore be refused outright, leaving [dstack_size] uninterpreted. *)
+   taken.  Rocq's own conversion accepts the match.  Forded split equations no
+   longer depend on recovering an index guard from this declared type, so both
+   constructor equations remain available. *)
 Fixpoint dstack (k n : nat) : Set :=
   match k with
   | 0 => dtree n
@@ -214,14 +213,9 @@ Definition dstack_size (n : nat) (r : dstack 0 n) : nat :=
   | dnode m _ _ => S m
   end.
 
-(* The same hazard on an *index-free* family, where it is reached through the
-   type of the case rather than through its index guard.  [dopt dred (dtree 0)]
-   reduces to [option (dtree 0)]; [option] declares no indices, so no guard is
-   read off the scrutinee's type -- but the type of the inner match is still
-   computed by applying its return predicate to the index arguments, and
-   [dopt]'s surplus colour argument is not one.  The inner match is the
-   scrutinee of an outer match on an indexed family, whose own scrutinee type
-   only that computation can supply. *)
+(* A nested match through an index-free type-level function.  The inner match
+   produces [dtree 0], allowing rigid-clash pruning to discard the outer node
+   branch while retaining the leaf equation and the correctly applied link. *)
 Definition dopt (c : dcolor) (A : Type) : Type := option A.
 
 Definition dnested (o : dopt dred (dtree 0)) : nat :=

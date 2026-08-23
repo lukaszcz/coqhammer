@@ -1,6 +1,5 @@
-(* Indexed-family translation fixtures.  Shape assertions over this output are
-   added separately once occurrence expansion and case compilation consume the
-   forded metadata. *)
+(* Indexed-family translation fixtures.  extraction_transl.v replays these
+   translations so check-extraction-transl.sh can assert their forded shapes. *)
 
 From Hammer Require Import Hammer.
 

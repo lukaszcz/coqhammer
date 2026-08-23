@@ -108,24 +108,49 @@ structural assertions that hold with the current translator:
   equations for Program `idiv`, bare `Fix` `idiv2`, and direct `Fix_F` `idiv3`;
   all three are checked to carry the converted `b <> 0` premise on link and case
   equations, with corpus-wide guards against unpremised WF unfolding equations.
-- Case index guards: `dsize` and `dheight` are checked to equate the matched
-  family's own index with each constructor's result index, and not to expose the
-  arguments of the type-level function their scrutinees are declared at
-  (`dres`/`dred` for `dsize`, `dswap`'s permuted colour for `dheight`);
-  `dstack_size`, whose scrutinee type is a type-level fixpoint that head
-  reduction does not unfold, is checked to emit no definition axiom at all while
-  keeping its typing axiom, so an uncomputable guard degrades to an
-  uninterpreted symbol rather than to an unguarded equation.
+- Forded indexed split equations: `dsize` and `dheight` have unconditional
+  equations for both constructors, with no legacy `=> @` index premise and no
+  reference to the `dres`/`dswap` type-level functions in their definition
+  lines. `dstack_size` likewise has unconditional leaf/node equations even
+  though its scrutinee is declared through a type-level fixpoint the
+  head-normalizer does not unfold. For nested matching at `dtree 0`, the link
+  applies the outer case symbol directly to the inner option case; rigid clash
+  pruning keeps the leaf equation and omits the impossible node equation.
+- Indexed-family fixtures from `extraction_indexed.v`: declaration inversion
+  axioms for `breflect`, `tagged`, `okp`, and `vec` are checked by parsing their
+  fresh binders and correlating those exact identifiers across typing guards,
+  constructor parameters and payloads, and residual index equations. `untag`
+  exposes the constructor's solved index without a premise; `ibval` erases the
+  `IBounded` package to its carrier and expands the `k < n` payload in its type
+  axiom; `fromok`, `fromisT`, `fromtrue`, `cast`, and the JMeq match collapse to
+  unconditional equations. Their asserted typing/inversion axioms retain the
+  relevant Prop premises and index equalities. In particular, `cast`'s helper
+  correlates its exact source/target binders through the equality premise and
+  source-payload/target-result typing, and reuses its exact outer function binder
+  in both self-typing and the result application. The user `vhead`
+  emits only its live `vcons` equation, and `dheight2` emits only its live
+  `dbox_succ` equation; neither equation has a legacy index premise. Default
+  indexed-subset declaration skipping is pinned by requiring the ordinary
+  `$_typeof_extraction_indexed.ibounded` axiom while forbidding
+  `$_inj_extraction_indexed.IBounded` and `$_inversion_extraction_indexed.ibounded`.
+- Indexed guard expansion: `introT` and `$_typeof_Nat.eqb_spec` each contain
+  `ReflectT` and `ReflectF` alternatives with the positive/negative proposition
+  payload and `= true`/`= false` residual index equations. For `Nat.eqb_spec`,
+  the exact generated proposition helpers are checked to define equality and
+  the exact shared boolean helper is checked against the full `Nat.eqb` O/S
+  truth table. Their old nominal `$HasType ... reflect` leaves are forbidden.
 - Stdlib regression constants: split-equation checks for `Nat.add`, `List.app`,
   and `Streams.hd`; structural checks for `List.Forall`, `eq_ind_r`, `proj1`,
-  `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `sumbool`, `sig`, `prod`, `Vector.hd`, a
-  `Streams` coinductive destructor, and the `Equivalence_Reflexive` typeclass
-  method projection.  The profile additionally enforces a transport-erased
-  `$_def_` equation for `eq_ind_r` and pins declaration-level subset
-  injectivity/inversion as present with the optional skip constant off by default.
+  `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `Nat.eqb_spec`, `sumbool`, `introT`,
+  `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
+  the `Equivalence_Reflexive` typeclass method projection. Declaration-level
+  subset injectivity/inversion remains present for parameter-dependent `sig`.
 
 ### Documented deviations
 
 No disabled translation assertion blocks remain. The transport ATP-dump layer
 remains as an independent translation-quality gate in addition to the end-to-end
-`hammer` goal.
+`hammer` goal. Two transport-cleanup snapshots are intentionally deferred to
+TASK_07: removal of the synthetic `$_def_eq_ind_r` proof equation, and tightening
+`$_def_Acc_rect` to exactly one `Acc` premise. Until then the harness retains the
+current `eq_ind_r` definition assertion and the existing `Acc_rect` premise check.

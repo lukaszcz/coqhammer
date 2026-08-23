@@ -44,6 +44,133 @@ require_count_exact() {
   fi
 }
 
+get_unique_line() {
+  local label=$1
+  local prefix=$2
+  local lines
+  mapfile -t lines < <(awk -v prefix="$prefix" 'index($0, prefix) == 1' "$out")
+  if [ "${#lines[@]}" -ne 1 ]; then
+    fail "$label (expected one line beginning with: $prefix; found ${#lines[@]})"
+  fi
+  printf '%s\n' "${lines[0]}"
+}
+
+parse_binders() {
+  local label=$1
+  local text=$2
+  local quantifier=$3
+  local expected=$4
+  local result_name=$5
+  local pattern
+  local -n result=$result_name
+
+  case "$quantifier" in
+    universal) pattern='!\[[^ ]+ : \$Any\]' ;;
+    existential) pattern='\?\[[^ ]+ : \$Any\]' ;;
+    *) fail "$label (unknown binder quantifier: $quantifier)" ;;
+  esac
+  mapfile -t result < <(
+    printf '%s\n' "$text" |
+      grep -Eo -- "$pattern" |
+      sed -E 's/^[!?]\[([^ ]+) : \$Any\]$/\1/'
+  )
+  if [ "${#result[@]}" -ne "$expected" ]; then
+    fail "$label (expected $expected $quantifier binders; found ${#result[@]})"
+  fi
+}
+
+require_text() {
+  local label=$1
+  local text=$2
+  local needle=$3
+  if [[ "$text" != *"$needle"* ]]; then
+    fail "$label (missing fixed text: $needle)"
+  fi
+}
+
+extract_unique_symbol() {
+  local label=$1
+  local text=$2
+  local context_pattern=$3
+  local symbol_pattern=$4
+  local symbols
+  mapfile -t symbols < <(
+    printf '%s\n' "$text" |
+      grep -Eo -- "$context_pattern" |
+      grep -Eo -- "$symbol_pattern" |
+      sort -u || true
+  )
+  if [ "${#symbols[@]}" -ne 1 ]; then
+    fail "$label (expected one generated symbol; found ${#symbols[@]})"
+  fi
+  printf '%s\n' "${symbols[0]}"
+}
+
+require_text_count_exact() {
+  local label=$1
+  local text=$2
+  local needle=$3
+  local expected=$4
+  local count
+  count=$(printf '%s\n' "$text" | { grep -Fo -- "$needle" || true; } | wc -l)
+  if [ "$count" -ne "$expected" ]; then
+    fail "$label (expected $expected occurrences of $needle; found $count)"
+  fi
+}
+
+# Proposition helpers are generated with fresh IDs.  Parse their binders and
+# compare the complete defining equivalence instead of baking those IDs into a
+# regular expression.
+assert_binary_prop_is_equality() {
+  local label=$1
+  local symbol=$2
+  local line
+  local binders
+  local lhs rhs expected
+  line=$(get_unique_line "$label helper definition" "$symbol:")
+  parse_binders "$label helper definition" "$line" universal 2 binders
+  lhs=${binders[0]}
+  rhs=${binders[1]}
+  expected="$symbol: ![$lhs : \$Any]: (![$rhs : \$Any]: (((<=> @ (($symbol @ $lhs) @ $rhs)) @ ($lhs = $rhs))))"
+  if [ "$line" != "$expected" ]; then
+    fail "$label helper $symbol does not define its exact proposition as equality"
+  fi
+}
+
+assert_nat_eqb_truth_table() {
+  local symbol=$1
+  local line expected
+  local binders
+  local x y
+  local o='Corelib.Init.Datatypes.O'
+  local s='Corelib.Init.Datatypes.S'
+  local true='Corelib.Init.Datatypes.true'
+  local false='Corelib.Init.Datatypes.false'
+
+  line=$(get_unique_line "Nat.eqb O/O helper equation" "$symbol\$O\$O:")
+  expected="$symbol\$O\$O: ((($symbol @ $o) @ $o) = $true)"
+  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong O/O equation"
+
+  line=$(get_unique_line "Nat.eqb O/S helper equation" "$symbol\$O\$S:")
+  parse_binders "Nat.eqb O/S helper equation" "$line" universal 1 binders
+  x=${binders[0]}
+  expected="$symbol\$O\$S: ![$x : \$Any]: (((($symbol @ $o) @ ($s @ $x)) = $false))"
+  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong O/S equation"
+
+  line=$(get_unique_line "Nat.eqb S/O helper equation" "$symbol\$S\$O:")
+  parse_binders "Nat.eqb S/O helper equation" "$line" universal 1 binders
+  x=${binders[0]}
+  expected="$symbol\$S\$O: ![$x : \$Any]: (((($symbol @ ($s @ $x)) @ $o) = $false))"
+  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong S/O equation"
+
+  line=$(get_unique_line "Nat.eqb S/S helper equation" "$symbol\$S\$S:")
+  parse_binders "Nat.eqb S/S helper equation" "$line" universal 2 binders
+  x=${binders[0]}
+  y=${binders[1]}
+  expected="$symbol\$S\$S: ![$x : \$Any]: (![$y : \$Any]: (((($symbol @ ($s @ $x)) @ ($s @ $y)) = (($symbol @ $x) @ $y))))"
+  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong S/S recursion equation"
+}
+
 # -----------------------------------------------------------------------------
 # Global sanity checks enforced now.
 # -----------------------------------------------------------------------------
@@ -224,48 +351,257 @@ forbid_line "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extra
 require_line "vhead has a cons split equation" '^\$_def_extraction_deptypes\.vhead[$]cons:.*= var_1_h_[0-9]+\)'
 forbid_line "vhead split equations are existential-free" '^\$_def_extraction_deptypes\.vhead[$].*\?\['
 
-# Type-level function scrutinees: the index guard of a split equation is read
-# off the matched family, never off the scrutinee's declared type.  dsize's
-# scrutinee is declared at [dres dred n], convertible to [dtree n] but not an
-# application of [dtree], so the guard must equate [dtree]'s single index with
-# each constructor's result index and must not mention [dres]'s own arguments.
-# These are shape assertions, not golden output: the guard is pinned, the rest
-# of the equation is not.
-require_line "dsize leaf guard equates the dtree index with the constructor result" '^\$_def_extraction_deptypes\.dsize[$]dleaf:.*=> @ \(0_n = Corelib\.Init\.Datatypes\.O\)'
-require_line "dsize node guard equates the dtree index with the constructor result" '^\$_def_extraction_deptypes\.dsize[$]dnode:.*=> @ \(0_n = \(Corelib\.Init\.Datatypes\.S @ var_[0-9]+_n_[0-9]+\)\)'
-forbid_line "dsize split equations must not read the type-level function arguments" '^\$_def_extraction_deptypes\.dsize[$].*extraction_deptypes\.(dres|dred|dblack|dpair)'
+# Forded split equations do not depend on index premises recovered from a
+# scrutinee's declared type.  dsize and dheight therefore emit both equations
+# unconditionally even though their declared types are type-level functions.
+dsize_leaf_line=$(get_unique_line "dsize leaf equation" '$_def_extraction_deptypes.dsize$dleaf:')
+parse_binders "dsize leaf equation" "$dsize_leaf_line" universal 1 dsize_leaf_binders
+dsize_outer=${dsize_leaf_binders[0]}
+require_text_count_exact "dsize has an unconditional leaf equation" "$dsize_leaf_line" "(((extraction_deptypes.dsize @ $dsize_outer) @ extraction_deptypes.dleaf) = Corelib.Init.Datatypes.O)" 1
 
-# dheight is the same hazard with the argument counts aligned, so a
-# declared-type reading yields a well-formed but wrong guard instead of an
-# error: [dswap n dred] would put the colour where [dbox]'s nat index belongs.
-# [dred] stays legitimate as [dbox]'s parameter inside the constructor pattern,
-# hence the forbidden pattern is positional.
-require_line "dheight zero guard equates the dbox index with the constructor result" '^\$_def_extraction_deptypes\.dheight[$]dbox_zero:.*=> @ \(0_n = Corelib\.Init\.Datatypes\.O\)'
-require_line "dheight successor guard equates the dbox index with the constructor result" '^\$_def_extraction_deptypes\.dheight[$]dbox_succ:.*=> @ \(0_n = \(Corelib\.Init\.Datatypes\.S @ var_[0-9]+_n_[0-9]+\)\)'
-forbid_line "dheight guards must not put the permuted colour argument in an index position" '^\$_def_extraction_deptypes\.dheight[$][^:]*:.*=> @ \(extraction_deptypes\.(dred|dblack) ='
-forbid_line "dheight split equations must not mention the type-level function" '^\$_def_extraction_deptypes\.dheight[$].*extraction_deptypes\.dswap'
+dsize_node_line=$(get_unique_line "dsize node equation" '$_def_extraction_deptypes.dsize$dnode:')
+parse_binders "dsize node equation" "$dsize_node_line" universal 4 dsize_node_binders
+dsize_outer=${dsize_node_binders[0]}
+dsize_n=${dsize_node_binders[1]}
+dsize_left=${dsize_node_binders[2]}
+dsize_right=${dsize_node_binders[3]}
+require_text_count_exact "dsize correlates its node binders with the result" "$dsize_node_line" "((extraction_deptypes.dsize @ $dsize_outer) @ (((extraction_deptypes.dnode @ $dsize_n) @ $dsize_left) @ $dsize_right)) = (Corelib.Init.Datatypes.S @ $dsize_n)" 1
+forbid_line "dsize split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dsize[$].*=> @'
+forbid_line "dsize split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dsize[$].*extraction_deptypes\.(dres|dred|dblack|dpair)'
 
-# dstack_size matches through a type-level *fixpoint*, which head reduction
-# deliberately does not unfold, so no index guard is computable.  Omitting the
-# guard alone would assert each branch equation for every index, so the whole
-# case is refused: the symbol keeps its typing axiom and stays uninterpreted.
-forbid_line "an unresolvable case scrutinee type emits no definition axiom" '^\$_def_extraction_deptypes\.dstack_size[$:]'
-require_line "a refused case still declares its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
+dheight_zero_line=$(get_unique_line "dheight zero equation" '$_def_extraction_deptypes.dheight$dbox_zero:')
+parse_binders "dheight zero equation" "$dheight_zero_line" universal 1 dheight_zero_binders
+dheight_outer=${dheight_zero_binders[0]}
+require_text_count_exact "dheight has an unconditional zero equation" "$dheight_zero_line" "((extraction_deptypes.dheight @ $dheight_outer) @ (extraction_deptypes.dbox_zero @ extraction_deptypes.dred)) = Corelib.Init.Datatypes.O" 1
 
-# dnested matches an indexed family on the result of a match over an index-free
-# one, so the outer scrutinee's type is whatever inference reads off the inner
-# case.  [dopt dred (dtree 0)] reduces to [option (dtree 0)]: the colour is a
-# surplus argument of the type-level function, not an index of [option], and
-# applying the inner return predicate to it would type the outer scrutinee at a
-# term-applied [dtree 0].  The auxiliary would then close over [o] and lose its
-# branch equations, so both the arity of the link and the equations are pinned.
-# The link pattern closes one paren more than it opens, deliberately: the last
-# one is the equation's own, so requiring it pins that the outer auxiliary is
-# applied to the inner case and to nothing further.  These are substring
-# matches, not balanced ones -- do not "balance" the pattern by dropping it.
+dheight_succ_line=$(get_unique_line "dheight successor equation" '$_def_extraction_deptypes.dheight$dbox_succ:')
+parse_binders "dheight successor equation" "$dheight_succ_line" universal 3 dheight_succ_binders
+dheight_outer=${dheight_succ_binders[0]}
+dheight_n=${dheight_succ_binders[1]}
+dheight_payload=${dheight_succ_binders[2]}
+require_text_count_exact "dheight correlates its successor binders with the result" "$dheight_succ_line" "((extraction_deptypes.dheight @ $dheight_outer) @ (((extraction_deptypes.dbox_succ @ extraction_deptypes.dred) @ $dheight_n) @ $dheight_payload)) = (Corelib.Init.Datatypes.S @ $dheight_n)" 1
+forbid_line "dheight split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dheight[$].*=> @'
+forbid_line "dheight split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dheight[$].*extraction_deptypes\.dswap'
+
+# The same rule makes a match through a type-level fixpoint translatable without
+# unfolding that fixpoint merely to manufacture an index guard.
+dstack_leaf_line=$(get_unique_line "dstack_size leaf equation" '$_def_extraction_deptypes.dstack_size$dleaf:')
+parse_binders "dstack_size leaf equation" "$dstack_leaf_line" universal 1 dstack_leaf_binders
+dstack_outer=${dstack_leaf_binders[0]}
+require_text_count_exact "dstack_size has an unconditional leaf equation" "$dstack_leaf_line" "(((extraction_deptypes.dstack_size @ $dstack_outer) @ extraction_deptypes.dleaf) = Corelib.Init.Datatypes.O)" 1
+
+dstack_node_line=$(get_unique_line "dstack_size node equation" '$_def_extraction_deptypes.dstack_size$dnode:')
+parse_binders "dstack_size node equation" "$dstack_node_line" universal 4 dstack_node_binders
+dstack_outer=${dstack_node_binders[0]}
+dstack_n=${dstack_node_binders[1]}
+dstack_left=${dstack_node_binders[2]}
+dstack_right=${dstack_node_binders[3]}
+require_text_count_exact "dstack_size correlates its node binders with the result" "$dstack_node_line" "((extraction_deptypes.dstack_size @ $dstack_outer) @ (((extraction_deptypes.dnode @ $dstack_n) @ $dstack_left) @ $dstack_right)) = (Corelib.Init.Datatypes.S @ $dstack_n)" 1
+forbid_line "dstack_size split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dstack_size[$].*=> @'
+require_line "dstack_size retains its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
+
+# The nested outer match is known to inspect [dtree 0].  Rigid-clash pruning
+# retains its leaf equation and removes the impossible successor-indexed node
+# equation.  The link also pins that the outer auxiliary receives exactly the
+# result of the inner option case, not a surplus type-level-function argument.
 require_line "the inner case supplies the outer scrutinee its unapplied type" '^\$_def_extraction_deptypes\.dnested[$]link:.*= \(\$_case_extraction_deptypes\.dtree[$][0-9]+ @ \(\$_case_Corelib\.Init\.Datatypes\.option[$][0-9]+ @ 0_o\)\)\)'
 require_line "the outer case auxiliary keeps its leaf equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dleaf:'
-require_line "the outer case auxiliary keeps its node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
+forbid_line "rigid clash prunes the outer node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
+
+# Indexed-family fixtures: solved constructor arguments and erased proof fields
+# make the split equations unconditional, while occurrence guards retain the
+# informative payload and residual index equations.  Generated binder suffixes
+# are unstable, so parse each inversion line once and use fixed-text fragments
+# that correlate the exact binders across guards, constructors, and equations.
+breflect_line=$(get_unique_line "breflect inversion" '$_inversion_extraction_indexed.breflect:')
+parse_binders "breflect inversion" "$breflect_line" universal 3 breflect_binders
+breflect_p=${breflect_binders[0]}
+breflect_index=${breflect_binders[1]}
+breflect_value=${breflect_binders[2]}
+require_text "breflect inversion types its proposition binder" "$breflect_line" "\$HasType @ $breflect_p) @ Prop"
+require_text "breflect inversion admits exactly the boolean result indices" "$breflect_line" "((| @ ((& @ ($breflect_index = Corelib.Init.Datatypes.true)) @ \$True)) @ ((& @ ($breflect_index = Corelib.Init.Datatypes.false)) @ \$True))"
+require_text_count_exact "breflect ReflectT forward branch correlates constructor, payload, and index" "$breflect_line" "((& @ ($breflect_value = (extraction_indexed.BReflectT @ $breflect_p))) @ ((& @ $breflect_p) @ ($breflect_index = Corelib.Init.Datatypes.true)))" 1
+require_text_count_exact "breflect ReflectT reverse branch correlates constructor, payload, and index" "$breflect_line" "((& @ $breflect_p) @ ((& @ ($breflect_index = Corelib.Init.Datatypes.true)) @ ($breflect_value = (extraction_indexed.BReflectT @ $breflect_p))))" 1
+require_text_count_exact "breflect ReflectF forward branch correlates constructor, payload, and index" "$breflect_line" "((& @ ($breflect_value = (extraction_indexed.BReflectF @ $breflect_p))) @ ((& @ (~ @ $breflect_p)) @ ($breflect_index = Corelib.Init.Datatypes.false)))" 1
+require_text_count_exact "breflect ReflectF reverse branch correlates constructor, payload, and index" "$breflect_line" "((& @ (~ @ $breflect_p)) @ ((& @ ($breflect_index = Corelib.Init.Datatypes.false)) @ ($breflect_value = (extraction_indexed.BReflectF @ $breflect_p))))" 1
+
+tagged_line=$(get_unique_line "tagged inversion" '$_inversion_extraction_indexed.tagged:')
+parse_binders "tagged inversion outer" "$tagged_line" universal 2 tagged_outer_binders
+parse_binders "tagged inversion constructor" "$tagged_line" existential 1 tagged_constructor_binders
+tagged_index=${tagged_outer_binders[0]}
+tagged_value=${tagged_outer_binders[1]}
+tagged_n=${tagged_constructor_binders[0]}
+require_text "tagged inversion correlates its outer guard and constructor" "$tagged_line" "((=> @ ((\$HasType @ $tagged_index) @ Corelib.Init.Datatypes.nat)) @ ((=> @ ((& @ ($tagged_value = (extraction_indexed.tg @ $tagged_index))) @ \$True))"
+require_text_count_exact "tagged inversion correlates its solved index, RHS, and constructor typing" "$tagged_line" "?[$tagged_n : \$Any]: (((& @ ((\$HasType @ $tagged_n) @ Corelib.Init.Datatypes.nat)) @ ((& @ ($tagged_index = $tagged_n)) @ ($tagged_value = (extraction_indexed.tg @ $tagged_n))))" 1
+
+okp_line=$(get_unique_line "okp inversion" '$_inversion_extraction_indexed.okp:')
+parse_binders "okp inversion" "$okp_line" universal 2 okp_binders
+okp_n=${okp_binders[0]}
+okp_index=${okp_binders[1]}
+require_text "okp inversion types its parameter" "$okp_line" "\$HasType @ $okp_n) @ Corelib.Init.Datatypes.nat"
+require_text "okp inversion types its result index" "$okp_line" "\$HasType @ $okp_index) @ Corelib.Init.Datatypes.nat"
+require_text_count_exact "okp inversion correlates its family parameters and successor index" "$okp_line" "((=> @ ((extraction_indexed.okp @ $okp_n) @ $okp_index)) @ ($okp_index = (Corelib.Init.Datatypes.S @ $okp_n)))" 1
+
+vec_line=$(get_unique_line "vec inversion" '$_inversion_extraction_indexed.vec:')
+parse_binders "vec inversion outer" "$vec_line" universal 3 vec_outer_binders
+parse_binders "vec inversion vcons" "$vec_line" existential 3 vec_constructor_binders
+vec_a=${vec_outer_binders[0]}
+vec_index=${vec_outer_binders[1]}
+vec_value=${vec_outer_binders[2]}
+vec_n=${vec_constructor_binders[0]}
+vec_payload=${vec_constructor_binders[1]}
+vec_tail=${vec_constructor_binders[2]}
+require_text "vec inversion correlates its outer typing guards" "$vec_line" "((=> @ ((\$HasType @ $vec_a) @ Type)) @ ((=> @ ((\$HasType @ $vec_index) @ Corelib.Init.Datatypes.nat)) @ ((=> @ ((\$HasType @ $vec_value) @ ((extraction_indexed.vec @ $vec_a) @ $vec_index)))"
+require_text_count_exact "vec inversion correlates its vnil parameter and zero index" "$vec_line" "((& @ ($vec_index = Corelib.Init.Datatypes.O)) @ ($vec_value = (extraction_indexed.vnil @ $vec_a)))" 1
+require_text "vec inversion types its vcons index" "$vec_line" "?[$vec_n : \$Any]: (((& @ ((\$HasType @ $vec_n) @ Corelib.Init.Datatypes.nat))"
+require_text "vec inversion types its payload at the exact family parameter" "$vec_line" "?[$vec_payload : \$Any]: (((& @ ((\$HasType @ $vec_payload) @ $vec_a))"
+require_text "vec inversion types its tail at the exact parameter and constructor index" "$vec_line" "?[$vec_tail : \$Any]: (((& @ ((\$HasType @ $vec_tail) @ ((extraction_indexed.vec @ $vec_a) @ $vec_n)))"
+require_text_count_exact "vec inversion correlates its successor index and complete vcons payload" "$vec_line" "((& @ ($vec_index = (Corelib.Init.Datatypes.S @ $vec_n))) @ ($vec_value = ((((extraction_indexed.vcons @ $vec_a) @ $vec_n) @ $vec_payload) @ $vec_tail)))" 1
+
+untag_line=$(get_unique_line "untag constructor equation" '$_def_extraction_indexed.untag$tg:')
+parse_binders "untag constructor equation" "$untag_line" universal 2 untag_binders
+untag_outer=${untag_binders[0]}
+untag_index=${untag_binders[1]}
+require_text_count_exact "untag correlates its constructor index with the result" "$untag_line" "((extraction_indexed.untag @ $untag_outer) @ (extraction_indexed.tg @ $untag_index)) = $untag_index)" 1
+forbid_line "untag has no legacy index premise" '^\$_def_extraction_indexed\.untag[$]tg:.*=> @'
+
+ibval_line=$(get_unique_line "ibval constructor equation" '$_def_extraction_indexed.ibval$IBounded:')
+parse_binders "ibval constructor equation" "$ibval_line" universal 3 ibval_binders
+ibval_outer=${ibval_binders[0]}
+ibval_constructor_index=${ibval_binders[1]}
+ibval_carrier=${ibval_binders[2]}
+require_text "ibval retains its erased constructor index binder" "$ibval_line" "![$ibval_constructor_index : \$Any]"
+require_text_count_exact "ibval correlates its carrier argument with the result" "$ibval_line" "((extraction_indexed.ibval @ $ibval_outer) @ $ibval_carrier) = $ibval_carrier)" 1
+forbid_line "ibval carrier equation is unconditional" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*=> @'
+forbid_line "ibval definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*extraction_indexed\.IBounded'
+
+ibval_typeof_line=$(get_unique_line "ibval typing axiom" '$_typeof_extraction_indexed.ibval:')
+parse_binders "ibval typing axiom" "$ibval_typeof_line" universal 2 ibval_typeof_binders
+ibval_n=${ibval_typeof_binders[0]}
+ibval_b=${ibval_typeof_binders[1]}
+require_text "ibval typing axiom types its exact index binder" "$ibval_typeof_line" "((\$HasType @ $ibval_n) @ Corelib.Init.Datatypes.nat)"
+require_text_count_exact "ibval typing axiom correlates its carrier and bound" "$ibval_typeof_line" "((& @ ((\$HasType @ $ibval_b) @ Corelib.Init.Datatypes.nat)) @ ((Corelib.Init.Peano.lt @ $ibval_b) @ $ibval_n))" 1
+require_text_count_exact "ibval typing axiom correlates its result application" "$ibval_typeof_line" "((\$HasType @ ((extraction_indexed.ibval @ $ibval_n) @ $ibval_b)) @ Corelib.Init.Datatypes.nat)" 1
+forbid_line "ibval type axiom has no nominal ibounded leaf" '^\$_typeof_extraction_indexed\.ibval:.*\$HasType.*extraction_indexed\.ibounded'
+
+ibounded_typeof_line=$(get_unique_line "indexed subset typing axiom" '$_typeof_extraction_indexed.ibounded:')
+[ "$ibounded_typeof_line" = '$_typeof_extraction_indexed.ibounded: (($HasType @ extraction_indexed.ibounded) @ (($_arrow @ Corelib.Init.Datatypes.nat) @ Type))' ] || fail "indexed subset declaration has the wrong ordinary type axiom"
+forbid_line "indexed subset constructor injectivity is skipped by default" '^\$_inj_extraction_indexed\.IBounded:'
+forbid_line "indexed subset inversion is skipped by default" '^\$_inversion_extraction_indexed\.ibounded:'
+
+fromok_line=$(get_unique_line "fromok definition" '$_def_extraction_indexed.fromok:')
+parse_binders "fromok definition" "$fromok_line" universal 2 fromok_binders
+fromok_n=${fromok_binders[0]}
+fromok_m=${fromok_binders[1]}
+require_text_count_exact "fromok singleton match is unconditional" "$fromok_line" "((extraction_indexed.fromok @ $fromok_n) @ $fromok_m) = (Corelib.Init.Datatypes.S @ $fromok_n)" 1
+forbid_line "fromok definition has no index or proof premise" '^\$_def_extraction_indexed\.fromok:.*=> @'
+
+fromok_typeof_line=$(get_unique_line "fromok typing axiom" '$_typeof_extraction_indexed.fromok:')
+parse_binders "fromok typing axiom" "$fromok_typeof_line" universal 2 fromok_typeof_binders
+fromok_n=${fromok_typeof_binders[0]}
+fromok_m=${fromok_typeof_binders[1]}
+require_text "fromok typing axiom types its exact parameter" "$fromok_typeof_line" "((\$HasType @ $fromok_n) @ Corelib.Init.Datatypes.nat)"
+require_text "fromok typing axiom types its exact index" "$fromok_typeof_line" "((\$HasType @ $fromok_m) @ Corelib.Init.Datatypes.nat)"
+require_text_count_exact "fromok typing axiom correlates its Prop premise" "$fromok_typeof_line" "((=> @ ((extraction_indexed.okp @ $fromok_n) @ $fromok_m)) @ ((\$HasType @ ((extraction_indexed.fromok @ $fromok_n) @ $fromok_m)) @ Corelib.Init.Datatypes.nat))" 1
+
+cast_line=$(get_unique_line "cast definition" '$_def_extraction_indexed.cast:')
+parse_binders "cast definition" "$cast_line" universal 3 cast_binders
+cast_a=${cast_binders[0]}
+cast_b=${cast_binders[1]}
+cast_x=${cast_binders[2]}
+require_text_count_exact "cast erases transport to its exact payload binder" "$cast_line" "(((extraction_indexed.cast @ $cast_a) @ $cast_b) @ $cast_x) = $cast_x)" 1
+forbid_line "cast definition has no equality premise" '^\$_def_extraction_indexed\.cast:.*=> @'
+cast_typeof_line=$(get_unique_line "cast typing axiom" '$_typeof_extraction_indexed.cast:')
+cast_type_symbol=$(extract_unique_symbol "cast typing helper" "$cast_typeof_line" '\$_type_[0-9]+' '\$_type_[0-9]+')
+cast_type_line=$(get_unique_line "cast typing helper definition" "$cast_type_symbol:")
+parse_binders "cast typing helper" "$cast_type_line" universal 4 cast_type_binders
+cast_function=${cast_type_binders[0]}
+cast_source=${cast_type_binders[1]}
+cast_target=${cast_type_binders[2]}
+cast_payload=${cast_type_binders[3]}
+require_text_count_exact "cast typing helper self-types its exact outer function binder" "$cast_type_line" "((\$HasType @ $cast_function) @ $cast_type_symbol)" 1
+require_text "cast typing helper types its exact source binder" "$cast_type_line" "((\$HasType @ $cast_source) @ Type)"
+require_text "cast typing helper types its exact target binder" "$cast_type_line" "((\$HasType @ $cast_target) @ Type)"
+require_text_count_exact "cast typing helper correlates its exact source and target binders" "$cast_type_line" "((=> @ ($cast_source = $cast_target)) @ ![$cast_payload : \$Any]" 1
+require_text_count_exact "cast typing helper correlates its function, payload, source, and target binders" "$cast_type_line" "((=> @ ((\$HasType @ $cast_payload) @ $cast_source)) @ ((\$HasType @ ((($cast_function @ $cast_source) @ $cast_target) @ $cast_payload)) @ $cast_target))" 1
+
+vhead_line=$(get_unique_line "indexed vhead vcons equation" '$_def_extraction_indexed.vhead$vcons:')
+parse_binders "indexed vhead vcons equation" "$vhead_line" universal 5 vhead_binders
+vhead_a=${vhead_binders[0]}
+vhead_outer_n=${vhead_binders[1]}
+vhead_constructor_n=${vhead_binders[2]}
+vhead_payload=${vhead_binders[3]}
+vhead_tail=${vhead_binders[4]}
+require_text_count_exact "indexed vhead correlates its complete vcons pattern and result" "$vhead_line" "(((extraction_indexed.vhead @ $vhead_a) @ $vhead_outer_n) @ ((((extraction_indexed.vcons @ $vhead_a) @ $vhead_constructor_n) @ $vhead_payload) @ $vhead_tail)) = $vhead_payload)" 1
+forbid_line "indexed vhead prunes the impossible vnil equation" '^\$_def_extraction_indexed\.vhead[$]vnil:'
+forbid_line "indexed vhead equation has no legacy index premise" '^\$_def_extraction_indexed\.vhead[$].*=> @'
+
+dheight2_line=$(get_unique_line "dheight2 successor equation" '$_def_extraction_indexed.dheight2$dbox_succ:')
+parse_binders "dheight2 successor equation" "$dheight2_line" universal 3 dheight2_binders
+dheight2_outer=${dheight2_binders[0]}
+dheight2_n=${dheight2_binders[1]}
+dheight2_payload=${dheight2_binders[2]}
+require_text_count_exact "dheight2 correlates its successor pattern and result" "$dheight2_line" "((extraction_indexed.dheight2 @ $dheight2_outer) @ (((extraction_deptypes.dbox_succ @ extraction_deptypes.dred) @ $dheight2_n) @ $dheight2_payload)) = (Corelib.Init.Datatypes.S @ $dheight2_n)" 1
+forbid_line "dheight2 prunes the clashing zero equation" '^\$_def_extraction_indexed\.dheight2[$]dbox_zero:'
+forbid_line "dheight2 successor equation is unconditional" '^\$_def_extraction_indexed\.dheight2[$]dbox_succ:.*=> @'
+
+# Prop singleton matches collapse to their sole branch.  Their inversion axioms
+# still pin the index equation used when the propositions occur as assumptions.
+isT_line=$(get_unique_line "isT inversion" '$_inversion_extraction_indexed.isT:')
+parse_binders "isT inversion" "$isT_line" universal 1 isT_binders
+isT_index=${isT_binders[0]}
+require_text_count_exact "isT inversion correlates its typing guard, premise, and index" "$isT_line" "((=> @ ((\$HasType @ $isT_index) @ Type)) @ ((=> @ (extraction_indexed.isT @ $isT_index)) @ ($isT_index = Corelib.Init.Datatypes.nat)))" 1
+
+fromisT_line=$(get_unique_line "fromisT definition" '$_def_extraction_indexed.fromisT:')
+parse_binders "fromisT definition" "$fromisT_line" universal 1 fromisT_binders
+fromisT_t=${fromisT_binders[0]}
+require_text_count_exact "fromisT returns zero for its exact source binder" "$fromisT_line" "(extraction_indexed.fromisT @ $fromisT_t) = Corelib.Init.Datatypes.O" 1
+forbid_line "fromisT definition has no singleton premise" '^\$_def_extraction_indexed\.fromisT:.*=> @'
+
+fromisT_typeof_line=$(get_unique_line "fromisT typing axiom" '$_typeof_extraction_indexed.fromisT:')
+parse_binders "fromisT typing axiom" "$fromisT_typeof_line" universal 1 fromisT_typeof_binders
+fromisT_t=${fromisT_typeof_binders[0]}
+require_text_count_exact "fromisT typing correlates its type, premise, application, and result" "$fromisT_typeof_line" "((=> @ ((\$HasType @ $fromisT_t) @ Type)) @ ((=> @ (extraction_indexed.isT @ $fromisT_t)) @ ((\$HasType @ (extraction_indexed.fromisT @ $fromisT_t)) @ $fromisT_t)))" 1
+
+istrue_line=$(get_unique_line "istrue inversion" '$_inversion_extraction_indexed.istrue:')
+parse_binders "istrue inversion" "$istrue_line" universal 1 istrue_binders
+istrue_index=${istrue_binders[0]}
+istrue_enum="((| @ ((& @ ($istrue_index = Corelib.Init.Datatypes.true)) @ \$True)) @ ((& @ ($istrue_index = Corelib.Init.Datatypes.false)) @ \$True))"
+require_text_count_exact "istrue inversion correlates its enum guard, premise, and index" "$istrue_line" "((=> @ $istrue_enum) @ ((=> @ (extraction_indexed.istrue @ $istrue_index)) @ ($istrue_index = Corelib.Init.Datatypes.true)))" 1
+
+fromtrue_line=$(get_unique_line "fromtrue definition" '$_def_extraction_indexed.fromtrue:')
+parse_binders "fromtrue definition" "$fromtrue_line" universal 1 fromtrue_binders
+fromtrue_b=${fromtrue_binders[0]}
+require_text_count_exact "fromtrue returns true for its exact source binder" "$fromtrue_line" "(extraction_indexed.fromtrue @ $fromtrue_b) = Corelib.Init.Datatypes.true" 1
+forbid_line "fromtrue definition has no singleton premise" '^\$_def_extraction_indexed\.fromtrue:.*=> @'
+
+fromtrue_typeof_line=$(get_unique_line "fromtrue typing axiom" '$_typeof_extraction_indexed.fromtrue:')
+parse_binders "fromtrue typing axiom" "$fromtrue_typeof_line" universal 1 fromtrue_typeof_binders
+fromtrue_b=${fromtrue_typeof_binders[0]}
+fromtrue_guard="((| @ ((& @ ($fromtrue_b = Corelib.Init.Datatypes.true)) @ \$True)) @ ((& @ ($fromtrue_b = Corelib.Init.Datatypes.false)) @ \$True))"
+fromtrue_result="((| @ ((& @ ((extraction_indexed.fromtrue @ $fromtrue_b) = Corelib.Init.Datatypes.true)) @ \$True)) @ ((& @ ((extraction_indexed.fromtrue @ $fromtrue_b) = Corelib.Init.Datatypes.false)) @ \$True))"
+require_text_count_exact "fromtrue typing correlates its enum guard, premise, and result" "$fromtrue_typeof_line" "((=> @ $fromtrue_guard) @ ((=> @ (extraction_indexed.istrue @ $fromtrue_b)) @ $fromtrue_result))" 1
+
+jmeq_line=$(get_unique_line "JMeq singleton definition" '$_def_extraction_indexed.jmeq_match:')
+parse_binders "JMeq singleton definition" "$jmeq_line" universal 4 jmeq_binders
+jmeq_a=${jmeq_binders[0]}
+jmeq_b=${jmeq_binders[1]}
+jmeq_x=${jmeq_binders[2]}
+jmeq_y=${jmeq_binders[3]}
+require_text_count_exact "JMeq singleton match returns its exact source payload" "$jmeq_line" "((((extraction_indexed.jmeq_match @ $jmeq_a) @ $jmeq_b) @ $jmeq_x) @ $jmeq_y) = $jmeq_x)" 1
+forbid_line "JMeq match definition has no proof premise" '^\$_def_extraction_indexed\.jmeq_match:.*=> @'
+
+jmeq_typeof_line=$(get_unique_line "JMeq match typing axiom" '$_typeof_extraction_indexed.jmeq_match:')
+parse_binders "JMeq match typing axiom" "$jmeq_typeof_line" universal 4 jmeq_typeof_binders
+jmeq_a=${jmeq_typeof_binders[0]}
+jmeq_b=${jmeq_typeof_binders[1]}
+jmeq_x=${jmeq_typeof_binders[2]}
+jmeq_y=${jmeq_typeof_binders[3]}
+require_text "JMeq typing types its exact source type" "$jmeq_typeof_line" "((\$HasType @ $jmeq_a) @ Type)"
+require_text "JMeq typing types its exact target type" "$jmeq_typeof_line" "((\$HasType @ $jmeq_b) @ Type)"
+require_text "JMeq typing correlates its source payload and type" "$jmeq_typeof_line" "((\$HasType @ $jmeq_x) @ $jmeq_a)"
+require_text "JMeq typing correlates its target payload and type" "$jmeq_typeof_line" "((\$HasType @ $jmeq_y) @ $jmeq_b)"
+require_text_count_exact "JMeq typing correlates its premise and result application" "$jmeq_typeof_line" "((=> @ ((((Stdlib.Logic.JMeq.JMeq @ $jmeq_a) @ $jmeq_x) @ $jmeq_b) @ $jmeq_y)) @ ((\$HasType @ ((((extraction_indexed.jmeq_match @ $jmeq_a) @ $jmeq_b) @ $jmeq_x) @ $jmeq_y)) @ $jmeq_a))" 1
 
 # Corpus-wide shallowness gates for the covered constants.  WF-gated idiv
 # definitions and explicit stdlib structural snapshots are checked separately.
@@ -310,9 +646,45 @@ require_line "eq_ind_r has a transport-erased definition" '^\$_def_Corelib\.Init
 require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
+
+# Applied indexed reflect guards expand shallowly.  Generated proposition and
+# fixpoint IDs are deliberately parsed from the eqb_spec typing line: each tag
+# is tied to the definition of its exact proposition helper, and the exact
+# boolean helper in both residual equations is tied to Nat.eqb's truth table.
+nat_eqb_spec_line=$(get_unique_line "Nat.eqb_spec typing axiom" '$_typeof_Stdlib.Arith.PeanoNat.Nat.eqb_spec:')
+parse_binders "Nat.eqb_spec typing axiom" "$nat_eqb_spec_line" universal 2 nat_eqb_spec_binders
+nat_eqb_x=${nat_eqb_spec_binders[0]}
+nat_eqb_y=${nat_eqb_spec_binders[1]}
+nat_eqb_true_prop=$(extract_unique_symbol "Nat.eqb_spec ReflectT proposition" "$nat_eqb_spec_line" 'ReflectT @ \(\(\$_prop_[0-9]+' '\$_prop_[0-9]+')
+nat_eqb_false_prop=$(extract_unique_symbol "Nat.eqb_spec ReflectF proposition" "$nat_eqb_spec_line" 'ReflectF @ \(\(\$_prop_[0-9]+' '\$_prop_[0-9]+')
+nat_eqb_bool=$(extract_unique_symbol "Nat.eqb_spec boolean helper" "$nat_eqb_spec_line" '\$_fix_[A-Za-z0-9_$.-]+' '\$_fix_[A-Za-z0-9_$.-]+')
+assert_binary_prop_is_equality "Nat.eqb_spec ReflectT proposition" "$nat_eqb_true_prop"
+assert_binary_prop_is_equality "Nat.eqb_spec ReflectF proposition" "$nat_eqb_false_prop"
+require_text "Nat.eqb_spec types its exact x binder" "$nat_eqb_spec_line" "((\$HasType @ $nat_eqb_x) @ Corelib.Init.Datatypes.nat)"
+require_text "Nat.eqb_spec types its exact y binder" "$nat_eqb_spec_line" "((\$HasType @ $nat_eqb_y) @ Corelib.Init.Datatypes.nat)"
+require_text_count_exact "Nat.eqb_spec uses one boolean helper in both residual equations" "$nat_eqb_spec_line" "$nat_eqb_bool" 2
+
+nat_eqb_true_branch="((& @ (((Stdlib.Arith.PeanoNat.Nat.eqb_spec @ $nat_eqb_x) @ $nat_eqb_y) = (Corelib.Init.Datatypes.ReflectT @ (($nat_eqb_true_prop @ $nat_eqb_x) @ $nat_eqb_y)))) @ ((& @ ($nat_eqb_x = $nat_eqb_y)) @ ((($nat_eqb_bool @ $nat_eqb_x) @ $nat_eqb_y) = Corelib.Init.Datatypes.true)))"
+nat_eqb_false_branch="((& @ (((Stdlib.Arith.PeanoNat.Nat.eqb_spec @ $nat_eqb_x) @ $nat_eqb_y) = (Corelib.Init.Datatypes.ReflectF @ (($nat_eqb_false_prop @ $nat_eqb_x) @ $nat_eqb_y)))) @ ((& @ (~ @ ($nat_eqb_x = $nat_eqb_y))) @ ((($nat_eqb_bool @ $nat_eqb_x) @ $nat_eqb_y) = Corelib.Init.Datatypes.false)))"
+require_text_count_exact "Nat.eqb_spec true branch correlates its outer binders, tag proposition, payload, and boolean helper" "$nat_eqb_spec_line" "$nat_eqb_true_branch" 1
+require_text_count_exact "Nat.eqb_spec false branch correlates its outer binders, tag proposition, payload, and boolean helper" "$nat_eqb_spec_line" "$nat_eqb_false_branch" 1
+
+assert_nat_eqb_truth_table "$nat_eqb_bool"
+forbid_line "Nat.eqb_spec has no nominal reflect guard" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
+
 require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'
-require_line "indexed reflect stays on regular guard path" '^Corelib\.ssr\.ssrbool\.introT:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
-forbid_line "indexed reflect guard must not be enum-expanded without index constraints" '^Corelib\.ssr\.ssrbool\.introT:.*Corelib\.Init\.Datatypes\.ReflectT'
+introT_line=$(get_unique_line "introT formula" 'Corelib.ssr.ssrbool.introT:')
+parse_binders "introT formula" "$introT_line" universal 3 introT_binders
+introT_p=${introT_binders[0]}
+introT_b=${introT_binders[1]}
+introT_value=${introT_binders[2]}
+require_text "introT types its exact proposition binder" "$introT_line" "((\$HasType @ $introT_p) @ Prop)"
+introT_bool_guard="((| @ ((& @ ($introT_b = Corelib.Init.Datatypes.true)) @ \$True)) @ ((& @ ($introT_b = Corelib.Init.Datatypes.false)) @ \$True))"
+require_text_count_exact "introT correlates its exact boolean binder in the enum guard" "$introT_line" "$introT_bool_guard" 1
+require_text_count_exact "introT true branch correlates its exact binders, payload, and index" "$introT_line" "((& @ ($introT_value = (Corelib.Init.Datatypes.ReflectT @ $introT_p))) @ ((& @ $introT_p) @ ($introT_b = Corelib.Init.Datatypes.true)))" 1
+require_text_count_exact "introT false branch correlates its exact binders, payload, and index" "$introT_line" "((& @ ($introT_value = (Corelib.Init.Datatypes.ReflectF @ $introT_p))) @ ((& @ (~ @ $introT_p)) @ ($introT_b = Corelib.Init.Datatypes.false)))" 1
+require_text_count_exact "introT correlates its exact proposition and boolean binders in the result" "$introT_line" "((=> @ $introT_p) @ (Corelib.Init.Datatypes.is_true @ $introT_b))" 1
+forbid_line "introT has no nominal reflect guard" '^Corelib\.ssr\.ssrbool\.introT:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
 require_line "parameter-dependent sig keeps its inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
 require_line "parameter-dependent sig keeps constructor injectivity" '^\$_inj_Corelib\.Init\.Specif\.exist:'
 require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
