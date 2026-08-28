@@ -105,12 +105,6 @@ val constructor_index_data :
     both must use this helper rather than destructing the constructor separately.
     For the lowered equality target [Equal (a, b)], the patterns are [[b]]. *)
 
-val telescope_length : coqterm -> int
-(** The number of arguments a telescope takes.  Unlike
-    [Coq_typing.get_type_args] this is purely syntactic and refreshes no
-    binder, so it may be used to check an arity without renumbering the symbols
-    of every axiom emitted afterwards. *)
-
 val index_formals_of : index_formals -> coqterm list -> int -> index_formals
 (** [index_formals_of type_args params params_num] is the index suffix of an
     inductive's declared telescope [type_args], instantiated at the occurrence

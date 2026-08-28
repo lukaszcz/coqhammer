@@ -1442,6 +1442,16 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         (Coq_typing.get_type_args indty) params params_num
     in
     let constructor_index_condition index_formals informative actual_indices patterns =
+      (* [instantiate] is partial in the arity, and the two arities are derived
+         differently -- the formals by evaluating the inductive's arity, the
+         actual indices by the syntactic telescope length of the occurrence --
+         so check them here rather than let the mismatch surface as an
+         [Invalid_argument] past the alignment report below. *)
+      if List.length index_formals <> List.length actual_indices then
+        internal_error
+          ("case predicate indices do not match the declared index telescope (" ^
+           string_of_int (List.length actual_indices) ^ " actual, " ^
+           string_of_int (List.length index_formals) ^ " declared)");
       let patterns =
         List.map (Coq_erasure.instantiate index_formals actual_indices) patterns
       in
@@ -2276,7 +2286,10 @@ and guard_leaf ctx ty x =
       tm env
   in
   let instantiate formals indices tm =
-    simpl (Coq_erasure.instantiate formals indices tm)
+    if List.length formals <> List.length indices then
+      internal_error "instantiates a telescope at the wrong index arity"
+    else
+      simpl (Coq_erasure.instantiate formals indices tm)
   in
   (* Instantiate a retained constructor telescope from left to right.  Every
      local argument of an enum is either solved by an occurrence index or is an

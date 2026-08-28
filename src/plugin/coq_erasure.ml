@@ -67,12 +67,39 @@ type memo_class =
   | MEnum of (string * int list) list
   | MRegular
 
+(* The bindings of [ctx] that the classification of an occurrence at [params]
+   can read: the free variables of the parameters, closed under the free
+   variables of their types.  [ctx] is innermost-first and a binder's type
+   mentions only binders to its right, so one left-to-right pass collects them
+   all. *)
+let context_slice ctx params =
+  let rec hlp needed acc = function
+    | [] -> List.rev acc
+    | ((name, ty) as binding) :: ctx2 ->
+        if List.exists (var_occurs name) needed then
+          hlp (ty :: needed) (binding :: acc) ctx2
+        else
+          hlp needed acc ctx2
+  in
+  hlp params [] ctx
+
 (* Keyed on the occurrence itself -- the inductive, its actual parameters and
-   their propositional verdicts -- so that the shape can be looked up before
-   any constructor telescope is destructed.  The classification of an
-   occurrence is a function of exactly those inputs, and the shapes that carry
-   no occurrence-specific data are answered from the key alone. *)
-let memo : ((string * coqterm list * bool list), memo_class) Hashtbl.t = Hashtbl.create 257
+   the context slice those parameters are typed in -- so that the shape can be
+   looked up before any constructor telescope is destructed.  Everything else
+   the classification reads comes from the declaration, so the shape is a
+   function of exactly this key and the shapes carrying no occurrence-specific
+   data are answered from the key alone.
+
+   The slice is part of the key, and not merely the propositional verdicts of
+   the parameters themselves: binder names come verbatim from Rocq, so two
+   premises of one problem can both bind a variable printed [T], one at
+   [nat -> Prop] and one at [nat -> Type].  The parameter terms are then equal
+   and so are their verdicts (neither [T] is a proposition), while a
+   constructor field [T 0] is propositional in the one context and informative
+   in the other. *)
+let memo :
+      ((string * coqterm list * (string * coqterm) list), memo_class) Hashtbl.t =
+  Hashtbl.create 257
 
 let clear () = Hashtbl.clear memo
 
@@ -581,7 +608,7 @@ let classify ctx indname params =
         CRegular
     | Some (constrs, params_num, ind_ty, ind_sort) ->
         let params = Hhlib.take params_num params in
-        let mask = List.map (check_prop ctx) params in
+        let key = (indname, params, context_slice ctx params) in
         (* Destructing the constructor telescopes is by far the expensive part
            of the classification, and [classify] runs at every occurrence of
            every premise type.  It is therefore reached only when the memo
@@ -611,11 +638,10 @@ let classify ctx indname params =
               CRegular
           | _ -> cls
         in
-        begin match Hashtbl.find_opt memo (indname, params, mask) with
+        begin match Hashtbl.find_opt memo key with
         | Some MRegular -> CRegular
         | Some MEmpty -> CEmpty
-        | Some MPropSingleton ->
-            begin match constrs with [_] -> CPropSingleton | _ -> CRegular end
+        | Some MPropSingleton -> CPropSingleton
         | Some ((MSubset _ | MEnum _) as shape) ->
             let (has_indices, ctor_infos) = constructor_infos () in
             expand has_indices ctor_infos shape
@@ -625,7 +651,7 @@ let classify ctx indname params =
               ind_sort = SortProp || Coq_typing.check_type_target_is_prop ind_ty
             in
             let shape = classify_shape is_prop_ind has_indices ctor_infos in
-            Hashtbl.add memo (indname, params, mask) shape;
+            Hashtbl.add memo key shape;
             expand has_indices ctor_infos shape
         end
   with Not_classifiable | Failure _ -> CRegular
