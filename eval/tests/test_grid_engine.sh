@@ -109,6 +109,66 @@ sed -i -e 's/^opt_prop_case_erasure=.*/opt_prop_case_erasure=false/' \
 _grid_validate_config_options "$config_manifest" all-off ||
   fail "grid rejected all-off manifest values"
 
+# A real consistency hit is complete measured output.  Validate all outputs
+# before interpreting one hit: a complete multi-output scan is published, but
+# a hit followed by an incomplete result is a failed scan rather than a hit.
+(
+  results_root="$tmp/consistency-results"
+  consistency_tim=2
+  checkpoint_done() { return 1; }
+  _grid_prepare_prefix_env() { return 0; }
+  _grid_require_prover() { return 0; }
+  eprover() {
+    local problem=${!#} name
+    name=$(basename "$problem")
+    if [ "$name" = first.p ]; then
+      printf '# SZS status Theorem for first\n'
+    elif [ "$consistency_case" = complete ]; then
+      printf '# SZS status GaveUp for second\n'
+    else
+      printf '# prover stopped without a terminal status\n'
+    fi
+  }
+  make_consistency_fixture() {
+    local corpus="$1" outdir problem
+    outdir="$results_root/label/$corpus"
+    mkdir -p "$outdir/atp-problems/knn-64"
+    : > "$outdir/generated-knn-64.lst"
+    for name in first second; do
+      problem="$outdir/atp-problems/knn-64/$name.p"
+      printf "fof(%s, conjecture, \$true).\n" "$name" > "$problem"
+      printf '%s\n' "$problem" >> "$outdir/generated-knn-64.lst"
+    done
+  }
+
+  consistency_case=complete
+  make_consistency_fixture rerun
+  set +e
+  _grid_run_consistency label rerun knn-64 eprover "$prefix" >/dev/null 2>&1
+  consistency_status=$?
+  set -e
+  [ "$consistency_status" -eq "$_GRID_CONSISTENCY_HIT_STATUS" ] ||
+    fail "complete consistency hit returned $consistency_status"
+  list="$results_root/label/rerun/consistency-outputs-eprover-knn-64.lst"
+  [ "$(wc -l < "$list")" -eq 2 ] ||
+    fail "multi-output consistency hit did not publish its complete output list"
+  if ! grep -Fqx "$results_root/label/rerun/consistency/eprover-knn-64/outputs/first.p" "$list" ||
+      ! grep -Fqx "$results_root/label/rerun/consistency/eprover-knn-64/outputs/second.p" "$list"; then
+    fail "multi-output consistency list omitted an output"
+  fi
+
+  consistency_case=incomplete
+  make_consistency_fixture rerun
+  set +e
+  _grid_run_consistency label rerun knn-64 eprover "$prefix" >/dev/null 2>&1
+  consistency_status=$?
+  set -e
+  [ "$consistency_status" -eq 1 ] ||
+    fail "incomplete consistency rerun returned $consistency_status instead of scan failure"
+  [ ! -e "$list" ] ||
+    fail "incomplete consistency rerun left the complete run's stale output list"
+)
+
 marker="$tmp/checkpoint/generate"
 old_corpus_digest=${corpus_digest[corpus]}
 # The pre-engine grid scripts recorded a single-tree corpus as that tree's own
@@ -520,8 +580,15 @@ trap - INT TERM
   _grid_build_install() { return 0; }
   _grid_set_corpus_inputs() { return 0; }
   _grid_require_consistent_corpus_provenance() { return 0; }
-  _grid_run_summarizer() { echo summarized; }
-  _grid_write_provenance() { return 0; }
+  _grid_run_summarizer() {
+    echo summarized
+    printf 'summary\n' > "$3"
+    printf 'analysis\n' > "$4"
+  }
+  _grid_write_provenance() {
+    echo provenanced
+    printf 'provenance\n' > "$1"
+  }
   _grid_run_generation() { echo "gen $2"; }
   _grid_run_prover() { echo "prover $2"; }
   _grid_run_consistency() { echo "consistency $2"; }
@@ -531,6 +598,7 @@ trap - INT TERM
   run_driver() {
     local stage_override="$1"
     shift
+    rm -rf "$GRID_ARTIFACTS_DIR"
     set +e
     driver_out=$( "$stage_override"; grid_run -j 2 "$@" 2>&1 )
     driver_status=$?
@@ -538,6 +606,7 @@ trap - INT TERM
   }
   expect_driver() {
     local description="$1" expected="$2" present="$3" absent="$4"
+    local published="${5:-false}" artifact
     if [ "$driver_status" -ne "$expected" ]; then
       fail "$description exited $driver_status, expected $expected"
     fi
@@ -547,11 +616,18 @@ trap - INT TERM
     if [ -n "$absent" ] && grep -qF -- "$absent" <<< "$driver_out"; then
       fail "$description still reported: $absent"
     fi
+    for artifact in summary.tsv analysis.md provenance.env; do
+      if [ "$published" = true ] && [ ! -f "$GRID_ARTIFACTS_DIR/$artifact" ]; then
+        fail "$description did not publish $artifact"
+      elif [ "$published" = false ] && [ -e "$GRID_ARTIFACTS_DIR/$artifact" ]; then
+        fail "$description published $artifact"
+      fi
+    done
   }
 
   no_override() { :; }
   run_driver no_override
-  expect_driver "a clean grid" 0 summarized ''
+  expect_driver "a clean grid" 0 summarized '' true
 
   # A generation failure skips the rest of its corpus, since every later stage
   # reads the problem trees it did not write, and leaves the next corpus alone.
@@ -563,6 +639,7 @@ trap - INT TERM
   }
   run_driver generation_returns
   expect_driver "a failed generation" 1 'gen corpus-b' 'prover corpus-a'
+  expect_driver "a failed generation" 1 '' summarized
 
   # Bash ignores errexit throughout a command run in a condition or on the left
   # of ||, so a stage invoked that way would walk past this unchecked failure.
@@ -575,14 +652,15 @@ trap - INT TERM
   }
   run_driver generation_walks_on
   expect_driver "an unchecked stage failure" 1 '' 'continued'
+  expect_driver "an unchecked stage failure" 1 '' summarized
 
   prover_exits() { _grid_run_prover() { echo "prover $2"; exit 1; }; }
   run_driver prover_exits
-  expect_driver "a stage that exits" 1 'prover corpus-b' ''
+  expect_driver "a stage that exits" 1 'prover corpus-b' summarized
 
   prover_returns() { _grid_run_prover() { echo "prover $2"; return 1; }; }
   run_driver prover_returns
-  expect_driver "a failed prover" 1 'consistency corpus-a' ''
+  expect_driver "a failed prover" 1 'consistency corpus-a' summarized
 
   # An inconsistency hit is a measurement the summarizer reads from the status
   # file, so it alone leaves the grid's own status clean.
@@ -593,7 +671,7 @@ trap - INT TERM
     }
   }
   run_driver consistency_hits
-  expect_driver "an inconsistency hit" 0 summarized 'stages failed'
+  expect_driver "an inconsistency hit" 0 summarized 'stages failed' true
   run_driver consistency_hits --only-label label
   expect_driver "an inconsistency hit in a partial run" 0 '' ''
 
@@ -601,7 +679,7 @@ trap - INT TERM
   # a partial run has no summarizer to report it in the engine's place.
   consistency_breaks() { _grid_run_consistency() { echo "consistency $2"; return 1; }; }
   run_driver consistency_breaks
-  expect_driver "a failed consistency scan" 1 'stages failed' ''
+  expect_driver "a failed consistency scan" 1 'stages failed' summarized
   run_driver consistency_breaks --only-corpus corpus-a
   expect_driver "a failed consistency scan in a partial run" 1 \
     'not updated by a partial run' summarized

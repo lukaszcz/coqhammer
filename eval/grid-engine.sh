@@ -970,7 +970,12 @@ _grid_run_consistency() {
   local label="$1" corpus="$2" premise="$3" prover="$4" prefix="$5"
   local outdir="$results_root/$label/$corpus"
   local marker="$outdir/consistency-$prover-$premise" input_digest
-  input_digest=$(hash_tree "$outdir/atp-problems/$premise")
+  local output_list="$outdir/consistency-outputs-$prover-$premise.lst"
+  if ! input_digest=$(hash_tree "$outdir/atp-problems/$premise"); then
+    rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status" \
+      "$output_list"
+    return 1
+  fi
   if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
       "premise=$premise" "prover=$prover" "timeout=$consistency_tim" \
       "input_sha256=$input_digest"; then
@@ -981,7 +986,8 @@ _grid_run_consistency() {
     invalidate_checkpoint "$marker" "consistency status or outputs are incomplete or invalid"
   fi
 
-  rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status"
+  rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status" \
+    "$output_list"
   if ! list_is_nonempty_and_complete "$outdir/generated-$premise.lst"; then
     echo "Cannot run consistency check: no problems for $label/$corpus/$premise" >&2
     return 1
@@ -1043,14 +1049,28 @@ PY
       return 1
     fi
   done
+  # Validate and publish every output before interpreting any one of them as a
+  # hit.  A genuine inconsistency is a measured result, not an incomplete run,
+  # and the summarizer needs the complete per-problem output list to count it.
+  local candidate_list="$work/consistency-outputs.lst"
+  find "$work/outputs" -type f | sort > "$candidate_list"
+  if ! consistency_outputs_are_complete \
+      "$outdir/generated-$premise.lst" "$work/outputs" "$work/raw" "$work/status" \
+      "$candidate_list"; then
+    rm -f "$output_list"
+    echo consistency_exit=1 > "$outdir/consistency-$prover-$premise.status"
+    echo "Consistency check produced incomplete outputs for $label/$corpus/$prover/$premise" >&2
+    return 1
+  fi
+  mv -- "$candidate_list" "$output_list"
   if grep -RE "SZS status (Theorem|Unsatisfiable|ContradictoryAxioms)|^unsat$" "$work/outputs" >/dev/null 2>&1; then
     echo consistency_exit=1 > "$outdir/consistency-$prover-$premise.status"
     echo "Inconsistency hit for $label/$corpus/$prover/$premise; see $work/outputs" >&2
     return "$_GRID_CONSISTENCY_HIT_STATUS"
   fi
-  find "$work/outputs" -type f | sort > "$outdir/consistency-outputs-$prover-$premise.lst"
   echo consistency_exit=0 > "$outdir/consistency-$prover-$premise.status"
   if ! _grid_validate_consistency_run "$outdir" "$prover" "$premise"; then
+    rm -f "$output_list"
     echo "Consistency check produced incomplete outputs for $label/$corpus/$prover/$premise" >&2
     return 1
   fi
@@ -1400,6 +1420,8 @@ grid_run() (
   echo "  raw checkpoints: $results_root"
   if [ -n "$only_label" ] || [ -n "$only_corpus" ]; then
     echo "  summary:         not updated by a partial run"
+  elif [ "$run_status" -ne 0 ]; then
+    echo "  summary:         not updated because one or more grid stages failed"
   else
     _grid_run_summarizer "$GRID_SUMMARIZER" "$results_root" \
       "$artifacts_dir/summary.tsv" "$artifacts_dir/analysis.md"

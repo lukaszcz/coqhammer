@@ -34,18 +34,27 @@ first to install the libraries and build the Coq-Equations checkout that some
 of them need.
 
 The standard evaluation uses the prepared source files in `problems/`. The
-extraction evaluation uses three corpora:
+full extraction confirmation evaluates seven corpora:
 
 - `stdlib-regression`: built from the installed Rocq standard library. The
   installed library ships a `.glob` beside every `.v`, which is all `coqnames`
   needs to place the `hammer_hook` calls, so this needs no stdlib rebuild.
   The default slice is `Arith Bool Vectors Lists NArith`, about 1200 goals
-  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`.
+  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`;
+- `dependent-stdlib`: dependent modules from the installed Rocq standard
+  library;
+- `stdpp`: built from the installed `rocq-stdpp` library;
+- `color-vector`: built from the installed CoLoR vector modules;
 - `dependent-slice`: committed dependent elimination, finite map, and
   well-founded recursion fixtures;
+- `equations-examples`: built from the configured Coq-Equations checkout;
 - `external-equations`: built from the installed `rocq-equations` library, or
   from a checkout passed with `--external-source /path/to/Coq-Equations`. See
   `corpora/external-equations/CANDIDATES.md` for how it was chosen.
+
+The extraction screening grid intentionally uses only the three committed
+sample corpora `stdlib-regression`, `dependent-slice`, and
+`external-equations`; it is an option sweep, not the seven-corpus confirmation.
 
 Generating the corpora from the installed libraries keeps them in step with the
 Rocq the evaluation actually runs against, instead of committing a snapshot
@@ -165,16 +174,18 @@ the numbers it vouches for share a single history — checkpoints are keyed by
 label, so once a grid is rerun that history is the only surviving record of the
 previous one.
 
-Two grids qualify. `artifacts/extraction-confirmation` holds the confirmation
-grid, which carries the soundness and reconstruction claims.
-`artifacts/premise-screening` holds the premise-selection screening grid, whose
-definitional-slot sweep is the headline result for premise selection; it is the
-one screening grid that is tracked, and it records its own non-standard
-measurement policy in `provenance.env`. Every other screening summary —
-`artifacts/extraction-screening` — stays untracked: a variant sweep that
-nothing is claimed from is rerun rather than cited. `summary.tsv` and
-`analysis.md` are marked `linguist-generated` in `.gitattributes` so review
-collapses them; regenerate them through the grid rather than editing them.
+The tracked grid artifacts are the ones cited by branch claims.
+`artifacts/extraction-confirmation` carries the full-grid consistency and
+reconstruction measurements. `artifacts/extraction-screening` carries the
+TASK_10 extraction-option sweep, and `artifacts/premise-screening` carries the
+premise-selection definitional-slot sweep and its non-standard measurement
+policy. `artifacts/task10-comparison` is a compact, cross-commit report derived
+from workspace-local baseline/candidate snapshots; it retains their digests and
+common-key statistics without committing the large attempt tables. Screening
+or comparison output not cited by the branch is rerun rather than tracked.
+`summary.tsv` and `analysis.md` are marked `linguist-generated` in
+`.gitattributes` so review collapses them; regenerate grid output through the
+harness rather than editing it.
 
 The confirmation run also checks that the translated axioms stay consistent: it
 replaces each conjecture with `$false` and expects no refutation. Those axioms
