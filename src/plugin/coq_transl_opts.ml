@@ -62,8 +62,6 @@ let opt_indexed_families = true
 let opt_rigid_clash_pruning = true
 (* Expand refinement types shallowly. *)
 let opt_refinement_types = true
-(* Skip redundant declaration-level subset axioms. *)
-let opt_refinement_decl_skips = true
 (* Alongside the propositional equivalence for a transparent Prop-valued
    definition with an atomic body, also emit the term-level definitional
    equation.  The two sides are one object by delta-conversion, but the

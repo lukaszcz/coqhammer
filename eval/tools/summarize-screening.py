@@ -103,15 +103,6 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
         if not label_dir.is_dir():
             raise ValueError(f"required label checkpoints are missing: {label_dir}")
         config = "current" if label == "current" else label.removeprefix("screening-")
-        # opt_refinement_decl_skips defaults to true in the checked-in
-        # src/plugin/coq_transl_opts.ml, and rebuild-config.sh builds "current"
-        # from that value unpatched, so "current" is always the enabled case
-        # even though its config label carries no "-decl-skips" suffix.
-        decl_skips = config == "current" or config.endswith("-decl-skips")
-        if decl_skips:
-            config_core = config.removesuffix("-decl-skips")
-        else:
-            config_core = config
         for corpus in CORPORA:
             corpus_dir = label_dir / corpus
             if not corpus_dir.is_dir():
@@ -136,8 +127,7 @@ def load_rows(root: Path, labels: list[str]) -> list[dict[str, object]]:
                     rows.append(
                         {
                             "label": label,
-                            "config": config_core,
-                            "decl_skips": str(decl_skips).lower(),
+                            "config": config,
                             "corpus": corpus,
                             "premise": premise.removeprefix("knn-"),
                             "prover": prover,
@@ -162,7 +152,6 @@ def write_tsv(rows: list[dict[str, object]], out: Path) -> None:
     fieldnames = [
         "label",
         "config",
-        "decl_skips",
         "corpus",
         "premise",
         "prover",
@@ -231,17 +220,17 @@ def md_table(rows: list[dict[str, object]], columns: list[str], limit: int | Non
 
 
 def write_analysis(rows: list[dict[str, object]], out: Path) -> None:
-    by_label = aggregate(rows, "label", "config", "decl_skips")
+    by_label = aggregate(rows, "label", "config")
     by_label_sorted = sorted(by_label, key=lambda r: (-float(r["success_rate"]), str(r["label"])))
-    by_corpus = aggregate(rows, "label", "config", "decl_skips", "corpus")
-    by_prover = aggregate(rows, "label", "config", "decl_skips", "prover")
+    by_corpus = aggregate(rows, "label", "config", "corpus")
+    by_prover = aggregate(rows, "label", "config", "prover")
     current = next((r for r in by_label if r["label"] == "current"), None)
     all_on = next((r for r in by_label if r["label"] == "screening-all-on"), None)
 
     flagged: list[str] = []
     if all_on is not None:
         for row in by_label:
-            if str(row["label"]).startswith("screening-loo-") and not str(row["label"]).endswith("decl-skips"):
+            if str(row["label"]).startswith("screening-loo-"):
                 if row["success_rate"] > all_on["success_rate"]:
                     flagged.append(
                         f"{row['config']} exceeds all-on ({100*row['success_rate']:.1f}% vs "
@@ -256,7 +245,7 @@ def write_analysis(rows: list[dict[str, object]], out: Path) -> None:
         "",
         "## Overall configuration ranking",
         "",
-        md_table(by_label_sorted, ["label", "config", "decl_skips", "generated", "theorems", "success_rate", "def_constants_mean", "avg_bytes_mean", "consistency_hits"]),
+        md_table(by_label_sorted, ["label", "config", "generated", "theorems", "success_rate", "def_constants_mean", "avg_bytes_mean", "consistency_hits"]),
         "",
         "## Per-corpus rates",
         "",

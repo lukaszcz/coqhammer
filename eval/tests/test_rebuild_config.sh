@@ -25,7 +25,6 @@ let opt_erasure_guards = false
 let opt_refinement_types = true
 let opt_indexed_families = true
 let opt_rigid_clash_pruning = true
-let opt_refinement_decl_skips = true
 EOF
 printf 'semantic fixture\n' > "$repo/tests/plugin/singleton_premises.v"
 printf '# assertion library fixture\n' > "$repo/tests/plugin/transl-assert-lib.sh"

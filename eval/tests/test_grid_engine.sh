@@ -81,7 +81,6 @@ opt_erasure_guards=true
 opt_refinement_types=true
 opt_indexed_families=true
 opt_rigid_clash_pruning=true
-opt_refinement_decl_skips=false
 EOF
 
 for config in loo-indexed-families loo-rigid-clash-pruning; do

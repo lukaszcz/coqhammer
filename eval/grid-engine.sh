@@ -364,9 +364,6 @@ _grid_install_is_supported() {
   local install="$1" core="$1"
   [ "$install" = current ] && return 0
   case "$core" in
-    *-decl-skips) core=${core%-decl-skips} ;;
-  esac
-  case "$core" in
     all-off|all-on|loo-prop-case-erasure|loo-erasure-guards|loo-refinement-types|loo-indexed-families|loo-rigid-clash-pruning) ;;
     *) return 1 ;;
   esac
@@ -400,12 +397,8 @@ _grid_resolve_install_prefixes() {
 }
 
 _grid_validate_config_options() {
-  local manifest="$1" config="$2" core decl_skips prop erasure refinement indexed pruning
+  local manifest="$1" config="$2" core prop erasure refinement indexed pruning
   core="$config"
-  decl_skips=false
-  case "$core" in
-    *-decl-skips) decl_skips=true; core=${core%-decl-skips} ;;
-  esac
   prop=true
   erasure=true
   refinement=true
@@ -425,8 +418,7 @@ _grid_validate_config_options() {
     expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
     expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
     expect_manifest_value "$manifest" opt_indexed_families "$indexed" &&
-    expect_manifest_value "$manifest" opt_rigid_clash_pruning "$pruning" &&
-    expect_manifest_value "$manifest" opt_refinement_decl_skips "$decl_skips"
+    expect_manifest_value "$manifest" opt_rigid_clash_pruning "$pruning"
 }
 
 _grid_manifest_matches_install() {

@@ -3018,8 +3018,15 @@ and add_def_eq_axiom (name, value, ty, srt) =
            end
       end
 
+(* A declaration that erases to its carrier at every occurrence has no
+   constructor symbol left for the declaration-level structural axioms to
+   describe: injectivity of the erased constructor degenerates to a tautology,
+   and inversion asserts a constructor shape the occurrence-level expansion
+   never produces.  Only declaration-independent classifications qualify --
+   [classify_decl] returns [None] for parameter-dependent declarations, whose
+   structural axioms are therefore kept. *)
 and skip_refinement_decl_axioms indname =
-  opt_refinement_types && opt_refinement_decl_skips &&
+  opt_refinement_types &&
   match Coq_erasure.classify_decl indname with
   | Some (Coq_erasure.CSubset _) -> true
   | _ -> false

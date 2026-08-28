@@ -21,17 +21,12 @@ src/plugin/coq_transl_opts.ml while building and restore it afterwards.
 Core configs:
   current                  the current CoqHammer configuration
   all-off                  all extraction constants off
-  all-on                   all extraction constants on, decl-level skips off
+  all-on                   all extraction constants on
   loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false
   loo-refinement-types     all-on except opt_refinement_types=false
   loo-indexed-families     all-on except opt_indexed_families=false
   loo-rigid-clash-pruning  all-on except opt_rigid_clash_pruning=false
-
-Decl-skip variants:
-  append -decl-skips to any core config other than `current` to set
-  opt_refinement_decl_skips=true.  `current` already builds with
-  declaration-level skips enabled, so `current-decl-skips` is rejected.
 USAGE
 }
 
@@ -50,7 +45,6 @@ while [ "$#" -gt 0 ]; do
       echo current
       for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-indexed-families loo-rigid-clash-pruning; do
         echo "$base"
-        echo "$base-decl-skips"
       done
       exit 0
       ;;
@@ -95,28 +89,9 @@ if ! git diff --quiet -- "$opts" || ! git diff --cached --quiet -- "$opts"; then
 fi
 
 core="$config"
-decl_skips=false
 patch_needed=true
 if [ "$core" = current ]; then
   patch_needed=false
-fi
-case "$core" in
-  *-decl-skips)
-    decl_skips=true
-    core=${core%-decl-skips}
-    ;;
-esac
-
-# current-decl-skips cannot be built correctly: patching only decl_skips would
-# still fall back to the generic prop/erasure/refinement defaults below,
-# silently overriding whatever the tree's current constants actually are
-# (right now opt_erasure_guards=false, so this would build all-on-decl-skips
-# mislabeled as current-decl-skips). opt_refinement_decl_skips already
-# defaults to true in src/plugin/coq_transl_opts.ml, so `current` alone
-# already has declaration-level skips enabled and the suffix is redundant.
-if [ "$core" = current ] && [ "$decl_skips" = true ]; then
-  echo "current-decl-skips is not a supported configuration: declaration-level skips are already enabled by default in the current tree (opt_refinement_decl_skips); use 'current' instead." >&2
-  exit 2
 fi
 
 prop=true
@@ -223,7 +198,7 @@ restore_opts() {
 trap restore_opts EXIT INT TERM
 
 if [ "$patch_needed" = true ]; then
-python3 - "$opts" "$prop" "$erasure" "$refinement" "$indexed" "$pruning" "$decl_skips" <<'PY'
+python3 - "$opts" "$prop" "$erasure" "$refinement" "$indexed" "$pruning" <<'PY'
 import pathlib
 import re
 import sys
@@ -235,7 +210,6 @@ values = {
     "opt_refinement_types": sys.argv[4],
     "opt_indexed_families": sys.argv[5],
     "opt_rigid_clash_pruning": sys.argv[6],
-    "opt_refinement_decl_skips": sys.argv[7],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -358,7 +332,6 @@ opt_erasure_guards=$erasure
 opt_refinement_types=$refinement
 opt_indexed_families=$indexed
 opt_rigid_clash_pruning=$pruning
-opt_refinement_decl_skips=$decl_skips
 MANIFEST
 fi
 printf 'built_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$prefix/manifest.env"
