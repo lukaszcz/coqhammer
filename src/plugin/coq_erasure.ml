@@ -147,6 +147,14 @@ let occurrence_indices indname ty =
   | true, Equal (_, rhs) -> Some [rhs]
   | _ ->
     match get_inductive indname with
+    | Some (_, params_num, ind_ty, _) when telescope_length ind_ty <= params_num ->
+        (* An index-free family is not required to expose its inductive, and
+           must not be: outside a case predicate [Coq_convert] lowers the
+           logical inductives to the FOL formers [$True], [$False], [&] and
+           [|], and a scrutinee typed by one of them is no longer an
+           application of the inductive in any syntactic sense.  It has no
+           index either way, so the empty index list is the whole answer. *)
+        Some []
     | Some (_, params_num, ind_ty, _) ->
         let expected = telescope_length ind_ty in
         let unfold name =

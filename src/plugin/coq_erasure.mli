@@ -129,9 +129,12 @@ val informative_index_mask : coqcontext -> index_formals -> bool list
 val occurrence_indices : string -> coqterm -> coqterm list option
 (** [occurrence_indices indname ty] weak-head-normalizes [ty], verifies that it
     is an exactly saturated occurrence of [indname], and returns only its
-    indices.  This validation also applies to index-free inductives.  For the
-    exact inductive registered as [core.eq.type], the lowered representation
-    [Equal (a, b)] returns [Some [b]]. *)
+    indices.  An inductive declaring no index is exempt from that validation
+    and always yields [Some []]: [Coq_convert] lowers the logical inductives to
+    the FOL formers, so a scrutinee typed by one of them is no longer an
+    application of the inductive in any syntactic sense, and it has no index to
+    recover either way.  For the exact inductive registered as [core.eq.type],
+    the lowered representation [Equal (a, b)] returns [Some [b]]. *)
 
 val clear : unit -> unit
 (** Clear the classification memo table. *)
