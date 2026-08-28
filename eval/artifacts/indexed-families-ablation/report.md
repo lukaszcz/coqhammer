@@ -1,6 +1,6 @@
-# TASK_10 D3 follow-up
+# Indexed-families ablation follow-up
 
-Commit `62fc0708997c4a65a09b63902df85c1921e2201e` fixes the D3 screening discrepancy: with erasure guards enabled and indexed families disabled, indexed Prop-singleton collapse now uses the legacy source-proposition premise. The two affected TASK_10 labels were rerun to completion through separate harness `--only-label` runs. The original 15-label artifact remains unchanged and is used only for the historical rows and controlled references in `table.tsv`.
+Commit `62fc0708997c4a65a09b63902df85c1921e2201e` fixes an ablation-boundary discrepancy in the indexed-families screening grid: with erasure guards enabled and indexed families disabled, indexed Prop-singleton collapse now uses the legacy source-proposition premise instead of accidentally retaining forded singleton premises. The two affected screening labels were rerun to completion through separate harness `--only-label` runs. The original 15-label artifact remains unchanged and is used only for the historical rows and controlled references in `table.tsv`.
 
 ## Scope and validation
 

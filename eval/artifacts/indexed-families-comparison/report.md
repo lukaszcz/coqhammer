@@ -1,9 +1,10 @@
-# TASK_10 baseline/candidate comparison
+# Indexed-families baseline/candidate comparison
 
-This compact artifact preserves the cross-commit claims used by
-`notes/extraction_eval.md` without committing the 45 MiB per-attempt/per-goal
+This compact artifact preserves the cross-commit claims of the indexed-family
+extraction evaluation without committing the 45 MiB per-attempt/per-goal
 snapshot pair. The source snapshots remain workspace-local under
-`eval/results/task10-evidence/`; their digests are recorded in `provenance.env`.
+`eval/results/indexed-families-evidence/`; their digests are recorded in
+`provenance.env`.
 
 ## Chronology and scope
 
@@ -15,7 +16,8 @@ day. The selected candidate confirmation snapshot was written at
 2026-08-28T06:05:03+02:00.
 
 Both confirmations used all seven full corpora, ten selector/count choices,
-and four provers. Baseline `dependent-slice` predates seven TASK_09 fixtures;
+and four provers. Baseline `dependent-slice` predates the seven indexed-family
+fixtures added with the candidate;
 the other six corpus digests match. A common attempt key is
 `(corpus, premise selector/count, prover, relative problem path)`. There are
 276,560 common attempt keys and 6,914 common goal keys. The candidate has 280

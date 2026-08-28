@@ -177,13 +177,14 @@ previous one.
 The tracked grid artifacts are the ones cited by branch claims.
 `artifacts/extraction-confirmation` carries the full-grid consistency and
 reconstruction measurements. `artifacts/extraction-screening` carries the
-TASK_10 extraction-option sweep, and `artifacts/premise-screening` carries the
-premise-selection definitional-slot sweep and its non-standard measurement
-policy. `artifacts/task10-comparison` is a compact, cross-commit report derived
-from workspace-local baseline/candidate snapshots; it retains their digests and
-common-key statistics without committing the large attempt tables.
-`artifacts/task10-d3-followup` compactly records the two corrected option-off
-screening cells rerun after the D3 ablation-boundary fix. Screening or
+indexed-families extraction-option sweep, and `artifacts/premise-screening`
+carries the premise-selection definitional-slot sweep and its non-standard
+measurement policy. `artifacts/indexed-families-comparison` is a compact,
+cross-commit report derived from workspace-local baseline/candidate snapshots;
+it retains their digests and common-key statistics without committing the
+large attempt tables. `artifacts/indexed-families-ablation` compactly records
+the two corrected option-off screening cells rerun after the
+ablation-boundary fix. Screening or
 comparison output not cited by the branch is rerun rather than tracked.
 `summary.tsv` and `analysis.md` are marked `linguist-generated` in
 `.gitattributes` so review collapses them; regenerate grid output through the
