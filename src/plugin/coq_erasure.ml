@@ -55,7 +55,6 @@ type arg_info = {
 type ctor_info = {
   ctor_name : string;
   ctor_args : arg_info list;
-  ctor_patterns : coqterm list;
   ctor_solved : (int * int) list;
   ctor_eqs : index_eqs;
   ctor_index_formals : index_formals;
@@ -86,7 +85,7 @@ let get_inductive name =
   else
     None
 
-let constructor_index_data _ctx params params_num cname =
+let constructor_index_data params params_num cname =
   let (target, targs, cargs) =
     Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
   in
@@ -104,13 +103,21 @@ let constructor_index_data _ctx params params_num cname =
   in
   (List.map instantiate_params patterns, args)
 
-let constructor_index_patterns ctx params params_num cname =
-  fst (constructor_index_data ctx params params_num cname)
-
 let rec telescope_length = function
   | Prod (_, _, body) -> 1 + telescope_length body
   | Let (_, (_, _, body)) -> telescope_length body
   | _ -> 0
+
+(* The index suffix of an inductive's declared telescope [type_args],
+   instantiated at the occurrence [params].  [type_args] is taken rather than
+   the arity itself because [Coq_typing.get_type_args] refreshes every binder,
+   so a caller that already destructed the arity must pass its own result
+   instead of provoking a second, differently named one. *)
+let index_formals_of type_args params params_num =
+  let param_formals = Hhlib.take params_num type_args in
+  List.map
+    (fun (name, ty) -> (name, subst_params param_formals params ty))
+    (Hhlib.drop params_num type_args)
 
 let occurrence_indices indname ty =
   match indname = Hhutils.lib_ref_name "core.eq.type", ty with
@@ -211,9 +218,6 @@ let residual_informative ctor =
     ctor.ctor_args
 
 let solved_names ctor =
-  (* A solved argument necessarily came from a kept result-index pattern. *)
-  if ctor.ctor_solved <> [] && ctor.ctor_patterns = [] then
-    raise Not_classifiable;
   List.fold_right
     (fun (arg_idx, index_pos) acc ->
        match arg_at ctor.ctor_args arg_idx with
@@ -380,7 +384,7 @@ let constructor_fields_depend_on_params params_num cname =
   with _ ->
     true
 
-let classify_shape _indname is_prop_ind has_indices ctor_infos =
+let classify_shape is_prop_ind has_indices ctor_infos =
   (* Singleton proof matches can be erased, and refinement/enum occurrences
      can be expanded from their residual informative arguments.  Solved
      constructor arguments remain in the retained telescope but are not
@@ -414,7 +418,7 @@ let classify_shape _indname is_prop_ind has_indices ctor_infos =
         MRegular
 
 let constructor_info ctx params params_num index_formals cname =
-  let patterns, args = constructor_index_data ctx params params_num cname in
+  let patterns, args = constructor_index_data params params_num cname in
   let rec keep_patterns pos formal_ctx acc formals patterns =
     match formals, patterns with
     | [], [] -> List.rev acc
@@ -504,7 +508,6 @@ let constructor_info ctx params params_num index_formals cname =
   {
     ctor_name = cname;
     ctor_args;
-    ctor_patterns = List.map (fun (_, _, pattern) -> pattern) kept;
     ctor_solved;
     ctor_eqs = if proof_occurs then erase_proofs [] eqs ctor_args else eqs;
     ctor_index_formals = index_formals;
@@ -524,12 +527,7 @@ let classify ctx indname params =
         let all_formals = Coq_typing.get_type_args ind_ty in
         let has_indices = List.length all_formals > params_num in
         let params = Hhlib.take params_num params in
-        let param_formals = Hhlib.take params_num all_formals in
-        let index_formals =
-          List.map
-            (fun (name, ty) -> (name, subst_params param_formals params ty))
-            (Hhlib.drop params_num all_formals)
-        in
+        let index_formals = index_formals_of all_formals params params_num in
         let mask = List.map (check_prop ctx) params in
         let ctor_infos =
           List.map (constructor_info ctx params params_num index_formals) constrs
@@ -543,7 +541,7 @@ let classify ctx indname params =
         let key = (indname, mask, is_prop_ind, ctor_prop_mask) in
         let shape =
           try Hashtbl.find memo key with Not_found ->
-            let shape = classify_shape indname is_prop_ind has_indices ctor_infos in
+            let shape = classify_shape is_prop_ind has_indices ctor_infos in
             Hashtbl.add memo key shape;
             shape
         in

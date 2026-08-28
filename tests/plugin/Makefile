@@ -94,7 +94,7 @@ extraction_deptypes.vo: extraction_deptypes.v
 extraction_indexed.vo: extraction_indexed.v extraction_deptypes.vo
 	$(COQC) extraction_indexed.v
 
-singleton_premises.vo: singleton_premises.v check-singleton-premises.sh
+singleton_premises.vo: singleton_premises.v check-singleton-premises.sh transl-assert-lib.sh
 	@set -e; \
 	$(COQC) singleton_premises.v > singleton_premises.out 2>&1 || { \
 	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
@@ -550,7 +550,7 @@ premise_isolation.vo: premise_isolation.v
 	  rm -f premise_isolation.vo premise_isolation.out; exit 1; }; \
 	rm -f premise_isolation.out
 
-extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo check-extraction-transl.sh
+extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo check-extraction-transl.sh transl-assert-lib.sh
 	@set -e; \
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \

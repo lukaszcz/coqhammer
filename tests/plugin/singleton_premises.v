@@ -6,8 +6,8 @@ From Stdlib Require Import Arith.Wf_nat Logic.JMeq.
 Inductive indexed_singleton : Type -> Prop :=
 | indexed_nat : indexed_singleton nat.
 
-(* N3: this singleton is indexed by a proof, and proposition-valued index
-   formals are intentionally absent from the residual first-order equations. *)
+(* This singleton is indexed by a proof, and proposition-valued index formals
+   are intentionally absent from the residual first-order equations. *)
 Inductive prop_index_singleton (P : Prop) : P -> Prop :=
 | prop_index_intro : forall p : P, prop_index_singleton P p.
 

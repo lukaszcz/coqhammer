@@ -19,8 +19,9 @@ type enum_constructor = {
   (** Constructor tag. *)
   enum_args : (string * coqterm) list;
   (** The instantiated, non-parameter constructor telescope in declaration order.
-      Types include N1 substitutions and provide the names needed to erase proof
-      arguments when constructing the tag at an occurrence. *)
+      Types have the solved arguments already substituted away, and provide the
+      names needed to erase proof arguments when constructing the tag at an
+      occurrence. *)
   enum_payloads : (string * coqterm) list;
   (** Propositional constructor arguments and their payload formulas. *)
   enum_solved : (string * int) list;
@@ -63,9 +64,10 @@ type ind_class =
           substitutes the guarded term for it before proposition translation. *)
       subset_args : (string * coqterm) list;
       (** The complete instantiated, non-parameter constructor telescope in
-          declaration order.  Its types include N1 solved-argument substitutions;
-          consumers must use this retained telescope instead of destructing the
-          constructor again, which would produce unrelated fresh binder names. *)
+          declaration order.  Its types have the solved arguments already
+          substituted away; consumers must use this retained telescope instead
+          of destructing the constructor again, which would produce unrelated
+          fresh binder names. *)
       prop_args : (string * coqterm) list;
       (** Propositional payload fields dropped by program extraction.  The types
           are instantiated with the actual inductive parameters and may mention
@@ -100,20 +102,27 @@ val instantiate : index_formals -> coqterm list -> coqterm -> coqterm
     pointwise for the declared index [formals] in [tm].  The arities must agree. *)
 
 val constructor_index_data :
-  coqcontext -> coqterm list -> int -> string ->
-  coqterm list * (string * coqterm) list
-(** [constructor_index_data ctx params params_num cname] atomically returns the
+  coqterm list -> int -> string -> coqterm list * (string * coqterm) list
+(** [constructor_index_data params params_num cname] atomically returns the
     result-index patterns and instantiated non-parameter constructor telescope
     of [cname].  Both components come from the same [destruct_type_app] call, so
     their globally refreshed constructor binders correspond.  Callers needing
-    both must use this helper rather than destructing the constructor separately. *)
+    both must use this helper rather than destructing the constructor separately.
+    For the lowered equality target [Equal (a, b)], the patterns are [[b]]. *)
 
-val constructor_index_patterns :
-  coqcontext -> coqterm list -> int -> string -> coqterm list
-(** [constructor_index_patterns ctx params params_num cname] is the patterns-only
-    wrapper around [constructor_index_data].  It returns the result indices of
-    [cname], with constructor parameter formals replaced by [params].  For the
-    lowered equality target [Equal (a, b)], it returns [[b]]. *)
+val telescope_length : coqterm -> int
+(** The number of arguments a telescope takes.  Unlike
+    [Coq_typing.get_type_args] this is purely syntactic and refreshes no
+    binder, so it may be used to check an arity without renumbering the symbols
+    of every axiom emitted afterwards. *)
+
+val index_formals_of : index_formals -> coqterm list -> int -> index_formals
+(** [index_formals_of type_args params params_num] is the index suffix of an
+    inductive's declared telescope [type_args], instantiated at the occurrence
+    [params].  The destructed telescope is taken as an argument rather than the
+    arity itself: [Coq_typing.get_type_args] refreshes every binder, so a
+    caller that already destructed the arity must pass its own result instead
+    of provoking a second, differently named one. *)
 
 val occurrence_indices : string -> coqterm -> coqterm list option
 (** [occurrence_indices indname ty] weak-head-normalizes [ty], verifies that it

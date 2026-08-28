@@ -2,11 +2,9 @@
 set -euo pipefail
 
 out=${1:-extraction_transl.out}
-
-fail() {
-  echo "extraction_transl assertion FAILED: $*" >&2
-  exit 1
-}
+assert_context=extraction_transl
+# shellcheck source=tests/plugin/transl-assert-lib.sh
+. "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/transl-assert-lib.sh"
 
 require_line() {
   local label=$1
@@ -44,49 +42,8 @@ require_count_exact() {
   fi
 }
 
-get_unique_line() {
-  local label=$1
-  local prefix=$2
-  local lines
-  mapfile -t lines < <(awk -v prefix="$prefix" 'index($0, prefix) == 1' "$out")
-  if [ "${#lines[@]}" -ne 1 ]; then
-    fail "$label (expected one line beginning with: $prefix; found ${#lines[@]})"
-  fi
-  printf '%s\n' "${lines[0]}"
-}
 
-parse_binders() {
-  local label=$1
-  local text=$2
-  local quantifier=$3
-  local expected=$4
-  local result_name=$5
-  local pattern
-  local -n result=$result_name
 
-  case "$quantifier" in
-    universal) pattern='!\[[^ ]+ : \$Any\]' ;;
-    existential) pattern='\?\[[^ ]+ : \$Any\]' ;;
-    *) fail "$label (unknown binder quantifier: $quantifier)" ;;
-  esac
-  mapfile -t result < <(
-    printf '%s\n' "$text" |
-      grep -Eo -- "$pattern" |
-      sed -E 's/^[!?]\[([^ ]+) : \$Any\]$/\1/'
-  )
-  if [ "${#result[@]}" -ne "$expected" ]; then
-    fail "$label (expected $expected $quantifier binders; found ${#result[@]})"
-  fi
-}
-
-require_text() {
-  local label=$1
-  local text=$2
-  local needle=$3
-  if [[ "$text" != *"$needle"* ]]; then
-    fail "$label (missing fixed text: $needle)"
-  fi
-}
 
 extract_unique_symbol() {
   local label=$1
@@ -106,17 +63,6 @@ extract_unique_symbol() {
   printf '%s\n' "${symbols[0]}"
 }
 
-require_text_count_exact() {
-  local label=$1
-  local text=$2
-  local needle=$3
-  local expected=$4
-  local count
-  count=$(printf '%s\n' "$text" | { grep -Fo -- "$needle" || true; } | wc -l)
-  if [ "$count" -ne "$expected" ]; then
-    fail "$label (expected $expected occurrences of $needle; found $count)"
-  fi
-}
 
 # Proposition helpers are generated with fresh IDs.  Parse their binders and
 # compare the complete defining equivalence instead of baking those IDs into a

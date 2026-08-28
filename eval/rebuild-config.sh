@@ -316,7 +316,8 @@ validate_singleton_premises() (
   trap 'rm -rf "$tmp"' EXIT
   out="$tmp/singleton_premises.out"
   cp "$repo/tests/plugin/singleton_premises.v" \
-    "$repo/tests/plugin/check-singleton-premises.sh" "$tmp/"
+    "$repo/tests/plugin/check-singleton-premises.sh" \
+    "$repo/tests/plugin/transl-assert-lib.sh" "$tmp/"
   if ! (cd "$tmp" && rocq c -coqlib "$prefix/coq" singleton_premises.v) \
       >"$out" 2>&1; then
     cat "$out" >&2

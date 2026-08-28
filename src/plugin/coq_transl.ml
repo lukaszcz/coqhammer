@@ -1284,6 +1284,19 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       in
       hlp (List.map fst vars) [] [] args
     in
+    (* Carry the renaming [refresh_case_args] performed on a constructor
+       telescope over to terms expressed in the original binders -- the result
+       index patterns, which must keep referring to the arguments the branch
+       now binds. *)
+    let refresh_case_terms args0 args tms =
+      List.map
+        (fun tm ->
+           List.fold_left2
+             (fun tm (name, _) (name2, _) ->
+                if name = name2 then tm else substvar name (Var name2) tm)
+             tm args0 args)
+        tms
+    in
     (* Refinement occurrence collapse: matching a subset value exposes the
        erased carrier itself, and the remaining proof payload binders are erased.
        [Coq_erasure.validate_subset] only classifies a constructor as [CSubset]
@@ -1316,7 +1329,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       match constrs, branches with
       | [cname], [(n, branch)] ->
          let (_, args) =
-           Coq_erasure.constructor_index_data (List.rev vars) params params_num cname
+           Coq_erasure.constructor_index_data params params_num cname
          in
          if List.length args <> n then
            internal_error "propositional singleton constructor telescope arity mismatch"
@@ -1344,11 +1357,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       | Some p1, Some p2 -> Some (mk_and p1 p2)
     in
     let case_index_formals indty params params_num =
-      let type_args = Coq_typing.get_type_args indty in
-      let param_formals = Hhlib.take params_num type_args in
-      List.map
-        (fun (name, ty) -> (name, subst_params param_formals params ty))
-        (Hhlib.drop params_num type_args)
+      Coq_erasure.index_formals_of
+        (Coq_typing.get_type_args indty) params params_num
     in
     let constructor_index_condition ctx index_formals actual_indices patterns =
       let patterns =
@@ -1465,22 +1475,14 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       let one_branch cname =
         let n, branch = get_branch cname constrs branches in
         let patterns, args =
-          Coq_erasure.constructor_index_data ctx params params_num cname
+          Coq_erasure.constructor_index_data params params_num cname
         in
         if List.length args <> n then
           raise (Hammer_errors.HammerError
                    "internal translation error: constructor telescope arity mismatch");
         let args0 = args in
         let args = refresh_case_args vars args in
-        let patterns =
-          List.map
-            (fun tm ->
-               List.fold_left2
-                 (fun tm (name, _) (name2, _) ->
-                    if name = name2 then tm else substvar name (Var name2) tm)
-                 tm args0 args)
-            patterns
-        in
+        let patterns = refresh_case_terms args0 args patterns in
         let body = simpl (mk_long_app branch (mk_vars args)) in
         let body = subst_proof_args ctx args body in
         prop_to_formula (List.rev (vars @ args)) body >>= fun branch_formula ->
@@ -1804,33 +1806,37 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          match Coq_erasure.occurrence_indices indname scrutinee_ty with
                          | None -> None
                          | Some indices ->
-                            Some (indices, case_index_formals indty params params_num)
+                            (* The scrutinee's indices and the informative
+                               positions of the index telescope are the same
+                               for every branch, so normalize the actuals and
+                               decide propositional-ness once here rather than
+                               once per constructor. *)
+                            let formals =
+                              case_index_formals indty params params_num
+                            in
+                            let rec informative formal_ctx = function
+                              | [] -> []
+                              | (name, ty) :: formals2 ->
+                                 not (Coq_typing.check_prop formal_ctx ty) ::
+                                   informative ((name, ty) :: formal_ctx) formals2
+                            in
+                            Some (List.map nbe indices,
+                                  informative (List.rev vars) formals)
                      in
                      let branch_clashes patterns =
                        match pruning_data with
                        | None -> false
-                       | Some (indices, formals) ->
+                       | Some (indices, informative) ->
                           if List.length indices <> List.length patterns ||
-                             List.length patterns <> List.length formals
+                             List.length patterns <> List.length informative
                           then
                             internal_error
                               "constructor result indices do not align with the scrutinee occurrence"
                           else
-                            let rec check formal_ctx indices patterns formals =
-                              match indices, patterns, formals with
-                              | actual :: indices2, pattern :: patterns2,
-                                (name, ty) :: formals2 ->
-                                 if Coq_typing.check_prop formal_ctx ty then
-                                   check ((name, ty) :: formal_ctx)
-                                     indices2 patterns2 formals2
-                                 else
-                                   rigid_clash (nbe actual) pattern ||
-                                   check ((name, ty) :: formal_ctx)
-                                     indices2 patterns2 formals2
-                              | [], [], [] -> false
-                              | _ -> assert false
-                            in
-                            check (List.rev vars) indices patterns formals
+                            List.exists2
+                              (fun (actual, keep) pattern ->
+                                 keep && rigid_clash actual pattern)
+                              (List.combine indices informative) patterns
                      in
                      let rec split_scrutinee acc = function
                        | [] -> internal_error "case scrutinee is absent from the normalized context"
@@ -1842,8 +1848,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      let prepare_branch cname =
                        let (n, branch) = get_branch cname constrs branches in
                        let patterns, args0 =
-                         Coq_erasure.constructor_index_data
-                           (List.rev vars) params params_num cname
+                         Coq_erasure.constructor_index_data params params_num cname
                        in
                        if List.length args0 <> n then
                          internal_error
@@ -1856,15 +1861,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          let patterns =
                            match pruning_data with
                            | None -> []
-                           | Some _ ->
-                              List.map
-                                (fun tm ->
-                                   List.fold_left2
-                                     (fun tm (name, _) (name2, _) ->
-                                        if name = name2 then tm
-                                        else substvar name (Var name2) tm)
-                                     tm args0 args)
-                                patterns
+                           | Some _ -> refresh_case_terms args0 args patterns
                          in
                          let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
                          in
@@ -2257,18 +2254,15 @@ and guard_leaf ctx ty x =
      binder names.  [substvar] is capture-avoiding, so occurrence variables are
      safe even when source binders reuse their printed names. *)
   let prepare_telescope formals indices solved residuals proof_names args =
-    let find name entries =
-      try Some (List.assoc name entries) with Not_found -> None
-    in
     let rec prepare env acc = function
       | [] -> (List.rev acc, env)
       | (name, ty) :: args2 ->
          let ty = subst_env env (instantiate formals indices ty) in
          let value =
-           match find name solved with
+           match Hhlib.massoc name solved with
            | Some pos -> nth_index indices pos
            | None ->
-              begin match find name residuals with
+              begin match Hhlib.massoc name residuals with
               | Some value -> value
               | None when List.mem name proof_names -> mk_proof_cast ty
               | None -> internal_error "has an unaccounted constructor argument"
@@ -2301,7 +2295,7 @@ and guard_leaf ctx ty x =
     | Const indname, args ->
        begin match Defhash.find indname with
        | (_, IndType(_, _, params_num), ind_ty, _) ->
-          let arity = List.length (Coq_typing.get_type_args ind_ty) in
+          let arity = Coq_erasure.telescope_length ind_ty in
           if List.length args <> arity then
             None
           else
@@ -2320,8 +2314,7 @@ and guard_leaf ctx ty x =
   if not opt_refinement_types then
     fallback ()
   else
-    let ty_nf = simpl (Coq_typing.reify (Coq_typing.eval ty))
-    in
+    let ty_nf = nbe ty in
     match (try classify_leaf ty_nf with _ -> None) with
     | None ->
        fallback ()

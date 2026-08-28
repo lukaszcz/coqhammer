@@ -28,11 +28,13 @@ let opt_rigid_clash_pruning = true
 let opt_refinement_decl_skips = true
 EOF
 printf 'semantic fixture\n' > "$repo/tests/plugin/singleton_premises.v"
+printf '# assertion library fixture\n' > "$repo/tests/plugin/transl-assert-lib.sh"
 cat > "$repo/tests/plugin/check-singleton-premises.sh" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 work=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 [ -f "$work/singleton_premises.v" ]
+[ -f "$work/transl-assert-lib.sh" ]
 [ "$2" = "$work/singleton_premises.out" ]
 printf '%s\t%s\n' "$1" "$work" >> "$VALIDATION_LOG"
 EOF

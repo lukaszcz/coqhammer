@@ -23,8 +23,8 @@ Definition prop_or_match (P Q : Prop) (h : P \/ Q) : P \/ Q :=
 Definition false_case_prop (h : False) : Prop :=
   match h with end.
 
-(* Stage 2 exposed the unsound index-blind expansion of [reflect] in a
-   negative guard.  Keep both polarities in separate dumps: the result type of
+(* An index-blind expansion of [reflect] in a negative guard is unsound.
+   Keep both polarities in separate dumps: the result type of
    [reflect_positive_canary] puts [reflect P true] in positive position, while
    [reflect_negative_canary]'s argument puts [reflect P b] in negative
    position.  Their typing axioms retain these expansions after the checker
