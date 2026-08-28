@@ -1353,20 +1353,20 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       Coq_erasure.index_formals_of
         (Coq_typing.get_type_args indty) params params_num
     in
-    let constructor_index_condition ctx index_formals actual_indices patterns =
+    let constructor_index_condition index_formals informative actual_indices patterns =
       let patterns =
         List.map (Coq_erasure.instantiate index_formals actual_indices) patterns
       in
-      let rec conjs formal_ctx actuals patterns formals acc =
-        match actuals, patterns, formals with
-        | actual :: actuals2, pattern :: patterns2, (name, ty) :: formals2 ->
+      let rec conjs actuals patterns informative acc =
+        match actuals, patterns, informative with
+        | actual :: actuals2, pattern :: patterns2, keep :: informative2 ->
            let acc =
-             if Coq_typing.check_prop formal_ctx ty then
-               acc
-             else
+             if keep then
                mk_eq actual pattern :: acc
+             else
+               acc
            in
-           conjs ((name, ty) :: formal_ctx) actuals2 patterns2 formals2 acc
+           conjs actuals2 patterns2 informative2 acc
         | [], [], [] ->
            begin match acc with
            | [] -> None
@@ -1377,9 +1377,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              ("constructor result indices do not align with the case predicate (" ^
               string_of_int (List.length actuals) ^ " actual, " ^
               string_of_int (List.length patterns) ^ " constructor, " ^
-              string_of_int (List.length formals) ^ " formal arguments remain)")
+              string_of_int (List.length informative) ^ " formal arguments remain)")
       in
-      conjs ctx actual_indices patterns index_formals []
+      conjs actual_indices patterns informative []
     in
     let emit_equation ?premise axname vars lhs rhs is_prop =
       let mk_eqv = if is_prop then mk_equiv lhs rhs else mk_eq lhs rhs in
@@ -1435,6 +1435,11 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         | Some _ -> ()
       in
       let index_formals = case_index_formals indty params params_num in
+      let informative =
+        match actual_indices with
+        | None -> []
+        | Some _ -> Coq_erasure.informative_index_mask ctx index_formals
+      in
       let close_fol body =
         let rec close ctx = function
           | (name, ty) :: rest ->
@@ -1486,7 +1491,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
           match actual_indices with
           | None -> None
           | Some indices ->
-             constructor_index_condition ctx index_formals indices patterns
+             constructor_index_condition index_formals informative indices patterns
         in
         begin match index with
         | None -> return scrutinee_formula
@@ -1767,14 +1772,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             let formals =
                               case_index_formals indty params params_num
                             in
-                            let rec informative formal_ctx = function
-                              | [] -> []
-                              | (name, ty) :: formals2 ->
-                                 not (Coq_typing.check_prop formal_ctx ty) ::
-                                   informative ((name, ty) :: formal_ctx) formals2
-                            in
                             Some (List.map nbe indices,
-                                  informative (List.rev vars) formals)
+                                  Coq_erasure.informative_index_mask
+                                    (List.rev vars) formals)
                      in
                      let branch_clashes patterns =
                        match pruning_data with

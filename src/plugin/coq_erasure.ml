@@ -128,6 +128,20 @@ let index_formals_of type_args params params_num =
     (fun (name, ty) -> (name, subst_params param_formals params ty))
     (Hhlib.drop params_num type_args)
 
+(* The informative/propositional verdict of every position of an index
+   telescope, decided left to right in the extended context.  The fording
+   patterns kept by [constructor_info], the index equalities emitted for a
+   case predicate and the rigid-clash pruning of case branches all key off the
+   same positions, so they all read this one mask. *)
+let informative_index_mask ctx index_formals =
+  let rec hlp formal_ctx acc = function
+    | [] -> List.rev acc
+    | (name, ty) :: formals ->
+        hlp ((name, ty) :: formal_ctx)
+          (not (Coq_typing.check_prop formal_ctx ty) :: acc) formals
+  in
+  hlp ctx [] index_formals
+
 let occurrence_indices indname ty =
   match indname = Hhutils.lib_ref_name "core.eq.type", ty with
   | true, Equal (_, rhs) -> Some [rhs]
@@ -424,16 +438,19 @@ let classify_shape is_prop_ind has_indices ctor_infos =
 
 let constructor_info ctx params params_num index_formals cname =
   let patterns, args = constructor_index_data params params_num cname in
-  let rec keep_patterns pos formal_ctx acc formals patterns =
-    match formals, patterns with
-    | [], [] -> List.rev acc
-    | (name, ty) :: formals2, pattern :: patterns2 ->
-        let is_prop = check_prop formal_ctx ty in
-        let acc = if is_prop then acc else (pos, name, pattern) :: acc in
-        keep_patterns (pos + 1) ((name, ty) :: formal_ctx) acc formals2 patterns2
+  let mask =
+    try informative_index_mask ctx index_formals
+    with _ -> raise Not_classifiable
+  in
+  let rec keep_patterns pos acc mask formals patterns =
+    match mask, formals, patterns with
+    | [], [], [] -> List.rev acc
+    | keep :: mask2, (name, _) :: formals2, pattern :: patterns2 ->
+        let acc = if keep then (pos, name, pattern) :: acc else acc in
+        keep_patterns (pos + 1) acc mask2 formals2 patterns2
     | _ -> raise Not_classifiable
   in
-  let kept = keep_patterns 0 ctx [] index_formals patterns in
+  let kept = keep_patterns 0 [] mask index_formals patterns in
   let find_arg name =
     let rec find idx = function
       | [] -> None

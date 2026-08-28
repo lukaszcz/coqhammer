@@ -119,6 +119,13 @@ val index_formals_of : index_formals -> coqterm list -> int -> index_formals
     caller that already destructed the arity must pass its own result instead
     of provoking a second, differently named one. *)
 
+val informative_index_mask : coqcontext -> index_formals -> bool list
+(** [informative_index_mask ctx index_formals] is the informative/propositional
+    verdict of every position of an index telescope, decided left to right in
+    the extended context.  Kept fording patterns, emitted index equalities and
+    rigid-clash branch pruning all key off the same positions, so they must all
+    read this one mask. *)
+
 val occurrence_indices : string -> coqterm -> coqterm list option
 (** [occurrence_indices indname ty] weak-head-normalizes [ty], verifies that it
     is an exactly saturated occurrence of [indname], and returns only its
