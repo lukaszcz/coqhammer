@@ -619,22 +619,25 @@ let specif_constant basename =
   if Defhash.mem core then core else if Defhash.mem coq then coq else stdlib
 
 let erase_false_rect_type_arg ctx tm =
-  match flatten_app tm with
-  | Const name, ty :: args
-       when is_false_rect_constant name && args <> [] && ty <> type_any &&
-            Coq_erasure.has_erasable_content ctx ty ->
-     (* Impossible branches may mention a collapsed refinement package in
-        the eliminated result type, but the proof argument is erased and the
-        branch is unreachable.  Keep the ordinary opaque eliminator and replace
-        only the type parameter by [$Any] so no sig/exist bridge leaks into a
-        definition axiom. *)
-     Some (mk_long_app (Const name) (type_any :: args))
-  | _ -> None
+  if opt_dependent_types then
+    match flatten_app tm with
+    | Const name, ty :: args
+         when is_false_rect_constant name && args <> [] && ty <> type_any &&
+              Coq_erasure.has_erasable_content ctx ty ->
+       (* Impossible branches may mention a collapsed refinement package in
+          the eliminated result type, but the proof argument is erased and the
+          branch is unreachable.  Keep the ordinary opaque eliminator and replace
+          only the type parameter by [$Any] so no sig/exist bridge leaks into a
+          definition axiom. *)
+       Some (mk_long_app (Const name) (type_any :: args))
+    | _ -> None
+  else
+    None
 
 let transport_full_arity = 6
 
 let erase_transport_head tm =
-  if not opt_erasure_guards then
+  if opt_dependent_types then
     match flatten_app tm with
     | Const name, args
          when name <> !translation_owner && is_transport_constant name &&
@@ -642,8 +645,7 @@ let erase_transport_head tm =
        (* Inline an occurrence of the generic transport definition equation.
           The defining equation's own left-hand side stays intact.  Preserve
           applications after the transport spine, e.g. [(eq_rect ... f ... e) x]
-          becomes [f x].  With erasure guards enabled, leave the occurrence
-          intact so the generic premised equation applies. *)
+          becomes [f x]. *)
        Some (mk_long_app (List.nth args 3) (Hhlib.drop transport_full_arity args))
     | _ -> None
   else
@@ -1347,12 +1349,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              Some body
       | _ -> internal_error "propositional singleton has an unexpected constructor shape"
     in
-    let combine_premises p1 p2 =
-      match p1, p2 with
-      | None, None -> None
-      | Some p, None | None, Some p -> Some p
-      | Some p1, Some p2 -> Some (mk_and p1 p2)
-    in
     let case_index_formals indty params params_num =
       Coq_erasure.index_formals_of
         (Coq_typing.get_type_args indty) params params_num
@@ -1682,7 +1678,11 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                    raw_logic_head || Coq_typing.check_prop ctx target
               in
               if return_target_is_prop (List.rev vars) return_type then
-                begin
+                if not opt_dependent_types then begin
+                  log 2 ("case-axiom-omitted: dependent-types " ^ axname);
+                  return ()
+                end
+                else begin
                   record_case_dependency ();
                   match matched_term with
                   | Var _ ->
@@ -1696,16 +1696,20 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
                 end
               else if Coq_typing.check_type_target_is_prop indty then
-                begin
+                if not opt_dependent_types then begin
+                  log 2 ("case-axiom-omitted: dependent-types " ^ axname);
+                  return ()
+                end
+                else begin
                   match matched_term with
-                  | Var proof_name ->
+                  | Var _ ->
                   begin
                     match Coq_erasure.classify (List.rev vars) indname params with
                     | Coq_erasure.CEmpty ->
                        (* An elimination from an empty proposition is unreachable.
                           Its lifted denotation is intentionally unconstrained. *)
                        return ()
-                    | Coq_erasure.CPropSingleton { index_eqs; index_formals } ->
+                    | Coq_erasure.CPropSingleton ->
                        begin
                          match collapse_prop_singleton vars indname constrs params params_num branches with
                          | None ->
@@ -1714,49 +1718,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             return ()
                          | Some body2 ->
                             record_case_dependency ();
-                            (* With guards disabled, singleton elimination uses
-                               the unconditional proof-irrelevant equation.
-                               Guarded indexed-family translation fords the
-                               premise to residual constructor index equations,
-                               falling back to the source proposition when the
-                               occurrence cannot be exposed.  With indexed-family
-                               translation disabled, retain that proposition as
-                               the legacy premise.  Index-free singletons such as
-                               [Acc] need no extra premise in either guarded mode. *)
-                            let singleton_premise =
-                              if not opt_erasure_guards || index_formals = [] then
-                                None
-                              else
-                                let scrutinee_ty =
-                                  try List.assoc proof_name vars with Not_found ->
-                                    internal_error
-                                      "singleton proof scrutinee is absent from the normalized context"
-                                in
-                                if not opt_indexed_families then
-                                  Some scrutinee_ty
-                                else
-                                  match Coq_erasure.occurrence_indices indname scrutinee_ty with
-                                  | None -> Some scrutinee_ty
-                                  | Some indices ->
-                                     let equations =
-                                       List.map
-                                         (fun (pos, pattern) ->
-                                            let actual =
-                                              try List.nth indices pos with _ ->
-                                                internal_error
-                                                  "singleton index equation is outside the occurrence telescope"
-                                            in
-                                            mk_eq actual
-                                              (Coq_erasure.instantiate
-                                                 index_formals indices pattern))
-                                         index_eqs
-                                     in
-                                     begin match equations with
-                                     | [] -> None
-                                     | _ -> Some (join_right mk_and equations)
-                                     end
-                            in
-                            let premise = combine_premises premise singleton_premise in
+                            (* Singleton elimination is proof-irrelevant: the
+                               unique branch is the value for every inhabitant,
+                               so the equation needs no premise. *)
                             compile_case ?premise lhs vars axname body2
                        end
                     | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
@@ -1784,28 +1748,33 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   match matched_term with
                   | Var scrutinee when var_occurs scrutinee lhs ->
                      let pruning_data =
-                       let scrutinee_ty =
-                         try List.assoc scrutinee vars with Not_found ->
-                           internal_error
-                             "case scrutinee is absent from the normalized context"
-                       in
-                       match Coq_erasure.occurrence_indices indname scrutinee_ty with
-                       | None -> None
-                       | Some indices ->
-                          (* The scrutinee's indices and the informative
-                             positions of the index telescope are the same for
-                             every branch, so normalize the actuals and decide
-                             propositional-ness once here rather than once per
-                             constructor. *)
-                          let formals = case_index_formals indty params params_num in
-                          let rec informative formal_ctx = function
-                            | [] -> []
-                            | (name, ty) :: formals2 ->
-                               not (Coq_typing.check_prop formal_ctx ty) ::
-                                 informative ((name, ty) :: formal_ctx) formals2
-                          in
-                          Some (List.map nbe indices,
-                                informative (List.rev vars) formals)
+                       if not opt_dependent_types then
+                         None
+                       else
+                         let scrutinee_ty =
+                           try List.assoc scrutinee vars with Not_found ->
+                             internal_error
+                               "case scrutinee is absent from the normalized context"
+                         in
+                         match Coq_erasure.occurrence_indices indname scrutinee_ty with
+                         | None -> None
+                         | Some indices ->
+                            (* The scrutinee's indices and the informative
+                               positions of the index telescope are the same
+                               for every branch, so normalize the actuals and
+                               decide propositional-ness once here rather than
+                               once per constructor. *)
+                            let formals =
+                              case_index_formals indty params params_num
+                            in
+                            let rec informative formal_ctx = function
+                              | [] -> []
+                              | (name, ty) :: formals2 ->
+                                 not (Coq_typing.check_prop formal_ctx ty) ::
+                                   informative ((name, ty) :: formal_ctx) formals2
+                            in
+                            Some (List.map nbe indices,
+                                  informative (List.rev vars) formals)
                      in
                      let branch_clashes patterns =
                        match pruning_data with
@@ -1884,20 +1853,23 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                         emit_equation ?premise (axname ^ "$link") vars lhs rhs
                           (Coq_typing.check_prop (List.rev vars) case_body)
                 in
-                match Coq_erasure.classify (List.rev vars) indname params with
-                | Coq_erasure.CSubset {
-                    carrier_idx; subset_args; index_formals = []; _
-                  } ->
-                   compile_case ?premise lhs vars axname
-                     (collapse_subset_case subset_args carrier_idx)
-                | Coq_erasure.CSubset _ -> regular_case ()
-                | Coq_erasure.CEnum _ ->
-                   (* Enum scrutinees (e.g. sumbool) need no special collapse;
-                      split-form validity applies to the erased constructor tags,
-                      while enum guards reuse the existing inversion scheme. *)
-                   regular_case ()
-                | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular ->
-                   regular_case ()
+                if opt_dependent_types then
+                  match Coq_erasure.classify (List.rev vars) indname params with
+                  | Coq_erasure.CSubset {
+                      carrier_idx; subset_args; index_formals = []; _
+                    } ->
+                     compile_case ?premise lhs vars axname
+                       (collapse_subset_case subset_args carrier_idx)
+                  | Coq_erasure.CSubset _ -> regular_case ()
+                  | Coq_erasure.CEnum _ ->
+                     (* Enum scrutinees (e.g. sumbool) need no special collapse;
+                        split-form validity applies to the erased constructor tags,
+                        while enum guards reuse the existing inversion scheme. *)
+                     regular_case ()
+                  | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
+                     regular_case ()
+                else
+                  regular_case ()
               end
            | _ -> internal_error "case scrutinee declaration is not inductive"
          end
@@ -2082,7 +2054,7 @@ and convert ctx tm =
       | Some tm2 -> convert ctx tm2
       | None ->
       begin
-      match subset_constructor_spine () with
+      match if opt_dependent_types then subset_constructor_spine () else None with
       | Some (`Carrier (carrier_arg, extras)) ->
          (* Refinement occurrence collapse: subset constructors erase to
             their carrier at each occurrence.  Trailing applications are
@@ -2286,90 +2258,93 @@ and guard_leaf ctx ty x =
             | (Coq_erasure.CSubset _ | Coq_erasure.CEnum _ |
                Coq_erasure.CEmpty) as cls ->
                Some (params, indices, cls)
-            | Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular -> None
+            | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
             end
        | _ -> None
        end
     | _ -> None
   in
-  let ty_nf = nbe ty in
-  match (try classify_leaf ty_nf with _ -> None) with
-  | None ->
-     fallback ()
-  | Some (_, indices, Coq_erasure.CSubset {
-      carrier_idx; carrier_name; subset_args; prop_args; solved; index_eqs;
-      index_formals
-    }) ->
-     (* A refinement guard is expanded at the occurrence itself: the carrier
-        guard is conjoined with the translated payload and residual result-
-        index equations.  The same leaf is used in hypotheses and conclusions.
-        The retained named telescope lets solved arguments, erased proofs and
-        the carrier be substituted coherently through dependent payloads. *)
-     convert ctx x >>= fun carrier ->
-     let proof_names = List.map fst prop_args in
-     let prepared, env =
-       prepare_telescope index_formals indices solved
-         [carrier_name, carrier] proof_names subset_args
-     in
-     let carrier_ty =
-       try
-         let (_, ty, _) = List.nth prepared carrier_idx in ty
-       with Failure _ ->
-         internal_error "subset carrier is outside its constructor telescope"
-     in
-     make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
-     formulas ctx
-       (List.map
-          (fun (_, prop_ty) ->
-             prepare_term index_formals indices env prop_ty)
-          prop_args) >>= fun payloads ->
-     formulas ctx
-       (index_equations index_formals indices env index_eqs) >>= fun equations ->
-     return (conjoin (carrier_guard :: payloads @ equations))
-  | Some (params, indices, Coq_erasure.CEnum enum) ->
-     let one_ctor ctor =
-       let proof_names =
-         List.map fst ctor.Coq_erasure.enum_payloads
-       in
+  if not opt_dependent_types then
+    fallback ()
+  else
+    let ty_nf = nbe ty in
+    match (try classify_leaf ty_nf with _ -> None) with
+    | None ->
+       fallback ()
+    | Some (_, indices, Coq_erasure.CSubset {
+        carrier_idx; carrier_name; subset_args; prop_args; solved; index_eqs;
+        index_formals
+      }) ->
+       (* A refinement guard is expanded at the occurrence itself: the carrier
+          guard is conjoined with the translated payload and residual result-
+          index equations.  The same leaf is used in hypotheses and conclusions.
+          The retained named telescope lets solved arguments, erased proofs and
+          the carrier be substituted coherently through dependent payloads. *)
+       convert ctx x >>= fun carrier ->
+       let proof_names = List.map fst prop_args in
        let prepared, env =
-         prepare_telescope enum.Coq_erasure.enum_index_formals indices
-           ctor.Coq_erasure.enum_solved [] proof_names
-           ctor.Coq_erasure.enum_args
+         prepare_telescope index_formals indices solved
+           [carrier_name, carrier] proof_names subset_args
        in
-       let args = List.map (fun (_, _, value) -> value) prepared in
-       convert ctx
-         (mk_long_app (Const ctor.Coq_erasure.enum_name) (params @ args))
-         >>= fun tag ->
+       let carrier_ty =
+         try
+           let (_, ty, _) = List.nth prepared carrier_idx in ty
+         with Failure _ ->
+           internal_error "subset carrier is outside its constructor telescope"
+       in
+       make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
        formulas ctx
          (List.map
-            (fun (_, payload_ty) ->
-               prepare_term enum.Coq_erasure.enum_index_formals indices env
-                 payload_ty)
-            ctor.Coq_erasure.enum_payloads) >>= fun payloads ->
+            (fun (_, prop_ty) ->
+               prepare_term index_formals indices env prop_ty)
+            prop_args) >>= fun payloads ->
        formulas ctx
-         (index_equations enum.Coq_erasure.enum_index_formals indices env
-            ctor.Coq_erasure.enum_index_eqs) >>= fun equations ->
-       return (mk_and (mk_eq x tag) (conjoin (payloads @ equations)))
-     in
-     let rec disjs = function
-       | [] -> return []
-       | ctor :: ctors ->
-          one_ctor ctor >>= fun f ->
-          disjs ctors >>= fun fs ->
-          return (f :: fs)
-     in
-     (* A CEnum guard reuses the existing inversion scheme as a self-contained
-        disjunction of constructor tags, payload formulas and instantiated
-        result-index equations; non-guard occurrences still use the ordinary
-        declaration-level inversion axiom. *)
-     disjs enum.Coq_erasure.enum_constructors >>= fun fs ->
-     return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
-  | Some (_, _, Coq_erasure.CEmpty) ->
-     (* The guard for an empty classified type is false, matching the
-        zero-constructor inversion scheme. *)
-     return (Const("$False"))
-  | Some (_, _, (Coq_erasure.CPropSingleton _ | Coq_erasure.CRegular)) ->
-     internal_error "received a non-expandable classification"
+         (index_equations index_formals indices env index_eqs) >>= fun equations ->
+       return (conjoin (carrier_guard :: payloads @ equations))
+    | Some (params, indices, Coq_erasure.CEnum enum) ->
+       let one_ctor ctor =
+         let proof_names =
+           List.map fst ctor.Coq_erasure.enum_payloads
+         in
+         let prepared, env =
+           prepare_telescope enum.Coq_erasure.enum_index_formals indices
+             ctor.Coq_erasure.enum_solved [] proof_names
+             ctor.Coq_erasure.enum_args
+         in
+         let args = List.map (fun (_, _, value) -> value) prepared in
+         convert ctx
+           (mk_long_app (Const ctor.Coq_erasure.enum_name) (params @ args))
+           >>= fun tag ->
+         formulas ctx
+           (List.map
+              (fun (_, payload_ty) ->
+                 prepare_term enum.Coq_erasure.enum_index_formals indices env
+                   payload_ty)
+              ctor.Coq_erasure.enum_payloads) >>= fun payloads ->
+         formulas ctx
+           (index_equations enum.Coq_erasure.enum_index_formals indices env
+              ctor.Coq_erasure.enum_index_eqs) >>= fun equations ->
+         return (mk_and (mk_eq x tag) (conjoin (payloads @ equations)))
+       in
+       let rec disjs = function
+         | [] -> return []
+         | ctor :: ctors ->
+            one_ctor ctor >>= fun f ->
+            disjs ctors >>= fun fs ->
+            return (f :: fs)
+       in
+       (* A CEnum guard reuses the existing inversion scheme as a self-contained
+          disjunction of constructor tags, payload formulas and instantiated
+          result-index equations; non-guard occurrences still use the ordinary
+          declaration-level inversion axiom. *)
+       disjs enum.Coq_erasure.enum_constructors >>= fun fs ->
+       return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
+    | Some (_, _, Coq_erasure.CEmpty) ->
+       (* The guard for an empty classified type is false, matching the
+          zero-constructor inversion scheme. *)
+       return (Const("$False"))
+    | Some (_, _, (Coq_erasure.CPropSingleton | Coq_erasure.CRegular)) ->
+       internal_error "received a non-expandable classification"
 
 (* `x' does not get converted *)
 and make_guard ctx ty x =
@@ -2861,7 +2836,7 @@ and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
-      if Coq_erasure.has_erasable_content [] ty then
+      if opt_dependent_types && Coq_erasure.has_erasable_content [] ty then
         begin
           (* When the type contains erasure-relevant refinements/enums, emit the
              applied forall-form directly through type_to_guard.  This bypasses
@@ -3004,6 +2979,7 @@ and add_def_eq_axiom (name, value, ty, srt) =
    [classify_decl] returns [None] for parameter-dependent declarations, whose
    structural axioms are therefore kept. *)
 and skip_refinement_decl_axioms indname =
+  opt_dependent_types &&
   match Coq_erasure.classify_decl indname with
   | Some (Coq_erasure.CSubset _) -> true
   | _ -> false

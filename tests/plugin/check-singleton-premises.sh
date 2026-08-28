@@ -1,16 +1,10 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-mode=${1:?usage: check-singleton-premises.sh MODE [OUTPUT]}
-out=${2:-singleton_premises.out}
-assert_context="singleton-premise ($mode)"
+out=${1:-singleton_premises.out}
+assert_context="singleton-premise"
 # shellcheck source=tests/plugin/transl-assert-lib.sh
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/transl-assert-lib.sh"
-
-case "$mode" in
-  guards-off|guards-indexed|guards-legacy) ;;
-  *) echo "unknown singleton-premise mode: $mode" >&2; exit 2 ;;
-esac
 
 cast_line=$(get_unique_line "cast definition" '$_def_singleton_premises.singleton_cast:')
 parse_binders "cast definition" "$cast_line" universal 3 cast_binders
@@ -51,44 +45,11 @@ jmeq_y=${jmeq_binders[3]}
 jmeq_equation="((((singleton_premises.singleton_jmeq @ $jmeq_a) @ $jmeq_b) @ $jmeq_x) @ $jmeq_y) = $jmeq_x"
 require_text "JMeq equation" "$jmeq_line" "$jmeq_equation"
 
-case "$mode" in
-  guards-off)
-    forbid_text "cast is unconditional" "$cast_line" '=> @'
-    forbid_text "eq_rect is unconditional" "$eq_rect_line" '=> @'
-    forbid_text "singleton_value is unconditional" "$singleton_value_line" '=> @'
-    forbid_text "Prop-index singleton is unconditional" "$prop_index_line" '=> @'
-    forbid_text "JMeq is unconditional" "$jmeq_line" '=> @'
-    ;;
-  guards-indexed)
-    require_text "cast has its residual equation" "$cast_line" "((=> @ ($cast_b = $cast_a)) @"
-    require_text_count_exact "cast has one premise" "$cast_line" '=> @' 1
-    require_text "eq_rect has its residual equation" "$eq_rect_line" "((=> @ ($eq_y = $eq_x)) @"
-    require_text_count_exact "eq_rect has one premise" "$eq_rect_line" '=> @' 1
-    require_text "singleton_value has its residual equation" "$singleton_value_line" "((=> @ ($singleton_value_t = Corelib.Init.Datatypes.nat)) @"
-    require_text_count_exact "singleton_value has one premise" "$singleton_value_line" '=> @' 1
-    forbid_text "Prop-index singleton has no residual equation" "$prop_index_line" '=> @'
-    require_text "JMeq has both residual equations" "$jmeq_line" \
-      "((=> @ ((& @ ($jmeq_b = $jmeq_a)) @ ($jmeq_y = $jmeq_x))) @"
-    require_text_count_exact "JMeq has one conjunctive premise" "$jmeq_line" '=> @' 1
-    ;;
-  guards-legacy)
-    require_text "cast has its source proposition" "$cast_line" "((=> @ ($cast_a = $cast_b)) @"
-    require_text_count_exact "cast has one premise" "$cast_line" '=> @' 1
-    require_text "eq_rect has its source proposition" "$eq_rect_line" "((=> @ ($eq_x = $eq_y)) @"
-    require_text_count_exact "eq_rect has one premise" "$eq_rect_line" '=> @' 1
-    require_text "singleton_value has its source proposition" "$singleton_value_line" "((=> @ (singleton_premises.indexed_singleton @ $singleton_value_t)) @"
-    forbid_text "singleton_value has no residual equation" "$singleton_value_line" "$singleton_value_t = Corelib.Init.Datatypes.nat"
-    require_text_count_exact "singleton_value has one premise" "$singleton_value_line" '=> @' 1
-    require_text "Prop-index singleton has its source proposition" "$prop_index_line" \
-      "((=> @ (singleton_premises.prop_index_singleton @ $prop_index_p)) @"
-    require_text_count_exact "Prop-index singleton has one premise" "$prop_index_line" '=> @' 1
-    require_text "JMeq has its source proposition" "$jmeq_line" \
-      "((=> @ ((((Stdlib.Logic.JMeq.JMeq @ $jmeq_a) @ $jmeq_x) @ $jmeq_b) @ $jmeq_y)) @"
-    forbid_text "JMeq has no residual type equation" "$jmeq_line" "$jmeq_b = $jmeq_a"
-    forbid_text "JMeq has no residual value equation" "$jmeq_line" "$jmeq_y = $jmeq_x"
-    require_text_count_exact "JMeq has one premise" "$jmeq_line" '=> @' 1
-    ;;
-esac
+forbid_text "cast is unconditional" "$cast_line" '=> @'
+forbid_text "eq_rect is unconditional" "$eq_rect_line" '=> @'
+forbid_text "singleton_value is unconditional" "$singleton_value_line" '=> @'
+forbid_text "Prop-index singleton is unconditional" "$prop_index_line" '=> @'
+forbid_text "JMeq is unconditional" "$jmeq_line" '=> @'
 
 acc_line=$(get_unique_line "Acc_rect definition" '$_def_Corelib.Init.Wf.Acc_rect:')
 parse_binders "Acc_rect definition" "$acc_line" universal 5 acc_binders
@@ -99,4 +60,4 @@ require_text "Acc_rect keeps its independent well-foundedness premise" "$acc_lin
   "((=> @ (((Corelib.Init.Wf.Acc @ $acc_a) @ $acc_r) @ $acc_x)) @"
 require_text_count_exact "Acc_rect has no extra singleton premise" "$acc_line" '=> @' 1
 
-echo "singleton-premise assertions passed ($mode)"
+echo "singleton-premise assertions passed"

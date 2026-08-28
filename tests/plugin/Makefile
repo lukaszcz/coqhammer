@@ -99,7 +99,7 @@ singleton_premises.vo: singleton_premises.v check-singleton-premises.sh transl-a
 	$(COQC) singleton_premises.v > singleton_premises.out 2>&1 || { \
 	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
 	}; \
-	if ! ./check-singleton-premises.sh guards-off singleton_premises.out; then \
+	if ! ./check-singleton-premises.sh singleton_premises.out; then \
 	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
 	fi; \
 	rm -f singleton_premises.out

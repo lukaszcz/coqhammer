@@ -34,7 +34,7 @@ compile_timeout_grace=10
 legacy_grid_script_digests=("$legacy")
 corpus_mode=sample
 force=false
-declare -A label_config=([label]=all-on)
+declare -A label_config=([label]=dependent-types-off)
 declare -A label_preamble=([label]='')
 declare -A label_preamble_digest=([label]="$(hash_text '')")
 declare -A corpus_source=([corpus]=eval/corpora/corpus/sample)
@@ -73,34 +73,24 @@ second_harness_hash=$(hash_harness_sources supervisor "$tmp/harness-source")
 eval_prefix_write_marker "$prefix"
 cat > "$prefix/manifest.env" <<EOF
 kind=configuration
-config=all-on
+config=dependent-types-off
 commit=$repo_commit
 prefix=$prefix
-opt_erasure_guards=true
-opt_indexed_families=true
+opt_dependent_types=false
 EOF
 
-for config in loo-erasure-guards loo-indexed-families; do
-  _grid_install_is_supported "$config" ||
-    fail "grid rejected supported configuration $config"
-  grep -qx "$config" < <("$eval_dir/rebuild-config.sh" --list) ||
-    fail "rebuild-config did not list $config"
-done
+config=dependent-types-off
+_grid_install_is_supported "$config" ||
+  fail "grid rejected supported configuration $config"
+grep -qx "$config" < <("$eval_dir/rebuild-config.sh" --list) ||
+  fail "rebuild-config did not list $config"
 config_manifest="$tmp/config-manifest.env"
 cp "$prefix/manifest.env" "$config_manifest"
-sed -i 's/^opt_indexed_families=.*/opt_indexed_families=false/' "$config_manifest"
-_grid_validate_config_options "$config_manifest" loo-indexed-families ||
-  fail "grid rejected loo-indexed-families manifest values"
-cp "$prefix/manifest.env" "$config_manifest"
-sed -i 's/^opt_erasure_guards=.*/opt_erasure_guards=false/' "$config_manifest"
-_grid_validate_config_options "$config_manifest" loo-erasure-guards ||
-  fail "grid rejected loo-erasure-guards manifest values"
-cp "$prefix/manifest.env" "$config_manifest"
-sed -i -e 's/^opt_erasure_guards=.*/opt_erasure_guards=false/' \
-  -e 's/^opt_indexed_families=.*/opt_indexed_families=false/' \
-  "$config_manifest"
-_grid_validate_config_options "$config_manifest" all-off ||
-  fail "grid rejected all-off manifest values"
+_grid_validate_config_options "$config_manifest" dependent-types-off ||
+  fail "grid rejected dependent-types-off manifest values"
+sed -i 's/^opt_dependent_types=.*/opt_dependent_types=true/' "$config_manifest"
+_grid_validate_config_options "$config_manifest" dependent-types-off &&
+  fail "grid accepted a dependent-types-off manifest with the option on"
 
 # A real consistency hit is complete measured output.  Validate all outputs
 # before interpreting one hit: a complete multi-output scan is published, but
@@ -194,7 +184,7 @@ repository_commit=$historical_commit
 grid_script_sha256=$historical_digest
 checkpoint_helper_sha256=$historical_helper
 label=label
-config=all-on
+config=dependent-types-off
 install_commit=$repo_commit
 install_kind=configuration
 install_manifest_sha256=$manifest_sha
@@ -272,7 +262,7 @@ for tamper in \
     's/^install_commit=.*/install_commit=3333333333333333333333333333333333333333/' \
     's/^install_manifest_sha256=.*/install_manifest_sha256=ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff/' \
     's/^corpus_source=.*/corpus_source=eval\/corpora\/other\/sample/' \
-    's/^config=.*/config=all-off/' \
+    's/^config=.*/config=current/' \
     's/^checkpoint_version=.*/checkpoint_version=2/'; do
   write_historical_marker "$legacy" prover \
     premise=knn-64 prover=eprover timeout=5 input_sha256="$old_corpus_digest"
@@ -310,7 +300,7 @@ repository_commit=$repo_commit
 grid_script_sha256=$grid_script_digest
 checkpoint_helper_sha256=$grid_helper_digest
 label=label
-config=all-on
+config=dependent-types-off
 install_commit=$repo_commit
 install_kind=configuration
 install_manifest_sha256=$manifest_sha
@@ -342,10 +332,10 @@ checkpoint_matches "$marker" prover label corpus "$prefix" \
 compile_timeout=600
 
 # Prefix reuse requires both the path-bound ownership marker and manifest path.
-_grid_manifest_matches_install all-on "$prefix" || fail "owned prefix was rejected"
+_grid_manifest_matches_install dependent-types-off "$prefix" || fail "owned prefix was rejected"
 printf '%s\nprefix=%s\n' "$EVAL_PREFIX_MARKER_MAGIC" "$tmp/elsewhere" > \
   "$prefix/$EVAL_PREFIX_MARKER"
-expect_failure _grid_manifest_matches_install all-on "$prefix"
+expect_failure _grid_manifest_matches_install dependent-types-off "$prefix"
 eval_prefix_write_marker "$prefix"
 # The marker is line-oriented, so a prefix spelled with a newline could never
 # be recognized again; it is refused before anything is written or erased.
@@ -356,7 +346,7 @@ expect_failure eval_prefix_write_marker "$newline_prefix"
   fail "marker was written for a prefix that cannot be read back"
 expect_failure eval_prefix_is_owned "$newline_prefix"
 sed -i "s|^prefix=.*|prefix=$tmp/elsewhere|" "$prefix/manifest.env"
-expect_failure _grid_manifest_matches_install all-on "$prefix"
+expect_failure _grid_manifest_matches_install dependent-types-off "$prefix"
 sed -i "s|^prefix=.*|prefix=$prefix|" "$prefix/manifest.env"
 
 # A stale prefix has to be erased before rebuild-config.sh can reinstall into
@@ -372,7 +362,7 @@ build_install_fixture() {
   build_prefix="$eval_dir/$relative"
   mkdir -p "$build_prefix"
   # A prefix without the ownership marker, so rebuild-config.sh would refuse it.
-  printf 'kind=configuration\nconfig=all-on\ncommit=stale\nprefix=%s\n' \
+  printf 'kind=configuration\nconfig=dependent-types-off\ncommit=stale\nprefix=%s\n' \
     "$build_prefix" > "$build_prefix/manifest.env"
   printf 'stale\n' > "$build_prefix/sentinel"
   cat > "$eval_dir/rebuild-config.sh" <<'SCRIPT'
@@ -386,17 +376,17 @@ SCRIPT
   base_path=$PATH
   base_ocamlpath=
   export RECORD="$tmp/rebuild-args"
-  declare -gA install_label=([all-on]=stale-label)
-  declare -gA install_prefix=([all-on]="$build_prefix")
+  declare -gA install_label=([dependent-types-off]=stale-label)
+  declare -gA install_prefix=([dependent-types-off]="$build_prefix")
 }
 (
   build_install_fixture _installs/stale-label
-  output=$(_grid_build_install all-on 2>&1)
+  output=$(_grid_build_install dependent-types-off 2>&1)
   [[ "$output" == *'stale or mismatched; rebuilding'* ]] ||
     fail "stale unowned prefix did not announce a rebuild: $output"
   [ ! -e "$build_prefix/sentinel" ] || fail "stale unowned prefix was not erased"
   mapfile -t rebuild_args < "$RECORD"
-  [ "${rebuild_args[0]}" = all-on ] || fail "rebuild received config ${rebuild_args[0]}"
+  [ "${rebuild_args[0]}" = dependent-types-off ] || fail "rebuild received config ${rebuild_args[0]}"
   [ "${rebuild_args[2]}" = stale-label ] || fail "rebuild received label ${rebuild_args[2]}"
   [ "${rebuild_args[4]}" = "$build_prefix" ] ||
     fail "rebuild received prefix ${rebuild_args[4]}"
@@ -409,7 +399,7 @@ for unmanaged in _installs/nested/stale-label not-installs/stale-label; do
   (
     build_install_fixture "$unmanaged"
     set +e
-    output=$(_grid_build_install all-on 2>&1)
+    output=$(_grid_build_install dependent-types-off 2>&1)
     status=$?
     set -e
     [ "$status" -eq 1 ] || fail "unmanaged stale prefix exited $status"
@@ -730,14 +720,14 @@ PY
 # install identity. Detect the normalized destination before creating it.
 (
   collision_eval="$tmp/collision-eval"
-  labels=(all-on shared-a shared-b)
+  labels=(dependent-types-off shared-a shared-b)
   declare -A label_config=(
-    [all-on]=current
-    [shared-a]=all-on
-    [shared-b]=all-on
+    [dependent-types-off]=current
+    [shared-a]=dependent-types-off
+    [shared-b]=dependent-types-off
   )
-  declare -A install_label=([current]=all-on [all-on]=shared-a)
-  declare -A install_count=([current]=1 [all-on]=2)
+  declare -A install_label=([current]=dependent-types-off [dependent-types-off]=shared-a)
+  declare -A install_count=([current]=1 [dependent-types-off]=2)
   declare -A install_prefix=()
   declare -A label_prefix=()
   ! _grid_resolve_install_prefixes "$collision_eval" >/dev/null 2>&1

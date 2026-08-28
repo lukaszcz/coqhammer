@@ -253,7 +253,7 @@ forbid_line "safe_pred successor branch must not keep eq_refl" '^\$_def_extracti
 forbid_line "safe_pred successor branch must not keep exist" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
 
 # Transport erasure: eq_rect/eq_rec/eq_ind-style casts are identities in the
-# proof-irrelevant erasure model (guarded by opt_erasure_guards when enabled).
+# proof-irrelevant erasure model.
 require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*= 4_x'
 
 # proj1_sig's own subset match collapses to the identity equation; no
@@ -607,7 +607,7 @@ eq_rect_f=${eq_rect_binders[3]}
 eq_rect_y=${eq_rect_binders[4]}
 require_text_count_exact "eq_rect generic singleton equation" "$eq_rect_line" "Corelib.Init.Logic.eq_rect @ $eq_rect_a) @ $eq_rect_x) @ $eq_rect_p) @ $eq_rect_f) @ $eq_rect_y) = $eq_rect_f" 1
 if [[ "$eq_rect_line" == *'=> @'* ]]; then
-  fail "eq_rect generic singleton equation must be unconditional with erasure guards off"
+  fail "eq_rect generic singleton equation must be unconditional"
 fi
 require_line "eq_ind has a translated formula" '^Corelib\.Init\.Logic\.eq_ind:'
 require_line "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'

@@ -20,10 +20,8 @@ src/plugin/coq_transl_opts.ml while building and restore it afterwards.
 
 Core configs:
   current                  the current CoqHammer configuration
-  all-off                  all extraction constants off
-  all-on                   all extraction constants on
-  loo-erasure-guards       all-on except opt_erasure_guards=false
-  loo-indexed-families     all-on except opt_indexed_families=false
+  dependent-types-off      opt_dependent_types=false: the translation as it was
+                           before dependent types were handled
 USAGE
 }
 
@@ -40,9 +38,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
       echo current
-      for base in all-off all-on loo-erasure-guards loo-indexed-families; do
-        echo "$base"
-      done
+      echo dependent-types-off
       exit 0
       ;;
     --label) need_value "$@"; label="$2"; shift 2 ;;
@@ -91,14 +87,10 @@ if [ "$core" = current ]; then
   patch_needed=false
 fi
 
-erasure=true
-indexed=true
+dependent=true
 case "$core" in
   current) ;;
-  all-off) erasure=false; indexed=false ;;
-  all-on) ;;
-  loo-erasure-guards) erasure=false ;;
-  loo-indexed-families) indexed=false ;;
+  dependent-types-off) dependent=false ;;
   *) echo "Unknown configuration: $config" >&2; usage >&2; exit 2 ;;
 esac
 
@@ -112,11 +104,10 @@ current_option_bool() {
   esac
 }
 
-# Core configuration booleans are explicit above.  For `current`, retain the
-# tree's values while still selecting the matching post-install semantic check.
+# The configuration boolean is explicit above.  For `current`, retain the
+# tree's value while still selecting the matching post-install semantic check.
 if [ "$core" = current ]; then
-  erasure=$(current_option_bool opt_erasure_guards)
-  indexed=$(current_option_bool opt_indexed_families)
+  dependent=$(current_option_bool opt_dependent_types)
 fi
 
 if [ -z "$prefix" ]; then
@@ -188,15 +179,14 @@ restore_opts() {
 trap restore_opts EXIT INT TERM
 
 if [ "$patch_needed" = true ]; then
-python3 - "$opts" "$erasure" "$indexed" <<'PY'
+python3 - "$opts" "$dependent" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
 values = {
-    "opt_erasure_guards": sys.argv[2],
-    "opt_indexed_families": sys.argv[3],
+    "opt_dependent_types": sys.argv[2],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -242,7 +232,7 @@ make install \
   COQFLAGS="-coqlib $prefix/coq"
 
 validate_singleton_premises() (
-  local tmp out mode
+  local tmp out
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
   out="$tmp/singleton_premises.out"
@@ -254,20 +244,17 @@ validate_singleton_premises() (
     cat "$out" >&2
     return 1
   fi
-  if [ "$erasure" = false ]; then
-    mode=guards-off
-  elif [ "$indexed" = false ]; then
-    mode=guards-legacy
-  else
-    mode=guards-indexed
-  fi
-  if ! bash "$tmp/check-singleton-premises.sh" "$mode" "$out"; then
+  if ! bash "$tmp/check-singleton-premises.sh" "$out"; then
     cat "$out" >&2
     return 1
   fi
 )
 
-validate_singleton_premises
+# The singleton equations the check asserts are only emitted when dependent
+# types are handled; with the handling off there is nothing to assert.
+if [ "$dependent" = true ]; then
+  validate_singleton_premises
+fi
 
 kind=configuration
 if [ "$config" = current ]; then
@@ -282,8 +269,7 @@ prefix=$prefix
 MANIFEST
 if [ "$patch_needed" = true ]; then
   cat >> "$prefix/manifest.env" <<MANIFEST
-opt_erasure_guards=$erasure
-opt_indexed_families=$indexed
+opt_dependent_types=$dependent
 MANIFEST
 fi
 printf 'built_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$prefix/manifest.env"

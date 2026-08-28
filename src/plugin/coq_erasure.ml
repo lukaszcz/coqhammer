@@ -26,7 +26,7 @@ type enum_data = {
 
 type ind_class =
   | CEmpty
-  | CPropSingleton of { index_eqs : index_eqs; index_formals : index_formals }
+  | CPropSingleton
   | CSubset of {
       carrier_idx : int;
       carrier_name : string;
@@ -357,11 +357,7 @@ let instantiate_class indname ctor_infos = function
   | MEmpty -> CEmpty
   | MPropSingleton ->
       begin match ctor_infos with
-      | [ctor] ->
-          CPropSingleton {
-            index_eqs = ctor.ctor_eqs;
-            index_formals = ctor.ctor_index_formals;
-          }
+      | [_] -> CPropSingleton
       | _ -> CRegular
       end
   | MSubset (carrier_idx, prop_indices) ->
@@ -399,7 +395,7 @@ let classify_shape is_prop_ind has_indices ctor_infos =
   | [] -> MEmpty
   | [ctor] when is_prop_ind && List.for_all (fun info -> info.arg_is_prop) ctor.ctor_args ->
       MPropSingleton
-  | _ when has_indices && not opt_indexed_families -> MRegular
+  | _ when has_indices && not opt_dependent_types -> MRegular
   | _ when is_prop_ind -> MRegular
   | [ctor] ->
       let informative = residual_informative ctor in
@@ -584,7 +580,7 @@ let classify_decl indname =
 
 let is_erasable_class = function
   | CRegular -> false
-  | CEmpty | CPropSingleton _ | CSubset _ | CEnum _ -> true
+  | CEmpty | CPropSingleton | CSubset _ | CEnum _ -> true
 
 let params_for_inductive indname args =
   match get_inductive indname with

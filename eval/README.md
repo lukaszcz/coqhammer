@@ -120,12 +120,10 @@ repeated. The lower-level commands used by `evaluate.sh library` are
 
 `rebuild-config.sh` is an implementation helper used by the grid commands.
 `current` builds exactly the option values committed in
-`src/plugin/coq_transl_opts.ml`. The other names are controlled configuration
-variants used to understand the current translator:
-
-- `all-off` and `all-on`;
-- `loo-erasure-guards`;
-- `loo-indexed-families`.
+`src/plugin/coq_transl_opts.ml`. The one controlled variant used to understand
+the current translator is `dependent-types-off`, which builds
+`opt_dependent_types=false`: the translation as it was before dependent types
+were handled.
 
 Configuration builds restore `coq_transl_opts.ml` after installation.
 Each build wipes its install prefix first, so `--prefix` is accepted only for a

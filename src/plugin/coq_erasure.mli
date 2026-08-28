@@ -43,12 +43,7 @@ type ind_class =
   | CEmpty
       (** No inhabitants are represented in the extracted program, as for
           ordinary empty inductives such as [False]. *)
-  | CPropSingleton of {
-      index_eqs : index_eqs;
-      (** Residual equations of the singleton constructor's forded form. *)
-      index_formals : index_formals;
-      (** Formals used by the residual index patterns. *)
-    }
+  | CPropSingleton
       (** A [Prop]-sorted inductive satisfying CIC's singleton-elimination
           criterion: one constructor and all non-parameter constructor arguments
           are propositional.  Matches on such proofs may be erased to the unique

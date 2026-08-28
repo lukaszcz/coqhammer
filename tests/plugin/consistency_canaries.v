@@ -151,7 +151,7 @@ Abort.
 
 (* F*-#1542 guard: the impossible equality lets a dependent match return the
    positive [reflect] constructor at the observably distinct [false] index.
-   Its guards-off collapse is unconditional, but its result typing must remain
+   Its collapse is unconditional, but its result typing must remain
    behind [true = false].  The nested transport crosses three distinct types
    in the same problem, so erased polymorphic equations cannot leak between
    their type instances. *)

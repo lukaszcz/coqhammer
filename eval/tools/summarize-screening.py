@@ -225,17 +225,17 @@ def write_analysis(rows: list[dict[str, object]], out: Path) -> None:
     by_corpus = aggregate(rows, "label", "config", "corpus")
     by_prover = aggregate(rows, "label", "config", "prover")
     current = next((r for r in by_label if r["label"] == "current"), None)
-    all_on = next((r for r in by_label if r["label"] == "screening-all-on"), None)
 
+    # A controlled configuration that beats the checked-in one is the result
+    # worth surfacing: it says the defaults are leaving successes on the table.
     flagged: list[str] = []
-    if all_on is not None:
+    if current is not None:
         for row in by_label:
-            if str(row["label"]).startswith("screening-loo-"):
-                if row["success_rate"] > all_on["success_rate"]:
-                    flagged.append(
-                        f"{row['config']} exceeds all-on ({100*row['success_rate']:.1f}% vs "
-                        f"{100*all_on['success_rate']:.1f}%)"
-                    )
+            if row["label"] != "current" and row["success_rate"] > current["success_rate"]:
+                flagged.append(
+                    f"{row['config']} exceeds current ({100*row['success_rate']:.1f}% vs "
+                    f"{100*current['success_rate']:.1f}%)"
+                )
 
     lines = [
         "# Extraction screening analysis",
@@ -263,9 +263,9 @@ def write_analysis(rows: list[dict[str, object]], out: Path) -> None:
     else:
         lines.append("The current configuration was not included in this partial run.")
     if flagged:
-        lines.append("Leave-one-out configurations exceeding all-on: " + "; ".join(flagged) + ".")
+        lines.append("Configurations exceeding current: " + "; ".join(flagged) + ".")
     else:
-        lines.append("No leave-one-out configuration exceeded all-on.")
+        lines.append("No configuration exceeded current.")
     lines.append("")
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text("\n".join(lines))

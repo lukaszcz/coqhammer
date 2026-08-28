@@ -364,7 +364,7 @@ _grid_install_is_supported() {
   local install="$1" core="$1"
   [ "$install" = current ] && return 0
   case "$core" in
-    all-off|all-on|loo-erasure-guards|loo-indexed-families) ;;
+    dependent-types-off) ;;
     *) return 1 ;;
   esac
 }
@@ -397,19 +397,12 @@ _grid_resolve_install_prefixes() {
 }
 
 _grid_validate_config_options() {
-  local manifest="$1" config="$2" core erasure indexed
-  core="$config"
-  erasure=true
-  indexed=true
-  case "$core" in
-    all-off) erasure=false; indexed=false ;;
-    all-on) ;;
-    loo-erasure-guards) erasure=false ;;
-    loo-indexed-families) indexed=false ;;
+  local manifest="$1" config="$2" dependent
+  case "$config" in
+    dependent-types-off) dependent=false ;;
     *) return 1 ;;
   esac
-  expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
-    expect_manifest_value "$manifest" opt_indexed_families "$indexed"
+  expect_manifest_value "$manifest" opt_dependent_types "$dependent"
 }
 
 _grid_manifest_matches_install() {

@@ -20,8 +20,7 @@ cp "$eval_dir/rebuild-config.sh" "$eval_dir/cli-lib.sh" \
   "$eval_dir/install-prefix-lib.sh" "$repo/eval/"
 
 cat > "$repo/src/plugin/coq_transl_opts.ml" <<'EOF'
-let opt_erasure_guards = false
-let opt_indexed_families = true
+let opt_dependent_types = true
 EOF
 printf 'semantic fixture\n' > "$repo/tests/plugin/singleton_premises.v"
 printf '# assertion library fixture\n' > "$repo/tests/plugin/transl-assert-lib.sh"
@@ -31,8 +30,8 @@ set -euo pipefail
 work=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 [ -f "$work/singleton_premises.v" ]
 [ -f "$work/transl-assert-lib.sh" ]
-[ "$2" = "$work/singleton_premises.out" ]
-printf '%s\t%s\n' "$1" "$work" >> "$VALIDATION_LOG"
+[ "$1" = "$work/singleton_premises.out" ]
+printf '%s\n' "$work" >> "$VALIDATION_LOG"
 EOF
 chmod +x "$repo/tests/plugin/check-singleton-premises.sh"
 printf 'runtime\n' > "$tmp/runtime/rocq-runtime/fixture"
@@ -78,30 +77,33 @@ export FAKE_COQLIB="$fake_coqlib"
 export VALIDATION_LOG="$validation_log"
 
 run_config() {
-  local config=$1 expected_mode=$2 line mode work
+  local config=$1 work
   (cd "$repo" && ./eval/rebuild-config.sh "$config" >/dev/null)
-  line=$(tail -n 1 "$validation_log")
-  IFS=$'\t' read -r mode work <<< "$line"
-  [ "$mode" = "$expected_mode" ] ||
-    fail "$config selected $mode instead of $expected_mode"
+  work=$(tail -n 1 "$validation_log")
   [ ! -d "$work" ] || fail "$config left semantic-validation temporary directory $work"
   (cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
     fail "$config did not restore coq_transl_opts.ml"
 }
 
-run_config current guards-off
-run_config all-on guards-indexed
-run_config all-off guards-off
-run_config loo-erasure-guards guards-off
-run_config loo-indexed-families guards-legacy
-sed -i \
-  -e 's/^let opt_erasure_guards = false$/let opt_erasure_guards = true/' \
-  -e 's/^let opt_indexed_families = true$/let opt_indexed_families = false/' \
-  "$repo/src/plugin/coq_transl_opts.ml"
-(cd "$repo" && git add src/plugin/coq_transl_opts.ml && git commit -qm guarded-legacy-current)
-run_config current guards-legacy
+run_config current
 
-[ "$(wc -l < "$validation_log")" -eq 6 ] ||
-  fail "semantic validation did not run exactly once per rebuild"
+validation_count=$(wc -l < "$validation_log")
+(cd "$repo" && ./eval/rebuild-config.sh dependent-types-off >/dev/null)
+[ "$(wc -l < "$validation_log")" -eq "$validation_count" ] ||
+  fail "dependent-types-off ran an inapplicable singleton validation"
+(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
+  fail "dependent-types-off did not restore coq_transl_opts.ml"
+
+sed -i 's/^let opt_dependent_types = true$/let opt_dependent_types = false/' \
+  "$repo/src/plugin/coq_transl_opts.ml"
+(cd "$repo" && git add src/plugin/coq_transl_opts.ml && git commit -qm dependent-off-current)
+(cd "$repo" && ./eval/rebuild-config.sh current >/dev/null)
+[ "$(wc -l < "$validation_log")" -eq "$validation_count" ] ||
+  fail "current with dependent types off ran singleton validation"
+(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
+  fail "current with dependent types off did not restore coq_transl_opts.ml"
+
+[ "$validation_count" -eq 1 ] ||
+  fail "semantic validation did not run exactly once per applicable rebuild"
 
 echo "test_rebuild_config: ok"

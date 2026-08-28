@@ -89,7 +89,7 @@ existing dump names enumerated by `check-consistency.sh`:
 - `consistency-dsize.p` / `consistency-dheight.p`: vector and `Fin.t 0`
   hypotheses whose constructor indices rigidly clash;
 - `consistency-eq-rect.p`: the F*-#1542-shaped equality match under
-  `true = false`, together with guards-off transports across `nat`, `bool`, and
+  `true = false`, together with erased transports across `nat`, `bool`, and
   `string` in one problem;
 - `consistency-h.p`: an indexed subset at zero whose expanded carrier payload
   is the refutable proposition `k < 0`;
@@ -163,8 +163,8 @@ structural assertions that hold with the current translator:
   `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `Nat.eqb_spec`, `sumbool`,
   `introT`, `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
   the `Equivalence_Reflexive` typeclass method projection. The generic
-  singleton path emits the unconditional `eq_rect(A,x,P,f,y) = f` equation in
-  the default guards-off build; `eq_ind` and `eq_ind_r` contribute only their
+  singleton path emits the unconditional `eq_rect(A,x,P,f,y) = f` equation;
+  `eq_ind` and `eq_ind_r` contribute only their
   formulas, with no synthetic `$Proof = $Proof` definition. `Acc_rect` carries
   exactly one `Acc` premise. Declaration-level subset injectivity/inversion
   remains present for parameter-dependent `sig`.
