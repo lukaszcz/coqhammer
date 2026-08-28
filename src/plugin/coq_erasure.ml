@@ -85,9 +85,18 @@ let get_inductive name =
   else
     None
 
+(* Premise selection can omit a constructor independently of its inductive, so
+   this lookup fails on well-formed input.  Report it the way the case path
+   always did, instead of letting the bare [Failure] surface as an unexplained
+   internal bug. *)
+let constructor_def cname =
+  try Defhash.find cname with Failure _ ->
+    raise (Hammer_errors.HammerError
+             ("internal translation error: missing constructor declaration: " ^ cname))
+
 let constructor_index_data params params_num cname =
   let (target, targs, cargs) =
-    Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+    Coq_typing.destruct_type_app (coqdef_type (constructor_def cname))
   in
   let param_formals = Hhlib.take params_num cargs in
   let instantiate_params tm = subst_params param_formals params tm in
@@ -518,6 +527,12 @@ let classify ctx indname params =
            parameters are not all determined, so [constructor_info] could not
            substitute them and [check_prop] would be handed unbound formals.
            Such occurrences stay on the status-quo path. *)
+        CRegular
+    | Some (constrs, _, _, _) when not (List.for_all Defhash.mem constrs) ->
+        (* Premise selection can omit a constructor independently of its
+           inductive.  There is then no complete set of telescopes to classify,
+           and an occurrence outside a match must not be turned into the
+           missing-declaration error the case path reports. *)
         CRegular
     | Some (constrs, params_num, ind_ty, ind_sort) ->
         let all_formals = Coq_typing.get_type_args ind_ty in
