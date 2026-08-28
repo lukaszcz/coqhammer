@@ -14,6 +14,7 @@ repo="$tmp/repo"
 mock_bin="$tmp/bin"
 fake_coqlib="$tmp/runtime/coq"
 validation_log="$tmp/validation.log"
+translation_log="$tmp/translation.log"
 mkdir -p "$repo/eval" "$repo/src/plugin" "$repo/tests/plugin" "$mock_bin" \
   "$fake_coqlib/theories" "$fake_coqlib/user-contrib" "$tmp/runtime/rocq-runtime"
 cp "$eval_dir/rebuild-config.sh" "$eval_dir/cli-lib.sh" \
@@ -46,11 +47,12 @@ fi
 case " $* " in
   *" singleton_premises.v "*)
     [ -f singleton_premises.v ]
-    printf 'mock singleton translation\n'
-    ;;
-  *" prop_case_ablation.v "*)
-    [ -f prop_case_ablation.v ]
-    printf 'mock proposition-case translation\n'
+    printf '%s\n' "$PWD" >> "$TRANSLATION_LOG"
+    # The dollar signs are literal parts of Hammer's generated identifiers.
+    printf '%s\n' '$_typeof_singleton_premises.singleton_cast: mock translation'
+    if [ -n "${STALE_DEPENDENT_ARTIFACT:-}" ]; then
+      printf '%s\n' '$_def_singleton_premises.singleton_cast: mock translation'
+    fi
     ;;
   *) exit 1 ;;
 esac
@@ -75,35 +77,53 @@ chmod +x "$mock_bin/rocq" "$mock_bin/make"
 export PATH="$mock_bin:$PATH"
 export FAKE_COQLIB="$fake_coqlib"
 export VALIDATION_LOG="$validation_log"
+export TRANSLATION_LOG="$translation_log"
+
+# Every configuration translates the probe against the prefix it just
+# installed; only the one that handles dependent types hands the output to the
+# assertion script, the other asserting the dependent-only equations away
+# itself.
+expect_counts() {
+  local config=$1 validations=$2 translations=$3
+  [ "$(wc -l < "$validation_log")" -eq "$validations" ] ||
+    fail "$config did not run the singleton-premise check $validations time(s)"
+  [ "$(wc -l < "$translation_log")" -eq "$translations" ] ||
+    fail "$config did not translate the probe $translations time(s)"
+}
 
 run_config() {
   local config=$1 work
   (cd "$repo" && ./eval/rebuild-config.sh "$config" >/dev/null)
-  work=$(tail -n 1 "$validation_log")
+  work=$(tail -n 1 "$translation_log")
   [ ! -d "$work" ] || fail "$config left semantic-validation temporary directory $work"
   (cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
     fail "$config did not restore coq_transl_opts.ml"
 }
 
 run_config current
+expect_counts current 1 1
 
-validation_count=$(wc -l < "$validation_log")
-(cd "$repo" && ./eval/rebuild-config.sh dependent-types-off >/dev/null)
-[ "$(wc -l < "$validation_log")" -eq "$validation_count" ] ||
-  fail "dependent-types-off ran an inapplicable singleton validation"
-(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
-  fail "dependent-types-off did not restore coq_transl_opts.ml"
+run_config dependent-types-off
+expect_counts dependent-types-off 1 2
 
 sed -i 's/^let opt_dependent_types = true$/let opt_dependent_types = false/' \
   "$repo/src/plugin/coq_transl_opts.ml"
 (cd "$repo" && git add src/plugin/coq_transl_opts.ml && git commit -qm dependent-off-current)
-(cd "$repo" && ./eval/rebuild-config.sh current >/dev/null)
-[ "$(wc -l < "$validation_log")" -eq "$validation_count" ] ||
-  fail "current with dependent types off ran singleton validation"
-(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
-  fail "current with dependent types off did not restore coq_transl_opts.ml"
+run_config current
+expect_counts "current with dependent types off" 1 3
 
-[ "$validation_count" -eq 1 ] ||
-  fail "semantic validation did not run exactly once per applicable rebuild"
+# A prefix whose artifact still emits the dependent-only equations is a stale
+# build, not an off baseline: the rebuild must fail rather than leave the grids
+# attributing the current translation to it.
+if (cd "$repo" && STALE_DEPENDENT_ARTIFACT=1 ./eval/rebuild-config.sh \
+      dependent-types-off >/dev/null 2>&1); then
+  fail "a stale dependent-types artifact was accepted as dependent-types-off"
+fi
+expect_counts "the rejected stale artifact" 1 4
+work=$(tail -n 1 "$translation_log")
+[ ! -d "$work" ] ||
+  fail "the rejected stale artifact left semantic-validation temporary directory $work"
+(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
+  fail "the rejected stale artifact did not restore coq_transl_opts.ml"
 
 echo "test_rebuild_config: ok"

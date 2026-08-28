@@ -231,6 +231,13 @@ make install \
   BINDIR="$prefix/bin/" \
   COQFLAGS="-coqlib $prefix/coq"
 
+# What the grids measure is the installed prefix, not the checkout, and
+# `make install` is incremental: a build that silently kept a stale artifact
+# would still be described by a manifest written from this script's intent.
+# So both configurations translate the shared singleton probe with the plugin
+# that was just installed and assert what their option value implies -- the
+# collapsed singleton equations when dependent types are handled, and the
+# absence of every one of them when they are not.
 validate_singleton_premises() (
   local tmp out
   tmp=$(mktemp -d)
@@ -244,17 +251,34 @@ validate_singleton_premises() (
     cat "$out" >&2
     return 1
   fi
-  if ! bash "$tmp/check-singleton-premises.sh" "$out"; then
+  if [ "$dependent" = true ]; then
+    if ! bash "$tmp/check-singleton-premises.sh" "$out"; then
+      cat "$out" >&2
+      return 1
+    fi
+    return 0
+  fi
+  # With dependent types off, every elimination the probe defines is a match
+  # on a proposition, and those are left opaque: none of the definition
+  # equations the check script asserts may be emitted at all.  Anchor the
+  # absence on a shape the configuration does not decide, so that an output
+  # the probe never reached cannot satisfy it vacuously.
+  # The dollar signs are literal parts of Hammer's generated identifiers.
+  # shellcheck disable=SC2016
+  if ! grep -Eq '^\$_typeof_singleton_premises\.' "$out"; then
+    echo "the probe emitted no translation of its own definitions" >&2
+    cat "$out" >&2
+    return 1
+  fi
+  # shellcheck disable=SC2016
+  if grep -Eq '^\$_def_(singleton_premises\.(singleton_cast|singleton_value|prop_index_value|singleton_jmeq)|Corelib\.Init\.Logic\.eq_rect):' "$out"; then
+    echo "opt_dependent_types=false still emitted singleton-elimination equations" >&2
     cat "$out" >&2
     return 1
   fi
 )
 
-# The singleton equations the check asserts are only emitted when dependent
-# types are handled; with the handling off there is nothing to assert.
-if [ "$dependent" = true ]; then
-  validate_singleton_premises
-fi
+validate_singleton_premises
 
 kind=configuration
 if [ "$config" = current ]; then

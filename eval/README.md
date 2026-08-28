@@ -125,6 +125,13 @@ the current translator is `dependent-types-off`, which builds
 `opt_dependent_types=false`: the translation as it was before dependent types
 were handled.
 
+Every build then validates the prefix it installed: the shared
+`tests/plugin/singleton_premises.v` probe is translated with the plugin just
+installed, and the emitted axioms must agree with the configuration -- the
+collapsed singleton-elimination equations when dependent types are handled,
+none of them when they are not. A stale artifact fails the rebuild instead of
+being measured under the label it was asked for.
+
 Configuration builds restore `coq_transl_opts.ml` after installation.
 Each build wipes its install prefix first, so `--prefix` is accepted only for a
 dedicated install directory: outside the checkout or under `eval/_installs`,
