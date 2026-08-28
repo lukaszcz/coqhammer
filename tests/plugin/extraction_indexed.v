@@ -27,6 +27,16 @@ Definition ibval n (b : ibounded n) : nat :=
   | IBounded _ k _ => k
   end.
 
+(* The body reads the solved index rather than the carrier.  Fording must tie
+   that index to the scrutinee's own index: left universally quantified it
+   would occur only on the right-hand side of the branch equation, and the
+   collapse of the constructor to its carrier would then equate every two
+   indices. *)
+Definition ibidx n (b : ibounded n) : nat :=
+  match b with
+  | IBounded n' _ _ => n'
+  end.
+
 (* A parameter-dependent indexed subset cannot be collapsed occurrence by
    occurrence while its declaration keeps constructor injectivity: equal
    carriers at different indices would make those indices equal. *)
@@ -97,6 +107,7 @@ Hammer_transl "tagged".
 Hammer_transl "untag".
 Hammer_transl "ibounded".
 Hammer_transl "ibval".
+Hammer_transl "ibidx".
 Hammer_transl "indexed_poly_subset".
 Hammer_transl "indexed_poly_value".
 Hammer_transl "okp".

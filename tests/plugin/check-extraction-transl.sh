@@ -405,22 +405,33 @@ require_text "vec inversion types its payload at the exact family parameter" "$v
 require_text "vec inversion types its tail at the exact parameter and constructor index" "$vec_line" "?[$vec_tail : \$Any]: (((& @ ((\$HasType @ $vec_tail) @ ((extraction_indexed.vec @ $vec_a) @ $vec_n)))"
 require_text_count_exact "vec inversion correlates its successor index and complete vcons payload" "$vec_line" "((& @ ($vec_index = (Corelib.Init.Datatypes.S @ $vec_n))) @ ($vec_value = ((((extraction_indexed.vcons @ $vec_a) @ $vec_n) @ $vec_payload) @ $vec_tail)))" 1
 
+# The constructor argument a result index fords is not quantified again: it is
+# the scrutinee's own index, so the branch equation binds it once.
 untag_line=$(get_unique_line "untag constructor equation" '$_def_extraction_indexed.untag$tg:')
-parse_binders "untag constructor equation" "$untag_line" universal 2 untag_binders
-untag_outer=${untag_binders[0]}
-untag_index=${untag_binders[1]}
-require_text_count_exact "untag correlates its constructor index with the result" "$untag_line" "((extraction_indexed.untag @ $untag_outer) @ (extraction_indexed.tg @ $untag_index)) = $untag_index)" 1
+parse_binders "untag constructor equation" "$untag_line" universal 1 untag_binders
+untag_index=${untag_binders[0]}
+require_text_count_exact "untag fords its constructor index to the occurrence index" "$untag_line" "((extraction_indexed.untag @ $untag_index) @ (extraction_indexed.tg @ $untag_index)) = $untag_index)" 1
 forbid_line "untag has no legacy index premise" '^\$_def_extraction_indexed\.untag[$]tg:.*=> @'
 
 ibval_line=$(get_unique_line "ibval constructor equation" '$_def_extraction_indexed.ibval$IBounded:')
-parse_binders "ibval constructor equation" "$ibval_line" universal 3 ibval_binders
+parse_binders "ibval constructor equation" "$ibval_line" universal 2 ibval_binders
 ibval_outer=${ibval_binders[0]}
-ibval_constructor_index=${ibval_binders[1]}
-ibval_carrier=${ibval_binders[2]}
-require_text "ibval retains its erased constructor index binder" "$ibval_line" "![$ibval_constructor_index : \$Any]"
+ibval_carrier=${ibval_binders[1]}
 require_text_count_exact "ibval correlates its carrier argument with the result" "$ibval_line" "((extraction_indexed.ibval @ $ibval_outer) @ $ibval_carrier) = $ibval_carrier)" 1
 forbid_line "ibval carrier equation is unconditional" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*=> @'
 forbid_line "ibval definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*extraction_indexed\.IBounded'
+
+# A body reading the solved index instead of the carrier must equate the result
+# with the scrutinee's index.  A fresh binder there would occur only on the
+# right-hand side, and the collapse of the constructor to its carrier would
+# then make any two indices equal.
+ibidx_line=$(get_unique_line "ibidx constructor equation" '$_def_extraction_indexed.ibidx$IBounded:')
+parse_binders "ibidx constructor equation" "$ibidx_line" universal 2 ibidx_binders
+ibidx_outer=${ibidx_binders[0]}
+ibidx_carrier=${ibidx_binders[1]}
+require_text_count_exact "ibidx fords its solved index to the scrutinee index" "$ibidx_line" "((extraction_indexed.ibidx @ $ibidx_outer) @ $ibidx_carrier) = $ibidx_outer)" 1
+forbid_line "ibidx carrier equation is unconditional" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*=> @'
+forbid_line "ibidx definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*extraction_indexed\.IBounded'
 
 ibval_typeof_line=$(get_unique_line "ibval typing axiom" '$_typeof_extraction_indexed.ibval:')
 parse_binders "ibval typing axiom" "$ibval_typeof_line" universal 2 ibval_typeof_binders
@@ -443,6 +454,12 @@ forbid_line "indexed subset inversion is skipped by default" '^\$_inversion_extr
 require_line "parameter-dependent indexed subset keeps constructor injectivity" '^\$_inj_extraction_indexed\.IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
 require_line "parameter-dependent indexed subset keeps inversion" '^\$_inversion_extraction_indexed\.indexed_poly_subset:'
 require_line "parameter-dependent indexed subset projector keeps its constructor" '^\$_def_extraction_indexed\.indexed_poly_value[$]IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
+indexed_poly_value_line=$(get_unique_line "parameter-dependent indexed subset projector" '$_def_extraction_indexed.indexed_poly_value$IndexedPolySubset:')
+parse_binders "parameter-dependent indexed subset projector" "$indexed_poly_value_line" universal 3 indexed_poly_value_binders
+indexed_poly_value_a=${indexed_poly_value_binders[0]}
+indexed_poly_value_n=${indexed_poly_value_binders[1]}
+indexed_poly_value_x=${indexed_poly_value_binders[2]}
+require_text_count_exact "parameter-dependent indexed subset projector fords its constructor index" "$indexed_poly_value_line" "(((extraction_indexed.indexed_poly_value @ $indexed_poly_value_a) @ $indexed_poly_value_n) @ (((extraction_indexed.IndexedPolySubset @ $indexed_poly_value_a) @ $indexed_poly_value_n) @ $indexed_poly_value_x)) = $indexed_poly_value_x)" 1
 
 fromok_line=$(get_unique_line "fromok definition" '$_def_extraction_indexed.fromok:')
 parse_binders "fromok definition" "$fromok_line" universal 2 fromok_binders

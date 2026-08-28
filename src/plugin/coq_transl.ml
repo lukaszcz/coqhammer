@@ -1298,9 +1298,13 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
     in
     (* The preparation every case branch shares, whichever equation shape the
        branch ends up in: the constructor telescope is refreshed away from the
-       enclosing context, the proof payloads of the branch body are erased and
-       the constructor pattern is built from the resulting spine. *)
-    let prepare_case_branch vars indname params params_num constrs branches cname =
+       enclosing context, the arguments the occurrence indices ford are
+       instantiated, the proof payloads of the branch body are erased and the
+       constructor pattern is built from the resulting spine.  [indices] and
+       [informative] are empty when the occurrence exposes no index telescope,
+       which simply fords nothing. *)
+    let prepare_case_branch vars indname params params_num constrs branches
+        indices informative cname =
       let (n, branch) = get_branch cname constrs branches in
       let (patterns, args0) =
         Coq_erasure.constructor_index_data params params_num cname
@@ -1313,9 +1317,50 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       else
         let args = refresh_case_args vars args0 in
         let patterns = refresh_case_terms args0 args patterns in
-        let body = simpl (mk_long_app branch (mk_vars args)) in
+        (* Fording solves a constructor argument whose result-index pattern is
+           that argument itself.  Such a branch is reachable only at the
+           scrutinee's own index, so the argument is instantiated with that
+           index instead of being quantified: a binder left universal while
+           occurring only on the right-hand side of the branch equation is
+           outright inconsistent once the constructor collapses to its
+           carrier. *)
+        let solved =
+          let rec hlp acc informative actuals patterns =
+            match informative, actuals, patterns with
+            | keep :: informative2, actual :: actuals2, Var name :: patterns2
+                 when keep && List.mem_assoc name args &&
+                        not (List.mem_assoc name acc) ->
+               hlp ((name, actual) :: acc) informative2 actuals2 patterns2
+            | _ :: informative2, _ :: actuals2, _ :: patterns2 ->
+               hlp acc informative2 actuals2 patterns2
+            | _ -> List.rev acc
+          in
+          hlp [] informative indices patterns
+        in
+        let subst_solved tm =
+          List.fold_left
+            (fun tm (name, value) ->
+               if var_occurs name tm then substvar name value tm else tm)
+            tm solved
+        in
+        let patterns = List.map subst_solved patterns in
+        let spine =
+          List.map
+            (fun (name, _) ->
+               match Hhlib.massoc name solved with
+               | Some value -> value
+               | None -> Var name)
+            args
+        in
+        let args =
+          List.fold_right
+            (fun (name, ty) acc ->
+               if List.mem_assoc name solved then acc else (name, subst_solved ty) :: acc)
+            args []
+        in
+        let body = simpl (mk_long_app branch spine) in
         let body = subst_proof_args (List.rev vars) args body in
-        (args, patterns, mk_long_app (Const(cname)) (params @ mk_vars args), body)
+        (args, patterns, mk_long_app (Const(cname)) (params @ spine), body)
     in
     (* Refinement occurrence collapse: matching a subset value exposes the
        erased carrier itself, and the remaining proof payload binders are erased.
@@ -1382,7 +1427,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         match actuals, patterns, informative with
         | actual :: actuals2, pattern :: patterns2, keep :: informative2 ->
            let acc =
-             if keep then
+             (* A forded position was already instantiated with the occurrence
+                index, so its equality is a tautology. *)
+             if keep && actual <> pattern then
                mk_eq actual pattern :: acc
              else
                acc
@@ -1492,8 +1539,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         loop ctx args
       in
       let one_branch cname =
+        let indices = match actual_indices with None -> [] | Some indices -> indices in
         let (args, patterns, pattern, body) =
-          prepare_case_branch vars indname params params_num constrs branches cname
+          prepare_case_branch vars indname params params_num constrs branches
+            indices informative cname
         in
         prop_to_formula (List.rev (vars @ args)) body >>= fun branch_formula ->
         prop_to_formula (List.rev (vars @ args)) (mk_eq (Var scrutinee) pattern)
@@ -1783,14 +1832,19 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             let formals =
                               case_index_formals indty params params_num
                             in
-                            Some (List.map nbe indices,
+                            Some (indices, List.map nbe indices,
                                   Coq_erasure.informative_index_mask
                                     (List.rev vars) formals)
+                     in
+                     let branch_indices =
+                       match pruning_data with
+                       | None -> ([], [])
+                       | Some (indices, _, informative) -> (indices, informative)
                      in
                      let branch_clashes patterns =
                        match pruning_data with
                        | None -> false
-                       | Some (indices, informative) ->
+                       | Some (_, indices, informative) ->
                           if List.length indices <> List.length patterns ||
                              List.length patterns <> List.length informative
                           then
@@ -1810,9 +1864,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      in
                      let vars_before, vars_after = split_scrutinee [] vars in
                      let prepare_branch cname =
+                       let (indices, informative) = branch_indices in
                        let (args, patterns, pattern, branch_body) =
                          prepare_case_branch vars indname params params_num constrs
-                           branches cname
+                           branches indices informative cname
                        in
                        let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
                        let lhs2 = substvar scrutinee pattern lhs

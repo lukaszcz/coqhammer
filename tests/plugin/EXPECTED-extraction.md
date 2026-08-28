@@ -139,10 +139,14 @@ structural assertions that hold with the current translator:
   axioms for `breflect`, `tagged`, `okp`, and `vec` are checked by parsing their
   fresh binders and correlating those exact identifiers across typing guards,
   constructor parameters and payloads, and residual index equations. `untag`
-  exposes the constructor's solved index without a premise; `ibval` erases the
+  fords the constructor's solved index to the occurrence index without a
+  premise, so its equation binds that index once; `ibval` erases the
   `IBounded` package to its carrier and expands the `k < n` payload in its type
-  axiom; `fromok`, `fromisT`, `fromtrue`, `cast`, and the JMeq match collapse to
-  unconditional equations. Their asserted typing/inversion axioms retain the
+  axiom, and `ibidx` -- whose body reads the solved index instead of the carrier
+  -- equates its result with the scrutinee's index rather than with a fresh
+  binder that would occur on the right-hand side alone; `indexed_poly_value`
+  likewise fords its constructor index; `fromok`, `fromisT`, `fromtrue`, `cast`,
+  and the JMeq match collapse to unconditional equations. Their asserted typing/inversion axioms retain the
   relevant Prop premises and index equalities. In particular, `cast`'s helper
   correlates its exact source/target binders through the equality premise and
   source-payload/target-result typing, and reuses its exact outer function binder
