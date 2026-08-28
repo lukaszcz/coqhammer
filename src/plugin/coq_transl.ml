@@ -853,22 +853,44 @@ let wf_mark = ref false
 let nbe tm = simpl (Coq_typing.reify (Coq_typing.eval tm))
 
 (* Constructor applications are rigid only at constructor heads.  Equal heads
-   may still clash in any corresponding argument, including parameters; a
-   variable or any other non-constructor head is deliberately never unified. *)
-let rec rigid_clash u t =
+   may still clash in any corresponding informative argument, including
+   parameters; a variable or any other non-constructor head is deliberately
+   never unified.  Proof arguments are exempt: distinct proofs of a proposition
+   are not discriminable in CIC, so a branch whose declared pattern differs
+   from the occurrence only inside a proof subterm is still reachable and must
+   not be pruned.  The constructor telescope decides which positions those are;
+   an unavailable one leaves every position informative, which is the status
+   quo. *)
+let rec rigid_clash ctx u t =
   match flatten_app u, flatten_app t with
   | (Const c1, args1), (Const c2, args2)
        when Coq_typing.is_constructor c1 && Coq_typing.is_constructor c2 ->
      if c1 <> c2 then
        true
      else
-       let rec some_pair_clashes xs ys =
+       let formals =
+         try
+           let (_, _, cargs) =
+             Coq_typing.destruct_type_app (coqdef_type (Defhash.find c1))
+           in
+           cargs
+         with _ -> []
+       in
+       let rec some_pair_clashes formals xs ys =
          match xs, ys with
-         | x :: xs, y :: ys ->
-            rigid_clash x y || some_pair_clashes xs ys
+         | x :: xs2, y :: ys2 ->
+            let (is_proof, formals2) =
+              match formals with
+              | (name, ty) :: formals2 ->
+                 ((try Coq_typing.check_prop ctx ty with _ -> false),
+                  List.map (fun (n, t) -> (n, simple_subst name x t)) formals2)
+              | [] -> (false, [])
+            in
+            (not is_proof && rigid_clash ctx x y) ||
+              some_pair_clashes formals2 xs2 ys2
          | _ -> false
        in
-       some_pair_clashes args1 args2
+       some_pair_clashes formals args1 args2
   | _ -> false
 
 (* True only for a proposition whose formula rendering is `p(t)' for a
@@ -1853,7 +1875,7 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                           else
                             List.exists2
                               (fun (actual, keep) pattern ->
-                                 keep && rigid_clash actual pattern)
+                                 keep && rigid_clash (List.rev vars) actual pattern)
                               (List.combine indices informative) patterns
                      in
                      let rec split_scrutinee acc = function
