@@ -165,8 +165,11 @@ structural assertions that hold with the current translator:
   `ReflectT` and `ReflectF` alternatives with the positive/negative proposition
   payload and `= true`/`= false` residual index equations. For `Nat.eqb_spec`,
   the exact generated proposition helpers are checked to define equality and
-  the exact shared boolean helper is checked against the full `Nat.eqb` O/S
-  truth table. Their old nominal `$HasType ... reflect` leaves are forbidden.
+  both residual equations are checked to name `Nat.eqb` itself. A guard leaf is
+  recognized under the same budgeted head normalization as a case scrutinee, so
+  the boolean index is not unfolded into a lifted fixpoint copy that no axiom
+  relates back to the constant the definition axiom uses; that lifted copy is
+  forbidden. Their old nominal `$HasType ... reflect` leaves are forbidden.
 - Stdlib regression constants: split-equation checks for `Nat.add`, `List.app`,
   and `Streams.hd`; structural checks for `List.Forall`, `eq_rect`, `eq_ind_r`,
   `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `Nat.eqb_spec`, `sumbool`,

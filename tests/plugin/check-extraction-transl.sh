@@ -83,40 +83,6 @@ assert_binary_prop_is_equality() {
   fi
 }
 
-assert_nat_eqb_truth_table() {
-  local symbol=$1
-  local line expected
-  local binders
-  local x y
-  local o='Corelib.Init.Datatypes.O'
-  local s='Corelib.Init.Datatypes.S'
-  local true='Corelib.Init.Datatypes.true'
-  local false='Corelib.Init.Datatypes.false'
-
-  line=$(get_unique_line "Nat.eqb O/O helper equation" "$symbol\$O\$O:")
-  expected="$symbol\$O\$O: ((($symbol @ $o) @ $o) = $true)"
-  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong O/O equation"
-
-  line=$(get_unique_line "Nat.eqb O/S helper equation" "$symbol\$O\$S:")
-  parse_binders "Nat.eqb O/S helper equation" "$line" universal 1 binders
-  x=${binders[0]}
-  expected="$symbol\$O\$S: ![$x : \$Any]: (((($symbol @ $o) @ ($s @ $x)) = $false))"
-  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong O/S equation"
-
-  line=$(get_unique_line "Nat.eqb S/O helper equation" "$symbol\$S\$O:")
-  parse_binders "Nat.eqb S/O helper equation" "$line" universal 1 binders
-  x=${binders[0]}
-  expected="$symbol\$S\$O: ![$x : \$Any]: (((($symbol @ ($s @ $x)) @ $o) = $false))"
-  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong S/O equation"
-
-  line=$(get_unique_line "Nat.eqb S/S helper equation" "$symbol\$S\$S:")
-  parse_binders "Nat.eqb S/S helper equation" "$line" universal 2 binders
-  x=${binders[0]}
-  y=${binders[1]}
-  expected="$symbol\$S\$S: ![$x : \$Any]: (![$y : \$Any]: (((($symbol @ ($s @ $x)) @ ($s @ $y)) = (($symbol @ $x) @ $y))))"
-  [ "$line" = "$expected" ] || fail "Nat.eqb helper has the wrong S/S recursion equation"
-}
-
 # -----------------------------------------------------------------------------
 # Global sanity checks enforced now.
 # -----------------------------------------------------------------------------
@@ -657,29 +623,32 @@ require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
 require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
 
-# Applied indexed reflect guards expand shallowly.  Generated proposition and
-# fixpoint IDs are deliberately parsed from the eqb_spec typing line: each tag
-# is tied to the definition of its exact proposition helper, and the exact
-# boolean helper in both residual equations is tied to Nat.eqb's truth table.
+# Applied indexed reflect guards expand shallowly.  Generated proposition IDs
+# are deliberately parsed from the eqb_spec typing line, so each tag is tied to
+# the definition of its exact proposition helper.  The residual index equations
+# name Nat.eqb itself: the guard recognizes the occurrence under the same
+# budgeted head normalization as the case path, so it does not unfold the
+# boolean test into a lifted fixpoint copy that nothing relates back to the
+# constant the rest of the problem speaks of.
 nat_eqb_spec_line=$(get_unique_line "Nat.eqb_spec typing axiom" '$_typeof_Stdlib.Arith.PeanoNat.Nat.eqb_spec:')
 parse_binders "Nat.eqb_spec typing axiom" "$nat_eqb_spec_line" universal 2 nat_eqb_spec_binders
 nat_eqb_x=${nat_eqb_spec_binders[0]}
 nat_eqb_y=${nat_eqb_spec_binders[1]}
 nat_eqb_true_prop=$(extract_unique_symbol "Nat.eqb_spec ReflectT proposition" "$nat_eqb_spec_line" 'ReflectT @ \(\(\$_prop_[0-9]+' '\$_prop_[0-9]+')
 nat_eqb_false_prop=$(extract_unique_symbol "Nat.eqb_spec ReflectF proposition" "$nat_eqb_spec_line" 'ReflectF @ \(\(\$_prop_[0-9]+' '\$_prop_[0-9]+')
-nat_eqb_bool=$(extract_unique_symbol "Nat.eqb_spec boolean helper" "$nat_eqb_spec_line" '\$_fix_[A-Za-z0-9_$.-]+' '\$_fix_[A-Za-z0-9_$.-]+')
+nat_eqb_bool='Corelib.Init.Nat.eqb'
 assert_binary_prop_is_equality "Nat.eqb_spec ReflectT proposition" "$nat_eqb_true_prop"
 assert_binary_prop_is_equality "Nat.eqb_spec ReflectF proposition" "$nat_eqb_false_prop"
 require_text "Nat.eqb_spec types its exact x binder" "$nat_eqb_spec_line" "((\$HasType @ $nat_eqb_x) @ Corelib.Init.Datatypes.nat)"
 require_text "Nat.eqb_spec types its exact y binder" "$nat_eqb_spec_line" "((\$HasType @ $nat_eqb_y) @ Corelib.Init.Datatypes.nat)"
-require_text_count_exact "Nat.eqb_spec uses one boolean helper in both residual equations" "$nat_eqb_spec_line" "$nat_eqb_bool" 2
+require_text_count_exact "Nat.eqb_spec names the boolean constant in both residual equations" "$nat_eqb_spec_line" "$nat_eqb_bool" 2
 
 nat_eqb_true_branch="((& @ (((Stdlib.Arith.PeanoNat.Nat.eqb_spec @ $nat_eqb_x) @ $nat_eqb_y) = (Corelib.Init.Datatypes.ReflectT @ (($nat_eqb_true_prop @ $nat_eqb_x) @ $nat_eqb_y)))) @ ((& @ ($nat_eqb_x = $nat_eqb_y)) @ ((($nat_eqb_bool @ $nat_eqb_x) @ $nat_eqb_y) = Corelib.Init.Datatypes.true)))"
 nat_eqb_false_branch="((& @ (((Stdlib.Arith.PeanoNat.Nat.eqb_spec @ $nat_eqb_x) @ $nat_eqb_y) = (Corelib.Init.Datatypes.ReflectF @ (($nat_eqb_false_prop @ $nat_eqb_x) @ $nat_eqb_y)))) @ ((& @ (~ @ ($nat_eqb_x = $nat_eqb_y))) @ ((($nat_eqb_bool @ $nat_eqb_x) @ $nat_eqb_y) = Corelib.Init.Datatypes.false)))"
 require_text_count_exact "Nat.eqb_spec true branch correlates its outer binders, tag proposition, payload, and boolean helper" "$nat_eqb_spec_line" "$nat_eqb_true_branch" 1
 require_text_count_exact "Nat.eqb_spec false branch correlates its outer binders, tag proposition, payload, and boolean helper" "$nat_eqb_spec_line" "$nat_eqb_false_branch" 1
 
-assert_nat_eqb_truth_table "$nat_eqb_bool"
+forbid_line "Nat.eqb_spec unfolds no boolean index into a lifted fixpoint" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$_fix_'
 forbid_line "Nat.eqb_spec has no nominal reflect guard" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
 
 require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'

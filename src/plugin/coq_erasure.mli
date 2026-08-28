@@ -126,10 +126,19 @@ val informative_index_mask : coqcontext -> index_formals -> bool list
     rigid-clash branch pruning all key off the same positions, so they must all
     read this one mask. *)
 
+val saturated_occurrence : coqterm -> (string * coqterm list * coqterm list) option
+(** [saturated_occurrence ty] head-normalizes [ty] and, when the result is an
+    exactly saturated application of an inductive, returns that inductive's
+    name, its parameters and its indices.  This is the one definition of an
+    exactly saturated occurrence: the guard path and the case path must
+    recognize the same occurrences, or a family would receive index equations
+    in its guards without the matching branch pruning.  The normalization is
+    the budgeted head reduction of [opt_whnf_budget], which exposes an
+    inductive head without risking the type-level unfolding blow-up. *)
+
 val occurrence_indices : string -> coqterm -> coqterm list option
-(** [occurrence_indices indname ty] weak-head-normalizes [ty], verifies that it
-    is an exactly saturated occurrence of [indname], and returns only its
-    indices.  An inductive declaring no index is exempt from that validation
+(** [occurrence_indices indname ty] recovers the indices of [ty] as a
+    [saturated_occurrence] of [indname].  An inductive declaring no index is exempt from that validation
     and always yields [Some []]: [Coq_convert] lowers the logical inductives to
     the FOL formers, so a scrutinee typed by one of them is no longer an
     application of the inductive in any syntactic sense, and it has no index to

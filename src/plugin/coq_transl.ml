@@ -2318,37 +2318,27 @@ and guard_leaf ctx ty x =
   (* Decide the shape of the guard before building any formula.  An inductive,
      constructor or telescope which is unavailable or malformed simply carries
      no refinement structure, and such a leaf legitimately degrades to plain
-     typing; the lookups below are therefore the only failures allowed to mean
-     "no refinement here".  Payload translation is kept outside, so a bug in it
-     surfaces instead of quietly weakening the guard.  Exact saturation is
-     checked before exposing the class: a partial family application is a type
-     former and must retain its complete ordinary typing atom. *)
-  let classify_leaf ty_nf =
-    match flatten_app ty_nf with
-    | Const indname, args ->
-       begin match Defhash.find indname with
-       | (_, IndType(_, _, params_num), ind_ty, _) ->
-          let arity = Coq_erasure.telescope_length ind_ty in
-          if List.length args <> arity then
-            None
-          else
-            let params = Hhlib.take params_num args in
-            let indices = Hhlib.drop params_num args in
-            begin match Coq_erasure.classify ctx indname params with
-            | (Coq_erasure.CSubset _ | Coq_erasure.CEnum _ |
-               Coq_erasure.CEmpty) as cls ->
-               Some (params, indices, cls)
-            | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
-            end
-       | _ -> None
+     typing; the declaration lookups of [saturated_occurrence] are therefore
+     the only failures allowed to mean "no refinement here".  Payload
+     translation is kept outside, so a bug in it surfaces instead of quietly
+     weakening the guard.  That same helper decides exact saturation, which the
+     case path reads too: a partial family application is a type former and
+     must retain its complete ordinary typing atom. *)
+  let classify_leaf ty =
+    match Coq_erasure.saturated_occurrence ty with
+    | Some (indname, params, indices) ->
+       begin match Coq_erasure.classify ctx indname params with
+       | (Coq_erasure.CSubset _ | Coq_erasure.CEnum _ |
+          Coq_erasure.CEmpty) as cls ->
+          Some (params, indices, cls)
+       | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
        end
-    | _ -> None
+    | None -> None
   in
   if not opt_dependent_types then
     fallback ()
   else
-    let ty_nf = nbe ty in
-    match (try classify_leaf ty_nf with _ -> None) with
+    match (try classify_leaf ty with _ -> None) with
     | None ->
        fallback ()
     | Some (_, indices, Coq_erasure.CSubset {

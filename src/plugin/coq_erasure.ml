@@ -142,6 +142,26 @@ let informative_index_mask ctx index_formals =
   in
   hlp ctx [] index_formals
 
+(* The single notion of "exactly saturated occurrence" shared by the guard and
+   the case paths.  Both must agree: a family recognized on one side of the
+   sequent but not on the other would receive index equations in its guards
+   without the matching branch pruning.  The normalizer is the budgeted head
+   reduction of [opt_whnf_budget], which is built for exposing an inductive
+   head and bounded against the type-level unfolding blow-up. *)
+let saturated_occurrence ty =
+  let unfold name =
+    try Some (coqdef_value (Defhash.find name)) with Failure _ -> None
+  in
+  match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
+  | Const indname, args ->
+      begin match get_inductive indname with
+      | Some (_, params_num, ind_ty, _)
+           when List.length args = telescope_length ind_ty ->
+          Some (indname, Hhlib.take params_num args, Hhlib.drop params_num args)
+      | _ -> None
+      end
+  | _ -> None
+
 let occurrence_indices indname ty =
   match indname = Hhutils.lib_ref_name "core.eq.type", ty with
   | true, Equal (_, rhs) -> Some [rhs]
@@ -155,14 +175,9 @@ let occurrence_indices indname ty =
            application of the inductive in any syntactic sense.  It has no
            index either way, so the empty index list is the whole answer. *)
         Some []
-    | Some (_, params_num, ind_ty, _) ->
-        let expected = telescope_length ind_ty in
-        let unfold name =
-          try Some (coqdef_value (Defhash.find name)) with Failure _ -> None
-        in
-        begin match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
-        | Const name, args when name = indname && List.length args = expected ->
-            Some (Hhlib.drop params_num args)
+    | Some _ ->
+        begin match saturated_occurrence ty with
+        | Some (name, _, indices) when name = indname -> Some indices
         | _ -> None
         end
     | None -> None
