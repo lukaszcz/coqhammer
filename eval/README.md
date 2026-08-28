@@ -124,11 +124,8 @@ repeated. The lower-level commands used by `evaluate.sh library` are
 variants used to understand the current translator:
 
 - `all-off` and `all-on`;
-- `loo-prop-case-erasure`;
 - `loo-erasure-guards`;
-- `loo-refinement-types`;
-- `loo-indexed-families`;
-- `loo-rigid-clash-pruning`.
+- `loo-indexed-families`.
 
 Configuration builds restore `coq_transl_opts.ml` after installation.
 Each build wipes its install prefix first, so `--prefix` is accepted only for a

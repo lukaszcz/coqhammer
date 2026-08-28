@@ -20,11 +20,8 @@ cp "$eval_dir/rebuild-config.sh" "$eval_dir/cli-lib.sh" \
   "$eval_dir/install-prefix-lib.sh" "$repo/eval/"
 
 cat > "$repo/src/plugin/coq_transl_opts.ml" <<'EOF'
-let opt_prop_case_erasure = true
 let opt_erasure_guards = false
-let opt_refinement_types = true
 let opt_indexed_families = true
-let opt_rigid_clash_pruning = true
 EOF
 printf 'semantic fixture\n' > "$repo/tests/plugin/singleton_premises.v"
 printf '# assertion library fixture\n' > "$repo/tests/plugin/transl-assert-lib.sh"
@@ -94,6 +91,8 @@ run_config() {
 
 run_config current guards-off
 run_config all-on guards-indexed
+run_config all-off guards-off
+run_config loo-erasure-guards guards-off
 run_config loo-indexed-families guards-legacy
 sed -i \
   -e 's/^let opt_erasure_guards = false$/let opt_erasure_guards = true/' \
@@ -102,23 +101,7 @@ sed -i \
 (cd "$repo" && git add src/plugin/coq_transl_opts.ml && git commit -qm guarded-legacy-current)
 run_config current guards-legacy
 
-validation_count=$(wc -l < "$validation_log")
-(cd "$repo" && ./eval/rebuild-config.sh all-off >/dev/null)
-[ "$(wc -l < "$validation_log")" -eq "$validation_count" ] ||
-  fail "prop-case-off configuration ran an inapplicable singleton validation"
-(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
-  fail "all-off did not restore coq_transl_opts.ml"
-
-sed -i 's/^let opt_prop_case_erasure = true$/let opt_prop_case_erasure = false/' \
-  "$repo/src/plugin/coq_transl_opts.ml"
-(cd "$repo" && git add src/plugin/coq_transl_opts.ml && git commit -qm prop-off-current)
-(cd "$repo" && ./eval/rebuild-config.sh current >/dev/null)
-[ "$(wc -l < "$validation_log")" -eq "$validation_count" ] ||
-  fail "current prop-case-off configuration ran singleton validation"
-(cd "$repo" && git diff --quiet -- src/plugin/coq_transl_opts.ml) ||
-  fail "current prop-case-off did not restore coq_transl_opts.ml"
-
-[ "$validation_count" -eq 4 ] ||
-  fail "semantic validation did not run exactly once per applicable rebuild"
+[ "$(wc -l < "$validation_log")" -eq 6 ] ||
+  fail "semantic validation did not run exactly once per rebuild"
 
 echo "test_rebuild_config: ok"

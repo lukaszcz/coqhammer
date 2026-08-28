@@ -76,14 +76,11 @@ kind=configuration
 config=all-on
 commit=$repo_commit
 prefix=$prefix
-opt_prop_case_erasure=true
 opt_erasure_guards=true
-opt_refinement_types=true
 opt_indexed_families=true
-opt_rigid_clash_pruning=true
 EOF
 
-for config in loo-indexed-families loo-rigid-clash-pruning; do
+for config in loo-erasure-guards loo-indexed-families; do
   _grid_install_is_supported "$config" ||
     fail "grid rejected supported configuration $config"
   grep -qx "$config" < <("$eval_dir/rebuild-config.sh" --list) ||
@@ -95,15 +92,12 @@ sed -i 's/^opt_indexed_families=.*/opt_indexed_families=false/' "$config_manifes
 _grid_validate_config_options "$config_manifest" loo-indexed-families ||
   fail "grid rejected loo-indexed-families manifest values"
 cp "$prefix/manifest.env" "$config_manifest"
-sed -i 's/^opt_rigid_clash_pruning=.*/opt_rigid_clash_pruning=false/' "$config_manifest"
-_grid_validate_config_options "$config_manifest" loo-rigid-clash-pruning ||
-  fail "grid rejected loo-rigid-clash-pruning manifest values"
+sed -i 's/^opt_erasure_guards=.*/opt_erasure_guards=false/' "$config_manifest"
+_grid_validate_config_options "$config_manifest" loo-erasure-guards ||
+  fail "grid rejected loo-erasure-guards manifest values"
 cp "$prefix/manifest.env" "$config_manifest"
-sed -i -e 's/^opt_prop_case_erasure=.*/opt_prop_case_erasure=false/' \
-  -e 's/^opt_erasure_guards=.*/opt_erasure_guards=false/' \
-  -e 's/^opt_refinement_types=.*/opt_refinement_types=false/' \
+sed -i -e 's/^opt_erasure_guards=.*/opt_erasure_guards=false/' \
   -e 's/^opt_indexed_families=.*/opt_indexed_families=false/' \
-  -e 's/^opt_rigid_clash_pruning=.*/opt_rigid_clash_pruning=false/' \
   "$config_manifest"
 _grid_validate_config_options "$config_manifest" all-off ||
   fail "grid rejected all-off manifest values"

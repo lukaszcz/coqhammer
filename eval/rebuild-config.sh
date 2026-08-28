@@ -22,11 +22,8 @@ Core configs:
   current                  the current CoqHammer configuration
   all-off                  all extraction constants off
   all-on                   all extraction constants on
-  loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
   loo-erasure-guards       all-on except opt_erasure_guards=false
-  loo-refinement-types     all-on except opt_refinement_types=false
   loo-indexed-families     all-on except opt_indexed_families=false
-  loo-rigid-clash-pruning  all-on except opt_rigid_clash_pruning=false
 USAGE
 }
 
@@ -43,7 +40,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
       echo current
-      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types loo-indexed-families loo-rigid-clash-pruning; do
+      for base in all-off all-on loo-erasure-guards loo-indexed-families; do
         echo "$base"
       done
       exit 0
@@ -94,20 +91,14 @@ if [ "$core" = current ]; then
   patch_needed=false
 fi
 
-prop=true
 erasure=true
-refinement=true
 indexed=true
-pruning=true
 case "$core" in
   current) ;;
-  all-off) prop=false; erasure=false; refinement=false; indexed=false; pruning=false ;;
+  all-off) erasure=false; indexed=false ;;
   all-on) ;;
-  loo-prop-case-erasure) prop=false ;;
   loo-erasure-guards) erasure=false ;;
-  loo-refinement-types) refinement=false ;;
   loo-indexed-families) indexed=false ;;
-  loo-rigid-clash-pruning) pruning=false ;;
   *) echo "Unknown configuration: $config" >&2; usage >&2; exit 2 ;;
 esac
 
@@ -124,7 +115,6 @@ current_option_bool() {
 # Core configuration booleans are explicit above.  For `current`, retain the
 # tree's values while still selecting the matching post-install semantic check.
 if [ "$core" = current ]; then
-  prop=$(current_option_bool opt_prop_case_erasure)
   erasure=$(current_option_bool opt_erasure_guards)
   indexed=$(current_option_bool opt_indexed_families)
 fi
@@ -180,7 +170,7 @@ validate_prefix() {
 # refusing the unusable path the caller asked for.
 require_markable_prefix "$prefix"
 # Resolve next: the prefix is later used from other working directories
-# (-coqlib in validate_prop_case_ablation), so it has to be absolute.
+# (-coqlib in validate_singleton_premises), so it has to be absolute.
 # Resolution can reintroduce the very newline the check above ruled out -- a
 # markable prefix may be a symlink to a target whose name ends in one -- so
 # capture the output behind a sentinel and drop only the newline realpath
@@ -198,18 +188,15 @@ restore_opts() {
 trap restore_opts EXIT INT TERM
 
 if [ "$patch_needed" = true ]; then
-python3 - "$opts" "$prop" "$erasure" "$refinement" "$indexed" "$pruning" <<'PY'
+python3 - "$opts" "$erasure" "$indexed" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
 values = {
-    "opt_prop_case_erasure": sys.argv[2],
-    "opt_erasure_guards": sys.argv[3],
-    "opt_refinement_types": sys.argv[4],
-    "opt_indexed_families": sys.argv[5],
-    "opt_rigid_clash_pruning": sys.argv[6],
+    "opt_erasure_guards": sys.argv[2],
+    "opt_indexed_families": sys.argv[3],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -254,36 +241,6 @@ make install \
   BINDIR="$prefix/bin/" \
   COQFLAGS="-coqlib $prefix/coq"
 
-validate_prop_case_ablation() {
-  local tmp out
-  tmp=$(mktemp -d)
-  out="$tmp/prop-case-ablation.out"
-  cat > "$tmp/prop_case_ablation.v" <<'EOF'
-From Hammer Require Import Hammer.
-Definition prop_case_ablation (n : nat) : Prop :=
-  match n with O => True | S _ => False end.
-Hammer_transl "prop_case_ablation".
-EOF
-  if ! (cd "$tmp" && rocq c -coqlib "$prefix/coq" prop_case_ablation.v) >"$out" 2>&1; then
-    cat "$out" >&2
-    rm -rf "$tmp"
-    return 1
-  fi
-  # The dollar signs are literal parts of Hammer's generated identifiers.
-  # shellcheck disable=SC2016
-  if grep -Eq '^\$_def_.*prop_case_ablation\$(lower|upper):' "$out"; then
-    echo "opt_prop_case_erasure=false still emitted proposition-case bounds" >&2
-    cat "$out" >&2
-    rm -rf "$tmp"
-    return 1
-  fi
-  rm -rf "$tmp"
-}
-
-if [ "$prop" = false ]; then
-  validate_prop_case_ablation
-fi
-
 validate_singleton_premises() (
   local tmp out mode
   tmp=$(mktemp -d)
@@ -310,9 +267,7 @@ validate_singleton_premises() (
   fi
 )
 
-if [ "$prop" = true ]; then
-  validate_singleton_premises
-fi
+validate_singleton_premises
 
 kind=configuration
 if [ "$config" = current ]; then
@@ -327,11 +282,8 @@ prefix=$prefix
 MANIFEST
 if [ "$patch_needed" = true ]; then
   cat >> "$prefix/manifest.env" <<MANIFEST
-opt_prop_case_erasure=$prop
 opt_erasure_guards=$erasure
-opt_refinement_types=$refinement
 opt_indexed_families=$indexed
-opt_rigid_clash_pruning=$pruning
 MANIFEST
 fi
 printf 'built_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$prefix/manifest.env"

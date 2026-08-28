@@ -47,21 +47,12 @@ let opt_precise_inversion = true
 let opt_type_lifting = true
 (* should translate Set to Type? *)
 let opt_set_to_type = true
-(* Erase propositional case analyses. *)
-let opt_prop_case_erasure = true
 (* Guard erased transports. *)
 let opt_erasure_guards = false
 (* Classify the forded form of indexed families; expand index equations per
    occurrence; ford the premise of singleton collapses under
    opt_erasure_guards. *)
 let opt_indexed_families = true
-(* Skip split equations of branches whose constructor result indices rigidly
-   clash with the scrutinee's indices.  Such a branch is unreachable, so
-   dropping it is sound; it only changes which equations are emitted, never
-   what they mean. *)
-let opt_rigid_clash_pruning = true
-(* Expand refinement types shallowly. *)
-let opt_refinement_types = true
 (* Alongside the propositional equivalence for a transparent Prop-valued
    definition with an atomic body, also emit the term-level definitional
    equation.  The two sides are one object by delta-conversion, but the

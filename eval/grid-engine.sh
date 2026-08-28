@@ -364,7 +364,7 @@ _grid_install_is_supported() {
   local install="$1" core="$1"
   [ "$install" = current ] && return 0
   case "$core" in
-    all-off|all-on|loo-prop-case-erasure|loo-erasure-guards|loo-refinement-types|loo-indexed-families|loo-rigid-clash-pruning) ;;
+    all-off|all-on|loo-erasure-guards|loo-indexed-families) ;;
     *) return 1 ;;
   esac
 }
@@ -397,28 +397,19 @@ _grid_resolve_install_prefixes() {
 }
 
 _grid_validate_config_options() {
-  local manifest="$1" config="$2" core prop erasure refinement indexed pruning
+  local manifest="$1" config="$2" core erasure indexed
   core="$config"
-  prop=true
   erasure=true
-  refinement=true
   indexed=true
-  pruning=true
   case "$core" in
-    all-off) prop=false; erasure=false; refinement=false; indexed=false; pruning=false ;;
+    all-off) erasure=false; indexed=false ;;
     all-on) ;;
-    loo-prop-case-erasure) prop=false ;;
     loo-erasure-guards) erasure=false ;;
-    loo-refinement-types) refinement=false ;;
     loo-indexed-families) indexed=false ;;
-    loo-rigid-clash-pruning) pruning=false ;;
     *) return 1 ;;
   esac
-  expect_manifest_value "$manifest" opt_prop_case_erasure "$prop" &&
-    expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
-    expect_manifest_value "$manifest" opt_refinement_types "$refinement" &&
-    expect_manifest_value "$manifest" opt_indexed_families "$indexed" &&
-    expect_manifest_value "$manifest" opt_rigid_clash_pruning "$pruning"
+  expect_manifest_value "$manifest" opt_erasure_guards "$erasure" &&
+    expect_manifest_value "$manifest" opt_indexed_families "$indexed"
 }
 
 _grid_manifest_matches_install() {
