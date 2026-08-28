@@ -67,7 +67,12 @@ type memo_class =
   | MEnum of (string * int list) list
   | MRegular
 
-let memo : ((string * bool list * bool * bool list list), memo_class) Hashtbl.t = Hashtbl.create 257
+(* Keyed on the occurrence itself -- the inductive, its actual parameters and
+   their propositional verdicts -- so that the shape can be looked up before
+   any constructor telescope is destructed.  The classification of an
+   occurrence is a function of exactly those inputs, and the shapes that carry
+   no occurrence-specific data are answered from the key alone. *)
+let memo : ((string * coqterm list * bool list), memo_class) Hashtbl.t = Hashtbl.create 257
 
 let clear () = Hashtbl.clear memo
 
@@ -575,43 +580,53 @@ let classify ctx indname params =
            missing-declaration error the case path reports. *)
         CRegular
     | Some (constrs, params_num, ind_ty, ind_sort) ->
-        let all_formals = Coq_typing.get_type_args ind_ty in
-        let has_indices = List.length all_formals > params_num in
         let params = Hhlib.take params_num params in
-        let index_formals = index_formals_of all_formals params params_num in
         let mask = List.map (check_prop ctx) params in
-        let ctor_infos =
-          List.map (constructor_info ctx params params_num index_formals) constrs
+        (* Destructing the constructor telescopes is by far the expensive part
+           of the classification, and [classify] runs at every occurrence of
+           every premise type.  It is therefore reached only when the memo
+           misses or when the recognized shape genuinely carries occurrence
+           terms; the remaining shapes are decided from the declaration. *)
+        let constructor_infos () =
+          let all_formals = Coq_typing.get_type_args ind_ty in
+          let index_formals = index_formals_of all_formals params params_num in
+          (List.length all_formals > params_num,
+           List.map (constructor_info ctx params params_num index_formals) constrs)
         in
-        let is_prop_ind =
-          ind_sort = SortProp || Coq_typing.check_type_target_is_prop ind_ty
+        let expand has_indices ctor_infos shape =
+          let cls = instantiate_class indname ctor_infos shape in
+          (* Occurrence-level subset collapse must agree with the declaration
+             axioms.  Parameter-dependent declarations cannot be classified
+             uniformly (a parameter may later be instantiated by [Prop]), so
+             [classify_decl] retains constructor injectivity.  For an indexed
+             subset that axiom also recovers solved indices from constructor
+             equality; collapsing two constructor occurrences to the same
+             carrier would therefore make distinct indices equal.  Keep these
+             families regular at every occurrence. *)
+          match cls with
+          | CSubset _ when has_indices &&
+                           List.exists
+                             (constructor_fields_depend_on_params params_num)
+                             constrs ->
+              CRegular
+          | _ -> cls
         in
-        let ctor_prop_mask =
-          List.map (fun ctor -> List.map (fun info -> info.arg_is_prop) ctor.ctor_args) ctor_infos
-        in
-        let key = (indname, mask, is_prop_ind, ctor_prop_mask) in
-        let shape =
-          try Hashtbl.find memo key with Not_found ->
+        begin match Hashtbl.find_opt memo (indname, params, mask) with
+        | Some MRegular -> CRegular
+        | Some MEmpty -> CEmpty
+        | Some MPropSingleton ->
+            begin match constrs with [_] -> CPropSingleton | _ -> CRegular end
+        | Some ((MSubset _ | MEnum _) as shape) ->
+            let (has_indices, ctor_infos) = constructor_infos () in
+            expand has_indices ctor_infos shape
+        | None ->
+            let (has_indices, ctor_infos) = constructor_infos () in
+            let is_prop_ind =
+              ind_sort = SortProp || Coq_typing.check_type_target_is_prop ind_ty
+            in
             let shape = classify_shape is_prop_ind has_indices ctor_infos in
-            Hashtbl.add memo key shape;
-            shape
-        in
-        let cls = instantiate_class indname ctor_infos shape in
-        (* Occurrence-level subset collapse must agree with the declaration
-           axioms.  Parameter-dependent declarations cannot be classified
-           uniformly (a parameter may later be instantiated by [Prop]), so
-           [classify_decl] retains constructor injectivity.  For an indexed
-           subset that axiom also recovers solved indices from constructor
-           equality; collapsing two constructor occurrences to the same
-           carrier would therefore make distinct indices equal.  Keep these
-           families regular at every occurrence. *)
-        begin match cls with
-        | CSubset _ when has_indices &&
-                         List.exists
-                           (constructor_fields_depend_on_params params_num)
-                           constrs ->
-            CRegular
-        | _ -> cls
+            Hashtbl.add memo (indname, params, mask) shape;
+            expand has_indices ctor_infos shape
         end
   with Not_classifiable | Failure _ -> CRegular
 
