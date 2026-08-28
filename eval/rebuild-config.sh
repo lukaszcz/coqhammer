@@ -136,6 +136,24 @@ case "$core" in
   *) echo "Unknown configuration: $config" >&2; usage >&2; exit 2 ;;
 esac
 
+current_option_bool() {
+  local name=$1
+  local value
+  value=$(sed -n "s/^let $name = \(true\|false\)$/\\1/p" "$opts")
+  case "$value" in
+    true|false) printf '%s\n' "$value" ;;
+    *) echo "Could not read the current $name binding from $opts" >&2; exit 1 ;;
+  esac
+}
+
+# Core configuration booleans are explicit above.  For `current`, retain the
+# tree's values while still selecting the matching post-install semantic check.
+if [ "$core" = current ]; then
+  prop=$(current_option_bool opt_prop_case_erasure)
+  erasure=$(current_option_bool opt_erasure_guards)
+  indexed=$(current_option_bool opt_indexed_families)
+fi
+
 if [ -z "$prefix" ]; then
   prefix="$repo/eval/_installs/$label"
 fi
@@ -290,6 +308,35 @@ EOF
 
 if [ "$prop" = false ]; then
   validate_prop_case_ablation
+fi
+
+validate_singleton_premises() (
+  local tmp out mode
+  tmp=$(mktemp -d)
+  trap 'rm -rf "$tmp"' EXIT
+  out="$tmp/singleton_premises.out"
+  cp "$repo/tests/plugin/singleton_premises.v" \
+    "$repo/tests/plugin/check-singleton-premises.sh" "$tmp/"
+  if ! (cd "$tmp" && rocq c -coqlib "$prefix/coq" singleton_premises.v) \
+      >"$out" 2>&1; then
+    cat "$out" >&2
+    return 1
+  fi
+  if [ "$erasure" = false ]; then
+    mode=guards-off
+  elif [ "$indexed" = false ]; then
+    mode=guards-legacy
+  else
+    mode=guards-indexed
+  fi
+  if ! bash "$tmp/check-singleton-premises.sh" "$mode" "$out"; then
+    cat "$out" >&2
+    return 1
+  fi
+)
+
+if [ "$prop" = true ]; then
+  validate_singleton_premises
 fi
 
 kind=configuration

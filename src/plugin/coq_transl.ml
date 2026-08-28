@@ -1724,14 +1724,16 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                          | Some body2 ->
                             record_case_dependency ();
                             (* With guards disabled, singleton elimination uses
-                               the unconditional proof-irrelevant equation.  With
-                               guards enabled, ford the premise to the residual
-                               constructor index equations; if the occurrence
-                               cannot be exposed, retain the source proposition
-                               as the conservative fallback.  Index-free
-                               singletons such as [Acc] need no extra premise. *)
+                               the unconditional proof-irrelevant equation.
+                               Guarded indexed-family translation fords the
+                               premise to residual constructor index equations,
+                               falling back to the source proposition when the
+                               occurrence cannot be exposed.  With indexed-family
+                               translation disabled, retain that proposition as
+                               the legacy premise.  Index-free singletons such as
+                               [Acc] need no extra premise in either guarded mode. *)
                             let singleton_premise =
-                              if not opt_erasure_guards || index_eqs = [] then
+                              if not opt_erasure_guards || index_formals = [] then
                                 None
                               else
                                 let scrutinee_ty =
@@ -1739,26 +1741,29 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                                     internal_error
                                       "singleton proof scrutinee is absent from the normalized context"
                                 in
-                                match Coq_erasure.occurrence_indices indname scrutinee_ty with
-                                | None -> Some scrutinee_ty
-                                | Some indices ->
-                                   let equations =
-                                     List.map
-                                       (fun (pos, pattern) ->
-                                          let actual =
-                                            try List.nth indices pos with _ ->
-                                              internal_error
-                                                "singleton index equation is outside the occurrence telescope"
-                                          in
-                                          mk_eq actual
-                                            (Coq_erasure.instantiate
-                                               index_formals indices pattern))
-                                       index_eqs
-                                   in
-                                   begin match equations with
-                                   | [] -> None
-                                   | _ -> Some (join_right mk_and equations)
-                                   end
+                                if not opt_indexed_families then
+                                  Some scrutinee_ty
+                                else
+                                  match Coq_erasure.occurrence_indices indname scrutinee_ty with
+                                  | None -> Some scrutinee_ty
+                                  | Some indices ->
+                                     let equations =
+                                       List.map
+                                         (fun (pos, pattern) ->
+                                            let actual =
+                                              try List.nth indices pos with _ ->
+                                                internal_error
+                                                  "singleton index equation is outside the occurrence telescope"
+                                            in
+                                            mk_eq actual
+                                              (Coq_erasure.instantiate
+                                                 index_formals indices pattern))
+                                         index_eqs
+                                     in
+                                     begin match equations with
+                                     | [] -> None
+                                     | _ -> Some (join_right mk_and equations)
+                                     end
                             in
                             let premise = combine_premises premise singleton_premise in
                             compile_case ?premise lhs vars axname body2
