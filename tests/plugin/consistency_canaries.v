@@ -90,6 +90,27 @@ Goal
   hammer_dump "consistency-h.p".
 Abort.
 
+(* If these constructor occurrences were both collapsed to [x] while
+   constructor injectivity remained enabled, injectivity would imply [0 = 1]
+   and make the dumped theory inconsistent. *)
+Inductive canary_indexed_poly_subset (A : Type) : nat -> Type :=
+| CanaryIndexedPolySubset :
+    forall n (x : A), True -> canary_indexed_poly_subset A n.
+
+Definition canary_indexed_poly_value
+    A n (v : canary_indexed_poly_subset A n) : A :=
+  match v with
+  | CanaryIndexedPolySubset _ _ x _ => x
+  end.
+
+Goal forall (A : Type) (x : A) (pf : True),
+    canary_indexed_poly_value A 0
+      (CanaryIndexedPolySubset A 0 x pf) = x /\
+    canary_indexed_poly_value A 1
+      (CanaryIndexedPolySubset A 1 x pf) = x.
+  hammer_dump "consistency-indexed-poly-subset.p".
+Abort.
+
 (* Case index guards read off a type-level function's own arguments relate
    unrelated symbols, so the guarded branch equations they protect are asserted
    at the wrong indices.  Both scrutinee shapes are dumped: dsize's declared

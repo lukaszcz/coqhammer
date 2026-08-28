@@ -490,6 +490,14 @@ ibounded_typeof_line=$(get_unique_line "indexed subset typing axiom" '$_typeof_e
 forbid_line "indexed subset constructor injectivity is skipped by default" '^\$_inj_extraction_indexed\.IBounded:'
 forbid_line "indexed subset inversion is skipped by default" '^\$_inversion_extraction_indexed\.ibounded:'
 
+# An indexed subset whose fields depend on a parameter is not a uniform
+# declaration-level subset.  It must stay nominal at occurrences while its
+# structural axioms remain enabled, or injectivity would recover distinct
+# indices from equality of the collapsed carriers.
+require_line "parameter-dependent indexed subset keeps constructor injectivity" '^\$_inj_extraction_indexed\.IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
+require_line "parameter-dependent indexed subset keeps inversion" '^\$_inversion_extraction_indexed\.indexed_poly_subset:'
+require_line "parameter-dependent indexed subset projector keeps its constructor" '^\$_def_extraction_indexed\.indexed_poly_value[$]IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
+
 fromok_line=$(get_unique_line "fromok definition" '$_def_extraction_indexed.fromok:')
 parse_binders "fromok definition" "$fromok_line" universal 2 fromok_binders
 fromok_n=${fromok_binders[0]}

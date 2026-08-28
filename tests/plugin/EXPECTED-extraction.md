@@ -81,7 +81,7 @@ fixtures are additionally dumped as `consistency-dsize.p` and
 `consistency-dheight.p` and ATP-checked by `check-consistency.sh`, since a
 misread index guard is soundness-relevant rather than merely lossy.
 
-The consistency suite also retains four indexed-family canary groups in the
+The consistency suite also retains five indexed-family canary groups in the
 existing dump names enumerated by `check-consistency.sh`:
 
 - `consistency-prop-or-match.p` / `consistency-false-case-prop.p`: negative and
@@ -92,7 +92,9 @@ existing dump names enumerated by `check-consistency.sh`:
   `true = false`, together with guards-off transports across `nat`, `bool`, and
   `string` in one problem;
 - `consistency-h.p`: an indexed subset at zero whose expanded carrier payload
-  is the refutable proposition `k < 0`.
+  is the refutable proposition `k < 0`;
+- `consistency-indexed-poly-subset.p`: a parameter-dependent indexed subset
+  whose equal carrier payload is constructed at two distinct indices.
 
 Each group keeps its relevant definition/typing formulas as axioms, so replacing
 the conjecture by `$false` checks the emitted theory rather than merely deleting

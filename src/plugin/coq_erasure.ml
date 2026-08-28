@@ -368,6 +368,18 @@ let instantiate_class indname ctor_infos = function
   | MEnum ctor_prop_indices -> validate_enum ctor_infos ctor_prop_indices
   | MRegular -> CRegular
 
+let constructor_fields_depend_on_params params_num cname =
+  try
+    let (_, _, cargs) =
+      Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+    in
+    let param_names = List.map fst (Hhlib.take params_num cargs) in
+    List.exists
+      (fun (_, ty) -> List.exists (fun name -> var_occurs name ty) param_names)
+      (Hhlib.drop params_num cargs)
+  with _ ->
+    true
+
 let classify_shape _indname is_prop_ind has_indices ctor_infos =
   (* Singleton proof matches can be erased, and refinement/enum occurrences
      can be expanded from their residual informative arguments.  Solved
@@ -535,22 +547,26 @@ let classify ctx indname params =
             Hashtbl.add memo key shape;
             shape
         in
-        instantiate_class indname ctor_infos shape
+        let cls = instantiate_class indname ctor_infos shape in
+        (* Occurrence-level subset collapse must agree with the declaration
+           axioms.  Parameter-dependent declarations cannot be classified
+           uniformly (a parameter may later be instantiated by [Prop]), so
+           [classify_decl] retains constructor injectivity.  For an indexed
+           subset that axiom also recovers solved indices from constructor
+           equality; collapsing two constructor occurrences to the same
+           carrier would therefore make distinct indices equal.  Keep these
+           families regular at every occurrence. *)
+        begin match cls with
+        | CSubset _ when has_indices &&
+                         List.exists
+                           (constructor_fields_depend_on_params params_num)
+                           constrs ->
+            CRegular
+        | _ -> cls
+        end
   with Not_classifiable | Failure _ -> CRegular
 
 let classify_decl indname =
-  let constructor_fields_depend_on_params params_num cname =
-    try
-      let (_, _, cargs) =
-        Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
-      in
-      let param_names = List.map fst (Hhlib.take params_num cargs) in
-      List.exists
-        (fun (_, ty) -> List.exists (fun name -> var_occurs name ty) param_names)
-        (Hhlib.drop params_num cargs)
-    with _ ->
-      true
-  in
   match get_inductive indname with
   | None -> None
   | Some (constrs, params_num, ind_ty, _) ->

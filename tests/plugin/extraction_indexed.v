@@ -27,6 +27,17 @@ Definition ibval n (b : ibounded n) : nat :=
   | IBounded _ k _ => k
   end.
 
+(* A parameter-dependent indexed subset cannot be collapsed occurrence by
+   occurrence while its declaration keeps constructor injectivity: equal
+   carriers at different indices would make those indices equal. *)
+Inductive indexed_poly_subset (A : Type) : nat -> Type :=
+| IndexedPolySubset : forall n (x : A), True -> indexed_poly_subset A n.
+
+Definition indexed_poly_value A n (v : indexed_poly_subset A n) : A :=
+  match v with
+  | IndexedPolySubset _ _ x _ => x
+  end.
+
 Inductive okp (n : nat) : nat -> Prop :=
 | ok_intro : okp n (S n).
 
@@ -86,6 +97,8 @@ Hammer_transl "tagged".
 Hammer_transl "untag".
 Hammer_transl "ibounded".
 Hammer_transl "ibval".
+Hammer_transl "indexed_poly_subset".
+Hammer_transl "indexed_poly_value".
 Hammer_transl "okp".
 Hammer_transl "fromok".
 Hammer_transl "isT".
