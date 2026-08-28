@@ -139,6 +139,17 @@ val occurrence_indices : string -> coqterm -> coqterm list option
 val clear : unit -> unit
 (** Clear the classification memo table. *)
 
+val unford_telescope :
+  index_formals -> (string * int) list -> (string * coqterm) list ->
+  (string * coqterm) list
+(** [unford_telescope index_formals solved args] restores the ordinary
+    constructor telescope from a retained one.  [subset_args] and [enum_args]
+    refer to every solved argument through the index formal that fords it,
+    which only a consumer holding the occurrence's indices can instantiate; a
+    consumer holding the constructor's own arguments instead -- a constructor
+    application rather than a typing occurrence -- substitutes each such formal
+    back to the argument it stands for. *)
+
 val classify : coqcontext -> string -> coqterm list -> ind_class
 (** [classify ctx indname params] classifies the inductive instance
     [indname params] in context [ctx].  Constructor telescopes are instantiated

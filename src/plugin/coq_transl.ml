@@ -2086,8 +2086,19 @@ and convert ctx tm =
                        let params = Hhlib.take params_num args in
                        begin
                          match Coq_erasure.classify ctx indname params with
-                         | Coq_erasure.CSubset { carrier_idx; subset_args; _ } ->
-                            let cargs = Hhlib.take params_num cargs @ subset_args in
+                         | Coq_erasure.CSubset
+                             { carrier_idx; subset_args; solved; index_formals; _ } ->
+                            (* The retained telescope reaches a solved argument
+                               through the index formal that fords it.  A
+                               constructor application has the argument itself
+                               and no occurrence type to read the index from, so
+                               the ordinary telescope is what aligns the actual
+                               spine and eta-expands the missing fields. *)
+                            let cargs =
+                              Hhlib.take params_num cargs @
+                                Coq_erasure.unford_telescope index_formals solved
+                                  subset_args
+                            in
                             let actuals, extras = align_actuals cargs args in
                             let carrier_pos = params_num + carrier_idx in
                             if List.length actuals > carrier_pos then

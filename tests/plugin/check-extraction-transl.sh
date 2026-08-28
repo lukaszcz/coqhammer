@@ -447,6 +447,29 @@ ibounded_typeof_line=$(get_unique_line "indexed subset typing axiom" '$_typeof_e
 forbid_line "indexed subset constructor injectivity is skipped by default" '^\$_inj_extraction_indexed\.IBounded:'
 forbid_line "indexed subset inversion is skipped by default" '^\$_inversion_extraction_indexed\.ibounded:'
 
+# An under-applied constructor of an indexed subset is eta-expanded and then
+# collapsed to its carrier.  The residual fields are typed through the argument
+# the result index fords, so their payload must be instantiated at the
+# occurrence's own index rather than at the index formal the classification
+# substituted for that argument -- a formal that is free in this context.
+ibpart_def_line=$(get_unique_line "under-applied indexed subset constructor" '$_def_extraction_indexed.ibpart:')
+ibpart_lam=$(extract_unique_symbol "under-applied indexed subset constructor body" "$ibpart_def_line" '\$_lam_[0-9]+' '\$_lam_[0-9]+')
+[ "$ibpart_def_line" = "\$_def_extraction_indexed.ibpart: (extraction_indexed.ibpart = $ibpart_lam)" ] ||
+  fail "under-applied indexed subset constructor is not lifted to a single lambda"
+ibpart_lam_line=$(get_unique_line "under-applied indexed subset constructor lambda" "$ibpart_lam:")
+parse_binders "under-applied indexed subset constructor lambda" "$ibpart_lam_line" universal 1 ibpart_lam_binders
+ibpart_carrier=${ibpart_lam_binders[0]}
+[ "$ibpart_lam_line" = "$ibpart_lam: ![$ibpart_carrier : \$Any]: ((($ibpart_lam @ $ibpart_carrier) = $ibpart_carrier))" ] ||
+  fail "under-applied indexed subset constructor does not collapse to its carrier"
+
+ibpart_bound="(Corelib.Init.Datatypes.S @ (Corelib.Init.Datatypes.S @ (Corelib.Init.Datatypes.S @ (Corelib.Init.Datatypes.S @ (Corelib.Init.Datatypes.S @ Corelib.Init.Datatypes.O)))))"
+ibpart_typeof_line=$(get_unique_line "under-applied indexed subset constructor typing axiom" '$_typeof_extraction_indexed.ibpart:')
+parse_binders "under-applied indexed subset constructor typing axiom" "$ibpart_typeof_line" universal 1 ibpart_typeof_binders
+ibpart_k=${ibpart_typeof_binders[0]}
+require_text "under-applied indexed subset constructor types its exact residual binder" "$ibpart_typeof_line" "((\$HasType @ $ibpart_k) @ Corelib.Init.Datatypes.nat)"
+require_text_count_exact "under-applied indexed subset constructor instantiates its payload at the occurrence index" "$ibpart_typeof_line" "((=> @ ((Corelib.Init.Peano.lt @ $ibpart_k) @ $ibpart_bound)) @ ((& @ ((\$HasType @ (extraction_indexed.ibpart @ $ibpart_k)) @ Corelib.Init.Datatypes.nat)) @ ((Corelib.Init.Peano.lt @ (extraction_indexed.ibpart @ $ibpart_k)) @ $ibpart_bound)))" 1
+forbid_line "under-applied indexed subset constructor leaves no index formal free" '^\$_typeof_extraction_indexed\.ibpart:.*[$]Anonymous'
+
 # An indexed subset whose fields depend on a parameter is not a uniform
 # declaration-level subset.  It must stay nominal at occurrences while its
 # structural axioms remain enabled, or injectivity would recover distinct

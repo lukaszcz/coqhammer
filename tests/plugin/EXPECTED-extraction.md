@@ -156,6 +156,11 @@ structural assertions that hold with the current translator:
   indexed-subset declaration skipping is pinned by requiring the ordinary
   `$_typeof_extraction_indexed.ibounded` axiom while forbidding
   `$_inj_extraction_indexed.IBounded` and `$_inversion_extraction_indexed.ibounded`.
+  `ibpart`, an under-applied `IBounded`, is eta-expanded and collapsed to the
+  lambda `f x = x`, and its typing axiom instantiates the `k < n` payload at the
+  literal occurrence index on both sides of the implication -- the index formal
+  the classification substitutes for the forded argument is free here, so
+  leaving it in the residual field types aborted the translation.
 - Indexed guard expansion: `introT` and `$_typeof_Nat.eqb_spec` each contain
   `ReflectT` and `ReflectF` alternatives with the positive/negative proposition
   payload and `= true`/`= false` residual index equations. For `Nat.eqb_spec`,

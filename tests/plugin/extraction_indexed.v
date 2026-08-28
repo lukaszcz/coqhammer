@@ -37,6 +37,12 @@ Definition ibidx n (b : ibounded n) : nat :=
   | IBounded n' _ _ => n'
   end.
 
+(* An under-applied constructor of an indexed subset.  Its remaining fields are
+   typed through the argument the result index fords, so eta-expanding the
+   partial application must see that argument and not the index formal the
+   classification substituted for it. *)
+Definition ibpart := IBounded 5.
+
 (* A parameter-dependent indexed subset cannot be collapsed occurrence by
    occurrence while its declaration keeps constructor injectivity: equal
    carriers at different indices would make those indices equal. *)
@@ -108,6 +114,7 @@ Hammer_transl "untag".
 Hammer_transl "ibounded".
 Hammer_transl "ibval".
 Hammer_transl "ibidx".
+Hammer_transl "ibpart".
 Hammer_transl "indexed_poly_subset".
 Hammer_transl "indexed_poly_value".
 Hammer_transl "okp".

@@ -159,6 +159,7 @@ Hammer_transl "untag".
 Hammer_transl "ibounded".
 Hammer_transl "ibval".
 Hammer_transl "ibidx".
+Hammer_transl "ibpart".
 Hammer_transl "indexed_poly_subset".
 Hammer_transl "indexed_poly_value".
 Hammer_transl "okp".

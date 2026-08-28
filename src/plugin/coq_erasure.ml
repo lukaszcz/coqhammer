@@ -618,6 +618,27 @@ let classify_decl indname =
            Some (classify ctx indname (mk_vars params))
          with Failure _ -> None)
 
+(* The retained telescope of a classified constructor refers to every solved
+   argument through the index formal that fords it, which only a consumer
+   holding the occurrence's indices can instantiate.  A consumer holding the
+   constructor's own arguments instead -- a constructor application rather than
+   a typing occurrence -- needs the ordinary telescope back, with each such
+   formal restored to the argument it stands for. *)
+let unford_telescope index_formals solved args =
+  let substitutions =
+    List.map
+      (fun (arg_name, index_pos) ->
+         (fst (List.nth index_formals index_pos), Var arg_name))
+      solved
+  in
+  List.map
+    (fun (name, ty) ->
+       (name,
+        List.fold_left
+          (fun ty (formal, value) -> simple_subst formal value ty)
+          ty substitutions))
+    args
+
 let is_erasable_class = function
   | CRegular -> false
   | CEmpty | CPropSingleton | CSubset _ | CEnum _ -> true
