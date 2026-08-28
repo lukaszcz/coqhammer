@@ -1296,6 +1296,27 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              tm args0 args)
         tms
     in
+    (* The preparation every case branch shares, whichever equation shape the
+       branch ends up in: the constructor telescope is refreshed away from the
+       enclosing context, the proof payloads of the branch body are erased and
+       the constructor pattern is built from the resulting spine. *)
+    let prepare_case_branch vars indname params params_num constrs branches cname =
+      let (n, branch) = get_branch cname constrs branches in
+      let (patterns, args0) =
+        Coq_erasure.constructor_index_data params params_num cname
+      in
+      if List.length args0 <> n then
+        internal_error
+          ("constructor telescope arity mismatch for " ^ cname ^ " in " ^
+           indname ^ ": branch binds " ^ string_of_int n ^
+           " but normalized constructor has " ^ string_of_int (List.length args0))
+      else
+        let args = refresh_case_args vars args0 in
+        let patterns = refresh_case_terms args0 args patterns in
+        let body = simpl (mk_long_app branch (mk_vars args)) in
+        let body = subst_proof_args (List.rev vars) args body in
+        (args, patterns, mk_long_app (Const(cname)) (params @ mk_vars args), body)
+    in
     (* Refinement occurrence collapse: matching a subset value exposes the
        erased carrier itself, and the remaining proof payload binders are erased.
        [Coq_erasure.validate_subset] only classifies a constructor as [CSubset]
@@ -1471,20 +1492,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         loop ctx args
       in
       let one_branch cname =
-        let n, branch = get_branch cname constrs branches in
-        let patterns, args =
-          Coq_erasure.constructor_index_data params params_num cname
+        let (args, patterns, pattern, body) =
+          prepare_case_branch vars indname params params_num constrs branches cname
         in
-        if List.length args <> n then
-          raise (Hammer_errors.HammerError
-                   "internal translation error: constructor telescope arity mismatch");
-        let args0 = args in
-        let args = refresh_case_args vars args in
-        let patterns = refresh_case_terms args0 args patterns in
-        let body = simpl (mk_long_app branch (mk_vars args)) in
-        let body = subst_proof_args ctx args body in
         prop_to_formula (List.rev (vars @ args)) body >>= fun branch_formula ->
-        let pattern = mk_long_app (Const(cname)) (params @ mk_vars args) in
         prop_to_formula (List.rev (vars @ args)) (mk_eq (Var scrutinee) pattern)
         >>= fun scrutinee_formula ->
         let index =
@@ -1799,36 +1810,17 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      in
                      let vars_before, vars_after = split_scrutinee [] vars in
                      let prepare_branch cname =
-                       let (n, branch) = get_branch cname constrs branches in
-                       let patterns, args0 =
-                         Coq_erasure.constructor_index_data params params_num cname
+                       let (args, patterns, pattern, branch_body) =
+                         prepare_case_branch vars indname params params_num constrs
+                           branches cname
                        in
-                       if List.length args0 <> n then
-                         internal_error
-                           ("constructor telescope arity mismatch for " ^ cname ^
-                            " in " ^ indname ^ ": branch binds " ^ string_of_int n ^
-                            " but normalized constructor has " ^
-                            string_of_int (List.length args0))
-                       else
-                         let args = refresh_case_args vars args0 in
-                         let patterns =
-                           match pruning_data with
-                           | None -> []
-                           | Some _ -> refresh_case_terms args0 args patterns
-                         in
-                         let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
-                         in
-                         let branch_body = simpl (mk_long_app branch (mk_vars args))
-                         in
-                         let branch_body = subst_proof_args (List.rev vars) args branch_body
-                         in
-                         let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
-                         let lhs2 = substvar scrutinee pattern lhs
-                         and body2 = substvar scrutinee pattern branch_body
-                         and axname2 = axname ^ "$" ^ short_name cname
-                         and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
-                         in
-                         (branch_clashes patterns, lhs2, vars2, axname2, body2)
+                       let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
+                       let lhs2 = substvar scrutinee pattern lhs
+                       and body2 = substvar scrutinee pattern branch_body
+                       and axname2 = axname ^ "$" ^ short_name cname
+                       and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
+                       in
+                       (branch_clashes patterns, lhs2, vars2, axname2, body2)
                      in
                      (* Validate every constructor telescope before filtering
                         any impossible branch or emitting the first equation. *)
