@@ -32,7 +32,13 @@ work=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 [ -f "$work/singleton_premises.v" ]
 [ -f "$work/transl-assert-lib.sh" ]
 [ "$1" = "$work/singleton_premises.out" ]
-printf '%s\n' "$work" >> "$VALIDATION_LOG"
+expect=${SINGLETON_PREMISES_EXPECT:-present}
+printf '%s %s\n' "$expect" "$work" >> "$VALIDATION_LOG"
+if [ "$expect" = absent ]; then
+  # The dollar sign is a literal part of Hammer's generated identifiers.
+  # shellcheck disable=SC2016
+  ! grep -q '^\$_def_singleton_premises\.' "$1"
+fi
 EOF
 chmod +x "$repo/tests/plugin/check-singleton-premises.sh"
 printf 'runtime\n' > "$tmp/runtime/rocq-runtime/fixture"
@@ -80,15 +86,17 @@ export VALIDATION_LOG="$validation_log"
 export TRANSLATION_LOG="$translation_log"
 
 # Every configuration translates the probe against the prefix it just
-# installed; only the one that handles dependent types hands the output to the
-# assertion script, the other asserting the dependent-only equations away
-# itself.
+# installed and hands the output to the assertion script, in the mode its
+# option value implies: the collapsed equations when dependent types are
+# handled, their absence when they are not.
 expect_counts() {
-  local config=$1 validations=$2 translations=$3
+  local config=$1 validations=$2 translations=$3 mode=$4
   [ "$(wc -l < "$validation_log")" -eq "$validations" ] ||
     fail "$config did not run the singleton-premise check $validations time(s)"
   [ "$(wc -l < "$translation_log")" -eq "$translations" ] ||
     fail "$config did not translate the probe $translations time(s)"
+  [ "$(tail -n 1 "$validation_log" | cut -d' ' -f1)" = "$mode" ] ||
+    fail "$config did not run the singleton-premise check in $mode mode"
 }
 
 run_config() {
@@ -101,16 +109,16 @@ run_config() {
 }
 
 run_config current
-expect_counts current 1 1
+expect_counts current 1 1 present
 
 run_config dependent-types-off
-expect_counts dependent-types-off 1 2
+expect_counts dependent-types-off 2 2 absent
 
 sed -i 's/^let opt_dependent_types = true$/let opt_dependent_types = false/' \
   "$repo/src/plugin/coq_transl_opts.ml"
 (cd "$repo" && git add src/plugin/coq_transl_opts.ml && git commit -qm dependent-off-current)
 run_config current
-expect_counts "current with dependent types off" 1 3
+expect_counts "current with dependent types off" 3 3 absent
 
 # A prefix whose artifact still emits the dependent-only equations is a stale
 # build, not an off baseline: the rebuild must fail rather than leave the grids
@@ -119,7 +127,7 @@ if (cd "$repo" && STALE_DEPENDENT_ARTIFACT=1 ./eval/rebuild-config.sh \
       dependent-types-off >/dev/null 2>&1); then
   fail "a stale dependent-types artifact was accepted as dependent-types-off"
 fi
-expect_counts "the rejected stale artifact" 1 4
+expect_counts "the rejected stale artifact" 4 4 absent
 work=$(tail -n 1 "$translation_log")
 [ ! -d "$work" ] ||
   fail "the rejected stale artifact left semantic-validation temporary directory $work"

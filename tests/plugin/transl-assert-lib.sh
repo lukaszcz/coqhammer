@@ -17,16 +17,43 @@ fail() {
   exit 1
 }
 
+# Every output line beginning with the given literal prefix.
+lines_with_prefix() {
+  awk -v prefix="$1" 'index($0, prefix) == 1' "$out"
+}
+
 # The single output line beginning with the given literal prefix.
 get_unique_line() {
   local label=$1
   local prefix=$2
   local lines
-  mapfile -t lines < <(awk -v prefix="$prefix" 'index($0, prefix) == 1' "$out")
+  mapfile -t lines < <(lines_with_prefix "$prefix")
   if [ "${#lines[@]}" -ne 1 ]; then
     fail "$label (expected one line beginning with: $prefix; found ${#lines[@]})"
   fi
   printf '%s\n' "${lines[0]}"
+}
+
+# At least one output line begins with the given literal prefix.
+require_line() {
+  local label=$1
+  local prefix=$2
+  local lines
+  mapfile -t lines < <(lines_with_prefix "$prefix")
+  if [ "${#lines[@]}" -eq 0 ]; then
+    fail "$label (expected a line beginning with: $prefix; found none)"
+  fi
+}
+
+# No output line begins with the given literal prefix.
+forbid_line() {
+  local label=$1
+  local prefix=$2
+  local lines
+  mapfile -t lines < <(lines_with_prefix "$prefix")
+  if [ "${#lines[@]}" -ne 0 ]; then
+    fail "$label (expected no line beginning with: $prefix; found ${#lines[@]})"
+  fi
 }
 
 # The generated binder names of one quantifier, in order of occurrence.

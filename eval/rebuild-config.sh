@@ -239,7 +239,7 @@ make install \
 # collapsed singleton equations when dependent types are handled, and the
 # absence of every one of them when they are not.
 validate_singleton_premises() (
-  local tmp out
+  local tmp out expect
   tmp=$(mktemp -d)
   trap 'rm -rf "$tmp"' EXIT
   out="$tmp/singleton_premises.out"
@@ -251,28 +251,17 @@ validate_singleton_premises() (
     cat "$out" >&2
     return 1
   fi
-  if [ "$dependent" = true ]; then
-    if ! bash "$tmp/check-singleton-premises.sh" "$out"; then
-      cat "$out" >&2
-      return 1
-    fi
-    return 0
+  # With dependent types off, every elimination the probe defines is a match on
+  # a proposition, and those are left opaque: none of the definition equations
+  # the check script asserts may be emitted at all.  The script's absence mode
+  # asserts exactly that, over the same roster as its positive assertions, so
+  # the two halves cannot drift apart.
+  expect=present
+  if [ "$dependent" != true ]; then
+    expect=absent
   fi
-  # With dependent types off, every elimination the probe defines is a match
-  # on a proposition, and those are left opaque: none of the definition
-  # equations the check script asserts may be emitted at all.  Anchor the
-  # absence on a shape the configuration does not decide, so that an output
-  # the probe never reached cannot satisfy it vacuously.
-  # The dollar signs are literal parts of Hammer's generated identifiers.
-  # shellcheck disable=SC2016
-  if ! grep -Eq '^\$_typeof_singleton_premises\.' "$out"; then
-    echo "the probe emitted no translation of its own definitions" >&2
-    cat "$out" >&2
-    return 1
-  fi
-  # shellcheck disable=SC2016
-  if grep -Eq '^\$_def_(singleton_premises\.(singleton_cast|singleton_value|prop_index_value|singleton_jmeq)|Corelib\.Init\.Logic\.eq_rect):' "$out"; then
-    echo "opt_dependent_types=false still emitted singleton-elimination equations" >&2
+  if ! SINGLETON_PREMISES_EXPECT="$expect" \
+      bash "$tmp/check-singleton-premises.sh" "$out"; then
     cat "$out" >&2
     return 1
   fi
