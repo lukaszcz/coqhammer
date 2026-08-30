@@ -6,13 +6,18 @@ assert_context=extraction_transl
 # shellcheck source=tests/plugin/transl-assert-lib.sh
 . "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)/transl-assert-lib.sh"
 
-require_line() {
+# These assertions match an extended regular expression anywhere in a line; the
+# require_line/forbid_line of the shared library match a literal line prefix.
+
+# At least one output line matches the given pattern.
+require_pattern() {
   local label=$1
   local pattern=$2
   grep -Eq -- "$pattern" "$out" || fail "$label (missing pattern: $pattern)"
 }
 
-forbid_line() {
+# No output line matches the given pattern.
+forbid_pattern() {
   local label=$1
   local pattern=$2
   if grep -Eq -- "$pattern" "$out"; then
@@ -87,25 +92,25 @@ assert_binary_prop_is_equality() {
 # Global sanity checks enforced now.
 # -----------------------------------------------------------------------------
 
-forbid_line "Hammer_transl lookup failures" '^Error: Not found:'
+forbid_pattern "Hammer_transl lookup failures" '^Error: Not found:'
 
 # Same intent as transl.v's Init.Logic sanity check, but restricted to logical
 # connective constants: this corpus intentionally still exposes proof constants
 # such as eq_refl/False_rect on fallback paths.
-forbid_line "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|ex|all)\b'
+forbid_pattern "untranslated Init.Logic connectives" 'Init\.Logic\.(and|or|not|iff|ex|all)\b'
 
 
 # Proof arguments are proof-irrelevant: generated structural and definitional
 # axioms must not leave tautological $Proof = $Proof equalities behind.
-forbid_line "injectivity axioms omit proof-only equalities" '^\$_inj_.*\$Proof = \$Proof'
-forbid_line "definition axioms omit proof-only equalities" '^\$_def_.*\$Proof = \$Proof'
+forbid_pattern "injectivity axioms omit proof-only equalities" '^\$_inj_.*\$Proof = \$Proof'
+forbid_pattern "definition axioms omit proof-only equalities" '^\$_def_.*\$Proof = \$Proof'
 
 # Shallowness gates for definitional output: split equations should not
 # reintroduce type guards, existential packages, or disjunctive case bodies on
 # definition lines.
-forbid_line "definition axioms are HasType-free" '^\$_def_.*\$HasType'
-forbid_line "definition axioms are existential-free" '^\$_def_.*\?\['
-forbid_line "definition axioms are disjunction-free" '^\$_def_.*[|]'
+forbid_pattern "definition axioms are HasType-free" '^\$_def_.*\$HasType'
+forbid_pattern "definition axioms are existential-free" '^\$_def_.*\?\['
+forbid_pattern "definition axioms are disjunction-free" '^\$_def_.*[|]'
 
 # -----------------------------------------------------------------------------
 # Corpus constants: baseline structural assertions that hold today.
@@ -117,152 +122,152 @@ forbid_line "definition axioms are disjunction-free" '^\$_def_.*[|]'
 # membership_transl.v pins for every product with erasable content.  The type is
 # a lifted name rather than an [$_arrow] application because an SProp domain is
 # proof-like, and remove_type canonicalizes only informative domains.
-require_line "SProp argument is translated as a premise" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(& @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ \$_type_[0-9]+\)\) @ \(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ Corelib\.Init\.Datatypes\.nat\)\)\)'
-require_line "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
-forbid_line "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
+require_pattern "SProp argument is translated as a premise" '^\$_typeof_extraction_transl\.sprop_arg_term: \(\(& @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ \$_type_[0-9]+\)\) @ \(\(=> @ extraction_transl\.sflag\) @ \(\(\$HasType @ extraction_transl\.sprop_arg_term\) @ Corelib\.Init\.Datatypes\.nat\)\)\)'
+require_pattern "SProp proof argument is pruned from the definition" '^\$_def_extraction_transl\.sprop_arg_term: \(extraction_transl\.sprop_arg_term = extraction_transl\.sprop_consumer\)'
+forbid_pattern "SProp proof argument must not be applied as a term" '^\$_def_extraction_transl\.sprop_arg_term:.*sprop_consumer @'
 
 # A Prop premise must leave the extracted term unapplied across the implication
 # (proof argument pruned from arity).
-require_line "spec_pruned type axiom keeps pruned arity" '^\$_typeof_extraction_transl\.spec_pruned:.*\(=> @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)\) @ \(\(& @ \(\(\$HasType @ \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\)\)'
-forbid_line "spec_pruned proof premise must not be applied as a term" '^\$_typeof_extraction_transl\.spec_pruned:.*extraction_transl\.spec_pruned @ .*\$Proof'
+require_pattern "spec_pruned type axiom keeps pruned arity" '^\$_typeof_extraction_transl\.spec_pruned:.*\(=> @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)\) @ \(\(& @ \(\(\$HasType @ \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = \(extraction_transl\.spec_pruned @ var_0_n_[0-9]+\)\)\)'
+forbid_pattern "spec_pruned proof premise must not be applied as a term" '^\$_typeof_extraction_transl\.spec_pruned:.*extraction_transl\.spec_pruned @ .*\$Proof'
 
 # User constants with proof/transport basenames must remain ordinary constants.
-require_line "shadow eq_rect definition is not a fake transport definition" '^\$_def_extraction_transl\.ShadowTransport\.eq_rect:.*= 4_e\)'
-require_line "shadow eq_rect applications are not transport-erased" '^\$_def_extraction_transl\.shadow_eq_rect_user:.*extraction_transl\.ShadowTransport\.eq_rect'
-require_line "shadow False_rect type argument is not proof-erased" '^\$_def_extraction_transl\.shadow_false_rect_user:.*Corelib\.Init\.Specif\.sig'
-require_line "shadow eq_refl application remains a term" '^\$_def_extraction_transl\.shadow_eq_refl_user:.*extraction_transl\.ShadowProofNames\.eq_refl'
-require_line "shadow eq_trans application remains a term" '^\$_def_extraction_transl\.shadow_eq_trans_user:.*extraction_transl\.ShadowProofNames\.eq_trans'
-require_line "shadow eq_sym application remains a term" '^\$_def_extraction_transl\.shadow_eq_sym_user:.*extraction_transl\.ShadowProofNames\.eq_sym'
-require_line "shadow JMeq_refl application remains a term" '^\$_def_extraction_transl\.shadow_jmeq_refl_user:.*extraction_transl\.ShadowProofNames\.JMeq_refl'
+require_pattern "shadow eq_rect definition is not a fake transport definition" '^\$_def_extraction_transl\.ShadowTransport\.eq_rect:.*= 4_e\)'
+require_pattern "shadow eq_rect applications are not transport-erased" '^\$_def_extraction_transl\.shadow_eq_rect_user:.*extraction_transl\.ShadowTransport\.eq_rect'
+require_pattern "shadow False_rect type argument is not proof-erased" '^\$_def_extraction_transl\.shadow_false_rect_user:.*Corelib\.Init\.Specif\.sig'
+require_pattern "shadow eq_refl application remains a term" '^\$_def_extraction_transl\.shadow_eq_refl_user:.*extraction_transl\.ShadowProofNames\.eq_refl'
+require_pattern "shadow eq_trans application remains a term" '^\$_def_extraction_transl\.shadow_eq_trans_user:.*extraction_transl\.ShadowProofNames\.eq_trans'
+require_pattern "shadow eq_sym application remains a term" '^\$_def_extraction_transl\.shadow_eq_sym_user:.*extraction_transl\.ShadowProofNames\.eq_sym'
+require_pattern "shadow JMeq_refl application remains a term" '^\$_def_extraction_transl\.shadow_jmeq_refl_user:.*extraction_transl\.ShadowProofNames\.JMeq_refl'
 for shadow_name in shadow_false_rect_user shadow_eq_refl_user shadow_eq_trans_user shadow_eq_sym_user shadow_jmeq_refl_user; do
-  forbid_line "shadow proof-name constants must not become proof terms ($shadow_name)" '^\$_def_extraction_transl\.'"$shadow_name"':.*\$Proof'
+  forbid_pattern "shadow proof-name constants must not become proof terms ($shadow_name)" '^\$_def_extraction_transl\.'"$shadow_name"':.*\$Proof'
 done
 
 # Split-case constructor binders are refreshed when they collide with function
 # binders, so the function argument and constructor payload remain distinct.
-require_line "box_arg_collision split keeps outer and constructor a distinct" '^\$_def_extraction_transl\.box_arg_collision[$]onebox_intro:.*\(\(\(extraction_transl\.box_arg_collision @ 0_A\) @ 1_a\) @ \(\(extraction_transl\.onebox_intro @ 0_A\) @ var_[0-9]+_a_[0-9]+\)\) = var_[0-9]+_a_[0-9]+'
+require_pattern "box_arg_collision split keeps outer and constructor a distinct" '^\$_def_extraction_transl\.box_arg_collision[$]onebox_intro:.*\(\(\(extraction_transl\.box_arg_collision @ 0_A\) @ 1_a\) @ \(\(extraction_transl\.onebox_intro @ 0_A\) @ var_[0-9]+_a_[0-9]+\)\) = var_[0-9]+_a_[0-9]+'
 
 # A user inductive whose field has type [F x] is instance-dependent: for
 # [F : nat -> Prop], the field is proof-only even though the declaration-level
 # formal [F : A -> Type] is not.  The definition unboxes the carrier and the
 # occurrence guard expands to the carrier guard plus the predicate payload.
-require_line "depbox_project unboxes an instance-dependent user subset" '^\$_def_extraction_transl\.depbox_project:.*= 1_b\)'
-require_line "depbox_project type axiom expands the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(& @ \(\(\$HasType @ var_1_b_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_P_[0-9]+ @ var_1_b_[0-9]+\)'
+require_pattern "depbox_project unboxes an instance-dependent user subset" '^\$_def_extraction_transl\.depbox_project:.*= 1_b\)'
+require_pattern "depbox_project type axiom expands the dependent package guard" '^\$_typeof_extraction_transl\.depbox_project:.*\(& @ \(\(\$HasType @ var_1_b_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_P_[0-9]+ @ var_1_b_[0-9]+\)'
 
 # A mutually recursive pair of apparent refinement carriers is not collapsible.
 # Translation must terminate and retain its ordinary nominal guard.  The guard
 # lives in the unfolding axiom of the canonical arrow former, since
 # [mutual_ref_a -> mutual_ref_a] is a non-dependent product.
-require_line "mutual refinement carrier cycle translation terminates" '^\$_def_extraction_transl\.mutual_ref_identity:'
-require_line "mutual refinement carrier cycle falls back to a nominal guard" '^\$_arrow_[0-9]+:.*\$HasType.*extraction_transl\.mutual_ref_a.*\$HasType.*extraction_transl\.mutual_ref_a'
+require_pattern "mutual refinement carrier cycle translation terminates" '^\$_def_extraction_transl\.mutual_ref_identity:'
+require_pattern "mutual refinement carrier cycle falls back to a nominal guard" '^\$_arrow_[0-9]+:.*\$HasType.*extraction_transl\.mutual_ref_a.*\$HasType.*extraction_transl\.mutual_ref_a'
 
 # [poly_ref A] changes classification when [A] is instantiated by a Prop, so
 # formal-instance subset classification must not suppress declaration structure.
-require_line "parameter-dependent refinement keeps constructor injectivity" '^\$_inj_extraction_transl\.poly_ref_intro:'
-forbid_line "erased constructor injectivity does not infer parameter equality" '^\$_inj_extraction_transl\.poly_ref_intro:.*var_0_A_[0-9]+ = var_0_A_[0-9]+'
-require_line "parameter-dependent refinement keeps inversion" '^\$_inversion_extraction_transl\.poly_ref:'
+require_pattern "parameter-dependent refinement keeps constructor injectivity" '^\$_inj_extraction_transl\.poly_ref_intro:'
+forbid_pattern "erased constructor injectivity does not infer parameter equality" '^\$_inj_extraction_transl\.poly_ref_intro:.*var_0_A_[0-9]+ = var_0_A_[0-9]+'
+require_pattern "parameter-dependent refinement keeps inversion" '^\$_inversion_extraction_transl\.poly_ref:'
 
 # Split equations: variable-scrutinee definitions are emitted as one guard-free
 # unit equation per constructor.
-require_line "myadd zero split equation" '^\$_def_extraction_matches\.myadd[$]O:.*extraction_matches\.myadd @ Corelib\.Init\.Datatypes\.O'
-require_line "myadd successor split equation" '^\$_def_extraction_matches\.myadd[$]S:.*extraction_matches\.myadd @ \(Corelib\.Init\.Datatypes\.S @'
-forbid_line "myadd split equations are guard/existential/disjunction free" '^\$_def_extraction_matches\.myadd[$].*(\$HasType|\?\[|[|])'
+require_pattern "myadd zero split equation" '^\$_def_extraction_matches\.myadd[$]O:.*extraction_matches\.myadd @ Corelib\.Init\.Datatypes\.O'
+require_pattern "myadd successor split equation" '^\$_def_extraction_matches\.myadd[$]S:.*extraction_matches\.myadd @ \(Corelib\.Init\.Datatypes\.S @'
+forbid_pattern "myadd split equations are guard/existential/disjunction free" '^\$_def_extraction_matches\.myadd[$].*(\$HasType|\?\[|[|])'
 
-require_line "g zero split equation" '^\$_def_extraction_matches\.g[$]O:'
-require_line "g one split equation" '^\$_def_extraction_matches\.g[$]S[$]O:'
-require_line "g deep split equation" '^\$_def_extraction_matches\.g[$]S[$]S:.*Corelib\.Init\.Datatypes\.S @ \(Corelib\.Init\.Datatypes\.S @'
-forbid_line "g split equations are existential-free" '^\$_def_extraction_matches\.g[$].*\?\['
+require_pattern "g zero split equation" '^\$_def_extraction_matches\.g[$]O:'
+require_pattern "g one split equation" '^\$_def_extraction_matches\.g[$]S[$]O:'
+require_pattern "g deep split equation" '^\$_def_extraction_matches\.g[$]S[$]S:.*Corelib\.Init\.Datatypes\.S @ \(Corelib\.Init\.Datatypes\.S @'
+forbid_pattern "g split equations are existential-free" '^\$_def_extraction_matches\.g[$].*\?\['
 
 # k: compound scrutinee compilation emits one linking equation to a shared
 # bool case symbol plus one unit equation per constructor for that symbol.
-require_line "k has a linking definition axiom" '^\$_def_extraction_matches\.k[$]link:.*\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+ @ \(Corelib\.Init\.Datatypes\.negb @'
-require_line "k aux case true equation" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$]true:'
-require_line "k aux case false equation" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$]false:'
-forbid_line "k aux case equations are unit/guard-free" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$].*(\$HasType|\?\[|[|])'
+require_pattern "k has a linking definition axiom" '^\$_def_extraction_matches\.k[$]link:.*\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+ @ \(Corelib\.Init\.Datatypes\.negb @'
+require_pattern "k aux case true equation" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$]true:'
+require_pattern "k aux case false equation" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$]false:'
+forbid_pattern "k aux case equations are unit/guard-free" '^\$_case_Corelib\.Init\.Datatypes\.bool[$][0-9]+[$].*(\$HasType|\?\[|[|])'
 
 # Mutual fixpoints: translating either body emits two equations for the result
 # name and two equations for the sibling under the $_fix_<id>_ prefix.
-require_line "even zero equation" '^\$_def_extraction_matches\.even[$]O:'
-require_line "even successor equation" '^\$_def_extraction_matches\.even[$]S:'
-require_line "even translation emits odd sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_odd[$]O:'
-require_line "even translation emits odd sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_odd[$]S:'
-require_line "odd zero equation" '^\$_def_extraction_matches\.odd[$]O:'
-require_line "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
-require_line "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
-require_line "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
+require_pattern "even zero equation" '^\$_def_extraction_matches\.even[$]O:'
+require_pattern "even successor equation" '^\$_def_extraction_matches\.even[$]S:'
+require_pattern "even translation emits odd sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_odd[$]O:'
+require_pattern "even translation emits odd sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_odd[$]S:'
+require_pattern "odd zero equation" '^\$_def_extraction_matches\.odd[$]O:'
+require_pattern "odd successor equation" '^\$_def_extraction_matches\.odd[$]S:'
+require_pattern "odd translation emits even sibling zero equation" '^\$_fix_[0-9]+_[0-9]+_even[$]O:'
+require_pattern "odd translation emits even sibling successor equation" '^\$_fix_[0-9]+_[0-9]+_even[$]S:'
 
 # A subset constructor with a proof binder before the carrier must still erase
 # the constructor occurrence in the type axiom guard.
-require_line "proof-first subset type axiom expands the payload on the erased carrier" '^\$_typeof_extraction_transl\.proof_first_make:.*\(\(\$HasType @ \(extraction_transl\.proof_first_make @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\).*var_0_n_[0-9]+ = \(extraction_transl\.proof_first_make @ var_0_n_[0-9]+\)'
-forbid_line "proof-first subset type axiom must not keep the constructor application" '^\$_typeof_extraction_transl\.proof_first_make:.*extraction_transl\.proof_first_intro'
-forbid_line "proof-first subset definition must erase proof payloads" '^\$_def_extraction_transl\.proof_first_make:.*(Corelib\.Init\.Logic\.(I|eq_refl)|extraction_transl\.proof_first_intro)'
+require_pattern "proof-first subset type axiom expands the payload on the erased carrier" '^\$_typeof_extraction_transl\.proof_first_make:.*\(\(\$HasType @ \(extraction_transl\.proof_first_make @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\).*var_0_n_[0-9]+ = \(extraction_transl\.proof_first_make @ var_0_n_[0-9]+\)'
+forbid_pattern "proof-first subset type axiom must not keep the constructor application" '^\$_typeof_extraction_transl\.proof_first_make:.*extraction_transl\.proof_first_intro'
+forbid_pattern "proof-first subset definition must erase proof payloads" '^\$_def_extraction_transl\.proof_first_make:.*(Corelib\.Init\.Logic\.(I|eq_refl)|extraction_transl\.proof_first_intro)'
 
 # The h example has exactly two axioms: a carrier-only program equation and a
 # specification axiom with nat guards plus the expanded equality payload.
 require_count_exact "h emits exactly its definition and type axioms" '^\$_(def|typeof)_extraction_deptypes\.h:' 2
-require_line "h has the carrier-only definition equation" '^\$_def_extraction_deptypes\.h: !\[0_x : \$Any\]: \(!\[1_y : \$Any\]: \(!\[2_z : \$Any\]: .*\(\(\(extraction_deptypes\.h @ 0_x\) @ 1_y\) @ 2_z\) = 2_z'
-require_line "h has the specification-extracted axiom shape" '^\$_typeof_extraction_deptypes\.h:.*\$HasType @ var_0_x_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_1_y_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_2_z_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*=> @ \(\(& @ \(var_0_x_[0-9]+ = var_1_y_[0-9]+\)\) @ \(var_1_y_[0-9]+ = var_2_z_[0-9]+\)\).*& @ \(\(\$HasType @ \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_x_[0-9]+ = \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\)'
-forbid_line "h type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.h:.*Corelib\.Init\.Specif\.sig'
-forbid_line "h output must not mention erased sig/exist/proj1_sig" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.(sig|exist|proj1_sig)'
-forbid_line "h singleton collapse must not leave generic case" '^.*extraction_deptypes\.h.*\$_generic_case'
-forbid_line "default extraction output contains no opaque generic case symbol" '\$_generic_case_'
+require_pattern "h has the carrier-only definition equation" '^\$_def_extraction_deptypes\.h: !\[0_x : \$Any\]: \(!\[1_y : \$Any\]: \(!\[2_z : \$Any\]: .*\(\(\(extraction_deptypes\.h @ 0_x\) @ 1_y\) @ 2_z\) = 2_z'
+require_pattern "h has the specification-extracted axiom shape" '^\$_typeof_extraction_deptypes\.h:.*\$HasType @ var_0_x_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_1_y_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*\$HasType @ var_2_z_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat.*=> @ \(\(& @ \(var_0_x_[0-9]+ = var_1_y_[0-9]+\)\) @ \(var_1_y_[0-9]+ = var_2_z_[0-9]+\)\).*& @ \(\(\$HasType @ \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_x_[0-9]+ = \(\(\(extraction_deptypes\.h @ var_0_x_[0-9]+\) @ var_1_y_[0-9]+\) @ var_2_z_[0-9]+\)\)'
+forbid_pattern "h type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.h:.*Corelib\.Init\.Specif\.sig'
+forbid_pattern "h output must not mention erased sig/exist/proj1_sig" '^.*extraction_deptypes\.h.*Corelib\.Init\.Specif\.(sig|exist|proj1_sig)'
+forbid_pattern "h singleton collapse must not leave generic case" '^.*extraction_deptypes\.h.*\$_generic_case'
+forbid_pattern "default extraction output contains no opaque generic case symbol" '\$_generic_case_'
 
 # safe_pred: the dependent match still splits on nat and now keeps a definition
 # for both branches while proof payloads in the live successor branch are erased.
 require_count_at_least "safe_pred has split definition axioms" '^\$_def_extraction_deptypes\.safe_pred[$]' 2
-require_line "safe_pred zero branch remains dead-code fallback" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Logic\.False_rect'
-forbid_line "safe_pred zero branch must not leak the erased sig package" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Specif\.sig'
-require_line "safe_pred successor branch unboxes the subset result" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*= var_0_[$]Anonymous_[0-9]+\)'
-require_line "safe_pred type axiom expands the subset payload" '^\$_typeof_extraction_deptypes\.safe_pred:.*var_0_n_[0-9]+ = \(Corelib\.Init\.Datatypes\.S @ \(extraction_deptypes\.safe_pred @ var_0_n_[0-9]+\)\)'
-forbid_line "safe_pred type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.safe_pred:.*Corelib\.Init\.Specif\.sig'
-forbid_line "safe_pred successor branch must not keep eq_refl" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Logic\.eq_refl'
-forbid_line "safe_pred successor branch must not keep exist" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
+require_pattern "safe_pred zero branch remains dead-code fallback" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Logic\.False_rect'
+forbid_pattern "safe_pred zero branch must not leak the erased sig package" '^\$_def_extraction_deptypes\.safe_pred[$]O:.*Corelib\.Init\.Specif\.sig'
+require_pattern "safe_pred successor branch unboxes the subset result" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*= var_0_[$]Anonymous_[0-9]+\)'
+require_pattern "safe_pred type axiom expands the subset payload" '^\$_typeof_extraction_deptypes\.safe_pred:.*var_0_n_[0-9]+ = \(Corelib\.Init\.Datatypes\.S @ \(extraction_deptypes\.safe_pred @ var_0_n_[0-9]+\)\)'
+forbid_pattern "safe_pred type axiom must not keep a sig HasType atom" '^\$_typeof_extraction_deptypes\.safe_pred:.*Corelib\.Init\.Specif\.sig'
+forbid_pattern "safe_pred successor branch must not keep eq_refl" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Logic\.eq_refl'
+forbid_pattern "safe_pred successor branch must not keep exist" '^\$_def_extraction_deptypes\.safe_pred[$]S:.*Corelib\.Init\.Specif\.exist'
 
 # Transport erasure: eq_rect/eq_rec/eq_ind-style casts are identities in the
 # proof-irrelevant erasure model.
-require_line "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*= 4_x'
+require_pattern "tr has an identity definition" '^\$_def_extraction_deptypes\.tr:.*= 4_x'
 
 # proj1_sig's own subset match collapses to the identity equation; no
 # per-occurrence delta unfolding is needed for users because this is a perfect
 # demodulator.
-require_line "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
+require_pattern "proj1_sig has an identity definition" '^\$_def_Corelib\.Init\.Specif\.proj1_sig:.*= 2_e\)'
 
 # pval: non-primitive projection over a proof-carrying record is the identity
 # after subset-match collapse; its argument guard expands to the carrier and
 # positivity payload.
-require_line "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
-require_line "pval type axiom expands the posnat guard" '^\$_typeof_extraction_deptypes\.pval:.*\(& @ \(\(\$HasType @ var_0_p_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(\(Corelib\.Init\.Peano\.lt @ Corelib\.Init\.Datatypes\.O\) @ var_0_p_[0-9]+\)'
-forbid_line "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
+require_pattern "pval has an identity definition" '^\$_def_extraction_deptypes\.pval:.*= 0_p\)'
+require_pattern "pval type axiom expands the posnat guard" '^\$_typeof_extraction_deptypes\.pval:.*\(& @ \(\(\$HasType @ var_0_p_[0-9]+\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(\(Corelib\.Init\.Peano\.lt @ Corelib\.Init\.Datatypes\.O\) @ var_0_p_[0-9]+\)'
+forbid_pattern "pval definition must not mention mkpos" '^\$_def_extraction_deptypes\.pval:.*extraction_deptypes\.mkpos'
 
 # beq: sumbool-driven definition links through an auxiliary case symbol for
 # the compound Nat.eq_dec scrutinee; enum guards expand to constructor tags plus
 # payload formulas.
 require_count_at_least "beq has a linking definition axiom" '^\$_def_extraction_deptypes\.beq[$]link:' 1
-require_line "beq link mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq[$]link:.*Nat\.eq_dec'
-require_line "beq aux case mentions sumbool constructors" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$].*Corelib\.Init\.Specif\.(left|right)'
-require_line "beq type axiom expands bool enum result" '^\$_typeof_extraction_deptypes\.beq:.*extraction_deptypes\.beq @ var_0_n_[0-9]+.*Corelib\.Init\.Datatypes\.true.*Corelib\.Init\.Datatypes\.false'
-require_line "Nat.eq_dec type axiom expands sumbool payloads" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*var_0_n_[0-9]+ = var_1_m_[0-9]+.*~ @ \(var_0_n_[0-9]+ = var_1_m_[0-9]+\)'
-forbid_line "Nat.eq_dec type axiom must not keep a sumbool HasType atom" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*Corelib\.Init\.Specif\.sumbool'
+require_pattern "beq link mentions Nat.eq_dec" '^\$_def_extraction_deptypes\.beq[$]link:.*Nat\.eq_dec'
+require_pattern "beq aux case mentions sumbool constructors" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$].*Corelib\.Init\.Specif\.(left|right)'
+require_pattern "beq type axiom expands bool enum result" '^\$_typeof_extraction_deptypes\.beq:.*extraction_deptypes\.beq @ var_0_n_[0-9]+.*Corelib\.Init\.Datatypes\.true.*Corelib\.Init\.Datatypes\.false'
+require_pattern "Nat.eq_dec type axiom expands sumbool payloads" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*var_0_n_[0-9]+ = var_1_m_[0-9]+.*~ @ \(var_0_n_[0-9]+ = var_1_m_[0-9]+\)'
+forbid_pattern "Nat.eq_dec type axiom must not keep a sumbool HasType atom" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:.*Corelib\.Init\.Specif\.sumbool'
 
 # between: sig2 is declaration-level subset-like and erases to its carrier while
 # both payload propositions are expanded in the type axiom.
-require_line "between has an unboxed definition axiom" '^\$_def_extraction_deptypes\.between:.*= 0_n\)'
-require_line "between type axiom expands both sig2 payloads" '^\$_typeof_extraction_deptypes\.between:.*Corelib\.Init\.Peano\.le @ var_0_n_[0-9]+\) @ \(extraction_deptypes\.between @ var_0_n_[0-9]+\).*Corelib\.Init\.Peano\.le @ \(extraction_deptypes\.between @ var_0_n_[0-9]+\)\) @ \(Corelib\.Init\.Datatypes\.S @ var_0_n_[0-9]+\)'
-forbid_line "between definition must not mention exist2" '^\$_def_extraction_deptypes\.between:.*Corelib\.Init\.Specif\.exist2'
-forbid_line "between type axiom must not keep a sig2 HasType atom" '^\$_typeof_extraction_deptypes\.between:.*Corelib\.Init\.Specif\.sig2'
+require_pattern "between has an unboxed definition axiom" '^\$_def_extraction_deptypes\.between:.*= 0_n\)'
+require_pattern "between type axiom expands both sig2 payloads" '^\$_typeof_extraction_deptypes\.between:.*Corelib\.Init\.Peano\.le @ var_0_n_[0-9]+\) @ \(extraction_deptypes\.between @ var_0_n_[0-9]+\).*Corelib\.Init\.Peano\.le @ \(extraction_deptypes\.between @ var_0_n_[0-9]+\)\) @ \(Corelib\.Init\.Datatypes\.S @ var_0_n_[0-9]+\)'
+forbid_pattern "between definition must not mention exist2" '^\$_def_extraction_deptypes\.between:.*Corelib\.Init\.Specif\.exist2'
+forbid_pattern "between type axiom must not keep a sig2 HasType atom" '^\$_typeof_extraction_deptypes\.between:.*Corelib\.Init\.Specif\.sig2'
 
 # tag: prod-with-Prop is a per-instance subset; pair erases to the informative
 # first component and the result guard carries the equality payload.
-require_line "tag has an unboxed definition axiom" '^\$_def_extraction_deptypes\.tag:.*= 0_n\)'
-require_line "tag type axiom expands the prod payload" '^\$_typeof_extraction_deptypes\.tag:.*\(& @ \(\(\$HasType @ \(extraction_deptypes\.tag @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)'
-forbid_line "tag definition must not mention pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
-forbid_line "tag proof payload is erased" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
-forbid_line "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.prod'
+require_pattern "tag has an unboxed definition axiom" '^\$_def_extraction_deptypes\.tag:.*= 0_n\)'
+require_pattern "tag type axiom expands the prod payload" '^\$_typeof_extraction_deptypes\.tag:.*\(& @ \(\(\$HasType @ \(extraction_deptypes\.tag @ var_0_n_[0-9]+\)\) @ Corelib\.Init\.Datatypes\.nat\)\) @ \(var_0_n_[0-9]+ = var_0_n_[0-9]+\)'
+forbid_pattern "tag definition must not mention pair" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.pair'
+forbid_pattern "tag proof payload is erased" '^\$_def_extraction_deptypes\.tag:.*Corelib\.Init\.Logic\.eq_refl'
+forbid_pattern "tag type axiom must not keep a prod HasType atom" '^\$_typeof_extraction_deptypes\.tag:.*Corelib\.Init\.Datatypes\.prod'
 
 # Indexed-family match: vhead is a normal split-pattern equation over Vector.t;
 # it must not introduce existential case bodies in definition axioms.
-require_line "vhead has a cons split equation" '^\$_def_extraction_deptypes\.vhead[$]cons:.*= var_1_h_[0-9]+\)'
-forbid_line "vhead split equations are existential-free" '^\$_def_extraction_deptypes\.vhead[$].*\?\['
+require_pattern "vhead has a cons split equation" '^\$_def_extraction_deptypes\.vhead[$]cons:.*= var_1_h_[0-9]+\)'
+forbid_pattern "vhead split equations are existential-free" '^\$_def_extraction_deptypes\.vhead[$].*\?\['
 
 # Forded split equations do not depend on index premises recovered from a
 # scrutinee's declared type.  dsize and dheight therefore emit both equations
@@ -279,8 +284,8 @@ dsize_n=${dsize_node_binders[1]}
 dsize_left=${dsize_node_binders[2]}
 dsize_right=${dsize_node_binders[3]}
 require_text_count_exact "dsize correlates its node binders with the result" "$dsize_node_line" "((extraction_deptypes.dsize @ $dsize_outer) @ (((extraction_deptypes.dnode @ $dsize_n) @ $dsize_left) @ $dsize_right)) = (Corelib.Init.Datatypes.S @ $dsize_n)" 1
-forbid_line "dsize split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dsize[$].*=> @'
-forbid_line "dsize split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dsize[$].*extraction_deptypes\.(dres|dred|dblack|dpair)'
+forbid_pattern "dsize split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dsize[$].*=> @'
+forbid_pattern "dsize split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dsize[$].*extraction_deptypes\.(dres|dred|dblack|dpair)'
 
 dheight_zero_line=$(get_unique_line "dheight zero equation" '$_def_extraction_deptypes.dheight$dbox_zero:')
 parse_binders "dheight zero equation" "$dheight_zero_line" universal 1 dheight_zero_binders
@@ -293,8 +298,8 @@ dheight_outer=${dheight_succ_binders[0]}
 dheight_n=${dheight_succ_binders[1]}
 dheight_payload=${dheight_succ_binders[2]}
 require_text_count_exact "dheight correlates its successor binders with the result" "$dheight_succ_line" "((extraction_deptypes.dheight @ $dheight_outer) @ (((extraction_deptypes.dbox_succ @ extraction_deptypes.dred) @ $dheight_n) @ $dheight_payload)) = (Corelib.Init.Datatypes.S @ $dheight_n)" 1
-forbid_line "dheight split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dheight[$].*=> @'
-forbid_line "dheight split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dheight[$].*extraction_deptypes\.dswap'
+forbid_pattern "dheight split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dheight[$].*=> @'
+forbid_pattern "dheight split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dheight[$].*extraction_deptypes\.dswap'
 
 # The same rule makes a match through a type-level fixpoint translatable: the
 # head normalizer takes the fixpoint iota step, and fording no longer needs an
@@ -311,8 +316,8 @@ dstack_n=${dstack_node_binders[1]}
 dstack_left=${dstack_node_binders[2]}
 dstack_right=${dstack_node_binders[3]}
 require_text_count_exact "dstack_size correlates its node binders with the result" "$dstack_node_line" "((extraction_deptypes.dstack_size @ $dstack_outer) @ (((extraction_deptypes.dnode @ $dstack_n) @ $dstack_left) @ $dstack_right)) = (Corelib.Init.Datatypes.S @ $dstack_n)" 1
-forbid_line "dstack_size split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dstack_size[$].*=> @'
-require_line "dstack_size retains its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
+forbid_pattern "dstack_size split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dstack_size[$].*=> @'
+require_pattern "dstack_size retains its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
 
 # A guard leaf is expanded from the occurrence type, so it needs the same
 # fixpoint iota step.  A collapsed refinement emits no inversion axiom either,
@@ -331,20 +336,20 @@ forbid_text "fstack_value guard does not degrade to a nominal fixpoint-typed lea
 # retains its leaf equation and removes the impossible successor-indexed node
 # equation.  The link also pins that the outer auxiliary receives exactly the
 # result of the inner option case, not a surplus type-level-function argument.
-require_line "the inner case supplies the outer scrutinee its unapplied type" '^\$_def_extraction_deptypes\.dnested[$]link:.*= \(\$_case_extraction_deptypes\.dtree[$][0-9]+ @ \(\$_case_Corelib\.Init\.Datatypes\.option[$][0-9]+ @ 0_o\)\)\)'
-require_line "the outer case auxiliary keeps its leaf equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dleaf:'
-forbid_line "rigid clash prunes the outer node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
+require_pattern "the inner case supplies the outer scrutinee its unapplied type" '^\$_def_extraction_deptypes\.dnested[$]link:.*= \(\$_case_extraction_deptypes\.dtree[$][0-9]+ @ \(\$_case_Corelib\.Init\.Datatypes\.option[$][0-9]+ @ 0_o\)\)\)'
+require_pattern "the outer case auxiliary keeps its leaf equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dleaf:'
+forbid_pattern "rigid clash prunes the outer node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
 
 # The compared indices are head-normalized where they are compared, not
 # normalized in advance, so a computed index still exposes its constructor.
-require_line "a computed index keeps the branch it admits" '^\$_def_extraction_deptypes\.dcomputed[$]dnode:'
-forbid_line "a computed index prunes the branch it clashes with" '^\$_def_extraction_deptypes\.dcomputed[$]dleaf:'
+require_pattern "a computed index keeps the branch it admits" '^\$_def_extraction_deptypes\.dcomputed[$]dnode:'
+forbid_pattern "a computed index prunes the branch it clashes with" '^\$_def_extraction_deptypes\.dcomputed[$]dleaf:'
 
 # That normalization is budgeted.  An index whose head the budget does not
 # reach is undecided, and an undecided comparison prunes nothing: both branches
 # survive, which costs an impossible equation rather than a reachable one.
-require_line "an index beyond the normalization budget keeps its leaf branch" '^\$_def_extraction_deptypes\.dcomputed_deep[$]dleaf:'
-require_line "an index beyond the normalization budget keeps its node branch" '^\$_def_extraction_deptypes\.dcomputed_deep[$]dnode:'
+require_pattern "an index beyond the normalization budget keeps its leaf branch" '^\$_def_extraction_deptypes\.dcomputed_deep[$]dleaf:'
+require_pattern "an index beyond the normalization budget keeps its node branch" '^\$_def_extraction_deptypes\.dcomputed_deep[$]dnode:'
 
 # Indexed-family fixtures: solved constructor arguments and erased proof fields
 # make the split equations unconditional, while occurrence guards retain the
@@ -402,15 +407,15 @@ untag_line=$(get_unique_line "untag constructor equation" '$_def_extraction_inde
 parse_binders "untag constructor equation" "$untag_line" universal 1 untag_binders
 untag_index=${untag_binders[0]}
 require_text_count_exact "untag fords its constructor index to the occurrence index" "$untag_line" "((extraction_indexed.untag @ $untag_index) @ (extraction_indexed.tg @ $untag_index)) = $untag_index)" 1
-forbid_line "untag has no legacy index premise" '^\$_def_extraction_indexed\.untag[$]tg:.*=> @'
+forbid_pattern "untag has no legacy index premise" '^\$_def_extraction_indexed\.untag[$]tg:.*=> @'
 
 ibval_line=$(get_unique_line "ibval constructor equation" '$_def_extraction_indexed.ibval$IBounded:')
 parse_binders "ibval constructor equation" "$ibval_line" universal 2 ibval_binders
 ibval_outer=${ibval_binders[0]}
 ibval_carrier=${ibval_binders[1]}
 require_text_count_exact "ibval correlates its carrier argument with the result" "$ibval_line" "((extraction_indexed.ibval @ $ibval_outer) @ $ibval_carrier) = $ibval_carrier)" 1
-forbid_line "ibval carrier equation is unconditional" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*=> @'
-forbid_line "ibval definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*extraction_indexed\.IBounded'
+forbid_pattern "ibval carrier equation is unconditional" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*=> @'
+forbid_pattern "ibval definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibval[$]IBounded:.*extraction_indexed\.IBounded'
 
 # A body reading the solved index instead of the carrier must equate the result
 # with the scrutinee's index.  A fresh binder there would occur only on the
@@ -421,8 +426,8 @@ parse_binders "ibidx constructor equation" "$ibidx_line" universal 2 ibidx_binde
 ibidx_outer=${ibidx_binders[0]}
 ibidx_carrier=${ibidx_binders[1]}
 require_text_count_exact "ibidx fords its solved index to the scrutinee index" "$ibidx_line" "((extraction_indexed.ibidx @ $ibidx_outer) @ $ibidx_carrier) = $ibidx_outer)" 1
-forbid_line "ibidx carrier equation is unconditional" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*=> @'
-forbid_line "ibidx definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*extraction_indexed\.IBounded'
+forbid_pattern "ibidx carrier equation is unconditional" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*=> @'
+forbid_pattern "ibidx definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*extraction_indexed\.IBounded'
 
 # The same body behind a type-level fixpoint.  The occurrence indices fording
 # reads come from the scrutinee's declared type, so they depend on the fixpoint
@@ -439,8 +444,8 @@ require_text_count_exact "istack_index fords its solved index to the scrutinee i
 # only on the right-hand side of the branch equation -- which, once the
 # constructor collapses to its carrier, equates every two indices.  The split
 # equations are omitted instead, costing completeness rather than soundness.
-forbid_line "an unrecognized indexed refinement emits no carrier-collapsed equation" '^\$_def_extraction_indexed\.istack_index_deep[$]'
-require_line "an unrecognized indexed refinement keeps its typing axiom" '^\$_typeof_extraction_indexed\.istack_index_deep:'
+forbid_pattern "an unrecognized indexed refinement emits no carrier-collapsed equation" '^\$_def_extraction_indexed\.istack_index_deep[$]'
+require_pattern "an unrecognized indexed refinement keeps its typing axiom" '^\$_typeof_extraction_indexed\.istack_index_deep:'
 
 ibval_typeof_line=$(get_unique_line "ibval typing axiom" '$_typeof_extraction_indexed.ibval:')
 parse_binders "ibval typing axiom" "$ibval_typeof_line" universal 2 ibval_typeof_binders
@@ -449,12 +454,12 @@ ibval_b=${ibval_typeof_binders[1]}
 require_text "ibval typing axiom types its exact index binder" "$ibval_typeof_line" "((\$HasType @ $ibval_n) @ Corelib.Init.Datatypes.nat)"
 require_text_count_exact "ibval typing axiom correlates its carrier and bound" "$ibval_typeof_line" "((& @ ((\$HasType @ $ibval_b) @ Corelib.Init.Datatypes.nat)) @ ((Corelib.Init.Peano.lt @ $ibval_b) @ $ibval_n))" 1
 require_text_count_exact "ibval typing axiom correlates its result application" "$ibval_typeof_line" "((\$HasType @ ((extraction_indexed.ibval @ $ibval_n) @ $ibval_b)) @ Corelib.Init.Datatypes.nat)" 1
-forbid_line "ibval type axiom has no nominal ibounded leaf" '^\$_typeof_extraction_indexed\.ibval:.*\$HasType.*extraction_indexed\.ibounded'
+forbid_pattern "ibval type axiom has no nominal ibounded leaf" '^\$_typeof_extraction_indexed\.ibval:.*\$HasType.*extraction_indexed\.ibounded'
 
 ibounded_typeof_line=$(get_unique_line "indexed subset typing axiom" '$_typeof_extraction_indexed.ibounded:')
 [ "$ibounded_typeof_line" = '$_typeof_extraction_indexed.ibounded: (($HasType @ extraction_indexed.ibounded) @ (($_arrow @ Corelib.Init.Datatypes.nat) @ Type))' ] || fail "indexed subset declaration has the wrong ordinary type axiom"
-forbid_line "indexed subset constructor injectivity is skipped by default" '^\$_inj_extraction_indexed\.IBounded:'
-forbid_line "indexed subset inversion is skipped by default" '^\$_inversion_extraction_indexed\.ibounded:'
+forbid_pattern "indexed subset constructor injectivity is skipped by default" '^\$_inj_extraction_indexed\.IBounded:'
+forbid_pattern "indexed subset inversion is skipped by default" '^\$_inversion_extraction_indexed\.ibounded:'
 
 # An under-applied constructor of an indexed subset is eta-expanded and then
 # collapsed to its carrier.  The residual fields are typed through the argument
@@ -477,15 +482,15 @@ parse_binders "under-applied indexed subset constructor typing axiom" "$ibpart_t
 ibpart_k=${ibpart_typeof_binders[0]}
 require_text "under-applied indexed subset constructor types its exact residual binder" "$ibpart_typeof_line" "((\$HasType @ $ibpart_k) @ Corelib.Init.Datatypes.nat)"
 require_text_count_exact "under-applied indexed subset constructor instantiates its payload at the occurrence index" "$ibpart_typeof_line" "((=> @ ((Corelib.Init.Peano.lt @ $ibpart_k) @ $ibpart_bound)) @ ((& @ ((\$HasType @ (extraction_indexed.ibpart @ $ibpart_k)) @ Corelib.Init.Datatypes.nat)) @ ((Corelib.Init.Peano.lt @ (extraction_indexed.ibpart @ $ibpart_k)) @ $ibpart_bound)))" 1
-forbid_line "under-applied indexed subset constructor leaves no index formal free" '^\$_typeof_extraction_indexed\.ibpart:.*[$]Anonymous'
+forbid_pattern "under-applied indexed subset constructor leaves no index formal free" '^\$_typeof_extraction_indexed\.ibpart:.*[$]Anonymous'
 
 # An indexed subset whose fields depend on a parameter is not a uniform
 # declaration-level subset.  It must stay nominal at occurrences while its
 # structural axioms remain enabled, or injectivity would recover distinct
 # indices from equality of the collapsed carriers.
-require_line "parameter-dependent indexed subset keeps constructor injectivity" '^\$_inj_extraction_indexed\.IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
-require_line "parameter-dependent indexed subset keeps inversion" '^\$_inversion_extraction_indexed\.indexed_poly_subset:'
-require_line "parameter-dependent indexed subset projector keeps its constructor" '^\$_def_extraction_indexed\.indexed_poly_value[$]IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
+require_pattern "parameter-dependent indexed subset keeps constructor injectivity" '^\$_inj_extraction_indexed\.IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
+require_pattern "parameter-dependent indexed subset keeps inversion" '^\$_inversion_extraction_indexed\.indexed_poly_subset:'
+require_pattern "parameter-dependent indexed subset projector keeps its constructor" '^\$_def_extraction_indexed\.indexed_poly_value[$]IndexedPolySubset:.*extraction_indexed\.IndexedPolySubset'
 indexed_poly_value_line=$(get_unique_line "parameter-dependent indexed subset projector" '$_def_extraction_indexed.indexed_poly_value$IndexedPolySubset:')
 parse_binders "parameter-dependent indexed subset projector" "$indexed_poly_value_line" universal 3 indexed_poly_value_binders
 indexed_poly_value_a=${indexed_poly_value_binders[0]}
@@ -498,7 +503,7 @@ parse_binders "fromok definition" "$fromok_line" universal 2 fromok_binders
 fromok_n=${fromok_binders[0]}
 fromok_m=${fromok_binders[1]}
 require_text_count_exact "fromok singleton match is unconditional" "$fromok_line" "((extraction_indexed.fromok @ $fromok_n) @ $fromok_m) = (Corelib.Init.Datatypes.S @ $fromok_n)" 1
-forbid_line "fromok definition has no index or proof premise" '^\$_def_extraction_indexed\.fromok:.*=> @'
+forbid_pattern "fromok definition has no index or proof premise" '^\$_def_extraction_indexed\.fromok:.*=> @'
 
 fromok_typeof_line=$(get_unique_line "fromok typing axiom" '$_typeof_extraction_indexed.fromok:')
 parse_binders "fromok typing axiom" "$fromok_typeof_line" universal 2 fromok_typeof_binders
@@ -514,7 +519,7 @@ cast_a=${cast_binders[0]}
 cast_b=${cast_binders[1]}
 cast_x=${cast_binders[2]}
 require_text_count_exact "cast erases transport to its exact payload binder" "$cast_line" "(((extraction_indexed.cast @ $cast_a) @ $cast_b) @ $cast_x) = $cast_x)" 1
-forbid_line "cast definition has no equality premise" '^\$_def_extraction_indexed\.cast:.*=> @'
+forbid_pattern "cast definition has no equality premise" '^\$_def_extraction_indexed\.cast:.*=> @'
 cast_typeof_line=$(get_unique_line "cast typing axiom" '$_typeof_extraction_indexed.cast:')
 cast_type_symbol=$(extract_unique_symbol "cast typing helper" "$cast_typeof_line" '\$_type_[0-9]+' '\$_type_[0-9]+')
 cast_type_line=$(get_unique_line "cast typing helper definition" "$cast_type_symbol:")
@@ -537,8 +542,8 @@ vhead_constructor_n=${vhead_binders[2]}
 vhead_payload=${vhead_binders[3]}
 vhead_tail=${vhead_binders[4]}
 require_text_count_exact "indexed vhead correlates its complete vcons pattern and result" "$vhead_line" "(((extraction_indexed.vhead @ $vhead_a) @ $vhead_outer_n) @ ((((extraction_indexed.vcons @ $vhead_a) @ $vhead_constructor_n) @ $vhead_payload) @ $vhead_tail)) = $vhead_payload)" 1
-forbid_line "indexed vhead prunes the impossible vnil equation" '^\$_def_extraction_indexed\.vhead[$]vnil:'
-forbid_line "indexed vhead equation has no legacy index premise" '^\$_def_extraction_indexed\.vhead[$].*=> @'
+forbid_pattern "indexed vhead prunes the impossible vnil equation" '^\$_def_extraction_indexed\.vhead[$]vnil:'
+forbid_pattern "indexed vhead equation has no legacy index premise" '^\$_def_extraction_indexed\.vhead[$].*=> @'
 
 dheight2_line=$(get_unique_line "dheight2 successor equation" '$_def_extraction_indexed.dheight2$dbox_succ:')
 parse_binders "dheight2 successor equation" "$dheight2_line" universal 3 dheight2_binders
@@ -546,8 +551,8 @@ dheight2_outer=${dheight2_binders[0]}
 dheight2_n=${dheight2_binders[1]}
 dheight2_payload=${dheight2_binders[2]}
 require_text_count_exact "dheight2 correlates its successor pattern and result" "$dheight2_line" "((extraction_indexed.dheight2 @ $dheight2_outer) @ (((extraction_deptypes.dbox_succ @ extraction_deptypes.dred) @ $dheight2_n) @ $dheight2_payload)) = (Corelib.Init.Datatypes.S @ $dheight2_n)" 1
-forbid_line "dheight2 prunes the clashing zero equation" '^\$_def_extraction_indexed\.dheight2[$]dbox_zero:'
-forbid_line "dheight2 successor equation is unconditional" '^\$_def_extraction_indexed\.dheight2[$]dbox_succ:.*=> @'
+forbid_pattern "dheight2 prunes the clashing zero equation" '^\$_def_extraction_indexed\.dheight2[$]dbox_zero:'
+forbid_pattern "dheight2 successor equation is unconditional" '^\$_def_extraction_indexed\.dheight2[$]dbox_succ:.*=> @'
 
 # Prop singleton matches collapse to their sole branch.  Their inversion axioms
 # still pin the index equation used when the propositions occur as assumptions.
@@ -560,7 +565,7 @@ fromisT_line=$(get_unique_line "fromisT definition" '$_def_extraction_indexed.fr
 parse_binders "fromisT definition" "$fromisT_line" universal 1 fromisT_binders
 fromisT_t=${fromisT_binders[0]}
 require_text_count_exact "fromisT returns zero for its exact source binder" "$fromisT_line" "(extraction_indexed.fromisT @ $fromisT_t) = Corelib.Init.Datatypes.O" 1
-forbid_line "fromisT definition has no singleton premise" '^\$_def_extraction_indexed\.fromisT:.*=> @'
+forbid_pattern "fromisT definition has no singleton premise" '^\$_def_extraction_indexed\.fromisT:.*=> @'
 
 fromisT_typeof_line=$(get_unique_line "fromisT typing axiom" '$_typeof_extraction_indexed.fromisT:')
 parse_binders "fromisT typing axiom" "$fromisT_typeof_line" universal 1 fromisT_typeof_binders
@@ -577,7 +582,7 @@ fromtrue_line=$(get_unique_line "fromtrue definition" '$_def_extraction_indexed.
 parse_binders "fromtrue definition" "$fromtrue_line" universal 1 fromtrue_binders
 fromtrue_b=${fromtrue_binders[0]}
 require_text_count_exact "fromtrue returns true for its exact source binder" "$fromtrue_line" "(extraction_indexed.fromtrue @ $fromtrue_b) = Corelib.Init.Datatypes.true" 1
-forbid_line "fromtrue definition has no singleton premise" '^\$_def_extraction_indexed\.fromtrue:.*=> @'
+forbid_pattern "fromtrue definition has no singleton premise" '^\$_def_extraction_indexed\.fromtrue:.*=> @'
 
 fromtrue_typeof_line=$(get_unique_line "fromtrue typing axiom" '$_typeof_extraction_indexed.fromtrue:')
 parse_binders "fromtrue typing axiom" "$fromtrue_typeof_line" universal 1 fromtrue_typeof_binders
@@ -593,7 +598,7 @@ jmeq_b=${jmeq_binders[1]}
 jmeq_x=${jmeq_binders[2]}
 jmeq_y=${jmeq_binders[3]}
 require_text_count_exact "JMeq singleton match returns its exact source payload" "$jmeq_line" "((((extraction_indexed.jmeq_match @ $jmeq_a) @ $jmeq_b) @ $jmeq_x) @ $jmeq_y) = $jmeq_x)" 1
-forbid_line "JMeq match definition has no proof premise" '^\$_def_extraction_indexed\.jmeq_match:.*=> @'
+forbid_pattern "JMeq match definition has no proof premise" '^\$_def_extraction_indexed\.jmeq_match:.*=> @'
 
 jmeq_typeof_line=$(get_unique_line "JMeq match typing axiom" '$_typeof_extraction_indexed.jmeq_match:')
 parse_binders "JMeq match typing axiom" "$jmeq_typeof_line" universal 4 jmeq_typeof_binders
@@ -609,21 +614,21 @@ require_text_count_exact "JMeq typing correlates its premise and result applicat
 
 # Corpus-wide shallowness gates for the covered constants.  WF-gated idiv
 # definitions and explicit stdlib structural snapshots are checked separately.
-forbid_line "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'
-forbid_line "covered extraction type axioms do not keep classified HasType leaves" '^\$_typeof_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag):.*Corelib\.Init\.(Specif\.(sig|sig2|sumbool)|Datatypes\.prod)'
+forbid_pattern "covered extraction definitions do not mention erased packages" '^\$_def_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag|vhead)[:$].*Corelib\.Init\.Specif\.(sig|sig2|exist|exist2|proj1_sig)'
+forbid_pattern "covered extraction type axioms do not keep classified HasType leaves" '^\$_typeof_extraction_deptypes\.(h|safe_pred|pval|beq|between|tag):.*Corelib\.Init\.(Specif\.(sig|sig2|sumbool)|Datatypes\.prod)'
 
 # WF recursion: Program Fixpoint/Fix_sub idiv and the bare Fix/Fix_F fixtures
 # expose only premised unfolding equations.  The erased b <> 0 premise is
 # mandatory on the top-level link and on recursive/zero branches.
-require_line "idiv link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv[$]link:.*=> @ \(~ @ \([^)]*_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
-require_line "idiv recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_1 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv_func.*Corelib\.Init\.Nat\.sub'
-require_line "idiv zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_1 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
-require_line "idiv2 link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv2[$]link:.*=> @ \(~ @ \(0_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
-require_line "idiv3 link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv3[$]link:.*=> @ \(~ @ \(0_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
-require_line "idiv2 recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv2 @ v_CANONICAL_0.*Corelib\.Init\.Nat\.sub'
-require_line "idiv3 recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv3 @ v_CANONICAL_0.*Corelib\.Init\.Nat\.sub'
-require_line "idiv2 zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
-require_line "idiv3 zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
+require_pattern "idiv link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv[$]link:.*=> @ \(~ @ \([^)]*_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
+require_pattern "idiv recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_1 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv_func.*Corelib\.Init\.Nat\.sub'
+require_pattern "idiv zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_1 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
+require_pattern "idiv2 link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv2[$]link:.*=> @ \(~ @ \(0_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
+require_pattern "idiv3 link has the b nonzero premise" '^\$_def_extraction_deptypes\.idiv3[$]link:.*=> @ \(~ @ \(0_b = Corelib\.Init\.Datatypes\.O\)\).*le_lt_dec'
+require_pattern "idiv2 recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv2 @ v_CANONICAL_0.*Corelib\.Init\.Nat\.sub'
+require_pattern "idiv3 recursive branch has the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]left:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*extraction_deptypes\.idiv3 @ v_CANONICAL_0.*Corelib\.Init\.Nat\.sub'
+require_pattern "idiv2 zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
+require_pattern "idiv3 zero branch keeps the b nonzero premise" '^\$_case_Corelib\.Init\.Specif\.sumbool[$][0-9]+[$]right:.*=> @ \(~ @ \(v_CANONICAL_0 = Corelib\.Init\.Datatypes\.O\)\).*Corelib\.Init\.Datatypes\.O'
 for wf_name in idiv idiv2 idiv3; do
   wf_pattern='^\$_def_extraction_deptypes\.'"$wf_name"'[$][^:]*:.*le_lt_dec'
   if grep -E "$wf_pattern" "$out" | grep -Ev '=> @ \(~ @ \([^)]* = Corelib\.Init\.Datatypes\.O\)\)' >/dev/null; then
@@ -638,15 +643,15 @@ require_text_count_exact "Acc_rect definition carries exactly one Acc premise" "
 # Stdlib regression constants: structural snapshots enforced now.
 # -----------------------------------------------------------------------------
 
-require_line "Nat.add zero split equation" '^\$_def_Corelib\.Init\.Nat\.add[$]O:'
-require_line "Nat.add successor split equation" '^\$_def_Corelib\.Init\.Nat\.add[$]S:'
-forbid_line "Nat.add split equations are guard/existential/disjunction free" '^\$_def_Corelib\.Init\.Nat\.add[$].*(\$HasType|\?\[|[|])'
+require_pattern "Nat.add zero split equation" '^\$_def_Corelib\.Init\.Nat\.add[$]O:'
+require_pattern "Nat.add successor split equation" '^\$_def_Corelib\.Init\.Nat\.add[$]S:'
+forbid_pattern "Nat.add split equations are guard/existential/disjunction free" '^\$_def_Corelib\.Init\.Nat\.add[$].*(\$HasType|\?\[|[|])'
 
 require_count_at_least "List.app has split definition axioms" '^\$_def_Corelib\.Init\.Datatypes\.app[$]' 2
-require_line "List.app split mentions nil" '^\$_def_Corelib\.Init\.Datatypes\.app[$]nil:.*Corelib\.Init\.Datatypes\.nil'
-require_line "List.app split mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.app[$]cons:.*Corelib\.Init\.Datatypes\.cons'
+require_pattern "List.app split mentions nil" '^\$_def_Corelib\.Init\.Datatypes\.app[$]nil:.*Corelib\.Init\.Datatypes\.nil'
+require_pattern "List.app split mentions cons" '^\$_def_Corelib\.Init\.Datatypes\.app[$]cons:.*Corelib\.Init\.Datatypes\.cons'
 
-require_line "List.Forall has an inversion axiom" '^\$_inversion_Corelib\.Lists\.ListDef\.Forall:'
+require_pattern "List.Forall has an inversion axiom" '^\$_inversion_Corelib\.Lists\.ListDef\.Forall:'
 eq_rect_line=$(get_unique_line "eq_rect generic definition" '$_def_Corelib.Init.Logic.eq_rect:')
 parse_binders "eq_rect generic definition" "$eq_rect_line" universal 5 eq_rect_binders
 eq_rect_a=${eq_rect_binders[0]}
@@ -658,12 +663,12 @@ require_text_count_exact "eq_rect generic singleton equation" "$eq_rect_line" "C
 if [[ "$eq_rect_line" == *'=> @'* ]]; then
   fail "eq_rect generic singleton equation must be unconditional"
 fi
-require_line "eq_ind has a translated formula" '^Corelib\.Init\.Logic\.eq_ind:'
-require_line "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'
-forbid_line "eq_ind has no synthetic definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind:'
-forbid_line "eq_ind_r has no synthetic definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:'
-require_line "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
-require_line "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
+require_pattern "eq_ind has a translated formula" '^Corelib\.Init\.Logic\.eq_ind:'
+require_pattern "eq_ind_r has a translated formula" '^Corelib\.Init\.Logic\.eq_ind_r:'
+forbid_pattern "eq_ind has no synthetic definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind:'
+forbid_pattern "eq_ind_r has no synthetic definition" '^\$_def_Corelib\.Init\.Logic\.eq_ind_r:'
+require_pattern "proj1 has a translated formula" '^Corelib\.Init\.Logic\.proj1:'
+require_pattern "Acc_rect has a type axiom" '^\$_typeof_Corelib\.Init\.Wf\.Acc_rect:'
 require_count_at_least "Nat.eq_dec has a definition axiom" '^\$_def_Stdlib\.Arith\.PeanoNat\.Nat\.eq_dec:' 1
 
 # Applied indexed reflect guards expand shallowly.  Generated proposition IDs
@@ -691,10 +696,10 @@ nat_eqb_false_branch="((& @ (((Stdlib.Arith.PeanoNat.Nat.eqb_spec @ $nat_eqb_x) 
 require_text_count_exact "Nat.eqb_spec true branch correlates its outer binders, tag proposition, payload, and boolean helper" "$nat_eqb_spec_line" "$nat_eqb_true_branch" 1
 require_text_count_exact "Nat.eqb_spec false branch correlates its outer binders, tag proposition, payload, and boolean helper" "$nat_eqb_spec_line" "$nat_eqb_false_branch" 1
 
-forbid_line "Nat.eqb_spec unfolds no boolean index into a lifted fixpoint" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$_fix_'
-forbid_line "Nat.eqb_spec has no nominal reflect guard" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
+forbid_pattern "Nat.eqb_spec unfolds no boolean index into a lifted fixpoint" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$_fix_'
+forbid_pattern "Nat.eqb_spec has no nominal reflect guard" '^\$_typeof_Stdlib\.Arith\.PeanoNat\.Nat\.eqb_spec:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
 
-require_line "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'
+require_pattern "sumbool has an inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sumbool:'
 introT_line=$(get_unique_line "introT formula" 'Corelib.ssr.ssrbool.introT:')
 parse_binders "introT formula" "$introT_line" universal 3 introT_binders
 introT_p=${introT_binders[0]}
@@ -706,13 +711,13 @@ require_text_count_exact "introT correlates its exact boolean binder in the enum
 require_text_count_exact "introT true branch correlates its exact binders, payload, and index" "$introT_line" "((& @ ($introT_value = (Corelib.Init.Datatypes.ReflectT @ $introT_p))) @ ((& @ $introT_p) @ ($introT_b = Corelib.Init.Datatypes.true)))" 1
 require_text_count_exact "introT false branch correlates its exact binders, payload, and index" "$introT_line" "((& @ ($introT_value = (Corelib.Init.Datatypes.ReflectF @ $introT_p))) @ ((& @ (~ @ $introT_p)) @ ($introT_b = Corelib.Init.Datatypes.false)))" 1
 require_text_count_exact "introT correlates its exact proposition and boolean binders in the result" "$introT_line" "((=> @ $introT_p) @ (Corelib.Init.Datatypes.is_true @ $introT_b))" 1
-forbid_line "introT has no nominal reflect guard" '^Corelib\.ssr\.ssrbool\.introT:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
-require_line "parameter-dependent sig keeps its inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
-require_line "parameter-dependent sig keeps constructor injectivity" '^\$_inj_Corelib\.Init\.Specif\.exist:'
-require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
+forbid_pattern "introT has no nominal reflect guard" '^Corelib\.ssr\.ssrbool\.introT:.*\$HasType.*Corelib\.Init\.Datatypes\.reflect'
+require_pattern "parameter-dependent sig keeps its inversion axiom" '^\$_inversion_Corelib\.Init\.Specif\.sig:'
+require_pattern "parameter-dependent sig keeps constructor injectivity" '^\$_inj_Corelib\.Init\.Specif\.exist:'
+require_pattern "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatypes\.prod:'
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
 require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1
-require_line "typeclass method projection is translated" '^Corelib\.Classes\.RelationClasses\.Equivalence_Reflexive:'
+require_pattern "typeclass method projection is translated" '^Corelib\.Classes\.RelationClasses\.Equivalence_Reflexive:'
 
 # The two [hammer_transl] goals over [memo_ref] differ only in the sort of the
 # hypothesis [Hp], whose type the erasure memo key does not record: a hypothesis

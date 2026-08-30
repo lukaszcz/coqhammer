@@ -9,7 +9,7 @@
 #   assert_context  - short name of the suite, used in failure messages
 #
 # Dollar signs in generated identifiers are literal, and parse_binders assigns
-# its named arrays indirectly through a nameref.
+# its named arrays indirectly through a nameref, which needs Bash 4.3 or later.
 # shellcheck disable=SC2016,SC2154
 
 fail() {
@@ -64,6 +64,13 @@ parse_binders() {
   local expected=$4
   local result_name=$5
   local pattern
+  # The nameref below resolves in this function's own scope, so a caller array
+  # sharing a name with one of the locals would either be shadowed or make the
+  # reference circular.  Reject those names outright rather than mis-parse.
+  case "$result_name" in
+    label|text|quantifier|expected|result_name|pattern|result)
+      fail "$label (reserved binder array name: $result_name)" ;;
+  esac
   local -n result=$result_name
 
   case "$quantifier" in

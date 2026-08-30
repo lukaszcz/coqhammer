@@ -61,6 +61,50 @@ let adjust_logops =
     end
 
 (***************************************************************************************)
+(* Caches of the declarations *)
+
+(* Declared constructor telescopes, keyed on the constructor name and holding
+   what [destruct_type_app] returns for it: the whole declared type evaluated
+   and every binder refreshed.  The rigid-clash recursion asks for the same
+   telescope at every node it visits and at every occurrence it is run over,
+   and the answer is a function of [Defhash] alone.  The names
+   [refresh_varname] mints are unique for the life of a translation, so a
+   telescope handed out twice is as capture-free as a freshly destructed one. *)
+let constructor_formals_hash : (string, (string * coqterm) list) Hashtbl.t =
+  Hashtbl.create 257
+
+let constructor_formals cname =
+  match Hashtbl.find_opt constructor_formals_hash cname with
+  | Some formals -> formals
+  | None ->
+     let (_, _, cargs) =
+       Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+     in
+     Hashtbl.add constructor_formals_hash cname cargs;
+     cargs
+
+(* Everything remembered about the declarations rather than about the terms
+   being translated: the erasure verdicts, [Coq_typing]'s constructorhood bits
+   and the constructor telescopes above.  None of the three records which
+   [Defhash] entries it was read from -- an erasure verdict is keyed by
+   occurrence, a constructorhood bit is a function of both the name's entry and
+   its inductive's, and a telescope is a function of the name's entry -- so
+   none of them can be invalidated selectively, and all three are dropped
+   whole wherever the [Defhash] population changes: [reinit], [remove_def] and
+   [cleanup].  They are cheap to rebuild and each is rebuilt lazily, on the
+   first query that misses.
+
+   Keeping any of them across such a change is not merely a stale answer: a
+   constructorhood bit answered `no' because premise selection had not admitted
+   the inductive yet, or a telescope of a declaration whose type a
+   re-translation replaces, both feed rigid-clash pruning, where a wrong answer
+   can prune a reachable branch. *)
+let clear_declaration_caches () =
+  Coq_erasure.clear ();
+  Coq_typing.clear_constructor_hash ();
+  Hashtbl.clear constructor_formals_hash
+
+(***************************************************************************************)
 (* Initialization *)
 
 let reinit (lst : hhdef list) =
@@ -84,15 +128,16 @@ let reinit (lst : hhdef list) =
         ()
   in
   log 1 "Reinitializing...";
-  (* The erasure memo is keyed on an occurrence, not on the [Defhash] entries
-     the classification resolves that occurrence's constants through, so it is
-     valid for one population of [Defhash] only.  [reinit] is where that
-     population is established -- after [cleanup] for the prover path, but also
-     on its own for the [Hammer_transl] diagnostics, which keep the translation
-     caches across goals.  Two goals of one session may bind a hypothesis of
-     the same name at different types, and a constant absent from the first
-     goal's premises is classified as informative until selection admits it. *)
-  Coq_erasure.clear ();
+  (* The declaration caches are keyed on names and occurrences, not on the
+     [Defhash] entries they were read through, so they are valid for one
+     population of [Defhash] only.  [reinit] is where that population is
+     established -- after [cleanup] for the prover path, but also on its own
+     for the [Hammer_transl] diagnostics, which keep the translation caches
+     across goals.  Two goals of one session may bind a hypothesis of the same
+     name at different types, and a constant absent from the first goal's
+     premises is classified as informative, and is not a constructor, until
+     selection admits it. *)
+  clear_declaration_caches ();
   let hastype_type = mk_fun_ty (Const("$Any")) (mk_fun_ty SortType SortProp) in
   begin
     try
@@ -858,29 +903,6 @@ let program_wf_simpl tm =
    falling back whenever an Acc/proof-recursive path would otherwise emit an
    unsafe unconditional equation. *)
 let wf_mark = ref false
-
-(* Declared constructor telescopes, keyed on the constructor name and holding
-   what [destruct_type_app] returns for it: the whole declared type evaluated
-   and every binder refreshed.  The rigid-clash recursion below asks for the
-   same telescope at every node it visits and at every occurrence it is run
-   over, and the answer is a function of [Defhash] alone.  The names
-   [refresh_varname] mints are unique for the life of a translation, so a
-   telescope handed out twice is as capture-free as a freshly destructed one.
-   Cleared in [cleanup] together with [Defhash] and [Coq_typing]'s companion
-   [constructor_hash], which is the lifecycle a cache of the declarations must
-   share to avoid going stale. *)
-let constructor_formals_hash : (string, (string * coqterm) list) Hashtbl.t =
-  Hashtbl.create 257
-
-let constructor_formals cname =
-  match Hashtbl.find_opt constructor_formals_hash cname with
-  | Some formals -> formals
-  | None ->
-     let (_, _, cargs) =
-       Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
-     in
-     Hashtbl.add constructor_formals_hash cname cargs;
-     cargs
 
 (* Constructor applications are rigid only at constructor heads.  Equal heads
    may still clash in any corresponding informative argument, including
@@ -3510,24 +3532,22 @@ let remove_def name =
      [Lift_dependencies] is keyed by symbol rather than by owner and stays
      consistent with the surviving [coqterm_hash], so it is left alone.
 
-     The erasure memo has to go too, whole: its entries are keyed by occurrence
-     and record no provenance, so there is no way to drop just the verdicts
-     that read this declaration's type.  Dropping all of them is cheap here --
-     [remove_def] is only ever used before a translation, never inside one --
-     and it is what keeps a verdict from surviving a declaration whose type the
-     re-translation replaces. *)
+     The caches of the declarations have to go too, whole: none of them records
+     which [Defhash] entries it was read from, so there is no way to drop just
+     the answers that read this declaration.  Dropping all of them is cheap
+     here -- [remove_def] is only ever used before a translation, never inside
+     one -- and it is what keeps an answer from surviving the declaration whose
+     content the re-translation replaces. *)
   Lift_owners.remove name;
-  Coq_erasure.clear ()
+  clear_declaration_caches ()
 
 let cleanup () =
   reset_unique_id ();
   discarded_speculations := 0;
   discarded_speculation_effects := 0;
   Defhash.clear ();
-  Coq_typing.clear_constructor_hash ();
-  Hashtbl.clear constructor_formals_hash;
+  clear_declaration_caches ();
   Axhash.clear ();
-  Coq_erasure.clear ();
   Case_dependencies.clear ();
   Lift_dependencies.clear ();
   Lift_owners.clear ();

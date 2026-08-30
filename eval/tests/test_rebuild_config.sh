@@ -34,10 +34,15 @@ work=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 [ "$1" = "$work/singleton_premises.out" ]
 expect=${SINGLETON_PREMISES_EXPECT:-present}
 printf '%s %s\n' "$expect" "$work" >> "$VALIDATION_LOG"
+# The dollar signs are literal parts of Hammer's generated identifiers.
+# shellcheck disable=SC2016
+grep -q '^\$_typeof_singleton_premises\.' "$1"
 if [ "$expect" = absent ]; then
-  # The dollar sign is a literal part of Hammer's generated identifiers.
   # shellcheck disable=SC2016
   ! grep -q '^\$_def_singleton_premises\.' "$1"
+else
+  # shellcheck disable=SC2016
+  grep -q '^\$_def_singleton_premises\.' "$1"
 fi
 EOF
 chmod +x "$repo/tests/plugin/check-singleton-premises.sh"
@@ -54,9 +59,23 @@ case " $* " in
   *" singleton_premises.v "*)
     [ -f singleton_premises.v ]
     printf '%s\n' "$PWD" >> "$TRANSLATION_LOG"
+    # What the probe translates with is the plugin in the prefix it is pointed
+    # at, so read that prefix's option value rather than the checkout's.
+    coqlib=
+    prev=
+    for arg in "$@"; do
+      if [ "$prev" = -coqlib ]; then
+        coqlib=$arg
+      fi
+      prev=$arg
+    done
+    [ -n "$coqlib" ]
+    dependent=$(cat "$(dirname "$coqlib")/opt_dependent_types")
     # The dollar signs are literal parts of Hammer's generated identifiers.
     printf '%s\n' '$_typeof_singleton_premises.singleton_cast: mock translation'
-    if [ -n "${STALE_DEPENDENT_ARTIFACT:-}" ]; then
+    # STALE_DEPENDENT_ARTIFACT stands for a prefix whose plugin was never
+    # rebuilt, so it still collapses singletons however it was installed.
+    if [ "$dependent" = true ] || [ -n "${STALE_DEPENDENT_ARTIFACT:-}" ]; then
       printf '%s\n' '$_def_singleton_premises.singleton_cast: mock translation'
     fi
     ;;
@@ -68,6 +87,18 @@ cat > "$mock_bin/make" <<'EOF'
 set -euo pipefail
 [ "$1" = install ]
 [[ " $* " == *"COQFLAGS=-coqlib "* ]]
+prefix=
+for arg in "$@"; do
+  case "$arg" in
+    COQPLUGININSTALL=*) prefix=${arg#COQPLUGININSTALL=} ;;
+  esac
+done
+[ -n "$prefix" ]
+# A real install bakes the tree's option values into the installed plugin;
+# record them beside it so the probe can be answered from the prefix.
+sed -n 's/^let opt_dependent_types = \(true\|false\)$/\1/p' \
+  src/plugin/coq_transl_opts.ml > "$prefix/opt_dependent_types"
+[ -s "$prefix/opt_dependent_types" ]
 EOF
 chmod +x "$mock_bin/rocq" "$mock_bin/make"
 

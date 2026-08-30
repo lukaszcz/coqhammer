@@ -176,10 +176,11 @@ structural assertions that hold with the current translator:
   `introT`, `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
   the `Equivalence_Reflexive` typeclass method projection. The generic
   singleton path emits the unconditional `eq_rect(A,x,P,f,y) = f` equation;
-  `eq_ind` and `eq_ind_r` contribute only their
-  formulas, with no synthetic `$Proof = $Proof` definition. `Acc_rect` carries
-  exactly one `Acc` premise. Declaration-level subset injectivity/inversion
-  remains present for parameter-dependent `sig`.
+  `eq_ind` and `eq_ind_r` contribute only their own translated formulas:
+  neither generates a synthetic `$_def_` axiom, so neither carries a
+  definitional `$Proof = $Proof` equality. `Acc_rect` carries exactly one
+  `Acc` premise. Declaration-level subset injectivity/inversion remains
+  present for parameter-dependent `sig`.
 
 ### Documented deviations
 
