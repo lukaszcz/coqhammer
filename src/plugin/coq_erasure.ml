@@ -229,10 +229,13 @@ type fording = {
    A caller which does require the three to align -- the classification, whose
    patterns and formals both come from the declaration -- checks that itself.
 
-   Instantiating a solved argument reaches the patterns that follow it, and
-   [simple_subst] is enough for that: the binders of a pattern come from the
-   global binder refresh of [constructor_index_data], so none of them can
-   capture a free variable of a replacement. *)
+   Instantiating a solved argument reaches every pattern and every residual
+   equation, not only the positions that follow it: a solved argument leaves
+   the constructor telescope, so an earlier position mentioning it -- a family
+   indexed by both [S n] and [n], say -- would otherwise keep a reference no
+   consumer binds any more.  [simple_subst] is enough for that: the binders of
+   a pattern come from the global binder refresh of [constructor_index_data],
+   so none of them can capture a free variable of a replacement. *)
 let ford_indices mask replacements args patterns =
   let find_arg name =
     let rec find idx = function
@@ -257,9 +260,12 @@ let ford_indices mask replacements args patterns =
                   { ford_arg = arg_name; ford_arg_index = arg_idx;
                     ford_index_pos = pos; ford_value = value }
                 in
-                hlp (pos + 1) (entry :: solved) eqs (value :: seen)
+                let subst = simple_subst arg_name value in
+                hlp (pos + 1) (entry :: solved)
+                  (List.map (fun (pos2, tm) -> (pos2, subst tm)) eqs)
+                  (value :: List.map subst seen)
                   mask2 replacements2
-                  (List.map (simple_subst arg_name value) patterns2)
+                  (List.map subst patterns2)
             | None -> residual ()
             end
         | _ -> residual ()
@@ -799,7 +805,29 @@ let classify_decl indname =
         None
       else
         (try
-           let params = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
+           let formals = Hhlib.take params_num (Coq_typing.get_type_args ind_ty) in
+           (* [get_type_args] refreshes every binder, so the same declaration
+              yields different formal names at every call.  Those names are part
+              of the memo key, through both the parameters and the context slice
+              they are typed in, so keying on them would file one entry no later
+              call can ever look up and re-run the classification every time.
+              Rename them positionally instead: the key then depends on the
+              declaration alone.  The names cannot collide -- a refreshed binder
+              is [var_<name>_<id>] and a Rocq identifier holds no [$] -- and
+              they stay inside the classification, which reads their types and
+              returns no term built over them. *)
+           let rec canonical i renaming acc = function
+             | [] -> List.rev acc
+             | (name, ty) :: formals2 ->
+                 let name2 = "$decl_param_" ^ string_of_int i in
+                 let ty2 =
+                   List.fold_left
+                     (fun ty (n, n2) -> simple_subst n (Var n2) ty) ty renaming
+                 in
+                 canonical (i + 1) ((name, name2) :: renaming)
+                   ((name2, ty2) :: acc) formals2
+           in
+           let params = canonical 0 [] [] formals in
            let ctx = List.rev params in
            Some (classify ctx indname (mk_vars params))
          with Failure _ -> None)

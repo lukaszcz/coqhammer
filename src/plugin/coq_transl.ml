@@ -1435,6 +1435,20 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                if List.mem_assoc name solved then acc else (name, subst_solved ty) :: acc)
             args []
         in
+        (* The occurrence indices now reach the emitted equation itself, not
+           just an index premise: they are substituted into the spine, and from
+           there into the constructor pattern, the branch body and the types
+           the scrutinee substitution rewrites.  Only [vars] and the retained
+           [args] are ever quantified, so an index or pattern escaping them
+           would be emitted as a free TPTP variable -- the prover rejects the
+           whole problem and the goal is lost with no diagnostic.  Check the
+           scope before anything is built from it. *)
+        let bound_names = List.map fst (vars @ args) in
+        if not (List.for_all (term_fvars_subset bound_names)
+                  (indices @ spine @ patterns))
+        then
+          internal_error "case index arguments escape the normalized scope"
+        else
         let body = simpl (mk_long_app branch spine) in
         let body = subst_proof_args (List.rev vars) args body in
         (args, patterns, mk_long_app (Const(cname)) (params @ spine), body)
@@ -1497,19 +1511,16 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         (Coq_typing.get_type_args indty) params params_num
     in
     let constructor_index_condition index_formals informative actual_indices patterns =
-      (* [instantiate] is partial in the arity, and the two arities are derived
-         differently -- the formals by evaluating the inductive's arity, the
-         actual indices by the syntactic telescope length of the occurrence --
-         so check them here rather than let the mismatch surface as an
-         [Invalid_argument] past the alignment report below. *)
+      (* The two arities are derived differently -- the formals by evaluating
+         the inductive's arity, the actual indices by the syntactic telescope
+         length of the occurrence -- so report a mismatch between them here,
+         where it names both sources, rather than let it reach the alignment
+         report below as an unexplained surplus of formal arguments. *)
       if List.length index_formals <> List.length actual_indices then
         internal_error
           ("case predicate indices do not match the declared index telescope (" ^
            string_of_int (List.length actual_indices) ^ " actual, " ^
            string_of_int (List.length index_formals) ^ " declared)");
-      let patterns =
-        List.map (Coq_erasure.instantiate index_formals actual_indices) patterns
-      in
       let rec conjs actuals patterns informative acc =
         match actuals, patterns, informative with
         | actual :: actuals2, pattern :: patterns2, keep :: informative2 ->
@@ -1795,6 +1806,21 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         convert ctx matched_term >>= fun mt ->
         return (Some (App(aux, mt)))
     in
+    (* The link equation for a case whose scrutinee is not a variable.
+       [case_aux_value] declines when the scrutinee's type cannot be closed over
+       [vars]; every other case omission is logged, so log that one too rather
+       than let the equation disappear with nothing in the dump to point at. *)
+    let emit_case_link ?premise axname vars lhs indname matched_term return_type
+        raw_return_type params_num branches indty is_prop =
+      case_aux_value vars indname matched_term return_type raw_return_type
+        params_num branches indty
+      >>= function
+      | None ->
+         log 2 ("case-axiom-omitted: unresolved-scrutinee-type " ^ axname ^
+                " (" ^ indname ^ ")");
+         return ()
+      | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs is_prop
+    in
     (* Termination follows the structure of the generated statement: first the
        number of root case/lambda/fix nodes remaining to compile, then the node
        count.  Non-variable scrutinees are replaced by fresh variables in
@@ -1859,11 +1885,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      emit_prop_case axname vars lhs indname indty params params_num
                        constrs matched_term branches
                   | _ ->
-                     case_aux_value vars indname matched_term return_type raw_return_type
-                       params_num branches indty
-                     >>= function
-                     | None -> return ()
-                     | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
+                     emit_case_link ?premise axname vars lhs indname matched_term
+                       return_type raw_return_type params_num branches indty true
                 end
               else if Coq_typing.check_type_target_is_prop indty then
                 if not opt_dependent_types then begin
@@ -1901,12 +1924,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   end
                   | _ ->
                      record_case_dependency ();
-                     case_aux_value vars indname matched_term return_type raw_return_type
-                       params_num branches indty
-                     >>= function
-                     | None -> return ()
-                     | Some rhs ->
-                        emit_equation ?premise (axname ^ "$link") vars lhs rhs false
+                     emit_case_link ?premise axname vars lhs indname matched_term
+                       return_type raw_return_type params_num branches indty false
                 end
               else begin
                 record_case_dependency ();
@@ -2018,8 +2037,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                        in
                        (branch_clashes patterns, lhs2, vars2, axname2, body2)
                      in
-                     (* Validate every constructor telescope before filtering
-                        any impossible branch or emitting the first equation. *)
+                     (* Validate every constructor telescope and index scope
+                        before filtering any impossible branch or emitting the
+                        first equation. *)
                      let prepared = List.map prepare_branch constrs in
                      let prepared =
                        List.filter
@@ -2033,13 +2053,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                           acc >> compile_case ?premise lhs2 vars2 axname2 body2)
                        (return ()) prepared
                   | _ ->
-                     case_aux_value vars indname matched_term return_type raw_return_type
-                       params_num branches indty
-                     >>= function
-                     | None -> return ()
-                     | Some rhs ->
-                        emit_equation ?premise (axname ^ "$link") vars lhs rhs
-                          (Coq_typing.check_prop (List.rev vars) case_body)
+                     emit_case_link ?premise axname vars lhs indname matched_term
+                       return_type raw_return_type params_num branches indty
+                       (Coq_typing.check_prop (List.rev vars) case_body)
                 in
                 if opt_dependent_types then
                   match Coq_erasure.classify (List.rev vars) indname params with
