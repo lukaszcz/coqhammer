@@ -296,8 +296,9 @@ require_text_count_exact "dheight correlates its successor binders with the resu
 forbid_line "dheight split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dheight[$].*=> @'
 forbid_line "dheight split equations do not expose the declared type-level function" '^\$_def_extraction_deptypes\.dheight[$].*extraction_deptypes\.dswap'
 
-# The same rule makes a match through a type-level fixpoint translatable without
-# unfolding that fixpoint merely to manufacture an index guard.
+# The same rule makes a match through a type-level fixpoint translatable: the
+# head normalizer takes the fixpoint iota step, and fording no longer needs an
+# index guard read from the declared type either way.
 dstack_leaf_line=$(get_unique_line "dstack_size leaf equation" '$_def_extraction_deptypes.dstack_size$dleaf:')
 parse_binders "dstack_size leaf equation" "$dstack_leaf_line" universal 1 dstack_leaf_binders
 dstack_outer=${dstack_leaf_binders[0]}
@@ -313,6 +314,19 @@ require_text_count_exact "dstack_size correlates its node binders with the resul
 forbid_line "dstack_size split equations have no legacy index premise" '^\$_def_extraction_deptypes\.dstack_size[$].*=> @'
 require_line "dstack_size retains its typing axiom" '^\$_typeof_extraction_deptypes\.dstack_size:'
 
+# A guard leaf is expanded from the occurrence type, so it needs the same
+# fixpoint iota step.  A collapsed refinement emits no inversion axiom either,
+# so a leaf that failed to recognize the family would state nothing at all about
+# the value rather than merely stating less.
+fstack_typeof_line=$(get_unique_line "fstack_value typing axiom" '$_typeof_extraction_deptypes.fstack_value:')
+fstack_type_symbol=$(extract_unique_symbol "fstack_value typing helper" "$fstack_typeof_line" '\$_type_[0-9]+' '\$_type_[0-9]+')
+fstack_type_line=$(get_unique_line "fstack_value typing helper definition" "$fstack_type_symbol:")
+parse_binders "fstack_value typing helper" "$fstack_type_line" universal 3 fstack_type_binders
+fstack_bound=${fstack_type_binders[1]}
+fstack_carrier=${fstack_type_binders[2]}
+require_text_count_exact "fstack_value expands its refinement guard at the occurrence bound" "$fstack_type_line" "((& @ ((\$HasType @ $fstack_carrier) @ Corelib.Init.Datatypes.nat)) @ ((Corelib.Init.Peano.lt @ $fstack_carrier) @ $fstack_bound))" 1
+forbid_text "fstack_value guard does not degrade to a nominal fixpoint-typed leaf" "$fstack_type_line" "extraction_deptypes.fstack @"
+
 # The nested outer match is known to inspect [dtree 0].  Rigid-clash pruning
 # retains its leaf equation and removes the impossible successor-indexed node
 # equation.  The link also pins that the outer auxiliary receives exactly the
@@ -320,6 +334,17 @@ require_line "dstack_size retains its typing axiom" '^\$_typeof_extraction_depty
 require_line "the inner case supplies the outer scrutinee its unapplied type" '^\$_def_extraction_deptypes\.dnested[$]link:.*= \(\$_case_extraction_deptypes\.dtree[$][0-9]+ @ \(\$_case_Corelib\.Init\.Datatypes\.option[$][0-9]+ @ 0_o\)\)\)'
 require_line "the outer case auxiliary keeps its leaf equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dleaf:'
 forbid_line "rigid clash prunes the outer node equation" '^\$_case_extraction_deptypes\.dtree[$][0-9]+[$]dnode:'
+
+# The compared indices are head-normalized where they are compared, not
+# normalized in advance, so a computed index still exposes its constructor.
+require_line "a computed index keeps the branch it admits" '^\$_def_extraction_deptypes\.dcomputed[$]dnode:'
+forbid_line "a computed index prunes the branch it clashes with" '^\$_def_extraction_deptypes\.dcomputed[$]dleaf:'
+
+# That normalization is budgeted.  An index whose head the budget does not
+# reach is undecided, and an undecided comparison prunes nothing: both branches
+# survive, which costs an impossible equation rather than a reachable one.
+require_line "an index beyond the normalization budget keeps its leaf branch" '^\$_def_extraction_deptypes\.dcomputed_deep[$]dleaf:'
+require_line "an index beyond the normalization budget keeps its node branch" '^\$_def_extraction_deptypes\.dcomputed_deep[$]dnode:'
 
 # Indexed-family fixtures: solved constructor arguments and erased proof fields
 # make the split equations unconditional, while occurrence guards retain the
@@ -398,6 +423,24 @@ ibidx_carrier=${ibidx_binders[1]}
 require_text_count_exact "ibidx fords its solved index to the scrutinee index" "$ibidx_line" "((extraction_indexed.ibidx @ $ibidx_outer) @ $ibidx_carrier) = $ibidx_outer)" 1
 forbid_line "ibidx carrier equation is unconditional" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*=> @'
 forbid_line "ibidx definition omits the erased subset constructor" '^\$_def_extraction_indexed\.ibidx[$]IBounded:.*extraction_indexed\.IBounded'
+
+# The same body behind a type-level fixpoint.  The occurrence indices fording
+# reads come from the scrutinee's declared type, so they depend on the fixpoint
+# iota step of the head normalizer.
+istack_line=$(get_unique_line "istack_index constructor equation" '$_def_extraction_indexed.istack_index$IBounded:')
+parse_binders "istack_index constructor equation" "$istack_line" universal 2 istack_binders
+istack_outer=${istack_binders[0]}
+istack_carrier=${istack_binders[1]}
+require_text_count_exact "istack_index fords its solved index to the scrutinee index" "$istack_line" "((extraction_indexed.istack_index @ $istack_outer) @ $istack_carrier) = $istack_outer)" 1
+
+# Head normalization is budgeted, so a deep enough wrapper leaves the family
+# unrecognized however far the normalizer is widened.  Nothing can be forded
+# then, and the solved index would stay universally quantified while occurring
+# only on the right-hand side of the branch equation -- which, once the
+# constructor collapses to its carrier, equates every two indices.  The split
+# equations are omitted instead, costing completeness rather than soundness.
+forbid_line "an unrecognized indexed refinement emits no carrier-collapsed equation" '^\$_def_extraction_indexed\.istack_index_deep[$]'
+require_line "an unrecognized indexed refinement keeps its typing axiom" '^\$_typeof_extraction_indexed\.istack_index_deep:'
 
 ibval_typeof_line=$(get_unique_line "ibval typing axiom" '$_typeof_extraction_indexed.ibval:')
 parse_binders "ibval typing axiom" "$ibval_typeof_line" universal 2 ibval_typeof_binders
@@ -670,5 +713,25 @@ require_line "prod has an inversion axiom" '^\$_inversion_Corelib\.Init\.Datatyp
 require_count_at_least "Vector.hd has a definition axiom" '^\$_def_Stdlib\.Vectors\.VectorDef\.hd:' 1
 require_count_at_least "Streams.hd has a split definition axiom" '^\$_def_Stdlib\.Streams\.Streams\.hd[$]' 1
 require_line "typeclass method projection is translated" '^Corelib\.Classes\.RelationClasses\.Equivalence_Reflexive:'
+
+# The two [hammer_transl] goals over [memo_ref] differ only in the sort of the
+# hypothesis [Hp], whose type the erasure memo key does not record: a hypothesis
+# reaches the translation as a constant, so both occurrences key identically.
+# The tactic re-translates through remove_def and reinit rather than cleanup, so
+# a memo surviving the first goal would replay its verdict on the second and
+# silently lose the refinement expansion.
+mapfile -t memo_goal_lines < <(lines_with_prefix '_HAMMER_GOAL: ')
+if [ "${#memo_goal_lines[@]}" -ne 2 ]; then
+  fail "memo lifecycle goals (expected two translated goals; found ${#memo_goal_lines[@]})"
+fi
+memo_set_line=${memo_goal_lines[0]}
+memo_prop_line=${memo_goal_lines[1]}
+parse_binders "memo_ref informative-parameter goal" "$memo_set_line" universal 1 memo_set_binders
+parse_binders "memo_ref propositional-parameter goal" "$memo_prop_line" universal 1 memo_prop_binders
+memo_set_r=${memo_set_binders[0]}
+memo_prop_r=${memo_prop_binders[0]}
+require_text "memo_ref at an informative parameter keeps its plain typing atom" "$memo_set_line" "((\$HasType @ $memo_set_r) @ ((extraction_transl.memo_ref @ Corelib.Init.Datatypes.nat) @ Hp))"
+require_text "memo_ref at a propositional parameter expands to carrier and payload" "$memo_prop_line" "((& @ ((\$HasType @ $memo_prop_r) @ Corelib.Init.Datatypes.nat)) @ (Hp @ $memo_prop_r))"
+forbid_text "memo_ref at a propositional parameter does not replay the preceding goal's verdict" "$memo_prop_line" 'extraction_transl.memo_ref'
 
 printf 'extraction_transl assertions passed\n'

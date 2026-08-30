@@ -196,11 +196,11 @@ Definition dheight {n} (b : dswap n dred) : nat :=
   | dbox_succ _ m _ => S m
   end.
 
-(* A type-level function the head-normalizer cannot see through: it is a
-   fixpoint, and fixpoint unfolding is deliberately not one of the head steps
-   taken.  Rocq's own conversion accepts the match.  Forded split equations no
-   longer depend on recovering an index guard from this declared type, so both
-   constructor equations remain available. *)
+(* A type-level function the head-normalizer reaches only through a fixpoint
+   iota step, which fires here because the decreasing argument is a literal
+   constructor application.  Rocq's own conversion accepts the match either
+   way, and forded split equations do not depend on recovering an index guard
+   from the declared type, so both constructor equations remain available. *)
 Fixpoint dstack (k n : nat) : Set :=
   match k with
   | 0 => dtree n
@@ -213,6 +213,19 @@ Definition dstack_size (n : nat) (r : dstack 0 n) : nat :=
   | dnode m _ _ => S m
   end.
 
+(* The same wrapper around a refinement rather than an indexed family.  A guard
+   leaf is expanded from the occurrence type, so it needs the very same fixpoint
+   iota step.  A collapsed refinement emits no inversion axiom, so nothing else
+   relates a nominally typed value to its payload: a leaf that fails to
+   recognize the family states nothing whatsoever about the value. *)
+Fixpoint fstack (k n : nat) : Set :=
+  match k with
+  | 0 => {y : nat | y < n}
+  | S k' => fstack k' n
+  end.
+
+Definition fstack_value (n : nat) (x : fstack 0 n) : nat := proj1_sig x.
+
 (* A nested match through an index-free type-level function.  The inner match
    produces [dtree 0], allowing rigid-clash pruning to discard the outer node
    branch while retaining the leaf equation and the correctly applied link. *)
@@ -220,6 +233,40 @@ Definition dopt (c : dcolor) (A : Type) : Type := option A.
 
 Definition dnested (o : dopt dred (dtree 0)) : nat :=
   match (match o with Some t => t | None => dleaf end) with
+  | dleaf => 0
+  | dnode m _ _ => S m
+  end.
+
+(* The scrutinee's index is a type-level computation rather than a literal.
+   Rigid-clash pruning head-normalizes the two sides where it compares them,
+   so the index reaches a successor and the leaf branch is discarded. *)
+Fixpoint ddepth (k : nat) : nat :=
+  match k with
+  | 0 => 0
+  | S k' => S (ddepth k')
+  end.
+
+Definition dcomputed (t : dtree (ddepth 1)) : nat :=
+  match t with
+  | dleaf => 0
+  | dnode m _ _ => S m
+  end.
+
+(* The same, behind a computation that reaches its head only after more steps
+   than the normalization budget allows.  Pruning is an optimization, so an
+   index whose head the budget did not expose must leave every branch alone:
+   both equations stay, at the cost of an impossible one rather than of a
+   silently missing reachable one.  Unlike the carrier-collapsing families of
+   extraction_indexed.v, nothing here is forded, so retaining the impossible
+   branch is merely coarse. *)
+Fixpoint dpeel (k : nat) : nat :=
+  match k with
+  | 0 => 0
+  | S k' => dpeel k'
+  end.
+
+Definition dcomputed_deep (t : dtree (dpeel 20)) : nat :=
+  match t with
   | dleaf => 0
   | dnode m _ _ => S m
   end.

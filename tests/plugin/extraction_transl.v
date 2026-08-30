@@ -146,10 +146,17 @@ Hammer_transl "idiv3".
 Hammer_transl "dsize".
 Hammer_transl "dheight".
 Hammer_transl "dstack_size".
+Hammer_transl "fstack_value".
 
 (* The nested indexed match also exercises rigid-clash pruning: only its leaf
    branch is possible at index zero. *)
 Hammer_transl "dnested".
+
+(* Pruning normalizes the compared indices under a budget: [dcomputed] reaches
+   a successor and loses its leaf branch, while [dcomputed_deep] exhausts the
+   budget and keeps both. *)
+Hammer_transl "dcomputed".
+Hammer_transl "dcomputed_deep".
 
 (* Indexed-family fixtures.  Commands in an imported .vo are not replayed, so
    invoke them here to put their emissions under the shape-assertion harness. *)
@@ -160,6 +167,8 @@ Hammer_transl "ibounded".
 Hammer_transl "ibval".
 Hammer_transl "ibidx".
 Hammer_transl "ibpart".
+Hammer_transl "istack_index".
+Hammer_transl "istack_index_deep".
 Hammer_transl "indexed_poly_subset".
 Hammer_transl "indexed_poly_value".
 Hammer_transl "okp".
@@ -195,3 +204,29 @@ Hammer_transl "prod".
 Hammer_transl "Vector.hd".
 Hammer_transl "Streams.hd".
 Hammer_transl "Equivalence_Reflexive". (* typeclass method projection *)
+
+(* The erasure classification memo is keyed on the occurrence -- the inductive,
+   its actual parameters and the context slice they are typed in -- while the
+   type of a parameter that is a local hypothesis lives in Defhash, which the
+   key does not record.  A hypothesis reaches the translation as a constant, so
+   both goals below produce the same key and must not share a verdict: at
+   [nat -> Set] the two constructor fields are informative and the occurrence
+   keeps its plain typing atom, at [nat -> Prop] the second field is a payload
+   and the guard expands to the carrier's type conjoined with it.  The
+   [hammer_transl] tactic re-translates through [remove_def] and [reinit]
+   rather than [cleanup], which is exactly the lifecycle the memo has to
+   follow. *)
+Inductive memo_ref (A : Type) (P : A -> Type) : Type :=
+| memo_ref_intro (x : A) (px : P x).
+
+Goal forall Hp : nat -> Set, forall r : memo_ref nat Hp, True.
+Proof.
+  intros Hp.
+  hammer_transl.
+Abort.
+
+Goal forall Hp : nat -> Prop, forall r : memo_ref nat Hp, True.
+Proof.
+  intros Hp.
+  hammer_transl.
+Abort.

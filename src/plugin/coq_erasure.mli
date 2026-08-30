@@ -120,6 +120,55 @@ val informative_index_mask : coqcontext -> index_formals -> bool list
     rigid-clash branch pruning all key off the same positions, so they must all
     read this one mask. *)
 
+type forded_index = {
+  ford_arg : string;
+  (** Name of the constructor argument this index position solves. *)
+  ford_arg_index : int;
+  (** Its zero-based position in the non-parameter constructor telescope. *)
+  ford_index_pos : int;
+  (** The zero-based index position that fords it. *)
+  ford_value : coqterm;
+  (** The term the argument is instantiated with instead of being quantified. *)
+}
+(** One constructor argument solved by fording. *)
+
+type fording = {
+  ford_solved : forded_index list;
+  (** Solved arguments, in index-position order. *)
+  ford_patterns : coqterm list;
+  (** All result-index patterns, with the solved arguments instantiated. *)
+  ford_eqs : index_eqs;
+  (** The informative positions that were not solved, with their patterns. *)
+}
+(** The result of applying the fording rule to one constructor. *)
+
+val ford_indices :
+  bool list -> coqterm list -> (string * coqterm) list -> coqterm list -> fording
+(** [ford_indices mask replacements args patterns] applies the fording rule to
+    the result-index [patterns] of one constructor whose non-parameter telescope
+    is [args].  A position solves a constructor argument when it is informative
+    per [mask], its pattern is that bare argument and no earlier position
+    already solved it; the argument is then instantiated with the corresponding
+    entry of [replacements] -- the index formals for the classification, the
+    occurrence's actual indices for a case branch -- rather than quantified.
+    Every other informative position yields a residual equation.  This is the
+    one implementation of the rule: the guard path and the case path must ford
+    the same positions, or a family would receive index equations in its guards
+    that its branch equations do not match.
+
+    The three lists are walked in lockstep and the walk stops with the shortest,
+    leaving the remaining patterns untouched; a case occurrence which does not
+    expose its family passes no indices and an empty mask, and fords nothing.
+    A caller which requires the three to align must check that itself. *)
+
+val budgeted_whnf : coqterm -> coqterm
+(** [budgeted_whnf tm] head-normalizes [tm] under the [opt_whnf_budget] fuel,
+    resolving constants through [Defhash].  Only the head is exposed, and only
+    as far as the fuel reaches; a term whose head could not be exposed comes
+    back unreduced, which every caller must read as the conservative answer.
+    The fuel is what keeps a type-level function from being unfolded wholesale
+    merely to answer a question about its head. *)
+
 val saturated_occurrence : coqterm -> (string * coqterm list * coqterm list) option
 (** [saturated_occurrence ty] head-normalizes [ty] and, when the result is an
     exactly saturated application of an inductive, returns that inductive's
@@ -140,7 +189,12 @@ val occurrence_indices : string -> coqterm -> coqterm list option
     the lowered representation [Equal (a, b)] returns [Some [b]]. *)
 
 val clear : unit -> unit
-(** Clear the classification memo table. *)
+(** Clear the classification memo table.  The memo does not record [Defhash],
+    which the classification reads for the declaration itself and for the type
+    of every constant its key mentions -- a local hypothesis among them, since
+    hypotheses reach the translation as constants.  It is therefore valid for
+    one [Defhash] population only, and every point that changes that population
+    must clear it. *)
 
 val unford_telescope :
   index_formals -> (string * int) list -> (string * coqterm) list ->

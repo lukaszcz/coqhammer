@@ -43,6 +43,31 @@ Definition ibidx n (b : ibounded n) : nat :=
    classification substituted for it. *)
 Definition ibpart := IBounded 5.
 
+(* The same solved index behind a type-level fixpoint.  Fording reads the
+   occurrence indices off the scrutinee's declared type, which the head
+   normalizer reaches only by unfolding [istack] on its constructor argument. *)
+Fixpoint istack (k n : nat) : Set :=
+  match k with
+  | 0 => ibounded n
+  | S k' => istack k' n
+  end.
+
+Definition istack_index (n : nat) (b : istack 0 n) : nat :=
+  match b with
+  | IBounded n' _ _ => n'
+  end.
+
+(* Head normalization is budgeted, so however far it is widened a wrapper deep
+   enough to exhaust the fuel leaves the family unrecognized.  Nothing is forded
+   then, and the solved index would stay universally quantified while occurring
+   only on the right-hand side of the branch equation -- which, once the
+   constructor collapses to its carrier, equates every two indices.  The split
+   equations are omitted instead; that costs completeness, not soundness. *)
+Definition istack_index_deep (n : nat) (b : istack 20 n) : nat :=
+  match b with
+  | IBounded n' _ _ => n'
+  end.
+
 (* A parameter-dependent indexed subset cannot be collapsed occurrence by
    occurrence while its declaration keeps constructor injectivity: equal
    carriers at different indices would make those indices equal. *)
@@ -115,6 +140,8 @@ Hammer_transl "ibounded".
 Hammer_transl "ibval".
 Hammer_transl "ibidx".
 Hammer_transl "ibpart".
+Hammer_transl "istack_index".
+Hammer_transl "istack_index_deep".
 Hammer_transl "indexed_poly_subset".
 Hammer_transl "indexed_poly_value".
 Hammer_transl "okp".

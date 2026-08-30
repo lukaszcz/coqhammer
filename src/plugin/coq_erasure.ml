@@ -83,12 +83,22 @@ let context_slice ctx params =
   in
   hlp params [] ctx
 
+type memo_entry = {
+  memo_shape : memo_class;
+  (** The declaration-level shape, which the recognized occurrence data is
+      rebuilt against. *)
+  memo_erasable : bool;
+  (** [is_erasable_class] of the validated verdict this key produced.  A false
+      bit is the whole answer -- the verdict was [CRegular] -- and it is not
+      implied by the shape: [expand] demotes an [MSubset] to [CRegular] for a
+      parameter-dependent indexed family. *)
+}
+
 (* Keyed on the occurrence itself -- the inductive, its actual parameters and
    the context slice those parameters are typed in -- so that the shape can be
-   looked up before any constructor telescope is destructed.  Everything else
-   the classification reads comes from the declaration, so the shape is a
-   function of exactly this key and the shapes carrying no occurrence-specific
-   data are answered from the key alone.
+   looked up before any constructor telescope is destructed.  The shapes
+   carrying no occurrence-specific data, and every key whose verdict was
+   [CRegular], are then answered from the key alone.
 
    The slice is part of the key, and not merely the propositional verdicts of
    the parameters themselves: binder names come verbatim from Rocq, so two
@@ -96,9 +106,23 @@ let context_slice ctx params =
    [nat -> Prop] and one at [nat -> Type].  The parameter terms are then equal
    and so are their verdicts (neither [T] is a proposition), while a
    constructor field [T 0] is propositional in the one context and informative
-   in the other. *)
+   in the other.
+
+   What the key does *not* record is [Defhash].  The rest of the classification
+   is read from there -- the declaration itself, and, through
+   [Coq_typing.check_prop], the type of every constant the key mentions.  A
+   local hypothesis reaches the translation as a [$Var], which
+   [Coq_convert.to_coqterm] lowers to a [Const], so a parameter that is a
+   hypothesis [H] contributes its bare name to the key and its type only to
+   [Defhash]; two goals of one session both binding [H], at [nat -> Prop] and
+   at [nat -> Set], produce the same key and different verdicts.  A constant
+   absent from [Defhash] is likewise classified as informative and would change
+   verdict once premise selection admits it.  The memo is therefore valid for
+   exactly one [Defhash] population and is cleared wherever that population
+   changes: [Coq_transl.reinit], [Coq_transl.remove_def] and
+   [Coq_transl.cleanup]. *)
 let memo :
-      ((string * coqterm list * (string * coqterm) list), memo_class) Hashtbl.t =
+      ((string * coqterm list * (string * coqterm) list), memo_entry) Hashtbl.t =
   Hashtbl.create 257
 
 let clear () = Hashtbl.clear memo
@@ -174,17 +198,101 @@ let informative_index_mask ctx index_formals =
   in
   hlp ctx [] index_formals
 
+type forded_index = {
+  ford_arg : string;
+  ford_arg_index : int;
+  ford_index_pos : int;
+  ford_value : coqterm;
+}
+
+type fording = {
+  ford_solved : forded_index list;
+  ford_patterns : coqterm list;
+  ford_eqs : index_eqs;
+}
+
+(* The fording rule itself, shared by the guard and the case paths.  A result
+   index position solves a constructor argument when the position is
+   informative per [informative_index_mask], its pattern is that bare argument
+   and no earlier position already solved it.  A solved argument is not
+   quantified but instantiated with the corresponding entry of [replacements] --
+   the index formal for the classification, the occurrence's actual index for a
+   case branch -- and every other informative position contributes a residual
+   equation between the index and its pattern.  The two paths must agree: a
+   pattern shape forded on one side alone would give a family guard-side index
+   equations that its branch equations do not match.
+
+   [mask], [replacements] and [patterns] are walked in lockstep and the walk
+   stops with the shortest of them, leaving the remaining patterns untouched.
+   That is what the case path relies on for an occurrence which does not expose
+   its family: it passes no indices and an empty mask, and nothing is forded.
+   A caller which does require the three to align -- the classification, whose
+   patterns and formals both come from the declaration -- checks that itself.
+
+   Instantiating a solved argument reaches the patterns that follow it, and
+   [simple_subst] is enough for that: the binders of a pattern come from the
+   global binder refresh of [constructor_index_data], so none of them can
+   capture a free variable of a replacement. *)
+let ford_indices mask replacements args patterns =
+  let find_arg name =
+    let rec find idx = function
+      | [] -> None
+      | (name2, _) :: args2 -> if name = name2 then Some idx else find (idx + 1) args2
+    in
+    find 0 args
+  in
+  let rec hlp pos solved eqs seen mask replacements patterns =
+    match mask, replacements, patterns with
+    | keep :: mask2, value :: replacements2, pattern :: patterns2 ->
+        let residual () =
+          hlp (pos + 1) solved (if keep then (pos, pattern) :: eqs else eqs)
+            (pattern :: seen) mask2 replacements2 patterns2
+        in
+        begin match pattern with
+        | Var arg_name
+             when keep && not (List.exists (fun s -> s.ford_arg = arg_name) solved) ->
+            begin match find_arg arg_name with
+            | Some arg_idx ->
+                let entry =
+                  { ford_arg = arg_name; ford_arg_index = arg_idx;
+                    ford_index_pos = pos; ford_value = value }
+                in
+                hlp (pos + 1) (entry :: solved) eqs (value :: seen)
+                  mask2 replacements2
+                  (List.map (simple_subst arg_name value) patterns2)
+            | None -> residual ()
+            end
+        | _ -> residual ()
+        end
+    | _ ->
+        { ford_solved = List.rev solved;
+          ford_patterns = List.rev_append seen patterns;
+          ford_eqs = List.rev eqs }
+  in
+  hlp 0 [] [] [] mask replacements patterns
+
+(* Head reduction under the [opt_whnf_budget] fuel, resolving constants through
+   [Defhash].  Every caller wants nothing but the head -- an inductive for an
+   occurrence type, a constructor for a rigid-clash comparison -- and the fuel
+   is what keeps a type-level function from being unfolded wholesale merely to
+   answer a question about its head.  Running out is not an error: the term
+   comes back unreduced, and the caller reads the head it failed to expose as
+   the negative answer, which for every caller is the conservative one. *)
+let budgeted_whnf tm =
+  let unfold name =
+    try Some (coqdef_value (Defhash.find name)) with Failure _ -> None
+  in
+  whnf_head ~budget:opt_whnf_budget ~unfold
+    ~is_constructor:Coq_typing.is_constructor tm
+
 (* The single notion of "exactly saturated occurrence" shared by the guard and
    the case paths.  Both must agree: a family recognized on one side of the
    sequent but not on the other would receive index equations in its guards
    without the matching branch pruning.  The normalizer is the budgeted head
-   reduction of [opt_whnf_budget], which is built for exposing an inductive
+   reduction of [budgeted_whnf], which is built for exposing an inductive
    head and bounded against the type-level unfolding blow-up. *)
 let saturated_occurrence ty =
-  let unfold name =
-    try Some (coqdef_value (Defhash.find name)) with Failure _ -> None
-  in
-  match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
+  match flatten_app (budgeted_whnf ty) with
   | Const indname, args ->
       begin match get_inductive indname with
       | Some (_, params_num, ind_ty, _)
@@ -497,48 +605,17 @@ let constructor_info ctx params params_num index_formals cname =
     try informative_index_mask ctx index_formals
     with _ -> raise Not_classifiable
   in
-  let rec keep_patterns pos acc mask formals patterns =
-    match mask, formals, patterns with
-    | [], [], [] -> List.rev acc
-    | keep :: mask2, (name, _) :: formals2, pattern :: patterns2 ->
-        let acc = if keep then (pos, name, pattern) :: acc else acc in
-        keep_patterns (pos + 1) acc mask2 formals2 patterns2
-    | _ -> raise Not_classifiable
-  in
-  let kept = keep_patterns 0 [] mask index_formals patterns in
-  let find_arg name =
-    let rec find idx = function
-      | [] -> None
-      | (name2, _) :: args2 ->
-          if name = name2 then Some idx else find (idx + 1) args2
-    in
-    find 0 args
-  in
-  let rec ford solved eqs = function
-    | [] -> (List.rev solved, List.rev eqs)
-    | (index_pos, formal_name, pattern) :: rest ->
-        begin match pattern with
-        | Var arg_name when not (List.mem_assoc arg_name solved) ->
-            begin match find_arg arg_name with
-            | Some arg_idx ->
-                let replacement = Var formal_name in
-                let rest =
-                  List.map
-                    (fun (pos, name, tm) ->
-                       (pos, name, simple_subst arg_name replacement tm))
-                    rest
-                in
-                ford ((arg_name, (arg_idx, index_pos, replacement)) :: solved) eqs rest
-            | None -> ford solved ((index_pos, pattern) :: eqs) rest
-            end
-        | _ -> ford solved ((index_pos, pattern) :: eqs) rest
-        end
-  in
-  let solved_by_name, eqs = ford [] [] kept in
+  (* [ford_indices] stops with the shortest of its three lists; a declaration
+     whose result-index patterns do not align with its own index telescope is
+     malformed and must not be classified from the prefix that does align. *)
+  if List.length patterns <> List.length index_formals then
+    raise Not_classifiable;
+  let fording = ford_indices mask (mk_vars index_formals) args patterns in
+  let eqs = fording.ford_eqs in
   let apply_solved tm =
     List.fold_left
-      (fun tm (name, (_, _, replacement)) -> simple_subst name replacement tm)
-      tm solved_by_name
+      (fun tm solved -> simple_subst solved.ford_arg solved.ford_value tm)
+      tm fording.ford_solved
   in
   let args = List.map (fun (name, ty) -> (name, apply_solved ty)) args in
   let rec collect arg_ctx idx acc = function
@@ -573,7 +650,9 @@ let constructor_info ctx params params_num index_formals cname =
           erase_proofs substitutions eqs infos
   in
   let ctor_solved =
-    List.map (fun (_, (arg_idx, index_pos, _)) -> (arg_idx, index_pos)) solved_by_name
+    List.map
+      (fun solved -> (solved.ford_arg_index, solved.ford_index_pos))
+      fording.ford_solved
   in
   let proof_occurs =
     List.exists
@@ -589,6 +668,25 @@ let constructor_info ctx params params_num index_formals cname =
     ctor_eqs = if proof_occurs then erase_proofs [] eqs ctor_args else eqs;
     ctor_index_formals = index_formals;
   }
+
+let is_erasable_class = function
+  | CRegular -> false
+  | CEmpty | CPropSingleton | CSubset _ | CEnum _ -> true
+
+(* The memo key of an occurrence, from its already truncated parameters. *)
+let occurrence_key ctx indname params =
+  (indname, params, context_slice ctx params)
+
+(* The key [is_erasable_instance] may look up, or [None] when [classify] would
+   not have keyed the occurrence at all.  The guards repeated here are the ones
+   [classify] applies before building its own key, so that a lookup cannot
+   answer for a key no classification ever filled. *)
+let classifiable_key ctx indname params =
+  match get_inductive indname with
+  | Some (constrs, params_num, _, _)
+       when List.length params >= params_num && List.for_all Defhash.mem constrs ->
+      Some (occurrence_key ctx indname (Hhlib.take params_num params))
+  | _ -> None
 
 let classify ctx indname params =
   try
@@ -608,7 +706,7 @@ let classify ctx indname params =
         CRegular
     | Some (constrs, params_num, ind_ty, ind_sort) ->
         let params = Hhlib.take params_num params in
-        let key = (indname, params, context_slice ctx params) in
+        let key = occurrence_key ctx indname params in
         (* Destructing the constructor telescopes is by far the expensive part
            of the classification, and [classify] runs at every occurrence of
            every premise type.  It is therefore reached only when the memo
@@ -639,22 +737,54 @@ let classify ctx indname params =
           | _ -> cls
         in
         begin match Hashtbl.find_opt memo key with
-        | Some MRegular -> CRegular
-        | Some MEmpty -> CEmpty
-        | Some MPropSingleton -> CPropSingleton
-        | Some ((MSubset _ | MEnum _) as shape) ->
+        | Some { memo_erasable = false; _ } ->
+            (* The validated verdict was [CRegular], whatever the shape:
+               [MRegular], or a shape [validate_subset]/[validate_enum] or the
+               parameter-dependence demotion of [expand] rejected.  There is
+               nothing to rebuild the telescopes for. *)
+            CRegular
+        | Some { memo_shape = MEmpty; _ } -> CEmpty
+        | Some { memo_shape = MPropSingleton; _ } -> CPropSingleton
+        | Some { memo_shape = (MSubset _ | MEnum _) as shape; _ } ->
             let (has_indices, ctor_infos) = constructor_infos () in
             expand has_indices ctor_infos shape
+        | Some { memo_shape = MRegular; _ } -> CRegular
         | None ->
             let (has_indices, ctor_infos) = constructor_infos () in
             let is_prop_ind =
               ind_sort = SortProp || Coq_typing.check_type_target_is_prop ind_ty
             in
             let shape = classify_shape is_prop_ind has_indices ctor_infos in
-            Hashtbl.add memo key shape;
-            expand has_indices ctor_infos shape
+            let cls = expand has_indices ctor_infos shape in
+            Hashtbl.add memo key
+              { memo_shape = shape; memo_erasable = is_erasable_class cls };
+            cls
         end
   with Not_classifiable | Failure _ -> CRegular
+
+(* [has_erasable_content] asks for nothing but this bit at every application
+   node of every premise type, and discards the rest of the classification.
+   Answering it from the memo is what keeps a [bool] or [sumbool] occurrence
+   from rebuilding a constructor telescope per occurrence; only the first
+   occurrence of a key runs the classification.
+
+   The bit is memoized rather than the [CSubset]/[CEnum] record itself.  Those
+   records escape into emitted terms -- guard expansion substitutes through
+   [subset_args] and instantiates [enum_args] into constructor tags -- and
+   their binders are globally fresh per classification, which nested guards
+   over one formula rely on.  (The [constructor_formals_hash] of [Coq_transl]
+   caches such a telescope, but only [Coq_typing.check_prop] ever reads it and
+   nothing from it reaches an axiom.)  Returning one record twice would put the
+   same binder names in two places of one formula, so the record is rebuilt and
+   only the verdict is remembered. *)
+let is_erasable_instance ctx indname params =
+  match classifiable_key ctx indname params with
+  | None -> false
+  | Some key ->
+      begin match Hashtbl.find_opt memo key with
+      | Some entry -> entry.memo_erasable
+      | None -> is_erasable_class (classify ctx indname params)
+      end
 
 let classify_decl indname =
   match get_inductive indname with
@@ -695,23 +825,10 @@ let unford_telescope index_formals solved args =
           ty substitutions))
     args
 
-let is_erasable_class = function
-  | CRegular -> false
-  | CEmpty | CPropSingleton | CSubset _ | CEnum _ -> true
-
-let params_for_inductive indname args =
-  match get_inductive indname with
-  | Some (_, params_num, _, _) -> Hhlib.take params_num args
-  | None -> args
-
 let rec has_erasable_content ctx tm =
   let classifies_here =
     match flatten_app tm with
-    | Const indname, args ->
-        begin match get_inductive indname with
-        | Some _ -> is_erasable_class (classify ctx indname (params_for_inductive indname args))
-        | None -> false
-        end
+    | Const indname, args -> is_erasable_instance ctx indname args
     | _ -> false
   in
   classifies_here ||
