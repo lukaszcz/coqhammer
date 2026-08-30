@@ -8,8 +8,9 @@
 #   out             - path to the captured translator output
 #   assert_context  - short name of the suite, used in failure messages
 #
-# Dollar signs in generated identifiers are literal, and parse_binders assigns
-# its named arrays indirectly through a nameref, which needs Bash 4.3 or later.
+# Dollar signs in generated identifiers are literal.  parse_binders assigns its
+# named arrays indirectly through mapfile's array-name argument, so these
+# helpers need nothing newer than Bash 4.0.
 # shellcheck disable=SC2016,SC2154
 
 fail() {
@@ -64,28 +65,31 @@ parse_binders() {
   local expected=$4
   local result_name=$5
   local pattern
-  # The nameref below resolves in this function's own scope, so a caller array
-  # sharing a name with one of the locals would either be shadowed or make the
-  # reference circular.  Reject those names outright rather than mis-parse.
+  local -a parsed
+  # The final mapfile assigns in this function's own scope, so a caller array
+  # sharing a name with one of the locals would be shadowed rather than set.
+  # Reject those names outright rather than mis-parse.
   case "$result_name" in
-    label|text|quantifier|expected|result_name|pattern|result)
+    label|text|quantifier|expected|result_name|pattern|parsed)
       fail "$label (reserved binder array name: $result_name)" ;;
   esac
-  local -n result=$result_name
 
   case "$quantifier" in
     universal) pattern='!\[[^ ]+ : \$Any\]' ;;
     existential) pattern='\?\[[^ ]+ : \$Any\]' ;;
     *) fail "$label (unknown binder quantifier: $quantifier)" ;;
   esac
-  mapfile -t result < <(
+  mapfile -t parsed < <(
     printf '%s\n' "$text" |
       grep -Eo -- "$pattern" |
       sed -E 's/^[!?]\[([^ ]+) : \$Any\]$/\1/'
   )
-  if [ "${#result[@]}" -ne "$expected" ]; then
-    fail "$label (expected $expected $quantifier binders; found ${#result[@]})"
+  if [ "${#parsed[@]}" -ne "$expected" ]; then
+    fail "$label (expected $expected $quantifier binders; found ${#parsed[@]})"
   fi
+  mapfile -t "$result_name" < <(
+    [ "${#parsed[@]}" -eq 0 ] || printf '%s\n' "${parsed[@]}"
+  )
 }
 
 require_text() {
