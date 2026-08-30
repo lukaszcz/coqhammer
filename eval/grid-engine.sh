@@ -947,9 +947,10 @@ _grid_run_consistency() {
   local outdir="$results_root/$label/$corpus"
   local marker="$outdir/consistency-$prover-$premise" input_digest
   local output_list="$outdir/consistency-outputs-$prover-$premise.lst"
+  # A failed hash proves nothing about the recorded outputs: keep the
+  # checkpoint, whose input_sha256 decides on the next run whether it is still
+  # valid, rather than discarding an expensive per-problem scan.
   if ! input_digest=$(hash_tree "$outdir/atp-problems/$premise"); then
-    rm -f "$marker.done" "$outdir/consistency-$prover-$premise.status" \
-      "$output_list"
     return 1
   fi
   if checkpoint_done "$marker" consistency "$label" "$corpus" "$prefix" \
