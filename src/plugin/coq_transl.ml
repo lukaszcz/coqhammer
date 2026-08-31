@@ -61,6 +61,50 @@ let adjust_logops =
     end
 
 (***************************************************************************************)
+(* Caches of the declarations *)
+
+(* Declared constructor telescopes, keyed on the constructor name and holding
+   what [destruct_type_app] returns for it: the whole declared type evaluated
+   and every binder refreshed.  The rigid-clash recursion asks for the same
+   telescope at every node it visits and at every occurrence it is run over,
+   and the answer is a function of [Defhash] alone.  The names
+   [refresh_varname] mints are unique for the life of a translation, so a
+   telescope handed out twice is as capture-free as a freshly destructed one. *)
+let constructor_formals_hash : (string, (string * coqterm) list) Hashtbl.t =
+  Hashtbl.create 257
+
+let constructor_formals cname =
+  match Hashtbl.find_opt constructor_formals_hash cname with
+  | Some formals -> formals
+  | None ->
+     let (_, _, cargs) =
+       Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
+     in
+     Hashtbl.add constructor_formals_hash cname cargs;
+     cargs
+
+(* Everything remembered about the declarations rather than about the terms
+   being translated: the erasure verdicts, [Coq_typing]'s constructorhood bits
+   and the constructor telescopes above.  None of the three records which
+   [Defhash] entries it was read from -- an erasure verdict is keyed by
+   occurrence, a constructorhood bit is a function of both the name's entry and
+   its inductive's, and a telescope is a function of the name's entry -- so
+   none of them can be invalidated selectively, and all three are dropped
+   whole wherever the [Defhash] population changes: [reinit], [remove_def] and
+   [cleanup].  They are cheap to rebuild and each is rebuilt lazily, on the
+   first query that misses.
+
+   Keeping any of them across such a change is not merely a stale answer: a
+   constructorhood bit answered `no' because premise selection had not admitted
+   the inductive yet, or a telescope of a declaration whose type a
+   re-translation replaces, both feed rigid-clash pruning, where a wrong answer
+   can prune a reachable branch. *)
+let clear_declaration_caches () =
+  Coq_erasure.clear ();
+  Coq_typing.clear_constructor_hash ();
+  Hashtbl.clear constructor_formals_hash
+
+(***************************************************************************************)
 (* Initialization *)
 
 let reinit (lst : hhdef list) =
@@ -84,6 +128,16 @@ let reinit (lst : hhdef list) =
         ()
   in
   log 1 "Reinitializing...";
+  (* The declaration caches are keyed on names and occurrences, not on the
+     [Defhash] entries they were read through, so they are valid for one
+     population of [Defhash] only.  [reinit] is where that population is
+     established -- after [cleanup] for the prover path, but also on its own
+     for the [Hammer_transl] diagnostics, which keep the translation caches
+     across goals.  Two goals of one session may bind a hypothesis of the same
+     name at different types, and a constant absent from the first goal's
+     premises is classified as informative, and is not a constructor, until
+     selection admits it. *)
+  clear_declaration_caches ();
   let hastype_type = mk_fun_ty (Const("$Any")) (mk_fun_ty SortType SortProp) in
   begin
     try
@@ -619,7 +673,7 @@ let specif_constant basename =
   if Defhash.mem core then core else if Defhash.mem coq then coq else stdlib
 
 let erase_false_rect_type_arg ctx tm =
-  if opt_refinement_types then
+  if opt_dependent_types then
     match flatten_app tm with
     | Const name, ty :: args
          when is_false_rect_constant name && args <> [] && ty <> type_any &&
@@ -637,32 +691,16 @@ let erase_false_rect_type_arg ctx tm =
 let transport_full_arity = 6
 
 let erase_transport_head tm =
-  if opt_prop_case_erasure then
+  if opt_dependent_types then
     match flatten_app tm with
     | Const name, args
-         when is_transport_constant name && List.length args >= transport_full_arity ->
-       (* Transport erasure maps fully applied casts to the transported value in
-          the proof-irrelevant model.  Preserve applications after the transport
-          spine, e.g. [(eq_rect ... f ... e) x] erases to [f x].
-          Reconstruction-sensitive cases are isolated by [opt_erasure_guards]. *)
+         when name <> !translation_owner && is_transport_constant name &&
+              List.length args >= transport_full_arity ->
+       (* Inline an occurrence of the generic transport definition equation.
+          The defining equation's own left-hand side stays intact.  Preserve
+          applications after the transport spine, e.g. [(eq_rect ... f ... e) x]
+          becomes [f x]. *)
        Some (mk_long_app (List.nth args 3) (Hhlib.drop transport_full_arity args))
-    | _ -> None
-  else
-    None
-
-let transport_erasure_premise tm =
-  if opt_erasure_guards then
-    match flatten_app tm with
-    | Const name, args
-         when is_transport_constant name && List.length args >= transport_full_arity ->
-       let a = List.nth args 1
-       and b = List.nth args 4
-       in
-       (* Transport/UIP debt note: transport erasure is valid in the junk model
-          by proof irrelevance but is not generally replayable as a CIC source
-          theorem; the guarded option emits the converted source equality as a
-          premise. *)
-       Some (mk_eq a b)
     | _ -> None
   else
     None
@@ -866,63 +904,74 @@ let program_wf_simpl tm =
    unsafe unconditional equation. *)
 let wf_mark = ref false
 
-(* The number of arguments the telescope of `ty' takes.  Substituting into the
-   bodies would not change the count, so nothing is substituted. *)
-let rec telescope_length ty =
-  match ty with
-  | Prod(_, _, body) -> 1 + telescope_length body
-  | Let(_, (_, _, body)) -> telescope_length body
-  | _ -> 0
+(* Constructor applications are rigid only at constructor heads.  Equal heads
+   may still clash in any corresponding informative argument, including
+   parameters; a variable or any other non-constructor head is deliberately
+   never unified.  Proof arguments are exempt: distinct proofs of a proposition
+   are not discriminable in CIC, so a branch whose declared pattern differs
+   from the occurrence only inside a proof subterm is still reachable and must
+   not be pruned.  The constructor telescope decides which positions those are.
 
-(* The scrutinee's declared type need only be *convertible* to an application
-   of the matched inductive: a binder `r : insResult Red n', where `insResult'
-   is a type-level function, is matched as an `rtree'.  Reading index arguments
-   off the declared type would then take `insResult''s own arguments for
-   `rtree''s indices, so expose the inductive first and verify the head and the
-   arity before anything is emitted.  `None' means the invariant could not be
-   established; it is a refusal, never an omission (see `refuse_case').
+   Pruning is an optimization -- leaving a branch unpruned costs the prover one
+   impossible equation, dropping a reachable one silently loses the goal -- so
+   every way this can fail to decide answers `no clash'.  An unavailable
+   telescope, a position [check_prop] cannot classify and an exhausted
+   normalization budget all exempt the position instead of comparing it, and
+   any exception escaping the recursion answers `no clash' outright.
 
-   A family declaring no indices is not required to expose its inductive, and
-   must not be: outside a case predicate `coq_convert' lowers the logical
-   inductives to the FOL formers `$True', `$False', `&' and `|', and a scrutinee
-   typed by one of them is no longer an application of the inductive in any
-   syntactic sense.  `eq' is the one lowered family that does declare an index;
-   its case translation reads the guard off the lowered equation instead (see
-   `emit_prop_case').  Its arguments are still truncated to the parameter
-   prefix, which is all a caller may read there -- the arguments past
-   `params_num' are the indices, and an index-free family has none.  A reducible
-   alias with arguments of its own -- `Al n A := option A' -- would otherwise
-   hand `n' over as an index of `option'. *)
-let scrutinee_ind_args indname ty =
-  match (try Some (Defhash.find indname) with Failure _ -> None) with
-  | Some (_, IndType(_, _, params_num), indty, _) ->
-     (* the telescope is counted here rather than by `Coq_typing.get_type_args',
-        which refreshes every binder name and would thus renumber the symbols of
-        every axiom emitted afterwards *)
-     let expected = telescope_length indty in
-     if expected <= params_num then
-       Some (Hhlib.take params_num (snd (flatten_app ty)))
-     else
-       (* the arity check is against the inductive's declared telescope, so a
-          reduced but partially applied type is rejected too *)
-       let unfold c = try Some (coqdef_value (Defhash.find c)) with Failure _ -> None in
-       begin
-         match flatten_app (whnf_head ~budget:opt_whnf_budget ~unfold ty) with
-         | Const(c), args when c = indname && List.length args = expected -> Some args
-         | _ -> None
-       end
-  | _ -> None
-
-(* A case whose scrutinee type cannot be exposed as an application of the
-   matched inductive has no computable index guard.  The index premise sits in
-   antecedent position, so omitting it alone would assert every branch equation
-   unconditionally -- for `Leaf : rbtree Black 0' that is
-   `forall c n. f c n Leaf = b1 c n', true only at the `Black'/`0' instance, and
-   in the untyped target it constrains junk applications and can contradict the
-   other branches.  The whole case is therefore refused. *)
-let refuse_case axname indname =
-  log 2 ("case-axiom-omitted: case-index-refusal " ^ axname ^ " (" ^ indname ^ ")");
-  return ()
+   The two sides are head-normalized where they are compared rather than
+   normalized in advance: the fuel is then spent only along the spine the
+   comparison actually walks, which the declared pattern bounds, instead of
+   over the whole of an index computed by a type-level function.  A head the
+   budget did not reach is not a constructor, hence no clash. *)
+let rigid_clash ctx u t =
+  (* [Coq_typing.check_prop] answers `no' for a type whose head constant is
+     absent from [Defhash] exactly as it does for a genuinely informative one:
+     premise selection filters declarations out independently of the ones whose
+     types mention them, and a declaration that is not there has no sort to
+     read.  Everywhere else in the translation that uninformed `no' is the
+     conservative answer; here it is the one that prunes, so a position the
+     hash cannot vouch for joins the proofs. *)
+  let rec sort_is_available ty =
+    match ty with
+    | Prod(_, _, ty2) -> sort_is_available ty2
+    | _ -> match fst (flatten_app ty) with
+           | Const c -> Defhash.mem c
+           | _ -> true
+  in
+  let is_informative ty =
+    sort_is_available ty &&
+      (try not (Coq_typing.check_prop ctx ty) with _ -> false)
+  in
+  let rec clash u t =
+    match flatten_app (Coq_erasure.budgeted_whnf u),
+          flatten_app (Coq_erasure.budgeted_whnf t) with
+    | (Const c1, args1), (Const c2, args2)
+         when Coq_typing.is_constructor c1 && Coq_typing.is_constructor c2 ->
+       if c1 <> c2 then
+         true
+       else
+         let rec some_pair_clashes formals xs ys =
+           match xs, ys with
+           | x :: xs2, y :: ys2 ->
+              let (compare_here, formals2) =
+                match formals with
+                | (name, ty) :: formals2 ->
+                   (is_informative ty,
+                    List.map
+                      (fun (n, t) ->
+                         (n, if var_occurs name t then simple_subst name x t else t))
+                      formals2)
+                | [] -> (false, [])
+              in
+              (compare_here && clash x y) ||
+                some_pair_clashes formals2 xs2 ys2
+           | _ -> false
+         in
+         some_pair_clashes (constructor_formals c1) args1 args2
+    | _ -> false
+  in
+  try clash u t with _ -> false
 
 (* True only for a proposition whose formula rendering is `p(t)' for a
    Const-headed application `t': then, and only then, does the definitional
@@ -1048,8 +1097,7 @@ and lambda_lifting wf_fix_names axname name fvars lvars1 tm =
   in
   match erase_transport_head body2 with
   | Some body3 ->
-     let premise = transport_erasure_premise body2 in
-     emit_definition_equation ?premise axname name fvars lvars body3
+     emit_definition_equation axname name fvars lvars body3
   | None ->
   let wf_recursion_equation tm =
     if name = "" then
@@ -1288,27 +1336,6 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          if c = cname then b else get_branch cname cstrs2 brs2
       | _ -> internal_error "case branch does not match constructor telescope"
     in
-    let constructor_args params params_num cname =
-      let cdef =
-        try Defhash.find cname with Failure _ ->
-          internal_error ("missing constructor declaration: " ^ cname)
-      in
-      let (_, targs, cargs) = Coq_typing.destruct_type_app (coqdef_type cdef)
-      in
-      let cargs1 = Hhlib.take params_num cargs
-      in
-      let cargs2 =
-        List.map
-          (fun (name, ty) -> (name, subst_params cargs1 params ty))
-          (Hhlib.drop params_num cargs)
-      in
-      let targs2 =
-        List.map
-          (fun tm -> subst_params cargs1 params tm)
-          (Hhlib.drop params_num targs)
-      in
-      (targs2, cargs2)
-    in
     (* Substituting a constructor argument away has to reach the types of the
        arguments that follow it: those types are carried into the [$Proof] casts
        that replace erased payloads, so an argument still mentioned there would
@@ -1358,6 +1385,96 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       in
       hlp (List.map fst vars) [] [] args
     in
+    (* Carry the renaming [refresh_case_args] performed on a constructor
+       telescope over to terms expressed in the original binders -- the result
+       index patterns, which must keep referring to the arguments the branch
+       now binds. *)
+    let refresh_case_terms args0 args tms =
+      List.map
+        (fun tm ->
+           List.fold_left2
+             (fun tm (name, _) (name2, _) ->
+                if name = name2 then tm else substvar name (Var name2) tm)
+             tm args0 args)
+        tms
+    in
+    (* The preparation every case branch shares, whichever equation shape the
+       branch ends up in: the constructor telescope is refreshed away from the
+       enclosing context, the arguments the occurrence indices ford are
+       instantiated, the proof payloads of the branch body are erased and the
+       constructor pattern is built from the resulting spine.  [indices] and
+       [informative] are empty when the occurrence exposes no index telescope,
+       which simply fords nothing. *)
+    let prepare_case_branch vars indname params params_num constrs branches
+        indices informative cname =
+      let (n, branch) = get_branch cname constrs branches in
+      let (patterns, args0) =
+        Coq_erasure.constructor_index_data params params_num cname
+      in
+      if List.length args0 <> n then
+        internal_error
+          ("constructor telescope arity mismatch for " ^ cname ^ " in " ^
+           indname ^ ": branch binds " ^ string_of_int n ^
+           " but normalized constructor has " ^ string_of_int (List.length args0))
+      else
+        let args = refresh_case_args vars args0 in
+        let patterns = refresh_case_terms args0 args patterns in
+        (* Fording solves a constructor argument whose result-index pattern is
+           that argument itself.  Such a branch is reachable only at the
+           scrutinee's own index, so the argument is instantiated with that
+           index instead of being quantified: a binder left universal while
+           occurring only on the right-hand side of the branch equation is
+           outright inconsistent once the constructor collapses to its
+           carrier.  Which positions those are is decided by
+           [Coq_erasure.ford_indices], the same rule the classification applies
+           to build a family's guard-side index metadata: the two must agree, or
+           a guard would state index equations these branch equations do not
+           match. *)
+        let fording = Coq_erasure.ford_indices informative indices args patterns in
+        let solved =
+          List.map
+            (fun s -> (s.Coq_erasure.ford_arg, s.Coq_erasure.ford_value))
+            fording.Coq_erasure.ford_solved
+        in
+        let patterns = fording.Coq_erasure.ford_patterns in
+        let subst_solved tm =
+          List.fold_left
+            (fun tm (name, value) ->
+               if var_occurs name tm then substvar name value tm else tm)
+            tm solved
+        in
+        let spine =
+          List.map
+            (fun (name, _) ->
+               match Hhlib.massoc name solved with
+               | Some value -> value
+               | None -> Var name)
+            args
+        in
+        let args =
+          List.fold_right
+            (fun (name, ty) acc ->
+               if List.mem_assoc name solved then acc else (name, subst_solved ty) :: acc)
+            args []
+        in
+        (* The occurrence indices now reach the emitted equation itself, not
+           just an index premise: they are substituted into the spine, and from
+           there into the constructor pattern, the branch body and the types
+           the scrutinee substitution rewrites.  Only [vars] and the retained
+           [args] are ever quantified, so an index or pattern escaping them
+           would be emitted as a free TPTP variable -- the prover rejects the
+           whole problem and the goal is lost with no diagnostic.  Check the
+           scope before anything is built from it. *)
+        let bound_names = List.map fst (vars @ args) in
+        if not (List.for_all (term_fvars_subset bound_names)
+                  (indices @ spine @ patterns))
+        then
+          internal_error "case index arguments escape the normalized scope"
+        else
+        let body = simpl (mk_long_app branch spine) in
+        let body = subst_proof_args (List.rev vars) args body in
+        (args, patterns, mk_long_app (Const(cname)) (params @ spine), body)
+    in
     (* Refinement occurrence collapse: matching a subset value exposes the
        erased carrier itself, and the remaining proof payload binders are erased.
        [Coq_erasure.validate_subset] only classifies a constructor as [CSubset]
@@ -1366,10 +1483,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
        particular the carrier never heads a proof-payload type.  So the
        [check_prop] below cannot fail on a well-classified subset, and the
        informative-payload internal error is an unreachable consistency check. *)
-    let collapse_subset_case ~matched_term ~vars ~constrs ~branches ~params ~params_num carrier_idx =
+    let collapse_subset_case ~matched_term ~vars ~constrs ~branches subset_args carrier_idx =
       match constrs, branches with
-      | [cname], [(n, branch)] ->
-         let (_, args) = constructor_args params params_num cname in
+      | [_], [(n, branch)] ->
+         let args = subset_args in
          if List.length args <> n then
            internal_error "subset constructor telescope arity mismatch"
          else
@@ -1389,7 +1506,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
     let collapse_prop_singleton vars indname constrs params params_num branches =
       match constrs, branches with
       | [cname], [(n, branch)] ->
-         let (_, args) = constructor_args params params_num cname in
+         let (_, args) =
+           Coq_erasure.constructor_index_data params params_num cname
+         in
          if List.length args <> n then
            internal_error "propositional singleton constructor telescope arity mismatch"
          else
@@ -1409,53 +1528,46 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
              Some body
       | _ -> internal_error "propositional singleton has an unexpected constructor shape"
     in
-    let combine_premises p1 p2 =
-      match p1, p2 with
-      | None, None -> None
-      | Some p, None | None, Some p -> Some p
-      | Some p1, Some p2 -> Some (mk_and p1 p2)
+    let case_index_formals indty params params_num =
+      Coq_erasure.index_formals_of
+        (Coq_typing.get_type_args indty) params params_num
     in
-    let constructor_index_premise indname indty params params_num actual_tyargs targs =
-      let type_args = Coq_typing.get_type_args indty in
-      let actual_args = Hhlib.drop params_num actual_tyargs
-      and index_formals = Hhlib.drop params_num type_args
-      and ctx = List.rev (Hhlib.take params_num type_args)
-      in
-      let targs =
-        if Coq_stdnames.is_init_logic "eq" indname && targs = [] &&
-           List.length actual_args = 1 && params <> []
-        then [List.hd (List.rev params)]
-        else targs
-      in
-      if index_formals = [] then
-        None
-      else
-      let rec conjs ctx actuals targs formals acc =
-        match actuals, targs, formals with
-        | actual :: actuals2, targ :: targs2, (name, ty) :: formals2 ->
+    let constructor_index_condition index_formals informative actual_indices patterns =
+      (* The two arities are derived differently -- the formals by evaluating
+         the inductive's arity, the actual indices by the syntactic telescope
+         length of the occurrence -- so report a mismatch between them here,
+         where it names both sources, rather than let it reach the alignment
+         report below as an unexplained surplus of formal arguments. *)
+      if List.length index_formals <> List.length actual_indices then
+        internal_error
+          ("case predicate indices do not match the declared index telescope (" ^
+           string_of_int (List.length actual_indices) ^ " actual, " ^
+           string_of_int (List.length index_formals) ^ " declared)");
+      let rec conjs actuals patterns informative acc =
+        match actuals, patterns, informative with
+        | actual :: actuals2, pattern :: patterns2, keep :: informative2 ->
            let acc =
-             if Coq_typing.check_prop ctx ty then
-               acc
+             (* A forded position was already instantiated with the occurrence
+                index, so its equality is a tautology. *)
+             if keep && actual <> pattern then
+               mk_eq actual pattern :: acc
              else
-               mk_eq actual targ :: acc
+               acc
            in
-           conjs ((name, ty) :: ctx) actuals2 targs2 formals2 acc
+           conjs actuals2 patterns2 informative2 acc
         | [], [], [] ->
            begin match acc with
            | [] -> None
            | _ -> Some (join_right mk_and acc)
            end
-        (* an internal assertion: `scrutinee_ind_args' establishes that the
-           actual arguments come from the matched inductive itself, so all three
-           lists have the same length by construction *)
         | _ ->
            internal_error
              ("constructor result indices do not align with the case predicate (" ^
               string_of_int (List.length actuals) ^ " actual, " ^
-              string_of_int (List.length targs) ^ " constructor, " ^
-              string_of_int (List.length formals) ^ " formal arguments remain)")
+              string_of_int (List.length patterns) ^ " constructor, " ^
+              string_of_int (List.length informative) ^ " formal arguments remain)")
       in
-      conjs ctx actual_args targs index_formals []
+      conjs actual_indices patterns informative []
     in
     let emit_equation ?premise axname vars lhs rhs is_prop =
       let mk_eqv = if is_prop then mk_equiv lhs rhs else mk_eq lhs rhs in
@@ -1504,18 +1616,36 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
            raise (Hammer_errors.HammerError
                     "internal translation error: propositional case was not normalized")
       in
-      (* An `eq' scrutinee reads no index argument off its type: its guard is
-         the lowered equation itself (see `one_branch' below), which is also the
-         only form the type has left after logical lowering.  Everywhere else
-         the index arguments must come from the matched inductive. *)
-      match
-        if Coq_stdnames.is_init_logic "eq" indname then
-          Some []
-        else
-          scrutinee_ind_args indname scrutinee_ty
-      with
-      | None -> refuse_case axname indname
-      | Some actual_tyargs ->
+      let index_formals = case_index_formals indty params params_num in
+      (* The indices and their mask are used as one piece of information --
+         the mask says which of the indices are forded and which contribute an
+         index premise -- so a telescope position [check_prop] cannot classify
+         degrades the whole occurrence to the index-free path rather than
+         escaping.  That path is the one an occurrence which does not expose
+         the family already takes: nothing is forded, no index equality is
+         stated, and both bounds below merely quantify over the constructor
+         arguments the fording would have solved, which weakens each of them.
+         Escaping instead would abort the translation in every prover process
+         at once and lose the goal outright. *)
+      let indexing =
+        match Coq_erasure.occurrence_indices indname scrutinee_ty with
+        | None -> None
+        | Some indices ->
+           begin
+             try Some (indices, Coq_erasure.informative_index_mask ctx index_formals)
+             with _ -> None
+           end
+      in
+      let () =
+        match indexing with
+        | None -> log 2 ("case-index-omitted: " ^ axname)
+        | Some _ -> ()
+      in
+      let actual_indices =
+        match indexing with None -> None | Some (indices, _) -> Some indices
+      and informative =
+        match indexing with None -> [] | Some (_, informative) -> informative
+      in
       let close_fol body =
         let rec close ctx = function
           | (name, ty) :: rest ->
@@ -1547,33 +1677,19 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
         loop ctx args
       in
       let one_branch cname =
-        let n, branch = get_branch cname constrs branches in
-        let targs, args = constructor_args params params_num cname in
-        if List.length args <> n then
-          raise (Hammer_errors.HammerError
-                   "internal translation error: constructor telescope arity mismatch");
-        let args0 = args in
-        let args = refresh_case_args vars args in
-        let targs =
-          List.map
-            (fun tm ->
-               List.fold_left2
-                 (fun tm (name, _) (name2, _) ->
-                    if name = name2 then tm else substvar name (Var name2) tm)
-                 tm args0 args)
-            targs
+        let indices = match actual_indices with None -> [] | Some indices -> indices in
+        let (args, patterns, pattern, body) =
+          prepare_case_branch vars indname params params_num constrs branches
+            indices informative cname
         in
-        let body = simpl (mk_long_app branch (mk_vars args)) in
-        let body = subst_proof_args ctx args body in
         prop_to_formula (List.rev (vars @ args)) body >>= fun branch_formula ->
-        let pattern = mk_long_app (Const(cname)) (params @ mk_vars args) in
         prop_to_formula (List.rev (vars @ args)) (mk_eq (Var scrutinee) pattern)
         >>= fun scrutinee_formula ->
         let index =
-          if Coq_stdnames.is_init_logic "eq" indname then
-            Some scrutinee_ty
-          else
-            constructor_index_premise indname indty params params_num actual_tyargs targs
+          match actual_indices with
+          | None -> None
+          | Some indices ->
+             constructor_index_condition index_formals informative indices patterns
         in
         begin match index with
         | None -> return scrutinee_formula
@@ -1635,14 +1751,10 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       | Case(indname, matched, _, raw_return_type, params_num, _) ->
          begin match infer_term_type ctx matched with
          | Some matched_ty ->
-            begin match scrutinee_ind_args indname matched_ty with
-            | Some actual_tyargs when List.length actual_tyargs >= params_num ->
-               (* the length test still has work to do for an index-free family,
-                  whose type is not required to expose the inductive and may
-                  thus not supply the parameters either *)
-               let indices = Hhlib.drop params_num actual_tyargs in
+            begin match Coq_erasure.occurrence_indices indname matched_ty with
+            | Some indices ->
                Some (simpl (mk_long_app raw_return_type (indices @ [matched])))
-            | _ -> None
+            | None -> None
             end
          | None -> None
          end
@@ -1676,9 +1788,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
          in the scope of [vars] alone, or the lifted case is hash-consed against
          a context too short for it; the scrutinee's inferred type is that same
          type with the indices instantiated.  When inference cannot recover such
-         a type -- it now refuses rather than guess when the scrutinee's type does
-         not expose the matched inductive -- the case is refused by the caller
-         instead of lifted against a context too short for it. *)
+         a closed type, the auxiliary link is omitted instead of being lifted
+         against a context too short for it. *)
       let is_closed ty = term_fvars_subset (List.map fst vars) ty in
       let scrutinee_ty =
         if is_closed scrutinee_ty then
@@ -1716,6 +1827,21 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
       else
         convert ctx matched_term >>= fun mt ->
         return (Some (App(aux, mt)))
+    in
+    (* The link equation for a case whose scrutinee is not a variable.
+       [case_aux_value] declines when the scrutinee's type cannot be closed over
+       [vars]; every other case omission is logged, so log that one too rather
+       than let the equation disappear with nothing in the dump to point at. *)
+    let emit_case_link ?premise axname vars lhs indname matched_term return_type
+        raw_return_type params_num branches indty is_prop =
+      case_aux_value vars indname matched_term return_type raw_return_type
+        params_num branches indty
+      >>= function
+      | None ->
+         log 2 ("case-axiom-omitted: unresolved-scrutinee-type " ^ axname ^
+                " (" ^ indname ^ ")");
+         return ()
+      | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs is_prop
     in
     (* Termination follows the structure of the generated statement: first the
        number of root case/lambda/fix nodes remaining to compile, then the node
@@ -1770,8 +1896,8 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                    raw_logic_head || Coq_typing.check_prop ctx target
               in
               if return_target_is_prop (List.rev vars) return_type then
-                if not opt_prop_case_erasure then begin
-                  log 2 ("case-axiom-omitted: prop-case-erasure " ^ axname);
+                if not opt_dependent_types then begin
+                  log 2 ("case-axiom-omitted: dependent-types " ^ axname);
                   return ()
                 end
                 else begin
@@ -1781,20 +1907,17 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      emit_prop_case axname vars lhs indname indty params params_num
                        constrs matched_term branches
                   | _ ->
-                     case_aux_value vars indname matched_term return_type raw_return_type
-                       params_num branches indty
-                     >>= function
-                     | None -> refuse_case axname indname
-                     | Some rhs -> emit_equation ?premise (axname ^ "$link") vars lhs rhs true
+                     emit_case_link ?premise axname vars lhs indname matched_term
+                       return_type raw_return_type params_num branches indty true
                 end
               else if Coq_typing.check_type_target_is_prop indty then
-                if not opt_prop_case_erasure then begin
-                  log 2 ("case-axiom-omitted: prop-case-erasure " ^ axname);
+                if not opt_dependent_types then begin
+                  log 2 ("case-axiom-omitted: dependent-types " ^ axname);
                   return ()
                 end
                 else begin
                   match matched_term with
-                  | Var proof_name ->
+                  | Var _ ->
                   begin
                     match Coq_erasure.classify (List.rev vars) indname params with
                     | Coq_erasure.CEmpty ->
@@ -1810,16 +1933,9 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                             return ()
                          | Some body2 ->
                             record_case_dependency ();
-                            (* Singleton erasure: the proof match computes as
-                               its unique branch after proof arguments are erased.
-                               The source proposition is load-bearing for indexed
-                               singletons such as equality and [eq_true]. *)
-                            let premise =
-                              try
-                                combine_premises premise (Some (List.assoc proof_name vars))
-                              with Not_found ->
-                                internal_error "singleton proof scrutinee is absent from the normalized context"
-                            in
+                            (* Singleton elimination is proof-irrelevant: the
+                               unique branch is the value for every inhabitant,
+                               so the equation needs no premise. *)
                             compile_case ?premise lhs vars axname body2
                        end
                     | Coq_erasure.CRegular | Coq_erasure.CSubset _ | Coq_erasure.CEnum _ ->
@@ -1830,29 +1946,98 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                   end
                   | _ ->
                      record_case_dependency ();
-                     case_aux_value vars indname matched_term return_type raw_return_type
-                       params_num branches indty
-                     >>= function
-                     | None -> refuse_case axname indname
-                     | Some rhs ->
-                        emit_equation ?premise (axname ^ "$link") vars lhs rhs false
+                     emit_case_link ?premise axname vars lhs indname matched_term
+                       return_type raw_return_type params_num branches indty false
                 end
               else begin
                 record_case_dependency ();
-                let collapse_subset_case carrier_idx =
+                let collapse_subset_case subset_args carrier_idx =
                   collapse_subset_case ~matched_term ~vars ~constrs ~branches
-                    ~params ~params_num carrier_idx
+                    subset_args carrier_idx
                 in
-                let regular_case () =
+                (* [collapses_solved_args] says that a constructor occurrence of
+                   this family erases to its carrier alone, dropping the
+                   arguments a result index fords (see
+                   [subset_constructor_spine]).  Those arguments reach the
+                   branch equation only through the fording [prepare_case_branch]
+                   performs from the occurrence indices, so without them the
+                   equation is not merely coarse but inconsistent, exactly the
+                   hazard the fording comment above describes. *)
+                let regular_case ~collapses_solved_args () =
                   match matched_term with
                   | Var scrutinee when var_occurs scrutinee lhs ->
-                     let scrutinee_ty =
-                       try List.assoc scrutinee vars with Not_found ->
-                         internal_error "case scrutinee is absent from the normalized context"
+                     let pruning_data =
+                       if not opt_dependent_types then
+                         None
+                       else
+                         let scrutinee_ty =
+                           try List.assoc scrutinee vars with Not_found ->
+                             internal_error
+                               "case scrutinee is absent from the normalized context"
+                         in
+                         match Coq_erasure.occurrence_indices indname scrutinee_ty with
+                         | None -> None
+                         | Some indices ->
+                            (* The informative positions of the index telescope
+                               are the same for every branch, so decide
+                               propositional-ness once here rather than once per
+                               constructor.  A position [check_prop] cannot
+                               classify degrades the whole occurrence to the
+                               index-free path -- nothing forded, nothing
+                               pruned, every branch emitted, and for a
+                               carrier-collapsing family no equation at all --
+                               which is what an occurrence not exposing the
+                               family already takes.  Escaping instead would
+                               abort the translation in every prover process at
+                               once and lose the goal outright. *)
+                            let formals =
+                              case_index_formals indty params params_num
+                            in
+                            match
+                              try
+                                Some (Coq_erasure.informative_index_mask
+                                        (List.rev vars) formals)
+                              with _ -> None
+                            with
+                            | None ->
+                               log 2 ("case-index-unclassified: " ^ axname ^
+                                      " (" ^ indname ^ ")");
+                               None
+                            | Some informative -> Some (indices, informative)
                      in
-                     begin match scrutinee_ind_args indname scrutinee_ty with
-                     | None -> refuse_case axname indname
-                     | Some actual_tyargs ->
+                     if collapses_solved_args && pruning_data = None then begin
+                       (* Either the occurrence type does not expose the family
+                          or its index telescope could not be classified;
+                          either way nothing can be forded.  [whnf_head] is
+                          budgeted and its iota rules are constructor-guarded,
+                          so a stuck head stays possible however far the
+                          normalizer is widened; omitting the equations only
+                          loses completeness, while emitting them with a
+                          right-hand-side-only binder is outright unsound. *)
+                       log 2 ("case-axiom-omitted: unforded-carrier-collapse " ^
+                              axname ^ " (" ^ indname ^ ")");
+                       return ()
+                     end else
+                     let branch_indices =
+                       match pruning_data with
+                       | None -> ([], [])
+                       | Some data -> data
+                     in
+                     let branch_clashes patterns =
+                       match pruning_data with
+                       | None -> false
+                       | Some (indices, informative) ->
+                          if List.length indices <> List.length patterns ||
+                             List.length patterns <> List.length informative
+                          then
+                            internal_error
+                              "constructor result indices do not align with the scrutinee occurrence"
+                          else
+                            List.exists2
+                              (fun (actual, keep) pattern ->
+                                 keep && rigid_clash (List.rev vars) actual pattern)
+                              (List.combine indices informative) patterns
+                     in
                      let rec split_scrutinee acc = function
                        | [] -> internal_error "case scrutinee is absent from the normalized context"
                        | (name, _) :: vars_after when name = scrutinee ->
@@ -1861,82 +2046,64 @@ and case_lifting wf_fix_names axname0 name0 fvars lvars tm =
                      in
                      let vars_before, vars_after = split_scrutinee [] vars in
                      let prepare_branch cname =
-                       let (n, branch) = get_branch cname constrs branches
+                       let (indices, informative) = branch_indices in
+                       let (args, patterns, pattern, branch_body) =
+                         prepare_case_branch vars indname params params_num constrs
+                           branches indices informative cname
                        in
-                       let (targs, args) = constructor_args params params_num cname
+                       let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
+                       let lhs2 = substvar scrutinee pattern lhs
+                       and body2 = substvar scrutinee pattern branch_body
+                       and axname2 = axname ^ "$" ^ short_name cname
+                       and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
                        in
-                       if List.length args <> n then
-                         internal_error
-                           ("constructor telescope arity mismatch for " ^ cname ^
-                            " in " ^ indname ^ ": branch binds " ^ string_of_int n ^
-                            " but normalized constructor has " ^
-                            string_of_int (List.length args))
-                       else
-                         let args0 = args in
-                         let args = refresh_case_args vars args in
-                         let refresh_terms tms =
-                           List.map
-                             (fun tm ->
-                                List.fold_left2
-                                  (fun tm (name, _) (name2, _) ->
-                                     if name = name2 then tm else substvar name (Var name2) tm)
-                                  tm args0 args)
-                             tms
-                         in
-                         let targs = refresh_terms targs in
-                         let bound_names = List.map fst (vars @ args) in
-                         if not (List.for_all (term_fvars_subset bound_names) (actual_tyargs @ targs)) then
-                           internal_error "case index arguments escape the normalized scope"
-                         else
-                         let index_premise =
-                           constructor_index_premise indname indty params params_num
-                             actual_tyargs targs
-                         in
-                         let premise = combine_premises premise index_premise in
-                         let pattern = mk_long_app (Const(cname)) (params @ mk_vars args)
-                         in
-                         let branch_body = simpl (mk_long_app branch (mk_vars args))
-                         in
-                         let branch_body = subst_proof_args (List.rev vars) args branch_body
-                         in
-                         let subst_scrutinee_type (name, ty) = (name, substvar scrutinee pattern ty) in
-                         let lhs2 = substvar scrutinee pattern lhs
-                         and body2 = substvar scrutinee pattern branch_body
-                         and axname2 = axname ^ "$" ^ short_name cname
-                         and vars2 = vars_before @ args @ List.map subst_scrutinee_type vars_after
-                         in
-                         (premise, lhs2, vars2, axname2, body2)
+                       (branch_clashes patterns, lhs2, vars2, axname2, body2)
                      in
                      (* Validate every constructor telescope and index scope
-                        before the first split equation is emitted. *)
+                        before filtering any impossible branch or emitting the
+                        first equation. *)
                      let prepared = List.map prepare_branch constrs in
+                     let prepared =
+                       List.filter
+                         (fun (clashes, _, _, axname2, _) ->
+                            if clashes then log 2 ("case-branch-pruned: " ^ axname2);
+                            not clashes)
+                         prepared
+                     in
                      List.fold_left
-                       (fun acc (premise, lhs2, vars2, axname2, body2) ->
+                       (fun acc (_, lhs2, vars2, axname2, body2) ->
                           acc >> compile_case ?premise lhs2 vars2 axname2 body2)
                        (return ()) prepared
-                     end
                   | _ ->
-                     case_aux_value vars indname matched_term return_type raw_return_type
-                       params_num branches indty
-                     >>= function
-                     | None -> refuse_case axname indname
-                     | Some rhs ->
-                        emit_equation ?premise (axname ^ "$link") vars lhs rhs
-                          (Coq_typing.check_prop (List.rev vars) case_body)
+                     emit_case_link ?premise axname vars lhs indname matched_term
+                       return_type raw_return_type params_num branches indty
+                       (Coq_typing.check_prop (List.rev vars) case_body)
                 in
-                if opt_refinement_types then
+                if opt_dependent_types then
                   match Coq_erasure.classify (List.rev vars) indname params with
-                  | Coq_erasure.CSubset { carrier_idx; _ } ->
-                     compile_case ?premise lhs vars axname (collapse_subset_case carrier_idx)
+                  | Coq_erasure.CSubset {
+                      carrier_idx; subset_args; index_formals = []; _
+                    } ->
+                     compile_case ?premise lhs vars axname
+                       (collapse_subset_case subset_args carrier_idx)
+                  | Coq_erasure.CSubset { solved; _ } ->
+                     (* An indexed refinement still collapses to its carrier at
+                        every constructor occurrence, so the arguments its result
+                        indices ford are the ones the equation would otherwise
+                        lose. *)
+                     regular_case ~collapses_solved_args:(solved <> []) ()
                   | Coq_erasure.CEnum _ ->
                      (* Enum scrutinees (e.g. sumbool) need no special collapse;
                         split-form validity applies to the erased constructor tags,
-                        while enum guards reuse the existing inversion scheme. *)
-                     regular_case ()
+                        while enum guards reuse the existing inversion scheme.
+                        Their solved arguments are informative and therefore
+                        survive in the translated pattern, so an unforded branch
+                        equation stays coarse rather than inconsistent. *)
+                     regular_case ~collapses_solved_args:false ()
                   | Coq_erasure.CEmpty | Coq_erasure.CPropSingleton | Coq_erasure.CRegular ->
-                     regular_case ()
+                     regular_case ~collapses_solved_args:false ()
                 else
-                  regular_case ()
+                  regular_case ~collapses_solved_args:false ()
               end
            | _ -> internal_error "case scrutinee declaration is not inductive"
          end
@@ -2084,7 +2251,19 @@ and convert ctx tm =
                        let params = Hhlib.take params_num args in
                        begin
                          match Coq_erasure.classify ctx indname params with
-                         | Coq_erasure.CSubset { carrier_idx; _ } ->
+                         | Coq_erasure.CSubset
+                             { carrier_idx; subset_args; solved; index_formals; _ } ->
+                            (* The retained telescope reaches a solved argument
+                               through the index formal that fords it.  A
+                               constructor application has the argument itself
+                               and no occurrence type to read the index from, so
+                               the ordinary telescope is what aligns the actual
+                               spine and eta-expands the missing fields. *)
+                            let cargs =
+                              Hhlib.take params_num cargs @
+                                Coq_erasure.unford_telescope index_formals solved
+                                  subset_args
+                            in
                             let actuals, extras = align_actuals cargs args in
                             let carrier_pos = params_num + carrier_idx in
                             if List.length actuals > carrier_pos then
@@ -2113,14 +2292,14 @@ and convert ctx tm =
         in
         build args missing
       in
-      begin match if opt_erasure_guards then None else erase_transport_head tm with
+      begin match erase_transport_head tm with
       | Some tm2 -> convert ctx tm2
       | None ->
       begin match erase_false_rect_type_arg ctx tm with
       | Some tm2 -> convert ctx tm2
       | None ->
       begin
-      match if opt_refinement_types then subset_constructor_spine () else None with
+      match if opt_dependent_types then subset_constructor_spine () else None with
       | Some (`Carrier (carrier_arg, extras)) ->
          (* Refinement occurrence collapse: subset constructors erase to
             their carrier at each occurrence.  Trailing applications are
@@ -2246,71 +2425,144 @@ and guard_leaf ctx ty x =
     | [] -> Const("$True")
     | fs -> join_right mk_and fs
   in
+  let internal_error msg =
+    raise
+      (Hammer_errors.HammerError
+         ("internal translation error: indexed guard " ^ msg))
+  in
+  let nth_index indices pos =
+    try List.nth indices pos with Failure _ ->
+      internal_error "refers to an index outside the occurrence telescope"
+  in
+  let subst_env env tm =
+    List.fold_left
+      (fun tm (name, value) ->
+         if var_occurs name tm then substvar name value tm else tm)
+      tm env
+  in
+  let instantiate formals indices tm =
+    if List.length formals <> List.length indices then
+      internal_error "instantiates a telescope at the wrong index arity"
+    else
+      simpl (Coq_erasure.instantiate formals indices tm)
+  in
+  (* Instantiate a retained constructor telescope from left to right.  Every
+     local argument of an enum is either solved by an occurrence index or is an
+     erased proof; a subset additionally has its one residual carrier.  Keeping
+     an explicit substitution environment is important for dependent
+     telescopes: proof casts use the already-instantiated types of preceding
+     arguments, rather than a second constructor destruction with unrelated
+     binder names.  [substvar] is capture-avoiding, so occurrence variables are
+     safe even when source binders reuse their printed names. *)
+  let prepare_telescope formals indices solved residuals proof_names args =
+    let rec prepare env acc = function
+      | [] -> (List.rev acc, env)
+      | (name, ty) :: args2 ->
+         let ty = subst_env env (instantiate formals indices ty) in
+         let value =
+           match Hhlib.massoc name solved with
+           | Some pos -> nth_index indices pos
+           | None ->
+              begin match Hhlib.massoc name residuals with
+              | Some value -> value
+              | None when List.mem name proof_names -> mk_proof_cast ty
+              | None -> internal_error "has an unaccounted constructor argument"
+              end
+         in
+         prepare ((name, value) :: env) ((name, ty, value) :: acc) args2
+    in
+    prepare [] [] args
+  in
+  let prepare_term formals indices env tm =
+    simpl (subst_env env (instantiate formals indices tm))
+  in
+  let index_equations formals indices env eqs =
+    List.map
+      (fun (pos, pattern) ->
+         mk_eq (nth_index indices pos)
+           (prepare_term formals indices env pattern))
+      eqs
+  in
   (* Decide the shape of the guard before building any formula.  An inductive,
      constructor or telescope which is unavailable or malformed simply carries
      no refinement structure, and such a leaf legitimately degrades to plain
-     typing; the lookups below are therefore the only failures allowed to mean
-     "no refinement here".  Payload translation is kept outside, so a bug in it
-     surfaces instead of quietly weakening the guard. *)
-  let classify_leaf ty_nf =
-    match flatten_app ty_nf with
-    | Const indname, args ->
-       begin match Defhash.find indname with
-       | (_, IndType(_, constrs, params_num), _, _) ->
-          let params = Hhlib.take params_num args
-          in
-          begin match Coq_erasure.classify ctx indname params with
-          | Coq_erasure.CSubset { carrier_idx; carrier_name; prop_args } ->
-             begin match constrs with
-             | [cname] ->
-                let (_, _, cargs) = Coq_typing.destruct_type_app (coqdef_type (Defhash.find cname))
-                in
-                let cparams = Hhlib.take params_num cargs
-                in
-                let cargs =
-                  List.map
-                    (fun (name, ty) -> (name, subst_params cparams params ty))
-                    (Hhlib.drop params_num cargs)
-                in
-                let (_, carrier_ty) = List.nth cargs carrier_idx
-                in
-                Some (`Subset (simpl carrier_ty, carrier_name, prop_args))
-             | _ -> None
-             end
-          | Coq_erasure.CEnum ctors -> Some (`Enum (params, ctors))
-          | Coq_erasure.CEmpty -> Some `Empty
-          | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
-          end
-       | _ -> None
+     typing; the declaration lookups of [saturated_occurrence] are therefore
+     the only failures allowed to mean "no refinement here".  Payload
+     translation is kept outside, so a bug in it surfaces instead of quietly
+     weakening the guard.  That same helper decides exact saturation, which the
+     case path reads too: a partial family application is a type former and
+     must retain its complete ordinary typing atom. *)
+  let classify_leaf ty =
+    match Coq_erasure.saturated_occurrence ty with
+    | Some (indname, params, indices) ->
+       begin match Coq_erasure.classify ctx indname params with
+       | (Coq_erasure.CSubset _ | Coq_erasure.CEnum _ |
+          Coq_erasure.CEmpty) as cls ->
+          Some (params, indices, cls)
+       | Coq_erasure.CPropSingleton | Coq_erasure.CRegular -> None
        end
-    | _ -> None
+    | None -> None
   in
-  if not opt_refinement_types then
+  if not opt_dependent_types then
     fallback ()
   else
-    let ty_nf = simpl (Coq_typing.reify (Coq_typing.eval ty))
-    in
-    match (try classify_leaf ty_nf with _ -> None) with
+    match (try classify_leaf ty with _ -> None) with
     | None ->
        fallback ()
-    | Some (`Subset (carrier_ty, carrier_name, prop_args)) ->
+    | Some (_, indices, Coq_erasure.CSubset {
+        carrier_idx; carrier_name; subset_args; prop_args; solved; index_eqs;
+        index_formals
+      }) ->
        (* A refinement guard is expanded at the occurrence itself: the carrier
-          guard is conjoined with the translated payload.  The same leaf is used
-          in hypotheses and conclusions.  Substitute the erased carrier before
-          translating the payload so beta-redexes in predicate parameters
-          disappear shallowly. *)
+          guard is conjoined with the translated payload and residual result-
+          index equations.  The same leaf is used in hypotheses and conclusions.
+          The retained named telescope lets solved arguments, erased proofs and
+          the carrier be substituted coherently through dependent payloads. *)
        convert ctx x >>= fun carrier ->
+       let proof_names = List.map fst prop_args in
+       let prepared, env =
+         prepare_telescope index_formals indices solved
+           [carrier_name, carrier] proof_names subset_args
+       in
+       let carrier_ty =
+         try
+           let (_, ty, _) = List.nth prepared carrier_idx in ty
+         with Failure _ ->
+           internal_error "subset carrier is outside its constructor telescope"
+       in
        make_guard ctx carrier_ty carrier >>= fun carrier_guard ->
        formulas ctx
          (List.map
-            (fun (_, prop_ty) -> simpl (substvar carrier_name carrier prop_ty))
+            (fun (_, prop_ty) ->
+               prepare_term index_formals indices env prop_ty)
             prop_args) >>= fun payloads ->
-       return (conjoin (carrier_guard :: payloads))
-    | Some (`Enum (params, ctors)) ->
-       let one_ctor (cname, payloads) =
-         convert ctx (mk_long_app (Const cname) params) >>= fun ctor ->
-         formulas ctx payloads >>= fun payloads ->
-         return (mk_and (mk_eq x ctor) (conjoin payloads))
+       formulas ctx
+         (index_equations index_formals indices env index_eqs) >>= fun equations ->
+       return (conjoin (carrier_guard :: payloads @ equations))
+    | Some (params, indices, Coq_erasure.CEnum enum) ->
+       let one_ctor ctor =
+         let proof_names =
+           List.map fst ctor.Coq_erasure.enum_payloads
+         in
+         let prepared, env =
+           prepare_telescope enum.Coq_erasure.enum_index_formals indices
+             ctor.Coq_erasure.enum_solved [] proof_names
+             ctor.Coq_erasure.enum_args
+         in
+         let args = List.map (fun (_, _, value) -> value) prepared in
+         convert ctx
+           (mk_long_app (Const ctor.Coq_erasure.enum_name) (params @ args))
+           >>= fun tag ->
+         formulas ctx
+           (List.map
+              (fun (_, payload_ty) ->
+                 prepare_term enum.Coq_erasure.enum_index_formals indices env
+                   payload_ty)
+              ctor.Coq_erasure.enum_payloads) >>= fun payloads ->
+         formulas ctx
+           (index_equations enum.Coq_erasure.enum_index_formals indices env
+              ctor.Coq_erasure.enum_index_eqs) >>= fun equations ->
+         return (mk_and (mk_eq x tag) (conjoin (payloads @ equations)))
        in
        let rec disjs = function
          | [] -> return []
@@ -2320,15 +2572,17 @@ and guard_leaf ctx ty x =
             return (f :: fs)
        in
        (* A CEnum guard reuses the existing inversion scheme as a self-contained
-          disjunction of constructor tags and their propositional payload
-          formulas; non-guard occurrences still use the ordinary inversion
-          axiom. *)
-       disjs ctors >>= fun fs ->
+          disjunction of constructor tags, payload formulas and instantiated
+          result-index equations; non-guard occurrences still use the ordinary
+          declaration-level inversion axiom. *)
+       disjs enum.Coq_erasure.enum_constructors >>= fun fs ->
        return (match fs with [] -> Const("$False") | _ -> join_right mk_or fs)
-    | Some `Empty ->
+    | Some (_, _, Coq_erasure.CEmpty) ->
        (* The guard for an empty classified type is false, matching the
           zero-constructor inversion scheme. *)
        return (Const("$False"))
+    | Some (_, _, (Coq_erasure.CPropSingleton | Coq_erasure.CRegular)) ->
+       internal_error "received a non-expandable classification"
 
 (* `x' does not get converted *)
 and make_guard ctx ty x =
@@ -2820,7 +3074,7 @@ and add_typing_axiom name ty =
   debug 2 (fun () -> print_endline ("add_typing_axiom: " ^ name));
   if not (is_logop name) && name <> "$True" && name <> "$False" && ty <> type_any then
     begin
-      if opt_refinement_types && Coq_erasure.has_erasable_content [] ty then
+      if opt_dependent_types && Coq_erasure.has_erasable_content [] ty then
         begin
           (* When the type contains erasure-relevant refinements/enums, emit the
              applied forall-form directly through type_to_guard.  This bypasses
@@ -2900,25 +3154,6 @@ and add_def_eq_axiom (name, value, ty, srt) =
   debug 2 (fun () -> print_endline ("add_def_eq_axiom: " ^ name));
   let axname = "$_def_" ^ name
   in
-  let emit_transport_definition () =
-    try
-      let vars = Coq_typing.get_type_args ty in
-      match Hhlib.drop 3 vars with
-      | (proof_name, _) :: _ ->
-         (* Transport erasure for the standard transport family itself maps
-            the transport to its carried proof/value.  Reconstruction-sensitive
-            cases are the same as user constants whose bodies are eq_rect/eq_rec
-            or eq_ind wrappers. *)
-         let premise = transport_erasure_premise (mk_long_app (Const name) (mk_vars vars)) in
-         emit_definition_equation ?premise axname name [] vars (Var(proof_name)) >>
-         return ()
-      | [] -> return ()
-    with _ ->
-      return ()
-  in
-  if is_transport_constant name then
-    emit_transport_definition ()
-  else
   match value with
   | Lam(_) ->
      lambda_lifting [] axname name [] [] value >>
@@ -2974,8 +3209,15 @@ and add_def_eq_axiom (name, value, ty, srt) =
            end
       end
 
+(* A declaration that erases to its carrier at every occurrence has no
+   constructor symbol left for the declaration-level structural axioms to
+   describe: injectivity of the erased constructor degenerates to a tautology,
+   and inversion asserts a constructor shape the occurrence-level expansion
+   never produces.  Only declaration-independent classifications qualify --
+   [classify_decl] returns [None] for parameter-dependent declarations, whose
+   structural axioms are therefore kept. *)
 and skip_refinement_decl_axioms indname =
-  opt_refinement_types && opt_refinement_decl_skips &&
+  opt_dependent_types &&
   match Coq_erasure.classify_decl indname with
   | Some (Coq_erasure.CSubset _) -> true
   | _ -> false
@@ -3223,14 +3465,8 @@ and add_def_axioms ((name, value, ty, srt) as def) =
       end
   | _ ->
      if srt = SortProp then
-       begin
-         prop_to_formula [] ty >>= fun r ->
-         add_axiom (mk_axiom name r) >>
-         if is_transport_constant name then
-           add_def_eq_axiom def
-         else
-           return ()
-       end
+       prop_to_formula [] ty >>= fun r ->
+       add_axiom (mk_axiom name r)
      else
        begin
          add_typing_axiom name ty >>
@@ -3294,17 +3530,24 @@ let remove_def name =
      ownership pair would let a later occurrence reuse a lift a fresh process
      would have minted anew, making translation output order-dependent.
      [Lift_dependencies] is keyed by symbol rather than by owner and stays
-     consistent with the surviving [coqterm_hash], so it is left alone. *)
-  Lift_owners.remove name
+     consistent with the surviving [coqterm_hash], so it is left alone.
+
+     The caches of the declarations have to go too, whole: none of them records
+     which [Defhash] entries it was read from, so there is no way to drop just
+     the answers that read this declaration.  Dropping all of them is cheap
+     here -- [remove_def] is only ever used before a translation, never inside
+     one -- and it is what keeps an answer from surviving the declaration whose
+     content the re-translation replaces. *)
+  Lift_owners.remove name;
+  clear_declaration_caches ()
 
 let cleanup () =
   reset_unique_id ();
   discarded_speculations := 0;
   discarded_speculation_effects := 0;
   Defhash.clear ();
-  Coq_typing.clear_constructor_hash ();
+  clear_declaration_caches ();
   Axhash.clear ();
-  Coq_erasure.clear ();
   Case_dependencies.clear ();
   Lift_dependencies.clear ();
   Lift_owners.clear ();

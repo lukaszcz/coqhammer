@@ -31,6 +31,9 @@ test-prepare-corpus:
 test-grid-engine:
 	bash tests/test_grid_engine.sh
 
+test-rebuild-config:
+	bash tests/test_rebuild_config.sh
+
 test-compile-supervisor:
 	bash tests/test_compile_supervisor.sh
 
@@ -46,9 +49,9 @@ test-confirmation-option-probe:
 test-premise-summarizer:
 	python3 tests/test_summarize_premise_screening.py
 
-test: test-prepare-corpus test-grid-engine test-compile-supervisor \
-      test-atp-makefile test-premise-grid-spec test-confirmation-option-probe \
-      test-premise-summarizer
+test: test-prepare-corpus test-grid-engine test-rebuild-config \
+      test-compile-supervisor test-atp-makefile test-premise-grid-spec \
+      test-confirmation-option-probe test-premise-summarizer
 
 init: $(OFILES)
 problems/%.vo: problems/%.v
@@ -89,7 +92,7 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
 .PHONY: clean clean-vo clean-problems test test-prepare-corpus test-grid-engine \
-        test-compile-supervisor test-atp-makefile test-premise-grid-spec \
+        test-rebuild-config test-compile-supervisor test-atp-makefile test-premise-grid-spec \
         test-confirmation-option-probe \
         test-premise-summarizer \
         check atp reconstr prove init all

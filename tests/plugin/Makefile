@@ -1,14 +1,15 @@
 COQC ?= rocq c
 
-EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
+EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo singleton_premises.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
 PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo def_premises.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo premise_isolation.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
 # but only trivial ones the sauto pretactic phase closes before any ATP is
 # consulted; erasure_blacklist.vo, arrow_transl.vo, type_sharing_transl.vo,
-# membership_transl.vo, link_erasure_transl.vo and defterm_transl.vo assert on
-# the axioms the translation emits and prove nothing -- arrow_transl.vo,
+# membership_transl.vo, link_erasure_transl.vo, defterm_transl.vo and
+# singleton_premises.vo assert on the axioms the translation emits and prove
+# nothing -- arrow_transl.vo,
 # type_sharing_transl.vo and lambda_reuse_transl.vo also dump problems for
 # aborted goals, the rest only translate declarations.
 # premise_isolation.vo dumps problems too and needs no prover either, but its
@@ -20,7 +21,7 @@ PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo def_prem
 # also passes without an ATP, but only vacuously: it checks that `hammer` fails
 # when every prover is disabled, which is equally true when no prover exists, so
 # running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo singleton_premises.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -89,6 +90,19 @@ extraction_matches.vo: extraction_matches.v
 
 extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
+
+extraction_indexed.vo: extraction_indexed.v extraction_deptypes.vo
+	$(COQC) extraction_indexed.v
+
+singleton_premises.vo: singleton_premises.v check-singleton-premises.sh transl-assert-lib.sh
+	@set -e; \
+	$(COQC) singleton_premises.v > singleton_premises.out 2>&1 || { \
+	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
+	}; \
+	if ! ./check-singleton-premises.sh singleton_premises.out; then \
+	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
+	fi; \
+	rm -f singleton_premises.out
 
 erasure_blacklist.vo: erasure_blacklist.v
 	@set -e; \
@@ -536,7 +550,7 @@ premise_isolation.vo: premise_isolation.v
 	  rm -f premise_isolation.vo premise_isolation.out; exit 1; }; \
 	rm -f premise_isolation.out
 
-extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
+extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo check-extraction-transl.sh transl-assert-lib.sh
 	@set -e; \
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \

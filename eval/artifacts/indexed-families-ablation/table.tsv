@@ -1,0 +1,8 @@
+measurement	commit	label	decl_skips	atp_successes	atp_attempts	goals_solved	goals	consistency_hits	consistency_outputs	high_premise_total_bytes	high_premise_problems	high_premise_mean_bytes
+controlled-reference	5cb0bfd36c7f14149ee2fd9f09d188a8c69b1a6a	current	true	86	108	15	18	0	36	64837915	36	1801053.194
+controlled-reference	5cb0bfd36c7f14149ee2fd9f09d188a8c69b1a6a	screening-all-on	false	78	108	14	18	2	36	65528384	36	1820232.889
+controlled-reference	5cb0bfd36c7f14149ee2fd9f09d188a8c69b1a6a	screening-all-on-decl-skips	true	80	108	14	18	0	36	65518847	36	1819967.972
+original-incomplete-ablation	5cb0bfd36c7f14149ee2fd9f09d188a8c69b1a6a	screening-loo-indexed-families	false	79	108	14	18	0	36	65175966	36	1810443.500
+original-incomplete-ablation	5cb0bfd36c7f14149ee2fd9f09d188a8c69b1a6a	screening-loo-indexed-families-decl-skips	true	79	108	14	18	0	36	65168395	36	1810233.194
+followup-complete-ablation	62fc0708997c4a65a09b63902df85c1921e2201e	screening-loo-indexed-families	false	79	108	14	18	0	36	65175966	36	1810443.500
+followup-complete-ablation	62fc0708997c4a65a09b63902df85c1921e2201e	screening-loo-indexed-families-decl-skips	true	79	108	14	18	0	36	65168395	36	1810233.194

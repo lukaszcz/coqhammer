@@ -6,7 +6,6 @@ val is_canonical_constant : string list -> string -> string -> bool
     [prefix ^ "." ^ basename] for some listed [prefix]. *)
 
 val is_init_logic : string -> string -> bool
-val is_init_datatypes : string -> string -> bool
 val is_init_wf : string -> string -> bool
 val is_init_specif : string -> string -> bool
 val is_jmeq : string -> string -> bool

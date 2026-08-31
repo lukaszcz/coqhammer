@@ -10,8 +10,7 @@ Usage: ./run-screening-grid.sh [options]
 Run the extraction screening grid for the current checkout in a resumable
 layout:
   premise counts {64,256,1024} x {Vampire,E prover} x
-  {current, all-off, all-on, three leave-one-out configurations} x
-  {decl-skips off,on for configuration variants} over the three prepared corpora.
+  {current, dependent-types-off} over the three prepared corpora.
 
 Results are checkpointed under eval/results/screening/ and summarized under
   eval/artifacts/extraction-screening/summary.tsv. Checkpoints are reused only
@@ -69,11 +68,7 @@ GRID_PROVERS=(eprover vampire)
 GRID_CORPORA=(stdlib-regression dependent-slice external-equations)
 
 configs=(
-  all-off
-  all-on
-  loo-prop-case-erasure
-  loo-erasure-guards
-  loo-refinement-types
+  dependent-types-off
 )
 
 GRID_LABELS=(current)
@@ -83,9 +78,6 @@ for cfg in "${configs[@]}"; do
   label="screening-$cfg"
   GRID_LABELS+=("$label")
   screening_label_install[$label]="$cfg"
-  label="screening-$cfg-decl-skips"
-  GRID_LABELS+=("$label")
-  screening_label_install[$label]="$cfg-decl-skips"
 done
 
 # Declarative label callbacks consumed by grid-engine.sh.

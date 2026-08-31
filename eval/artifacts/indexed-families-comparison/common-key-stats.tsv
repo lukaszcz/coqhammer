@@ -1,0 +1,13 @@
+scope	value	common_attempt_keys	baseline_atp_successes	candidate_atp_successes	atp_gains	atp_losses	atp_net	baseline_reconstructions	candidate_reconstructions	reconstruction_gains	reconstruction_losses	reconstruction_net
+overall	all	276560	80580	80282	516	814	-298	70371	70069	519	821	-302
+corpus	color-vector	12480	3437	3450	38	25	13	3129	3128	25	26	-1
+corpus	dependent-slice	240	204	203	0	1	-1	204	203	0	1	-1
+corpus	dependent-stdlib	70880	23911	23770	172	313	-141	18644	18512	187	319	-132
+corpus	equations-examples	3320	695	695	3	3	0	488	487	0	1	-1
+corpus	external-equations	1960	681	682	2	1	1	369	370	2	1	1
+corpus	stdlib-regression	44840	25849	25760	69	158	-89	24312	24239	87	160	-73
+corpus	stdpp	142840	25803	25722	232	313	-81	23225	23130	218	313	-95
+prover	cvc4	69140	23966	23949	144	161	-17	20834	20804	133	163	-30
+prover	eprover	69140	17973	17938	155	190	-35	15638	15600	151	189	-38
+prover	vampire	69140	23950	23871	122	201	-79	20996	20921	143	218	-75
+prover	z3	69140	14691	14524	95	262	-167	12903	12744	92	251	-159

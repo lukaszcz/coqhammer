@@ -34,18 +34,27 @@ first to install the libraries and build the Coq-Equations checkout that some
 of them need.
 
 The standard evaluation uses the prepared source files in `problems/`. The
-extraction evaluation uses three corpora:
+full extraction confirmation evaluates seven corpora:
 
 - `stdlib-regression`: built from the installed Rocq standard library. The
   installed library ships a `.glob` beside every `.v`, which is all `coqnames`
   needs to place the `hammer_hook` calls, so this needs no stdlib rebuild.
   The default slice is `Arith Bool Vectors Lists NArith`, about 1200 goals
-  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`.
+  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`;
+- `dependent-stdlib`: dependent modules from the installed Rocq standard
+  library;
+- `stdpp`: built from the installed `rocq-stdpp` library;
+- `color-vector`: built from the installed CoLoR vector modules;
 - `dependent-slice`: committed dependent elimination, finite map, and
   well-founded recursion fixtures;
+- `equations-examples`: built from the configured Coq-Equations checkout;
 - `external-equations`: built from the installed `rocq-equations` library, or
   from a checkout passed with `--external-source /path/to/Coq-Equations`. See
   `corpora/external-equations/CANDIDATES.md` for how it was chosen.
+
+The extraction screening grid intentionally uses only the three committed
+sample corpora `stdlib-regression`, `dependent-slice`, and
+`external-equations`; it is an option sweep, not the seven-corpus confirmation.
 
 Generating the corpora from the installed libraries keeps them in step with the
 Rocq the evaluation actually runs against, instead of committing a snapshot
@@ -111,16 +120,19 @@ repeated. The lower-level commands used by `evaluate.sh library` are
 
 `rebuild-config.sh` is an implementation helper used by the grid commands.
 `current` builds exactly the option values committed in
-`src/plugin/coq_transl_opts.ml`. The other names are controlled configuration
-variants used to understand the current translator:
+`src/plugin/coq_transl_opts.ml`. The one controlled variant used to understand
+the current translator is `dependent-types-off`, which builds
+`opt_dependent_types=false`: the translation as it was before dependent types
+were handled.
 
-- `all-off` and `all-on`;
-- `loo-prop-case-erasure`;
-- `loo-erasure-guards`;
-- `loo-refinement-types`.
+Every build then validates the prefix it installed: the shared
+`tests/plugin/singleton_premises.v` probe is translated with the plugin just
+installed, and the emitted axioms must agree with the configuration -- the
+collapsed singleton-elimination equations when dependent types are handled,
+none of them when they are not. A stale artifact fails the rebuild instead of
+being measured under the label it was asked for.
 
-Append `-decl-skips` to a variant to enable declaration-level refinement
-skips. Configuration builds restore `coq_transl_opts.ml` after installation.
+Configuration builds restore `coq_transl_opts.ml` after installation.
 Each build wipes its install prefix first, so `--prefix` is accepted only for a
 dedicated install directory: outside the checkout or under `eval/_installs`,
 and, if it already exists, carrying the `.coqhammer-eval-prefix` marker an
@@ -163,16 +175,21 @@ the numbers it vouches for share a single history — checkpoints are keyed by
 label, so once a grid is rerun that history is the only surviving record of the
 previous one.
 
-Two grids qualify. `artifacts/extraction-confirmation` holds the confirmation
-grid, which carries the soundness and reconstruction claims.
-`artifacts/premise-screening` holds the premise-selection screening grid, whose
-definitional-slot sweep is the headline result for premise selection; it is the
-one screening grid that is tracked, and it records its own non-standard
-measurement policy in `provenance.env`. Every other screening summary —
-`artifacts/extraction-screening` — stays untracked: a variant sweep that
-nothing is claimed from is rerun rather than cited. `summary.tsv` and
-`analysis.md` are marked `linguist-generated` in `.gitattributes` so review
-collapses them; regenerate them through the grid rather than editing them.
+The tracked grid artifacts are the ones cited by branch claims.
+`artifacts/extraction-confirmation` carries the full-grid consistency and
+reconstruction measurements. `artifacts/extraction-screening` carries the
+indexed-families extraction-option sweep, and `artifacts/premise-screening`
+carries the premise-selection definitional-slot sweep and its non-standard
+measurement policy. `artifacts/indexed-families-comparison` is a compact,
+cross-commit report derived from workspace-local baseline/candidate snapshots;
+it retains their digests and common-key statistics without committing the
+large attempt tables. `artifacts/indexed-families-ablation` compactly records
+the two corrected option-off screening cells rerun after the
+ablation-boundary fix. Screening or
+comparison output not cited by the branch is rerun rather than tracked.
+`summary.tsv` and `analysis.md` are marked `linguist-generated` in
+`.gitattributes` so review collapses them; regenerate grid output through the
+harness rather than editing it.
 
 The confirmation run also checks that the translated axioms stay consistent: it
 replaces each conjecture with `$false` and expects no refutation. Those axioms
