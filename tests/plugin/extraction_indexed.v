@@ -132,26 +132,3 @@ Definition jmeq_match
   match e with
   | JMeq_refl => x
   end.
-
-Hammer_transl "breflect".
-Hammer_transl "tagged".
-Hammer_transl "untag".
-Hammer_transl "ibounded".
-Hammer_transl "ibval".
-Hammer_transl "ibidx".
-Hammer_transl "ibpart".
-Hammer_transl "istack_index".
-Hammer_transl "istack_index_deep".
-Hammer_transl "indexed_poly_subset".
-Hammer_transl "indexed_poly_value".
-Hammer_transl "okp".
-Hammer_transl "fromok".
-Hammer_transl "isT".
-Hammer_transl "fromisT".
-Hammer_transl "istrue".
-Hammer_transl "fromtrue".
-Hammer_transl "cast".
-Hammer_transl "vec".
-Hammer_transl "vhead".
-Hammer_transl "dheight2".
-Hammer_transl "jmeq_match".
