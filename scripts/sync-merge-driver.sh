@@ -69,10 +69,13 @@ fi
 sync_tokens_read "$A" "$P"
 
 # OUR prevailing prover word: whichever of the standalone words dominates on our
-# side (master mixes both -- "Rocq master" but "versions of Coq").
+# side (a branch may mix both -- "Rocq master" alongside "versions of Coq").
+# Either count may legitimately be zero, so absorb grep's no-match status: under
+# `pipefail` it would otherwise fail the assignment and `set -e` would abort the
+# driver before it merges anything, which git reports as a marker-less conflict.
 if [ "$SYNC_DOC" = 1 ]; then
-  arocq="$(grep -oE '\bRocq\b' "$A" | wc -l)"
-  acoq="$(grep -oE '\bCoq\b' "$A" | wc -l)"
+  arocq="$( { grep -oE '\bRocq\b' "$A" || true; } | wc -l)"
+  acoq="$( { grep -oE '\bCoq\b' "$A" || true; } | wc -l)"
   [ "$acoq" -gt "$arocq" ] && ADOMWORD='Coq' || ADOMWORD='Rocq'
 fi
 
