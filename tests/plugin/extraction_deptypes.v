@@ -1,5 +1,8 @@
 From Hammer Require Import Hammer.
 
+(* [Vectors.Vector] advises against its own use; these fixtures translate
+   dependent vectors on purpose. *)
+#[warnings="-warn-library-file-stdlib-vector"]
 From Stdlib Require Import Arith.Compare_dec Arith.PeanoNat Arith.Wf_nat Bool.Bool Lia Program.Wf Vectors.Vector.
 
 Set Hammer SAutoLimit 0.
