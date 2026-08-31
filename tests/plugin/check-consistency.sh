@@ -190,11 +190,14 @@ note_nonzero_exit() {
 
   # `timeout` prints its own lines into the captured output, and they can
   # report a core dump left behind by the prover it killed; read only what the
-  # prover itself wrote when deciding whether it crashed.
+  # prover itself wrote when deciding whether it crashed.  A portfolio prover
+  # also reports the crashes of the strategy processes it forks while itself
+  # surviving to deliver a verdict, so this says nothing about whether the
+  # prover answered: the captured output is still classified by the caller.
   if [ "$status" -gt 128 ] ||
      grep -Ev '^timeout: ' "$out" |
        grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction'; then
-    echo "SKIP: $prover crashed while checking $label; skipping this prover for this check" >&2
+    echo "NOTE: $prover reported a crash while checking $label; not treating the nonzero exit as a failure"
     return 0
   fi
 
