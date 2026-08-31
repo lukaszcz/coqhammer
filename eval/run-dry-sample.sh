@@ -2,12 +2,18 @@
 set -euo pipefail
 
 # shellcheck source=eval/cli-lib.sh
+# shellcheck disable=SC1091
 source "$(dirname "${BASH_SOURCE[0]}")/cli-lib.sh"
 
 usage() {
   cat <<'USAGE'
 Usage: ./run-dry-sample.sh --label LABEL --corpus CORPUS [--prefix PREFIX]
                            [--prover eprover] [--premise knn-32]
+                           [--compile-timeout SEC]
+                           [--compile-timeout-grace SEC]
+
+Compile timeout defaults: 600 seconds per file, with 10 seconds of TERM grace
+before process-group KILL.
 
 Run the eval harness on a small committed sample: compile/check, generate ATP
 problems with hammer_hook, run one prover on one premise-selection directory,
@@ -21,6 +27,8 @@ prefix=
 prover=eprover
 premise=knn-32
 jobs=1
+compile_timeout=600
+compile_timeout_grace=10
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -30,6 +38,8 @@ while [ "$#" -gt 0 ]; do
     --prover) need_value "$@"; prover="$2"; shift 2 ;;
     --premise) need_value "$@"; premise="$2"; shift 2 ;;
     -j|--jobs) need_value "$@"; jobs="$2"; shift 2 ;;
+    --compile-timeout) need_value "$@"; compile_timeout="$2"; shift 2 ;;
+    --compile-timeout-grace) need_value "$@"; compile_timeout_grace="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "Unknown argument: $1" >&2; usage >&2; exit 2 ;;
   esac
@@ -39,6 +49,12 @@ if [ -z "$label" ] || [ -z "$corpus" ]; then
   usage >&2
   exit 2
 fi
+for value in "$jobs" "$compile_timeout" "$compile_timeout_grace"; do
+  if [[ ! "$value" =~ ^[1-9][0-9]*$ ]]; then
+    echo "Jobs and compile timeouts must be positive integers: $value" >&2
+    exit 2
+  fi
+done
 
 # label/corpus/prover/premise all end up in derived paths (results/, atp/o/,
 # atp/i/f) and prover additionally names a `make -C atp` target, so they are
@@ -90,21 +106,29 @@ mkdir -p atp/o out
 export PATH="$prefix/bin:$PATH"
 export OCAMLPATH="$prefix${OCAMLPATH:+:$OCAMLPATH}"
 coqc_cmd="rocq c -coqlib $prefix/coq"
+compile_supervisor="$eval_dir/tools/rocq-compile-supervisor.sh"
 
-make -k -j "$jobs" init COQC="$coqc_cmd"
+# shellcheck source=eval/grid-checkpoint-lib.sh
+# shellcheck disable=SC1091
+source "$eval_dir/grid-checkpoint-lib.sh"
+
+run_compile_make init init "$coqc_cmd" "" logs/init
 echo "check" > coqhammer.opt
 rm -rf logs/check/ check.log
-make -k -j "$jobs" check COQC="$coqc_cmd" 2>&1 | tee check.log
-mv check.log check.log.bak
+check_status=0
+run_compile_make check check "$coqc_cmd" "" logs/check 2>&1 | tee check.log.bak || check_status=$?
 grep Error check.log.bak > check.log || true
 rm check.log.bak
+[ "$check_status" -eq 0 ] || exit "$check_status"
 
 echo "gen-atp" > coqhammer.opt
 rm -rf logs/atp/ atp/problems gen-atp.log
-make -k -j "$jobs" atp COQC="$coqc_cmd" 2>&1 | tee gen-atp.log
-mv gen-atp.log gen-atp.log.bak
+generation_status=0
+run_compile_make gen-atp atp "$coqc_cmd" "" logs/atp 2>&1 | tee gen-atp.log.bak || generation_status=$?
+cleanup_paired_output_temporaries atp/problems
 grep Error gen-atp.log.bak > gen-atp.log || true
 rm gen-atp.log.bak
+[ "$generation_status" -eq 0 ] || exit "$generation_status"
 
 if [ ! -d "atp/problems/$premise" ]; then
   echo "No generated ATP directory for premise selector: $premise" >&2
@@ -127,7 +151,7 @@ mv "atp/o/$prover" "atp/o/$prover-$premise"
 make clean-vo
 echo "reconstr" > coqhammer.opt
 reconstr_jobs=$(echo "($jobs-4)/4+1" | bc)
-make -k -j "$reconstr_jobs" reconstr COQC="$coqc_cmd"
+jobs=$reconstr_jobs run_compile_make reconstruction reconstr "$coqc_cmd" "" logs/reconstr
 
 result_dir="results/$label/$corpus"
 rm -rf "$result_dir"
@@ -141,6 +165,9 @@ find out -type f | sort > "$result_dir/reconstruction-outputs.lst"
   echo "prefix=$prefix"
   echo "prover=$prover"
   echo "premise=$premise"
+  echo "compile_timeout=$compile_timeout"
+  echo "compile_timeout_grace=$compile_timeout_grace"
+  echo "compile_supervisor_sha256=$(hash_file "$compile_supervisor")"
   echo "generated=$(wc -l < "$result_dir/generated.lst")"
   echo "prover_outputs=$(wc -l < "$result_dir/prover-outputs.lst")"
   echo "theorems=$( (grep -R "SZS status Theorem" "atp/o/$prover-$premise" 2>/dev/null || true) | wc -l )"

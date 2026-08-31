@@ -47,6 +47,34 @@ type coqcontext = (string * coqterm) list
 type fol = coqterm
 type fol_axioms = (string * fol) list
 
+(* Axiom names identify formulas throughout a translated problem.  Merge all
+   bundles through this function so duplicate replay is harmless only when the
+   formulas agree; silently retaining either side of a conflicting collision
+   would make the result depend on traversal order. *)
+let compose_axioms bundles =
+  let sorted =
+    List.sort (fun x y -> String.compare (fst x) (fst y))
+      (List.concat bundles)
+  in
+  let rec deduplicate acc = function
+    | [] -> List.rev acc
+    | ((name, formula) as axiom) :: rest ->
+       let rec consume = function
+         | (name2, formula2) :: tail when name2 = name ->
+            (* Replaying a cached bundle shares its formulas physically, so the
+               duplicates this is here to tolerate are almost always the same
+               object; the structural comparison then never has to walk them. *)
+            if formula2 != formula && formula2 <> formula then
+              raise (Hammer_errors.HammerError
+                       ("internal translation error: axiom name collision for " ^
+                        name));
+            consume tail
+         | tail -> tail
+       in
+       deduplicate (axiom :: acc) (consume rest)
+  in
+  deduplicate [] sorted
+
 let is_fol tm =
   match tm with
   | Fix(_) | Case(_) | Lam(_) | Cast(_) | Prod(_) | IndType(_) | Let(_) |
@@ -86,16 +114,15 @@ let coqdef_sort (_, _, _, srt) = srt
 
 let coqdef_map f (name, value, ty, srt) = (name, f value, f ty, srt)
 
-let unique_id =
-  let id = ref 0
-  in
-  fun () ->
-    begin
-      incr id;
-      if !id = 0 then
-        failwith "unique_id";
-      string_of_int !id
-    end
+let unique_id_counter = ref 0
+
+let unique_id () =
+  incr unique_id_counter;
+  if !unique_id_counter = 0 then
+    failwith "unique_id";
+  string_of_int !unique_id_counter
+
+let reset_unique_id () = unique_id_counter := 0
 
 let refresh_varname name = "var_" ^ name ^ "_" ^ unique_id ()
 
@@ -526,15 +553,27 @@ let simpl =
 (* Head-normalize `tm' far enough to expose the head of its weak head normal
    form -- typically an application of an inductive type.  `unfold' resolves a
    global constant to its definition value, `None' when the constant is opaque
-   or absent; this module cannot reach the definition hash itself, hence the
-   callback.  Only head steps are taken -- beta, delta, iota and let
-   substitution -- with no reduction under binders and no recursion into
-   arguments, the scrutinee of a `Case' being the sole exception since iota
-   needs it.  All steps share the `budget' fuel counter and the current term is
-   returned unreduced once it runs out: an unbounded type-level unfolder is a
-   known blow-up hazard here.  `Fix' is deliberately not reduced.  It is the
-   caller, not the reducer, that decides whether a stuck head is a refusal. *)
-let whnf_head ~budget ~unfold tm =
+   or absent, and `is_constructor' tells a constructor from an axiom, both
+   opaque constants standing for themselves; this module cannot reach the
+   definition hash itself, hence the callbacks.  Only head steps are taken --
+   beta, delta, iota and let substitution -- with no reduction under binders
+   and no recursion into arguments, the arguments iota must inspect (a `Case'
+   scrutinee, a `Fix' recursive argument) being the sole exception.  All steps
+   share the `budget' fuel counter and the current term is returned unreduced
+   once it runs out: an unbounded type-level unfolder is a known blow-up hazard
+   here.  It is the caller, not the reducer, that decides whether a stuck head
+   is a refusal.
+
+   Both iota rules are constructor-guarded, as CIC's are: a `Fix' is unfolded
+   only once its declared decreasing argument head-normalizes to a constructor
+   application, which no amount of unfolding can manufacture out of a stuck
+   argument, so the rule cannot cycle on a neutral term the way unconditional
+   delta on a fixpoint does (a well-founded recursion stays stuck on its
+   abstract accessibility proof forever -- see `Coq_typing.is_constructor_headed'
+   for the same guard on the full evaluator).  The shared fuel counter bounds
+   the reduction regardless, closed recursions included.  A `CoFix' has no
+   decreasing argument to guard on and is never unfolded. *)
+let whnf_head ~budget ~unfold ~is_constructor tm =
   let fuel = ref budget
   in
   let step () =
@@ -578,6 +617,12 @@ let whnf_head ~budget ~unfold tm =
         | Some(tm2) -> whnf tm2 args
         | None -> mk_long_app tm args
       end
+    | Fix(CoqFix, k, recargs, names, types, bodies) ->
+      begin
+        match fix_iota k recargs names types bodies args with
+        | Some(body, args2) -> whnf body args2
+        | None -> mk_long_app tm args
+      end
     | _ ->
       mk_long_app tm args
   and iota indname matched params_num branches =
@@ -591,6 +636,35 @@ let whnf_head ~budget ~unfold tm =
             | Some(n, br) when List.length cargs = params_num + n && step () ->
               Some(mk_long_app br (Hhlib.drop params_num cargs))
             | _ -> None
+          end
+        | _ -> None
+      end
+    | _ -> None
+  (* The `k'-th component of the block is unfolded by replacing every
+     component name by the block itself taken at that component, simultaneously
+     so that a mutual block cannot capture its own binders.  The normalized
+     recursive argument is put back into the spine: the body is about to match
+     on it, and paying for the same normalization twice is what the fuel is
+     scarcest against. *)
+  and fix_iota k recargs names types bodies args =
+    match List.nth_opt recargs k with
+    | Some(recarg) when recarg >= 0 && List.length args > recarg ->
+      begin
+        let arg = whnf (List.nth args recarg) [] in
+        match flatten_app arg with
+        | (Const(cname), _) when is_constructor cname && step () ->
+          begin
+            match List.nth_opt bodies k with
+            | Some(body) ->
+              let components =
+                List.mapi
+                  (fun m name ->
+                     (name, lazy (Fix(CoqFix, m, recargs, names, types, bodies))))
+                  names
+              in
+              Some(dsubst components body,
+                   List.mapi (fun i x -> if i = recarg then arg else x) args)
+            | None -> None
           end
         | _ -> None
       end

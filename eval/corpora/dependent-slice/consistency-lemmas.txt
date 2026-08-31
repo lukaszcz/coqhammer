@@ -5,9 +5,16 @@
 # This corpus is small and hand-written, so every fixture is listed.  All of
 # them completed the check with no refutation before the list was introduced.
 
+dep_cast_compose
+dep_cast_refl
 dep_eq_rect_refl
 dep_fin_f1_zero
+dep_fin_zero_elim
 dep_fmap_empty
+dep_ibval_bound
 dep_idiv_zero
 dep_mset_empty
+dep_reflect_elim
+dep_reflect_intro
+dep_vector_hd_cons
 dep_vector_head_cons

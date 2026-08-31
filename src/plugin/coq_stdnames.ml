@@ -8,10 +8,6 @@ let is_init_logic =
   is_canonical_constant
     [ "Corelib.Init.Logic"; "Coq.Init.Logic"; "Stdlib.Init.Logic" ]
 
-let is_init_datatypes =
-  is_canonical_constant
-    [ "Corelib.Init.Datatypes"; "Coq.Init.Datatypes"; "Stdlib.Init.Datatypes" ]
-
 let is_init_wf =
   is_canonical_constant
     [ "Corelib.Init.Wf"; "Coq.Init.Wf"; "Stdlib.Init.Wf" ]

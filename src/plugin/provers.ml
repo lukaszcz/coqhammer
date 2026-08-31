@@ -454,15 +454,37 @@ let call_provers_par fname ofname =
 (******************************************************************************)
 (* Main functions *)
 
-let write_atp_file fname deps1 hyps deps goal =
+let prepare_atp deps1 hyps deps goal =
   let name = Hh_term.get_hhdef_name goal in
   let depnames = List.map Hh_term.get_hhdef_name (hyps @ deps1) in
-  Coq_transl.remove_def name;
-  List.iter (fun d -> Coq_transl.remove_def (Hh_term.get_hhdef_name d)) hyps;
+  (* Every ATP problem owns its translation state.  In particular, premise
+     growth or minimization must not reuse anonymous lifts and side-axiom
+     bundles created for an earlier problem in the same Rocq process.
+
+     Measured cost of discarding that state, on the POPLMark [scope_le_app_len]
+     goal of [tests/plugin/premise_isolation.v] at 128 premises: when
+     consecutive problems select DIFFERENT premise sets there is nothing to
+     reuse and no measurable difference (15.6s either way for its four
+     problems).  Repeating one problem ten times over -- the maximum a shared
+     state could save -- costs 0.20s per repetition, about a fifth of a
+     problem's preparation; the rest is premise selection, which this does not
+     touch.  Retaining the state instead is not merely cheaper: it changes the
+     problems.  The same file's growing selections then emit a 128-premise
+     problem differing from the one a fresh process emits, which is the
+     contamination [premise_isolation.vo] pins. *)
+  Coq_transl.cleanup ();
   Coq_transl.reinit (goal :: hyps @ deps);
   if !Opt.debug_mode || !Opt.gs_mode = 0 then
     Msg.info ("Translating the problem to FOL...");
   Coq_transl.retranslate (name :: depnames);
+  name, depnames
+
+let write_atp oc deps1 hyps deps goal =
+  let name, depnames = prepare_atp deps1 hyps deps goal in
+  Coq_transl.output_problem oc name depnames
+
+let write_atp_file fname deps1 hyps deps goal =
+  let name, depnames = prepare_atp deps1 hyps deps goal in
   if !Opt.debug_mode then
     Msg.info ("Writing translated problem to file '" ^ fname ^ "'...");
   Coq_transl.write_problem fname name depnames

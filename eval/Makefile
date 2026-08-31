@@ -6,34 +6,78 @@ OFILES=$(patsubst problems/%.v,problems/%.vo,$(FFILES))
 # environment and silently evaluate against the active switch instead.
 COQFLAGS ?=
 COQC=rocq c $(COQFLAGS) $(shell find problems/ -name "*.conf" -exec cat {} + | tr "\n" " ")
+COMPILE_SUPERVISOR ?= tools/rocq-compile-supervisor.sh
+COMPILE_TIMEOUT ?= 600
+COMPILE_TIMEOUT_GRACE ?= 10
+COMPILE_PHASE ?= compile
+SUPERVISED_COQC=$(COMPILE_SUPERVISOR) --timeout "$(COMPILE_TIMEOUT)" \
+	--grace "$(COMPILE_TIMEOUT_GRACE)" --phase "$(COMPILE_PHASE)"
+# Each Rocq recipe names the phase the grid harness reports for it, so that a
+# timeout on the direct `make`, `check.sh`, `gen-atp.sh`, `run-reconstr.sh` and
+# `run-prove.sh` path is as diagnosable as one inside a grid. A COMPILE_PHASE=
+# on the command line -- what grid-checkpoint-lib.sh passes -- still wins.
+problems/%.vo: COMPILE_PHASE = init
+logs/check/%.log: COMPILE_PHASE = check
+logs/atp/%.log: COMPILE_PHASE = gen-atp
+logs/reconstr/%.log: COMPILE_PHASE = reconstruction
+logs/prove/%.log: COMPILE_PHASE = prove
 
 all:
 	@echo "See README on how to invoke make."
 
+test-prepare-corpus:
+	python3 tests/test_insert_committed_preamble.py
+
+test-grid-engine:
+	bash tests/test_grid_engine.sh
+
+test-rebuild-config:
+	bash tests/test_rebuild_config.sh
+
+test-compile-supervisor:
+	bash tests/test_compile_supervisor.sh
+
+test-atp-makefile:
+	bash tests/test_atp_makefile.sh
+
+test-premise-grid-spec:
+	bash tests/test_premise_grid_spec.sh
+
+test-confirmation-option-probe:
+	bash tests/test_confirmation_option_probe.sh
+
+test-premise-summarizer:
+	python3 tests/test_summarize_premise_screening.py
+
+test: test-prepare-corpus test-grid-engine test-rebuild-config \
+      test-compile-supervisor test-atp-makefile test-premise-grid-spec \
+      test-confirmation-option-probe test-premise-summarizer
+
 init: $(OFILES)
 problems/%.vo: problems/%.v
 	@mkdir -p logs/init
-	$(COQC) "$<" > logs/init/`basename "$@" .vo`.log 2>&1
+	$(SUPERVISED_COQC) --source "$<" -- $(COQC) "$<" \
+		> logs/init/`basename "$@" .vo`.log 2>&1
 
 check: $(patsubst problems/%.v,logs/check/%.log,$(FFILES))
 logs/check/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	$(COQC) "$<" > "$@" 2>&1
+	$(SUPERVISED_COQC) --source "$<" -- $(COQC) "$<" > "$@" 2>&1
 
 atp: $(patsubst problems/%.v,logs/atp/%.log,$(FFILES))
 logs/atp/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	$(COQC) "$<" > "$@" 2>&1
+	$(SUPERVISED_COQC) --source "$<" -- $(COQC) "$<" > "$@" 2>&1
 
 reconstr: $(patsubst problems/%.v,logs/reconstr/%.log,$(FFILES))
 logs/reconstr/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	$(COQC) "$<" > "$@" 2>&1
+	$(SUPERVISED_COQC) --source "$<" -- $(COQC) "$<" > "$@" 2>&1
 
 prove: $(patsubst problems/%.v,logs/prove/%.log,$(FFILES))
 logs/prove/%.log: problems/%.v
 	@mkdir -p `dirname "$@"`
-	$(COQC) "$<" > "$@" 2>&1
+	$(SUPERVISED_COQC) --source "$<" -- $(COQC) "$<" > "$@" 2>&1
 
 clean-vo:
 	rm -f $(OFILES)
@@ -47,4 +91,8 @@ clean-problems: clean-vo
 	rm -f $(patsubst problems/%.v,problems/%.v.bak,$(FFILES))
 	rm -f $(patsubst problems/%.v,problems/%.glob,$(FFILES))
 
-.PHONY: clean clean-vo clean-problems check atp reconstr init all
+.PHONY: clean clean-vo clean-problems test test-prepare-corpus test-grid-engine \
+        test-rebuild-config test-compile-supervisor test-atp-makefile test-premise-grid-spec \
+        test-confirmation-option-probe \
+        test-premise-summarizer \
+        check atp reconstr prove init all

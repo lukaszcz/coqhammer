@@ -9,7 +9,7 @@ From Stdlib Require Import Arith.PeanoNat Arith.Wf_nat Classes.RelationClasses
   Streams Vectors.Vector Lists.List Strings.String.
 From Corelib.ssr Require Import ssrbool.
 
-Require Import extraction_matches extraction_deptypes.
+Require Import extraction_matches extraction_deptypes extraction_indexed.
 
 Open Scope string_scope.
 
@@ -135,24 +135,53 @@ Hammer_transl "pval".
 Hammer_transl "beq".
 Hammer_transl "between".
 Hammer_transl "tag".
-Hammer_transl "vhead".
+Hammer_transl "extraction_deptypes.vhead".
 Hammer_transl "idiv".
 Hammer_transl "idiv2".
 Hammer_transl "idiv3".
 
-(* Case index guards must be read off the matched family, not off the scrutinee's
-   declared type: dsize crashes the guard walk when the type-level function's
-   arguments are counted as indices, dheight silently mistakes one for an index
-   when the counts happen to agree, and dstack_size has no computable guard at
-   all and must be refused rather than emitted unguarded. *)
+(* Fording makes split equations independent of index guards read from the
+   scrutinee's declared type.  This includes type-level function and fixpoint
+   wrappers that are only convertible to the matched family. *)
 Hammer_transl "dsize".
 Hammer_transl "dheight".
 Hammer_transl "dstack_size".
+Hammer_transl "fstack_value".
 
-(* An index-free family reads no index guard off its scrutinee's type, but the
-   type of the case is still its return predicate applied to the indices, and a
-   type-level function's surplus arguments are not indices. *)
+(* The nested indexed match also exercises rigid-clash pruning: only its leaf
+   branch is possible at index zero. *)
 Hammer_transl "dnested".
+
+(* Pruning normalizes the compared indices under a budget: [dcomputed] reaches
+   a successor and loses its leaf branch, while [dcomputed_deep] exhausts the
+   budget and keeps both. *)
+Hammer_transl "dcomputed".
+Hammer_transl "dcomputed_deep".
+
+(* Indexed-family fixtures.  Commands in an imported .vo are not replayed, so
+   invoke them here to put their emissions under the shape-assertion harness. *)
+Hammer_transl "breflect".
+Hammer_transl "tagged".
+Hammer_transl "untag".
+Hammer_transl "ibounded".
+Hammer_transl "ibval".
+Hammer_transl "ibidx".
+Hammer_transl "ibpart".
+Hammer_transl "istack_index".
+Hammer_transl "istack_index_deep".
+Hammer_transl "indexed_poly_subset".
+Hammer_transl "indexed_poly_value".
+Hammer_transl "okp".
+Hammer_transl "fromok".
+Hammer_transl "isT".
+Hammer_transl "fromisT".
+Hammer_transl "istrue".
+Hammer_transl "fromtrue".
+Hammer_transl "cast".
+Hammer_transl "vec".
+Hammer_transl "extraction_indexed.vhead".
+Hammer_transl "dheight2".
+Hammer_transl "jmeq_match".
 
 (* Stdlib regression list. Keep these as structural snapshots, not golden files;
    they pin representative fallback and coverage cases while remaining robust
@@ -160,10 +189,13 @@ Hammer_transl "dnested".
 Hammer_transl "Nat.add".
 Hammer_transl "app".              (* List.app *)
 Hammer_transl "Forall".           (* List.Forall *)
+Hammer_transl "eq_rect".
+Hammer_transl "eq_ind".
 Hammer_transl "eq_ind_r".
 Hammer_transl "proj1".
 Hammer_transl "Acc_rect".
 Hammer_transl "Nat.eq_dec".
+Hammer_transl "Nat.eqb_spec".
 Hammer_transl "sumbool".
 Hammer_transl "reflect".
 Hammer_transl "introT".
@@ -172,3 +204,29 @@ Hammer_transl "prod".
 Hammer_transl "Vector.hd".
 Hammer_transl "Streams.hd".
 Hammer_transl "Equivalence_Reflexive". (* typeclass method projection *)
+
+(* The erasure classification memo is keyed on the occurrence -- the inductive,
+   its actual parameters and the context slice they are typed in -- while the
+   type of a parameter that is a local hypothesis lives in Defhash, which the
+   key does not record.  A hypothesis reaches the translation as a constant, so
+   both goals below produce the same key and must not share a verdict: at
+   [nat -> Set] the two constructor fields are informative and the occurrence
+   keeps its plain typing atom, at [nat -> Prop] the second field is a payload
+   and the guard expands to the carrier's type conjoined with it.  The
+   [hammer_transl] tactic re-translates through [remove_def] and [reinit]
+   rather than [cleanup], which is exactly the lifecycle the memo has to
+   follow. *)
+Inductive memo_ref (A : Type) (P : A -> Type) : Type :=
+| memo_ref_intro (x : A) (px : P x).
+
+Goal forall Hp : nat -> Set, forall r : memo_ref nat Hp, True.
+Proof.
+  intros Hp.
+  hammer_transl.
+Abort.
+
+Goal forall Hp : nat -> Prop, forall r : memo_ref nat Hp, True.
+Proof.
+  intros Hp.
+  hammer_transl.
+Abort.

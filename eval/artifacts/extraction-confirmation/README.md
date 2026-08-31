@@ -18,17 +18,18 @@ are deliberately not copied here, because a hand-maintained copy of a generated
 table is stale from the next run onwards.
 
 Regenerate from the raw checkpoints under `eval/results/confirmation` with
-`../../evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
-switch, add `--setup` (or run `eval/install-external-libs.sh` first) to install
+`./evaluate.sh confirmation` from `eval/` (or re-run the grid). On a fresh
+switch, add `--setup` (or run `./install-external-libs.sh` first) to install
 the external libraries the full corpora need.
 
 ## Headline: soundness
 
-**Consistency hits: 0** across 14,660 consistency checks — every corpus, every
+**Consistency hits: 0** across 14,800 consistency checks — every corpus, every
 premise selector, both consistency provers. Each corpus's curated
 `consistency-lemmas.txt` is checked by rewriting the conjecture to `$false` and
 confirming E prover and Vampire cannot derive it from the selected axioms; a
-`ContradictoryAxioms`/`Unsatisfiable` verdict would be a fatal soundness hit.
+`ContradictoryAxioms`/`Unsatisfiable` verdict is a reported consistency hit
+requiring investigation, not an automatic hard gate on its own.
 This includes the lemmas that previously exposed the Curry/Russell paradox
 (`Proper`/`complement`) and the Type:Type/Hurkens universe collapse, both of
 which are now blocked by the restored premise filters (see `features.ml`).
@@ -41,12 +42,12 @@ distinguish a sound translation from an unsound one.
 ## Performance
 
 The grid is `{knn,nbayes} x {32,64,128,256,1024} x {E prover,Vampire,Z3,CVC4}`
-over seven corpora, 280 cells, 205,960 generated problems.
+over seven corpora, 280 cells, 276,840 generated problems.
 
 | metric | value |
 | --- | --- |
-| ATP success rate | 33.2% (68,442 / 205,960) |
-| Reconstruction on ATP-proved goals | 86.2% (58,964 / 68,442) |
+| Successful ATP attempts | 29.1% (80,454 / 276,840) |
+| Reconstruction on successful ATP attempts | 87.3% (70,241 / 80,454) |
 
 See `analysis.md` for the breakdown by prover, corpus and premise selector, and
 for the eq_rect/WF watch points.

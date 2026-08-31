@@ -34,18 +34,27 @@ first to install the libraries and build the Coq-Equations checkout that some
 of them need.
 
 The standard evaluation uses the prepared source files in `problems/`. The
-extraction evaluation uses three corpora:
+full extraction confirmation evaluates seven corpora:
 
 - `stdlib-regression`: built from the installed Rocq standard library. The
   installed library ships a `.glob` beside every `.v`, which is all `coqnames`
   needs to place the `hammer_hook` calls, so this needs no stdlib rebuild.
   The default slice is `Arith Bool Vectors Lists NArith`, about 1200 goals
-  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`.
+  across 40 files; change it with `--stdlib-modules` or `STDLIB_CORPUS_MODULES`;
+- `dependent-stdlib`: dependent modules from the installed Rocq standard
+  library;
+- `stdpp`: built from the installed `rocq-stdpp` library;
+- `color-vector`: built from the installed CoLoR vector modules;
 - `dependent-slice`: committed dependent elimination, finite map, and
   well-founded recursion fixtures;
+- `equations-examples`: built from the configured Coq-Equations checkout;
 - `external-equations`: built from the installed `rocq-equations` library, or
   from a checkout passed with `--external-source /path/to/Coq-Equations`. See
   `corpora/external-equations/CANDIDATES.md` for how it was chosen.
+
+The extraction screening grid intentionally uses only the three committed
+sample corpora `stdlib-regression`, `dependent-slice`, and
+`external-equations`; it is an option sweep, not the seven-corpus confirmation.
 
 Generating the corpora from the installed libraries keeps them in step with the
 Rocq the evaluation actually runs against, instead of committing a snapshot
@@ -111,16 +120,19 @@ repeated. The lower-level commands used by `evaluate.sh library` are
 
 `rebuild-config.sh` is an implementation helper used by the grid commands.
 `current` builds exactly the option values committed in
-`src/plugin/coq_transl_opts.ml`. The other names are controlled configuration
-variants used to understand the current translator:
+`src/plugin/coq_transl_opts.ml`. The one controlled variant used to understand
+the current translator is `dependent-types-off`, which builds
+`opt_dependent_types=false`: the translation as it was before dependent types
+were handled.
 
-- `all-off` and `all-on`;
-- `loo-prop-case-erasure`;
-- `loo-erasure-guards`;
-- `loo-refinement-types`.
+Every build then validates the prefix it installed: the shared
+`tests/plugin/singleton_premises.v` probe is translated with the plugin just
+installed, and the emitted axioms must agree with the configuration -- the
+collapsed singleton-elimination equations when dependent types are handled,
+none of them when they are not. A stale artifact fails the rebuild instead of
+being measured under the label it was asked for.
 
-Append `-decl-skips` to a variant to enable declaration-level refinement
-skips. Configuration builds restore `coq_transl_opts.ml` after installation.
+Configuration builds restore `coq_transl_opts.ml` after installation.
 Each build wipes its install prefix first, so `--prefix` is accepted only for a
 dedicated install directory: outside the checkout or under `eval/_installs`,
 and, if it already exists, carrying the `.coqhammer-eval-prefix` marker an
@@ -140,23 +152,44 @@ and prover combinations.
 
 Every complete grid writes `provenance.env` beside its summary. Checkpoints
 are reused only when their source commit, installed package, configuration,
-corpus content, scripts, and timeout settings still match.
+corpus content, scripts, and applicable timeout settings still match. Each
+per-file Rocq phase (`init`, `check`, ATP generation, and confirmation
+reconstruction) is supervised with `--compile-timeout SEC` (600 by default).
+On expiry the supervisor sends TERM to the compilation process group, waits the
+fixed `--compile-timeout-grace SEC` (10 by default), then sends KILL and reports
+the source file and phase with exit status 124. Generation checkpoints from
+before compile supervision are rejected. Regeneration retains downstream ATP
+results, but reuses each only when its recorded input hash still matches the
+newly generated problems.
 
-Of everything a run produces, only the confirmation grid's artifacts are
-tracked: `summary.tsv`, `analysis.md`, `provenance.env`, and the README beside
-them. The rest — `results/`, `problems/`, `logs/`, `_external/` — is ignored.
-The line is not source versus output but reproducible versus not. Checkpoints
-and generated problems come back by rerunning; a summary does not, since it
-depends on four external ATPs, pinned external libraries, and timeout-bound
-prover runs that never repeat exactly. A summary is therefore evidence about
-one commit rather than build output, and it is committed so that
-`provenance.env`'s `repository_commit` and the numbers it vouches for share a
-single history — the confirmation checkpoints are keyed by label, so once a
-grid is rerun that history is the only surviving record of the previous one.
-Screening summaries are not tracked; only the confirmation grid, which carries
-the branch's headline claim. `summary.tsv` and `analysis.md` are marked
-`linguist-generated` in `.gitattributes` so review collapses them; regenerate
-them through the grid rather than editing them.
+Of everything a run produces, only the artifacts of a grid whose numbers the
+branch actually claims are tracked: `summary.tsv`, `analysis.md`,
+`provenance.env`, and the README beside them. The rest — `results/`,
+`problems/`, `logs/`, `_external/` — is ignored. The line is not source versus
+output but reproducible versus not. Checkpoints and generated problems come
+back by rerunning; a summary does not, since it depends on four external ATPs,
+pinned external libraries, and timeout-bound prover runs that never repeat
+exactly. A summary is therefore evidence about one commit rather than build
+output, and it is committed so that `provenance.env`'s `repository_commit` and
+the numbers it vouches for share a single history — checkpoints are keyed by
+label, so once a grid is rerun that history is the only surviving record of the
+previous one.
+
+The tracked grid artifacts are the ones cited by branch claims.
+`artifacts/extraction-confirmation` carries the full-grid consistency and
+reconstruction measurements. `artifacts/extraction-screening` carries the
+indexed-families extraction-option sweep, and `artifacts/premise-screening`
+carries the premise-selection definitional-slot sweep and its non-standard
+measurement policy. `artifacts/indexed-families-comparison` is a compact,
+cross-commit report derived from workspace-local baseline/candidate snapshots;
+it retains their digests and common-key statistics without committing the
+large attempt tables. `artifacts/indexed-families-ablation` compactly records
+the two corrected option-off screening cells rerun after the
+ablation-boundary fix. Screening or
+comparison output not cited by the branch is rerun rather than tracked.
+`summary.tsv` and `analysis.md` are marked `linguist-generated` in
+`.gitattributes` so review collapses them; regenerate grid output through the
+harness rather than editing it.
 
 The confirmation run also checks that the translated axioms stay consistent: it
 replaces each conjecture with `$false` and expects no refutation. Those axioms

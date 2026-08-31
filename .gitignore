@@ -54,6 +54,8 @@ setup.log
 .merlin
 *.install
 _opam/
+# Task-local opam metadata roots; workspace switches remain under _opam/.
+/.opam-root/
 /_check-install/
 
 # agents

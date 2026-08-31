@@ -1,22 +1,27 @@
 COQC ?= rocq c
 
-EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
-PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo $(EXTRACTION_VOS)
+EXTRACTION_VOS := extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo singleton_premises.vo case_prop_transl.vo extraction_transl.vo erasure_blacklist.vo
+PLUGIN_VOS := transl.vo plugin_test.vo lemma_choice.vo basic.vo bugs.vo def_premises.vo prover_selection.vo hashing.vo arith.vo zarith.vo lists.vo misc.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo premise_isolation.vo $(EXTRACTION_VOS)
 
 # The tests that pass with no ATP installed, so that CI can run them without
 # depending on an external prover.  plugin_test.vo and transl.vo do prove goals,
 # but only trivial ones the sauto pretactic phase closes before any ATP is
 # consulted; erasure_blacklist.vo, arrow_transl.vo, type_sharing_transl.vo,
-# membership_transl.vo, link_erasure_transl.vo and defterm_transl.vo assert on
-# the axioms the translation emits and prove nothing -- arrow_transl.vo and
-# type_sharing_transl.vo also dump a problem for an aborted goal, the rest only
-# translate declarations.
+# membership_transl.vo, link_erasure_transl.vo, defterm_transl.vo and
+# singleton_premises.vo assert on the axioms the translation emits and prove
+# nothing -- arrow_transl.vo,
+# type_sharing_transl.vo and lambda_reuse_transl.vo also dump problems for
+# aborted goals, the rest only translate declarations.
+# premise_isolation.vo dumps problems too and needs no prover either, but its
+# goal is an Equations-generated function, and coq-equations is not a test
+# dependency of coq-hammer; like extraction_deptypes.vo it is therefore reached
+# only through tests and tests-plugin.
 # Everything else either sets SAutoLimit to 0, which disables that phase and
 # hands the goal to the ATPs, or requires a file that does.  prover_selection.vo
 # also passes without an ATP, but only vacuously: it checks that `hammer` fails
 # when every prover is disabled, which is equally true when no prover exists, so
 # running it here would not test detection.
-NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo
+NO_PROVER_VOS := plugin_test.vo transl.vo erasure_blacklist.vo arrow_transl.vo type_sharing_transl.vo membership_transl.vo link_erasure_transl.vo defterm_transl.vo lambda_reuse_transl.vo singleton_premises.vo
 
 all: $(PLUGIN_VOS)
 	COQC="$(COQC)" ./check-consistency.sh
@@ -49,6 +54,19 @@ basic.vo: basic.v
 bugs.vo: bugs.v
 	$(COQC) bugs.v
 
+def_premises.vo: def_premises.v
+	@set -e; \
+	$(COQC) def_premises.v > def_premises.out 2>&1 || { \
+	  cat def_premises.out; rm -f def_premises.vo def_premises.out; exit 1; \
+	}; \
+	premises=$$(grep -Fxc 'Current value of Hammer DefinitionPremises is 32' def_premises.out || true); \
+	features=$$(grep -Fxc 'Current value of Hammer DefinitionFeatures is 16' def_premises.out || true); \
+	if [ "$$premises" -ne 2 ] || [ "$$features" -ne 2 ]; then \
+	  echo "definition option default/reset check FAILED"; cat def_premises.out; \
+	  rm -f def_premises.vo def_premises.out; exit 1; \
+	fi; \
+	rm -f def_premises.out
+
 prover_selection.vo: prover_selection.v
 	$(COQC) prover_selection.v
 
@@ -72,6 +90,19 @@ extraction_matches.vo: extraction_matches.v
 
 extraction_deptypes.vo: extraction_deptypes.v
 	$(COQC) extraction_deptypes.v
+
+extraction_indexed.vo: extraction_indexed.v extraction_deptypes.vo
+	$(COQC) extraction_indexed.v
+
+singleton_premises.vo: singleton_premises.v check-singleton-premises.sh transl-assert-lib.sh
+	@set -e; \
+	$(COQC) singleton_premises.v > singleton_premises.out 2>&1 || { \
+	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
+	}; \
+	if ! ./check-singleton-premises.sh singleton_premises.out; then \
+	  cat singleton_premises.out; rm -f singleton_premises.vo singleton_premises.out; exit 1; \
+	fi; \
+	rm -f singleton_premises.out
 
 erasure_blacklist.vo: erasure_blacklist.v
 	@set -e; \
@@ -179,16 +210,19 @@ case_prop_transl.vo: case_prop_transl.v
 	  echo "cached case structural dependency replay check FAILED"; cat "$$tmp/case-structural-cache-hit.p"; \
 	  rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
 	grep -Fq "'\$$_discrim_case_prop_transl.delivery_left\$$case_prop_transl.delivery_right'" "$$tmp/case-structural-cache-hit.p" || { \
-	  echo "cached case structural discrimination replay check FAILED"; cat "$$tmp/case-structural-cache-hit.p"; \
+	  echo "cross-owner cached case structural discrimination replay check FAILED"; cat "$$tmp/case-structural-cache-hit.p"; \
 	  rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
-	warm_case_id=$$(grep -E '^\$$_def_case_prop_transl\.delivery_cache_warm:' case_prop_transl.out | \
-	  grep -Eo '\$$_case_case_prop_transl\.delivery_box[$$][0-9]+' | head -n 1 | grep -Eo '[0-9]+' || true); \
-	hit_case_id=$$(grep -F "fof('\$$_def_case_prop_transl.delivery_cache_hit'" "$$tmp/case-structural-cache-hit.p" | \
-	  grep -Eo 'delivery__box_24[0-9]+' | head -n 1 | sed 's/.*_24//'); \
-	if [ -z "$$warm_case_id" ] || [ "$$warm_case_id" != "$$hit_case_id" ]; then \
-	  echo "case structural replay did not exercise a cache hit"; cat case_prop_transl.out; \
-	  cat "$$tmp/case-structural-cache-hit.p"; rm -f case_prop_transl.vo case_prop_transl.out; exit 1; \
-	fi; \
+	warm_case=$$(grep -E '^\$$_def_case_prop_transl\.delivery_cache_warm:' case_prop_transl.out | \
+	  grep -Eo '\$$_case_case_prop_transl\.delivery_box[$$][0-9]+' | head -n 1); \
+	hit_cases=$$(grep -E '^\$$_def_case_prop_transl\.delivery_cache_hit:' case_prop_transl.out | \
+	  grep -Eo '\$$_case_case_prop_transl\.delivery_box[$$][0-9]+' || true); \
+	[ -n "$$warm_case" ] && \
+	[ $$(printf '%s\n' "$$hit_cases" | grep -c .) -eq 2 ] && \
+	[ $$(printf '%s\n' "$$hit_cases" | sort -u | grep -c .) -eq 1 ] && \
+	[ "$$(printf '%s\n' "$$hit_cases" | head -n 1)" = "$$warm_case" ] || { \
+	  echo "cross-owner case cache hit was not exercised"; \
+	  grep -E '^\$$_def_case_prop_transl\.delivery_cache_(warm|hit):' case_prop_transl.out || true; \
+	  rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
 	grep -Fq "'\$$_inversion_case_prop_transl.prop_case_box'" "$$tmp/prop-case-structural.p" || { \
 	  echo "proposition-valued case structural inversion delivery check FAILED"; \
 	  cat "$$tmp/prop-case-structural.p"; rm -f case_prop_transl.vo case_prop_transl.out; exit 1; }; \
@@ -312,15 +346,39 @@ type_sharing_transl.vo: type_sharing_transl.v
 	          if (j > 0 && (i == 0 || j < i)) print }' | grep -q .; then \
 	  fail "a lifted-type axiom is an equivalence, which is unsound over empty domains"; \
 	fi; \
-	grep -Eq "^fof\(.\\\$$_link_[0-9]+., axiom, \(c_24__type__[0-9]+ = c_24__type__[0-9]+___24a2\(ctype__sharing__transl_2eX,cQs\)\)\)\.$$" "$$tmp/type_sharing_transl.p" || { \
-	  echo "dumped link equation check FAILED"; \
-	  grep -E "^fof\(.\\\$$_link_" "$$tmp/type_sharing_transl.p" || true; \
-	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; }; \
-	grep -Eq '^fof\(.\$$_link_[0-9]+., axiom, \(c_24__lam__[0-9]+ = c_24__lam__[0-9]+___24a2\(ctype__sharing__transl_2eX,ctype__sharing__transl_2egg\)\)\)\.$$' "$$tmp/type_sharing_transl.p" || { \
-	  echo "dumped lambda link equation check FAILED"; \
-	  grep -E "^fof\(.\\\$$_link_" "$$tmp/type_sharing_transl.p" || true; \
-	  rm -f type_sharing_transl.vo type_sharing_transl.out; exit 1; }; \
-	equivalences=$$(grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" | \
+	dep_dumped_link=$$(grep -E '^fof\(.\$$_link_[0-9]+., axiom, \(c_24__type__[0-9]+ = c_24__type__[0-9]+___24a2\(ctype__sharing__transl_2eX,cQs\)\)\)\.$$' \
+	  "$$tmp/type_sharing_transl.p" || true); \
+	[ -n "$$dep_dumped_link" ] || \
+	  fail "dumped dependent product link equation check FAILED"; \
+	dep_dumped_lhs=$$(printf '%s\n' "$$dep_dumped_link" | grep -Eo 'c_24__type__[0-9]+' | head -n 1); \
+	dep_dumped_rhs=$$(printf '%s\n' "$$dep_dumped_link" | grep -Eo 'c_24__type__[0-9]+' | sed -n 2p); \
+	dep_dumped_sym=$$(grep -F "fof('\$$_typeof_ks'," "$$tmp/type_sharing_transl.p" | \
+	  grep -Eo 'c_24__type__[0-9]+' | head -n 1); \
+	[ "$$dep_dumped_lhs" = "$$dep_dumped_sym" ] || \
+	  fail "the dumped dependent link does not relate the goal hypothesis' own lifted type"; \
+	[ "$$dep_dumped_lhs" != "$$dep_dumped_rhs" ] || \
+	  fail "the dumped dependent link relates a lifted type to itself, so it says nothing"; \
+	lam_dumped_link=$$(grep -E '^fof\(.\$$_link_[0-9]+., axiom, \(c_24__lam__[0-9]+ = c_24__lam__[0-9]+___24a2\(ctype__sharing__transl_2eX,cgs\)\)\)\.$$' \
+	  "$$tmp/type_sharing_transl.p" || true); \
+	[ -n "$$lam_dumped_link" ] || \
+	  fail "dumped lambda link equation check FAILED"; \
+	lam_dumped_lhs=$$(printf '%s\n' "$$lam_dumped_link" | grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	lam_dumped_rhs=$$(printf '%s\n' "$$lam_dumped_link" | grep -Eo 'c_24__lam__[0-9]+' | sed -n 2p); \
+	lam_dumped_inst=$$(grep -F "fof('lam_inst_h'," "$$tmp/type_sharing_transl.p" | \
+	  grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	lam_dumped_schema=$$(grep -F "fof('lam_schema_h'," "$$tmp/type_sharing_transl.p" | \
+	  grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	[ "$$lam_dumped_lhs" = "$$lam_dumped_inst" ] || \
+	  fail "the dumped lambda link does not relate the instance hypothesis' own lifted lambda"; \
+	[ "$$lam_dumped_rhs" = "$$lam_dumped_schema" ] || \
+	  fail "the dumped lambda link does not relate the schema hypothesis' own lifted lambda"; \
+	[ "$$lam_dumped_lhs" != "$$lam_dumped_rhs" ] || \
+	  fail "the dumped lambda link relates a lifted lambda to itself, so it says nothing"; \
+	scanned=$$(grep -E '^fof\(.\$$_(arrow|type|link)_[0-9]+.' "$$tmp/type_sharing_transl.p" || true); \
+	printf '%s\n' "$$scanned" | grep -Fq "$$dep_dumped_link" && \
+	printf '%s\n' "$$scanned" | grep -Fq "$$lam_dumped_link" || \
+	  fail "the connective scan below no longer covers the link equations asserted above"; \
+	equivalences=$$(printf '%s\n' "$$scanned" | \
 	  awk '{ i = index($$0, " => "); j = index($$0, " <=> "); \
 	         if (j > 0 && (i == 0 || j < i)) print }'); \
 	if [ -n "$$equivalences" ]; then \
@@ -412,7 +470,87 @@ defterm_transl.vo: defterm_transl.v
 	fi; \
 	rm -f defterm_transl.out
 
-extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo check-extraction-transl.sh
+lambda_reuse_transl.vo: lambda_reuse_transl.v
+	@set -e; \
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	fail() { \
+	  echo "$$1"; cat lambda_reuse_transl.out; \
+	  rm -f lambda_reuse_transl.vo lambda_reuse_transl.out; exit 1; \
+	}; \
+	COQHAMMER_DUMP_DIR="$$tmp" timeout 120 $(COQC) lambda_reuse_transl.v > lambda_reuse_transl.out 2>&1 || \
+	  fail "lambda_reuse_transl.v failed or timed out"; \
+	definition_lams() { \
+	  grep -F "_def_lambda_reuse_transl.$$1:" lambda_reuse_transl.out | \
+	    grep -Eo '[$$]_lam_[0-9]+' || true; \
+	}; \
+	reuse_lams=$$(definition_lams reuse_ok); \
+	[ $$(printf '%s\n' "$$reuse_lams" | grep -c .) -eq 2 ] && \
+	[ $$(printf '%s\n' "$$reuse_lams" | sort -u | grep -c .) -eq 1 ] || \
+	  fail "same-declaration schema instance did not reuse the schema lambda"; \
+	binder_lams=$$(definition_lams reject_binder_erasure); \
+	[ $$(printf '%s\n' "$$binder_lams" | sort -u | grep -c .) -eq 2 ] || \
+	  fail "lambda reuse crossed a binder-erasure mismatch"; \
+	context_lams=$$(definition_lams reject_context_arity); \
+	[ $$(printf '%s\n' "$$context_lams" | sort -u | grep -c .) -ge 2 ] || \
+	  fail "lambda reuse accepted a schema application whose translated context spine is short"; \
+	grep -Eq 'rejected_schema_candidates_with_effects=[1-9][0-9]* discarded_effects=[1-9][0-9]*' \
+	  lambda_reuse_transl.out || \
+	  fail "the rejected schema candidate did not exercise behavioral effect rollback"; \
+	seed_lam=$$(definition_lams owner_seed | head -n 1); \
+	isolated_lam=$$(definition_lams owner_isolated | head -n 1); \
+	[ -n "$$seed_lam" ] && [ -n "$$isolated_lam" ] && [ "$$seed_lam" != "$$isolated_lam" ] || \
+	  fail "a schema registry entry was reused without availability in the current owner"; \
+	seed_dump_lam=$$(grep -F "_def_lambda_reuse_transl.owner_seed'" "$$tmp/lambda-reuse-owners.p" | \
+	  grep -Eo 'c_24__lam__[0-9]+' | head -n 1); \
+	replay_dump_lams=$$(grep -F "_def_lambda_reuse_transl.owner_replay'" "$$tmp/lambda-reuse-owners.p" | \
+	  grep -Eo 'c_24__lam__[0-9]+' || true); \
+	[ -n "$$seed_dump_lam" ] && \
+	[ $$(printf '%s\n' "$$replay_dump_lams" | grep -c .) -eq 2 ] && \
+	[ $$(printf '%s\n' "$$replay_dump_lams" | sort -u | grep -c .) -eq 1 ] && \
+	[ "$$(printf '%s\n' "$$replay_dump_lams" | head -n 1)" = "$$seed_dump_lam" ] || \
+	  fail "an exact cache hit did not replay and expose the full schema bundle to its current owner"; \
+	grep -Fq "_inversion_lambda_reuse_transl.replay_box'" "$$tmp/lambda-reuse-structural.p" || \
+	  fail "the cross-owner lambda cache hit lost its replay_box dependency"; \
+	if grep -Fq '_def_lambda_reuse_transl.owner_seed' "$$tmp/lambda-reuse-structural.p"; then \
+	  fail "the structural replay check is masked by the seed owner in the final theory"; \
+	fi; \
+	grep -F "_def_lambda_reuse_transl.nested_replay:" lambda_reuse_transl.out | \
+	  grep -Fq "lambda_reuse_transl.gv" || \
+	  fail "a replayed bundle did not make the lambdas nested inside it available"; \
+	grep -Fq "_inversion_lambda_reuse_transl.attr_marker'" \
+	  "$$tmp/lambda-reuse-attribution-instance.p" || \
+	  fail "a reusing occurrence lost the structural theory its own substitution needs"; \
+	if grep -Fq "attr_marker" "$$tmp/lambda-reuse-attribution-probe.p"; then \
+	  fail "a reusing occurrence's dependencies were attributed to the shared lift symbol"; \
+	fi; \
+	[ $$(grep -c '^_HAMMER_GOAL:' lambda_reuse_transl.out) -eq 2 ] || \
+	  fail "the goal-level translations did not both run"; \
+	if grep '^_HAMMER_GOAL:' lambda_reuse_transl.out | tail -n 1 | \
+	     grep -Fq "lambda_reuse_transl.gw"; then \
+	  fail "lift ownership recorded for one goal survived into the next one"; \
+	fi; \
+	rm -f lambda_reuse_transl.out
+
+premise_isolation.vo: premise_isolation.v
+	@set -e; \
+	tmp=$$(mktemp -d); \
+	trap 'rm -rf "$$tmp"' EXIT; \
+	COQHAMMER_DUMP_DIR="$$tmp" timeout 180 $(COQC) premise_isolation.v > premise_isolation.out 2>&1 || { \
+	  echo "premise_isolation.v failed or timed out"; cat premise_isolation.out; \
+	  rm -f premise_isolation.vo premise_isolation.out; exit 1; }; \
+	cmp "$$tmp/premise_seq128.p" "$$tmp/premise_fresh128.p" || { \
+	  echo "sequential and fresh bounded 128-premise POPLMark problems differ"; \
+	  rm -f premise_isolation.vo premise_isolation.out; exit 1; }; \
+	n32=$$(grep -c '^fof(' "$$tmp/premise_seq32.p"); \
+	n64=$$(grep -c '^fof(' "$$tmp/premise_seq64.p"); \
+	n128=$$(grep -c '^fof(' "$$tmp/premise_seq128.p"); \
+	[ "$$n32" -lt "$$n64" ] && [ "$$n64" -lt "$$n128" ] || { \
+	  echo "bounded POPLMark premise growth did not preserve increasing translated content: $$n32, $$n64, $$n128"; \
+	  rm -f premise_isolation.vo premise_isolation.out; exit 1; }; \
+	rm -f premise_isolation.out
+
+extraction_transl.vo: extraction_transl.v extraction_matches.vo extraction_deptypes.vo extraction_indexed.vo check-extraction-transl.sh transl-assert-lib.sh
 	@set -e; \
 	tmp=$$(mktemp -d); \
 	trap 'rm -rf "$$tmp"' EXIT; \

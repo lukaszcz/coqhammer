@@ -81,6 +81,25 @@ fixtures are additionally dumped as `consistency-dsize.p` and
 `consistency-dheight.p` and ATP-checked by `check-consistency.sh`, since a
 misread index guard is soundness-relevant rather than merely lossy.
 
+The consistency suite also retains five indexed-family canary groups in the
+existing dump names enumerated by `check-consistency.sh`:
+
+- `consistency-prop-or-match.p` / `consistency-false-case-prop.p`: negative and
+  positive `reflect` expansions, including the `true` result index;
+- `consistency-dsize.p` / `consistency-dheight.p`: vector and `Fin.t 0`
+  hypotheses whose constructor indices rigidly clash;
+- `consistency-eq-rect.p`: the F*-#1542-shaped equality match under
+  `true = false`, together with erased transports across `nat`, `bool`, and
+  `string` in one problem;
+- `consistency-h.p`: an indexed subset at zero whose expanded carrier payload
+  is the refutable proposition `k < 0`;
+- `consistency-indexed-poly-subset.p`: a parameter-dependent indexed subset
+  whose equal carrier payload is constructed at two distinct indices.
+
+Each group keeps its relevant definition/typing formulas as axioms, so replacing
+the conjecture by `$false` checks the emitted theory rather than merely deleting
+the exercised shape.
+
 ### Documented deviations
 
 No dependent-types extraction goals remain wrapped. The `canary`
@@ -108,24 +127,65 @@ structural assertions that hold with the current translator:
   equations for Program `idiv`, bare `Fix` `idiv2`, and direct `Fix_F` `idiv3`;
   all three are checked to carry the converted `b <> 0` premise on link and case
   equations, with corpus-wide guards against unpremised WF unfolding equations.
-- Case index guards: `dsize` and `dheight` are checked to equate the matched
-  family's own index with each constructor's result index, and not to expose the
-  arguments of the type-level function their scrutinees are declared at
-  (`dres`/`dred` for `dsize`, `dswap`'s permuted colour for `dheight`);
-  `dstack_size`, whose scrutinee type is a type-level fixpoint that head
-  reduction does not unfold, is checked to emit no definition axiom at all while
-  keeping its typing axiom, so an uncomputable guard degrades to an
-  uninterpreted symbol rather than to an unguarded equation.
+- Forded indexed split equations: `dsize` and `dheight` have unconditional
+  equations for both constructors, with no legacy `=> @` index premise and no
+  reference to the `dres`/`dswap` type-level functions in their definition
+  lines. `dstack_size` likewise has unconditional leaf/node equations even
+  though its scrutinee is declared through a type-level fixpoint the
+  head-normalizer does not unfold. For nested matching at `dtree 0`, the link
+  applies the outer case symbol directly to the inner option case; rigid clash
+  pruning keeps the leaf equation and omits the impossible node equation.
+- Indexed-family fixtures from `extraction_indexed.v`: declaration inversion
+  axioms for `breflect`, `tagged`, `okp`, and `vec` are checked by parsing their
+  fresh binders and correlating those exact identifiers across typing guards,
+  constructor parameters and payloads, and residual index equations. `untag`
+  fords the constructor's solved index to the occurrence index without a
+  premise, so its equation binds that index once; `ibval` erases the
+  `IBounded` package to its carrier and expands the `k < n` payload in its type
+  axiom, and `ibidx` -- whose body reads the solved index instead of the carrier
+  -- equates its result with the scrutinee's index rather than with a fresh
+  binder that would occur on the right-hand side alone; `indexed_poly_value`
+  likewise fords its constructor index; `fromok`, `fromisT`, `fromtrue`, `cast`,
+  and the JMeq match collapse to unconditional equations. Their asserted typing/inversion axioms retain the
+  relevant Prop premises and index equalities. In particular, `cast`'s helper
+  correlates its exact source/target binders through the equality premise and
+  source-payload/target-result typing, and reuses its exact outer function binder
+  in both self-typing and the result application. The user `vhead`
+  emits only its live `vcons` equation, and `dheight2` emits only its live
+  `dbox_succ` equation; neither equation has a legacy index premise. Default
+  indexed-subset declaration skipping is pinned by requiring the ordinary
+  `$_typeof_extraction_indexed.ibounded` axiom while forbidding
+  `$_inj_extraction_indexed.IBounded` and `$_inversion_extraction_indexed.ibounded`.
+  `ibpart`, an under-applied `IBounded`, is eta-expanded and collapsed to the
+  lambda `f x = x`, and its typing axiom instantiates the `k < n` payload at the
+  literal occurrence index on both sides of the implication -- the index formal
+  the classification substitutes for the forded argument is free here, so
+  leaving it in the residual field types aborted the translation.
+- Indexed guard expansion: `introT` and `$_typeof_Nat.eqb_spec` each contain
+  `ReflectT` and `ReflectF` alternatives with the positive/negative proposition
+  payload and `= true`/`= false` residual index equations. For `Nat.eqb_spec`,
+  the exact generated proposition helpers are checked to define equality and
+  both residual equations are checked to name `Nat.eqb` itself. A guard leaf is
+  recognized under the same budgeted head normalization as a case scrutinee, so
+  the boolean index is not unfolded into a lifted fixpoint copy that no axiom
+  relates back to the constant the definition axiom uses; that lifted copy is
+  forbidden. Their old nominal `$HasType ... reflect` leaves are forbidden.
 - Stdlib regression constants: split-equation checks for `Nat.add`, `List.app`,
-  and `Streams.hd`; structural checks for `List.Forall`, `eq_ind_r`, `proj1`,
-  `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `sumbool`, `sig`, `prod`, `Vector.hd`, a
-  `Streams` coinductive destructor, and the `Equivalence_Reflexive` typeclass
-  method projection.  The profile additionally enforces a transport-erased
-  `$_def_` equation for `eq_ind_r` and pins declaration-level subset
-  injectivity/inversion as present with the optional skip constant off by default.
+  and `Streams.hd`; structural checks for `List.Forall`, `eq_rect`, `eq_ind_r`,
+  `proj1`, `proj1_sig`, `Acc_rect`, `Nat.eq_dec`, `Nat.eqb_spec`, `sumbool`,
+  `introT`, `sig`, `prod`, `Vector.hd`, a `Streams` coinductive destructor, and
+  the `Equivalence_Reflexive` typeclass method projection. The generic
+  singleton path emits the unconditional `eq_rect(A,x,P,f,y) = f` equation;
+  `eq_ind` and `eq_ind_r` contribute only their own translated formulas:
+  neither generates a synthetic `$_def_` axiom, so neither carries a
+  definitional `$Proof = $Proof` equality. `Acc_rect` carries exactly one
+  `Acc` premise. Declaration-level subset injectivity/inversion remains
+  present for parameter-dependent `sig`.
 
 ### Documented deviations
 
 No disabled translation assertion blocks remain. The transport ATP-dump layer
 remains as an independent translation-quality gate in addition to the end-to-end
-`hammer` goal.
+`hammer` goal. Standard transports now use the generic definition path; no
+synthetic transport-definition axiom or definitional `$Proof = $Proof` equality
+remains.

@@ -4,6 +4,18 @@ set -eu
 TIMEOUT=${CONSISTENCY_TIMEOUT:-15}
 TMPDIR_BASE=${TMPDIR:-/tmp}
 
+# The statuses `timeout` reports when it has to kill the command it wraps: 124
+# for its default SIGTERM, and 128 + 9 for the SIGKILL we ask it for.
+TIMEOUT_SIGTERM_STATUS=124
+TIMEOUT_SIGKILL_STATUS=137
+
+# The statuses a prover job reports to reap_jobs.  2 is a definitive failure
+# that must fail the whole canary run; 3 says the prover delivered no verdict
+# at all (it was killed at its wall-clock limit, or it crashed), which is not a
+# failure but must not be read as "did not prove" either.
+JOB_FAILED_STATUS=2
+JOB_INCONCLUSIVE_STATUS=3
+
 # The cleanup trap below cannot run when the script is hard-killed (SIGKILL, or
 # a session teardown that kills the process group), and each run leaves over a
 # hundred megabytes of TPTP problems behind.  Sweep our own leftovers first, as
@@ -130,7 +142,7 @@ reap_jobs() {
     else
       status=$?
       mode=$(cat "$dir/mode" 2>/dev/null || true)
-      if [ "$mode" = negative ] || [ "$status" -eq 2 ]; then
+      if [ "$mode" = negative ] || [ "$status" -eq "$JOB_FAILED_STATUS" ]; then
         batch_failed=1
         failed_label=$(cat "$dir/label" 2>/dev/null || true)
       fi
@@ -171,10 +183,35 @@ note_nonzero_exit() {
   status=$2
   out=$3
   label=$4
+  # The bound, in seconds, that the `timeout` wrapper the prover ran under
+  # enforces, so that the statuses and the diagnostics that wrapper produces
+  # can be told apart from the prover's own.  Empty when the prover ran
+  # unwrapped.
+  wall_limit=${5:-}
 
+  # Set for the callers that must not read a verdict out of the output of a
+  # prover that never delivered one.
+  prover_inconclusive=0
+
+  if [ -n "$wall_limit" ] &&
+     { [ "$status" -eq "$TIMEOUT_SIGTERM_STATUS" ] ||
+       [ "$status" -eq "$TIMEOUT_SIGKILL_STATUS" ]; }; then
+    prover_inconclusive=1
+    echo "NOTE: $prover was killed at the ${wall_limit}s wall-clock limit on $label; treating the result as inconclusive"
+    return 0
+  fi
+
+  # `timeout` prints its own lines into the captured output, and they can
+  # report a core dump left behind by the prover it killed; read only what the
+  # prover itself wrote when deciding whether it crashed.  A portfolio prover
+  # also reports the crashes of the strategy processes it forks while itself
+  # surviving to deliver a verdict, so this says nothing about whether the
+  # prover answered: the captured output is still classified by the caller.
   if [ "$status" -gt 128 ] ||
-     grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction' "$out"; then
-    echo "SKIP: $prover crashed while checking $label; skipping this prover for this check" >&2
+     grep -Ev '^timeout: ' "$out" |
+       grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction'; then
+    prover_inconclusive=1
+    echo "NOTE: $prover reported a crash while checking $label; not treating the nonzero exit as a failure"
     return 0
   fi
 
@@ -229,6 +266,13 @@ else
   echo "SKIP: cvc4 not found; skipping CVC4 consistency checks"
 fi
 
+if command -v timeout >/dev/null 2>&1; then
+  have_timeout=1
+else
+  have_timeout=0
+  echo "SKIP: timeout not found; CVC4 is bounded only by its own --tlimit" >&2
+fi
+
 if [ "$have_eprover" -eq 0 ] && [ "$have_vampire" -eq 0 ] &&
    [ "$have_z3" -eq 0 ] && [ "$have_cvc4" -eq 0 ]; then
   fail "no supported ATP binary found; dumped consistency canaries were not ATP-checked"
@@ -270,7 +314,7 @@ check_provable_status() {
   if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
     show_prover_output "$prover" "$out" "$label"
     echo "consistency canary FAILED: $prover reported a parser error on $label" >&2
-    return 2
+    return "$JOB_FAILED_STATUS"
   fi
 
   grep -Eq 'SZS status Theorem' "$out"
@@ -341,6 +385,29 @@ run_z3() {
   check_unprovable_status "Z3" "$out" "$label"
 }
 
+# CVC4 does not reliably honour its own --tlimit on these problems: it can run
+# for minutes past the limit inside quantifier instantiation, so the external
+# wrapper is the real bound.  Kill it outright rather than with the wrapper's
+# default SIGTERM, whose handler in CVC4 exits through abort(): that leaves a
+# core file behind for every check and makes `timeout` announce the core dump
+# in the captured output.
+invoke_cvc4() {
+  problem=$1
+  timeout=$2
+  out=$3
+
+  if [ "$have_timeout" -eq 1 ]; then
+    # A second beyond CVC4's own --tlimit, so that the wrapper fires only when
+    # --tlimit did not; cvc4_wall_limit records the bound it enforces for the
+    # diagnostics.
+    cvc4_wall_limit=$((timeout + 1))
+    timeout -s KILL "$cvc4_wall_limit" cvc4 --tlimit "$((timeout * 1000))" "$problem" >"$out" 2>&1
+  else
+    cvc4_wall_limit=
+    cvc4 --tlimit "$((timeout * 1000))" "$problem" >"$out" 2>&1
+  fi
+}
+
 run_cvc4() {
   problem=$1
   timeout=$2
@@ -348,17 +415,11 @@ run_cvc4() {
   out=$4
 
   echo "CHECK: CVC4 consistency on $label"
-  if command -v timeout >/dev/null 2>&1; then
-    cvc4_cmd="timeout $((timeout + 1)) cvc4 --tlimit $((timeout * 1000))"
-  else
-    cvc4_cmd="cvc4 --tlimit $((timeout * 1000))"
-  fi
-  # shellcheck disable=SC2086
-  if $cvc4_cmd "$problem" >"$out" 2>&1; then
+  if invoke_cvc4 "$problem" "$timeout" "$out"; then
     :
   else
     status=$?
-    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label"; then
+    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label" "$cvc4_wall_limit"; then
       return 1
     fi
   fi
@@ -430,7 +491,7 @@ try_z3_theorem() {
   if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
     show_prover_output "Z3" "$out" "$label"
     echo "consistency canary FAILED: Z3 reported a parser error on $label" >&2
-    return 2
+    return "$JOB_FAILED_STATUS"
   fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
 }
@@ -442,24 +503,25 @@ try_cvc4_theorem() {
   out=$4
 
   echo "CHECK: CVC4 proves $label"
-  if command -v timeout >/dev/null 2>&1; then
-    cvc4_cmd="timeout $((timeout + 1)) cvc4 --tlimit $((timeout * 1000))"
-  else
-    cvc4_cmd="cvc4 --tlimit $((timeout * 1000))"
-  fi
-  # shellcheck disable=SC2086
-  if $cvc4_cmd "$problem" >"$out" 2>&1; then
+  if invoke_cvc4 "$problem" "$timeout" "$out"; then
     :
   else
     status=$?
-    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label"; then
+    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label" "$cvc4_wall_limit"; then
       return 1
+    fi
+    # A prover that was killed or crashed left no verdict behind: report it as
+    # inconclusive rather than classifying its truncated output below, which
+    # would read the missing proof as a definitive "did not prove".  Any other
+    # nonzero exit, a parse error in particular, is still classified.
+    if [ "$prover_inconclusive" -eq 1 ]; then
+      return "$JOB_INCONCLUSIVE_STATUS"
     fi
   fi
   if grep -Eiq '(syntax|parse|parser)[[:space:]_-]*error' "$out"; then
     show_prover_output "CVC4" "$out" "$label"
     echo "consistency canary FAILED: CVC4 reported a parser error on $label" >&2
-    return 2
+    return "$JOB_FAILED_STATUS"
   fi
   grep -Eq 'SZS status (Theorem|Unsatisfiable)|^unsat$' "$out"
 }
@@ -615,6 +677,7 @@ make_bad_successor_problem "$tmpdir/consistency-idiv3.p" "$bad_idiv3" \
 assert_unprovable_problem "$bad_idiv3" "$TIMEOUT" "idiv3 violated-premise unfolding instance"
 
 assert_unprovable "$tmpdir/consistency-h.p" "$TIMEOUT"
+assert_unprovable "$tmpdir/consistency-indexed-poly-subset.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-dsize.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-dheight.p" "$TIMEOUT"
 assert_unprovable "$tmpdir/consistency-eq-rect.p" "$TIMEOUT"

@@ -32,6 +32,22 @@ let check_bool label expected actual =
   if expected <> actual then
     report label (string_of_bool expected) (string_of_bool actual)
 
+let check_hammer_error label make =
+  try
+    ignore (make ());
+    report label "HammerError" "success"
+  with Hammer_lib.Hammer_errors.HammerError _ -> ()
+
+(* A same-name replay is valid only for the same formula.  Exercise the shared
+   merge path directly so a collision cannot again be hidden independently by
+   cache compaction, declaration translation, or final-theory composition. *)
+let () =
+  let a = ("collision", Const "a") in
+  check_int "identical axiom replay deduplicates" 1
+    (List.length (compose_axioms [[a]; [a]]));
+  check_hammer_error "different-formula axiom collision rejects"
+    (fun () -> compose_axioms [[a]; [("collision", Const "b")]])
+
 (* canonical variable names; a canonical context lists its variables in reverse
    canonical order (Coqterms.ctx_to_vars = List.rev) *)
 let v i = "v_CANONICAL_" ^ string_of_int i
@@ -355,6 +371,24 @@ let () =
   end;
   check_int "partner behind rejects: nothing truncated" 0
     (Hashing.counters "walk2").Hashing.lc_truncated
+
+(* Context types are part of an alpha-canonical cache key too.  Rocq gives
+   anonymous product binders fresh names in each declaration; leaving those
+   names raw makes exact hits (and therefore owner-bundle replay) depend on
+   declaration order. *)
+let () =
+  let made = ref 0 in
+  let table = Hashing.create (fun _ x -> x) in
+  let context binder =
+    [ ("f", Prod(binder, Var "Z", Var "Z")); ("Z", SortType) ]
+  in
+  let term = Lam("x", Var "Z", App(Var "f", Var "x")) in
+  let make _ _ = incr made; !made in
+  check_int "context-type alpha cache first value" 1
+    (Hashing.find_or_insert table (context "anon1") term make);
+  check_int "context-type alpha cache exact hit" 1
+    (Hashing.find_or_insert table (context "anon2") term make);
+  check_int "context-type alpha cache made once" 1 !made
 
 (* Entries with no constant at all are capped in number. *)
 let () =

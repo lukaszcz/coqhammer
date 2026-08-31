@@ -22,6 +22,24 @@ Since version 1.3, the CoqHammer system consists of two major separate component
 See the [CoqHammer webpage](https://coqhammer.github.io) for
 documentation and installation instructions.
 
+Premise selection options
+-------------------------
+- `Set Hammer DefinitionPremises K.` reserves bounded slots within each
+  predictor premise budget for accessible definitions referenced by the goal
+  or hypotheses (including grouped inductives and constructors). Candidates
+  are ordered by rarity, then size and name. At most `K` and one eighth of the
+  budget (rounded up) are reserved; the predictor fills the remaining slots,
+  so these definitions do not increase the budget. The default is `32`;
+  `0` disables reserved definition premises.
+- `Set Hammer DefinitionFeatures G.` expands the predictor query with the
+  plain constant dependencies taken from definitions of rare seed constants
+  mentioned by the goal or hypotheses. A seed constant is expanded when at
+  most `G` accessible definitions refer to it. The default is `16`; `0`
+  disables definition-feature expansion.
+
+`Unset Hammer DefinitionPremises.` and `Unset Hammer DefinitionFeatures.`
+restore their respective defaults.
+
 Requirements
 ------------
 - [Rocq master](https://github.com/rocq-prover/rocq)

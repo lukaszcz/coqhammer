@@ -23,6 +23,10 @@ Fixpoint tsize (t : tree) :=
   match t with L => 0 | N l _ r => S (myadd (tsize l) (tsize r)) end.
 Fixpoint tmirror (t : tree) :=
   match t with L => L | N l x r => N (tmirror r) x (tmirror l) end.
+(* The nested induction scheme would need an [All] scheme registered for
+   [list]; this fixture only translates [rose], so silence the advice
+   rather than register a scheme the corpus would then also translate. *)
+#[warnings="-register-all"]
 Inductive rose := Rose (children : list rose).
 Fixpoint rsize (r : rose) : nat :=
   match r with Rose cs => S (List.fold_right (fun c acc => rsize c + acc) 0 cs) end.

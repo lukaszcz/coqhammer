@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+eval_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd -P)
 # shellcheck source=eval/cli-lib.sh
-source "$(dirname "${BASH_SOURCE[0]}")/cli-lib.sh"
+# shellcheck disable=SC1091
+source "$eval_dir/cli-lib.sh"
+# shellcheck source=eval/install-prefix-lib.sh
+# shellcheck disable=SC1091
+source "$eval_dir/install-prefix-lib.sh"
 
 usage() {
   cat <<'USAGE'
@@ -15,16 +20,8 @@ src/plugin/coq_transl_opts.ml while building and restore it afterwards.
 
 Core configs:
   current                  the current CoqHammer configuration
-  all-off                  all extraction constants off
-  all-on                   all extraction constants on, decl-level skips off
-  loo-prop-case-erasure    all-on except opt_prop_case_erasure=false
-  loo-erasure-guards       all-on except opt_erasure_guards=false
-  loo-refinement-types     all-on except opt_refinement_types=false
-
-Decl-skip variants:
-  append -decl-skips to any core config other than `current` to set
-  opt_refinement_decl_skips=true.  `current` already builds with
-  declaration-level skips enabled, so `current-decl-skips` is rejected.
+  dependent-types-off      opt_dependent_types=false: the translation as it was
+                           before dependent types were handled
 USAGE
 }
 
@@ -41,10 +38,7 @@ while [ "$#" -gt 0 ]; do
   case "$1" in
     --list)
       echo current
-      for base in all-off all-on loo-prop-case-erasure loo-erasure-guards loo-refinement-types; do
-        echo "$base"
-        echo "$base-decl-skips"
-      done
+      echo dependent-types-off
       exit 0
       ;;
     --label) need_value "$@"; label="$2"; shift 2 ;;
@@ -73,6 +67,10 @@ if [ -z "$label" ]; then
     label="config-$config"
   fi
 fi
+if ! eval_safe_component "$label"; then
+  echo "Label must be a safe single path component: $label" >&2
+  exit 2
+fi
 
 repo=$(git rev-parse --show-toplevel)
 cd "$repo"
@@ -84,75 +82,57 @@ if ! git diff --quiet -- "$opts" || ! git diff --cached --quiet -- "$opts"; then
 fi
 
 core="$config"
-decl_skips=false
 patch_needed=true
 if [ "$core" = current ]; then
   patch_needed=false
 fi
-case "$core" in
-  *-decl-skips)
-    decl_skips=true
-    core=${core%-decl-skips}
-    ;;
-esac
 
-# current-decl-skips cannot be built correctly: patching only decl_skips would
-# still fall back to the generic prop/erasure/refinement defaults below,
-# silently overriding whatever the tree's current constants actually are
-# (right now opt_erasure_guards=false, so this would build all-on-decl-skips
-# mislabeled as current-decl-skips). opt_refinement_decl_skips already
-# defaults to true in src/plugin/coq_transl_opts.ml, so `current` alone
-# already has declaration-level skips enabled and the suffix is redundant.
-if [ "$core" = current ] && [ "$decl_skips" = true ]; then
-  echo "current-decl-skips is not a supported configuration: declaration-level skips are already enabled by default in the current tree (opt_refinement_decl_skips); use 'current' instead." >&2
-  exit 2
-fi
-
-prop=true
-erasure=true
-refinement=true
+dependent=true
 case "$core" in
   current) ;;
-  all-off) prop=false; erasure=false; refinement=false ;;
-  all-on) ;;
-  loo-prop-case-erasure) prop=false ;;
-  loo-erasure-guards) erasure=false ;;
-  loo-refinement-types) refinement=false ;;
+  dependent-types-off) dependent=false ;;
   *) echo "Unknown configuration: $config" >&2; usage >&2; exit 2 ;;
 esac
+
+current_option_bool() {
+  local name=$1
+  local value
+  value=$(sed -n "s/^let $name = \(true\|false\)$/\\1/p" "$opts")
+  case "$value" in
+    true|false) printf '%s\n' "$value" ;;
+    *) echo "Could not read the current $name binding from $opts" >&2; exit 1 ;;
+  esac
+}
+
+# The configuration boolean is explicit above.  For `current`, retain the
+# tree's value while still selecting the matching post-install semantic check.
+if [ "$core" = current ]; then
+  dependent=$(current_option_bool opt_dependent_types)
+fi
 
 if [ -z "$prefix" ]; then
   prefix="$repo/eval/_installs/$label"
 fi
+
+require_markable_prefix() {
+  if ! eval_prefix_path_is_markable "$1"; then
+    echo "Install prefix contains a newline, which the ownership marker cannot record; refusing to use it" >&2
+    exit 1
+  fi
+}
 
 # prepare_prefix wipes the prefix with `rm -rf`, so a mistyped --prefix would
 # erase the checkout or an unrelated directory.  Accept only a dedicated
 # install directory: never the repository or one of its parents, inside the
 # repository only under eval/_installs, and, when it already exists, only a
 # directory carrying the marker a previous run wrote for that very path.
-prefix_marker=.coqhammer-eval-prefix
-prefix_marker_magic=coqhammer-eval-prefix-v1
-
 # Ownership has to be established, not read off contents the directory could
 # have acquired any other way.  A manifest.env is not evidence: an unrelated
-# project may ship a file of that name, and even a manifest naming its own
-# directory is just text, so the check would compare our own guess with a
-# string we do not control.  The marker is written by prepare_prefix alone,
-# right after it creates the directory, and records the path it was written
-# for, so a prefix that was copied or moved elsewhere stops counting as ours.
-write_prefix_marker() {
-  printf '%s\nprefix=%s\n' "$prefix_marker_magic" "$1" > "$1/$prefix_marker"
-}
-
-owns_prefix() {
-  local marker="$1/$prefix_marker"
-  [ -f "$marker" ] || return 1
-  [ "$(sed -n 1p "$marker")" = "$prefix_marker_magic" ] || return 1
-  [ "$(sed -n 's/^prefix=//p' "$marker" | head -n 1)" = "$1" ]
-}
-
+# project may ship a file of that name.  The shared marker records the path it
+# was written for, so a prefix that was copied or moved stops counting as ours.
 validate_prefix() {
   local p="$1"
+  require_markable_prefix "$p"
   case "$p" in
     /|"${HOME:-}")
       echo "Refusing to use $p as the install prefix" >&2
@@ -167,16 +147,30 @@ validate_prefix() {
     echo "Install prefix $p is inside the checkout but not under eval/_installs" >&2
     exit 1
   fi
-  if [ -e "$p" ] && ! owns_prefix "$p"; then
-    echo "Install prefix $p exists but carries no $prefix_marker written for it, so this script cannot establish that it created it; refusing to erase it" >&2
+  if [ -e "$p" ] && ! eval_prefix_is_owned "$p"; then
+    echo "Install prefix $p exists but carries no $EVAL_PREFIX_MARKER written for it, so this script cannot establish that it created it; refusing to erase it" >&2
     echo "Prefixes built before the marker existed, and prefixes that were moved or copied, have to be removed by hand first: rm -rf $p" >&2
     exit 1
   fi
 }
 
-# Resolve first: the prefix is later used from other working directories
-# (-coqlib in validate_prop_case_ablation), so it has to be absolute.
-prefix=$(realpath -m -- "$prefix")
+# Check the prefix as it was spelled first: `$(realpath ...)` reports the path
+# on a line of its own, so command substitution would eat a trailing newline
+# and hand validate_prefix a different, newline-free path -- one that may well
+# be an owned prefix, which prepare_prefix would then erase instead of
+# refusing the unusable path the caller asked for.
+require_markable_prefix "$prefix"
+# Resolve next: the prefix is later used from other working directories
+# (-coqlib in validate_singleton_premises), so it has to be absolute.
+# Resolution can reintroduce the very newline the check above ruled out -- a
+# markable prefix may be a symlink to a target whose name ends in one -- so
+# capture the output behind a sentinel and drop only the newline realpath
+# itself terminates the path with.  Stripping with plain command substitution
+# would eat the target's newline too, again yielding a different, newline-free
+# path for prepare_prefix to erase.
+resolved=$(realpath -m -- "$prefix" && printf x)
+resolved=${resolved%x}
+prefix=${resolved%$'\n'}
 validate_prefix "$prefix"
 
 restore_opts() {
@@ -185,17 +179,14 @@ restore_opts() {
 trap restore_opts EXIT INT TERM
 
 if [ "$patch_needed" = true ]; then
-python3 - "$opts" "$prop" "$erasure" "$refinement" "$decl_skips" <<'PY'
+python3 - "$opts" "$dependent" <<'PY'
 import pathlib
 import re
 import sys
 
 path = pathlib.Path(sys.argv[1])
 values = {
-    "opt_prop_case_erasure": sys.argv[2],
-    "opt_erasure_guards": sys.argv[3],
-    "opt_refinement_types": sys.argv[4],
-    "opt_refinement_decl_skips": sys.argv[5],
+    "opt_dependent_types": sys.argv[2],
 }
 text = path.read_text()
 for name, value in values.items():
@@ -212,7 +203,7 @@ prepare_prefix() {
   coqlib=$(rocq c -where)
   rm -rf "$p"
   mkdir -p "$p/bin" "$p/coq/user-contrib" "$p/rocq-runtime"
-  write_prefix_marker "$p"
+  eval_prefix_write_marker "$p"
   ln -sfn "$coqlib/theories" "$p/coq/theories"
   # Borrow every installed library except Hammer, which this prefix installs
   # itself and must not shadow with the switch's copy.  Linking only Stdlib
@@ -240,33 +231,43 @@ make install \
   BINDIR="$prefix/bin/" \
   COQFLAGS="-coqlib $prefix/coq"
 
-validate_prop_case_ablation() {
-  local tmp out
+# What the grids measure is the installed prefix, not the checkout, and
+# `make install` is incremental: a build that silently kept a stale artifact
+# would still be described by a manifest written from this script's intent.
+# So both configurations translate the shared singleton probe with the plugin
+# that was just installed and assert what their option value implies -- the
+# collapsed singleton equations when dependent types are handled, and the
+# absence of every one of them when they are not.
+validate_singleton_premises() (
+  local tmp out expect
   tmp=$(mktemp -d)
-  out="$tmp/prop-case-ablation.out"
-  cat > "$tmp/prop_case_ablation.v" <<'EOF'
-From Hammer Require Import Hammer.
-Definition prop_case_ablation (n : nat) : Prop :=
-  match n with O => True | S _ => False end.
-Hammer_transl "prop_case_ablation".
-EOF
-  if ! (cd "$tmp" && rocq c -coqlib "$prefix/coq" prop_case_ablation.v) >"$out" 2>&1; then
+  trap 'rm -rf "$tmp"' EXIT
+  out="$tmp/singleton_premises.out"
+  cp "$repo/tests/plugin/singleton_premises.v" \
+    "$repo/tests/plugin/check-singleton-premises.sh" \
+    "$repo/tests/plugin/transl-assert-lib.sh" "$tmp/"
+  if ! (cd "$tmp" && rocq c -coqlib "$prefix/coq" singleton_premises.v) \
+      >"$out" 2>&1; then
     cat "$out" >&2
-    rm -rf "$tmp"
     return 1
   fi
-  if grep -Eq '^\$_def_.*prop_case_ablation\$(lower|upper):' "$out"; then
-    echo "opt_prop_case_erasure=false still emitted proposition-case bounds" >&2
+  # With dependent types off, every elimination the probe defines is a match on
+  # a proposition, and those are left opaque: none of the definition equations
+  # the check script asserts may be emitted at all.  The script's absence mode
+  # asserts exactly that, over the same roster as its positive assertions, so
+  # the two halves cannot drift apart.
+  expect=present
+  if [ "$dependent" != true ]; then
+    expect=absent
+  fi
+  if ! SINGLETON_PREMISES_EXPECT="$expect" \
+      bash "$tmp/check-singleton-premises.sh" "$out"; then
     cat "$out" >&2
-    rm -rf "$tmp"
     return 1
   fi
-  rm -rf "$tmp"
-}
+)
 
-if [ "$prop" = false ]; then
-  validate_prop_case_ablation
-fi
+validate_singleton_premises
 
 kind=configuration
 if [ "$config" = current ]; then
@@ -281,10 +282,7 @@ prefix=$prefix
 MANIFEST
 if [ "$patch_needed" = true ]; then
   cat >> "$prefix/manifest.env" <<MANIFEST
-opt_prop_case_erasure=$prop
-opt_erasure_guards=$erasure
-opt_refinement_types=$refinement
-opt_refinement_decl_skips=$decl_skips
+opt_dependent_types=$dependent
 MANIFEST
 fi
 printf 'built_at=%s\n' "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$prefix/manifest.env"
