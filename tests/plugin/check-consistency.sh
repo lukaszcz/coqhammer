@@ -4,6 +4,11 @@ set -eu
 TIMEOUT=${CONSISTENCY_TIMEOUT:-15}
 TMPDIR_BASE=${TMPDIR:-/tmp}
 
+# The statuses `timeout` reports when it has to kill the command it wraps: 124
+# for its default SIGTERM, and 128 + 9 for the SIGKILL we ask it for.
+TIMEOUT_SIGTERM_STATUS=124
+TIMEOUT_SIGKILL_STATUS=137
+
 # The cleanup trap below cannot run when the script is hard-killed (SIGKILL, or
 # a session teardown that kills the process group), and each run leaves over a
 # hundred megabytes of TPTP problems behind.  Sweep our own leftovers first, as
@@ -171,9 +176,24 @@ note_nonzero_exit() {
   status=$2
   out=$3
   label=$4
+  # Whether the prover ran under the `timeout` wrapper, so that the statuses
+  # and the diagnostics that wrapper produces can be told apart from the
+  # prover's own.
+  wrapped=${5:-0}
 
+  if [ "$wrapped" -eq 1 ] &&
+     { [ "$status" -eq "$TIMEOUT_SIGTERM_STATUS" ] ||
+       [ "$status" -eq "$TIMEOUT_SIGKILL_STATUS" ]; }; then
+    echo "NOTE: $prover was killed at the ${TIMEOUT}s wall-clock limit on $label; treating the result as inconclusive"
+    return 0
+  fi
+
+  # `timeout` prints its own lines into the captured output, and they can
+  # report a core dump left behind by the prover it killed; read only what the
+  # prover itself wrote when deciding whether it crashed.
   if [ "$status" -gt 128 ] ||
-     grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction' "$out"; then
+     grep -Ev '^timeout: ' "$out" |
+       grep -Eiq 'segmentation fault|sigsegv|dumped core|core dumped|aborted|assertion.*failed|bus error|floating point exception|illegal instruction'; then
     echo "SKIP: $prover crashed while checking $label; skipping this prover for this check" >&2
     return 0
   fi
@@ -227,6 +247,13 @@ if command -v cvc4 >/dev/null 2>&1; then
   have_cvc4=1
 else
   echo "SKIP: cvc4 not found; skipping CVC4 consistency checks"
+fi
+
+if command -v timeout >/dev/null 2>&1; then
+  have_timeout=1
+else
+  have_timeout=0
+  echo "SKIP: timeout not found; CVC4 is bounded only by its own --tlimit" >&2
 fi
 
 if [ "$have_eprover" -eq 0 ] && [ "$have_vampire" -eq 0 ] &&
@@ -341,6 +368,24 @@ run_z3() {
   check_unprovable_status "Z3" "$out" "$label"
 }
 
+# CVC4 does not reliably honour its own --tlimit on these problems: it can run
+# for minutes past the limit inside quantifier instantiation, so the external
+# wrapper is the real bound.  Kill it outright rather than with the wrapper's
+# default SIGTERM, whose handler in CVC4 exits through abort(): that leaves a
+# core file behind for every check and makes `timeout` announce the core dump
+# in the captured output.
+invoke_cvc4() {
+  problem=$1
+  timeout=$2
+  out=$3
+
+  if [ "$have_timeout" -eq 1 ]; then
+    timeout -s KILL "$((timeout + 1))" cvc4 --tlimit "$((timeout * 1000))" "$problem" >"$out" 2>&1
+  else
+    cvc4 --tlimit "$((timeout * 1000))" "$problem" >"$out" 2>&1
+  fi
+}
+
 run_cvc4() {
   problem=$1
   timeout=$2
@@ -348,17 +393,11 @@ run_cvc4() {
   out=$4
 
   echo "CHECK: CVC4 consistency on $label"
-  if command -v timeout >/dev/null 2>&1; then
-    cvc4_cmd="timeout $((timeout + 1)) cvc4 --tlimit $((timeout * 1000))"
-  else
-    cvc4_cmd="cvc4 --tlimit $((timeout * 1000))"
-  fi
-  # shellcheck disable=SC2086
-  if $cvc4_cmd "$problem" >"$out" 2>&1; then
+  if invoke_cvc4 "$problem" "$timeout" "$out"; then
     :
   else
     status=$?
-    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label"; then
+    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label" "$have_timeout"; then
       return 1
     fi
   fi
@@ -442,17 +481,11 @@ try_cvc4_theorem() {
   out=$4
 
   echo "CHECK: CVC4 proves $label"
-  if command -v timeout >/dev/null 2>&1; then
-    cvc4_cmd="timeout $((timeout + 1)) cvc4 --tlimit $((timeout * 1000))"
-  else
-    cvc4_cmd="cvc4 --tlimit $((timeout * 1000))"
-  fi
-  # shellcheck disable=SC2086
-  if $cvc4_cmd "$problem" >"$out" 2>&1; then
+  if invoke_cvc4 "$problem" "$timeout" "$out"; then
     :
   else
     status=$?
-    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label"; then
+    if ! note_nonzero_exit "CVC4" "$status" "$out" "$label" "$have_timeout"; then
       return 1
     fi
   fi
