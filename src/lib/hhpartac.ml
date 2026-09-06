@@ -50,11 +50,11 @@ let worker time tac =
   if time > 0 then
     begin
       Sys.set_signal Sys.sigalrm Sys.Signal_default;
-      (* [Unix.alarm]'s argument passes through C's 32-bit [unsigned
-         int], and [time + 5] can overflow [int], so clamp to a finite
-         ceiling far below both limits (no real time limit approaches
-         11 days). *)
-      ignore (Unix.alarm (min time 1_000_000 + 5))
+      (* [min ... (max_int - 5)] keeps [time + 5] from overflowing
+         [int].  [Unix.alarm] truncates its argument to a 32-bit
+         [unsigned int], so the deadline is exact up to about 2^32
+         seconds (~136 years) -- far beyond any real time limit. *)
+      ignore (Unix.alarm (min time (max_int - 5) + 5))
     end;
   Proofview.tclOR
     (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
