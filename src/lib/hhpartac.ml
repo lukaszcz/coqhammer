@@ -50,11 +50,14 @@ let worker time tac =
   if time > 0 then
     begin
       Sys.set_signal Sys.sigalrm Sys.Signal_default;
-      (* [min ... (max_int - 5)] keeps [time + 5] from overflowing
-         [int].  [Unix.alarm] truncates its argument to a 32-bit
-         [unsigned int], so the deadline is exact up to about 2^32
-         seconds (~136 years) -- far beyond any real time limit. *)
-      ignore (Unix.alarm (min time (max_int - 5) + 5))
+      (* Cap the delay well below [Unix.alarm]'s 32-bit argument, so
+         [+ 5] can neither overflow [int] (including 31-bit [int] on a
+         32-bit build) nor wrap after the C conversion -- a wrap to
+         [alarm 0] would silently cancel the guard.  The cap (~31
+         years) is far beyond any real time limit, so a live worker is
+         never killed early; the guard only bounds the lifetime of a
+         worker orphaned by a parent that died without cleaning up. *)
+      ignore (Unix.alarm (min time 1_000_000_000 + 5))
     end;
   Proofview.tclOR
     (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
