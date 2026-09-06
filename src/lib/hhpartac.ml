@@ -47,17 +47,16 @@ let detach_child () =
    cannot hit a recycled pid. *)
 let worker time tac =
   detach_child ();
-  if time > 0 then
+  (* Arm the alarm only for a representable deadline: [Unix.alarm]
+     truncates its argument to a 32-bit [unsigned int], and [time + 5]
+     must not overflow [int] (31 bits on a 32-bit build).  A larger
+     [time] -- never a real time limit -- leaves the alarm unarmed
+     rather than firing early and killing a live worker before its
+     timeout; such a worker is still bounded by the parent watchdog. *)
+  if time > 0 && time <= 1_000_000_000 then
     begin
       Sys.set_signal Sys.sigalrm Sys.Signal_default;
-      (* Cap the delay well below [Unix.alarm]'s 32-bit argument, so
-         [+ 5] can neither overflow [int] (including 31-bit [int] on a
-         32-bit build) nor wrap after the C conversion -- a wrap to
-         [alarm 0] would silently cancel the guard.  The cap (~31
-         years) is far beyond any real time limit, so a live worker is
-         never killed early; the guard only bounds the lifetime of a
-         worker orphaned by a parent that died without cleaning up. *)
-      ignore (Unix.alarm (min time 1_000_000_000 + 5))
+      ignore (Unix.alarm (time + 5))
     end;
   Proofview.tclOR
     (Proofview.tclBIND tac (fun _ -> Unix._exit 0))
