@@ -140,4 +140,5 @@ File conventions: `.mlg` files are Rocq grammar extensions (VERNAC/TACTIC EXTEND
 - When finished, verify with `just check`; if the change alters what the
   translation emits, also run `make test-extraction`, which `just check` does
   not cover
+- Commit when done
 - Do not add steps to the `check` recipe in the justfile
