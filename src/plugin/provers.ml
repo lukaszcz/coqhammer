@@ -219,7 +219,7 @@ let call_eprover infile outfile =
   let tmt = string_of_int !Opt.atp_timelimit in
   let tmt2 = string_of_int (!Opt.atp_timelimit + 1) in
   let cmd =
-    "htimeout " ^ tmt2 ^ " eprover -s --cpu-limit=" ^ tmt ^ " --auto-schedule -R --print-statistics -p --tstp-format \"" ^ infile ^ "\" " ^ Opt.stderr_redirect () ^ " | grep \"file[(]'\\|# SZS\" > \"" ^ outfile ^ "\""
+    "htimeout " ^ tmt2 ^ " eprover -s --cpu-limit=" ^ tmt ^ " --auto-schedule -R --print-statistics -p --tstp-format \"" ^ infile ^ "\" " ^ Opt.stderr_redirect () ^ " | grep \"file[(]'\\|[#%] SZS\" > \"" ^ outfile ^ "\""
   in
   invoke_prover "eprover" cmd outfile
 
@@ -233,7 +233,8 @@ let extract_eprover_data outfile =
           let rec pom acc =
             try
               let ln = input_line ic in
-              if String.get ln 0 = '#' then
+              let c = String.get ln 0 in
+              if c = '#' || c = '%' then
                 pom acc
               else if String.sub ln ((String.index ln ',') + 2) 5 = "axiom" then
                 pom (axiom_name_of_line ln :: acc)
